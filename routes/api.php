@@ -400,3 +400,20 @@ $route->get('/offiaccount/transform', 'offiaccount.threads.transform', ApiContro
 |--------------------------------------------------------------------------
 */
 $route->delete('/cache', 'cache.clear', ApiController\Cache\CacheController::class);
+
+/*
+|--------------------------------------------------------------------------
+| 后台扩展字段
+|--------------------------------------------------------------------------
+*/
+$route->get('/adminsignin','adminsignin.list',ApiController\SignInFields\ListAdminSignInController::class);
+$route->post('/adminsignin','adminsignin.create',ApiController\SignInFields\CreateAdminSignInController::class);
+$route->delete('/adminsignin/{id}','adminsignin.delete',ApiController\SignInFields\DeleteAdminSignInController::class);
+$route->post('/adminsignin/{id}','adminsignin.update',ApiController\SignInFields\UpdateAdminSignInController::class);
+/*
+|--------------------------------------------------------------------------
+| 前台扩展字段
+|--------------------------------------------------------------------------
+*/
+$route->post('/usersignin','usersignin.create',ApiController\SignInFields\CreateUserSignInController::class);
+$route->get('/usersignin','usersignin.list',ApiController\SignInFields\ListUserSignInController::class);
