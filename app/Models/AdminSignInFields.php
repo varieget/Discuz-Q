@@ -23,4 +23,39 @@ use Illuminate\Database\Eloquent\Model;
 class AdminSignInFields extends Model
 {
 
+    protected $table = 'admin_sign_in_fields';
+
+    const STATUS_DELETE = 0; //废弃
+    const STATUS_ACTIVE = 1; //启用
+
+    const TYPE_SINGLE_LINE = 0;
+    const TYPE_MULTI_LINE = 1;
+    const TYPE_RADIO = 2;
+    const TYPE_CHECKBOX = 3;
+    const TYPE_IMAGE_UPLOAD = 4;
+    const TYPE_ZIP_UPLOAD = 5;
+
+    private $typeDic = [
+        self::TYPE_SINGLE_LINE => '单行文本框',
+        self::TYPE_MULTI_LINE => '多行文本框',
+        self::TYPE_RADIO => '单选',
+        self::TYPE_CHECKBOX => '复选',
+        self::TYPE_IMAGE_UPLOAD => '图片上传',
+        self::TYPE_ZIP_UPLOAD => '附件上传'
+    ];
+
+    /**
+     *获取全部扩展字段
+     */
+    public function getAdminSignInFields()
+    {
+        $ret = self::query()->select(['name', 'type', 'fields_ext', 'fields_desc'])
+            ->where('status', self::STATUS_ACTIVE)
+            ->orderBy('sort', 'asc')
+            ->get()->toArray();
+        array_walk($ret, function (&$item) {
+            $item['type_desc'] = $this->typeDic[$item['type']];
+        });
+        return $ret;
+    }
 }

@@ -18,7 +18,21 @@
 namespace App\Api\Controller\SignInFields;
 
 
-class ListAdminSignInController
-{
+use App\Models\AdminSignInFields;
+use Discuz\Api\Controller\AbstractListController;
+use Psr\Http\Message\ServerRequestInterface;
+use Tobscure\JsonApi\Document;
 
+class ListAdminSignInController extends AbstractListController
+{
+    protected function data(ServerRequestInterface $request, Document $document)
+    {
+        $model = new AdminSignInFields();
+
+        dd($model->getAdminSignInFields());
+        return $model->getAdminSignInFields();
+//        return 123;
+        dd($model->getAdminSignInFields());
+        // TODO: Implement data() method.
+    }
 }
