@@ -17,16 +17,18 @@
 
 namespace App\Api\Controller\SignInFields;
 
-
-use App\Commands\SignInFields\DeleteAdminSignIn;
-use App\Commands\StopWord\DeleteStopWord;
-use Discuz\Api\Controller\AbstractDeleteController;
+use App\Api\Serializer\UserSignInSerializer;
+use App\Commands\SignInFields\UpdateUserSignIn;
+use Discuz\Api\Controller\AbstractResourceController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
+use Tobscure\JsonApi\Document;
 
-class DeleteAdminSignInController extends AbstractDeleteController
+class UpdateUserSignInController extends AbstractResourceController
 {
+
+    public $serializer = UserSignInSerializer::class;
     protected $bus;
 
     public function __construct(Dispatcher $bus)
@@ -34,10 +36,11 @@ class DeleteAdminSignInController extends AbstractDeleteController
         $this->bus = $bus;
     }
 
-    protected function delete(ServerRequestInterface $request)
+    protected function data(ServerRequestInterface $request, Document $document)
     {
-        $id = explode(',', Arr::get($request->getQueryParams(), 'id'));
+        $id = Arr::get($request->getQueryParams(), 'id');
         $actor = $request->getAttribute('actor');
-        $this->bus->dispatch(new DeleteAdminSignIn($id, $actor));
+        $data = $request->getParsedBody()->get('data', []);
+        return $this->bus->dispatch(new UpdateUserSignIn($id, $actor, $data));
     }
 }

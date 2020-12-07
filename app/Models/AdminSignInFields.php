@@ -18,9 +18,17 @@
 namespace App\Models;
 
 
-use Illuminate\Database\Eloquent\Model;
-
-class AdminSignInFields extends Model
+use Discuz\Models\DzqModel;
+/**
+ * @property int $id
+ * @property string $name
+ * @property int $type
+ * @property string $fields_ext
+ * @property string $fields_desc
+ * @property int $sort
+ * @property int $status
+ */
+class AdminSignInFields extends DzqModel
 {
 
     protected $table = 'admin_sign_in_fields';
@@ -49,7 +57,7 @@ class AdminSignInFields extends Model
      */
     public function getAdminSignInFields()
     {
-        $ret = self::query()->select(['name', 'type', 'fields_ext', 'fields_desc'])
+        $ret = self::query()->select(['id', 'name', 'type', 'fields_ext', 'fields_desc'])
             ->where('status', self::STATUS_ACTIVE)
             ->orderBy('sort', 'asc')
             ->get()->toArray();

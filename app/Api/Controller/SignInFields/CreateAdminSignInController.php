@@ -18,7 +18,61 @@
 namespace App\Api\Controller\SignInFields;
 
 
-class CreateAdminSignInController
-{
+use App\Api\Serializer\AdminSignInSerializer;
+use App\Commands\SignInFields\CreateAdminSignIn;
+use Discuz\Api\Controller\AbstractCreateController;
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Support\Arr;
+use Psr\Http\Message\ServerRequestInterface;
+use Tobscure\JsonApi\Document;
 
+
+class CreateAdminSignInController extends AbstractCreateController
+{
+    public $serializer = AdminSignInSerializer::class;
+    public $include = [
+        'user',
+        'category',
+        'firstPost',
+        'firstPost.images',
+        'firstPost.postGoods',
+        'threadVideo',
+    ];
+    /**
+     * {@inheritdoc}
+     */
+    public $optionalInclude = [
+        'question',
+        'question.beUser',
+        'question.beUser.groups',
+        'question.images',
+    ];
+    public $mustInclude = [
+
+    ];
+    /**
+     * @var Dispatcher
+     */
+    protected $bus;
+    /**
+     * @param Dispatcher $bus
+     */
+    public function __construct(Dispatcher $bus)
+    {
+        $this->bus = $bus;
+    }
+
+
+    #怎么将对象转成json数据
+    protected function data(ServerRequestInterface $request, Document $document)
+    {
+        $actor = $request->getAttribute('actor');
+        $ip = ip($request->getServerParams());
+        $port = Arr::get($request->getServerParams(), 'REMOTE_PORT', 0);
+        $data = $request->getParsedBody()->get('data');
+//        vendor/illuminate/bus/Dispatcher.php
+        return $this->bus->dispatch(
+            new CreateAdminSignIn($actor, $data, $ip, $port)
+        );
+    }
 }

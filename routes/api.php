@@ -415,5 +415,7 @@ $route->post('/admin/signinfields/{id}','admin.signinfields.update',ApiControlle
 | 前台扩展字段
 |--------------------------------------------------------------------------
 */
-$route->post('/user/signinfields','user.signinfields.create',ApiController\SignInFields\CreateUserSignInController::class);
 $route->get('/user/signinfields','user.signinfields.list',ApiController\SignInFields\ListUserSignInController::class);
+$route->post('/user/signinfields','user.signinfields.create',ApiController\SignInFields\CreateUserSignInController::class);
+$route->post('/user/signinfields/{id}','admin.signinfields.update',ApiController\SignInFields\UpdateUserSignInController::class);
+

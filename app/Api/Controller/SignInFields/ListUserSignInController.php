@@ -17,8 +17,21 @@
 
 namespace App\Api\Controller\SignInFields;
 
+use App\Api\Serializer\UserSignInSerializer;
+use App\Models\UserSignInFields;
+use Discuz\Api\Controller\AbstractListController;
+use Illuminate\Support\Arr;
+use Psr\Http\Message\ServerRequestInterface;
+use Tobscure\JsonApi\Document;
 
-class ListUserSignInController
+class ListUserSignInController extends AbstractListController
 {
-
+    public $serializer = UserSignInSerializer::class;
+    protected function data(ServerRequestInterface $request, Document $document)
+    {
+        $actor = $request->getAttribute('actor');
+        $params = $request->getQueryParams();
+        $userId = Arr::get($params, 'user_id');
+        return UserSignInFields::instance()->getUserSignInFields($userId);
+    }
 }

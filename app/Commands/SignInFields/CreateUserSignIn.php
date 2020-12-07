@@ -15,20 +15,31 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\SignInFields;
+namespace App\Commands\SignInFields;
 
 
-use App\Api\Serializer\AdminSignInSerializer;
-use App\Models\AdminSignInFields;
-use Discuz\Api\Controller\AbstractListController;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
+use App\Models\UserSignInFields;
 
-class ListAdminSignInController extends AbstractListController
+class CreateUserSignIn
 {
-    public $serializer = AdminSignInSerializer::class;
-    protected function data(ServerRequestInterface $request, Document $document)
+    private $actor;
+    private $data;
+    private $ip;
+    private $port;
+
+    public function __construct($actor, $data, $ip, $port)
     {
-        return AdminSignInFields::instance()->getAdminSignInFields();
+        $this->actor = $actor;
+        $this->data = $data;
+        $this->ip = $ip;
+        $this->port = $port;
     }
+
+    public function handle()
+    {
+        $attributes = array_column($this->data,'attributes');
+        $userId = $this->actor->id;
+        return UserSignInFields::instance()->userSaveUserSignInFields($userId,$attributes);
+    }
+
 }

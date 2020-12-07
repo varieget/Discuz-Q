@@ -15,20 +15,32 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\SignInFields;
+namespace App\Commands\SignInFields;
 
 
-use App\Api\Serializer\AdminSignInSerializer;
 use App\Models\AdminSignInFields;
-use Discuz\Api\Controller\AbstractListController;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class ListAdminSignInController extends AbstractListController
+class DeleteAdminSignIn
 {
-    public $serializer = AdminSignInSerializer::class;
-    protected function data(ServerRequestInterface $request, Document $document)
+
+    public $id;
+    public $actor;
+
+    public function __construct($id, $actor)
     {
-        return AdminSignInFields::instance()->getAdminSignInFields();
+        $this->id = $id;
+        $this->actor = $actor;
+    }
+
+    public function handle()
+    {
+        $adminSignIn = AdminSignInFields::query()->where('id',$this->id)
+            ->where('status',AdminSignInFields::STATUS_ACTIVE)
+            ->first();
+        if(!empty($adminSignIn)){
+            $adminSignIn->status = AdminSignInFields::STATUS_DELETE;
+            $adminSignIn->save();
+        }
+        return $adminSignIn;
     }
 }

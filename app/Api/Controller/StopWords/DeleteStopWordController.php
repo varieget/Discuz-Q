@@ -46,7 +46,6 @@ class DeleteStopWordController extends AbstractDeleteController
     {
         $ids = explode(',', Arr::get($request->getQueryParams(), 'id'));
         $actor = $request->getAttribute('actor');
-
         foreach ($ids as $id) {
             $this->bus->dispatch(
                 new DeleteStopWord($id, $actor)

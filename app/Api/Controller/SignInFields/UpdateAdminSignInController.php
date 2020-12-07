@@ -18,7 +18,29 @@
 namespace App\Api\Controller\SignInFields;
 
 
-class UpdateAdminSignInController
+use App\Api\Serializer\AdminSignInSerializer;
+use App\Commands\SignInFields\UpdateAdminSignIn;
+use Discuz\Api\Controller\AbstractResourceController;
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Support\Arr;
+use Psr\Http\Message\ServerRequestInterface;
+use Tobscure\JsonApi\Document;
+
+class UpdateAdminSignInController extends AbstractResourceController
 {
 
+    public $serializer = AdminSignInSerializer::class;
+    protected $bus;
+
+    public function __construct(Dispatcher $bus)
+    {
+        $this->bus = $bus;
+    }
+    protected function data(ServerRequestInterface $request, Document $document)
+    {
+        $id = Arr::get($request->getQueryParams(), 'id');
+        $actor = $request->getAttribute('actor');
+        $data = $request->getParsedBody()->get('data', []);
+        return $this->bus->dispatch(new UpdateAdminSignIn($id,$actor,$data));
+    }
 }

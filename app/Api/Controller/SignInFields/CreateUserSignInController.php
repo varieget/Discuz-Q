@@ -17,7 +17,30 @@
 
 namespace App\Api\Controller\SignInFields;
 
-class CreateUserSignInController
-{
+use App\Api\Serializer\UserSignInSerializer;
+use App\Commands\SignInFields\CreateUserSignIn;
+use Discuz\Api\Controller\AbstractCreateController;
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Support\Arr;
+use Psr\Http\Message\ServerRequestInterface;
+use Tobscure\JsonApi\Document;
 
+class CreateUserSignInController extends AbstractCreateController
+{
+    public $serializer = UserSignInSerializer::class;
+    private $bus;
+    public function __construct(Dispatcher $bus)
+    {
+        $this->bus = $bus;
+    }
+
+    protected function data(ServerRequestInterface $request, Document $document)
+    {
+        //游客不允许提交，需要后台静默注册一个sign_in_pass=0的数据
+        $actor = $request->getAttribute('actor');
+        $ip = ip($request->getServerParams());
+        $port = Arr::get($request->getServerParams(), 'REMOTE_PORT', 0);
+        $data = $request->getParsedBody()->get('data');
+        return $this->bus->dispatch(new CreateUserSignIn($actor,$data,$ip,$port));
+    }
 }
