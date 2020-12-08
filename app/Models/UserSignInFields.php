@@ -149,7 +149,7 @@ class UserSignInFields extends DzqModel
         }
         if ($isAuditPass) {
             $user = User::query()->where('id', $userId)->get()->first();
-            $user->sign_in_pass = 1;
+            $user->status = User::STATUS_NORMAL;
             $user->save();
         }
         return true;

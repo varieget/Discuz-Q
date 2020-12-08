@@ -116,6 +116,12 @@ class User extends Model
         'mobile'
     ];
 
+    const STATUS_NORMAL = 0;//正常
+    const STATUS_BAN = 1;//禁用
+    const STATUS_MOD = 2;//审核中
+    const STATUS_REFUSE = 3;//审核拒绝
+    const STATUS_IGNORE = 4;//审核忽略
+
     /**
      * 枚举 - status
      *
