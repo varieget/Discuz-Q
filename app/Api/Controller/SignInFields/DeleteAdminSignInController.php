@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -16,41 +15,29 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\StopWords;
+namespace App\Api\Controller\SignInFields;
 
+
+use App\Commands\SignInFields\DeleteAdminSignIn;
 use App\Commands\StopWord\DeleteStopWord;
 use Discuz\Api\Controller\AbstractDeleteController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
 
-class DeleteStopWordController extends AbstractDeleteController
+class DeleteAdminSignInController extends AbstractDeleteController
 {
-    /**
-     * @var Dispatcher
-     */
     protected $bus;
 
-    /**
-     * @param Dispatcher $bus
-     */
     public function __construct(Dispatcher $bus)
     {
         $this->bus = $bus;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function delete(ServerRequestInterface $request)
     {
-        $ids = explode(',', Arr::get($request->getQueryParams(), 'id'));
+        $id = explode(',', Arr::get($request->getQueryParams(), 'id'));
         $actor = $request->getAttribute('actor');
-        
-        foreach ($ids as $id) {
-            $this->bus->dispatch(
-                new DeleteStopWord($id, $actor)
-            );
-        }
+        $this->bus->dispatch(new DeleteAdminSignIn($id, $actor));
     }
 }

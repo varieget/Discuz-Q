@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -16,41 +15,32 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\StopWords;
+namespace App\Api\Controller\SignInFields;
 
-use App\Commands\StopWord\DeleteStopWord;
-use Discuz\Api\Controller\AbstractDeleteController;
+
+use App\Api\Serializer\AdminSignInSerializer;
+use App\Commands\SignInFields\UpdateAdminSignIn;
+use Discuz\Api\Controller\AbstractResourceController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
+use Tobscure\JsonApi\Document;
 
-class DeleteStopWordController extends AbstractDeleteController
+class UpdateAdminSignInController extends AbstractResourceController
 {
-    /**
-     * @var Dispatcher
-     */
+
+    public $serializer = AdminSignInSerializer::class;
     protected $bus;
 
-    /**
-     * @param Dispatcher $bus
-     */
     public function __construct(Dispatcher $bus)
     {
         $this->bus = $bus;
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function delete(ServerRequestInterface $request)
+    protected function data(ServerRequestInterface $request, Document $document)
     {
-        $ids = explode(',', Arr::get($request->getQueryParams(), 'id'));
+        $id = Arr::get($request->getQueryParams(), 'id');
         $actor = $request->getAttribute('actor');
-        
-        foreach ($ids as $id) {
-            $this->bus->dispatch(
-                new DeleteStopWord($id, $actor)
-            );
-        }
+        $data = $request->getParsedBody()->get('data', []);
+        return $this->bus->dispatch(new UpdateAdminSignIn($id,$actor,$data));
     }
 }
