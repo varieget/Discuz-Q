@@ -84,6 +84,7 @@ class UserSignInFields extends DzqModel
             if (!empty($attribute['id'])) {//更新
                 $userSignIn = self::query()->where('id', $attribute['id'])
                     ->where('status','!=',self::STATUS_DELETE)
+                    ->where('user_id',$userId)
                     ->first();
                 if (empty($userSignIn)) {
                     continue;

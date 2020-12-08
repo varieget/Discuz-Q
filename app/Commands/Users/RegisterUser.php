@@ -52,18 +52,15 @@ class RegisterUser
      */
     public $data;
 
-    public $relationships;
 
     /**
      * @param User $actor The user performing the action.
      * @param array $data The attributes of the new user.
-     * @param $relationships
      */
-    public function __construct(User $actor, array $data,$relationships)
+    public function __construct(User $actor, array $data)
     {
         $this->actor = $actor;
         $this->data = $data;
-        $this->relationships = $relationships;
     }
 
     /**
@@ -107,12 +104,6 @@ class RegisterUser
         }
 
         $user = User::register(Arr::only($this->data, ['username', 'password', 'register_ip', 'register_port', 'register_reason']));
-
-        //添加关联扩展字段信息
-        if(!empty($this->relationships) && !empty($user)){
-            $attributes = array_column($this->relationships,'attributes');
-            UserSignInFields::instance()->userSaveUserSignInFields($user->id,$attributes);
-        }
         // 注册验证码(无感模式不走验证码，开启也不走)
         $captcha = '';  // 默认为空将不走验证
         if ((bool)$settings->get('register_captcha') &&
@@ -146,7 +137,6 @@ class RegisterUser
         $validator->valid($attrs_to_validate);
 
         $user->save();
-
         $user->raise(new Registered($user, $this->actor, $this->data));
 
         $this->dispatchEventsFor($user, $this->actor);
