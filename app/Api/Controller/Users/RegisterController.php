@@ -75,13 +75,13 @@ class RegisterController extends AbstractCreateController
         if (!(bool)$this->settings->get('register_close')) {
             throw new PermissionDeniedException('register_close');
         }
-
         $attributes = Arr::get($request->getParsedBody(), 'data.attributes', []);
+        $relationships = Arr::get($request->getParsedBody(), 'data.relationships', []);
         $attributes['register_ip'] = ip($request->getServerParams());
         $attributes['register_port'] = Arr::get($request->getServerParams(), 'REMOTE_PORT', 0);
 
         $user = $this->bus->dispatch(
-            new RegisterUser($request->getAttribute('actor'), $attributes)
+            new RegisterUser($request->getAttribute('actor'), $attributes,$relationships)
         );
 
         $rebind = Arr::get($attributes, 'rebind', 0);
