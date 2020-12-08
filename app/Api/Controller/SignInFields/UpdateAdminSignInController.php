@@ -38,9 +38,9 @@ class UpdateAdminSignInController extends AbstractResourceController
     }
     protected function data(ServerRequestInterface $request, Document $document)
     {
-        $id = Arr::get($request->getQueryParams(), 'id');
+        $ids = explode(',', Arr::get($request->getQueryParams(), 'ids'));
         $actor = $request->getAttribute('actor');
         $data = $request->getParsedBody()->get('data', []);
-        return $this->bus->dispatch(new UpdateAdminSignIn($id,$actor,$data));
+        return $this->bus->dispatch(new UpdateAdminSignIn($ids,$actor,$data));
     }
 }
