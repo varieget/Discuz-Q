@@ -409,7 +409,7 @@ $route->delete('/cache', 'cache.clear', ApiController\Cache\CacheController::cla
 $route->get('/admin/signinfields','admin.signinfields.list',ApiController\SignInFields\ListAdminSignInController::class);
 $route->post('/admin/signinfields','admin.signinfields.create',ApiController\SignInFields\CreateAdminSignInController::class);
 $route->delete('/admin/signinfields/{id}','admin.signinfields.delete',ApiController\SignInFields\DeleteAdminSignInController::class);
-$route->post('/admin/signinfields/{id}','admin.signinfields.update',ApiController\SignInFields\UpdateAdminSignInController::class);
+$route->post('/admin/signinfields/{ids}','admin.signinfields.update',ApiController\SignInFields\UpdateAdminSignInController::class);
 /*
 |--------------------------------------------------------------------------
 | 前台扩展字段

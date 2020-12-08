@@ -22,26 +22,35 @@ use Illuminate\Support\Arr;
 
 class UpdateAdminSignIn
 {
-    private $id;
+    private $ids;
     private $actor;
     private $data;
 
-    public function __construct($id,$actor,$data)
+    public function __construct($ids, $actor, $data)
     {
-        $this->id = $id;
+        $this->ids = $ids;
         $this->actor = $actor;
         $this->data = $data;
     }
-    public function handle(){
-        $adminSignIn = AdminSignInFields::query()->where('id',$this->id)->first();
-        if(empty($adminSignIn)){
-            return $adminSignIn;
+
+    public function handle()
+    {
+        if (isset($this->data['attributes'])) {
+            $attributes = [$this->data['attributes']];
+        } else {
+            $attributes = array_column($this->data, 'attributes');
         }
-        $attributes = Arr::get($this->data, 'attributes');
-        foreach ($attributes as $key => $value) {
-            in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status']) && $adminSignIn[$key] = $value;
+        $data = [];
+        foreach ($attributes as $attribute) {
+            $adminSignIn = AdminSignInFields::query()->where('id', $attribute['id'])->first();
+            if (empty($adminSignIn)) {
+                continue;
+            }
+            foreach ($attribute as $key => $value) {
+                in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status']) && $adminSignIn[$key] = $value;
+            }
+            $adminSignIn->save() && $data[] = $adminSignIn;
         }
-        $adminSignIn->save();
-        return $adminSignIn;
+        return $data;
     }
 }
