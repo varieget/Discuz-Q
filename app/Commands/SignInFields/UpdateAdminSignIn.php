@@ -37,7 +37,7 @@ class UpdateAdminSignIn
         if(empty($adminSignIn)){
             return $adminSignIn;
         }
-        $attributes = Arr::get($this->data, 'attributes', []);
+        $attributes = Arr::get($this->data, 'attributes');
         foreach ($attributes as $key => $value) {
             in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status']) && $adminSignIn[$key] = $value;
         }

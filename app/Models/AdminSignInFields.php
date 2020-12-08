@@ -57,7 +57,7 @@ class AdminSignInFields extends DzqModel
      */
     public function getAdminSignInFields()
     {
-        $ret = self::query()->select(['id', 'name', 'type', 'fields_ext', 'fields_desc'])
+        $ret = self::query()->select(['id', 'name', 'type', 'fields_ext', 'fields_desc','sort'])
             ->where('status', self::STATUS_ACTIVE)
             ->orderBy('sort', 'asc')
             ->get()->toArray();

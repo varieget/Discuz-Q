@@ -35,10 +35,10 @@ class UserSignInFields extends DzqModel
     const STATUS_AUDIT = 1;//待审核
     const STATUS_REJECT = 2;//已驳回
     const STATUS_PASS = 3;//审核通过
-
+    private $userId = 10;
     public function getUserSignInFields($userId)
     {
-//        $userId = 10;
+        if (empty($userId)) $userId = $this->userId;
         $adminSignIn = AdminSignInFields::instance()->getAdminSignInFields();
         $userSignIn = self::query()
             ->select(['id', 'aid', 'user_id', 'fields_ext', 'remark', 'status'])
@@ -79,7 +79,7 @@ class UserSignInFields extends DzqModel
      */
     public function userSaveUserSignInFields($userId, $attributes)
     {
-//        $userId = 10;
+        if (empty($userId)) $userId = $this->userId;
         foreach ($attributes as $attribute) {
             if (!empty($attribute['id'])) {//更新
                 $userSignIn = self::query()->where('id', $attribute['id'])
@@ -125,7 +125,7 @@ class UserSignInFields extends DzqModel
      */
     public function adminSaveUserSignInFields($userId, $attributes)
     {
-//        $userId = 10;
+        if (empty($userId)) $userId = $this->userId;
         $isAuditPass = true;
         foreach ($attributes as $attribute) {
             $userSignIn = self::query()->where('id', $attribute['id'])

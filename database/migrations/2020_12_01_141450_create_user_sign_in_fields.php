@@ -32,7 +32,7 @@ class CreateUserSignInFields extends Migration
             $table->unsignedBigInteger('aid')->nullable(false)->comment('自增id');
             $table->unsignedBigInteger('user_id')->index()->comment('用户user_id');
             $table->text('fields_ext')->comment('字段扩展信息，Json表示选项内容');
-            $table->string('remark',200)->comment('审核意见');
+            $table->string('remark',200)->default('')->comment('审核意见');
             $table->tinyInteger('status')->default(1)->comment('0:废弃 1:待审核 2:驳回 3:审核通过');
             $table->timestamp('created_at')->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
