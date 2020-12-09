@@ -24,6 +24,7 @@ use App\Events\Users\Saving;
 use App\Exceptions\TranslatorException;
 use App\Models\Invite;
 use App\Models\User;
+use App\Models\UserSignInFields;
 use App\Validators\UserValidator;
 use Carbon\Carbon;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -50,6 +51,7 @@ class RegisterUser
      * @var array
      */
     public $data;
+
 
     /**
      * @param User $actor The user performing the action.
@@ -102,7 +104,6 @@ class RegisterUser
         }
 
         $user = User::register(Arr::only($this->data, ['username', 'password', 'register_ip', 'register_port', 'register_reason']));
-
         // 注册验证码(无感模式不走验证码，开启也不走)
         $captcha = '';  // 默认为空将不走验证
         if ((bool)$settings->get('register_captcha') &&
@@ -136,7 +137,6 @@ class RegisterUser
         $validator->valid($attrs_to_validate);
 
         $user->save();
-
         $user->raise(new Registered($user, $this->actor, $this->data));
 
         $this->dispatchEventsFor($user, $this->actor);
