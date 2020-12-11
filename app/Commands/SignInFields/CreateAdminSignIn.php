@@ -81,13 +81,14 @@ class CreateAdminSignIn
         }
         $data = [];
         foreach ($attributes as $attribute) {
-            if (isset($attribute['id'])) {
+            if (!empty($attribute['id'])) {
                 $adminSignIn = AdminSignInFields::query()->where('id', $attribute['id'])->first();
                 if (empty($adminSignIn)) {
                     continue;
                 }
+            }else{
+                $adminSignIn = new AdminSignInFields();
             }
-            $adminSignIn = new AdminSignInFields();
             foreach ($attribute as $key => $value) {
                 in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status']) && $adminSignIn[$key] = $value;
             }
