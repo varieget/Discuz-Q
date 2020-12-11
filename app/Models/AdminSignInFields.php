@@ -33,7 +33,8 @@ class AdminSignInFields extends DzqModel
 
     protected $table = 'admin_sign_in_fields';
 
-    const STATUS_DELETE = 0; //废弃
+    const STATUS_UNACTIVE = -1;//未启用
+    const STATUS_DELETE = 0; //删除
     const STATUS_ACTIVE = 1; //启用
 
     const TYPE_SINGLE_LINE = 0;
@@ -57,8 +58,8 @@ class AdminSignInFields extends DzqModel
      */
     public function getAdminSignInFields()
     {
-        $ret = self::query()->select(['id', 'name', 'type', 'fields_ext', 'fields_desc','sort'])
-            ->where('status', self::STATUS_ACTIVE)
+        $ret = self::query()->select(['id', 'name', 'type', 'fields_ext', 'fields_desc','sort','status','required'])
+            ->where('status', '!=',self::STATUS_DELETE)
             ->orderBy('sort', 'asc')
             ->get()->toArray();
         array_walk($ret, function (&$item) {

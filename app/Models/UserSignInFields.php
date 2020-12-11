@@ -48,6 +48,7 @@ class UserSignInFields extends DzqModel
         $userSignIn = array_column($userSignIn, null, 'aid');
         $result = [];
         foreach ($adminSignIn as $item) {
+            if ($item['status'] != AdminSignInFields::STATUS_ACTIVE) continue;
             $data = [
                 'aid' => $item['id'],
                 'name' => $item['name'],
@@ -56,12 +57,12 @@ class UserSignInFields extends DzqModel
                 'type_desc' => $item['type_desc'],
             ];
             if (isset($userSignIn[$item['id']])) {
-                $data['id']=$userSignIn[$item['id']]['id'];
+                $data['id'] = $userSignIn[$item['id']]['id'];
                 $data['fields_ext'] = $userSignIn[$item['id']]['fields_ext'];
                 $data['remark'] = $userSignIn[$item['id']]['remark'];
                 $data['status'] = $userSignIn[$item['id']]['status'];
             } else {
-                $data['id']='';
+                $data['id'] = '';
                 $data['fields_ext'] = $item['fields_ext'];
                 $data['remark'] = '';
                 $data['status'] = self::STATUS_AUDIT;
@@ -83,8 +84,8 @@ class UserSignInFields extends DzqModel
         foreach ($attributes as $attribute) {
             if (!empty($attribute['id'])) {//更新
                 $userSignIn = self::query()->where('id', $attribute['id'])
-                    ->where('status','!=',self::STATUS_DELETE)
-                    ->where('user_id',$userId)
+                    ->where('status', '!=', self::STATUS_DELETE)
+                    ->where('user_id', $userId)
                     ->first();
                 if (empty($userSignIn)) {
                     continue;

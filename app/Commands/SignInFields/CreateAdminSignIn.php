@@ -90,7 +90,7 @@ class CreateAdminSignIn
                 $adminSignIn = new AdminSignInFields();
             }
             foreach ($attribute as $key => $value) {
-                in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status']) && $adminSignIn[$key] = $value;
+                in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status','required']) && $adminSignIn[$key] = $value;
             }
             $adminSignIn->save() && $data[] = $adminSignIn;
         }
