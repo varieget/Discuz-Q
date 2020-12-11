@@ -36,7 +36,8 @@ class CreateAdminSignInFields extends Migration
             $table->text('fields_ext')->comment('字段扩展信息，Json表示选项内容');
             $table->text('fields_desc')->comment('字段介绍');
             $table->tinyInteger('sort')->default(1)->comment('自定义显示顺序');
-            $table->tinyInteger('status')->default(1)->comment('0:废弃 1：启用');
+            $table->tinyInteger('status')->default(1)->comment('-1:未启用 0:删除 1：启用');
+            $table->tinyInteger('required')->default(1)->comment('是否必填项 0:否 1:是');
             $table->timestamp('created_at')->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
         });
