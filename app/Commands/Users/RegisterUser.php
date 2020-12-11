@@ -24,7 +24,6 @@ use App\Events\Users\Saving;
 use App\Exceptions\TranslatorException;
 use App\Models\Invite;
 use App\Models\User;
-use App\Models\UserSignInFields;
 use App\Validators\UserValidator;
 use Carbon\Carbon;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -97,11 +96,11 @@ class RegisterUser
         $censor->checkText(Arr::get($this->data, 'username'), 'username');
 
         // 注册原因
-        if ($settings->get('register_validate', 'default', false)) {
-            if (!Arr::has($this->data, 'register_reason')) {
-                throw new TranslatorException('setting_fill_register_reason');
-            }
-        }
+//        if ($settings->get('register_validate', 'default', false)) {
+//            if (!Arr::has($this->data, 'register_reason')) {
+//                throw new TranslatorException('setting_fill_register_reason');
+//            }
+//        }
 
         $user = User::register(Arr::only($this->data, ['username', 'password', 'register_ip', 'register_port', 'register_reason']));
         // 注册验证码(无感模式不走验证码，开启也不走)
