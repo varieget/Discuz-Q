@@ -74,15 +74,25 @@ class CreateAdminSignIn
      */
     public function handle()
     {
-        $data = $this->data['attributes'];
-        $adminSignIn = new AdminSignInFields();
-        $adminSignIn->name = $data['name'];
-        $adminSignIn->type = $data['type'];
-        $adminSignIn->fields_ext = $data['fields_ext'];
-        $adminSignIn->fields_desc = $data['fields_desc'];
-        $adminSignIn->sort = $data['sort'];
-        $adminSignIn->save();
-        return $adminSignIn;
+        if (isset($this->data['attributes'])) {
+            $attributes = [$this->data['attributes']];
+        } else {
+            $attributes = array_column($this->data, 'attributes');
+        }
+        $data = [];
+        foreach ($attributes as $attribute) {
+            if (isset($attribute['id'])) {
+                $adminSignIn = AdminSignInFields::query()->where('id', $attribute['id'])->first();
+                if (empty($adminSignIn)) {
+                    continue;
+                }
+            }
+            $adminSignIn = new AdminSignInFields();
+            foreach ($attribute as $key => $value) {
+                in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status']) && $adminSignIn[$key] = $value;
+            }
+            $adminSignIn->save() && $data[] = $adminSignIn;
+        }
+        return $data;
     }
-
 }
