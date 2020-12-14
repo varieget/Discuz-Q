@@ -157,4 +157,16 @@ class UserSignInFields extends DzqModel
         return true;
     }
 
+    /**
+     *查询用户填写的扩展字段信息
+     */
+    public function getUserRecordFields($userId)
+    {
+        return self::query()
+            ->select(['id', 'aid', 'user_id', 'fields_ext', 'remark', 'status'])
+            ->where('user_id', $userId)
+            ->where('status', '!=', self::STATUS_DELETE)
+            ->get();
+    }
+
 }
