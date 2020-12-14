@@ -133,6 +133,7 @@ class RegisterUser
         if ($password === '') {
             unset($attrs_to_validate['password']);
         }
+        unset($attrs_to_validate['register_reason']);
         $validator->valid($attrs_to_validate);
 
         $user->save();
