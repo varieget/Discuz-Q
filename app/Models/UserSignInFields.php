@@ -166,7 +166,7 @@ class UserSignInFields extends DzqModel
             ->select(['id', 'aid', 'user_id', 'fields_ext', 'remark', 'status'])
             ->where('user_id', $userId)
             ->where('status', '!=', self::STATUS_DELETE)
-            ->get();
+            ->get()->toArray();
     }
 
 }
