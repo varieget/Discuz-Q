@@ -55,6 +55,7 @@ class UserSignInFields extends DzqModel
                 'type' => $item['type'],
                 'fields_desc' => $item['fields_desc'],
                 'type_desc' => $item['type_desc'],
+                'required'=>$item['required']
             ];
             if (isset($userSignIn[$item['id']])) {
                 $data['id'] = $userSignIn[$item['id']]['id'];
@@ -104,7 +105,6 @@ class UserSignInFields extends DzqModel
                 $userSignIn->setRawAttributes($rawData);
                 $userSignIn->save();
             } else {//新建
-                //todo 不能重复添加 by coralchu
                 $userSignIn = new UserSignInFields();
                 $rawData = [
                     'aid' => $attribute['aid'],
