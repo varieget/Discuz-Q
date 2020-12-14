@@ -628,6 +628,12 @@ class User extends Model
             ->withPivot('expiration_time');
     }
 
+    public function extFields()
+    {
+        return $this->hasMany(UserSignInFields::class, 'user_id')
+            ->select('id', 'aid', 'user_id', 'fields_ext', 'remark', 'status');
+    }
+
     /**
      * Define the relationship with the user's favorite threads.
      *
