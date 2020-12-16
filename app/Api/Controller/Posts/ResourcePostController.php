@@ -63,6 +63,7 @@ class ResourcePostController extends AbstractResourceController
         'commentPosts.user.groups',
         'commentPosts.replyUser',
         'commentPosts.replyUser.groups',
+        'commentPosts.commentPostId',
         'commentPosts.mentionUsers',
         'commentPosts.images',
         'images',
