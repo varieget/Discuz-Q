@@ -67,4 +67,13 @@ class AdminSignInFields extends DzqModel
         });
         return $ret;
     }
+    public function getAdminSignIn($id){
+        $r =  self::query()->where('id',$id)->first();
+        if(empty($r)){
+            return '';
+        }else{
+            return $r['type'];
+        }
+
+    }
 }
