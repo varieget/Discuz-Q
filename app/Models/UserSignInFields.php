@@ -159,6 +159,8 @@ class UserSignInFields extends DzqModel
 
     /**
      *查询用户填写的扩展字段信息
+     * @param $userId
+     * @return array
      */
     public function getUserRecordFields($userId)
     {

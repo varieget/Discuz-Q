@@ -19,6 +19,7 @@ namespace App\Api\Serializer;
 
 
 use Discuz\Api\Serializer\AbstractSerializer;
+use App\Models\AdminSignInFields;
 
 class UserSignInSerializer extends AbstractSerializer
 {
@@ -26,9 +27,12 @@ class UserSignInSerializer extends AbstractSerializer
 
     protected function getDefaultAttributes($model)
     {
-        if(is_array($model)){
-            return $model;
+        if (!is_array($model)) {
+            $model = $model->toArray();
         }
-        return $model->toArray();
+        $aid = $model['aid'];
+        $admin = AdminSignInFields::instance()->getAdminSignIn($aid);
+        $model['type'] = $admin;
+        return $model;
     }
 }
