@@ -18,6 +18,7 @@
 
 namespace App\Api\Serializer;
 
+use App\Models\User;
 use Discuz\Api\Serializer\AbstractSerializer;
 
 class TokenSerializer extends AbstractSerializer
@@ -50,7 +51,7 @@ class TokenSerializer extends AbstractSerializer
             'access_token' => $model->access_token,
             'refresh_token' => $model->refresh_token,
         ];
-
+        User::$NEW_USER && $build['new_user'] = User::$NEW_USER;
         return $build;
     }
 
