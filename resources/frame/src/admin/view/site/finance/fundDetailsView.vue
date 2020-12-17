@@ -5,7 +5,17 @@
           <span class="fund-details__search-condition__title">用户名：</span>
           <el-input v-model="userName" clearable placeholder="搜索用户名"></el-input>
         </div>
-
+        <div class="fund-details__search-condition">
+          <span class="fund-details__search-condition__title">金额类型</span>
+          <el-select v-model="amountType" collapse-tags multiple placeholder="请选择">
+          <el-option
+            v-for="item in options"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+        </div>
         <div class="fund-details__search-condition">
           <span  class="fund-details__search-condition__title">变动时间：</span>
           <el-date-picker
@@ -34,6 +44,8 @@
       <div class="fund-details-table">
         <el-table
           :data="tableData"
+          :summary-method="getSummaries"
+          show-summary
           style="width: 100%">
 
           <el-table-column
@@ -64,9 +76,7 @@
             prop="_data.change_desc"
             label="变动描述">
           </el-table-column>
-
         </el-table>
-
         <Page
           v-if="pageCount > 1"
           @current-change="handleCurrentChange"
