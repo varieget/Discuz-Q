@@ -38,7 +38,6 @@
         <div class="fund-details__search-condition">
           <el-button  type="primary" size="medium" @click="searchClick">搜索</el-button>
         </div>
-
       </div>
 
       <div class="fund-details-table">

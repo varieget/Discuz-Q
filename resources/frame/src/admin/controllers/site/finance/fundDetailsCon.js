@@ -213,6 +213,7 @@ export default {
       }).catch(err=>{
       })
     },
+    
     // 合计
     getSummaries(param) {
       const { columns, data } = param;
