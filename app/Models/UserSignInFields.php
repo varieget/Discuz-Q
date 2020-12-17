@@ -55,7 +55,7 @@ class UserSignInFields extends DzqModel
                 'type' => $item['type'],
                 'fields_desc' => $item['fields_desc'],
                 'type_desc' => $item['type_desc'],
-                'required'=>$item['required']
+                'required' => $item['required']
             ];
             if (isset($userSignIn[$item['id']])) {
                 $data['id'] = $userSignIn[$item['id']]['id'];
@@ -165,10 +165,19 @@ class UserSignInFields extends DzqModel
     public function getUserRecordFields($userId)
     {
         return self::query()
-            ->select(['id', 'aid', 'user_id', 'fields_ext', 'remark', 'status'])
-            ->where('user_id', $userId)
-            ->where('status', '!=', self::STATUS_DELETE)
-            ->get()->toArray();
+            ->select(
+                'user_sign_in_fields.id',
+                'user_sign_in_fields.aid',
+                'user_sign_in_fields.user_id',
+                'user_sign_in_fields.fields_ext',
+                'user_sign_in_fields.remark',
+                'user_sign_in_fields.status',
+                'admin_sign_in_fields.type'
+            )
+            ->leftJoin('admin_sign_in_fields', 'admin_sign_in_fields.id', '=', 'user_sign_in_fields.aid')
+            ->where('user_sign_in_fields.user_id', $userId)
+            ->where('user_sign_in_fields.status', '!=', self::STATUS_DELETE)
+            ->get()->all();
     }
 
 }

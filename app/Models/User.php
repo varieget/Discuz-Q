@@ -633,7 +633,15 @@ class User extends Model
     public function extFields()
     {
         return $this->hasMany(UserSignInFields::class, 'user_id')
-            ->select('id', 'aid', 'user_id', 'fields_ext', 'remark', 'status');
+            ->select('user_sign_in_fields.id',
+                'user_sign_in_fields.aid',
+                'user_sign_in_fields.user_id',
+                'user_sign_in_fields.fields_ext',
+                'user_sign_in_fields.remark',
+                'user_sign_in_fields.status',
+                'admin_sign_in_fields.type'
+            )
+            ->leftJoin('admin_sign_in_fields','admin_sign_in_fields.id','=','user_sign_in_fields.aid');
     }
 
     /**
