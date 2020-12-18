@@ -19,7 +19,6 @@
 namespace App\Api\Serializer;
 
 use App\Common\CacheKey;
-use App\Models\User;
 use Discuz\Api\Serializer\AbstractSerializer;
 
 class TokenSerializer extends AbstractSerializer
@@ -57,8 +56,8 @@ class TokenSerializer extends AbstractSerializer
         $cacheKey = CacheKey::NEW_USER_LOGIN . $userId;
         $data = $cache->get($cacheKey);
         if (!empty($data)) {
-            $cache->delete($cacheKey);
             $build['new_user'] = true;
+            $cache->put($cacheKey,$data,10);
         }
         return $build;
     }
