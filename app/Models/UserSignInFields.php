@@ -172,7 +172,8 @@ class UserSignInFields extends DzqModel
                 'user_sign_in_fields.fields_ext',
                 'user_sign_in_fields.remark',
                 'user_sign_in_fields.status',
-                'admin_sign_in_fields.type'
+                'admin_sign_in_fields.type',
+                'admin_sign_in_fields.fields_desc'
             )
             ->leftJoin('admin_sign_in_fields', 'admin_sign_in_fields.id', '=', 'user_sign_in_fields.aid')
             ->where('user_sign_in_fields.user_id', $userId)
