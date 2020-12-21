@@ -29,13 +29,15 @@ class CreateUserSignInFields extends Migration
     {
         $this->schema()->create('user_sign_in_fields', function (Blueprint $table) {
             $table->unsignedBigInteger('id',true)->comment('自增id');
-            $table->unsignedBigInteger('aid')->nullable(false)->comment('自增id');
             $table->unsignedBigInteger('user_id')->index()->comment('用户user_id');
+            $table->string('name', 20)->nullable(false)->comment('用户端显示的字段名称');
             $table->tinyInteger('type')->default(0)->comment('0:单行文本框 1:多行文本框 2:单选 3:复选 4:图片上传 5:附件上传');
             $table->text('fields_ext')->comment('字段扩展信息，Json表示选项内容');
             $table->text('fields_desc')->comment('字段介绍');
             $table->string('remark',200)->default('')->comment('审核意见');
+            $table->tinyInteger('sort')->default(1)->comment('自定义显示顺序');
             $table->tinyInteger('status')->default(1)->comment('0:废弃 1:待审核 2:驳回 3:审核通过');
+            $table->tinyInteger('required')->default(1)->comment('是否必填项 0:否 1:是');
             $table->timestamp('created_at')->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
         });
