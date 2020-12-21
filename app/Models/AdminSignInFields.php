@@ -67,6 +67,14 @@ class AdminSignInFields extends DzqModel
         });
         return $ret;
     }
+    public function getActiveAdminSignInFields()
+    {
+        $ret = self::query()->select(['id', 'name', 'type', 'fields_ext', 'fields_desc','sort','status','required'])
+            ->where('status', '=',self::STATUS_ACTIVE)
+            ->orderBy('sort', 'asc')
+            ->get()->toArray();
+        return $ret;
+    }
     public function getAdminSignIn($id){
         $r =  self::query()->where('id',$id)->first();
         if(empty($r)){

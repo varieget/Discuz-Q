@@ -408,8 +408,9 @@ $route->delete('/cache', 'cache.clear', ApiController\Cache\CacheController::cla
 */
 $route->get('/admin/signinfields','admin.signinfields.list',ApiController\SignInFields\ListAdminSignInController::class);
 $route->post('/admin/signinfields','admin.signinfields.create',ApiController\SignInFields\CreateAdminSignInController::class);
-$route->delete('/admin/signinfields/{id}','admin.signinfields.delete',ApiController\SignInFields\DeleteAdminSignInController::class);
-$route->post('/admin/signinfields/{ids}','admin.signinfields.update',ApiController\SignInFields\UpdateAdminSignInController::class);
+//管理员审核用户扩展信息
+$route->get('/user/signinfields/{id}','user.signinfields.resource',ApiController\SignInFields\ResourceUserSignInController::class);
+$route->post('/user/signinfields/{id}','admin.signinfields.update',ApiController\SignInFields\UpdateUserSignInController::class);
 /*
 |--------------------------------------------------------------------------
 | 前台扩展字段
@@ -419,7 +420,5 @@ $route->post('/admin/signinfields/{ids}','admin.signinfields.update',ApiControll
 $route->get('/user/signinfields','user.signinfields.list',ApiController\SignInFields\ListUserSignInController::class);
 //用户首次提交扩展字段信息或者被驳回之后再次提交
 $route->post('/user/signinfields','user.signinfields.create',ApiController\SignInFields\CreateUserSignInController::class);
-//管理员审核用户扩展信息
-$route->get('/user/signinfields/{id}','user.signinfields.resource',ApiController\SignInFields\ResourceUserSignInController::class);
-$route->post('/user/signinfields/{id}','admin.signinfields.update',ApiController\SignInFields\UpdateUserSignInController::class);
+
 

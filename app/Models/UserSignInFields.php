@@ -39,49 +39,31 @@ class UserSignInFields extends DzqModel
     public function getUserSignInFields($userId)
     {
         if (empty($userId)) $userId = $this->userId;
-        $adminSignIn = AdminSignInFields::instance()->getAdminSignInFields();
-        $userSignIn = self::query()
-            ->select(['id', 'aid', 'user_id', 'fields_ext', 'remark', 'status'])
+        $extList = self::query()
+            ->select(['id','user_id','name','type', 'fields_ext','fields_desc', 'remark','sort', 'status','required'])
             ->where('user_id', $userId)
             ->where('status', '!=', self::STATUS_DELETE)
+            ->orderBy('sort','asc')
             ->get()->toArray();
-        $userSignIn = array_column($userSignIn, null, 'aid');
-        $result = [];
-        foreach ($adminSignIn as $item) {
-            if ($item['status'] != AdminSignInFields::STATUS_ACTIVE) continue;
-            $data = [
-                'aid' => $item['id'],
-                'name' => $item['name'],
-                'type' => $item['type'],
-                'fields_desc' => $item['fields_desc'],
-                'type_desc' => $item['type_desc'],
-                'required' => $item['required']
-            ];
-            if (isset($userSignIn[$item['id']])) {
-                $data['id'] = $userSignIn[$item['id']]['id'];
-                $data['fields_ext'] = $userSignIn[$item['id']]['fields_ext'];
-                $data['remark'] = $userSignIn[$item['id']]['remark'];
-                $data['status'] = $userSignIn[$item['id']]['status'];
-            } else {
-                $data['id'] = '';
-                $data['fields_ext'] = $item['fields_ext'];
-                $data['remark'] = '';
-                $data['status'] = self::STATUS_AUDIT;
-            }
-            $result[] = $data;
+        if(empty($extList)){
+            $extList =  AdminSignInFields::instance()->getActiveAdminSignInFields();
+            array_walk($extList, function (&$item) {
+                $item['id'] = '';
+            });
         }
-        return $result;
+        return $extList;
     }
 
     /**
      *用户新建或编辑扩展字段内容
      * @param $userId
      * @param $attributes
-     * @return bool
+     * @return array
      */
     public function userSaveUserSignInFields($userId, $attributes)
     {
         if (empty($userId)) $userId = $this->userId;
+        $data = [];
         foreach ($attributes as $attribute) {
             if (!empty($attribute['id'])) {//更新
                 $userSignIn = self::query()->where('id', $attribute['id'])
@@ -96,39 +78,37 @@ class UserSignInFields extends DzqModel
                     $userSignIn->save();
                     $userSignIn = new UserSignInFields();
                 }
-                $rawData = [
-                    'aid' => $attribute['aid'],
-                    'user_id' => $userId,
-                    'fields_ext' => $attribute['fields_ext'],
-                    'status' => self::STATUS_AUDIT,
-                ];
-                $userSignIn->setRawAttributes($rawData);
-                $userSignIn->save();
             } else {//新建
                 $userSignIn = new UserSignInFields();
-                $rawData = [
-                    'aid' => $attribute['aid'],
-                    'user_id' => $userId,
-                    'fields_ext' => $attribute['fields_ext'],
-                    'status' => self::STATUS_AUDIT,
-                ];
-                $userSignIn->setRawAttributes($rawData);
-                $userSignIn->save();
             }
+            $rawData = [
+                'user_id' => $userId,
+                'name'=>$attribute['name'],
+                'type'=>$attribute['type'],
+                'fields_ext' => $attribute['fields_ext'],
+                'fields_desc'=>$attribute['fields_desc'],
+                'sort'=>$attribute['sort'],
+                'status' => self::STATUS_AUDIT,
+                'required'=>$attribute['required']
+            ];
+            $userSignIn->setRawAttributes($rawData);
+            $userSignIn->save();
+            $data[]=$userSignIn;
         }
-        return true;
+        return $data;
     }
 
     /**
      *管理员审核扩展信息
      * @param $userId
      * @param $attributes
-     * @return bool
+     * @return array
      */
     public function adminSaveUserSignInFields($userId, $attributes)
     {
         if (empty($userId)) $userId = $this->userId;
         $isAuditPass = true;
+        $data = [];
         foreach ($attributes as $attribute) {
             $userSignIn = self::query()->where('id', $attribute['id'])
                 ->where('user_id', $userId)
@@ -137,7 +117,6 @@ class UserSignInFields extends DzqModel
                 continue;
             }
             $rawData = [
-                'aid' => $attribute['aid'],
                 'user_id' => $userId,
                 'fields_ext' => $attribute['fields_ext'],
                 'remark' => $attribute['remark'],
@@ -148,13 +127,14 @@ class UserSignInFields extends DzqModel
             if (!$userSignIn->save()) {
                 $isAuditPass = false;
             }
+            $data[]=$userSignIn;
         }
         if ($isAuditPass) {
             $user = User::query()->where('id', $userId)->get()->first();
             $user->status = User::STATUS_NORMAL;
             $user->save();
         }
-        return true;
+        return $data;
     }
 
     /**
@@ -165,20 +145,8 @@ class UserSignInFields extends DzqModel
     public function getUserRecordFields($userId)
     {
         return self::query()
-            ->select(
-                'user_sign_in_fields.id',
-                'user_sign_in_fields.aid',
-                'user_sign_in_fields.user_id',
-                'user_sign_in_fields.fields_ext',
-                'user_sign_in_fields.remark',
-                'user_sign_in_fields.status',
-                'admin_sign_in_fields.type',
-                'admin_sign_in_fields.fields_desc',
-                'admin_sign_in_fields.name'
-            )
-            ->leftJoin('admin_sign_in_fields', 'admin_sign_in_fields.id', '=', 'user_sign_in_fields.aid')
-            ->where('user_sign_in_fields.user_id', $userId)
-            ->where('user_sign_in_fields.status', '!=', self::STATUS_DELETE)
+            ->where('user_id', $userId)
+            ->where('status', '!=', self::STATUS_DELETE)
             ->get()->all();
     }
 

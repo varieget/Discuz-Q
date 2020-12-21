@@ -33,7 +33,7 @@ class UpdateUserSignIn
         $this->data = $data;
     }
     public function handle(){
-        $attributes = array_column($this->data,'attributes');
+        $attributes = $this->data['attributes'];
         return UserSignInFields::instance()->adminSaveUserSignInFields($this->id,$attributes);
     }
 }
