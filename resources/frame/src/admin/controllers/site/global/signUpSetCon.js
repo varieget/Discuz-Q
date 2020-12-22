@@ -21,6 +21,7 @@ export default {
       privacy_content:'',
       registerFull: false,
       privacyFull: false,
+      extensionOn: false,
     }
   },
   created(){
@@ -39,6 +40,7 @@ export default {
           this.$message.error(res.errors[0].code);
         }else {
           const agreement = res.readdata._data.agreement;
+          console.log(res);
           // this.pwdLength = res.readdata._data.setreg.password_length
           this.checked = res.readdata._data.set_reg.register_close;
           this.register_validate = res.readdata._data.set_reg.register_validate;
@@ -50,6 +52,7 @@ export default {
           this.register = agreement.register ? "1" : "0";
           this.register_content = agreement.register_content;
           this.privacy_content = agreement.privacy_content;
+          this.extensionOn = res.readdata._data.set_site.open_ext_fields === '1' ? true : false;
           // 旧注册登陆模式的禁用控制
           if(res.readdata._data.qcloud.qcloud_sms == true) {
             this.qcloud_sms = false
@@ -176,6 +179,13 @@ export default {
                 "tag": 'default'
                }
             },
+            {
+              "attributes":{
+                "key":'open_ext_fields',
+                "value": this.extensionOn ? 1 : 0,
+                "tag": 'default'
+               }
+            },
            ]
         }
       }).then(data=>{
@@ -191,6 +201,12 @@ export default {
         }
       })
 
+    },
+    configurat() {
+      console.log('配置信息');
+      this.$router.push({
+        path: "/admin/registration-btn",
+      });
     }
   },
   components:{
