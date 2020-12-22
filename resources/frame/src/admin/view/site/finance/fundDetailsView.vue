@@ -1,5 +1,6 @@
 <template>
     <div class="fund-details-box">
+      <!-- 搜索条件 -->
       <div class="fund-details__search-box">
         <div class="fund-details__search-condition">
           <span class="fund-details__search-condition__title">用户名：</span>
@@ -30,7 +31,7 @@
         </div>
 
       </div>
-
+      <!-- 资金明细列表 -->
       <div class="fund-details-table">
         <el-table
           :data="tableData"
@@ -66,7 +67,7 @@
           </el-table-column>
 
         </el-table>
-
+        <!-- 分页 -->
         <Page
           v-if="pageCount > 1"
           @current-change="handleCurrentChange"

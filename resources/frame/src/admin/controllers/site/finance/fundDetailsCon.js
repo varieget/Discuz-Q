@@ -9,7 +9,7 @@ import webDb from 'webDbHelper';
 export default {
   data:function () {
     return {
-      tableData: [],
+      tableData: [],             //列表数据
       pickerOptions: {
         shortcuts: [{
           text: '最近一周',
@@ -36,10 +36,10 @@ export default {
             picker.$emit('pick', [start, end]);
           }
         }]
-      },
-      userName:'',
-      changeTime:['',''],
-      changeDescription:'',
+      },                         //搜索-变动时间
+      userName:'',               //搜索-用户名
+      changeTime:['',''],        //搜索-变动时间范围
+      changeDescription:'',      //搜索-变动描述
 
       total:0,                    //总数
       pageCount:0,                //总页数
@@ -47,7 +47,9 @@ export default {
     }
   },
   methods:{
-
+    /*
+    * 搜索
+    * */
     searchClick(){
       if (this.changeTime == null){
         this.changeTime = ['','']
@@ -58,7 +60,9 @@ export default {
       this.currentPaga = 1;
       this.getFundingDetailsList();
     },
-
+    /*
+    * 切换分页
+    * */
     handleCurrentChange(val){
       this.currentPaga = val;
       this.getFundingDetailsList();
@@ -73,7 +77,7 @@ export default {
 
 
     /*
-    * 接口请求
+    * 接口请求 -- 获取资金明细数据
     * */
     getFundingDetailsList(){
       this.appFetch({
@@ -109,10 +113,6 @@ export default {
       }
       this.getFundingDetailsList();
     }
-  },
-  created(){
-    // this.currentPaga = Number(webDb.getLItem('currentPag'))||1;
-    // this.getFundingDetailsList(Number(webDb.getLItem('currentPag'))||1);
   },
   beforeRouteEnter (to,from,next){
     next(vm => {
