@@ -21,14 +21,17 @@ namespace App\Api\Controller\SignInFields;
 use App\Api\Serializer\AdminSignInSerializer;
 use App\Models\AdminSignInFields;
 use Discuz\Api\Controller\AbstractListController;
+use Discuz\Auth\AssertPermissionTrait;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
 
 class ListAdminSignInController extends AbstractListController
 {
+    use AssertPermissionTrait;
     public $serializer = AdminSignInSerializer::class;
     protected function data(ServerRequestInterface $request, Document $document)
     {
+        $this->assertAdmin($request->getAttribute('actor'));
         return AdminSignInFields::instance()->getAdminSignInFields();
     }
 }

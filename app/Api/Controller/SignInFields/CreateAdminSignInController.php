@@ -21,6 +21,7 @@ namespace App\Api\Controller\SignInFields;
 use App\Api\Serializer\AdminSignInSerializer;
 use App\Commands\SignInFields\CreateAdminSignIn;
 use Discuz\Api\Controller\AbstractCreateController;
+use Discuz\Auth\AssertPermissionTrait;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
@@ -29,6 +30,7 @@ use Tobscure\JsonApi\Document;
 
 class CreateAdminSignInController extends AbstractCreateController
 {
+    use AssertPermissionTrait;
     public $serializer = AdminSignInSerializer::class;
     public $include = [
         'user',
@@ -70,6 +72,7 @@ class CreateAdminSignInController extends AbstractCreateController
         $ip = ip($request->getServerParams());
         $port = Arr::get($request->getServerParams(), 'REMOTE_PORT', 0);
         $data = $request->getParsedBody()->get('data');
+        $this->assertAdmin($actor);
 //        vendor/illuminate/bus/Dispatcher.php
         return $this->bus->dispatch(
             new CreateAdminSignIn($actor, $data, $ip, $port)

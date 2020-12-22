@@ -31,7 +31,7 @@ class ListUserSignInController extends AbstractListController
     {
         $actor = $request->getAttribute('actor');
         $params = $request->getQueryParams();
-        $userId = Arr::get($params, 'user_id');
+        $userId = $actor->id;
         return UserSignInFields::instance()->getUserSignInFields($userId);
     }
 }
