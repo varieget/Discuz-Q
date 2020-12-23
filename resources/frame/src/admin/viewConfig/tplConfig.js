@@ -55,7 +55,7 @@ export default {
           "registration-btn" : {
             comLoad: function (resolve) {
               require([
-                "../view/site/global/registrationLoginPage/configUratIoninformationView"
+                "../view/site/global/registrationLoginPage/expandPageView"
               ], resolve);
             },
             metaInfo: {
