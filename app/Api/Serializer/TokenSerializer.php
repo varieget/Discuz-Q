@@ -19,6 +19,7 @@
 namespace App\Api\Serializer;
 
 use App\Common\CacheKey;
+use App\Models\User;
 use Discuz\Api\Serializer\AbstractSerializer;
 
 class TokenSerializer extends AbstractSerializer
@@ -50,6 +51,7 @@ class TokenSerializer extends AbstractSerializer
             'expires_in' => $model->expires_in,
             'access_token' => $model->access_token,
             'refresh_token' => $model->refresh_token,
+            'status'=>$this->getUserStatus()
         ];
         $userId = $this->getId($model);
         $cache = app('cache');
@@ -60,6 +62,18 @@ class TokenSerializer extends AbstractSerializer
             $cache->put($cacheKey,$data,10);
         }
         return $build;
+    }
+
+    public function getUserStatus()
+    {
+        $user = self::getUser();
+        $status = User::STATUS_NORMAL;
+        if (!empty($user)) {
+            if (isset($user['status'])) {
+                $status = $user['status'];
+            }
+        }
+        return $status;
     }
 
     public function getId($model)

@@ -95,6 +95,8 @@ class UserSignInFields extends DzqModel
             $userSignIn->save();
             $data[]=$userSignIn;
         }
+        //修改user的status为2，待审核状态
+        User::setUserStatusMod($userId);
         return $data;
     }
 
