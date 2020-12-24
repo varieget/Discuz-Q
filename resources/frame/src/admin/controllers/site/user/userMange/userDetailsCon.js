@@ -43,6 +43,10 @@ export default {
         {
           value: 3,
           label: "审核拒绝"
+        },
+        {
+          value: 10,
+          label: "待填写注册扩展信息"
         }
       ],
       value: "",
