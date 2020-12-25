@@ -17,6 +17,7 @@
 
 namespace App\Models;
 
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Models\DzqModel;
 
 /**
@@ -35,18 +36,18 @@ class UserSignInFields extends DzqModel
     const STATUS_AUDIT = 1;//待审核
     const STATUS_REJECT = 2;//已驳回
     const STATUS_PASS = 3;//审核通过
-    private $userId = 10;
+
     public function getUserSignInFields($userId)
     {
-        if (empty($userId)) $userId = $this->userId;
+        if (empty($userId)) throw new PermissionDeniedException('用户id错误');
         $extList = self::query()
-            ->select(['id','user_id','name','type', 'fields_ext','fields_desc', 'remark','sort', 'status','required'])
+            ->select(['id', 'user_id', 'name', 'type', 'fields_ext', 'fields_desc', 'remark', 'sort', 'status', 'required'])
             ->where('user_id', $userId)
             ->where('status', '!=', self::STATUS_DELETE)
-            ->orderBy('sort','asc')
+            ->orderBy('sort', 'asc')
             ->get()->toArray();
-        if(empty($extList)){
-            $extList =  AdminSignInFields::instance()->getActiveAdminSignInFields();
+        if (empty($extList)) {
+            $extList = AdminSignInFields::instance()->getActiveAdminSignInFields();
             array_walk($extList, function (&$item) {
                 $item['id'] = '';
             });
@@ -62,8 +63,11 @@ class UserSignInFields extends DzqModel
      */
     public function userSaveUserSignInFields($userId, $attributes)
     {
-        if (empty($userId)) $userId = $this->userId;
+        if (empty($userId)) throw new PermissionDeniedException('用户id错误');
         $data = [];
+        if (User::isStatusMod($userId)) {
+            throw new PermissionDeniedException('管理员审核中...');
+        }
         foreach ($attributes as $attribute) {
             if (!empty($attribute['id'])) {//更新
                 $userSignIn = self::query()->where('id', $attribute['id'])
@@ -83,17 +87,17 @@ class UserSignInFields extends DzqModel
             }
             $rawData = [
                 'user_id' => $userId,
-                'name'=>$attribute['name'],
-                'type'=>$attribute['type'],
+                'name' => $attribute['name'],
+                'type' => $attribute['type'],
                 'fields_ext' => $attribute['fields_ext'],
-                'fields_desc'=>$attribute['fields_desc'],
-                'sort'=>$attribute['sort'],
+                'fields_desc' => $attribute['fields_desc'],
+                'sort' => $attribute['sort'],
                 'status' => self::STATUS_AUDIT,
-                'required'=>$attribute['required']
+                'required' => $attribute['required']
             ];
             $userSignIn->setRawAttributes($rawData);
             $userSignIn->save();
-            $data[]=$userSignIn;
+            $data[] = $userSignIn;
         }
         //修改user的status为2，待审核状态
         User::setUserStatusMod($userId);
@@ -108,7 +112,7 @@ class UserSignInFields extends DzqModel
      */
     public function adminSaveUserSignInFields($userId, $attributes)
     {
-        if (empty($userId)) $userId = $this->userId;
+        if (empty($userId)) throw new PermissionDeniedException('用户id错误');
         $isAuditPass = true;
         $data = [];
         foreach ($attributes as $attribute) {
@@ -129,7 +133,7 @@ class UserSignInFields extends DzqModel
             if (!$userSignIn->save()) {
                 $isAuditPass = false;
             }
-            $data[]=$userSignIn;
+            $data[] = $userSignIn;
         }
         if ($isAuditPass) {
             $user = User::query()->where('id', $userId)->get()->first();
