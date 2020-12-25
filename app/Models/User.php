@@ -858,5 +858,14 @@ class User extends Model
         }
         return $user->save();
     }
+    public static function isStatusMod($userId){
+        $user = User::query()->find($userId);
+        if(!empty($user)){
+            if($user->status == self::STATUS_MOD){
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
