@@ -267,6 +267,14 @@ export default {
       } else {
         this.$message.warning('请选择需要删除的字段');
       }
+    },
+    channelInputLimit (e) {
+      let key = e.key;
+      if (key === 'e' || key === '.') {
+        e.returnValue = false
+        return false
+      }
+      return true
     }
   },
   components: {
