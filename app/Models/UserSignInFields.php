@@ -18,6 +18,7 @@
 namespace App\Models;
 
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Models\DzqModel;
 
 /**
@@ -64,10 +65,14 @@ class UserSignInFields extends DzqModel
     public function userSaveUserSignInFields($userId, $attributes)
     {
         if (empty($userId)) throw new PermissionDeniedException('用户id错误');
-        $data = [];
-        if (User::isStatusMod($userId)) {
-            throw new PermissionDeniedException('register_validate');
+        $settings = app(SettingsRepository::class);
+        $register_validate = $settings->get('register_validate');
+        if ($register_validate) {
+            if (User::isStatusMod($userId)) {
+                throw new PermissionDeniedException('register_validate');
+            }
         }
+        $data = [];
         foreach ($attributes as $attribute) {
             if (!empty($attribute['id'])) {//更新
                 $userSignIn = self::query()->where('id', $attribute['id'])
@@ -100,7 +105,11 @@ class UserSignInFields extends DzqModel
             $data[] = $userSignIn;
         }
         //修改user的status为2，待审核状态
-        User::setUserStatusMod($userId);
+        if ($register_validate) {
+            User::setUserStatusMod($userId);
+        } else {
+            User::setUserStatusNormal($userId);
+        }
         return $data;
     }
 

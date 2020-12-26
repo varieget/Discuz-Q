@@ -858,6 +858,16 @@ class User extends Model
         }
         return $user->save();
     }
+
+    public static function setUserStatusNormal($userId)
+    {
+        $user = User::query()->find($userId);
+        if (!empty($user)) {
+            $user->status = self::STATUS_NORMAL;
+        }
+        return $user->save();
+    }
+
     public static function isStatusMod($userId){
         $user = User::query()->find($userId);
         if(!empty($user)){
