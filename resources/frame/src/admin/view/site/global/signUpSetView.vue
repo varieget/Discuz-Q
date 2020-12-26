@@ -17,7 +17,7 @@
     
     <Card header="扩展信息：">
       <CardRow description="注册时需要用户填写的额外信息">
-        <el-checkbox v-model="extensionOn">注册扩展信息</el-checkbox>
+        <el-checkbox :disabled="extendsBtn" v-model="extensionOn">注册扩展信息</el-checkbox>
         <span class="registration-btn" @click="configurat">配置字段</span>
       </CardRow>
     </Card>

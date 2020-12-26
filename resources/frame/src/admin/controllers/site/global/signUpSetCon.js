@@ -22,10 +22,12 @@ export default {
       registerFull: false,
       privacyFull: false,
       extensionOn: false,
+      extendsBtn: false,
     }
   },
   created(){
     this.signUpSet()//获取前台信息
+    this.extendFun();
   },
   methods:{
     signUpSet(){
@@ -92,6 +94,49 @@ export default {
     },
     changeSize(obj){
        this[obj]= !this[obj];
+    },
+    extendFun() {
+      this.appFetch({
+        url: 'signInFields',
+        method: 'get',
+        data: {},
+      }).then(res => {
+        if (res.readdata.length < 1) {
+          this.extensionOn = false;
+          this.extendsBtn = true;
+          this.extendConfing();
+        } else {
+          this.extendsBtn = false;
+        }
+      }) 
+    },
+    extendConfing() {
+      this.appFetch({
+        url:'settings',
+        method:'post',
+        data:{
+          "data" :[
+            {
+              "attributes":{
+                "key":'open_ext_fields',
+                "value": this.extensionOn ? 1 : 0,
+                "tag": 'default'
+              }
+            }
+          ],
+        }
+      }).then(res => {
+        if (res.errors){
+          if (res.errors[0].detail){
+            this.$message.error(res.errors[0].code + '\n' + res.errors[0].detail[0])
+          } else {
+            this.$message.error(res.errors[0].code);
+          }
+          // this.$message.error(data.errors[0].code);
+        }else {
+          this.signUpSet();
+        }
+      })
     },
     submission(){ //提交注册信息接口
       var reg = /^\d+$|^\d+[.]?\d+$/;
