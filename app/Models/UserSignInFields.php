@@ -66,7 +66,7 @@ class UserSignInFields extends DzqModel
         if (empty($userId)) throw new PermissionDeniedException('用户id错误');
         $data = [];
         if (User::isStatusMod($userId)) {
-            throw new PermissionDeniedException('管理员审核中...');
+            throw new PermissionDeniedException('register_validate');
         }
         foreach ($attributes as $attribute) {
             if (!empty($attribute['id'])) {//更新
