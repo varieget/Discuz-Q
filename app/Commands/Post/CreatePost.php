@@ -180,7 +180,7 @@ class CreatePost
 
         $post = $post->reply(
             $thread->id,
-            trim($censor->checkText(Arr::get($this->data, 'attributes.content'))),
+            trim(Arr::get($this->data, 'attributes.content')),
             $this->actor->id,
             $this->ip,
             $this->port,
@@ -192,7 +192,9 @@ class CreatePost
             (bool) Arr::get($this->data, 'attributes.isComment')
         );
 
-        // 存在审核敏感词时，将回复内容放入待审核
+        $post->content = $censor->checkText($post->content);
+
+        // 存在审核敏感词时，将回复放入待审核
         if ($censor->isMod) {
             $post->is_approved = Post::UNAPPROVED;
         } else {
