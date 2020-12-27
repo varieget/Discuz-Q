@@ -183,6 +183,14 @@
   .el-upload-list__item .el-icon-close {
     display: inline-block;
   }
+
+  .user-details-box-extend {
+    width: 540PX;
+    line-height: 20PX;
+    word-wrap: break-word;
+    word-break: keep-all;
+    overflow: hidden;
+  }
 }
 
 
