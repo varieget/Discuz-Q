@@ -52,6 +52,7 @@
                 <el-button type="text" @click="dialogTableVisibleFun(scope)">查看</el-button>
                 <el-dialog title="扩展信息" :visible.sync="visibleExtends[scope.$index].dialogTableVisible">
                   <el-table
+                  class="user-review-table__box"
                     ref="multipleTable"
                     :data="gridDataFun(scope)"
                     tooltip-effect="dark"
@@ -59,9 +60,13 @@
                     :border="true"
                     @selection-change="handleSelectionChange">
                     <el-table-column
+                      class="user-review-table__trbox"
                       label="字段名称"
                       prop="_data.name"
                       width="100">
+                       <template slot-scope="scope">
+                         <div class="user-review-table__tdbox">{{scope.row._data.name}}</div>
+                       </template>
                     </el-table-column>
 
                     <el-table-column
