@@ -32,26 +32,7 @@ class CreateAdminSignInController extends AbstractCreateController
 {
     use AssertPermissionTrait;
     public $serializer = AdminSignInSerializer::class;
-    public $include = [
-        'user',
-        'category',
-        'firstPost',
-        'firstPost.images',
-        'firstPost.postGoods',
-        'threadVideo',
-    ];
-    /**
-     * {@inheritdoc}
-     */
-    public $optionalInclude = [
-        'question',
-        'question.beUser',
-        'question.beUser.groups',
-        'question.images',
-    ];
-    public $mustInclude = [
 
-    ];
     /**
      * @var Dispatcher
      */

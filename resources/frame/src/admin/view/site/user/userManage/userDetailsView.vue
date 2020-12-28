@@ -177,7 +177,7 @@
       :header="items.name + '：'"
       :class="(items.type === 4 || items.type === 5) ? 'upload-demo-img' : ''"
       :key="index">
-      <p v-if="items.type === 0 || items.type === 1">{{items.fields_ext}}</p>
+      <p class="user-details-box-extend" v-if="items.type === 0 || items.type === 1">{{items.fields_ext}}</p>
       <div v-if="items.type === 3 || items.type === 2">
         <span>{{extendUsers(items)}}</span>
       </div>
