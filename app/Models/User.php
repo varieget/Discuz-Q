@@ -890,4 +890,12 @@ class User extends Model
         ];
     }
 
+    public static function getUserInfo($userId){
+        $user = User::query()->find($userId);
+        if(empty($user)){
+            return false;
+        }
+        return $user->toArray();
+    }
+
 }
