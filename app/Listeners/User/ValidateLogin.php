@@ -18,6 +18,7 @@
 
 namespace App\Listeners\User;
 
+use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
 class ValidateLogin
@@ -26,7 +27,23 @@ class ValidateLogin
     {
         $user = $event->user;
         if ($user->status == 2) {
-            throw new PermissionDeniedException('register_validate');
+            $this->exceptionResponse($user->id, 'register_validate');
+//            throw new PermissionDeniedException('register_validate');
         }
+    }
+
+    private function exceptionResponse($userId, $msg)
+    {
+        $response = [
+            'errors' => [
+                [
+                    'status' => '401',
+                    'code' => $msg,
+                    'data' => User::getUserReject($userId)
+                ]
+            ]
+        ];
+        header('Content-Type:application/json; charset=utf-8', true, 401);
+        exit(json_encode($response, 256));
     }
 }
