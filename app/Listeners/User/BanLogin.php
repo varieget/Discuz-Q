@@ -18,7 +18,7 @@
 
 namespace App\Listeners\User;
 
-use App\Models\UserSignInFields;
+use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Http\DiscuzResponseFactory;
 
@@ -37,7 +37,7 @@ class BanLogin
                         [
                             'status' => '401',
                             'code' => 'validate_reject',
-                            'data' => UserSignInFields::instance()->getUserRejectReason($user->id)
+                            'data' => User::getUserReject($user->id)
                         ]
                     ]
                 ];

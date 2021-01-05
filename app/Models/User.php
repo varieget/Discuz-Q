@@ -53,6 +53,7 @@ use Illuminate\Support\Str;
  * @property string $register_ip
  * @property int $register_port
  * @property string $register_reason
+ * @property string $reject_reason
  * @property string $signature
  * @property string $username_bout
  * @property int $thread_count
@@ -876,6 +877,17 @@ class User extends Model
             }
         }
         return false;
+    }
+    public static function getUserReject($userId){
+        $user = User::query()->find($userId);
+        if(empty($user)){
+            return false;
+        }
+        return [
+            'id'=>$user['id'],
+            'userName'=>$user['username'],
+            'rejectReason'=>$user['reject_reason']
+        ];
     }
 
 }
