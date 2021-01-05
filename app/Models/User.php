@@ -889,13 +889,4 @@ class User extends Model
             'rejectReason'=>$user['reject_reason']
         ];
     }
-
-    public static function getUserInfo($userId){
-        $user = User::query()->find($userId);
-        if(empty($user)){
-            return false;
-        }
-        return $user->toArray();
-    }
-
 }
