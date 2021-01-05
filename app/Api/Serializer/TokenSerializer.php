@@ -54,6 +54,8 @@ class TokenSerializer extends AbstractSerializer
             'status'=>$this->getUserStatus()
         ];
         $userId = $this->getId($model);
+        $userInfo = User::getUserInfo($userId);
+        $build['username'] = $userInfo['username'];
         $cache = app('cache');
         $cacheKey = CacheKey::NEW_USER_LOGIN . $userId;
         $data = $cache->get($cacheKey);
