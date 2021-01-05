@@ -374,7 +374,7 @@ class UpdateUser
         $logMsg = Arr::get($attributes, 'refuse_message', '');
 
         // 审核后系统通知事件
-        $this->setRefuseMessage($user->id,$status,$logMsg);
+        $this->setRefuseMessage($user,$logMsg);
         $this->events->dispatch(new ChangeUserStatus($user, $logMsg));
 
         // 记录用户状态操作日志
@@ -382,15 +382,10 @@ class UpdateUser
     }
 
     //记录拒绝原因
-    private function setRefuseMessage($userId,$status,$refuseMessage){
-        if ($status == User::STATUS_REFUSE) {
-            UserSignInFields::query()
-                ->where(['user_id' => $userId, 'status' => UserSignInFields::STATUS_AUDIT])->get()
-                ->each(function (UserSignInFields &$item) use ($refuseMessage) {
-                    $item->remark = $refuseMessage;
-                    $item->status = UserSignInFields::STATUS_REJECT;
-                    $item->save();
-                });
+    private function setRefuseMessage(User &$user,$refuseMessage){
+        if ($user->status == User::STATUS_REFUSE) {
+            $user->reject_reason = $refuseMessage;
+            $user->save();
         }
     }
 
