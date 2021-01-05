@@ -163,7 +163,7 @@ export default {
     },
     // 点击右侧删除事件
     operationDelete(index) {
-      this.$confirm('删除后，则此字段及其历史用户信息，将从系统钟彻底删除，且无法恢复，请谨慎操作，点击确认删除，则删除', {
+      this.$confirm('删除后，则此字段及其历史用户信息，将从系统中彻底删除，且无法恢复，请谨慎操作，点击确认删除，则删除', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
@@ -252,7 +252,7 @@ export default {
     },
     submitDetele() {
       if (this.arrsLiist.length > 0) {
-        this.$confirm('删除后，则此字段及其历史用户信息，将从系统钟彻底删除，且无法恢复，请谨慎操作，点击确认删除，则删除', {
+        this.$confirm('删除后，则此字段及其历史用户信息，将从系统中彻底删除，且无法恢复，请谨慎操作，点击确认删除，则删除', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
