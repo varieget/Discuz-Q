@@ -879,7 +879,7 @@ class User extends Model
         return false;
     }
     public static function getUserReject($userId){
-        $user = User::query()->find($userId)->first();
+        $user = User::query()->find($userId);
         if(empty($user)){
             return false;
         }
