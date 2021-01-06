@@ -20,6 +20,7 @@ namespace App\Listeners\User;
 
 use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Http\DiscuzResponseFactory;
 
 class ValidateLogin
 {
@@ -34,6 +35,10 @@ class ValidateLogin
 
     private function exceptionResponse($userId, $msg)
     {
+        $crossHeaders = DiscuzResponseFactory::getCrossHeaders();
+        foreach ($crossHeaders as $k => $v) {
+            header($k . ':' . $v);
+        }
         $response = [
             'errors' => [
                 [
