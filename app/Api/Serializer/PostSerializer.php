@@ -55,4 +55,13 @@ class PostSerializer extends BasicPostSerializer
     {
         return $this->hasMany($post, CommentPostSerializer::class);
     }
+
+    /**
+     * @param $post
+     * @return Relationship
+     */
+    protected function commentUser($post)
+    {
+        return $this->hasOne($post, UserSerializer::class);
+    }
 }
