@@ -148,6 +148,7 @@ class ListThreadsController extends AbstractListController
         $this->tablePrefix = config('database.connections.mysql.prefix');
         $this->threadCache = new ThreadCache();
         $this->cache = app('cache');
+        app()->instance('isCalled',true);
     }
 
     /**
