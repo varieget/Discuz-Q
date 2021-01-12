@@ -34,7 +34,7 @@ class PostSerializer extends BasicPostSerializer
 
         $attributes['isFirst'] = (bool) $model->is_first;
         $attributes['isComment'] = false;
-        if (app()->get('isCalled')) {
+        if (app()->has('isCalled')) {
             unset($attributes['contentHtml']);
             unset($attributes['content']);
         }
