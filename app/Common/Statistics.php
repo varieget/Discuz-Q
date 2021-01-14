@@ -24,7 +24,6 @@ class Statistics
     public static function set($key, $value)
     {
         $path = storage_path('statistics') . '/' . sha1($key);
-        chmod(storage_path('statistics'),0777);
         try {
             $f = fopen($path, 'w');
             fwrite($f, serialize($value));
