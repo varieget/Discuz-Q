@@ -70,6 +70,7 @@ class ListPostsController extends AbstractListController
         'lastThreeComments.images',
         'deletedUser',
         'lastDeletedLog',
+        'commentUser',
     ];
 
     /**

@@ -451,7 +451,7 @@ class Post extends Model
      */
     public function replyUser()
     {
-        return $this->belongsTo(User::class, 'reply_user_id');
+        return $this->belongsTo(User::class, 'reply_user_id')->withDefault();
     }
 
     /**
@@ -461,7 +461,7 @@ class Post extends Model
      */
     public function commentUser()
     {
-        return $this->belongsTo(User::class, 'comment_user_id');
+        return $this->belongsTo(User::class, 'comment_user_id')->withDefault();
     }
 
     /**
