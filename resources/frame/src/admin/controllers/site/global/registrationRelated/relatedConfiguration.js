@@ -124,8 +124,13 @@ export default {
             "status": 0
           },
         }
-        data.attributes.id = item.id;
-        this.arrsLiist.push(data);
+        if (item.newly) {
+          let arrData = [];
+          arrData.push(item);
+        } else {
+          data.attributes.id = item.id;
+          this.arrsLiist.push(data);
+        }
       })
     },
     
@@ -180,8 +185,12 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.groupsList.splice(index.$index, 1);
-        this.deleteField(index);
+        if (index.row.newly) {
+          this.groupsList.splice(index.$index, 1);
+        } else {
+          this.groupsList.splice(index.$index, 1);
+          this.deleteField(index);
+        }
       }).catch(() => {
         this.$message({
           type: 'info',
@@ -201,6 +210,7 @@ export default {
         introduce: '',  // 字段介绍
         enable: false,      // 是否启用
         required: false,   // 是否必填
+        newly: 1,  // 用作判断是否新增
       })
     },
 
@@ -253,6 +263,13 @@ export default {
           this.$message.error('字段类型未填写');
           num = false;
           return
+        }
+        if (item.description === 2 || item.description === 3) {
+          if (item.content === '') {
+            this.$message.error('字段选项未填写');
+            num = false;
+            return
+          }
         }
         if (item.sort === '') {
           this.$message.error('字段排序未填写');
