@@ -238,7 +238,7 @@ class Post extends Model
         if (empty($this->attributes['content'])) {
             return $this->attributes['content'];
         }
-
+        empty(static::$formatter) && Post::setFormatter(app()->make(Formatter::class));
         return static::$formatter->render($this->attributes['content']);
     }
 
