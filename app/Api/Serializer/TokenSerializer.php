@@ -81,8 +81,7 @@ class TokenSerializer extends AbstractSerializer
             case PubEnum::PC:
                 $pcNum = Statistics::get($keyPc);
                 !$pcNum && $pcNum = 0;
-                $pcNum+=1;
-                Statistics::set($keyPc, $pcNum);
+                Statistics::set($keyPc, ++$pcNum);
                 break;
             case PubEnum::H5:
                 $h5Num = Statistics::get($keyH5);
