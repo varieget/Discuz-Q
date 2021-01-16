@@ -238,7 +238,7 @@ class Post extends Model
         if (empty($this->attributes['content'])) {
             return $this->attributes['content'];
         }
-
+        empty(static::$formatter) && Post::setFormatter(app()->make(Formatter::class));
         return static::$formatter->render($this->attributes['content']);
     }
 
@@ -451,7 +451,9 @@ class Post extends Model
      */
     public function replyUser()
     {
-        return $this->belongsTo(User::class, 'reply_user_id');
+        return $this->belongsTo(User::class, 'reply_user_id')->withDefault([
+            'id' => 0,
+        ]);
     }
 
     /**
@@ -461,7 +463,9 @@ class Post extends Model
      */
     public function commentUser()
     {
-        return $this->belongsTo(User::class, 'comment_user_id');
+        return $this->belongsTo(User::class, 'comment_user_id')->withDefault([
+            'id' => 0,
+        ]);
     }
 
     /**
@@ -614,8 +618,8 @@ class Post extends Model
         $cacheKey0 = CacheKey::POST_RESOURCE_BY_ID . '0' . $threadId;
         $cacheKey1 = CacheKey::POST_RESOURCE_BY_ID . '1' . $threadId;
         $cache = app('cache');
-        $f1 = $cache->delete($cacheKey0);
-        $f2 = $cache->delete($cacheKey1);
+        $f1 = $cache->forget($cacheKey0);
+        $f2 = $cache->forget($cacheKey1);
         return $f1 || $f2;
     }
 }

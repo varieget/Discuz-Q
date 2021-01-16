@@ -148,6 +148,7 @@ class ListThreadsController extends AbstractListController
         $this->tablePrefix = config('database.connections.mysql.prefix');
         $this->threadCache = new ThreadCache();
         $this->cache = app('cache');
+        app()->instance('isCalled',true);
     }
 
     /**
@@ -180,7 +181,14 @@ class ListThreadsController extends AbstractListController
             $params['userRole'] = $group['id'];
         }
         $cacheKey = CacheKey::LIST_THREAD_HOME_INDEX . md5(json_encode($params, 256));
-        $data = $this->cache->get($cacheKey);
+        $keys = $this->cache->get(CacheKey::LIST_THREAD_KEYS);
+        $data = null;
+        if(!empty($keys)){
+            $keys = json_decode($keys,true);
+            if($keys && in_array($cacheKey,$keys)){
+                $data = $this->cache->get($cacheKey);
+            }
+        }
         if (!empty($data)) {
             $obj  = unserialize($data);
             $metaLinks = $obj->getMetaLinks();
@@ -272,7 +280,7 @@ class ListThreadsController extends AbstractListController
         }
         if ($canCache) {
             $this->threadCache->setThreads($threads);
-            $this->cache->put($cacheKey, serialize($this->threadCache), 1800);
+            $this->cache->put($cacheKey, serialize($this->threadCache), 1800)&&
             $this->appendCache(CacheKey::LIST_THREAD_KEYS, $cacheKey, 1800);
         }
         return $threads;
@@ -643,7 +651,6 @@ class ListThreadsController extends AbstractListController
             ->whereIn('thread_id', $threadIds)
             ->whereNull('deleted_at')
             ->where('is_first', false)
-            ->where('is_comment', false)
             ->where('is_approved', Post::APPROVED)
             ->orderBy('updated_at', 'desc')
             ->get()
