@@ -75,5 +75,6 @@ class FinanceCreateCommand extends AbstractCommand
             ]
         );
         $this->info($date . ' ' . $this->signature);
+        $this->uinStatis();
     }
 }
