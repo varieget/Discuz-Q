@@ -148,7 +148,6 @@ class ListThreadsController extends AbstractListController
         $this->tablePrefix = config('database.connections.mysql.prefix');
         $this->threadCache = new ThreadCache();
         $this->cache = app('cache');
-        app()->instance('isCalled',true);
     }
 
     /**
@@ -163,7 +162,9 @@ class ListThreadsController extends AbstractListController
         $actor = $request->getAttribute('actor');
         $params = $request->getQueryParams();
         $filter = $this->extractFilter($request);
-
+        if (!(isset($filter['viewCountGt']) || isset($filter['viewCountLt']) || isset($filter['postCountGt']) || isset($filter['postCountLt']))) {
+            app()->instance('isCalled', true);
+        }
         // 获取推荐到站点信息页数据时 不检查权限
         if (Arr::get($filter, 'isSite', '') !== 'yes') {
             // 没有任何一个分类的查看权限时，判断是否有全局权限
