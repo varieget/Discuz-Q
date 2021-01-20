@@ -98,15 +98,8 @@ class PostListener
         if ($post->is_approved == Post::APPROVED) {
             // 如果当前用户不是主题作者，也是合法的，则通知主题作者
             if ($post->thread->user_id != $actor->id) {
-                $build = [
-                    'message' => $post->getSummaryContent(Post::NOTICE_LENGTH, true)['content'],
-                    'subject' => $post->getSummaryContent(Post::NOTICE_LENGTH, true)['first_content'],
-                    'raw' => array_merge(Arr::only($post->toArray(), ['id', 'thread_id', 'reply_post_id']), [
-                        'actor_username' => $actor->username    // 发送人姓名
-                    ]),
-                ];
                 // Tag 发送通知
-                $post->thread->user->notify(new Replied($actor, $post, $build));
+                $post->thread->user->notify(new Replied($actor, $post, ['notify_type' => 'notify_thread']));
             }
 
             // 如果被回复的用户不是当前用户，也不是主题作者，也是合法的，则通知被回复的人
@@ -118,15 +111,8 @@ class PostListener
                 // 被回复内容
                 $post->replyPost->content = Str::of($post->replyPost->content)->substr(0, Post::NOTICE_LENGTH);
 
-                $buildReplyUser = [
-                    'message' => $post->getSummaryContent(Post::NOTICE_LENGTH, true)['content'],
-                    'subject' => $post->replyPost->formatContent(), // 解析content
-                    'raw' => array_merge(Arr::only($post->toArray(), ['id', 'thread_id', 'reply_post_id']), [
-                        'actor_username' => $actor->username    // 发送人姓名
-                    ]),
-                ];
                 // Tag 发送通知
-                $post->replyUser->notify(new Replied($actor, $post, $buildReplyUser));
+                $post->replyUser->notify(new Replied($actor, $post, ['notify_type' => 'notify_reply_post']));
             }
         }
     }
@@ -238,12 +224,12 @@ class PostListener
         if ($event->post->user && $event->post->user->id != $event->actor->id) {
             $build = [
                 'message' => $event->content,
-                'raw' => Arr::only($event->post->toArray(), ['id', 'thread_id', 'is_first']),
+                'post' => $event->post,
                 'notify_type' => PostMessage::NOTIFY_EDIT_CONTENT_TYPE,
             ];
 
             // Tag 发送通知
-            $event->post->user->notify(new System(PostMessage::class, $event->post->user, $build));
+            $event->post->user->notify(new System(PostMessage::class, $event->actor, $build));
         }
     }
 

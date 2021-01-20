@@ -31,6 +31,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $content
  * @property string $vars
  * @property string $template_id
+ * @property string $first_data
+ * @property string $keywords_data
+ * @property string $remark_data
+ * @property string $redirect_url
  */
 class NotificationTpl extends Model
 {
@@ -47,7 +51,7 @@ class NotificationTpl extends Model
     /**
      * 枚举 - type
      *
-     * 通知类型: 0系统 1微信 2短信 3企业微信
+     * 通知类型: 0系统 1微信 2短信 3企业微信 4小程序通知
      * @var array
      */
     protected static $status = [
@@ -55,13 +59,22 @@ class NotificationTpl extends Model
         'wechat' => 1,
         'sms' => 2, // 待定暂未使用
         'enterpriseWeChat' => 3,
+        'miniProgram' => 4,
+    ];
+
+    protected static $typeName = [
+        0 => '系统',
+        1 => '微信',
+        2 => '短信',
+        3 => '企业微信',
+        4 => '小程序通知',
     ];
 
     /**
      * 根据 值/类型 获取对应值
      *
-     * @param mixed $mixed
-     * @return mixed
+     * @param $mixed
+     * @return false|int|string
      */
     public static function enumType($mixed)
     {
@@ -72,6 +85,24 @@ class NotificationTpl extends Model
         }
 
         return $arr[$mixed];
+    }
+
+    /**
+     * 获取对应 type 名称
+     *
+     * @param int $type
+     * @param string $suffix
+     * @return string
+     */
+    public static function enumTypeName(int $type, string $suffix = ''): string
+    {
+        $typeName = static::$typeName;
+
+        if (isset($typeName[$type])) {
+            return $typeName[$type] . $suffix;
+        }
+
+        return '';
     }
 
     /**
@@ -89,11 +120,11 @@ class NotificationTpl extends Model
                     'color' => '#173177'
                 ],
                 'keyword1' => [
-                    'value' => $arr['keyword1'],
+                    'value' => $arr['keyword1'] ?? '',
                     'color' => '#173177'
                 ],
                 'keyword2' => [
-                    'value' => $arr['keyword2'],
+                    'value' => $arr['keyword2'] ?? '',
                     'color' => '#173177'
                 ],
                 'remark' => [
@@ -189,19 +220,7 @@ class NotificationTpl extends Model
                 'type' => 1,
                 'type_name' => '内容点赞通知',
                 'title' => '微信内容通知',
-                'content' => self::getWechatFormat([
-                    'first' => '{username}点赞了你',
-                    'keyword1' => '{content}',
-                    'keyword2' => '{dateline}',
-                    'remark' => '点击查看',
-                    'redirect_url' => '{redirecturl}',
-                ]),
-                'vars' => serialize([
-                    '{username}' => '点赞人用户名',
-                    '{content}' => '点赞内容',
-                    '{dateline}' => '通知时间',
-                    '{redirecturl}' => '跳转地址',
-                ])
+                'content' => '',
             ],
             31 => [
                 'status' => 0,

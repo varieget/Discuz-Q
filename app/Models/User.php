@@ -148,6 +148,14 @@ class User extends Model
         'ignore' => 4,
     ];
 
+    protected static $statusMeaning = [
+        0 => '正常',
+        1 => '禁用',
+        2 => '审核中',
+        3 => '审核拒绝',
+        4 => '审核忽略',
+    ];
+
     /**
      * An array of permissions that this user has.
      *
@@ -193,13 +201,18 @@ class User extends Model
      * 根据 值/类型 获取对应值
      *
      * @param mixed $mixed
+     * @param bool $meaning 枚举含义
      * @return mixed
      */
-    public static function enumStatus($mixed)
+    public static function enumStatus($mixed, $meaning = false)
     {
         $arr = static::$status;
+        $arrMeaning = static::$statusMeaning;
 
         if (is_numeric($mixed)) {
+            if ($meaning) {
+                return $arrMeaning[$mixed];
+            }
             return array_search($mixed, $arr);
         }
 

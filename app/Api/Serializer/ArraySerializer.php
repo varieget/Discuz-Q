@@ -20,28 +20,17 @@ namespace App\Api\Serializer;
 
 use Discuz\Api\Serializer\AbstractSerializer;
 
-class NotificationTplSerializer extends AbstractSerializer
+class ArraySerializer extends AbstractSerializer
 {
-    protected $type = 'notification_tpls';
+    protected $type = 'array';
 
-    /**
-     * @inheritDoc
-     */
     protected function getDefaultAttributes($model)
     {
-        return [
-            'id' => $model->id,
-            'status' => $model->status,
-            'type' => $model->type,
-            'type_name' => $model->type_name,
-            'title' => $model->title,
-            'content' => $model->content,
-            'vars' => unserialize($model->vars),
-            'template_id' => $model->template_id,
-            'first_data' => $model->first_data,
-            'keywords_data' => explode(',', $model->keywords_data),
-            'remark_data' => $model->remark_data,
-            'redirect_url' => $model->redirect_url,
-        ];
+        return $model;
+    }
+
+    public function getId($model)
+    {
+        return $model['id'] ?? 0;
     }
 }

@@ -116,6 +116,7 @@ class System extends AbstractNotification
     /**
      * 初始化对应通知类型
      * TODO 尽量拆分通知为独立通知 Message，该方法最好不再叠加新通知类型（通知列表接口查询时传输类型数组筛选，就可做到每种通知的独立性）
+     * @see Liked Tag 新通知参考类
      */
     protected function initNoticeMessage()
     {
@@ -187,7 +188,7 @@ class System extends AbstractNotification
                     'wechat' => 23,
                 ];
             } else {
-                // 审核通过通知
+                // 注册审核通过通知
                 $this->tplId = [
                     'database' => 2,
                     'wechat' => 14,
@@ -201,7 +202,7 @@ class System extends AbstractNotification
                     'wechat' => 22,
                 ];
             } elseif ($originStatus == 2 && $status == 3) { // 2审核中 变 审核拒绝
-                // 审核拒绝通知
+                // 注册审核不通过通知
                 $this->tplId = [
                     'database' => 3,
                     'wechat' => 15,

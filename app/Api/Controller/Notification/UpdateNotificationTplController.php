@@ -62,7 +62,7 @@ class UpdateNotificationTplController extends AbstractResourceController
         $attributes = Arr::get($request->getParsedBody(), 'data.attributes');
 
         /** @var NotificationTpl $notificationTpl */
-        $notificationTpl = NotificationTpl::find($id);
+        $notificationTpl = NotificationTpl::query()->find($id);
 
         switch ($notificationTpl->type) {
             case 0:
@@ -99,6 +99,26 @@ class UpdateNotificationTplController extends AbstractResourceController
             }
 
             $notificationTpl->status = $status;
+        }
+
+        if (isset($attributes['first_data'])) {
+            $firstData = Arr::get($attributes, 'first_data');
+            $notificationTpl->first_data = $firstData;
+        }
+
+        if (isset($attributes['keywords_data'])) {
+            $keywordsData = Arr::get($attributes, 'keywords_data');
+            $notificationTpl->keywords_data = $keywordsData;
+        }
+
+        if (isset($attributes['remark_data'])) {
+            $remarkData = Arr::get($attributes, 'remark_data');
+            $notificationTpl->remark_data = $remarkData;
+        }
+
+        if (isset($attributes['redirect_url'])) {
+            $redirectUrl = Arr::get($attributes, 'redirect_url');
+            $notificationTpl->redirect_url = $redirectUrl;
         }
 
         $notificationTpl->save();
