@@ -193,7 +193,11 @@ class ThreadSerializer extends AbstractSerializer
      */
     public function posts($thread)
     {
-        return $this->hasMany($thread, PostSerializer::class);
+        if (app()->has('resourceThread')) {
+            return null;
+        } else {
+            return $this->hasMany($thread, PostSerializer::class);
+        }
     }
 
     /**

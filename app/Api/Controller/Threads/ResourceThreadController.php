@@ -109,6 +109,7 @@ class ResourceThreadController extends AbstractResourceController
     {
         $this->threads = $threads;
         $this->posts = $posts;
+        app()->instance('resourceThread',true);
     }
 
     /**
