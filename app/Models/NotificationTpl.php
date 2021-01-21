@@ -2,13 +2,10 @@
 
 /**
  * Copyright (C) 2020 Tencent Cloud.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *   http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,6 +31,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $first_data
  * @property string $keywords_data
  * @property string $remark_data
+ * @property string $color
  * @property string $redirect_url
  */
 class NotificationTpl extends Model
@@ -49,9 +47,14 @@ class NotificationTpl extends Model
     public $table = 'notification_tpls';
 
     /**
+     * {@inheritdoc}
+     */
+    protected $casts = ['color' => 'array'];
+
+    /**
      * 枚举 - type
-     *
      * 通知类型: 0系统 1微信 2短信 3企业微信 4小程序通知
+     *
      * @var array
      */
     protected static $status = [
@@ -59,7 +62,7 @@ class NotificationTpl extends Model
         'wechat' => 1,
         'sms' => 2, // 待定暂未使用
         'enterpriseWeChat' => 3,
-        'miniProgram' => 4,
+        'miniProgram' => 4, // 待定暂未使用
     ];
 
     protected static $typeName = [
@@ -94,7 +97,7 @@ class NotificationTpl extends Model
      * @param string $suffix
      * @return string
      */
-    public static function enumTypeName(int $type, string $suffix = ''): string
+    public static function enumTypeName(int $type, string $suffix = '') : string
     {
         $typeName = static::$typeName;
 
@@ -117,19 +120,19 @@ class NotificationTpl extends Model
             'data' => [
                 'first' => [
                     'value' => $arr['first'],
-                    'color' => '#173177'
+                    'color' => $arr['color']['first_color'] ?? '#173177',
                 ],
                 'keyword1' => [
                     'value' => $arr['keyword1'] ?? '',
-                    'color' => '#173177'
+                    'color' => $arr['color']['keyword1_color'] ?? '#173177',
                 ],
                 'keyword2' => [
                     'value' => $arr['keyword2'] ?? '',
-                    'color' => '#173177'
+                    'color' => $arr['color']['keyword2_color'] ?? '#173177',
                 ],
                 'remark' => [
                     'value' => $arr['remark'],
-                    'color' => '#173177'
+                    'color' => $arr['color']['remark_color'] ?? '#173177',
                 ],
             ],
             'redirect_url' => $arr['redirect_url'],
@@ -143,7 +146,7 @@ class NotificationTpl extends Model
             if (array_key_exists($keyword, $arr)) {
                 $result['data'][$keyword] = [
                     'value' => $arr[$keyword],
-                    'color' => '#173177'
+                    'color' => $arr['color']['keyword' . $i . '_color'] ?? '#173177',
                 ];
             } else {
                 break;
@@ -213,7 +216,7 @@ class NotificationTpl extends Model
                     '{subject}' => '原文内容',
                     '{dateline}' => '通知时间',
                     '{redirecturl}' => '跳转地址',
-                ])
+                ]),
             ],
             30 => [
                 'status' => 0,
@@ -242,7 +245,7 @@ class NotificationTpl extends Model
                     '{ordertype}' => '支付类型',
                     '{dateline}' => '通知时间',
                     '{redirecturl}' => '跳转地址',
-                ])
+                ]),
             ],
             32 => [
                 'status' => 0,
@@ -261,7 +264,7 @@ class NotificationTpl extends Model
                     '{content}' => '@内容',
                     '{dateline}' => '通知时间',
                     '{redirecturl}' => '跳转地址',
-                ])
+                ]),
             ],
             33 => [
                 'status' => 1,
@@ -297,7 +300,7 @@ class NotificationTpl extends Model
                     '{dateline}' => '申请时间',
                     '{withdrawalStatus}' => '提现状态',
                     '{redirecturl}' => '跳转地址',
-                ])
+                ]),
             ],
             36 => [
                 'status' => 0,
@@ -319,7 +322,7 @@ class NotificationTpl extends Model
                     '{withdrawalStatus}' => '提现状态',
                     '{reason}' => '原因',
                     '{redirecturl}' => '跳转地址',
-                ])
+                ]),
             ],
             37 => [
                 'status' => 1,
@@ -349,7 +352,7 @@ class NotificationTpl extends Model
                     '{ordertype}' => '支付类型',
                     '{dateline}' => '通知时间',
                     '{redirecturl}' => '跳转地址',
-                ])
+                ]),
             ],
             39 => [
                 'status' => 1,
@@ -378,7 +381,7 @@ class NotificationTpl extends Model
                     '{money}' => '问答价格',
                     '{dateline}' => '通知时间',
                     '{redirecturl}' => '跳转地址',
-                ])
+                ]),
             ],
             41 => [
                 'status' => 1,
@@ -405,7 +408,7 @@ class NotificationTpl extends Model
                     '{content}' => '回答内容',
                     '{dateline}' => '通知时间',
                     '{redirecturl}' => '跳转地址',
-                ])
+                ]),
             ],
             43 => [
                 'status' => 1,
@@ -434,8 +437,8 @@ class NotificationTpl extends Model
                     '{content}' => '内容',
                     '{dateline}' => '通知时间',
                     '{redirecturl}' => '跳转地址',
-                ])
-            ]
+                ]),
+            ],
         ];
     }
 }
