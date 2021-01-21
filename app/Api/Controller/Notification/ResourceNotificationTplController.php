@@ -30,6 +30,9 @@ class ResourceNotificationTplController extends AbstractListController
 {
     use AssertPermissionTrait;
 
+    /**
+     * {@inheritdoc}
+     */
     public $serializer = NotificationTplSerializer::class;
 
     /**
@@ -41,11 +44,11 @@ class ResourceNotificationTplController extends AbstractListController
     protected function data(ServerRequestInterface $request, Document $document)
     {
         $actor = $request->getAttribute('actor');
-        $this->assertPermission($actor->isAdmin());
+        $this->assertAdmin($actor);
 
         $type_name = Arr::get($request->getQueryParams(), 'type_name');
 
-        $query = NotificationTpl::query()->where('type_name', $type_name);
+        $query = NotificationTpl::query()->where('type_name', $type_name)->orderBy('type');
 
         return $query->get();
     }

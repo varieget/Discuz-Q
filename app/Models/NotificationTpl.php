@@ -32,7 +32,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $keywords_data
  * @property string $remark_data
  * @property string $color
+ * @property string $redirect_type
  * @property string $redirect_url
+ * @property string $page_path
  */
 class NotificationTpl extends Model
 {
