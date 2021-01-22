@@ -16,13 +16,13 @@
       <p class="system-title">系统通知</p>
     <Card header="用户角色通知标题：">
       <CardRow description="系统发送的欢迎信息的标题，不支持HTML，不超过75字节">
-        <el-input type="text" maxlength="75" v-model="systemTitle" ></el-input>
+        <el-input type="text" maxlength="75" v-model="systemList.title" ></el-input>
       </CardRow>
     </Card>
 
     <Card header="通知内容：">
       <CardRow row :description="systemDes">
-        <el-input type="textarea" :autosize="{ minRows: 5, maxRows: 5}" v-model="systemContent" clearable></el-input>
+        <el-input type="textarea" :autosize="{ minRows: 5, maxRows: 5}" v-model="systemList.content" clearable></el-input>
       </CardRow>
     </Card>
   </div>
@@ -32,7 +32,7 @@
       <p class="system-title">微信模板信息</p>
     <Card header="模板ID：">
       <CardRow description="请填写模板消息的ID">
-        <el-input type="text" maxlength="75" v-model="template_wxid" ></el-input>
+        <el-input type="text" maxlength="75" v-model="wxList.template_id" ></el-input>
       </CardRow>
     </Card>
 
@@ -42,7 +42,7 @@
       <CardRow row :description="wxDes">
       <div class="applets">
         <span class="applets-titles">first：</span>
-        <el-input type="input" v-model="wxfrist" style="width:352px" class="applets-input"></el-input>
+        <el-input type="input" v-model="wxList.first_data" style="width:352px" class="applets-input"></el-input>
       </div>
       <div v-for="(item,index) in appletsList" :key="index" class="applets">
         <span class="applets-title">{{`keyword${index}`}}:</span>
@@ -57,17 +57,17 @@
       </div>
       <div class="applets">
         <span class="applets-titles">remark：</span>
-        <el-input type="input" v-model="remark" style="width:352px" class="applets-input"></el-input>
+        <el-input type="input" v-model="wxList.remark_data" style="width:352px" class="applets-input"></el-input>
       </div>
       <div class="applets">
         <span class="applets-titles">跳转：</span>
-        <el-radio v-model="redirect_type" :label="0">无跳转</el-radio>
-        <el-radio v-model="redirect_type" :label="2">跳转至小程序</el-radio>
-        <el-radio v-model="redirect_type" :label="1">跳转至H5</el-radio>
+        <el-radio v-model="wxList.redirect_type" :label="0">无跳转</el-radio>
+        <el-radio v-model="wxList.redirect_type" :label="2">跳转至小程序</el-radio>
+        <el-radio v-model="wxList.redirect_type" :label="1">跳转至H5</el-radio>
       </div>
       <div class="applets">
         <span class="applets-titles">H5网址：</span>
-        <el-input type="input" v-model="noticeContent" style="width:352px" class="applets-input"></el-input>
+        <el-input type="input" v-model="wxList.redirect_url" style="width:352px" class="applets-input"></el-input>
       </div>
       </CardRow>
       </div>

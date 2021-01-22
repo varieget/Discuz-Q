@@ -9,31 +9,16 @@ import TableContAdd from '../../../../view/site/common/table/tableContAdd';
 export default {
     data: function () {
       return {
-        noticeTitle: '',      //用户角色通知标题
-        noticeContent: '',    //用户通知内容
         query: '',            //获取当前用户的ID
         typeName: '',         //获取当前typename
-        systemTitle: '',      //系统通知title
-        systemId: '',         //系统通知ID
-        systemDes: '',        //系统提示
-        systemContent: '',    //系统通知内容
-        template_id: '',      //系统通知模版ID
-        wxTitle: '',          //微信通知title
-        wxfrist: '',          //微信模版
-        wxId: '',             //微信ID
-        template_wxid: '',    //微信模版ID
-        remark: '',           //微信remark
-        redirect_type: 0,     //微信通知跳转 0 无跳转 1 h5 2 小程序
-        redirect_url: '',     //h5网址
-        keywords_data: [],    //keywords
-        noticeStatus: 0,      //系统状态
         showSystem: false,    //系统显示
         showWx: false,        //微信显示
+        noticeList: [],       //通知方式
         wxDes: '',            //微信描述
-        wxNoticeCon:'',       //微信配置ID
-        noticeList: [],       // 通知方式
-        noticeType: 0,
-        appletsList: [],
+        systemDes:'',         //系统通知描述
+        systemList: '',       //系统通知数据
+        wxList: '',           //微信通知数据
+        appletsList: [],      //keyword数组
       }
     },
     components: {
@@ -44,14 +29,11 @@ export default {
     created() {
       this.query = this.$route.query;
       this.typeName = this.$route.query.typeName;
-
       this.noticeConfigure();
-      // this.getNoticeList();
     },
     methods: {
       // 点击添加关键字
       tableContAdd() {
-        console.log('添加')
         this.appletsList.push('')
       },
       // 点击删除图标
@@ -70,7 +52,6 @@ export default {
         } else {
           this.showWx = true;
         }
-        console.log(data.indexOf('0'), 'shshhhsh')
       },
       // 初始化配置列表信息
       noticeConfigure() {
@@ -80,22 +61,17 @@ export default {
           splice: `?type_name=${this.typeName}`,
           data: {}
         }).then(res => {
-          console.log(res, 'ressshhshhs')
           if (res.readdata[0]) {
-            this.systemContent = res.readdata[0]._data.content;
-            this.systemTitle = res.readdata[0]._data.title;
-            this.systemId = res.readdata[0]._data.tpl_id;
-            this.template_id = res.readdata[0]._data.template_id;
-
-            let vars = res.readdata[0]._data.vars;
+            this.systemList = res.readdata[0]._data;
+          //  console.log(this.systemList, 'systemListsystemList') 
+            let vars = this.systemList.vars;
             if (vars) {
               this.systemDes = '请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。\n\n可以使用如下变量：\n';
               for (let key in vars) {
                 this.systemDes += `${key} ${vars[key]}\n`;
               }
             }
-
-            if (res.readdata[0]._data.status) {
+            if (this.systemList.status) {
               this.noticeList.push("0");
               this.showSystem = true
             } else {
@@ -103,15 +79,8 @@ export default {
             }
           }
           if (res.readdata[1]) {
-            this.wxTitle = res.readdata[1]._data.title;
-            this.wxfrist = res.readdata[1]._data.first_data;
-            this.remark = res.readdata[1]._data.remark_data;
-            this.wxId = res.readdata[1]._data.tpl_id;
-            this.redirect_type = res.readdata[1]._data.redirect_type;
-            this.redirect_url = res.readdata[1]._data.redirect_url;
-            this.keywords_data = res.readdata[1]._data.keywords_data;
-            this.template_wxid = res.readdata[1]._data.template_id;
-            let vars = res.readdata[1]._data.vars;
+            this.wxList = res.readdata[1]._data;
+            let vars = this.wxList.vars;
             if (vars) {
               this.wxDes = '请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。\n\n可以使用如下变量：\n';
               for (let key in vars) {
@@ -119,12 +88,12 @@ export default {
               }
             }
             this.appletsList = [];
-            this.keywords_data.forEach((item, index) => {
+            this.wxList.keywords_data.forEach((item, index) => {
               this.appletsList.push(item)
             })
           }
 
-          if (res.readdata[1]._data.status) {
+          if (this.wxList.status) {
             this.noticeList.push("1");
             this.showWx = true;
           } else {
@@ -135,29 +104,28 @@ export default {
       // 提交按钮
       Submission() {
         let data = [];
-
         if (this.showSystem === true){
           data.push({
             'attributes':{
-              "id": this.systemId,
+              "id": this.systemList.tpl_id,
               "status": 1,
-              "template_id": this.template_id,
-              "title": this.systemTitle,
-              "content": this.systemContent
+              "template_id": this.systemList.template_id,
+              "title": this.systemList.title,
+              "content": this.systemList.content
             }
           });
         }
         if (this.showWx === true){
           data.push({
             'attributes':{
-              "id": this.wxId,
+              "id": this.wxList.tpl_id,
               "status": 1,
-              "template_id": this.template_wxid,
-              "first_data": this.wxfrist,
+              "template_id": this.wxList.template_id,
+              "first_data": this.wxList.first_data,
               "keywords_data": this.appletsList,
-              "remark_data": this.remark,
-              "redirect_type": this.redirect_type,
-              "redirect_url": this.redirect_url
+              "remark_data": this.wxList.remark_data,
+              "redirect_type": this.wxList.redirect_type,
+              "redirect_url": this.wxList.redirect_url
             }
           });
         }
