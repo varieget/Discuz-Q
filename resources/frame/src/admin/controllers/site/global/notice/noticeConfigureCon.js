@@ -4,6 +4,7 @@
 
 import Card from '../../../../view/site/common/card/card';
 import CardRow from '../../../../view/site/common/card/cardRow';
+import TableContAdd from '../../../../view/site/common/table/tableContAdd';
 
 export default {
     data: function () {
@@ -11,157 +12,149 @@ export default {
         noticeTitle: '',      //用户角色通知标题
         noticeContent: '',    //用户通知内容
         query: '',            //获取当前用户的ID
-        wxNoticeDescription:{
-          13:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "用户名：{{keyword1.DATA}}\n" +
-            "时间：{{keyword2.DATA}}\n" +
-            "{{{remark.DATA}}\n",
-          14:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "用户名：{{keyword1.DATA}}\n" +
-            "时间：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          15:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "用户名：{{keyword1.DATA}}\n" +
-            "原因：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          16:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "内容：{{keyword1.DATA}}\n" +
-            "时间：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          17:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "内容：{{keyword1.DATA}}\n" +
-            "原因：{{keyword2.DATA}}\n" +
-            "时间：{{keyword3.DATA}}\n" +
-            "{{remark.DATA}}",
-          18:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "内容：{{keyword1.DATA}}\n" +
-            "原因：{{keyword2.DATA}}\n" +
-            "时间：{{keyword3.DATA}}\n" +
-            "{{remark.DATA}}",
-          19:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "内容：{{keyword1.DATA}}\n" +
-            "时间：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          20:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "内容：{{keyword1.DATA}}\n" +
-            "时间：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          21:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "内容：{{keyword1.DATA}}\n" +
-            "时间：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          22:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "用户名：{{keyword1.DATA}}\n" +
-            "原因：{{keyword2.DATA}}\n" +
-            "时间：{{keyword3.DATA}}\n" +
-            "{{remark.DATA}}",
-          23:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "用户名：{{keyword1.DATA}}\n" +
-            "时间：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          24:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "用户名：{{keyword1.DATA}}\n" +
-            "原角色：{{keyword2.DATA}}\n" +
-            "新角色：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          29:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "回复内容：{{keyword1.DATA}}\n" +
-            "原文内容：{{keyword2.DATA}}\n" +
-            "回复时间：{{keyword3.DATA}}\n" +
-            "{{remark.DATA}}",
-          30:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "点赞内容：{{keyword1.DATA}}\n" +
-            "点赞时间：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          31:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "支付内容：{{keyword1.DATA}}\n" +
-            "支付类型：{{keyword2.DATA}}\n" +
-            "支付时间：{{keyword3.DATA}}\n" +
-            "{{remark.DATA}}",
-          32:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "@的内容：{{keyword1.DATA}}\n" +
-            "@的时间：{{keyword2.DATA}}\n" +
-            "{{remark.DATA}}",
-          35:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "提现金额：{{keyword1.DATA}}\n" +
-            "申请时间：{{keyword2.DATA}}\n" +
-            "提现状态：{{keyword3.DATA}}\n" +
-            "{{remark.DATA}}",
-          36:"请在“微信公众号-模板消息”中按照以下格式添加模版，并填写审核通过后的模板ID。<br>\n" +
-            "{{first.DATA}}\n" +
-            "提现金额：{{keyword1.DATA}}\n" +
-            "申请时间：{{keyword2.DATA}}\n" +
-            "提现状态：{{keyword3.DATA}}\n" +
-            "原因：{{keyword4.DATA}}\n" +
-            "{{remark.DATA}}",
-        },   //微信通知提示语。tpi：提示语id不同显示不同，每添加一个通知，就需要对应的添加一个提示语，id根据接口返回对应添加
-        wxNoticeCon:'',        //微信配置ID
+        typeName: '',         //获取当前typename
+        systemTitle: '',      //系统通知title
+        systemId: '',         //系统通知ID
+        systemDes: '',        //系统提示
+        systemContent: '',    //系统通知内容
+        template_id: '',      //系统通知模版ID
+        wxTitle: '',          //微信通知title
+        wxfrist: '',          //微信模版
+        wxId: '',             //微信ID
+        template_wxid: '',    //微信模版ID
+        remark: '',           //微信remark
+        redirect_type: 0,     //微信通知跳转 0 无跳转 1 h5 2 小程序
+        redirect_url: '',     //h5网址
+        keywords_data: [],    //keywords
+        noticeStatus: 0,      //系统状态
+        showSystem: false,    //系统显示
+        showWx: false,        //微信显示
+        wxNoticeCon:'',       //微信配置ID
+        noticeList: [],       // 通知方式
+        noticeType: 0,
+        appletsList: [],
       }
     },
     components: {
       Card,
-      CardRow
+      CardRow,
+      TableContAdd
     },
     created() {
       this.query = this.$route.query;
+      this.typeName = this.$route.query.typeName;
 
       this.noticeConfigure();
-      this.getNoticeList();
+      // this.getNoticeList();
     },
     methods: {
-      noticeConfigure() {   //初始化配置列表信息
+      // 点击添加关键字
+      tableContAdd() {
+        console.log('添加')
+        this.appletsList.push('')
+      },
+      // 点击删除图标
+      delectClick(index) {
+        this.appletsList.splice(index,1);
+      },
+      // 通知方式切换
+      noticeListChange(data) {
+        if (data.indexOf('0') === -1) {
+          this.showSystem = false;
+        } else {
+          this.showSystem = true;
+        }
+        if (data.indexOf('1') === -1) {
+          this.showWx = false;
+        } else {
+          this.showWx = true;
+        }
+        console.log(data.indexOf('0'), 'shshhhsh')
+      },
+      // 初始化配置列表信息
+      noticeConfigure() {
         this.appFetch({
-          url: 'noticeConfigure',
+          url: 'noticeDetail',
           method: 'get',
-          splice: this.query.id,
+          splice: `?type_name=${this.typeName}`,
           data: {}
         }).then(res => {
-          this.noticeTitle = res.readdata._data.title;  //用户角色通知标题
-          this.noticeContent = res.readdata._data.content; //用户通知内容
-          this.wxNoticeCon = res.readdata._data.template_id; //微信模板ID
+          console.log(res, 'ressshhshhs')
+          if (res.readdata[0]) {
+            this.systemContent = res.readdata[0]._data.content;
+            this.systemTitle = res.readdata[0]._data.title;
+            this.systemDes = res.readdata[0]._data.vars;
+            this.systemId = res.readdata[0]._data.tpl_id;
+            this.template_id = res.readdata[0]._data.template_id;
+            if (res.readdata[0]._data.status) {
+              this.noticeList.push("0");
+              if (this.noticeList.indexOf(0) === -1) {
+                this.showSystem = true
+              } else {
+                this.showSystem = false
+              }
+            }
+          }
+          if (res.readdata[1]) {
+            this.wxTitle = res.readdata[1]._data.title;
+            this.wxfrist = res.readdata[1]._data.first_data;
+            this.remark = res.readdata[1]._data.remark_data;
+            this.wxId = res.readdata[1]._data.tpl_id;
+            this.redirect_type = res.readdata[1]._data.redirect_type;
+            this.redirect_url = res.readdata[1]._data.redirect_url;
+            this.keywords_data = res.readdata[1]._data.keywords_data;
+            this.template_wxid = res.readdata[1]._data.template_id;
+            this.appletsList = [];
+            this.keywords_data.forEach((item, index) => {
+              this.appletsList.push(item)
+            })
+          }
+
+          if (res.readdata[1]._data.status) {
+            this.noticeList.push("1");
+            if(this.noticeList.indexOf(1) === -1) {
+              this.showWx = true;
+            } else {
+              this.showWx = false;
+            }
+          }
         })
       },
-      Submission() {     //提交按钮
-        let attributes = {};
+      // 提交按钮
+      Submission() {
+        let data = [];
 
-        if (this.query.type === 'system'){
-          attributes = {
+        if (this.showSystem === true){
+          data.push({
             'attributes':{
-              "title": this.noticeTitle,
-              "content": this.noticeContent
+              "id": this.systemId,
+              "status": 1,
+              "template_id": this.template_id,
+              "title": this.systemTitle,
+              "content": this.systemContent
             }
-          }
-        } else if (this.query.type === 'wx'){
-          attributes = {
+          });
+        }
+        if (this.showWx === true){
+          data.push({
             'attributes':{
-              "template_id": this.wxNoticeCon
+              "id": this.wxId,
+              "status": 1,
+              "template_id": this.template_wxid,
+              "first_data": this.wxfrist,
+              "keywords_data": this.appletsList,
+              "remark_data": this.remark,
+              "redirect_type": this.redirect_type,
+              "redirect_url": this.redirect_url
             }
-          }
+          });
         }
 
         this.appFetch({
-          url: 'notification',
+          url: 'noticeList',
           method: 'patch',
-          splice: this.query.id,
           data: {
-            "data": attributes
+            "data": data,
           }
       }).then(res=>{
         if (res.errors) {

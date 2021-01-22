@@ -48,6 +48,7 @@ export default {
           this.register_validate = res.readdata._data.set_reg.register_validate;
           this.pwdLength = res.readdata._data.set_reg.password_length;
           this.checkList = res.readdata._data.set_reg.password_strength;
+          console.log(this.checkList, 'checkList')
           this.register_captcha = res.readdata._data.set_reg.register_captcha;
           this.register_type = res.readdata._data.set_reg.register_type;
           this.privacy = agreement.privacy ? "1" : "0";

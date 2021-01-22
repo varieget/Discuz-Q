@@ -81,21 +81,7 @@ export default {
               id: 8,
               title: "通知设置",
               name: "noticeSet",
-              icon: "icontongzhi",
-              submenu: [
-                {
-                  id: 81,
-                  title: "系统通知",
-                  name: "noticeSet",
-                  icon: "icontongzhi"
-                },
-                {
-                  id: 82,
-                  title: "微信通知",
-                  name: "noticeSet",
-                  icon: "icontongzhi"
-                }
-              ]
+              icon: "icontongzhi"
             },
             {
               id: 9,
@@ -435,8 +421,6 @@ export default {
           this.$router.push({ path: "/admin/tencent-cloud-set" });
           break;
         case "noticeSet":
-          this.sideSubmenu = this.navList[1].submenu[8].submenu;
-          this.sideSubmenuSelect = this.navList[1].submenu[8].submenu[0].title;
           this.$router.push({ path: "/admin/system-notice" });
           break;
         case "adminUserManage":
@@ -521,15 +505,6 @@ export default {
      * */
     sideSubmenuClick(title) {
       switch (title) {
-        case "系统通知":
-          this.sideSubmenuSelect = title;
-          this.$router.push({ path: "/admin/system-notice" });
-          break;
-        case "微信通知":
-          this.sideSubmenuSelect = title;
-          this.$router.push({ path: "/admin/wx-notice" });
-          break;
-
         case "最新主题":
           this.sideSubmenuSelect = title;
           this.$router.push({ path: "/admin/cont-manage" });
@@ -639,14 +614,6 @@ export default {
 
       if (sideSubmenu) {
         switch (sideSubmenu) {
-          case "系统通知":
-            this.sideSubmenu = this.navList[1].submenu[8].submenu;
-            this.sideSubmenuSelect = this.navList[1].submenu[8].submenu[0].title;
-            break;
-          case "微信通知":
-            this.sideSubmenu = this.navList[1].submenu[8].submenu;
-            this.sideSubmenuSelect = this.navList[1].submenu[8].submenu[1].title;
-            break;
 
           case "最新主题":
             this.sideSubmenu = this.navList[3].submenu[1].submenu;

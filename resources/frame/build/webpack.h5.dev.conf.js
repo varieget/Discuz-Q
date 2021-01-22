@@ -147,8 +147,9 @@ module.exports = {
       "/api": {
         // target: "https://discuz.run",
         // target: "https://dq.comsenz-service.com/",
+        target: "https://demo.discuzq.com",
         // target: "http://dev.discuz.com/",
-        target: "https://discuz-dev.dnspod.dev/",
+        // target: "https://discuz-dev.dnspod.dev/",
         changeOrigin: true,
         secure: false,
       }
