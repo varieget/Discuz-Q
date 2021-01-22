@@ -51,7 +51,7 @@ class NotificationTplSerializer extends AbstractSerializer
     protected function getDefaultAttributes($model)
     {
         return [
-            'id'                => $model->id,
+            'tpl_id'            => $model->id,
             'status'            => $model->status,
             'type'              => $model->type,
             'type_name'         => $model->type_name,
