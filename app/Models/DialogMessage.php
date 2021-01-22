@@ -66,27 +66,49 @@ class DialogMessage extends Model
 
     public function getMessageTextAttribute($value)
     {
-        return static::$formatter->unparse($value);
+        $value = json_decode(stripslashes($value));
+        $value['message_text'] = static::$formatter->unparse($value['message_text']);
+        $value = json_encode($value);
+
+        return $value;
+    }
+
+    public function getCommonMessageText(){
+        $message_text_old = $this->attributes['message_text'] ?: '';
+        $message_text = json_decode(stripslashes($message_text_old));
+        if (!empty($message_text)) {
+            $messageText = $message_text->message_text->message_text;
+        } else {
+            $messageText = $this->attributes['message_text'];
+        }
+
+        return $messageText;
     }
 
     public function getParsedMessageTextAttribute()
     {
-        return $this->attributes['message_text'];
+        return $this->getCommonMessageText();
     }
 
     public function setMessageTextAttribute($value)
     {
-        $this->attributes['message_text'] = $value ? static::$formatter->parse($value, $this) : null;
+        $value['message_text'] = $value['message_text'] ? static::$formatter->parse($value['message_text'], $this) : null;
+        $this->attributes['message_text'] = addslashes(json_encode($value));
     }
 
     public function setParsedMessageTextAttribute($value)
     {
-        $this->attributes['message_text'] = $value;
+        $message = [
+            'message_text'  => $value,
+            'image_url'     => ''
+        ];
+        $this->attributes['message_text'] = addslashes(json_encode($message));
     }
 
     public function getSummaryAttribute()
     {
-        $message_text = Str::of($this->message_text ?: '');
+        $messageText = $this->getCommonMessageText();
+        $message_text = Str::of($messageText ?: '');
 
         if ($message_text->length() > self::SUMMARY_LENGTH) {
             $message_text = static::$formatter->parse(
@@ -100,16 +122,38 @@ class DialogMessage extends Model
         return str_replace('<br>', '', $message_text);
     }
 
+    public function getMessageText()
+    {
+        return $this->getCommonMessageText();
+    }
+
     public function formatMessageText()
     {
-        $messageText = $this->attributes['message_text'] ?: '';
-
-        $messageText = $messageText ? static::$formatter->render($messageText) : '';
+        $message_text_old = $this->attributes['message_text'] ?: '';
+        $message_text = json_decode(stripslashes($message_text_old));
+        if (!empty($message_text)) {
+            $messageText = $message_text->message_text ? static::$formatter->render($message_text->message_text) : '';
+        } else {
+            $messageText = $message_text_old ? static::$formatter->render($message_text_old) : '';
+        }
 
         return $messageText;
     }
 
-    public static function build($user_id, $dialog_id, $attachment_id, $message_text)
+    public function getImageUrlMessageText()
+    {
+        $message_text_old = $this->attributes['message_text'] ?: '';
+        $message_text = json_decode(stripslashes($message_text_old));
+        if (!empty($message_text)) {
+            $messageText = $message_text->image_url;
+        } else {
+            $messageText = '';
+        }
+
+        return $messageText;
+    }
+
+    public static function build($user_id, $dialog_id, $attachment_id, $message_text, $image_url)
     {
         $dialogMessage = new static();
 
@@ -117,6 +161,7 @@ class DialogMessage extends Model
         $dialogMessage->dialog_id     = $dialog_id;
         $dialogMessage->attachment_id = $attachment_id;
         $dialogMessage->message_text  = $message_text;
+        $dialogMessage->image_url     = $image_url;
 
         return $dialogMessage;
     }
