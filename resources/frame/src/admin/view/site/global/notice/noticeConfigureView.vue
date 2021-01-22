@@ -39,17 +39,7 @@
     <Card header="">
     <div class="applets-box">
       <div class="applets-box-content">
-      <CardRow row
-        description="请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。
-
-        可以使用如下变量:
-        {username}：用户名
-        {groupname} ：所属用户组
-        {time}：发送时间
-        {sitename}：网站名称（显示在页面底部的联系方式名称）
-        {content}：内容
-        {reason}：原因"
-      >
+      <CardRow row :description="wxDes">
       <div class="applets">
         <span class="applets-titles">first：</span>
         <el-input type="input" v-model="wxfrist" style="width:352px" class="applets-input"></el-input>

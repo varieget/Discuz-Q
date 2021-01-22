@@ -29,6 +29,7 @@ export default {
         noticeStatus: 0,      //系统状态
         showSystem: false,    //系统显示
         showWx: false,        //微信显示
+        wxDes: '',            //微信描述
         wxNoticeCon:'',       //微信配置ID
         noticeList: [],       // 通知方式
         noticeType: 0,
@@ -83,16 +84,22 @@ export default {
           if (res.readdata[0]) {
             this.systemContent = res.readdata[0]._data.content;
             this.systemTitle = res.readdata[0]._data.title;
-            this.systemDes = res.readdata[0]._data.vars;
             this.systemId = res.readdata[0]._data.tpl_id;
             this.template_id = res.readdata[0]._data.template_id;
+
+            let vars = res.readdata[0]._data.vars;
+            if (vars) {
+              this.systemDes = '请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。\n\n可以使用如下变量：\n';
+              for (let key in vars) {
+                this.systemDes += `${key} ${vars[key]}\n`;
+              }
+            }
+
             if (res.readdata[0]._data.status) {
               this.noticeList.push("0");
-              if (this.noticeList.indexOf(0) === -1) {
-                this.showSystem = true
-              } else {
-                this.showSystem = false
-              }
+              this.showSystem = true
+            } else {
+              this.showSystem = false
             }
           }
           if (res.readdata[1]) {
@@ -104,6 +111,13 @@ export default {
             this.redirect_url = res.readdata[1]._data.redirect_url;
             this.keywords_data = res.readdata[1]._data.keywords_data;
             this.template_wxid = res.readdata[1]._data.template_id;
+            let vars = res.readdata[1]._data.vars;
+            if (vars) {
+              this.wxDes = '请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。\n\n可以使用如下变量：\n';
+              for (let key in vars) {
+                this.wxDes += `${key} ${vars[key]}\n`;
+              }
+            }
             this.appletsList = [];
             this.keywords_data.forEach((item, index) => {
               this.appletsList.push(item)
@@ -112,11 +126,9 @@ export default {
 
           if (res.readdata[1]._data.status) {
             this.noticeList.push("1");
-            if(this.noticeList.indexOf(1) === -1) {
-              this.showWx = true;
-            } else {
-              this.showWx = false;
-            }
+            this.showWx = true;
+          } else {
+            this.showWx = false;
           }
         })
       },
