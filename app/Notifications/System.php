@@ -196,7 +196,7 @@ class System extends AbstractNotification
             }
         } else {
             if ($originStatus == 0 && $status == 1) {
-                // 帐号禁用通知
+                // 用户禁用通知
                 $this->tplId = [
                     'database' => 10,
                     'wechat' => 22,

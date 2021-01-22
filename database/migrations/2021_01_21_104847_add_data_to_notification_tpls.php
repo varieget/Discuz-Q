@@ -20,6 +20,7 @@ class AddDataToNotificationTpls extends Migration
             $table->tinyInteger('redirect_type')->default(0)->comment('跳转类型：0无跳转 1跳转H5 2跳转小程序');
             $table->string('redirect_url')->default('')->comment('跳转地址');
             $table->string('page_path')->default('')->comment('跳转路由');
+            $table->text('content')->nullable()->comment('内容')->change();
         });
     }
 
@@ -38,6 +39,7 @@ class AddDataToNotificationTpls extends Migration
             $table->dropColumn('redirect_type');
             $table->dropColumn('redirect_url');
             $table->dropColumn('page_path');
+            $table->text('content')->comment('内容')->change();
         });
     }
 }
