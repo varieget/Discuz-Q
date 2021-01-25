@@ -49,7 +49,8 @@
         <el-input type="input" v-model="appletsList[index]" style="width:330px" class="applets-input"></el-input>
         <span class="iconfont iconicon_delect iconhuishouzhan" @click="delectClick(index)" v-show="appletsList.length>2"></span>
       </div>
-      <div class="table-add">
+      <div class="applets">
+      <span class="applets-titles"></span>
       <TableContAdd
         @tableContAddClick="tableContAdd"
         cont="添加关键字"
