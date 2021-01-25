@@ -63,7 +63,6 @@ export default {
         }).then(res => {
           if (res.readdata[0]) {
             this.systemList = res.readdata[0]._data;
-          //  console.log(this.systemList, 'systemListsystemList') 
             let vars = this.systemList.vars;
             if (vars) {
               this.systemDes = '请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。\n\n可以使用如下变量：\n';
@@ -114,8 +113,32 @@ export default {
               "content": this.systemList.content
             }
           });
+        } else {
+          data.push({
+            'attributes':{
+              "id": this.systemList.tpl_id,
+              "status": 0,
+            }
+          });   
         }
         if (this.showWx === true){
+          if (this.wxList.first_data === '') {
+            this.$message.error('请填写first');
+            return;
+          }
+          for (let key in this.appletsList) {
+            if (key >= 2) {
+              break;
+            }
+            if (!this.appletsList[key]) {
+            this.$message.error('请填写keywords');
+            return;  
+            }
+          }
+          if (this.wxList.remark_data === '') {
+            this.$message.error('请填写remark');
+            return;     
+          }
           data.push({
             'attributes':{
               "id": this.wxList.tpl_id,
@@ -128,6 +151,13 @@ export default {
               "redirect_url": this.wxList.redirect_url
             }
           });
+        } else {
+          data.push({
+            'attributes':{
+              "id": this.wxList.tpl_id,
+              "status": 0,
+            }
+          }); 
         }
 
         this.appFetch({
@@ -138,8 +168,14 @@ export default {
           }
       }).then(res=>{
         if (res.errors) {
-            this.$message.error(res.errors[0].code + '\n' + res.errors[0].detail[0]);
+          if (res.errors[0].detail) {
+            this.$message.error(
+              res.errors[0].code + "\n" + res.errors[0].detail[0]
+            );
           } else {
+            this.$message.error(res.errors[0].code);
+          }
+          }else {
             this.$message({
               message: '提交成功',
               type: 'success'

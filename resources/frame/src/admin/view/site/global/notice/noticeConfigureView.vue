@@ -42,12 +42,12 @@
       <CardRow row :description="wxDes">
       <div class="applets">
         <span class="applets-titles">first：</span>
-        <el-input type="input" v-model="wxList.first_data" style="width:352px" class="applets-input"></el-input>
+        <el-input type="input" v-model="wxList.first_data" class="applets-input"></el-input>
       </div>
       <div v-for="(item,index) in appletsList" :key="index" class="applets">
-        <span class="applets-title">{{`keyword${index}`}}:</span>
-        <el-input type="input" v-model="appletsList[index]" style="width:330px" class="applets-input"></el-input>
-        <span class="iconfont iconicon_delect iconhuishouzhan" @click="delectClick(index)" v-show="appletsList.length>2"></span>
+        <span class="applets-title">{{`keyword${index+1}`}}:</span>
+        <el-input type="input" v-model="appletsList[index]"  class="applets-input"></el-input>
+        <span class="iconfont iconicon_delect iconhuishouzhan" @click="delectClick(index)" v-show="index>1"></span>
       </div>
       <div class="applets">
       <span class="applets-titles"></span>
@@ -58,17 +58,19 @@
       </div>
       <div class="applets">
         <span class="applets-titles">remark：</span>
-        <el-input type="input" v-model="wxList.remark_data" style="width:352px" class="applets-input"></el-input>
+        <el-input type="input" v-model="wxList.remark_data" class="applets-input"></el-input>
       </div>
       <div class="applets">
         <span class="applets-titles">跳转：</span>
+        <div class="applets-radio">
         <el-radio v-model="wxList.redirect_type" :label="0">无跳转</el-radio>
         <el-radio v-model="wxList.redirect_type" :label="2">跳转至小程序</el-radio>
         <el-radio v-model="wxList.redirect_type" :label="1">跳转至H5</el-radio>
+        </div>
       </div>
-      <div class="applets">
+      <div class="applets" v-show="wxList.redirect_type === 1">
         <span class="applets-titles">H5网址：</span>
-        <el-input type="input" v-model="wxList.redirect_url" style="width:352px" class="applets-input"></el-input>
+        <el-input type="input" v-model="wxList.redirect_url" class="applets-input"></el-input>
       </div>
       </CardRow>
       </div>

@@ -647,10 +647,9 @@
   // height: 40Px;
   font-size: 15.5PX !important;
   color: #336699;
-  margin-left: 7PX;
+  padding-left: 7PX;
 }
 .table-cont-add-box {
-  width: 352PX !important;
   border-bottom: 0PX !important;
 }
 .table-cont-add-box p {
@@ -664,4 +663,7 @@
 }
 .applets-box-content {
   padding: 15PX 0 24PX 12PX;
+}
+.applets-radio {
+  width: 100%;
 }
