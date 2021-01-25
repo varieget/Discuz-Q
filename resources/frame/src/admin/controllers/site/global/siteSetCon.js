@@ -35,7 +35,9 @@ export default {
       deleBtn: false,
       disabled: true, // 付费模式置灰
       askPrice: "", // 问答围观价格
+      /*IFTRUE_default*/
       purchase: false, // 权限购买
+      /*FITRUE_default*/
       purchaseNum: 0,
       numberimg: [
         {
@@ -95,7 +97,6 @@ export default {
           if (data.errors) {
             this.$message.error(data.errors[0].code);
           } else {
-            console.log("11111");
             console.log(data)
             // 微信支付关闭时置灰付费模式
             if (data.readdata._data.paycenter.wxpay_close == false) {
@@ -164,7 +165,9 @@ export default {
             }, []);
 
             this.siteCloseMsg = data.readdata._data.set_site.site_close_msg;
+            /*IFTRUE_default*/
             this.purchase = !!Number(data.readdata._data.set_site.site_pay_group_close);
+            /*FITRUE_default*/
             // 微信支付关闭时置灰付费模式
             if (data.readdata._data.paycenter.wxpay_close == false) {
               this.disabled = true;
@@ -492,6 +495,7 @@ export default {
                 tag: "default"
               }
             },
+            /*IFTRUE_default*/
             {
               attributes: {
                 key: "site_pay_group_close",
@@ -499,6 +503,7 @@ export default {
                 tag: "default"
               }
             }
+            /*FITRUE_default*/
           ]
         }
       })
