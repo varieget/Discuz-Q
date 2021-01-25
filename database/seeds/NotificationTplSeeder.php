@@ -17,7 +17,6 @@
  */
 
 use App\Models\NotificationTpl;
-use App\Models\NotificationTpl as NotificationTplModel;
 use Illuminate\Database\Seeder;
 
 class NotificationTplSeeder extends Seeder
@@ -40,7 +39,7 @@ class NotificationTplSeeder extends Seeder
          * 注意：由于数据格式不一致，分开 insert 执行
          */
         $wechat = $this->wechatData(); // 获取微信通知
-        $newData = array_values(NotificationTplModel::addData()); // 获取新增的新通知(叠加)
+        $newData = array_values($this->addData()); // 获取新增的新通知(叠加)
         $appendArr = array_merge($wechat, $newData);
         $notificationTpl->insert($appendArr);
     }
@@ -272,4 +271,137 @@ class NotificationTplSeeder extends Seeder
             ],
         ];
     }
+
+    /**
+     * 追加新增数据值 - 公共
+     *
+     * @return array[]
+     */
+    public function addData()
+    {
+        // 以数组追加形式新增放入最后
+        return [
+            25 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '内容回复通知',
+                'title' => '内容通知',
+            ],
+            26 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '内容点赞通知',
+                'title' => '内容通知',
+            ],
+            27 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '内容支付通知',
+                'title' => '内容通知',
+            ],
+            28 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '内容@通知',
+                'title' => '内容通知',
+            ],
+            29 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '内容回复通知',
+                'title' => '微信内容通知',
+            ],
+            30 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '内容点赞通知',
+                'title' => '微信内容通知',
+            ],
+            31 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '内容支付通知',
+                'title' => '微信内容通知',
+            ],
+            32 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '内容@通知',
+                'title' => '微信内容通知',
+            ],
+            33 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '提现通知',
+                'title' => '财务通知',
+            ],
+            34 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '提现失败通知',
+                'title' => '财务通知',
+            ],
+            35 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '提现通知',
+                'title' => '微信财务通知',
+            ],
+            36 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '提现失败通知',
+                'title' => '微信财务通知',
+            ],
+            37 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '分成收入通知',
+                'title' => '内容通知',
+            ],
+            38 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '分成收入通知',
+                'title' => '微信内容通知',
+            ],
+            39 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '问答提问通知',
+                'title' => '问答通知',
+            ],
+            40 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '问答提问通知',
+                'title' => '微信问答通知',
+            ],
+            41 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '问答回答通知',
+                'title' => '问答通知',
+            ],
+            42 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '问答回答通知',
+                'title' => '微信问答通知',
+            ],
+            43 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '问答过期通知',
+                'title' => '内容通知',
+            ],
+            44 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '问答过期通知',
+                'title' => '微信内容通知',
+            ],
+        ];
+    }
+
 }
