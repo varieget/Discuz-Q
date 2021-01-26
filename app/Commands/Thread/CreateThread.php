@@ -30,6 +30,7 @@ use App\Models\User;
 use App\Models\RedPacket;
 use App\Models\Setting;
 use App\Repositories\ThreadRepository;
+use App\Settings\ForumSettingField;
 use App\Validators\ThreadValidator;
 use Carbon\Carbon;
 use Discuz\Auth\AssertPermissionTrait;
@@ -81,12 +82,13 @@ class CreateThread
      * @param string $ip
      * @param string $port
      */
-    public function __construct(User $actor, array $data, $ip, $port)
+    public function __construct(User $actor, array $data, $ip, $port, ForumSettingField $forumField)
     {
         $this->actor = $actor;
         $this->data = $data;
         $this->ip = $ip;
         $this->port = $port;
+        $this->forumField = $forumField;
     }
 
     /**
@@ -194,8 +196,8 @@ class CreateThread
         $thread->location = Arr::get($attributes, 'location', '');
 
         // 红蓝版本对于位置权限的兼容性判断 红蓝，蓝1，红2，默认为1
-        $skin = Setting::query()->where('key', 'site_skin')->first();
-        if (!empty($skin->value) && $skin->value == 2) {
+        $site_skin = $this->forumField->getSiteSkin();
+        if (!empty($skin->value) && $site_skin == 2) {
             if (!empty($thread->longitude) || !empty($thread->latitude) || !empty($thread->address) || !empty($thread->location)) {
                 $this->assertCan($this->actor, 'createThread.' . $thread->type . '.position');
             }

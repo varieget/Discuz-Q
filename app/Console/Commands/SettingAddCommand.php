@@ -38,8 +38,7 @@ class SettingAddCommand extends AbstractCommand
             'site_create_thread' . Thread::TYPE_OF_IMAGE => 1,
             'site_create_thread' . Thread::TYPE_OF_AUDIO => 1,
             'site_create_thread' . Thread::TYPE_OF_QUESTION => 1,
-            'site_create_thread' . Thread::TYPE_OF_GOODS => 1,
-            'site_skin' => 1
+            'site_create_thread' . Thread::TYPE_OF_GOODS => 1
         ];
 
         $setting = Setting::query()->get();

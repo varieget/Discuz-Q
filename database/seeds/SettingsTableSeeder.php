@@ -135,11 +135,6 @@ class SettingsTableSeeder extends Seeder
               'key' => 'site_create_thread6',    // 允许发布商品帖
               'value' => 1,
               'tag' => 'default',
-            ],
-            [
-              'key' => 'site_skin',    // 红蓝，蓝1，红2，默认为1
-              'value' => 1,
-              'tag' => 'default',
             ]
         ]);
     }

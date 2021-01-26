@@ -95,7 +95,7 @@ class ForumSettingSerializer extends AbstractSerializer
                 'site_create_thread4' => (int)$this->settings->get('site_create_thread4'),
                 'site_create_thread5' => (int)$this->settings->get('site_create_thread5'),
                 'site_create_thread6' => (int)$this->settings->get('site_create_thread6'),
-                'site_skin' => (int)$this->settings->get('site_skin'),
+                'site_skin' => (int)$this->forumField->getSiteSkin(),
             ],
 
             // 注册设置

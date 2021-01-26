@@ -75,79 +75,92 @@ class SwitchSkinController implements RequestHandlerInterface
         $data = Arr::get($body, 'data', []);
         $attributes = Arr::get($data, 'attributes', []);
 
-        $skin = Setting::query()->where('key', 'site_skin')->first();
-        $operationSystem = strtoupper(substr(PHP_OS, 0, 3));
         $public_path = public_path();
         $last_path = dirname($public_path);
         $link_skin_public = $last_path . DIRECTORY_SEPARATOR .'public_'. $attributes['skin'];
 
-        if($skin->value == $attributes['skin'] && is_link($public_path) && readlink($public_path) == $link_skin_public){
-            throw new Exception("已是当前栏目，切换无效！");
-        }else{
-            if($operationSystem === 'WIN'){
-                // windows
-                if (!is_link($public_path) || readlink($public_path) !== $link_skin_public) {
-                    throw new Exception("<p>建立软连接失败，请在服务器上以管理员身份打开命令提示符，运行</p><p>rmdir $public_path && mklink /d $public_path $link_skin_public</p><p>然后重试本步骤</p>");
-                }else{
-                    if(is_link($public_path) && readlink($public_path) == $link_skin_public){
-                        Setting::query()->where('key', 'site_skin')->update(['value' => $attributes['skin']]);
-                        $result = [
-                            'data' => [
-                                'attributes' => [
-                                    'site_skin' => (int)$attributes['skin'],
-                                    'code' => 200,
-                                    'message' => '栏目切换成功！',
-                                ],
-                            ]
-                        ];
+        $status = false;
+        if(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'){
+            $this->copy_dir($link_skin_public, $public_path);
+            if(is_dir($public_path)){
+                if($dh = opendir($public_path)){
+                    $skin_file = 'skin.conf';
+                    if(file_exists($skin_file)){
+                        $site_skin = file_get_contents($skin_file);
+                        if($site_skin == $attributes['skin']){
+                            $status = true;
+                        }
                     }else{
-                        throw new Exception("$public_path 已存在，并且指向不正确，请删除后，再重试本步骤");
+                        throw new Exception("<p>您已丢失主题标识文件，无法判断您是否切换成功！</p>");
                     }
+                }
+            }
+        }else{
+            $cmd = '\\cp -r '. $link_skin_public . DIRECTORY_SEPARATOR . '* ' . $public_path. DIRECTORY_SEPARATOR;
+            shell_exec($cmd);
+            $skin_file = $public_path . DIRECTORY_SEPARATOR .'skin.conf';
+            if(file_exists($skin_file)){
+                $site_skin = file_get_contents($skin_file);
+                if($site_skin == $attributes['skin']){
+                    $status = true;
+                }else{
+                    throw new Exception("切换失败，请在站点目录下运行:$cmd");
                 }
             }else{
-                try{
-                    $cmd = 'rm '. $public_path .' && ln -s '. $last_path . DIRECTORY_SEPARATOR .'public_'. $attributes['skin'] .' '. $public_path;
-                    $result = false;
-                    for($i = 0; $i < 10; $i++){
-                        if(!is_link($public_path) || readlink($public_path) !== $link_skin_public){
-                            shell_exec($cmd);
-                        }else{
-                            $result = true;
-                            break;
-                        }
-                        sleep(0.1);
-                    }
-
-                    if($result){
-                        Setting::query()->where('key', 'site_skin')->update(['value' => $attributes['skin']]);
-                        $result = [
-                            'data' => [
-                                'attributes' => [
-                                    'site_skin' => (int)$attributes['skin'],
-                                    'code' => 200,
-                                    'message' => '栏目切换成功！',
-                                ],
-                            ]
-                        ];
-                    }else{
-                        throw new Exception("<p>切换栏目失败！</p>");
-                    }
-                }catch (Exception $e) {
-                    throw $e;
-                }
-            }
-
-            if($skin->value !== $attributes['skin'] && $attributes['skin'] == 1){
-                $settings = Setting::query()->where('key', 'like', "%site_create_thread%")->get();
-                $settings->each(function ($setting) {
-                    $key = Arr::get($setting, 'key');
-                    $value = 1;
-                    $tag = Arr::get($setting, 'tag', 'default');
-                    $this->settings->set($key, $value, $tag);
-                });
-                $this->events->dispatch(new Saved($settings));
+                throw new Exception("<p>您已丢失主题标识文件，无法判断您是否切换成功！</p>");
             }
         }
+
+        if($status){
+            $result = [
+                'data' => [
+                    'attributes' => [
+                        'site_skin' => (int)$attributes['skin'],
+                        'code' => 200,
+                        'message' => '主题切换成功！',
+                    ],
+                ]
+            ];
+        }else{
+            $result = [
+                'data' => [
+                    'attributes' => [
+                        'site_skin' => 1,
+                        'code' => 500,
+                        'message' => '主题切换失败！',
+                    ],
+                ]
+            ];
+        }
+
         return DiscuzResponseFactory::JsonResponse($result);
+    }
+
+    public function copy_dir($from_dir, $to_dir)
+    {
+        if(!is_dir($from_dir)){
+            return false;
+        }
+
+        $from_files = scandir($from_dir);
+         //如果不存在目标目录，则尝试创建
+        if(!file_exists($to_dir)){
+            @mkdir($to_dir);
+        }
+        if(!empty($from_files)){
+            foreach ($from_files as $file){
+                if($file == '.' || $file == '..' ){
+                    continue;
+                }
+
+                if(is_dir($from_dir .'/'. $file)){
+                    //如果是目录，则调用自身
+                    $this->copy_dir($from_dir .'/'. $file, $to_dir .'/'. $file);
+                }else{
+                    //直接copy到目标文件夹
+                    copy($from_dir .'/'. $file, $to_dir .'/'. $file);
+                }
+            }
+        }
     }
 }
