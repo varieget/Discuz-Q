@@ -18,6 +18,7 @@
 
 namespace App\Api\Serializer;
 
+use App\Common\SettingCache;
 use App\Models\Category;
 use App\Models\Thread;
 use App\Models\User;
@@ -36,10 +37,11 @@ class ForumSettingSerializer extends AbstractSerializer
 
     protected $forumField;
 
-    public function __construct(SettingsRepository $settings, ForumSettingField $forumField)
+    public function __construct(SettingsRepository $settings, ForumSettingField $forumField, SettingCache $settingcache)
     {
         $this->settings = $settings;
         $this->forumField = $forumField;
+        $this->settingcache = $settingcache;
     }
 
     /**
@@ -95,7 +97,7 @@ class ForumSettingSerializer extends AbstractSerializer
                 'site_create_thread4' => (int)$this->settings->get('site_create_thread4'),
                 'site_create_thread5' => (int)$this->settings->get('site_create_thread5'),
                 'site_create_thread6' => (int)$this->settings->get('site_create_thread6'),
-                'site_skin' => (int)$this->forumField->getSiteSkin(),
+                'site_skin' => (int)$this->settingcache->getSiteSkin()
             ],
 
             // 注册设置

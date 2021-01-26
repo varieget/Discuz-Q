@@ -252,28 +252,4 @@ class ForumSettingField
             'ucenter_appid' => $this->settings->get('ucenter_appid', 'ucenter'),
         ];
     }
-
-    /**
-     * 获取当前主题
-     */
-    public function getSiteSkin()
-    {
-        $public_path = public_path();
-        $site_skin = 1;
-        if(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'){
-            if(is_dir($public_path)){
-                if($dh = opendir($public_path)){
-                    $skin_file = 'skin.conf';
-                }
-            }
-        }else{
-            $skin_file = $public_path . DIRECTORY_SEPARATOR .'skin.conf';
-        }
-
-        if(file_exists($skin_file)){
-            $site_skin = file_get_contents($skin_file);
-        }
-
-        return $site_skin;
-    }
 }

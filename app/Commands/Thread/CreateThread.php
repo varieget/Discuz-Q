@@ -20,6 +20,7 @@ namespace App\Commands\Thread;
 
 use App\Censor\Censor;
 use App\Commands\Post\CreatePost;
+use App\Common\SettingCache;
 use App\Repositories\SequenceRepository;
 use App\Events\Thread\Created;
 use App\Events\Thread\Saving;
@@ -30,7 +31,6 @@ use App\Models\User;
 use App\Models\RedPacket;
 use App\Models\Setting;
 use App\Repositories\ThreadRepository;
-use App\Settings\ForumSettingField;
 use App\Validators\ThreadValidator;
 use Carbon\Carbon;
 use Discuz\Auth\AssertPermissionTrait;
@@ -82,13 +82,12 @@ class CreateThread
      * @param string $ip
      * @param string $port
      */
-    public function __construct(User $actor, array $data, $ip, $port, ForumSettingField $forumField)
+    public function __construct(User $actor, array $data, $ip, $port)
     {
         $this->actor = $actor;
         $this->data = $data;
         $this->ip = $ip;
         $this->port = $port;
-        $this->forumField = $forumField;
     }
 
     /**
@@ -105,7 +104,7 @@ class CreateThread
      * @throws Exception
      * @throws GuzzleException
      */
-    public function handle(EventDispatcher $events, BusDispatcher $bus, Censor $censor, Thread $thread, ThreadRepository $threads, ThreadValidator $validator)
+    public function handle(EventDispatcher $events, BusDispatcher $bus, Censor $censor, Thread $thread, ThreadRepository $threads, ThreadValidator $validator, SettingCache $settingcache)
     {
         $this->events = $events;
 
@@ -196,8 +195,8 @@ class CreateThread
         $thread->location = Arr::get($attributes, 'location', '');
 
         // 红蓝版本对于位置权限的兼容性判断 红蓝，蓝1，红2，默认为1
-        $site_skin = $this->forumField->getSiteSkin();
-        if (!empty($skin->value) && $site_skin == 2) {
+        $site_skin = $settingcache->getSiteSkin();
+        if ($site_skin == SettingCache::RED_SKIN_CODE) {
             if (!empty($thread->longitude) || !empty($thread->latitude) || !empty($thread->address) || !empty($thread->location)) {
                 $this->assertCan($this->actor, 'createThread.' . $thread->type . '.position');
             }
