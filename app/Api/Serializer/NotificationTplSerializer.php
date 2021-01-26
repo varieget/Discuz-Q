@@ -34,18 +34,7 @@ class NotificationTplSerializer extends AbstractSerializer
     /**
      * @var string[] 禁止修改的系统通知，只能设置开启关闭
      */
-    protected $disabledTypeName = [
-        '内容回复通知',
-        '内容点赞通知',
-        '内容支付通知',
-        '内容@通知',
-        '提现通知',
-        '提现失败通知',
-        '分成收入通知',
-        '问答提问通知',
-        '问答回答通知',
-        '过期通知',
-    ];
+    protected $disabledId = [25, 26, 27, 28, 33, 34, 37, 39, 41, 43];
 
     /**
      * @param NotificationTpl $model
@@ -71,7 +60,7 @@ class NotificationTplSerializer extends AbstractSerializer
             'redirect_type'      => (int) $model->redirect_type,
             'redirect_url'       => (string) $model->redirect_url,
             'page_path'          => (string) $model->page_path,
-            'disabled'           => $model->type === NotificationTpl::SYSTEM_NOTICE && in_array($model->type_name, $this->disabledTypeName),
+            'disabled'           => $model->type === NotificationTpl::SYSTEM_NOTICE && in_array($model->id, $this->disabledId),
         ];
     }
 
