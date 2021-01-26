@@ -88,14 +88,13 @@ class UpdateNotificationTplController extends AbstractListController
             case 0:
                 $this->validation->make($attributes, [
                     'title' => 'filled',
-                    'content' => 'filled',
                 ])->validate();
 
-                if ($title = Arr::get($attributes, 'title')) {
-                    $notificationTpl->title = $title;
+                if (Arr::has($attributes, 'title')) {
+                    $notificationTpl->title = Arr::get($attributes, 'title');
                 }
-                if ($content = Arr::get($attributes, 'content')) {
-                    $notificationTpl->content = $content;
+                if (Arr::has($attributes, 'content')) {
+                    $notificationTpl->content = Arr::get($attributes, 'content');
                 }
                 break;
             case 1:
