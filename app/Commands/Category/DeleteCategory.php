@@ -21,12 +21,15 @@ namespace App\Commands\Category;
 use App\Events\Category\Deleting;
 use App\Models\Category;
 use App\Models\User;
+use App\Models\AdminActionLog;
+use Carbon\Carbon;
 use App\Repositories\CategoryRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
 use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
+use Psr\Http\Message\ServerRequestInterface;
 
 class DeleteCategory
 {
@@ -73,9 +76,10 @@ class DeleteCategory
      * @throws PermissionDeniedException
      * @throws Exception
      */
-    public function handle(Dispatcher $events, CategoryRepository $categories)
+    public function handle(Dispatcher $events, CategoryRepository $categories, ServerRequestInterface $request)
     {
         $this->events = $events;
+        $ip = ip($request->getServerParams());
 
         $category = $categories->findOrFail($this->categoryId, $this->actor);
 
@@ -86,11 +90,34 @@ class DeleteCategory
             throw new Exception('cannot_delete_category_with_threads');
         }
 
+        if($category['parentid'] == 0){
+            $son_list = Category::query()->where('parentid',$this->categoryId)->get()->toArray();
+            if(isset($son_list) && !empty($son_list)){
+                foreach ($son_list as $key => $value) {
+                    $son_category = $categories->findOrFail($value['id'], $this->actor);
+                    if(!empty($son_category)){
+                        if($son_category->threads()->first('id')) {
+                            throw new Exception('cannot_delete_category_with_threads');
+                        }
+                    }
+                }
+            }
+        }
+        
+        $name = $category['name'];
+
         $this->events->dispatch(
             new Deleting($category, $this->actor, $this->data)
         );
 
         $category->delete();
+
+        AdminActionLog::createAdminActionLog(
+            $this->actor->id,
+            '删除内容分类【'. $name .'】',
+            $ip,
+            Carbon::now()
+        );
 
         $this->dispatchEventsFor($category, $this->actor);
 

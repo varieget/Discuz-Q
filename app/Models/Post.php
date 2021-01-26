@@ -22,6 +22,7 @@ use App\Common\CacheKey;
 use App\Events\Post\Hidden;
 use App\Events\Post\Restored;
 use App\Events\Post\Revised;
+use App\Models\UserWalletLog;
 use App\Formatter\Formatter;
 use Carbon\Carbon;
 use DateTime;
@@ -315,8 +316,9 @@ class Post extends Model
      * @param int $isComment
      * @return static
      */
-    public static function reply($threadId, $content, $userId, $ip, $port, $replyPostId, $replyUserId, $commentPostId, $commentUserId, $isFirst, $isComment)
+    public static function reply( $threadId, $content, $userId, $ip, $port, $replyPostId, $replyUserId, $commentPostId, $commentUserId, $isFirst, $isComment, Post $post=null)
     {
+        if (!$post->id)
         $post = new static;
 
         $post->created_at = Carbon::now();
@@ -617,5 +619,18 @@ class Post extends Model
         $f1 = $cache->forget($cacheKey0);
         $f2 = $cache->forget($cacheKey1);
         return $f1 || $f2;
+    }
+
+    public function getPostReward()
+    {
+        $this->removePostCache();
+        $thread = Thread::query()->where('id', $this->thread_id)->first();
+        $this->rewards = 0;
+        if($thread->type == Thread::TYPE_OF_QUESTION){
+            $this->rewards = UserWalletLog::query()
+                ->where(['post_id' => $this->id, 'thread_id' => $this->thread_id])
+                ->sum('change_available_amount');
+        }
+        return $this->rewards;
     }
 }

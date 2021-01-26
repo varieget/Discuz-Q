@@ -33,7 +33,35 @@ export default {
               id: 0,
               title: "站点设置",
               name: "siteSet",
-              icon: "iconzhandianshezhi"
+              icon: "iconzhandianshezhi",
+              submenu: [
+                {
+                  id: 0,
+                  title: "站点信息",
+                  name: "siteSet",
+                  icon: "iconzhandianshezhi"
+                },
+                {
+                  id: 1,
+                  title: "主题设置",
+                  name: "siteTheme",
+                  icon: "iconzhandianshezhi"
+                },
+                /*IFTRUE_pay*/
+                {
+                  id: 2,
+                  title: "功能设置",
+                  name: "siteFunctionSet",
+                  icon: "iconzhandianshezhi"
+                },
+                {
+                  id: 3,
+                  title: "首页数据设置",
+                  name: "siteSortSet",
+                  icon: "iconzhandianshezhi"
+                }
+                /*FITRUE_pay*/
+              ]
             },
             {
               id: 1,
@@ -97,13 +125,28 @@ export default {
                 }
               ]
             },
+            /*IFTRUE_default*/ 
             {
               id: 9,
               title: "其他服务设置",
               name: "otherServiceSet",
               icon: "iconqitafuwushezhi"
             },
-
+            /*FITRUE_default*/ 
+            /*IFTRUE_pay*/ 
+            {
+              id: 9,
+              title: "操作日志",
+              name: "operationLog",
+              icon: "iconqitafuwushezhi"
+            },
+            {
+              id: 10,
+              title: "其他服务设置",
+              name: "otherServiceSet",
+              icon: "iconqitafuwushezhi"
+            },
+            /*FITRUE_pay*/ 
             // {
             //   id:7,
             //   title:'后台用户管理',
@@ -354,9 +397,10 @@ export default {
           this.sideSelect = this.navList[1].submenu[0].name;
           this.indexTitle = this.navList[1].submenu[0].title;
           this.sideSubmenu =
-            this.navList[0].submenu[0].submenu === undefined || null
+            this.navList[1].submenu[0].submenu === undefined || null
               ? []
-              : this.navList[0].submenu[0].submenu;
+              : this.navList[1].submenu[0].submenu;
+          this.sideSubmenuSelect = this.navList[1].submenu[0].submenu[0].title;
           this.$router.push({ path: "/admin/site-set" });
           break;
         case "user":
@@ -407,7 +451,10 @@ export default {
         case "controlCenter":
           this.$router.push({ path: "/admin/home" });
           break;
+
         case "siteSet":
+          this.sideSubmenu = this.navList[1].submenu[0].submenu;
+          this.sideSubmenuSelect = this.navList[1].submenu[0].submenu[0].title;
           this.$router.push({
             path: "/admin/site-set",
             query: { name: "站点设置" }
@@ -439,6 +486,11 @@ export default {
           this.sideSubmenuSelect = this.navList[1].submenu[8].submenu[0].title;
           this.$router.push({ path: "/admin/system-notice" });
           break;
+        /*IFTRUE_pay*/
+        case "operationLog":
+          this.$router.push({ path: "/admin/operation-log" });
+          break;
+        /*FITRUE_pay*/
         case "adminUserManage":
           this.$router.push({ path: "/admin/user-manage-set" });
           break;
@@ -521,6 +573,28 @@ export default {
      * */
     sideSubmenuClick(title) {
       switch (title) {
+        case "站点信息":
+          this.sideSubmenuSelect = title;
+          this.$router.push({ 
+            path: "/admin/site-set",
+            query: { name: "站点设置" }
+          });
+          break;
+        case "主题设置":
+          this.sideSubmenuSelect = title;
+          this.$router.push({ path: "/admin/site-theme" });
+          break;
+        /*IFTRUE_pay*/
+        case "功能设置":
+          this.sideSubmenuSelect = title;
+          this.$router.push({ path: "/admin/site-function-set" });
+          break;
+        case "首页数据设置":
+          this.sideSubmenuSelect = title;
+          this.$router.push({ path: "/admin/site-sort-set" });
+          break;
+        /*FITRUE_pay*/
+
         case "系统通知":
           this.sideSubmenuSelect = title;
           this.$router.push({ path: "/admin/system-notice" });
@@ -639,6 +713,25 @@ export default {
 
       if (sideSubmenu) {
         switch (sideSubmenu) {
+          case "站点信息":
+            this.sideSubmenu = this.navList[1].submenu[0].submenu;
+            this.sideSubmenuSelect = this.navList[1].submenu[0].submenu[0].title;
+            break;
+          case "主题设置":
+            this.sideSubmenu = this.navList[1].submenu[0].submenu;
+            this.sideSubmenuSelect = this.navList[1].submenu[0].submenu[1].title;
+            break;
+          /*IFTRUE_pay*/
+          case "功能设置":
+            this.sideSubmenu = this.navList[1].submenu[0].submenu;
+            this.sideSubmenuSelect = this.navList[1].submenu[0].submenu[2].title;
+            break;
+          case "首页数据设置":
+            this.sideSubmenu = this.navList[1].submenu[0].submenu;
+            this.sideSubmenuSelect = this.navList[1].submenu[0].submenu[3].title;
+            break;
+          /*FITRUE_pay*/
+
           case "系统通知":
             this.sideSubmenu = this.navList[1].submenu[8].submenu;
             this.sideSubmenuSelect = this.navList[1].submenu[8].submenu[0].title;
