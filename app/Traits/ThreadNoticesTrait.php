@@ -91,14 +91,14 @@ trait ThreadNoticesTrait
     /**
      * 内容置顶通知
      *
-     * @param $thread
-     * @param $actor
+     * @param Thread $thread
+     * @param User $actor
      */
     private function sendIsSticky($thread, $actor)
     {
         $build = [
             'message' => $this->getThreadTitle($thread),
-            'post' => $thread->post,
+            'post' => $thread->firstPost,
             'notify_type' => PostMessage::NOTIFY_STICKY_TYPE,
         ];
 
@@ -109,14 +109,14 @@ trait ThreadNoticesTrait
     /**
      * 内容精华通知
      *
-     * @param $thread
-     * @param $actor
+     * @param Thread $thread
+     * @param User $actor
      */
     private function sendIsEssence($thread, $actor)
     {
         $build = [
             'message' => $this->getThreadTitle($thread),
-            'post' => $thread->post,
+            'post' => $thread->firstPost,
             'notify_type' => PostMessage::NOTIFY_ESSENCE_TYPE,
         ];
 
@@ -127,15 +127,15 @@ trait ThreadNoticesTrait
     /**
      * 内容删除通知
      *
-     * @param $thread
-     * @param $actor
+     * @param Thread $thread
+     * @param User $actor
      * @param array $attach 原因
      */
     private function sendIsDeleted($thread, $actor, array $attach)
     {
         $data = [
             'message' => $this->getThreadTitle($thread),
-            'post' => $thread->post,
+            'post' => $thread->firstPost,
             'refuse' => $attach['refuse'],
             'notify_type' => PostMessage::NOTIFY_DELETE_TYPE,
         ];
@@ -147,15 +147,15 @@ trait ThreadNoticesTrait
     /**
      * 内容审核通知
      *
-     * @param $thread
-     * @param $actor
+     * @param Thread $thread
+     * @param User $actor
      * @param array $attach 原因
      */
     private function sendIsApproved($thread, $actor, array $attach)
     {
         $data = [
             'message' => $this->getThreadTitle($thread),
-            'post' => $thread->post,
+            'post' => $thread->firstPost,
             'refuse' => $attach['refuse'],
         ];
 
@@ -174,7 +174,7 @@ trait ThreadNoticesTrait
     /**
      * 首贴内容代替
      *
-     * @param $thread
+     * @param Thread $thread
      * @return mixed
      */
     public function getThreadTitle($thread)

@@ -42,9 +42,10 @@ class PostWechatMessage extends SimpleMessage
         $this->data = $data;
 
         // set post model
-        isset($this->data['post']) ? $this->post = $data['post'] : null;
-
-        $this->template();
+        if (isset($this->data['post'])) {
+            $this->post = $data['post'];
+            $this->template();
+        }
     }
 
     public function template()
