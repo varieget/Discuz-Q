@@ -162,7 +162,10 @@ class ListThreadsController extends AbstractListController
         $actor = $request->getAttribute('actor');
         $params = $request->getQueryParams();
         $filter = $this->extractFilter($request);
-        if (!(isset($filter['viewCountGt']) || isset($filter['viewCountLt']) || isset($filter['postCountGt']) || isset($filter['postCountLt']))) {
+        if (!(
+            isset($filter['createdAtBegin']) ||
+            isset($filter['createdAtEnd'])
+        )) {
             app()->instance('isCalled', true);
         }
         // 获取推荐到站点信息页数据时 不检查权限
