@@ -43,18 +43,28 @@ class ListRandomUsersController extends AbstractListController
     protected function data(ServerRequestInterface $request, Document $document)
     {
 
-        $userList = User::query()->where('status',0)->orderBy('created_at')->get();
-        $userList_array = json_decode($userList,true);
-        shuffle($userList_array);
-        if(count($userList_array) <= 10){
+        $userCount = User::query()->where('status',0)->count();
+
+        if($userCount <= 10){
+            $userList = User::query()->limit(10)->where('status',0)->orderBy('updated_at')->get();
             return $userList;
-        }else{
-            $userList_array = array_slice($userList_array, 1, 10);
-            $ids = array();
-            foreach ($userList_array as $key => $value) {
-                $ids[] = $value['id'];
-            }
-            return User::query()->whereIn('id', $ids)->where('status',0)->orderBy('created_at')->get();
         }
+
+        $offset = rand(0,$userCount);
+
+        if($offset > $userCount-10){
+            $offset = $userCount - 10;
+        }
+
+        $userId = User::query()->offset($offset)->where('status',0)->limit(100)->pluck('id')->toArray();
+
+        shuffle($userId);
+
+        $ids = array_slice($userId,0,10);
+
+        $userList = User::query()->whereIn('id', $ids)->orderBy('updated_at')->get();
+
+        return $userList;
+
     }
 }

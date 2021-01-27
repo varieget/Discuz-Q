@@ -44,18 +44,28 @@ class ListRandomTopicsController extends AbstractListController
     protected function data(ServerRequestInterface $request, Document $document)
     {
 
-        $topicList = Topic::query()->orderBy('updated_at')->get();
-        $topicList_array = json_decode($topicList,true);
-        shuffle($topicList_array);
-        if(count($topicList_array) <= 10){
+        $topicCount = Topic::query()->count();
+
+        if($topicCount <= 10){
+            $topicList = Topic::query()->limit(10)->orderBy('updated_at')->get();
             return $topicList;
-        }else{
-            $topicList_array = array_slice($topicList_array, 1, 10);
-            $ids = array();
-            foreach ($topicList_array as $key => $value) {
-                $ids[] = $value['id'];
-            }
-            return Topic::query()->whereIn('id', $ids)->orderBy('updated_at')->get();
         }
+
+        $offset = rand(0,$topicCount);
+
+        if($offset > $topicCount-10){
+            $offset = $topicCount - 10;
+        }
+
+        $topicId = Topic::query()->offset($offset)->limit(100)->pluck('id')->toArray();
+
+        shuffle($topicId);
+
+        $ids = array_slice($topicId,0,10);
+
+        $topicList = Topic::query()->whereIn('id', $ids)->orderBy('updated_at')->get();
+
+        return $topicList;
+
     }
 }
