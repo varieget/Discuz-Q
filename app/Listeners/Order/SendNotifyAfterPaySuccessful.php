@@ -37,7 +37,6 @@ class SendNotifyAfterPaySuccessful
     public function handle(Updated $event)
     {
         $this->order = $event->order;
-        $this->actor = $event->actor;
 
         // 不发通知：问答的提问没有主题数据；购买用户组没人可收
         if (
@@ -116,8 +115,10 @@ class SendNotifyAfterPaySuccessful
             }
 
             if (! empty($userDistribution)) {
+                // 付款人 = 当前登录人
+                $actor = $this->order->user;
                 // Tag 发送通知
-                $userDistribution->parentUser->notify(new Rewarded(RewardedScaleWechatMessage::class, $this->actor, $this->order, ['notify_type' => $type]));
+                $userDistribution->parentUser->notify(new Rewarded(RewardedScaleWechatMessage::class, $actor, $this->order, ['notify_type' => $type]));
             }
         }
     }
