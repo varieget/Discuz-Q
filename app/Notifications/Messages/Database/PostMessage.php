@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Messages\Database;
 
+use App\Models\Post;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Support\Arr;
 
@@ -21,6 +22,11 @@ class PostMessage extends SimpleMessage
 
     protected $data;
 
+    /**
+     * @var Post
+     */
+    protected $post;
+
     public function __construct()
     {
         //
@@ -36,7 +42,11 @@ class PostMessage extends SimpleMessage
         $this->actor = $actor;
         $this->data = $data;
 
-        $this->render();
+        // set post model
+        if (isset($this->data['post'])) {
+            $this->post = $data['post'];
+            $this->render();
+        }
     }
 
     protected function titleReplaceVars()
@@ -49,7 +59,7 @@ class PostMessage extends SimpleMessage
         $message = Arr::get($data, 'message', '');
 
         return [
-            $this->actor->username,
+            $this->post->user->username,
             $this->filterSpecialChar ? $this->strWords($message) : $message,
             Arr::get($data, 'refuse', '无'),
         ];
