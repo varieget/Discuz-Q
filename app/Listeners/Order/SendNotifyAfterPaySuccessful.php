@@ -58,35 +58,39 @@ class SendNotifyAfterPaySuccessful
                 break;
             case Order::ORDER_TYPE_REWARD: // 打赏
                 // Tag 发送通知 (通知主题作者)
-                $this->order->payee->notify(new Rewarded(RewardedWechatMessage::class, $this->order->user, $this->order));
-
+                $this->senPayeeUser();
                 // 发送分成通知
                 $this->sendScaleNotice('paid_reward');
                 break;
             case Order::ORDER_TYPE_THREAD: // 付费主题
                 // Tag 发送通知 (通知作者收款通知)
-                $this->order->payee->notify(new Rewarded(RewardedWechatMessage::class, $this->order->user, $this->order));
-
+                $this->senPayeeUser();
                 // 发送分成通知
                 $this->sendScaleNotice('paid_thread');
                 break;
             case Order::ORDER_TYPE_ONLOOKER: // 围观
                 // Tag 发送通知 (发送给 问答人 收入分成通知 Tag 目前该用户上级不分成)
-                $this->order->payee->notify(new Rewarded(RewardedWechatMessage::class, $this->order->user, $this->order));
-
+                $this->senPayeeUser();
                 // Tag 发送通知 (发送给 答题人（第三方用户） 收入分成通知 Tag 目前该用户上级不分成)
                 $this->order->thirdParty->notify(new Rewarded(RewardedWechatMessage::class, $this->order->user, $this->order));
                 break;
             case Order::ORDER_TYPE_ATTACHMENT: // 附件付费
                 // Tag 发送通知 (通知作者收款通知)
-                $this->order->payee->notify(new Rewarded(RewardedWechatMessage::class, $this->order->user, $this->order));
-
+                $this->senPayeeUser();
                 // 发送分成通知
                 $this->sendScaleNotice('paid_attachment');
                 break;
             default:
                 break;
         }
+    }
+
+    /**
+     * 通知收款人(payee)
+     */
+    public function senPayeeUser()
+    {
+        $this->order->payee->notify(new Rewarded(RewardedWechatMessage::class, $this->order->user, $this->order));
     }
 
     /**
