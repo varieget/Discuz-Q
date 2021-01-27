@@ -34,11 +34,11 @@ export default {
     methods: {
       // 点击添加关键字
       tableContAdd() {
-        this.appletsList.push('')
+        this.appletsList.push('');
       },
       // 点击删除图标
       delectClick(index) {
-        this.appletsList.splice(index,1);
+        this.appletsList.splice(index, 1);
       },
       // 通知方式切换
       noticeListChange(data) {
@@ -63,7 +63,7 @@ export default {
         }).then(res => {
           if (res.readdata[0]) {
             this.systemList = res.readdata[0]._data;
-            let vars = this.systemList.vars;
+            let vars = this.systemList.template_variables;
             if (vars) {
               this.systemDes = '请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。\n\n可以使用如下变量：\n';
               for (let key in vars) {
@@ -79,17 +79,16 @@ export default {
           }
           if (res.readdata[1]) {
             this.wxList = res.readdata[1]._data;
-            let vars = this.wxList.vars;
+            let vars = this.wxList.template_variables;
             if (vars) {
               this.wxDes = '请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。\n\n可以使用如下变量：\n';
               for (let key in vars) {
                 this.wxDes += `${key} ${vars[key]}\n`;
               }
             }
-            this.appletsList = [];
-            this.wxList.keywords_data.forEach((item, index) => {
-              this.appletsList.push(item)
-            })
+            this.appletsList = this.wxList.keywords_data.length > 0
+              ? this.wxList.keywords_data
+              : ['', ''];
           }
 
           if (this.wxList.status) {
@@ -148,7 +147,8 @@ export default {
               "keywords_data": this.appletsList,
               "remark_data": this.wxList.remark_data,
               "redirect_type": this.wxList.redirect_type,
-              "redirect_url": this.wxList.redirect_url
+              "redirect_url": this.wxList.redirect_url,
+              "page_path":this.wxList.page_path,
             }
           });
         } else {
