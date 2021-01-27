@@ -15,13 +15,13 @@
     <div class="system-notice" v-show="showSystem">
       <p class="system-title">系统通知</p>
     <Card header="用户角色通知标题：">
-      <CardRow description="系统发送的欢迎信息的标题，不支持HTML，不超过75字节">
+      <CardRow :description="systemList.disabled ? '当前通知的内容和格式为系统内置，无法自定义配置' : '系统发送的欢迎信息的标题，不支持HTML，不超过75字节'">
         <el-input type="text" maxlength="75" v-model="systemList.title" :disabled="systemList.disabled" ></el-input>
       </CardRow>
     </Card>
 
     <Card header="通知内容：">
-      <CardRow row :description="systemDes">
+      <CardRow row :description="systemList.disabled ? '' : systemDes">
         <el-input type="textarea" :autosize="{ minRows: 5, maxRows: 5}" v-model="systemList.content" :disabled="systemList.disabled" clearable></el-input>
       </CardRow>
     </Card>
