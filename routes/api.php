@@ -409,13 +409,6 @@ $route->delete('/cache', 'cache.clear', ApiController\Cache\CacheController::cla
 
 /*
 |--------------------------------------------------------------------------
-| AdminActionLog
-|--------------------------------------------------------------------------
-*/
-$route->get('/adminactionlog', 'adminactionlog.log.list', ApiController\AdminActionLog\ListAdminActionLogsController::class);
-
-/*
-|--------------------------------------------------------------------------
 | Random
 |--------------------------------------------------------------------------
 */
