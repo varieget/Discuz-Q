@@ -2,13 +2,10 @@
 
 /**
  * Copyright (C) 2020 Tencent Cloud.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *   http://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,7 +61,8 @@ class SaveQuestionToDatabase
         ConnectionInterface $connection,
         SettingsRepository $settings,
         BusDispatcher $bus
-    ) {
+    )
+    {
         $this->events = $eventDispatcher;
         $this->questionValidator = $questionValidator;
         $this->connection = $connection;
@@ -98,7 +96,11 @@ class SaveQuestionToDatabase
                  */
                 $questionData['actor'] = $actor;
                 $this->questionValidator->valid($questionData);
-                $price = Arr::get($questionData, 'price', 0);
+                if (! isset($questionData['order_id']) || empty($questionData['order_id'])) {
+                    $price = 0;
+                } else {
+                    $price = Arr::get($questionData, 'price', 0);
+                }
                 $isOnlooker = Arr::get($questionData, 'is_onlooker', true); // 获取帖子是否允许围观
 
                 // get unit price
@@ -116,13 +118,13 @@ class SaveQuestionToDatabase
                      * @var Question $question
                      */
                     $build = [
-                        'thread_id' => $post->thread_id,
-                        'user_id' => $actor->id,
-                        'be_user_id' => Arr::get($questionData, 'be_user_id'),
-                        'price' => $price,
+                        'thread_id'           => $post->thread_id,
+                        'user_id'             => $actor->id,
+                        'be_user_id'          => Arr::get($questionData, 'be_user_id'),
+                        'price'               => $price,
                         'onlooker_unit_price' => $onlookerUnitPrice ?? 0,
-                        'is_onlooker' => $actor->can('canBeOnlooker') ? $isOnlooker : false,
-                        'expired_at' => Carbon::today()->addDays(Question::EXPIRED_DAY),
+                        'is_onlooker'         => $actor->can('canBeOnlooker') ? $isOnlooker : false,
+                        'expired_at'          => Carbon::today()->addDays(Question::EXPIRED_DAY),
                     ];
                     $question = Question::build($build);
                     $question->save();
@@ -146,8 +148,8 @@ class SaveQuestionToDatabase
                          */
                         if ($order->payment_type == Order::PAYMENT_TYPE_WALLET) {
                             $walletLog = UserWalletLog::query()->where([
-                                'user_id' => $actor->id,
-                                'order_id' => $order->id,
+                                'user_id'     => $actor->id,
+                                'order_id'    => $order->id,
                                 'change_type' => UserWalletLog::TYPE_QUESTION_FREEZE,
                             ])->first();
 
