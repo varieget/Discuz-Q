@@ -47,8 +47,8 @@ class NotificationTpl extends Model
     /**
      * 跳转类型：0无跳转 1跳转H5 2跳转小程序
      */
-    const REDIRECT_TYPE_TO_NO = 0;
-    const REDIRECT_TYPE_TO_H5 = 1;
+    const REDIRECT_TYPE_TO_NO          = 0;
+    const REDIRECT_TYPE_TO_H5          = 1;
     const REDIRECT_TYPE_TO_MINIPROGRAM = 2;
 
     public $timestamps = false;
@@ -67,11 +67,11 @@ class NotificationTpl extends Model
      * @var array
      */
     protected static $status = [
-        'database' => 0,
-        'wechat' => 1,
-        'sms' => 2, // 待定暂未使用
+        'database'         => 0,
+        'wechat'           => 1,
+        'sms'              => 2, // 待定暂未使用
         'enterpriseWeChat' => 3,
-        'miniProgram' => 4, // 待定暂未使用
+        'miniProgram'      => 4, // 待定暂未使用
     ];
 
     protected static $typeName = [
@@ -126,8 +126,8 @@ class NotificationTpl extends Model
     public static function getWechatFormat($arr)
     {
         $result = [
-            'data' => [
-                'first' => [
+            'data'         => [
+                'first'    => [
                     'value' => $arr['first'],
                     'color' => $arr['color']['first_color'] ?? '#173177',
                 ],
@@ -139,7 +139,7 @@ class NotificationTpl extends Model
                     'value' => $arr['keyword2'] ?? '',
                     'color' => $arr['color']['keyword2_color'] ?? '#173177',
                 ],
-                'remark' => [
+                'remark'   => [
                     'value' => $arr['remark'],
                     'color' => $arr['color']['remark_color'] ?? '#173177',
                 ],
