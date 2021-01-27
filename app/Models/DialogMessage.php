@@ -153,7 +153,7 @@ class DialogMessage extends Model
         return $messageText;
     }
 
-    public static function build($user_id, $dialog_id, $attachment_id, $message_text, $image_url)
+    public static function build($user_id, $dialog_id, $attachment_id, $message_text)
     {
         $dialogMessage = new static();
 
@@ -161,7 +161,6 @@ class DialogMessage extends Model
         $dialogMessage->dialog_id     = $dialog_id;
         $dialogMessage->attachment_id = $attachment_id;
         $dialogMessage->message_text  = $message_text;
-        $dialogMessage->image_url     = $image_url;
 
         return $dialogMessage;
     }
