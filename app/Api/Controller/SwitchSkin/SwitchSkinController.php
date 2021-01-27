@@ -90,7 +90,7 @@ class SwitchSkinController implements RequestHandlerInterface
         if(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'){
             // 检查文件有无读写权限
             $this->check_dir($link_skin_public, $public_path);
-            $this->copy_dir($link_skin_public, $public_path);
+            $this->copy_dir($link_skin_public, $public_path, $old_skin_public);
             if(is_dir($public_path)){
                 if($dh = opendir($public_path)){
                     $skin_file = 'skin.conf';
@@ -157,7 +157,16 @@ class SwitchSkinController implements RequestHandlerInterface
 
 
     // 文件拷贝
-    public function copy_dir($from_dir, $to_dir)
+    public function copy_dir($from_dir, $to_dir, $old_skin_public)
+    {
+        if(!$this->copy_dir_impl($from_dir, $to_dir)){
+            if(!$this->copy_dir_impl($old_skin_public, $from_dir)){
+                throw new Exception("切换失败！尝试文件还原不成功！");
+            }
+        }
+    }
+
+    public function copy_dir_impl($from_dir, $to_dir)
     {
         if(!is_dir($from_dir)){
             return false;
@@ -168,26 +177,35 @@ class SwitchSkinController implements RequestHandlerInterface
         if(!file_exists($to_dir)){
             @mkdir($to_dir);
         }
-        if(!empty($from_files)){
-            foreach ($from_files as $file){
-                if($file == '.' || $file == '..' ){
-                    continue;
+
+        if(empty($from_files)){
+            return false;
+        }
+
+        foreach ($from_files as $file){
+            if($file == '.' || $file == '..' ){
+                continue;
+            }
+
+            if(is_dir($from_dir .'/'. $file)){
+                //如果是目录，则调用自身
+                $this->copy_dir_impl($from_dir .'/'. $file, $to_dir .'/'. $file);
+            }else{
+                //直接copy到目标文件夹
+                $copyResult = false;
+                try {
+                    $copyResult = copy($from_dir .'/'. $file, $to_dir .'/'. $file);
+                } catch (Exception $e) {
                 }
 
-                if(is_dir($from_dir .'/'. $file)){
-                    //如果是目录，则调用自身
-                    $this->copy_dir($from_dir .'/'. $file, $to_dir .'/'. $file);
-                }else{
-                    //直接copy到目标文件夹
-                    $fileWritable = is_writable($to_dir .'/'. $file);
-                    if(!$fileWritable){
-                        $filePath = $to_dir .'/'. $file;
-                        throw new Exception("$filePath文件没有读写权限，无法进行栏目切换！");
-                    }
-                    copy($from_dir .'/'. $file, $to_dir .'/'. $file);
+                if(!$copyResult){
+                    return $copyResult;
                 }
+
             }
         }
+
+        return true;
     }
 
     // 文件读写权限检查-WIN
