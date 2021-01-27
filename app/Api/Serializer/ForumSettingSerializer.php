@@ -88,15 +88,15 @@ class ForumSettingSerializer extends AbstractSerializer
                 'site_master_scale' => $this->settings->get('site_master_scale'), // 站长比例
                 'site_pay_group_close' => $this->settings->get('site_pay_group_close'), // 用户组购买开关
                 'site_minimum_amount' => $this->settings->get('site_minimum_amount'),
-                'site_open_sort' => (int)$this->settings->get('site_open_sort') ?: 0,
-                'site_create_thread0' => (int)$this->settings->get('site_create_thread0') ?: 1,
-                'site_create_thread1' => (int)$this->settings->get('site_create_thread1') ?: 1,
-                'site_create_thread2' => (int)$this->settings->get('site_create_thread2') ?: 1,
-                'site_create_thread3' => (int)$this->settings->get('site_create_thread3') ?: 1,
-                'site_create_thread4' => (int)$this->settings->get('site_create_thread4') ?: 1,
-                'site_create_thread5' => (int)$this->settings->get('site_create_thread5') ?: 1,
-                'site_create_thread6' => (int)$this->settings->get('site_create_thread6') ?: 1,
-                'site_skin' => (int)$this->settingcache->getSiteSkin() ?: 1
+                'site_open_sort' => $this->settings->get('site_open_sort') == "" ? 0: $this->settings->get('site_open_sort'),
+                'site_create_thread0' => $this->settings->get('site_create_thread0') == "" ? 1 : $this->settings->get('site_create_thread0'),
+                'site_create_thread1' => $this->settings->get('site_create_thread1') == "" ? 1 : $this->settings->get('site_create_thread1'),
+                'site_create_thread2' => $this->settings->get('site_create_thread2') == "" ? 1 : $this->settings->get('site_create_thread2'),
+                'site_create_thread3' => $this->settings->get('site_create_thread3') == "" ? 1 : $this->settings->get('site_create_thread3'),
+                'site_create_thread4' => $this->settings->get('site_create_thread4') == "" ? 1 : $this->settings->get('site_create_thread4'),
+                'site_create_thread5' => $this->settings->get('site_create_thread5') == "" ? 1 : $this->settings->get('site_create_thread5'),
+                'site_create_thread6' => $this->settings->get('site_create_thread6') == "" ? 1 : $this->settings->get('site_create_thread6'),
+                'site_skin' => (int)$this->settingcache->getSiteSkin()
             ],
 
             // 注册设置

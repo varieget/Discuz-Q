@@ -399,7 +399,7 @@ class ListThreadsController extends AbstractListController
 
         if(!isset($filter['createdAtBegin'])){
             // from index request
-            if($filter['isSort'] == 1) {
+            if(isset($filter['isSort']) && $filter['isSort'] == 1) {
                 $cacheKey = CacheKey::LIST_SEQUENCE_THREAD_INDEX;
                 $index_thread_ids = $this->cache->get($cacheKey);
                 // don't have ids cache

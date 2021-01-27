@@ -79,8 +79,17 @@ class SwitchSkinController implements RequestHandlerInterface
         $last_path = dirname($public_path);
         $link_skin_public = $last_path . DIRECTORY_SEPARATOR .'public_'. $attributes['skin'];
 
+        $oldSkinPath = $public_path . DIRECTORY_SEPARATOR . 'skin.conf';
+        $oldSiteSkin = file_get_contents($oldSkinPath);
+        if($oldSiteSkin == $attributes['skin']){
+            throw new Exception("您已是当前栏目，无需切换！");
+        }
+
         $status = false;
+        $old_skin_public = $last_path . DIRECTORY_SEPARATOR .'public_'. $oldSiteSkin;
         if(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'){
+            // 检查文件有无读写权限
+            $this->check_dir($link_skin_public, $public_path);
             $this->copy_dir($link_skin_public, $public_path);
             if(is_dir($public_path)){
                 if($dh = opendir($public_path)){
@@ -91,23 +100,33 @@ class SwitchSkinController implements RequestHandlerInterface
                             $status = true;
                         }
                     }else{
-                        throw new Exception("<p>您已丢失主题标识文件，无法判断您是否切换成功！</p>");
+                        throw new Exception("您已丢失主题标识文件，无法判断您是否切换成功！");
                     }
                 }
             }
         }else{
             $cmd = '\\cp -r '. $link_skin_public . DIRECTORY_SEPARATOR . '* ' . $public_path. DIRECTORY_SEPARATOR;
-            shell_exec($cmd);
+            $message = shell_exec($cmd);
+            if($message){
+                // 如果发生异常(权限问题)，尝试把原文件从备用public里中拷回去
+                $restoreCmd = '\\cp -r '. $old_skin_public . DIRECTORY_SEPARATOR . '* ' . $public_path. DIRECTORY_SEPARATOR;
+                $restoreMessage = shell_exec($restoreCmd);
+                if($restoreMessage){
+                    throw new Exception("切换失败！尝试文件还原不成功！请在站点目录下执行命令:$cmd");
+                }else{
+                    throw new Exception("切换失败！请在站点目录下执行命令:$cmd");
+                }
+            }
             $skin_file = $public_path . DIRECTORY_SEPARATOR .'skin.conf';
             if(file_exists($skin_file)){
                 $site_skin = file_get_contents($skin_file);
                 if($site_skin == $attributes['skin']){
                     $status = true;
                 }else{
-                    throw new Exception("切换失败，请在站点目录下运行:$cmd");
+                    throw new Exception("切换失败，请在站点目录下执行命令:$cmd");
                 }
             }else{
-                throw new Exception("<p>您已丢失主题标识文件，无法判断您是否切换成功！</p>");
+                throw new Exception("您已丢失主题标识文件，无法判断您是否切换成功！");
             }
         }
 
@@ -136,6 +155,8 @@ class SwitchSkinController implements RequestHandlerInterface
         return DiscuzResponseFactory::JsonResponse($result);
     }
 
+
+    // 文件拷贝
     public function copy_dir($from_dir, $to_dir)
     {
         if(!is_dir($from_dir)){
@@ -158,7 +179,45 @@ class SwitchSkinController implements RequestHandlerInterface
                     $this->copy_dir($from_dir .'/'. $file, $to_dir .'/'. $file);
                 }else{
                     //直接copy到目标文件夹
+                    $fileWritable = is_writable($to_dir .'/'. $file);
+                    if(!$fileWritable){
+                        $filePath = $to_dir .'/'. $file;
+                        throw new Exception("$filePath文件没有读写权限，无法进行栏目切换！");
+                    }
                     copy($from_dir .'/'. $file, $to_dir .'/'. $file);
+                }
+            }
+        }
+    }
+
+    // 文件读写权限检查-WIN
+    public function check_dir($from_dir, $to_dir)
+    {
+        if(!is_dir($from_dir)){
+            return false;
+        }
+
+        $from_files = scandir($from_dir);
+         //如果不存在目标目录，则尝试创建
+        if(!file_exists($to_dir)){
+            @mkdir($to_dir);
+        }
+        if(!empty($from_files)){
+            foreach ($from_files as $file){
+                if($file == '.' || $file == '..' ){
+                    continue;
+                }
+
+                if(is_dir($from_dir .'/'. $file)){
+                    //如果是目录，则调用自身
+                    $this->check_dir($from_dir .'/'. $file, $to_dir .'/'. $file);
+                }else{
+                    //直接copy到目标文件夹
+                    $fileWritable = is_writable($to_dir .'/'. $file);
+                    if(!$fileWritable){
+                        $filePath = $to_dir .'/'. $file;
+                        throw new Exception("$filePath文件没有读写权限，无法进行栏目切换！");
+                    }
                 }
             }
         }
