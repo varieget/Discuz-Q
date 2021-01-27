@@ -138,9 +138,11 @@ class ThreadPolicy extends AbstractPolicy
             return true;
         }else{
             $request = app('request');
-            $data = $request->getParsedBody()->get('data', []);
-            if(isset($data['attributes']['is_old_draft']) && $data['attributes']['is_old_draft'] == 1){
-                return true;
+            if(Arr::get($request->getQueryParams(), 'data')){
+                $is_old_draft = Arr::get($request->getQueryParams(), 'data.attributes', 'is_old_draft');
+                if($is_old_draft == 1){
+                    return true;
+                }
             }
         }
     }

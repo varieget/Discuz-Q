@@ -26,6 +26,7 @@ use App\Models\Permission;
 use App\Models\User;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Http\DiscuzResponseFactory;
 use Exception;
 use Illuminate\Support\Arr;
@@ -40,10 +41,11 @@ class UpdateSequenceController implements RequestHandlerInterface
 
     protected $cache;
 
-    public function __construct(User $actor)
+    public function __construct(User $actor, SettingsRepository $settings)
     {
         $this->cache = app('cache');
         $this->actor = $actor;
+        $this->settings = $settings;
     }
 
     /**
@@ -63,7 +65,8 @@ class UpdateSequenceController implements RequestHandlerInterface
         if(!isset($attributes['site_open_sort']) || empty($attributes['site_open_sort'])){
             $attributes['site_open_sort'] = 0;
         }
-        Setting::query()->where('key', 'site_open_sort')->update(['value' => $attributes['site_open_sort']]);
+
+        $this->settings->set('site_open_sort', $attributes['site_open_sort'], 'default');
 
         $sequence = array(
             'category_ids' => $attributes['category_ids'] ?? '',
