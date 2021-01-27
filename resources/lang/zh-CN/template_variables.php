@@ -190,4 +190,13 @@ return [
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
     ],
 
+    // 路由跳转
+    // '/pages/home/index' => '首页',
+    '/topic/index?id={$thread_id}' => '帖子详情页',
+    '/pages/notice/notice?title=系统通知&type=system' => '"系统通知" 页',
+    '/pages/notice/notice?title=回复我的&type=replied' => '"回复我的" 通知页',
+    '/pages/notice/notice?title=点赞我的&type=liked' => '点赞我的" 通知页',
+    '/pages/notice/notice?title=财务通知&type=rewarded,withdrawal' => '"财务通知" 页',
+    '/pages/my/withdrawalslist' => '个人中心-我的钱包-提现记录页',
+    '/pages/my/walletlist' => '个人中心-我的钱包-钱包明细页',
 ];
