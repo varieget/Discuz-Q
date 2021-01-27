@@ -64,31 +64,30 @@ class StatusWechatMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
+         * @parem $user_id 用户ID
          * @parem $user_name 用户名
          * @parem $user_mobile 用户手机号
+         * @parem $user_mobile_encrypt 用户手机号(带 * 的)
          * @parem $user_change_status 改变的用户状态
          * @parem $user_original_status 原用户状态
          * @parem $reason 原因
          */
         $this->setTemplateData([
-            '{$user_name}' => $this->user->username,
-            '{$user_mobile}' => $this->user->getRawOriginal('mobile'),
-            '{$user_change_status}' => User::enumStatus($this->user->status, true),
+            '{$user_id}'              => $this->user->id,
+            '{$user_name}'            => $this->user->username,
+            '{$user_mobile}'          => $this->user->getRawOriginal('mobile'),
+            '{$user_mobile_encrypt}'  => $this->user->mobile,
+            '{$user_change_status}'   => User::enumStatus($this->user->status, true),
             '{$user_original_status}' => User::enumStatus($this->user->getRawOriginal('status'), true),
-            '{$reason}' => $reason,
+            '{$reason}'               => $reason,
         ]);
 
         // build data
-        $build = $this->compiledArray();
+        $expand = [
+            'redirect_url' => $this->url->to(''),
+        ];
 
-        // redirect_url
-        $redirectUrl = '';
-        if (! empty($this->firstData->redirect_url)) {
-            $redirectUrl = $this->firstData->redirect_url;
-        }
-        $build['redirect_url'] = $this->url->to($redirectUrl);
-
-        return $build;
+        return $this->compiledArray($expand);
     }
 
 }

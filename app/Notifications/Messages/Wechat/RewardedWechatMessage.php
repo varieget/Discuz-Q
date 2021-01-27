@@ -94,33 +94,32 @@ class RewardedWechatMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
+         * @parem $user_id 支付人用户ID
          * @parem $user_name 支付人
          * @parem $order_sn 订单编号
          * @parem $payment_sn 支付编号
          * @parem $order_type_name 订单支付类型 (打赏/付费主题/付费用户组/问答回答收入/问答围观收入/付费附件)
          * @parem $actual_amount 实际获得金额
+         * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
          */
         $this->setTemplateData([
-            '{$user_name}' => $this->order->user->username,
-            '{$order_sn}' => $this->order->order_sn,
-            '{$payment_sn}' => $this->order->payment_sn,
+            '{$user_id}'         => $this->order->user->id,
+            '{$user_name}'       => $this->order->user->username,
+            '{$order_sn}'        => $this->order->order_sn,
+            '{$payment_sn}'      => $this->order->payment_sn,
             '{$order_type_name}' => $orderTypeName,
-            '{$actual_amount}' => $actualAmount,
-            '{$thread_title}' => $this->strWords($threadTitle),
+            '{$actual_amount}'   => $actualAmount,
+            '{$thread_id}'       => $this->order->thread->id,
+            '{$thread_title}'    => $this->strWords($threadTitle),
         ]);
 
         // build data
-        $build = $this->compiledArray();
+        $expand = [
+            'redirect_url' => $this->url->to('/topic/index?id=' . $this->order->thread_id),
+        ];
 
-        // redirect_url
-        $redirectUrl = '/topic/index?id=' . $this->order->thread_id;
-        if (! empty($this->firstData->redirect_url)) {
-            $redirectUrl = $this->firstData->redirect_url;
-        }
-        $build['redirect_url'] = $this->url->to($redirectUrl);
-
-        return $build;
+        return $this->compiledArray($expand);
     }
 
 }

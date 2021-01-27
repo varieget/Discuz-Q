@@ -65,24 +65,25 @@ class PostWechatMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
+         * @parem $user_name 帖子创建人ID
          * @parem $user_name 帖子创建人
          * @parem $actor_name 当前操作人(一般为管理员)
          * @parem $message_change 修改帖子的内容
+         * @parem $thread_id 主题ID （可用于跳转参数）
          * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
          * @parem $thread_post_content 首贴内容
          * @parem $reason 原因
          */
         $this->setTemplateData([
-            '{$user_name}' => $this->post->user->username,
-            '{$actor_name}' => $this->actor->username,
-            '{$message_change}' => $this->strWords(Arr::get($data, 'message', '')),
-            '{$thread_title}' => $this->strWords($threadTitle),
+            '{$user_id}'             => $this->post->user->id,
+            '{$user_name}'           => $this->post->user->username,
+            '{$actor_name}'          => $this->actor->username,
+            '{$message_change}'      => $this->strWords(Arr::get($data, 'message', '')),
+            '{$thread_id}'           => $this->post->thread->id,
+            '{$thread_title}'        => $this->strWords($threadTitle),
             '{$thread_post_content}' => $this->strWords($threadPostContent),
-            '{$reason}' => Arr::get($data, 'refuse', '无'),
+            '{$reason}'              => Arr::get($data, 'refuse', '无'),
         ]);
-
-        // build data
-        $build = $this->compiledArray();
 
         // redirect_url
         // 判断如果是删除通知，帖子被删除后无法跳转到详情页，threadId 清空跳主页
@@ -91,12 +92,10 @@ class PostWechatMessage extends SimpleMessage
         } else {
             $redirectUrl = '/topic/index?id=' . $this->post->thread_id;
         }
-        if (! empty($this->firstData->redirect_url)) {
-            $redirectUrl = $this->firstData->redirect_url;
-        }
-        $build['redirect_url'] = $this->url->to($redirectUrl);
+        $expand['redirect_url'] = $this->url->to($redirectUrl);
 
-        return $build;
+        // build data
+        return $this->compiledArray($expand);
     }
 
 }

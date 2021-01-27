@@ -61,29 +61,25 @@ class LikedWechatMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
+         * @parem $user_id 点赞人用户ID
          * @parem $user_name 点赞人姓名
+         * @parem $thread_id 主题ID （可用于跳转参数）
          * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
          * @parem $thread_post_content 首贴内容
          * @parem $post_content 帖子内容
          */
         $this->setTemplateData([
-            '{$user_name}' => $this->actor->username,
-            '{$thread_title}' => $this->strWords($threadTitle),
+            '{$user_id}'             => $this->actor->id,
+            '{$user_name}'           => $this->actor->username,
+            '{$thread_id}'           => $this->post->thread->id,
+            '{$thread_title}'        => $this->strWords($threadTitle),
             '{$thread_post_content}' => $this->strWords($threadPostContent),
-            '{$post_content}' => $this->strWords($this->post->content),
+            '{$post_content}'        => $this->strWords($this->post->content),
         ]);
 
-        // build data
-        $build = $this->compiledArray();
-
-        // redirect_url
-        $redirectUrl = '/topic/index?id=' . $this->post->thread_id;
-        if (! empty($this->firstData->redirect_url)) {
-            $redirectUrl = $this->firstData->redirect_url;
-        }
-        $build['redirect_url'] = $this->url->to($redirectUrl);
-
         /**
+         * build data
+         *
          * @template array $build
          * @parem 'first' => '{user_name} {option} 了你',
          * @parem 'keyword1' => '{xxx}',
@@ -92,7 +88,11 @@ class LikedWechatMessage extends SimpleMessage
          * @parem 'remark' => '点击查看',
          * @parem 'redirect_url' => '{to_url}',
          */
-        return $build;
+        $expand = [
+            'redirect_url' => $this->url->to('/topic/index?id=' . $this->post->thread_id),
+        ];
+
+        return $this->compiledArray($expand);
     }
 
 }

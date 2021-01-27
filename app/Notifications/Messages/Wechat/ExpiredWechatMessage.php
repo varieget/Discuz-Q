@@ -65,33 +65,32 @@ class ExpiredWechatMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
+         * @parem $user_id 提问人用户ID (可用于跳转到用户信息)
          * @parem $user_name 提问人
          * @parem $be_user_name 被提问人
          * @parem $question_price 提问价格 (解冻金额)
          * @parem $question_created_at 提问创建时间
          * @parem $question_expired_at 提问过期时间
+         * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
          */
         $this->setTemplateData([
-            '{$user_name}' => $this->question->user->username,
-            '{$be_user_name}' => $this->question->beUser->username,
-            '{$question_price}' => $this->question->price,
+            '{$user_id}'             => $this->question->user->id,
+            '{$user_name}'           => $this->question->user->username,
+            '{$be_user_name}'        => $this->question->beUser->username,
+            '{$question_price}'      => $this->question->price,
             '{$question_created_at}' => $this->question->created_at,
             '{$question_expired_at}' => $this->question->expired_at,
-            '{$thread_title}' => $this->strWords($threadTitle),
+            '{$thread_id}'           => $this->question->thread_id,
+            '{$thread_title}'        => $this->strWords($threadTitle),
         ]);
 
         // build data
-        $build = $this->compiledArray();
+        $expand = [
+            'redirect_url' => $this->url->to('/topic/index?id=' . $this->question->thread_id),
+        ];
 
-        // redirect_url
-        $redirectUrl = '/topic/index?id=' . $this->question->thread_id;
-        if (! empty($this->firstData->redirect_url)) {
-            $redirectUrl = $this->firstData->redirect_url;
-        }
-        $build['redirect_url'] = $this->url->to($redirectUrl);
-
-        return $build;
+        return $this->compiledArray($expand);
     }
 
 }

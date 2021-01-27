@@ -94,25 +94,20 @@ class RewardedScaleWechatMessage extends SimpleMessage
          * @parem $title 主题标题/注册站点 (如果是注册站点，该字段是"注册站点")
          */
         $this->setTemplateData([
-            '{$user_name}' => $user->username,
-            '{$order_sn}' => $this->order->order_sn,
-            '{$payment_sn}' => $this->order->payment_sn,
+            '{$user_name}'       => $user->username,
+            '{$order_sn}'        => $this->order->order_sn,
+            '{$payment_sn}'      => $this->order->payment_sn,
             '{$order_type_name}' => $orderTypeName,
-            '{$boss_amount}' => $this->order->calculateAuthorAmount(),
-            '{$title}' => $this->strWords($title),
+            '{$boss_amount}'     => $this->order->calculateAuthorAmount(),
+            '{$title}'           => $this->strWords($title),
         ]);
 
         // build data
-        $build = $this->compiledArray();
+        $expand = [
+            'redirect_url' => $this->url->to('/topic/index?id=' . $this->order->thread_id),
+        ];
 
-        // redirect_url
-        $redirectUrl = '/topic/index?id=' . $this->order->thread_id;
-        if (! empty($this->firstData->redirect_url)) {
-            $redirectUrl = $this->firstData->redirect_url;
-        }
-        $build['redirect_url'] = $this->url->to($redirectUrl);
-
-        return $build;
+        return $this->compiledArray($expand);
     }
 
 }

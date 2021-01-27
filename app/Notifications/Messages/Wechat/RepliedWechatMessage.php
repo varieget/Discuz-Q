@@ -10,7 +10,6 @@ use Illuminate\Contracts\Routing\UrlGenerator;
 
 /**
  * 回复通知 - 微信
- *
  * Class RepliedWechatMessage
  *
  * @package App\Notifications\Messages\Wechat
@@ -65,9 +64,9 @@ class RepliedWechatMessage extends SimpleMessage
     public function contentReplaceVars($data)
     {
         $content = $this->post->getSummaryContent(Post::NOTICE_LENGTH, true);
-        $postContent = $content['content']; // 回复内容
+        $postContent = $content['content'];                                                 // 回复内容
         $threadTitle = $this->post->thread->getContentByType(Thread::CONTENT_LENGTH, true); // 主题标题/首贴内容
-        $threadPostContent = $content['first_content']; // 首贴内容
+        $threadPostContent = $content['first_content'];                                     // 首贴内容
 
         // 根据触发通知类型，变量的获取形式不同
         switch ($this->data['notify_type']) {
@@ -91,29 +90,28 @@ class RepliedWechatMessage extends SimpleMessage
          * @parem $user_name 回复人的用户名
          * @parem $post_content 回复内容
          * @parem $reply_post 被回复内容
+         * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
          * @parem $thread_post_content 首贴内容
          */
         $this->setTemplateData([
-            '{$user_name}' => $userName ?? $this->user->username,
-            '{$post_content}' => $this->strWords($postContent),
-            '{$reply_post}' => $this->strWords($subject ?? ''),
-            '{$thread_title}' => $this->strWords($threadTitle),
+            '{$user_name}'           => $userName ?? $this->user->username,
+            '{$post_content}'        => $this->strWords($postContent),
+            '{$reply_post}'          => $this->strWords($subject ?? ''),
+            '{$thread_id}'           => $this->post->thread_id,
+            '{$thread_title}'        => $this->strWords($threadTitle),
             '{$thread_post_content}' => $this->strWords($threadPostContent),
         ]);
 
-        // build data
-        $build = $this->compiledArray();
-
         // redirect_url TODO 判断 $replyPostId 是否是楼中楼 跳转楼中楼详情页
-        $replyPostId = $this->post->reply_post_id;  // 楼中楼时不为 0
-        $redirectUrl = '/topic/index?id=' . $this->post->thread_id;
-        if (! empty($this->firstData->redirect_url)) {
-            $redirectUrl = $this->firstData->redirect_url;
-        }
-        $build['redirect_url'] = $this->url->to($redirectUrl);
+        $replyPostId = $this->post->reply_post_id;                                          // 楼中楼时不为 0
 
-        return $build;
+        // build data
+        $expand = [
+            'redirect_url' => $this->url->to('/topic/index?id=' . $this->post->thread_id),
+        ];
+
+        return $this->compiledArray($expand);
     }
 
 }

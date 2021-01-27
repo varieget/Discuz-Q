@@ -9,7 +9,6 @@ use Illuminate\Contracts\Routing\UrlGenerator;
 
 /**
  * 提现通知/提现失败通知
- *
  * Class WithdrawalWechatMessage
  *
  * @package App\Notifications\Messages\Wechat
@@ -62,6 +61,7 @@ class WithdrawalWechatMessage extends SimpleMessage
     {
         /**
          * 设置父类 模板数据
+         * @parem $user_id 提现用户ID
          * @parem $user_name 提现用户
          * @parem $cash_sn 提现交易编号
          * @parem $cash_charge 提现手续费
@@ -74,29 +74,25 @@ class WithdrawalWechatMessage extends SimpleMessage
          * @parem $cash_created_at 提现创建时间
          */
         $this->setTemplateData([
-            '{$user_name}' => $this->cash->user->username,
-            '{$cash_sn}' => $this->cash->cash_sn,
-            '{$cash_charge}' => $this->cash->cash_charge,
+            '{$user_id}'            => $this->cash->user->id,
+            '{$user_name}'          => $this->cash->user->username,
+            '{$cash_sn}'            => $this->cash->cash_sn,
+            '{$cash_charge}'        => $this->cash->cash_charge,
             '{$cash_actual_amount}' => $this->cash->cash_actual_amount,
-            '{$cash_apply_amount}' => $this->cash->cash_apply_amount,
-            '{$cash_status}' => UserWalletCash::enumCashStatus($this->cash->cash_status),
-            '{$cash_mobile}' => $this->cash->cash_mobile,
-            '{$remark}' => $this->cash->remark ?: '无',
-            '{$trade_no}' => $this->cash->trade_no,
-            '{$cash_created_at}' => $this->cash->created_at,
+            '{$cash_apply_amount}'  => $this->cash->cash_apply_amount,
+            '{$cash_status}'        => UserWalletCash::enumCashStatus($this->cash->cash_status),
+            '{$cash_mobile}'        => $this->cash->cash_mobile,
+            '{$remark}'             => $this->cash->remark ?: '无',
+            '{$trade_no}'           => $this->cash->trade_no,
+            '{$cash_created_at}'    => $this->cash->created_at,
         ]);
 
         // build data
-        $build = $this->compiledArray();
+        $expand = [
+            'redirect_url' => $this->url->to(''),
+        ];
 
-        // redirect_url
-        $redirectUrl = '';
-        if (! empty($this->firstData->redirect_url)) {
-            $redirectUrl = $this->firstData->redirect_url;
-        }
-        $build['redirect_url'] = $this->url->to($redirectUrl);
-
-        return $build;
+        return $this->compiledArray($expand);
     }
 
 }

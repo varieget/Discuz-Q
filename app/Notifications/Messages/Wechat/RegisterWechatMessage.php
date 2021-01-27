@@ -65,9 +65,10 @@ class RegisterWechatMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
-         * @parem $user_id 注册人id (用于站点第几名注册)
+         * @parem $user_id 注册人id (可用于站点第几名注册)
          * @parem $user_name 注册人用户名
-         * @parem $user_mobile 用户手机号
+         * @parem $user_mobile 注册人手机号
+         * @parem $user_mobile_encrypt 注册人手机号(带 * 的)
          * @parem $user_group 注册人用户组
          * @parem $joined_at 付费加入时间
          * @parem $expired_at 付费到期时间
@@ -77,29 +78,25 @@ class RegisterWechatMessage extends SimpleMessage
          * @parem $site_mode 站点模式 (付费/免费，用于提示用户"付费加入该站点")
          */
         $this->setTemplateData([
-            '{$user_id}' => $this->actor->id,
-            '{$user_name}' => $this->actor->username,
-            '{$user_mobile}' => $this->actor->mobile,
-            '{$user_group}' => $this->actor->groups->pluck('name')->join('、'),
-            '{$joined_at}' => $this->actor->joined_at,
-            '{$expired_at}' => $this->actor->expired_at,
-            '{$site_name}' => $this->settings->get('site_name'),
-            '{$site_title}' => $this->settings->get('site_title'),
-            '{$site_introduction}' => $this->settings->get('site_introduction'),
-            '{$site_mode}' => $siteMode,
+            '{$user_id}'             => $this->actor->id,
+            '{$user_name}'           => $this->actor->username,
+            '{$user_mobile}'         => $this->actor->getRawOriginal('mobile'),
+            '{$user_mobile_encrypt}' => $this->actor->mobile,
+            '{$user_group}'          => $this->actor->groups->pluck('name')->join('、'),
+            '{$joined_at}'           => $this->actor->joined_at,
+            '{$expired_at}'          => $this->actor->expired_at,
+            '{$site_name}'           => $this->settings->get('site_name'),
+            '{$site_title}'          => $this->settings->get('site_title'),
+            '{$site_introduction}'   => $this->settings->get('site_introduction'),
+            '{$site_mode}'           => $siteMode,
         ]);
 
         // build data
-        $build = $this->compiledArray();
+        $expand = [
+            'redirect_url' => $this->url->to(''),
+        ];
 
-        // redirect_url
-        $redirectUrl = '';
-        if (! empty($this->firstData->redirect_url)) {
-            $redirectUrl = $this->firstData->redirect_url;
-        }
-        $build['redirect_url'] = $this->url->to($redirectUrl);
-
-        return $build;
+        return $this->compiledArray($expand);
     }
 
 }
