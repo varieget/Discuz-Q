@@ -191,7 +191,7 @@ return [
     ],
 
     // 路由跳转
-    // '/pages/home/index' => '首页',
+    '/pages/home/index' => '首页',
     '/topic/index?id={$thread_id}' => '帖子详情页',
     '/pages/notice/notice?title=系统通知&type=system' => '"系统通知" 页',
     '/pages/notice/notice?title=回复我的&type=replied' => '"回复我的" 通知页',
