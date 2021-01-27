@@ -45,7 +45,11 @@ trait ThreadNoticesTrait
     public function threadNotices(Thread $thread, User $actor, $type, $message = '')
     {
         // 审核通过时发送 @ 通知
-        if ($type === 'isApproved' && $thread->is_approved === Thread::APPROVED) {
+        if (
+            $type === 'isApproved'
+            && $thread->is_approved === Thread::APPROVED
+            && $thread->type == Thread::TYPE_OF_QUESTION
+        ) {
             $this->sendRelated($thread->firstPost, $actor);
             /**
              * 如果是问答审核，发送回答者通知
