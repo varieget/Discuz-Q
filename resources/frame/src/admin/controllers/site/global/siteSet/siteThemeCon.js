@@ -39,13 +39,29 @@ export default {
     submitThemeSelect() {
       let str = '';
       if (this.selectedTheme === 1 && this.newTheme === 2) {
-        str = '您确定要切换红色三栏版本吗？';
+        str = `
+          <p style="text-indent:2em;">您确定要切换红色三栏版本吗？</p>
+          <p style="text-indent:2em;;margin-top:10px;">
+            <span style="color:red">温馨小提示：</span>
+            小程序请参考安装手册，重新获取、提交红色三栏的源码哦
+          </p>
+        `;
       } else if (this.selectedTheme === 2 && this.newTheme === 1) {
-        str = '蓝色两栏版本功能升级中，现在切换回蓝色两栏版本时，将会暂时丢失红色三栏版本下的红包、悬赏贴哟，您确定要切换吗？';
+        str = `
+          <p style="text-indent:2em;">
+            蓝色两栏版本功能升级中，现在切换回蓝色两栏版本时，
+            将会暂时丢失红色三栏版本下的红包、悬赏贴哟，您确定要切换吗？
+          </P>
+          <p style="text-indent:2em;margin-top:10px;">
+            <span style="color:red;">温馨小提示：</span>
+            小程序请参考安装手册，重新获取、提交蓝色两栏的源码哦”
+          </p>
+        `;
       } else {
         str = '相同的提交可能不生效哦。'
       }
-      const res = this.$confirm(str, '确认信息', {
+      this.$confirm(str, '确认信息', {
+        dangerouslyUseHTMLString: true,
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'success'
