@@ -852,3 +852,53 @@
     padding: 0 !important;
   }
 }
+.system-notice {
+  .system-title {
+    color: #303133;
+    font-size: 16PX;
+    margin-top : 17PX;
+    font-weight: 600;
+  }
+}
+.applets {
+  display: flex;
+  flex: 2;
+  justify-content: center;
+  align-items: center;
+  padding-top: 20PX;
+}
+.applets-input {
+  // padding-left: 152PX;
+}
+.applets-title {
+  width:134PX;
+}
+.applets-titles {
+  width:134PX;
+  // margin-left:72PX;
+}
+.iconicon_delect {
+  // width: 40Px;
+  // height: 40Px;
+  font-size: 15.5PX !important;
+  color: #336699;
+  padding-left: 7PX;
+}
+.table-cont-add-box {
+  border-bottom: 0PX !important;
+}
+.table-cont-add-box p {
+  margin-left: 0PX !important;
+}
+.applets-box {
+  background:#F9F9F9;
+}
+.table-add {
+  padding-left:154PX;
+}
+.applets-box-content {
+  padding: 15PX 0 24PX 12PX;
+}
+.applets-radio {
+  width: 100%;
+}

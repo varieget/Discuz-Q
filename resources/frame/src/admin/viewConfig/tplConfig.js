@@ -239,7 +239,7 @@ export default {
               title: "通知设置",
               name: "noticeSet",
               attribution: "全局",
-              alias: "系统通知"
+              // alias: "系统通知"
             }
           },
           "notice-configure": {
