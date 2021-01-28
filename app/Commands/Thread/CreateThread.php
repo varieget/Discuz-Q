@@ -107,7 +107,7 @@ class CreateThread
         }
 
         $attributes = Arr::get($this->data, 'attributes', []);
-
+        if(mb_strlen($attributes) > 49998)  throw new PermissionDeniedException;
         $thread->type = (int) Arr::get($attributes, 'type', Thread::TYPE_OF_TEXT);
 
         // 是否有权发布某类型帖子
