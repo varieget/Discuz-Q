@@ -105,10 +105,13 @@ abstract class AbstractQQUserController extends AbstractResourceController
             $qqUser->save();
         }
         //创建 token
+        // qq 登录token 依据
         $params = [
+            'openid' => $qqUser->openid,
             'username' => $user->nickname,
             'password' => ''
         ];
+        GenJwtToken::setUid($qqUser->user->id);
         $response = $this->bus->dispatch(
             new GenJwtToken($params)
         );
