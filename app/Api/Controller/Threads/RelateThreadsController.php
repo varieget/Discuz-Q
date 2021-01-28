@@ -100,9 +100,9 @@ class RelateThreadsController extends AbstractListController
     protected function data(ServerRequestInterface $request, Document $document)
     {
         $threadId = (int)Arr::get($request->getQueryParams(), 'id');
-        $limit = (int)Arr::get($request->getQueryParams(), 'limit');
+//        $limit = (int)Arr::get($request->getQueryParams(), 'limit');
         $include = $this->extractInclude($request);
-
+        $limit = $this->extractLimit($request);
         $thread = $this->threads->findOrFail($threadId);
         $topicIdArr = $thread->topic()->pluck('id');
 
