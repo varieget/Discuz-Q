@@ -85,7 +85,7 @@ class RegisterController extends AbstractCreateController
         $registerType = $this->settings->get('register_type');
 
         //若参数与配置不一致，抛异常不再执行
-        if($type == $registerType) {
+        if($type != $registerType) {
             throw new RegisterException('Register Type Error');
         }
 
