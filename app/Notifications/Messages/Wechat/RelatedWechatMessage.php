@@ -73,7 +73,6 @@ class RelatedWechatMessage extends SimpleMessage
          * @parem $post_content @源帖子内容
          * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
-         * @parem $thread_post_content 首贴内容
          */
         $this->setTemplateData([
             '{$user_id}'             => $this->actor->id,
@@ -81,7 +80,6 @@ class RelatedWechatMessage extends SimpleMessage
             '{$post_content}'        => $this->strWords($postContent),
             '{$thread_id}'           => $this->post->thread_id,
             '{$thread_title}'        => $this->strWords($threadTitle),
-            '{$thread_post_content}' => $this->strWords($threadPostContent),
         ]);
 
         // redirect_url TODO 判断 $replyPostId 是否是楼中楼 跳转楼中楼详情页

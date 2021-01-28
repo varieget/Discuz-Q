@@ -67,13 +67,12 @@ class RepliedWechatMessage extends SimpleMessage
         $content = $this->post->getSummaryContent(Post::NOTICE_LENGTH, true);
         $postContent = $content['content'];                                                 // 回复内容
         $threadTitle = $this->post->thread->getContentByType(Thread::CONTENT_LENGTH, true); // 主题标题/首贴内容
-        $threadPostContent = $content['first_content'];                                     // 首贴内容
 
         // 根据触发通知类型，变量的获取形式不同
         switch ($this->data['notify_type']) {
             case 'notify_thread':
                 // 通知主题作者
-                $subject = $threadPostContent;
+                $subject = $threadTitle;
                 break;
             case 'notify_reply_post':
                 // 通知被回复的人
@@ -97,7 +96,6 @@ class RepliedWechatMessage extends SimpleMessage
          * @parem $reply_post 被回复内容
          * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
-         * @parem $thread_post_content 首贴内容
          */
         $this->setTemplateData([
             '{$user_name}'           => $userName ?? $this->user->username,
@@ -105,7 +103,6 @@ class RepliedWechatMessage extends SimpleMessage
             '{$reply_post}'          => $this->strWords($subject ?? ''),
             '{$thread_id}'           => $this->post->thread_id,
             '{$thread_title}'        => $this->strWords($threadTitle),
-            '{$thread_post_content}' => $this->strWords($threadPostContent),
         ]);
 
         // redirect_url TODO 判断 $replyPostId 是否是楼中楼 可跳转楼中楼详情页

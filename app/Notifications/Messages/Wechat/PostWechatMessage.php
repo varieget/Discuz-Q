@@ -71,7 +71,6 @@ class PostWechatMessage extends SimpleMessage
          * @parem $message_change 修改帖子的内容
          * @parem $thread_id 主题ID （可用于跳转参数）
          * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
-         * @parem $thread_post_content 首贴内容
          * @parem $reason 原因
          */
         $this->setTemplateData([
@@ -81,7 +80,6 @@ class PostWechatMessage extends SimpleMessage
             '{$message_change}'      => $this->strWords(Arr::get($data, 'message', '')),
             '{$thread_id}'           => $this->post->thread->id,
             '{$thread_title}'        => $this->strWords($threadTitle),
-            '{$thread_post_content}' => $this->strWords($threadPostContent),
             '{$reason}'              => Arr::get($data, 'refuse', '无'),
         ]);
 

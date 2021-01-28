@@ -56,7 +56,6 @@ class LikedWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
-        $threadPostContent = $this->post->getSummaryContent(Post::NOTICE_LENGTH, true)['first_content'];
         $threadTitle = $this->post->thread->getContentByType(Thread::CONTENT_LENGTH, true);
 
         /**
@@ -65,7 +64,6 @@ class LikedWechatMessage extends SimpleMessage
          * @parem $user_name 点赞人姓名
          * @parem $thread_id 主题ID （可用于跳转参数）
          * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
-         * @parem $thread_post_content 首贴内容
          * @parem $post_content 帖子内容
          */
         $this->setTemplateData([
@@ -73,7 +71,6 @@ class LikedWechatMessage extends SimpleMessage
             '{$user_name}'           => $this->actor->username,
             '{$thread_id}'           => $this->post->thread->id,
             '{$thread_title}'        => $this->strWords($threadTitle),
-            '{$thread_post_content}' => $this->strWords($threadPostContent),
             '{$post_content}'        => $this->strWords($this->post->content),
         ]);
 
