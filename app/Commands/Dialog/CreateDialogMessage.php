@@ -114,16 +114,10 @@ class CreateDialogMessage
             }
         }
 
-        if (!empty($image_url)) {
-            $message = [
-                'message_text'  => $message_text,
-                'image_url'     => $image_url
-            ];
-        } else {
-            $message = [
-                'message_text'  => $message_text
-            ];
-        }
+        $message = [
+            'message_text'  => $message_text,
+            'image_url'     => $image_url
+        ];
 
         $dialogMessage = DialogMessage::build($this->actor->id, $dialog_id, $attachment_id, $message);
         $dialogMessageRes = $dialogMessage->save();

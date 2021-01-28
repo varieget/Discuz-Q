@@ -99,7 +99,8 @@ class DialogMessage extends Model
     public function setParsedMessageTextAttribute($value)
     {
         $message = [
-            'message_text'  => $value
+            'message_text'  => $value,
+            'image_url'     => ''
         ];
         $this->attributes['message_text'] = addslashes(json_encode($message));
     }

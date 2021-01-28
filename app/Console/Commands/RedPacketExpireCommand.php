@@ -148,6 +148,7 @@ class RedPacketExpireCommand extends AbstractCommand
                 $this->connection->commit();
             } catch (Exception $e) {
                 $this->connection->rollback();
+                app('log')->info('红包过期处理异常: ' . $e->getMessage());
             }
 
             $bar->advance();
