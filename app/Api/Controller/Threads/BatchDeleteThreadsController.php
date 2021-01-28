@@ -21,6 +21,7 @@ namespace App\Api\Controller\Threads;
 use App\Api\Serializer\ThreadSerializer;
 use App\Commands\Thread\BatchDeleteThreads;
 use Discuz\Api\Controller\AbstractListController;
+use Discuz\Auth\AssertPermissionTrait;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,6 +29,8 @@ use Tobscure\JsonApi\Document;
 
 class BatchDeleteThreadsController extends AbstractListController
 {
+    use AssertPermissionTrait;
+
     /**
      * {@inheritdoc}
      */
@@ -53,7 +56,8 @@ class BatchDeleteThreadsController extends AbstractListController
     {
         $ids = explode(',', Arr::get($request->getQueryParams(), 'ids'));
         $actor = $request->getAttribute('actor');
-
+        $this->assertAdmin($actor);
+        $this->assertBatchData($ids);
         $result = $this->bus->dispatch(
             new BatchDeleteThreads($ids, $actor)
         );
