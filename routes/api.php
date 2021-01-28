@@ -40,6 +40,8 @@ $route->delete('/settings/logo', 'settings.delete.logo', ApiController\Settings\
 $route->get('/siteinfo', 'site.info', ApiController\SiteInfoController::class);
 $route->get('/check', 'check', ApiController\CheckController::class);
 $route->get('/forum', 'forum.settings', ApiController\Settings\ForumSettingsController::class);
+$route->get('/sequence', 'sequence.list', ApiController\Settings\ListSequenceController::class);
+$route->post('/sequence', 'sequence', ApiController\Settings\UpdateSequenceController::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -167,6 +169,8 @@ $route->delete('/categories/{id}', 'categories.delete', ApiController\Category\D
 
 $route->get('/favorites', 'favorites', ApiController\Threads\ListFavoritesController::class);
 $route->get('/threads', 'threads.index', ApiController\Threads\ListThreadsController::class);
+$route->get('/threads/recommend', 'threads.recommend', ApiController\Threads\ListRecommendedThreadsController::class);
+$route->get('/threads/paid', 'threads.paid', ApiController\Threads\ListPaidThreadsController::class);
 $route->get('/threads/share/{id}', 'threads.share', ApiController\Threads\ShareThreadController::class);
 $route->get('/threads/relate/{id}', 'threads.relate', ApiController\Threads\RelateThreadsController::class);
 $route->get('/threads/likes', 'threads.likes', ApiController\Threads\ListLikesController::class);
@@ -178,6 +182,8 @@ $route->delete('/threads/batch/{ids}', 'threads.batchDelete', ApiController\Thre
 $route->delete('/threads/{id}', 'threads.delete', ApiController\Threads\DeleteThreadController::class);
 $route->post('/threads/notify/video', 'threads.notify.video', ApiController\Threads\Notify\ThreadVideoNotifyController::class);
 $route->post('/thread/video', 'threads.video', ApiController\Threads\CreateThreadVideoController::class);
+$route->get('/thread/draft', 'threads.draft', ApiController\Threads\ListDraftThreadController::class);
+$route->get('/thread/search', 'threads.search', ApiController\Threads\ListSearchThreadController::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -189,6 +195,7 @@ $route->get('/likes', 'likes', ApiController\Posts\ListLikesController::class);
 $route->get('/posts', 'posts.index', ApiController\Posts\ListPostsController::class);
 $route->get('/posts/{id}', 'posts.resource', ApiController\Posts\ResourcePostController::class);
 $route->post('/posts', 'posts.create', ApiController\Posts\CreatePostController::class);
+$route->post('/posts/reward', 'posts.reward', ApiController\Posts\CreatePostRewardController::class);
 $route->patch('/posts/batch', 'posts.batchUpdate', ApiController\Posts\BatchUpdatePostsController::class);
 $route->patch('/posts/{id}', 'posts.update', ApiController\Posts\UpdatePostController::class);
 $route->delete('/posts/batch/{ids}', 'posts.batchDelete', ApiController\Posts\BatchDeletePostsController::class);
@@ -343,11 +350,9 @@ $route->delete('/reports/batch/{ids}', 'reports.batchDelete', ApiController\Repo
 |--------------------------------------------------------------------------
 */
 
-
 $route->post('/goods/analysis', 'goods.analysis', ApiController\Analysis\ResourceAnalysisGoodsController::class);
 $route->get('/goods/{id}', 'goods.resource', ApiController\Analysis\ResourceGoodsController::class);
 $route->post('/analysis/goods', 'analysis.goods.url', ApiController\Analysis\ResourceAnalysisGoodsController::class);
-
 
 /*
 |--------------------------------------------------------------------------
@@ -398,7 +403,17 @@ $route->get('/offiaccount/transform', 'offiaccount.threads.transform', ApiContro
 | Cache
 |--------------------------------------------------------------------------
 */
+
 $route->delete('/cache', 'cache.clear', ApiController\Cache\CacheController::class);
+
+/*
+|--------------------------------------------------------------------------
+| Random
+|--------------------------------------------------------------------------
+*/
+
+$route->get('/random/users', '', ApiController\Random\ListRandomUsersController::class);
+$route->get('/random/topics', '', ApiController\Random\ListRandomTopicsController::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -424,3 +439,19 @@ $route->get('/user/signinfields', 'user.signinfields.list', ApiController\SignIn
 
 // 用户首次提交扩展字段信息或者被驳回之后再次提交
 $route->post('/user/signinfields', 'user.signinfields.create', ApiController\SignInFields\CreateUserSignInController::class);
+
+/*
+|--------------------------------------------------------------------------
+| 红包帖
+|--------------------------------------------------------------------------
+*/
+
+$route->get('/redpacket/{id}', 'redpacket.resource', ApiController\RedPacket\ResourceRedPacketController::class);
+
+/*
+|--------------------------------------------------------------------------
+| 红蓝功能切换
+|--------------------------------------------------------------------------
+*/
+
+$route->post('/switchskin', 'switchskin', ApiController\SwitchSkin\SwitchSkinController::class);

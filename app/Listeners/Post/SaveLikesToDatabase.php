@@ -18,6 +18,7 @@
 
 namespace App\Listeners\Post;
 
+use App\Commands\RedPacket\CountLikedMakeRedPacket;
 use App\Events\Post\Deleted;
 use App\Events\Post\Saving;
 use App\Notifications\Liked;
@@ -26,22 +27,39 @@ use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
+use Illuminate\Support\Arr;
 
+/**
+ * @property Dispatcher events
+ */
 class SaveLikesToDatabase
 {
+    /**
+     * @var Dispatcher
+     */
+    protected $bus;
+
     use AssertPermissionTrait;
+
+    public function __construct(BusDispatcher $bus)
+    {
+        $this->bus = $bus;
+    }
 
     /**
      * @param Dispatcher $events
      */
     public function subscribe(Dispatcher $events)
     {
+        $this->events = $events;
         $events->listen(Saving::class, [$this, 'whenPostIsSaving']);
         $events->listen(Deleted::class, [$this, 'whenPostIsDeleted']);
     }
 
     /**
      * @param Saving $event
+     * @param BusDispatcher $bus
      * @throws NotAuthenticatedException
      * @throws PermissionDeniedException
      */
@@ -71,6 +89,9 @@ class SaveLikesToDatabase
                     $actor->likedPosts()->attach($post->id, ['created_at' => Carbon::now()]);
 
                     $post->refreshLikeCount()->save();
+
+                    //根据点赞数获取红包
+                    $this->bus->dispatch(new CountLikedMakeRedPacket($event->post->thread->user,$event->post->user,$event->actor,$event->post));
 
                     // 如果被点赞的用户不是当前用户，则通知被点赞的人
                     if ($post->user->id != $actor->id) {

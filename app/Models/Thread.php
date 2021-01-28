@@ -21,6 +21,7 @@ namespace App\Models;
 use App\Common\CacheKey;
 use App\Events\Thread\Hidden;
 use App\Events\Thread\Restored;
+use App\Models\ThreadReward;
 use Carbon\Carbon;
 use DateTime;
 use Discuz\Auth\Anonymous;
@@ -75,6 +76,15 @@ use Illuminate\Support\Stringable;
  * @property threadVideo $threadVideo
  * @property Question $question
  * @property Order $onlookerState
+ * @property int $is_red_packet
+ * @property int $rule
+ * @property int $condition
+ * @property int $likenum
+ * @property int $money
+ * @property int $number
+ * @property int $remain_money
+ * @property int $remain_number
+ * @property int $is_draft
  * @method increment($column, $amount = 1, array $extra = [])
  * @method decrement($column, $amount = 1, array $extra = [])
  */
@@ -102,6 +112,10 @@ class Thread extends Model
     const APPROVED = 1;
 
     const IGNORED = 2;
+
+    const NOT_HAVE_RED_PACKET = 0;
+
+    const HAVE_RED_PACKET = 1;
 
     /**
      * 通知内容展示长度(字)
@@ -462,7 +476,17 @@ class Thread extends Model
 
     public function question()
     {
-        return $this->hasOne(Question::class);
+        $questionType = ThreadReward::query()->where('thread_id', $this->id)->first();
+        if(isset($questionType['type']) && $questionType['type'] == 0) {
+            return $this->hasOne(ThreadReward::class);
+        } else{
+            return $this->hasOne(Question::class);
+        }
+    }
+
+    public function redPacket()
+    {
+        return $this->hasOne(RedPacket::class);
     }
 
     /**

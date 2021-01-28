@@ -20,10 +20,13 @@ namespace App\Listeners\Wallet;
 
 use App\Events\Wallet\Saved;
 use App\Models\Order;
+use App\Models\Post;
 use App\Models\Question;
 use App\Models\UserWalletLog;
 use App\Notifications\Messages\Wechat\ExpiredWechatMessage;
+use App\Notifications\Messages\Wechat\ReceiveRedPacketWechatMessage;
 use App\Notifications\Messages\Wechat\RewardedWechatMessage;
+use App\Notifications\ReceiveRedPacket;
 use App\Notifications\Rewarded;
 
 class SendNotifyOfWalletChanges
@@ -77,6 +80,55 @@ class SendNotifyOfWalletChanges
                      */
                     // Tag 发送通知
                     $user->notify(new Rewarded(ExpiredWechatMessage::class, $user, $question));
+                    break;
+                case UserWalletLog::TYPE_INCOME_TEXT: // 102 文字帖红包收入通知
+                    /**
+                     * 查询红包支付订单信息
+                     *
+                     * @var Question $question
+                     */
+                    $thread = Thread::query()->where('id', $data['thread_id'])->first();
+                    $order = $thread->ordersByType(Order::ORDER_TYPE_TEXT, false);
+
+                    /**
+                     * 被点赞人收入通知
+                     *
+                     * @see SendNotifyOfAnswer 集赞数够了之后发送回执通知
+                     */
+                    $build = [
+                        'message' => $order->thread->getContentByType(Thread::CONTENT_LENGTH, true),
+                        'raw' => array_merge(Arr::only($order->toArray(), ['id', 'thread_id', 'type']), [
+                            'actor_username' => $user,   // 发送人姓名
+                            'actual_amount' => $amount,     // 获取作者实际金额
+                        ]),
+                    ];
+                    // Tag 发送得到红包通知
+                    $user->notify(new ReceiveRedPacket(ReceiveRedPacketWechatMessage::class, $user, $order, $build));
+                    break;
+                case UserWalletLog::TYPE_INCOME_LONG: // 112 长字帖红包收入通知
+                    /**
+                     * 查询红包支付订单信息
+                     *
+                     * @var Question $question
+                     */
+                    $thread = Thread::query()->where('id', $data['thread_id'])->first();
+                    $order = $thread->ordersByType(Order::ORDER_TYPE_LONG, false);
+
+                    /**
+                     * 被点赞人收入通知
+                     *
+                     * @see SendNotifyOfAnswer 回答后发送回执通知
+                     */
+                    $build = [
+                        'message' => $order->thread->getContentByType(Thread::CONTENT_LENGTH, true),
+                        'raw' => array_merge(Arr::only($order->toArray(), ['id', 'thread_id', 'type']), [
+                            'actor_username' => $user,   // 发送人姓名
+                            'actual_amount' => $amount,     // 获取作者实际金额
+                        ]),
+                    ];
+
+                    // Tag 发送得到红包通知
+                    $user->notify(new ReceiveRedPacket(ReceiveRedPacketWechatMessage::class, $user, $order, $build));
                     break;
             }
         }

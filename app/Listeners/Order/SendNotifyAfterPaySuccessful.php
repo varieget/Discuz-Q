@@ -42,6 +42,8 @@ class SendNotifyAfterPaySuccessful
         if (
             $this->order->type == Order::ORDER_TYPE_QUESTION
             || $this->order->type == Order::ORDER_TYPE_GROUP
+            || $this->order->type == Order::ORDER_TYPE_TEXT
+            || $this->order->type == Order::ORDER_TYPE_LONG
         ) {
             return;
         }

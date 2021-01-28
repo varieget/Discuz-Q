@@ -21,8 +21,12 @@ namespace App\Api\Controller\System;
 use App\Console\Commands\AttachmentClearCommand;
 use App\Console\Commands\AvatarClearCommand;
 use App\Console\Commands\FinanceCreateCommand;
+use App\Console\Commands\GroupPermissionAddCommand;
 use App\Console\Commands\InviteExpireCommand;
 use App\Console\Commands\QueryWechatOrderConmmand;
+use App\Console\Commands\RedPacketExpireCommand;
+use App\Console\Commands\SettingAddCommand;
+use App\Console\Commands\ThreadRewardExpireCommand;
 use App\Console\Commands\VideoClearCommand;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Console\Kernel;
@@ -83,6 +87,10 @@ class CallCommandController extends AbstractResourceController
             'clear:attachment'  => AttachmentClearCommand::class,
             'clear:video'       => VideoClearCommand::class,
             'order:query'       => QueryWechatOrderConmmand::class,
+            'reward:expire'     => ThreadRewardExpireCommand::class,
+            'redpacket:expire'  => RedPacketExpireCommand::class,
+            'grouppermission:add'   => GroupPermissionAddCommand::class,
+            'setting:add'           => SettingAddCommand::class
         ];
         $command = Arr::get($request->getQueryParams(), 'name');
         if (!Arr::has($commandList, $command)) {

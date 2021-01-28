@@ -21,6 +21,8 @@ namespace App\Commands\Category;
 use App\Events\Category\Saving;
 use App\Models\Category;
 use App\Models\User;
+use App\Models\AdminActionLog;
+use Carbon\Carbon;
 use App\Validators\CategoryValidator;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Foundation\EventsDispatchTrait;
@@ -89,6 +91,7 @@ class BatchCreateCategories
                 $name,
                 Arr::get($data, 'attributes.description'),
                 (int) Arr::get($data, 'attributes.sort', 0),
+                (int) Arr::get($data, 'attributes.parentid', 0),
                 Arr::get($data, 'attributes.icon', ''),
                 $this->ip
             );
@@ -110,6 +113,13 @@ class BatchCreateCategories
             }
 
             $category->save();
+
+            AdminActionLog::createAdminActionLog(
+                $this->actor->id,
+                '新增内容分类【'. $name .'】',
+                $this->ip,
+                Carbon::now()
+            );
 
             $result['data'][] = $category;
 

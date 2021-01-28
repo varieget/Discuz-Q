@@ -246,9 +246,13 @@ class PostListener
     public function userMentions(Saved $event)
     {
         $post = $event->post;
-
+        //是否草稿
+        if($post->thread->is_draft == 1){
+            return;
+        }
+        
         // 新建 或者 修改了是否合法字段 并且 合法时，发送 @ 通知
-        if (($post->wasRecentlyCreated || $post->wasChanged('is_approved')) && $post->is_approved === Post::APPROVED) {
+        if ($post->thread->is_draft == 0 || ($post->wasRecentlyCreated || $post->wasChanged('is_approved')) && $post->is_approved === Post::APPROVED) {
             $this->sendRelated($event->post, $event->post->user);
         }
     }
@@ -278,6 +282,11 @@ class PostListener
             }
 
             $goodsId = (int) Arr::get($event->data, 'attributes.post_goods_id');
+
+            $isDraft = (int) Arr::get($event->data, 'attributes.is_draft');
+            if ($isDraft && !$goodsId) {
+                return;
+            }
 
             /**
              * 每个商品绑定一个 Post

@@ -56,6 +56,10 @@ class BatchDeleteCategoriesController extends AbstractListController
 
         $result = ['data' => [], 'meta' => []];
 
+        $ids = array_flip($ids);
+        $ids = array_keys($ids);
+        $ids = array_reverse($ids);
+
         foreach ($ids as $id) {
             try {
                 $result['data'][] = $this->bus->dispatch(

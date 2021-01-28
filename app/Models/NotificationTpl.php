@@ -164,4 +164,105 @@ class NotificationTpl extends Model
 
         return json_encode($result);
     }
+
+    /**
+     * 追加新增数据值 - 公共
+     *
+     * @return array[]
+     */
+    public static function addData()
+    {
+        // 以数组追加形式新增放入最后
+        return [
+            1000 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '得到红包通知',
+                'title' => '财务通知',
+                'content' => '',
+                'vars' => '',
+            ],
+            1001 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '得到红包通知',
+                'title' => '微信财务通知',
+                'content' => self::getWechatFormat([
+                    'first' => '你收到了{username}的红包{money}',
+                    'keyword1' => '{content}',
+                    'keyword2' => '{ordertype}',
+                    'keyword3' => '{dateline}',
+                    'remark' => '点击查看',
+                    'redirect_url' => '{redirecturl}',
+                ]),
+                'vars' => serialize([
+                    '{username}' => '支付用户名',
+                    '{money}' => '红包金额',
+                    '{content}' => '内容',
+                    '{ordertype}' => '支付类型',
+                    '{dateline}' => '通知时间',
+                    '{redirecturl}' => '跳转地址',
+                ])
+            ],
+            1002 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '悬赏问答通知',
+                'title' => '财务通知',
+                'content' => '',
+                'vars' => '',
+            ],
+            1003 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '悬赏问答通知',
+                'title' => '微信财务通知',
+                'content' => self::getWechatFormat([
+                    'first' => '你收到了{username}的悬赏{money}',
+                    'keyword1' => '{content}',
+                    'keyword2' => '{ordertype}',
+                    'keyword3' => '{dateline}',
+                    'remark' => '点击查看',
+                    'redirect_url' => '{redirecturl}',
+                ]),
+                'vars' => serialize([
+                    '{username}' => '支付用户名',
+                    '{money}' => '悬赏金额',
+                    '{content}' => '内容',
+                    '{ordertype}' => '支付类型',
+                    '{dateline}' => '通知时间',
+                    '{redirecturl}' => '跳转地址',
+                ])
+            ],
+            1004 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '悬赏过期通知',
+                'title' => '内容通知',
+                'content' => '',
+                'vars' => '',
+            ],
+            1005 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '悬赏过期通知',
+                'title' => '微信内容通知',
+                'content' => self::getWechatFormat([
+                    'first' => '{username}',
+                    'keyword1' => '{detail}',
+                    'keyword2' => '{content}',
+                    'keyword3' => '{dateline}',
+                    'remark' => '点击查看',
+                    'redirect_url' => '{redirecturl}',
+                ]),
+                'vars' => serialize([
+                    '{username}' => '您的悬赏问答已过期',
+                    '{detail}' => '返还剩余悬赏金额xx',
+                    '{content}' => '内容',
+                    '{dateline}' => '通知时间',
+                    '{redirecturl}' => '跳转地址',
+                ])
+            ],
+        ];
+    }
 }
