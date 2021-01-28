@@ -176,7 +176,7 @@ class ResourceThreadController extends AbstractResourceController
 
         $redPacket = RedPacket::query()->where('thread_id',$threadId)->first();
         if (!empty($redPacket)) {
-            $redPacket = $redPacket->toarray();
+            $redPacket = $redPacket->toArray();
             $thread->redPacket = $redPacket;
         }
 

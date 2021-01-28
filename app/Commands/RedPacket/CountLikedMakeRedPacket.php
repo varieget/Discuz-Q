@@ -74,10 +74,10 @@ class CountLikedMakeRedPacket
     protected $connection;
 
     /**
-     * @param User $threadUser // 当前帖子用户
-     * @param User $beLikeUser // 被点赞用户
-     * @param User $clickLikeUser //点赞用户
-     * @param Post $post //被点赞的回复
+     * @param User $threadUser      //当前帖子用户
+     * @param User $beLikeUser      //被点赞用户
+     * @param User $clickLikeUser   //点赞用户
+     * @param Post $post            //被点赞的回复
      */
     public function __construct(User $threadUser,User $beLikeUser,User $clickLikeUser,Post $post)
     {
@@ -104,7 +104,15 @@ class CountLikedMakeRedPacket
         $thread = $this->post->thread->getAttributes();
         $post = $this->post->getAttributes();
         $type = $thread['type'];
+        $info = '点赞用户id： '      . $this->clickLikeUser->id.
+                ',被点赞用户id： '   . $this->beLikeUser->id.
+                ',帖子所属用户id： ' . $this->threadUser->id.
+                ',访问帖子id：'      . $this->post->thread->id.
+                ',post_id：'        . $this->post->id.
+                ',msg：';
+
         if (!($type == Thread::TYPE_OF_TEXT || $type == Thread::TYPE_OF_LONG)) {
+            app('log')->info($info . '点赞领红包：该帖不为文字帖和长文贴');
             return;
         }
 
@@ -112,19 +120,23 @@ class CountLikedMakeRedPacket
             || $post['is_first'] == 1
             || $post['is_comment'] == 1
         ) {
+            app('log')->info($info . '点赞领红包：该帖不为红包帖、首帖、第一条评论');
             return;
         }
 
         $redPacket = RedPacket::query() ->where(['thread_id' => $thread['id'], 'status' => 1, 'condition' => 1])
                                         ->first();
         if (empty($redPacket) || empty($redPacket['remain_money']) || empty($redPacket['remain_number'])) {
+            app('log')->info($info . '点赞领红包：该红包帖无剩余金额和个数');
             return;
         }
 
         if ($post['like_count'] < $redPacket['likenum']) {
+            app('log')->info($info . '点赞领红包：该帖未达到集赞数');
             return;
         }
 
+        //领取过红包的用户不再领取
         if ($thread['type'] == Thread::TYPE_OF_TEXT) {
             $change_type = UserWalletLog::TYPE_INCOME_TEXT;
         } else {
@@ -136,6 +148,7 @@ class CountLikedMakeRedPacket
             'thread_id'     => $thread['id']
         ])->first();
         if (!empty($isReceive)) {
+            app('log')->info($info . '点赞领红包：该用户已经领取过红包了');
             return;
         }
 
