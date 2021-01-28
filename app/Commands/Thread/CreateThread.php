@@ -114,6 +114,7 @@ class CreateThread
         }
 
         $attributes = Arr::get($this->data, 'attributes', []);
+        if(mb_strlen($attributes) > 49998)  throw new PermissionDeniedException;
 
         $thread_id = Arr::get($attributes, 'id');
         if ($thread_id) {
