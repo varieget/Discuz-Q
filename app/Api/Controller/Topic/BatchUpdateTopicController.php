@@ -60,6 +60,8 @@ class BatchUpdateTopicController extends AbstractListController
 
         $data = $request->getParsedBody()->get('data', []);
         $ids = explode(',', Arr::get($request->getQueryParams(), 'ids'));
+        $this->assertBatchData($ids);
+
         $idsCollect = collect($ids);
 
         $result = ['data' => [], 'meta' => []];
