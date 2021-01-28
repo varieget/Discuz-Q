@@ -42,7 +42,6 @@ use Discuz\Auth\AssertPermissionTrait;
 use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 
 class PostListener
 {
@@ -118,11 +117,14 @@ class PostListener
                 && $post->reply_user_id != $actor->id
                 && $post->reply_user_id != $post->thread->user_id
             ) {
-                // 被回复内容
-                $post->replyPost->content = Str::of($post->replyPost->content)->substr(0, Post::NOTICE_LENGTH);
-
+                // 判断是否是 楼中楼
+                if (is_null($post->comment_post_id)) {
+                    $notifyType = 'notify_reply_post';
+                } else {
+                    $notifyType = 'notify_comment_post'; // 多级楼中楼
+                }
                 // Tag 发送通知
-                $post->replyUser->notify(new Replied($actor, $post, ['notify_type' => 'notify_reply_post']));
+                $post->replyUser->notify(new Replied($actor, $post, ['notify_type' => $notifyType]));
             }
         }
     }

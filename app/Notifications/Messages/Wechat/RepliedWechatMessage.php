@@ -7,6 +7,7 @@ use App\Models\Thread;
 use App\Models\User;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
+use Illuminate\Support\Str;
 
 /**
  * 回复通知 - 微信
@@ -75,8 +76,12 @@ class RepliedWechatMessage extends SimpleMessage
                 $subject = $threadPostContent;
                 break;
             case 'notify_reply_post':
-                // 通知被回复的人 （楼中楼）
-                $subject = $this->post->replyPost->formatContent(); // 解析 content
+                // 通知被回复的人
+                $subject = Str::of($this->post->replyPost->content)->substr(0, Post::NOTICE_LENGTH);
+                break;
+            case 'notify_comment_post':
+                // 通知 回复帖子的人（楼中楼）
+                $subject = Str::of($this->post->commentPost->content)->substr(0, Post::NOTICE_LENGTH);
                 break;
             case 'notify_approved':
                 // 审核通过后 发送回复人的主题通知
@@ -103,7 +108,7 @@ class RepliedWechatMessage extends SimpleMessage
             '{$thread_post_content}' => $this->strWords($threadPostContent),
         ]);
 
-        // redirect_url TODO 判断 $replyPostId 是否是楼中楼 跳转楼中楼详情页
+        // redirect_url TODO 判断 $replyPostId 是否是楼中楼 可跳转楼中楼详情页
         $replyPostId = $this->post->reply_post_id;                                          // 楼中楼时不为 0
 
         // build data

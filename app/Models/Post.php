@@ -66,6 +66,7 @@ use Illuminate\Support\Str;
  * @property User $deletedUser
  * @property PostMod $stopWords
  * @property Post replyPost
+ * @property Post commentPost
  * @property string parsedContent
  * @package App\Models
  */
@@ -467,6 +468,16 @@ class Post extends Model
     public function replyPost()
     {
         return $this->belongsTo(Post::class, 'reply_post_id');
+    }
+
+    /**
+     * Define the relationship with the post's content post.
+     *
+     * @return BelongsTo
+     */
+    public function commentPost()
+    {
+        return $this->belongsTo(Post::class, 'comment_post_id');
     }
 
     /**
