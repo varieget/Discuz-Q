@@ -45,7 +45,7 @@
 
     <Card >
       <CardRow class="card-points" description="允许站点发布问答帖">
-        <el-checkbox v-model="publishing.question">问答</el-checkbox>
+        <el-checkbox v-model="publishing.question" @change="handleQuestionChange">问答</el-checkbox>
       </CardRow>
     </Card>
 

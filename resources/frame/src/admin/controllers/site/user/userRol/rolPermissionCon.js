@@ -624,9 +624,38 @@ export default {
     // 发帖权限7项的扩展项切换状态时，有就加入权限组，否则清除
     changeExpandItem(val) {
       if (this.selectList[val.slice(0, 14)].includes(val)) {
-        this.checked.push(val)
+
+        if (val.includes('position')) {
+          // 位置权限直接添加
+          this.checked.push(val);
+        } else if (!this.checked.includes(val)) {
+          // 红包权限选择性添加
+          const str = `
+            <p style="text-indent:2em;">开启红包功能，存在被多个马甲刷回复领取红包的风险</p>
+            <p style="text-indent:2em;margin-top:10px;">
+              建议在
+              <span style="color:red;">用户 - 用户角色 - 设置 - 安全设置</span>
+              中开启以下权限：
+            </p>
+            <p style="padding-left:32PX;font-weight:bold;">
+              · 发布内容需先实名认证。<br>
+              · 发布内容需先绑定手机。
+            </p>
+          `;
+          this.$confirm(str, '提示', {
+            dangerouslyUseHTMLString: true,
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            this.checked.push(val);
+          }).catch(() => {
+            this.selectList[val.slice(0, 14)] = 
+              this.selectList[val.slice(0, 14)].filter(item => item !== val);
+          });
+        } 
       } else {
-        this.checked = this.checked.filter(item => item !== val)
+        this.checked = this.checked.filter(item => item !== val);
       }
     },
 

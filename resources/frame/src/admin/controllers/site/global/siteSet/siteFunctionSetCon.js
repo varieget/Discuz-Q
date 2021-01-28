@@ -7,12 +7,12 @@ export default {
       purchase:false, // 购买权限
       // 发布功能
       publishing:{
-        text:false,
-        post:false,
-        picture:false,
-        video:false,
-        voice:false,
-        goods:false,
+        text:true,
+        post:true,
+        picture:true,
+        video:true,
+        voice:true,
+        goods:true,
         question:false
       }
     }
@@ -43,6 +43,32 @@ export default {
           }
         })
         .catch(error => {});
+    },
+    // 为问答添加风险提示
+    handleQuestionChange(val) {
+      if (val) {
+        const str = `
+          <p style="text-indent:2em;">开启问答功能，存在被多个马甲刷回复领取剩余悬赏金额的风险。</p>
+          <p style="text-indent:2em;margin-top:10px;">
+            建议在
+            <span style="color:red;">用户 - 用户角色 - 设置 - 安全设置</span>
+            中开启以下权限：
+          </p>
+          <p style="padding-left:32PX;font-weight:bold;">
+            · 发布内容需先实名认证。<br>
+            · 发布内容需先绑定手机。
+          </p>
+        `;
+        this.$confirm(str, '提示', {
+          dangerouslyUseHTMLString: true,
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+        }).catch(() => {
+          this.publishing.question = false;      
+        });
+      }
     },
     // 提交功能状态更改
     handlePublishingSubmit(){
