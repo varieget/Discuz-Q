@@ -112,11 +112,7 @@ class PostListener
              * 如果被回复的用户不是当前用户，也不是主题作者，也是合法的，
              * 则通知被回复的人
              */
-            elseif (
-                $post->reply_post_id
-                && $post->reply_user_id != $actor->id
-                && $post->reply_user_id != $post->thread->user_id
-            ) {
+            elseif ($post->reply_post_id && $post->reply_user_id != $actor->id) {
                 // Tag 发送通知 判断是否是 楼中楼
                 if (is_null($post->comment_post_id)) {
                     $post->replyUser->notify(new Replied($actor, $post, ['notify_type' => 'notify_reply_post']));
