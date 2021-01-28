@@ -128,7 +128,7 @@ class SettingsTableSeeder extends Seeder
             ],
             [
               'key' => 'site_create_thread5',    // 允许发布问答帖(悬赏帖)
-              'value' => 1,
+              'value' => 0,
               'tag' => 'default',
             ],
             [

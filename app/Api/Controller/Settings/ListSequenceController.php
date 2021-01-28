@@ -21,6 +21,8 @@ namespace App\Api\Controller\Settings;
 use App\Api\Serializer\SequenceSerializer;
 use App\Models\Sequence;
 use Discuz\Api\Controller\AbstractResourceController;
+use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,6 +30,8 @@ use Tobscure\JsonApi\Document;
 
 class ListSequenceController extends AbstractResourceController
 {
+    use AssertPermissionTrait;
+
     /**
      * {@inheritdoc}
      */
@@ -40,7 +44,8 @@ class ListSequenceController extends AbstractResourceController
      * @throws InvalidParameterException
      */
     protected function data(ServerRequestInterface $request, Document $document)
-    {    
+    {
+        $this->assertAdmin($request->getAttribute('actor'));
         return Sequence::query()->first();
     }
 }
