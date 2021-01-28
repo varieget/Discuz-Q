@@ -63,11 +63,12 @@ use Illuminate\Support\Str;
  * @property Thread $thread
  * @property User $user
  * @property User $replyUser
+ * @property User $commentUser
  * @property User $deletedUser
  * @property PostMod $stopWords
- * @property Post replyPost
- * @property Post commentPost
- * @property string parsedContent
+ * @property Post $replyPost
+ * @property Post $commentPost
+ * @property string $parsedContent
  * @package App\Models
  */
 class Post extends Model

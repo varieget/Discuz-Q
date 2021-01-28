@@ -77,11 +77,11 @@ class RepliedWechatMessage extends SimpleMessage
                 break;
             case 'notify_reply_post':
                 // 通知被回复的人
-                $subject = Str::of($this->post->replyPost->content)->substr(0, Post::NOTICE_LENGTH);
+                $subject = Str::of($this->post->replyPost->content)->substr(0, Post::NOTICE_LENGTH)->__toString();
                 break;
             case 'notify_comment_post':
                 // 通知 回复帖子的人（楼中楼）
-                $subject = Str::of($this->post->commentPost->content)->substr(0, Post::NOTICE_LENGTH);
+                $subject = Str::of($this->post->commentPost->content)->substr(0, Post::NOTICE_LENGTH)->__toString();
                 break;
             case 'notify_approved':
                 // 审核通过后 发送回复人的主题通知

@@ -117,14 +117,13 @@ class PostListener
                 && $post->reply_user_id != $actor->id
                 && $post->reply_user_id != $post->thread->user_id
             ) {
-                // 判断是否是 楼中楼
+                // Tag 发送通知 判断是否是 楼中楼
                 if (is_null($post->comment_post_id)) {
-                    $notifyType = 'notify_reply_post';
+                    $post->replyUser->notify(new Replied($actor, $post, ['notify_type' => 'notify_reply_post']));
                 } else {
-                    $notifyType = 'notify_comment_post'; // 多级楼中楼
+                    // 多级楼中楼
+                    $post->commentUser->notify(new Replied($actor, $post, ['notify_type' => 'notify_comment_post']));
                 }
-                // Tag 发送通知
-                $post->replyUser->notify(new Replied($actor, $post, ['notify_type' => $notifyType]));
             }
         }
     }
