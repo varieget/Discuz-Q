@@ -177,6 +177,16 @@ trait NotifyTrait
 
                     return $this->orderInfo;
 
+                case Order::ORDER_TYPE_TEXT:
+                    // 添加文字帖红包
+                    $this->orderInfo->save();
+                    return $this->orderInfo;
+
+                case Order::ORDER_TYPE_LONG:
+                    // 添加长文帖红包
+                    $this->orderInfo->save();
+                    return $this->orderInfo;
+
                 default:
                     break;
             }
