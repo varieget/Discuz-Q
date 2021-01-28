@@ -96,14 +96,24 @@ class PostListener
         $actor = $event->actor;
 
         if ($post->is_approved == Post::APPROVED) {
-            // 如果当前用户不是主题作者，也是合法的，则通知主题作者
-            if ($post->thread->user_id != $actor->id) {
+            /**
+             * 如果当前用户不是主题作者，也是合法的，不是回复的回复，也不是楼中楼
+             * 则通知主题作者
+             */
+            if (
+                $post->thread->user_id != $actor->id
+                && is_null($post->reply_post_id)
+                && is_null($post->comment_post_id)
+            ) {
                 // Tag 发送通知
                 $post->thread->user->notify(new Replied($actor, $post, ['notify_type' => 'notify_thread']));
             }
 
-            // 如果被回复的用户不是当前用户，也不是主题作者，也是合法的，则通知被回复的人
-            if (
+            /**
+             * 如果被回复的用户不是当前用户，也不是主题作者，也是合法的，
+             * 则通知被回复的人
+             */
+            elseif (
                 $post->reply_post_id
                 && $post->reply_user_id != $actor->id
                 && $post->reply_user_id != $post->thread->user_id

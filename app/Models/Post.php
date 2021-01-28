@@ -258,32 +258,27 @@ class Post extends Model
             'first_content' => '',
         ];
 
+        $this->content = $substr ? Str::of($this->content)->substr(0, $substr) : $this->content;
+        if ($parse) {
+            // 原文
+            $content = $this->content;
+        } else {
+            $content = $this->formatContent();
+        }
+
         /**
          * 判断是否是楼中楼的回复
          */
         if ($this->reply_post_id) {
-            $this->content = $substr ? Str::of($this->content)->substr(0, $substr) : $this->content;
-            if ($parse) {
-                // 原文
-                $content = $this->content;
-            } else {
-                $content = $this->formatContent();
-            }
+            // Do something
+            // TODO comment_post_id 评论回复 id
         } else {
             /**
              * 判断长文点赞通知内容为标题
              */
             if ($this->thread->type === Thread::TYPE_OF_LONG) {
-                $content = $this->thread->getContentByType(self::NOTICE_LENGTH, $parse);
+                $firstContent = $this->thread->getContentByType(self::NOTICE_LENGTH, $parse);
             } else {
-                $this->content = $substr ? Str::of($this->content)->substr(0, $substr) : $this->content;
-                if ($parse) {
-                    // 原文
-                    $content = $this->content;
-                } else {
-                    $content = $this->formatContent();
-                }
-
                 // 如果是首贴 firstContent === content 内容一样
                 if ($this->is_first) {
                     $firstContent = $content;

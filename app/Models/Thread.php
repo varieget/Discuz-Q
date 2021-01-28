@@ -207,20 +207,20 @@ class Thread extends Model
         $special = app(SpecialCharServer::class);
 
         if ($this->type == 1) {
-            $content = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
-            $content = $special->purify($content);
+            $firstPost = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
+            $firstPost = $special->purify($firstPost);
         } else {
             // 不是长文没有标题则使用首贴内容
             $this->firstPost->content = $substr ? Str::of($this->firstPost->content)->substr(0, $substr) : $this->firstPost->content;
             if ($parse) {
                 // 原文
-                $content = $this->firstPost->content;
+                $firstPost = $this->firstPost->content;
             } else {
-                $content = $this->firstPost->formatContent();
+                $firstPost = $this->firstPost->formatContent();
             }
         }
 
-        return $content;
+        return $firstPost;
     }
 
     /**
