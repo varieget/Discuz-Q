@@ -22,6 +22,7 @@ use App\Common\CacheKey;
 use App\Events\Post\Hidden;
 use App\Events\Post\Restored;
 use App\Events\Post\Revised;
+use App\Models\UserWalletLog;
 use App\Formatter\Formatter;
 use Carbon\Carbon;
 use DateTime;
