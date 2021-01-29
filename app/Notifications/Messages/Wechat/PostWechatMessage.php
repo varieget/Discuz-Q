@@ -70,7 +70,7 @@ class PostWechatMessage extends SimpleMessage
          * @parem $actor_name 当前操作人(一般为管理员)
          * @parem $message_change 修改帖子的内容
          * @parem $thread_id 主题ID （可用于跳转参数）
-         * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
+         * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
          * @parem $reason 原因
          */
         $this->setTemplateData([

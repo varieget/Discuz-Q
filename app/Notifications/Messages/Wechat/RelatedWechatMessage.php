@@ -72,7 +72,7 @@ class RelatedWechatMessage extends SimpleMessage
          * @parem $user_name 发送人姓名
          * @parem $post_content @源帖子内容
          * @parem $thread_id 主题ID
-         * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
+         * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
          */
         $this->setTemplateData([
             '{$user_id}'             => $this->actor->id,

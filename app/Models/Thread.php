@@ -21,14 +21,12 @@ namespace App\Models;
 use App\Common\CacheKey;
 use App\Events\Thread\Hidden;
 use App\Events\Thread\Restored;
-use App\Models\ThreadReward;
 use Carbon\Carbon;
 use DateTime;
 use Discuz\Auth\Anonymous;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
 use Discuz\SpecialChar\SpecialCharServer;
-use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -224,7 +222,7 @@ class Thread extends Model
             $firstPost = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
             $firstPost = $special->purify($firstPost);
         } else {
-            // 不是长文没有标题则使用首贴内容
+            // 不是长文没有标题则使用首帖内容
             $this->firstPost->content = $substr ? Str::of($this->firstPost->content)->substr(0, $substr) : $this->firstPost->content;
             if ($parse) {
                 // 原文
