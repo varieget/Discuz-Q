@@ -95,15 +95,8 @@ class SaveLikesToDatabase
 
                     // 如果被点赞的用户不是当前用户，则通知被点赞的人
                     if ($post->user->id != $actor->id) {
-                        $build = [
-                            'message' => $post->content,
-                            'raw' => array_merge(Arr::only($post->toArray(), ['id', 'thread_id', 'is_first']), [
-                                'actor_username' => $actor->username    // 发送人姓名
-                            ]),
-                        ];
-
                         // Tag 发送通知
-                        $post->user->notify(new Liked($actor, clone $post, $build));
+                        $post->user->notify(new Liked($actor, clone $post));
                     }
                 }
             }

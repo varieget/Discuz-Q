@@ -184,6 +184,7 @@ $route->post('/threads/notify/video', 'threads.notify.video', ApiController\Thre
 $route->post('/thread/video', 'threads.video', ApiController\Threads\CreateThreadVideoController::class);
 $route->get('/thread/draft', 'threads.draft', ApiController\Threads\ListDraftThreadController::class);
 $route->get('/thread/search', 'threads.search', ApiController\Threads\ListSearchThreadController::class);
+
 /*
 |--------------------------------------------------------------------------
 | Posts
@@ -272,8 +273,8 @@ $route->get('/wallet/log', 'wallet.log.list', ApiController\Wallet\ListUserWalle
 
 $route->get('/notification', 'notification.list', ApiController\Notification\ListNotificationController::class);
 $route->get('/notification/tpl', 'notification.tpl.list', ApiController\Notification\ListNotificationTplController::class);
-$route->get('/notification/tpl/{id}', 'notification.tpl.show', ApiController\Notification\ResourceNotificationTplController::class);
-$route->patch('/notification/tpl/{id}', 'notification.tpl.update', ApiController\Notification\UpdateNotificationTplController::class);
+$route->get('/notification/tpl/detail', 'notification.tpl.detail', ApiController\Notification\ResourceNotificationTplController::class);
+$route->patch('/notification/tpl', 'notification.tpl.update', ApiController\Notification\UpdateNotificationTplController::class);
 $route->get('/notification/{id}', 'notification.resource', ApiController\Notification\ResourceNotificationController::class);
 $route->delete('/notification/{id}', 'notification.delete', ApiController\Notification\DeleteNotificationController::class);
 
@@ -349,11 +350,9 @@ $route->delete('/reports/batch/{ids}', 'reports.batchDelete', ApiController\Repo
 |--------------------------------------------------------------------------
 */
 
-
 $route->post('/goods/analysis', 'goods.analysis', ApiController\Analysis\ResourceAnalysisGoodsController::class);
 $route->get('/goods/{id}', 'goods.resource', ApiController\Analysis\ResourceGoodsController::class);
 $route->post('/analysis/goods', 'analysis.goods.url', ApiController\Analysis\ResourceAnalysisGoodsController::class);
-
 
 /*
 |--------------------------------------------------------------------------
@@ -399,12 +398,12 @@ $route->post('/offiaccount/menu', 'offiaccount.menu.batchCreate', ApiController\
 $route->get('/offiaccount/reprint/{id}', 'offiaccount.threads.reprint', ApiController\Wechat\OffIAccountThreadsReprintController::class);
 $route->get('/offiaccount/transform', 'offiaccount.threads.transform', ApiController\Wechat\OffIAccountThreadsTransformController::class);
 
-
 /*
 |--------------------------------------------------------------------------
 | Cache
 |--------------------------------------------------------------------------
 */
+
 $route->delete('/cache', 'cache.clear', ApiController\Cache\CacheController::class);
 
 /*
@@ -412,6 +411,7 @@ $route->delete('/cache', 'cache.clear', ApiController\Cache\CacheController::cla
 | Random
 |--------------------------------------------------------------------------
 */
+
 $route->get('/random/users', '', ApiController\Random\ListRandomUsersController::class);
 $route->get('/random/topics', '', ApiController\Random\ListRandomTopicsController::class);
 
@@ -420,20 +420,25 @@ $route->get('/random/topics', '', ApiController\Random\ListRandomTopicsControlle
 | 后台扩展字段
 |--------------------------------------------------------------------------
 */
-$route->get('/admin/signinfields','admin.signinfields.list',ApiController\SignInFields\ListAdminSignInController::class);
-$route->post('/admin/signinfields','admin.signinfields.create',ApiController\SignInFields\CreateAdminSignInController::class);
-//管理员审核用户扩展信息
-$route->get('/user/signinfields/{id}','user.signinfields.resource',ApiController\SignInFields\ResourceUserSignInController::class);
-$route->post('/user/signinfields/{id}','admin.signinfields.update',ApiController\SignInFields\UpdateUserSignInController::class);
+
+$route->get('/admin/signinfields', 'admin.signinfields.list', ApiController\SignInFields\ListAdminSignInController::class);
+$route->post('/admin/signinfields', 'admin.signinfields.create', ApiController\SignInFields\CreateAdminSignInController::class);
+
+// 管理员审核用户扩展信息
+$route->get('/user/signinfields/{id}', 'user.signinfields.resource', ApiController\SignInFields\ResourceUserSignInController::class);
+$route->post('/user/signinfields/{id}', 'admin.signinfields.update', ApiController\SignInFields\UpdateUserSignInController::class);
+
 /*
 |--------------------------------------------------------------------------
 | 前台扩展字段
 |--------------------------------------------------------------------------
 */
-//查询扩展字段列表（用户注册后显示）
-$route->get('/user/signinfields','user.signinfields.list',ApiController\SignInFields\ListUserSignInController::class);
-//用户首次提交扩展字段信息或者被驳回之后再次提交
-$route->post('/user/signinfields','user.signinfields.create',ApiController\SignInFields\CreateUserSignInController::class);
+
+// 查询扩展字段列表（用户注册后显示）
+$route->get('/user/signinfields', 'user.signinfields.list', ApiController\SignInFields\ListUserSignInController::class);
+
+// 用户首次提交扩展字段信息或者被驳回之后再次提交
+$route->post('/user/signinfields', 'user.signinfields.create', ApiController\SignInFields\CreateUserSignInController::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -448,4 +453,5 @@ $route->get('/redpacket/{id}', 'redpacket.resource', ApiController\RedPacket\Res
 | 红蓝功能切换
 |--------------------------------------------------------------------------
 */
+
 $route->post('/switchskin', 'switchskin', ApiController\SwitchSkin\SwitchSkinController::class);

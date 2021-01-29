@@ -16,32 +16,21 @@
  * limitations under the License.
  */
 
-namespace App\Events\Order;
+namespace App\Api\Serializer;
 
-use App\Models\Order;
-use App\Models\User;
+use Discuz\Api\Serializer\AbstractSerializer;
 
-class Updated
+class ArraySerializer extends AbstractSerializer
 {
-    /**
-     * @var Order
-     */
-    public $order;
+    protected $type = 'array';
 
-    /**
-     * @var User
-     */
-    public $actor;
-
-    /**
-     * Updated constructor.
-     *
-     * @param Order $order
-     * @param User|null $actor
-     */
-    public function __construct(Order $order, User $actor = null)
+    protected function getDefaultAttributes($model)
     {
-        $this->order = $order;
-        $this->actor = $actor;
+        return $model;
+    }
+
+    public function getId($model)
+    {
+        return $model['id'] ?? 0;
     }
 }
