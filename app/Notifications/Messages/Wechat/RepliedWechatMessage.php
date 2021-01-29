@@ -66,7 +66,7 @@ class RepliedWechatMessage extends SimpleMessage
     {
         $content = $this->post->getSummaryContent(Post::NOTICE_LENGTH, true);
         $postContent = $content['content'];                                                 // 回复内容
-        $threadTitle = $this->post->thread->getContentByType(Thread::CONTENT_LENGTH, true); // 主题标题/首贴内容
+        $threadTitle = $this->post->thread->getContentByType(Thread::CONTENT_LENGTH, true); // 主题标题/首帖内容
 
         // 根据触发通知类型，变量的获取形式不同
         switch ($this->data['notify_type']) {
@@ -95,7 +95,7 @@ class RepliedWechatMessage extends SimpleMessage
          * @parem $post_content 回复内容
          * @parem $reply_post 被回复内容
          * @parem $thread_id 主题ID
-         * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
+         * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
          */
         $this->setTemplateData([
             '{$user_name}'           => $userName ?? $this->user->username,

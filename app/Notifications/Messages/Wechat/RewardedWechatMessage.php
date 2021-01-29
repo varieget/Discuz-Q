@@ -101,7 +101,7 @@ class RewardedWechatMessage extends SimpleMessage
          * @parem $order_type_name 订单支付类型 (打赏/付费主题/付费用户组/问答回答收入/问答围观收入/付费附件)
          * @parem $actual_amount 实际获得金额
          * @parem $thread_id 主题ID
-         * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
+         * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
          */
         $this->setTemplateData([
             '{$user_id}'         => $this->order->user->id,

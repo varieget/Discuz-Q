@@ -18,23 +18,16 @@
 
 namespace App\Repositories;
 
-use App\Models\Thread;
-use App\Models\ThreadReward;
-use App\Models\User;
 use App\Models\Order;
-use App\Api\Serializer\ThreadSerializer;
-use App\Api\Serializer\UserSerializer;
+use App\Models\Thread;
+use App\Models\User;
+use App\Notifications\Messages\Wechat\ThreadRewardedWechatMessage;
+use App\Notifications\ThreadRewarded;
 use Discuz\Foundation\AbstractRepository;
 use Discuz\SpecialChar\SpecialCharServer;
 use Illuminate\Support\Arr;
-use App\Notifications\Messages\Wechat\ThreadRewardedWechatMessage;
-use App\Notifications\Messages\Wechat\ThreadRewardedExpiredWechatMessage;
-use App\Notifications\ThreadRewarded;
-use Tobscure\JsonApi\Relationship;
-use Discuz\Api\Serializer\AbstractSerializer;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
-use Illuminate\Database\Eloquent\Model;
 
 class ThreadRewardRepository extends AbstractRepository
 {
@@ -96,7 +89,7 @@ class ThreadRewardRepository extends AbstractRepository
             $content = $substr ? Str::of($thread->title)->substr(0, $substr) : $thread->title;
             $content = $special->purify($content);
         } else {
-            // 不是长文没有标题则使用首贴内容
+            // 不是长文没有标题则使用首帖内容
             $thread->content = $substr ? Str::of($thread->content)->substr(0, $substr) : $thread->content;
             $content = $thread->content;
         }

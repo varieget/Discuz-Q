@@ -176,7 +176,7 @@ trait ThreadNoticesTrait
     }
 
     /**
-     * 首贴内容代替
+     * 首帖内容代替
      *
      * @param Thread $thread
      * @return mixed

@@ -72,7 +72,7 @@ class ExpiredWechatMessage extends SimpleMessage
          * @parem $question_created_at 提问创建时间
          * @parem $question_expired_at 提问过期时间
          * @parem $thread_id 主题ID
-         * @parem $thread_title 主题标题/首贴内容 (如果有title是title，没有则是首帖内容)
+         * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
          */
         $this->setTemplateData([
             '{$user_id}'             => $this->question->user->id,

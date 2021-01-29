@@ -22,7 +22,6 @@ use App\Common\CacheKey;
 use App\Events\Post\Hidden;
 use App\Events\Post\Restored;
 use App\Events\Post\Revised;
-use App\Models\UserWalletLog;
 use App\Formatter\Formatter;
 use Carbon\Carbon;
 use DateTime;
@@ -282,7 +281,7 @@ class Post extends Model
             if ($this->thread->type === Thread::TYPE_OF_LONG) {
                 $firstContent = $this->thread->getContentByType(self::NOTICE_LENGTH, $parse);
             } else {
-                // 如果是首贴 firstContent === content 内容一样
+                // 如果是首帖 firstContent === content 内容一样
                 if ($this->is_first) {
                     $firstContent = $content;
                 } else {
