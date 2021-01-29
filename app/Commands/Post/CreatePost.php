@@ -160,7 +160,7 @@ class CreatePost
             $red_cache = $cache->get($cacheKey);
             if($red_cache){
                 $cache->put($cacheKey, true, self::LIMIT_RED_PACKET_TIME);
-                throw new Exception('do_frequent');
+                throw new Exception(trans('user.do_frequent'));
             }
         }
 
