@@ -137,7 +137,6 @@ class SaveQuestionToDatabase
                  * @see QuestionValidator
                  */
                 $questionData['actor'] = $actor;
-                $this->questionValidator->valid($questionData);
                 if (! isset($questionData['order_id']) || empty($questionData['order_id'])) {
                     $price = 0;
                 } else {

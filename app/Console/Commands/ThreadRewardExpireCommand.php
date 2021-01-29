@@ -22,6 +22,7 @@ use App\Models\ThreadReward;
 use App\Models\Post;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
+use App\Models\Order;
 use Carbon\Carbon;
 use App\Repositories\ThreadRewardRepository;
 use Discuz\Console\AbstractCommand;
@@ -78,7 +79,8 @@ class ThreadRewardExpireCommand extends AbstractCommand
         $threadReward->map(function ($item) use ($bar) {
             $item->remain_money = floatval(sprintf('%.2f', $item->remain_money));
             $userWallet = UserWallet::query()->lockForUpdate()->find($item->user_id);
-            if($userWallet->freeze_amount - $item->remain_money < 0){
+            $threadRewardOrder = Order::query()->where(['thread_id' => $thread_id, 'status' => 1])->first();
+            if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET && ($userWallet->freeze_amount - $item->remain_money < 0)){
                 app('log')->info('过期悬赏错误：悬赏帖(ID为' . $item->thread_id . ')，作者(ID为' . $item->user_id . ')，钱包冻结金额 小于 应返回的悬赏剩余金额，悬赏剩余金额返回失败！');
             }else{
                 // Start Transaction
@@ -90,7 +92,10 @@ class ThreadRewardExpireCommand extends AbstractCommand
                         $postListArray = empty($postList) ? array() : $postList->toArray();
 
                         if(empty($postListArray)){
-                            $userWallet->freeze_amount = $userWallet->freeze_amount - $item->remain_money;
+
+                            if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
+                                $userWallet->freeze_amount = $userWallet->freeze_amount - $item->remain_money;
+                            }
                             $userWallet->available_amount = $userWallet->available_amount + $item->remain_money;
                             $userWallet->save();
 
@@ -206,7 +211,9 @@ class ThreadRewardExpireCommand extends AbstractCommand
                             }
 
                             // 减少作者的冻结金额
-                            $userWallet->freeze_amount = $userWallet->freeze_amount - $item->remain_money;
+                            if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
+                                $userWallet->freeze_amount = $userWallet->freeze_amount - $item->remain_money;
+                            }
                             $userWallet->save();
 
                             // 清零作者悬赏帖的剩余金额

@@ -23,6 +23,7 @@ use App\Models\ThreadReward;
 use App\Models\Post;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
+use App\Models\Order;
 use Carbon\Carbon;
 use App\Repositories\ThreadRewardRepository;
 use Exception;
@@ -111,11 +112,15 @@ class CreatePostRewardController implements RequestHandlerInterface
             throw new Exception(trans('post.post_reward_post_user_id_limit'));
         }
 
+        $threadRewardOrder = Order::query()->where(['thread_id' => $thread_id, 'status' => 1])->first();
+
         $this->connection->beginTransaction();
         try {
-            $userWallet = UserWallet::query()->lockForUpdate()->find($actor->id);
-            $userWallet->freeze_amount = $userWallet->freeze_amount - $rewards;
-            $userWallet->save();
+            if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
+                $userWallet = UserWallet::query()->lockForUpdate()->find($actor->id);
+                $userWallet->freeze_amount = $userWallet->freeze_amount - $rewards;
+                $userWallet->save();
+            }
 
             $postUserWallet = UserWallet::query()->lockForUpdate()->find($posts['user_id']);
             $postUserWallet->available_amount = $postUserWallet->available_amount + $rewards;
