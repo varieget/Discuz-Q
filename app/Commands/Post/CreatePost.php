@@ -42,6 +42,7 @@ class CreatePost
     use AssertPermissionTrait;
     use EventsDispatchTrait;
 
+    const LIMIT_RED_PACKET_TIME = 30;
     /**
      * The id of the thread.
      *
@@ -149,9 +150,19 @@ class CreatePost
      */
     public function handle(Dispatcher $events, ThreadRepository $threads, PostValidator $validator, Censor $censor, Post $post)
     {
+        $cache = app('cache');
         $this->events = $events;
 
         $thread = $threads->findOrFail($this->threadId);
+
+        if(!empty($thread->redPacket())){
+            $cacheKey = 'thread_red_packet_'.md5($this->actor->id);
+            $red_cache = $cache->get($cacheKey);
+            if($red_cache){
+                $cache->put($cacheKey, true, self::LIMIT_RED_PACKET_TIME);
+                throw new Exception('do_frequent');
+            }
+        }
 
         $isFirst = is_null($this->isFirst) ? empty($thread->post_count):$this->isFirst;
 
@@ -228,6 +239,12 @@ class CreatePost
         }
 
         $post->save();
+
+        //这里判断是否为红包贴，如果是红包贴则限制用户回帖时间
+        if(!empty($thread->redPacket())){
+            $cacheKey = 'thread_red_packet_'.md5($this->actor->id);
+            $cache->put($cacheKey, true, self::LIMIT_RED_PACKET_TIME);
+        }
 
         // 记录触发的审核词
         if ($post->is_approved === Post::UNAPPROVED && $censor->wordMod) {
