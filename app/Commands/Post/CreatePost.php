@@ -111,13 +111,19 @@ class CreatePost
     protected $validator;
 
     /**
+     * @var null
+     */
+    protected $isFirst;
+
+    /**
      * @param int $threadId
      * @param User $actor
      * @param array $data
      * @param string $ip
      * @param int $port
+     * @param null $isFirst
      */
-    public function __construct($threadId, User $actor, array $data, $ip, $port)
+    public function __construct($threadId, User $actor, array $data, $ip, $port, $isFirst = null)
     {
         $this->threadId = $threadId;
         $this->replyPostId = Arr::get($data, 'attributes.replyId', null);
@@ -126,6 +132,7 @@ class CreatePost
         $this->data = $data;
         $this->ip = $ip;
         $this->port = $port;
+        $this->isFirst = $isFirst;
     }
 
     /**
@@ -146,9 +153,13 @@ class CreatePost
 
         $thread = $threads->findOrFail($this->threadId);
 
-        $isFirst = empty($thread->post_count);
+        $isFirst = is_null($this->isFirst) ? empty($thread->post_count):$this->isFirst;
 
-        if (! $isFirst) {
+        if ($isFirst && ($firstPost = $thread->firstPost)) {
+            $post = $firstPost;
+        }
+
+        if (!$isFirst) {
             // 非首帖，检查是否有权回复
             $this->assertCan($this->actor, 'reply', $thread);
 
@@ -193,7 +204,8 @@ class CreatePost
             $this->commentPostId,
             $this->commentUserId,
             $isFirst,
-            (bool) Arr::get($this->data, 'attributes.isComment')
+            (bool) Arr::get($this->data, 'attributes.isComment'),
+            $post
         );
 
         $post->content = $censor->checkText($post->content);
@@ -211,7 +223,9 @@ class CreatePost
             new Saving($post, $this->actor, $this->data)
         );
 
-        $validator->valid($post->getAttributes());
+        if (!$isDraft = Arr::get($this->data, 'attributes.is_draft')) {
+            $validator->valid($post->getAttributes());
+        }
 
         $post->save();
 
@@ -229,6 +243,8 @@ class CreatePost
         // $this->notifications->onePerUser(function () use ($post, $actor) {
         $this->dispatchEventsFor($post, $this->actor);
         // });
+
+        $post->rewards = floatval(sprintf('%.2f', $post->getPostReward()));
 
         return $post;
     }
