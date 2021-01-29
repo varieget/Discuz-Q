@@ -24,7 +24,6 @@ use App\Models\Thread;
 use App\Models\User;
 use App\Models\Category;
 use App\Models\AdminActionLog;
-use Carbon\Carbon;
 use App\Repositories\SequenceRepository;
 use App\Repositories\ThreadRepository;
 use App\Traits\ThreadNoticesTrait;
@@ -243,9 +242,7 @@ class BatchEditThreads
         if($action_desc !== '' && !empty($action_desc)){
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                $action_desc,
-                $_SERVER['REMOTE_ADDR'],
-                Carbon::now()
+                $action_desc
             );
             $status = 1;
         }
@@ -254,6 +251,10 @@ class BatchEditThreads
             if($category_id !== '' && !empty($category_id)) {
                 $categoryDetail = Category::query()->where('id', $category_id)->first();
                 $action_desc = '批量转移用户主题帖'. $titles .'至【'. $categoryDetail['name'] .'】分类';
+                AdminActionLog::createAdminActionLog(
+                    $this->actor->id,
+                    $action_desc
+                );
             }
         }
         

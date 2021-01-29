@@ -23,7 +23,6 @@ use App\Events\Group\PermissionUpdated;
 use App\Models\Group;
 use App\Models\Permission;
 use App\Models\AdminActionLog;
-use Carbon\Carbon;
 use Discuz\Api\Controller\AbstractListController;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -92,9 +91,7 @@ class UpdateGroupPermissionController extends AbstractListController
 
         AdminActionLog::createAdminActionLog(
             $actor->id,
-            '更改用户角色【'. $group->name .'】操作权限',
-            $_SERVER['REMOTE_ADDR'],
-            Carbon::now()
+            '更改用户角色【'. $group->name .'】操作权限'
         );
 
         return DiscuzResponseFactory::EmptyResponse();

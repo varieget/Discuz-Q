@@ -22,7 +22,6 @@ use App\Events\Category\Deleting;
 use App\Models\Category;
 use App\Models\User;
 use App\Models\AdminActionLog;
-use Carbon\Carbon;
 use App\Repositories\CategoryRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -79,7 +78,6 @@ class DeleteCategory
     public function handle(Dispatcher $events, CategoryRepository $categories, ServerRequestInterface $request)
     {
         $this->events = $events;
-        $ip = ip($request->getServerParams());
 
         $category = $categories->findOrFail($this->categoryId, $this->actor);
 
@@ -114,9 +112,7 @@ class DeleteCategory
 
         AdminActionLog::createAdminActionLog(
             $this->actor->id,
-            '删除内容分类【'. $name .'】',
-            $ip,
-            Carbon::now()
+            '删除内容分类【'. $name .'】'
         );
 
         $this->dispatchEventsFor($category, $this->actor);

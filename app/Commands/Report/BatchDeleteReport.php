@@ -105,9 +105,7 @@ class BatchDeleteReport
             if($action_desc !== '' && !empty($action_desc)) {
                 AdminActionLog::createAdminActionLog(
                     $this->actor->id,
-                    $action_desc,
-                    $_SERVER['REMOTE_ADDR'],
-                    date('Y-m-d H:m:s', time())
+                    $action_desc
                 );
             }
 

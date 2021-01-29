@@ -22,10 +22,10 @@ use App\Models\Thread;
 use App\Models\ThreadReward;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\Post;
 use App\Api\Serializer\ThreadSerializer;
 use App\Api\Serializer\UserSerializer;
 use Discuz\Foundation\AbstractRepository;
-use Discuz\SpecialChar\SpecialCharServer;
 use Illuminate\Support\Arr;
 use App\Notifications\Messages\Wechat\ThreadRewardedWechatMessage;
 use App\Notifications\Messages\Wechat\ThreadRewardedExpiredWechatMessage;
@@ -49,8 +49,7 @@ class ThreadRewardRepository extends AbstractRepository
     public function returnThreadRewardNotify($thread_id, $user_id, $rewards, $type)
     {
         $query = Thread::query();
-        $query->join('posts', 'threads.id', '=', 'posts.thread_id')->where(['posts.is_first' => 1, 'posts.is_comment' => 0]);
-        $query->where(['threads.id' => $thread_id]);
+        $query->where(['id' => $thread_id]);
         $thread = $query->first();
 
         $order = Order::query()->where(['thread_id' => $thread_id])->first();
@@ -59,7 +58,12 @@ class ThreadRewardRepository extends AbstractRepository
         $orderArr = empty($order) ? array() : $order->toArray();
 
         if(!empty($thread)){
-            $threadContent = $this->getContentByType($thread, Thread::CONTENT_LENGTH, true);
+            if(!empty($thread->title)){
+                $threadContent = $thread->title;
+            }else{
+                $post = Post::query()->where(['thread_id' => $thread_id, 'is_first' => 1])->first();
+                $threadContent = $post->content;
+            }
         }else{
             $threadContent = '悬赏帖已过期且已被删除，返回冻结金额';
         }
@@ -71,7 +75,7 @@ class ThreadRewardRepository extends AbstractRepository
                 'actor_username' => $actorUser->username,   // 发送人姓名
                 'actual_amount' => $rewards,     // 获取作者实际金额
                 'title' => $thread->title,
-                'content' => (string)$threadContent,
+                'content' => $threadContent,
                 'created_at' => (string)$thread->created_at
             ]),
         ];
@@ -79,28 +83,5 @@ class ThreadRewardRepository extends AbstractRepository
         $walletType = $type;
         // Tag 发送悬赏问答通知
         $user->notify(new ThreadRewarded(ThreadRewardedWechatMessage::class, $user, $order, $build, $walletType));
-    }
-
-    /**
-     * 根据类型获取 Thread content
-     *
-     * @param int $substr
-     * @param bool $parse
-     * @return Stringable|string
-     */
-    public function getContentByType($thread, $substr, $parse = false)
-    {
-        $special = app(SpecialCharServer::class);
-
-        if ($thread->type == 1) {
-            $content = $substr ? Str::of($thread->title)->substr(0, $substr) : $thread->title;
-            $content = $special->purify($content);
-        } else {
-            // 不是长文没有标题则使用首贴内容
-            $thread->content = $substr ? Str::of($thread->content)->substr(0, $substr) : $thread->content;
-            $content = $thread->content;
-        }
-
-        return $content;
     }
 }

@@ -22,7 +22,6 @@ use App\Events\Category\Saving;
 use App\Models\Category;
 use App\Models\User;
 use App\Models\AdminActionLog;
-use Carbon\Carbon;
 use App\Validators\CategoryValidator;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Foundation\EventsDispatchTrait;
@@ -116,9 +115,7 @@ class BatchCreateCategories
 
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                '新增内容分类【'. $name .'】',
-                $this->ip,
-                Carbon::now()
+                '新增内容分类【'. $name .'】'
             );
 
             $result['data'][] = $category;

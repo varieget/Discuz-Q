@@ -27,7 +27,6 @@ use App\Models\Thread;
 use App\Models\ThreadVideo;
 use App\Models\User;
 use App\Models\AdminActionLog;
-use Carbon\Carbon;
 use App\Repositories\ThreadRepository;
 use App\Repositories\ThreadVideoRepository;
 use App\Traits\ThreadNoticesTrait;
@@ -266,9 +265,7 @@ class EditThread
         if($action_desc !== '' && !empty($action_desc)){
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                $action_desc,
-                $_SERVER['REMOTE_ADDR'],
-                Carbon::now()
+                $action_desc
             );
         }
 
