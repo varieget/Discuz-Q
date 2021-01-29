@@ -14,7 +14,7 @@
     <!-- 系统通知 -->
     <div class="system-notice" v-show="showSystem">
       <p class="system-title">系统通知</p>
-    <Card header="用户角色通知标题：">
+    <Card :header="query.typeName">
       <CardRow :description="systemList.disabled ? '当前通知的内容和格式为系统内置，无法自定义配置' : '系统发送的欢迎信息的标题，不支持HTML，不超过75字节'">
         <el-input type="text" maxlength="75" v-model="systemList.title" :disabled="systemList.disabled" ></el-input>
       </CardRow>
@@ -61,19 +61,21 @@
         <el-input type="input" v-model="wxList.remark_data" class="applets-input"></el-input>
       </div>
       <div class="applets">
-        <span class="applets-title">跳转：</span>
+        <span class="applets-title">跳转类型：</span>
         <div class="applets-radio">
           <el-radio v-model="wxList.redirect_type" :label="0">无跳转</el-radio>
           <el-radio v-model="wxList.redirect_type" :label="2">跳转至小程序</el-radio>
           <el-radio v-model="wxList.redirect_type" :label="1">跳转至H5</el-radio>
         </div>
       </div>
+      </CardRow>
+    <CardRow row :description="wxList.redirect_type === 2 ?'请填写正确的小程序路径，填写错误将导致用户无法接收到消息通知。' : ''">
       <div class="applets" v-show="wxList.redirect_type === 1">
         <span class="applets-titles">H5网址：</span>
         <el-input type="input" v-model="wxList.redirect_url" class="applets-input"></el-input>
       </div>
       <div class="applets" v-show="wxList.redirect_type === 2">
-        <span class="applets-titles">小程序网址：</span>
+        <span class="applets-titles">小程序路径：</span>
         <el-input type="input" v-model="wxList.page_path" class="applets-input"></el-input>
       </div>
       </CardRow>
