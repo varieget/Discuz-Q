@@ -113,6 +113,9 @@ class CreatePostRewardController implements RequestHandlerInterface
         }
 
         $threadRewardOrder = Order::query()->where(['thread_id' => $thread_id, 'status' => Order::ORDER_STATUS_PAID])->first();
+        app('log')->info(__LINE__ . '行：开始检查！-------------------------------------------------------------------');
+        app('log')->info(__LINE__ . '行：悬赏帖ID:' . $thread_id . ',订单ID:' . $threadRewardOrder->id . ',订单支付类型为：' .$threadRewardOrder->payment_type .
+         ',作者' . $actor->username . ',作者ID为：' . $actor->id . '悬赏采纳金额为：' . $rewards);
         if(empty($threadRewardOrder)){
             app('log')->info('获取不到悬赏帖订单信息，作者' . $actor->username . '悬赏采纳失败！;悬赏问答帖ID为：' . $thread_id);
             throw new Exception(trans('post.post_reward_order_error'));
@@ -121,23 +124,28 @@ class CreatePostRewardController implements RequestHandlerInterface
         $this->connection->beginTransaction();
         try {
             if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
+                app('log')->info(__LINE__ . '行：支付方式钱包支付，所以进来扣冻结金额啦！');
                 $userWallet = UserWallet::query()->lockForUpdate()->find($actor->id);
+                app('log')->info(__LINE__ . '行：当前冻结金额为' . $userWallet->freeze_amount . '，采纳金额为' . $rewards);
                 if($userWallet->freeze_amount - $rewards < 0){
                     app('log')->info('作者' . $actor->username . '的冻结金额小于采纳金额，悬赏采纳失败！;悬赏问答帖ID为：' . $thread_id);
                     throw new Exception(trans('post.post_reward_user_wallet_error'));
                 }else{
                     $userWallet->freeze_amount = $userWallet->freeze_amount - $rewards;
                     $userWallet->save();
+                    app('log')->info(__LINE__ . '行：冻结金额扣除成功！');
                 }
             }
 
             $postUserWallet = UserWallet::query()->lockForUpdate()->find($posts['user_id']);
             $postUserWallet->available_amount = $postUserWallet->available_amount + $rewards;
             $postUserWallet->save();
+            app('log')->info(__LINE__ . '行：被采纳者可用余额增加了：' . $rewards);
 
             $threadRewardRemainMoney = ThreadReward::query()->lockForUpdate()->find($threadReward['id']);
             $threadRewardRemainMoney->remain_money = $threadRewardRemainMoney->remain_money - $rewards;
             $threadRewardRemainMoney->save();
+            app('log')->info(__LINE__ . '行：悬赏帖剩余悬赏金额减少了：' . $rewards);
 
             UserWalletLog::createWalletLog(
                 $posts['user_id'],
@@ -152,6 +160,7 @@ class CreatePostRewardController implements RequestHandlerInterface
                 $attributes['post_id'],
                 $thread_id
             );
+            app('log')->info(__LINE__ . '行：被采纳者用户ID为' . $posts['user_id'] . '，增加了一条收入流水。');
 
             $this->connection->commit();
 
@@ -162,6 +171,7 @@ class CreatePostRewardController implements RequestHandlerInterface
         }
 
         // 发送通知
+        app('log')->info(__LINE__ . '行：准备给被采纳者用户发送通知。');
         app(ThreadRewardRepository::class)->returnThreadRewardNotify($thread_id, $posts['user_id'], $rewards, UserWalletLog::TYPE_INCOME_THREAD_REWARD);
         return DiscuzResponseFactory::EmptyResponse(204);
     }

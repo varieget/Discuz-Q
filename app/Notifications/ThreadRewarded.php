@@ -136,7 +136,7 @@ class ThreadRewarded extends AbstractNotification
             $this->tplId['database'] = 1002;
             $this->data = array_merge($newData, ['notice_types_of' => 1]); // 收入通知
         }
-
+        app('log')->info(__LINE__ . '行：给被采纳者用户准备通知信息的模板。');
         $this->tplId['wechat'] = $this->messageRelationship['wechat']->tplId;
     }
 }
