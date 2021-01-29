@@ -24,6 +24,7 @@ use App\Events\Post\Saved;
 use App\Events\Post\Saving;
 use App\Models\Post;
 use App\Models\PostMod;
+use App\Models\Thread;
 use App\Models\User;
 use App\Repositories\ThreadRepository;
 use App\Validators\PostValidator;
@@ -155,7 +156,7 @@ class CreatePost
 
         $thread = $threads->findOrFail($this->threadId);
 
-        if(!empty($thread->redPacket())){
+        if($thread->is_red_packet != Thread::NOT_HAVE_RED_PACKET){
             $cacheKey = 'thread_red_packet_'.md5($this->actor->id);
             $red_cache = $cache->get($cacheKey);
             if($red_cache){
@@ -241,7 +242,7 @@ class CreatePost
         $post->save();
 
         //这里判断是否为红包贴，如果是红包贴则限制用户回帖时间
-        if(!empty($thread->redPacket())){
+        if($thread->is_red_packet != Thread::NOT_HAVE_RED_PACKET){
             $cacheKey = 'thread_red_packet_'.md5($this->actor->id);
             $cache->put($cacheKey, true, self::LIMIT_RED_PACKET_TIME);
         }
