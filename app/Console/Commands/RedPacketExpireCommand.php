@@ -32,7 +32,7 @@ use Illuminate\Database\ConnectionInterface;
 
 class RedPacketExpireCommand extends AbstractCommand
 {
-    protected $signature = 'redpacket:expire';
+    protected $signature = 'redPacket:expire';
 
     protected $description = '返还过期未回答的红包金额';
 
@@ -76,33 +76,35 @@ class RedPacketExpireCommand extends AbstractCommand
         $query->where('created_at', '<', $compareTime);
         $query->where('remain_money', '>', 0);
         $query->where('remain_number', '>', 0);
-        $redpacket = $query->get();
+        $redPacket = $query->get();
 
-        $bar = $this->createProgressBar(count($redpacket));
+        $bar = $this->createProgressBar(count($redPacket));
         $bar->start();
 
-        $redpacket->map(function ($item) use ($bar) {
+        $redPacket->map(function ($item) use ($bar) {
             // Start Transaction
             $this->connection->beginTransaction();
             try {
                 if (empty($item->thread_id)) {
-                    $this->outPutDebugInfo('1过期红包ID: ' . $item->id . ' -- 帖子ID不存在');
+                    $this->outPutDebugInfo('过期红包ID: ' . $item->id . ' -- 帖子ID不存在');
                     return;
                 }
 
                 $order = Order::query()->where('thread_id', $item->thread_id)->first();
                 if (empty($order)) {
-                    $this->outPutDebugInfo('删除过期红包ID: ' . $item->id . ' -- 帖子ID：' . $item->thread_id . ' -- 订单不存在');
+                    $this->outPutDebugInfo('删除过期红包ID: ' . $item->id
+                                                . ' -- 帖子ID：' . $item->thread_id . ' -- 订单不存在');
                     return;
                 }
-                $this->connection->commit();
+
                 if ($order['payment_type'] != Order::PAYMENT_TYPE_WALLET) {
-                    $this->outPutDebugInfo('过期红包ID: ' . $item->id . ' -- 帖子ID：' . $item->thread_id . ' -- 订单支付类型为：' . $order['payment_type']);
+                    $this->outPutDebugInfo('过期红包ID: ' . $item->id
+                                                . ' -- 帖子ID：' . $item->thread_id
+                                                . ' -- 订单支付类型为：' . $order['payment_type']);
                     return;
                 }
 
                 $thread = Thread::query()->where('id', $item->thread_id)->first();
-
                 if ($thread['type'] == Thread::TYPE_OF_TEXT) {
                     $return_change_type = UserWalletLog::TYPE_TEXT_RETURN_THAW;// 103 文字帖冻结返还
                     $return_change_desc = trans('wallet.return_text');//文字帖红包支出
@@ -118,36 +120,42 @@ class RedPacketExpireCommand extends AbstractCommand
                 ];
 
                 $query = UserWallet::query();
-                $query->where('user_id', $order->user->id);
+                $query->where('user_id', $order['user_id']);
                 $userWallet = $query->first();
-                $this->outPutDebugInfo(
-                    ' 过期红包ID: ' . $item->id
+                $debugInfo =
+                    '红包ID：' . $item->id
                     . ' -- 帖子ID：' . $item->thread_id
-                    . ' -- 返还用户id：' . $order->user->id
-                    . ' -- 金额：' . $item->remain_money
-                    . ' -- 用户原可用金额：' . $userWallet->available_amount
-                    . ' -- 用户原冻结金额：' . $userWallet->freeze_amount
-                );
+                    . ' -- 返还用户id：' . $order['user_id']
+                    . ' -- 退回金额：' . $item->remain_money
+                    . ' -- 原可用金额：' . $userWallet['available_amount']
+                    . ' -- 原冻结金额：' . $userWallet['freeze_amount']
+                ;
 
-                $this->bus->dispatch(new ChangeUserWallet($order->user, UserWallet::OPERATE_UNFREEZE, $item->remain_money, $data));
+                $this->bus->dispatch(new ChangeUserWallet($item->thread->user,
+                                                          UserWallet::OPERATE_UNFREEZE,
+                                                          $item->remain_money,
+                                                          $data
+                                     ));
 
                 $query = UserWallet::query();
-                $query->where('user_id', $order->user->id);
+                $query->where('user_id', $order['user_id']);
                 $userWallet = $query->first();
                 $this->outPutDebugInfo(
-                    ' -- 用户现可用金额：' . $userWallet->available_amount
-                            . ' -- 用户现冻结金额：' . $userWallet->freeze_amount
+                    $debugInfo
+                            . ' -- 现可用金额：' . $userWallet['available_amount']
+                            . ' -- 现冻结金额：' . $userWallet['freeze_amount']
                 );
 
-                /** @var RedPacket $item */
                 $item->status = 0;
                 $item->remain_money = 0.00;
                 $item->remain_number = 0;
                 $item->save();
 
+                $this->outPutDebugInfo('红包ID: '.$item->id.' 更改保存成功');
                 $this->connection->commit();
             } catch (Exception $e) {
                 $this->connection->rollback();
+                $this->outPutDebugInfo('红包ID:'. $item->id .' 过期处理异常');
                 app('log')->info('红包过期处理异常: ' . $e->getMessage());
             }
 
@@ -160,6 +168,10 @@ class RedPacketExpireCommand extends AbstractCommand
     public function outPutDebugInfo($debugInfo){
         if ($this->debugInfo) {
             echo PHP_EOL . $debugInfo;
+
+            $file_pointer = fopen("RedPacketExpireCommand.txt","a+");
+            fwrite($file_pointer,(PHP_EOL .'['. date('Y-m-d h:i:s', time()). ']: ' . $debugInfo));
+            fclose($file_pointer);
         }
     }
 }
