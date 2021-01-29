@@ -112,14 +112,23 @@ class CreatePostRewardController implements RequestHandlerInterface
             throw new Exception(trans('post.post_reward_post_user_id_limit'));
         }
 
-        $threadRewardOrder = Order::query()->where(['thread_id' => $thread_id, 'status' => 1])->first();
+        $threadRewardOrder = Order::query()->where(['thread_id' => $thread_id, 'status' => Order::ORDER_STATUS_PAID])->first();
+        if(empty($threadRewardOrder)){
+            app('log')->info('获取不到悬赏帖订单信息，作者' . $actor->username . '悬赏采纳失败！;悬赏问答帖ID为：' . $thread_id);
+            throw new Exception(trans('post.post_reward_order_error'));
+        }
 
         $this->connection->beginTransaction();
         try {
             if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
                 $userWallet = UserWallet::query()->lockForUpdate()->find($actor->id);
-                $userWallet->freeze_amount = $userWallet->freeze_amount - $rewards;
-                $userWallet->save();
+                if($userWallet->freeze_amount - $rewards < 0){
+                    app('log')->info('作者' . $actor->username . '的冻结金额小于采纳金额，悬赏采纳失败！;悬赏问答帖ID为：' . $thread_id);
+                    throw new Exception(trans('post.post_reward_user_wallet_error'));
+                }else{
+                    $userWallet->freeze_amount = $userWallet->freeze_amount - $rewards;
+                    $userWallet->save();
+                }
             }
 
             $postUserWallet = UserWallet::query()->lockForUpdate()->find($posts['user_id']);
