@@ -66,10 +66,11 @@ class ThreadRewardExpireCommand extends AbstractCommand
 
     public function handle()
     {
-        $today = Carbon::now()->toDateTimeString();
+        // 定时任务处理此条记录的时间，与用户最后参与领红包的时间增加 10 秒，以防时间临界点并发引起问题
+        $now = Carbon::now()->addSeconds(10)->toDateTimeString();
         $query = ThreadReward::query();
         $query->where('type', 0);
-        $query->where('expired_at', '<', $today);
+        $query->where('expired_at', '<', $now);
         $query->where('remain_money', '>', 0); // 还有剩余金额
         $threadReward = $query->get();
 

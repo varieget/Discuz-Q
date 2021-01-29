@@ -70,8 +70,8 @@ class RedPacketExpireCommand extends AbstractCommand
 
     public function handle()
     {
-        $preTime = time() - $this->expireTime;
-        $compareTime = date("Y-m-d H:i:s",$preTime);
+        // 定时任务处理此条记录的时间，与用户最后参与领红包的时间增加 10 秒，以防时间临界点并发引起问题
+        $compareTime = date("Y-m-d H:i:s", time() - $this->expireTime + 10);
         $query = RedPacket::query();
         $query->where('created_at', '<', $compareTime);
         $query->where('remain_money', '>', 0);
