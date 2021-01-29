@@ -51,13 +51,14 @@ class AdminActionLog extends Model
      * @param string $ip
      * @return static
      */
-    public static function createAdminActionLog($user_id, $action_desc, $ip, $created_at)
+    public static function createAdminActionLog($user_id, $action_desc)
     {
+        $request = app('request');
         $adminactionlog = new static;
 
         $adminactionlog->user_id = $user_id;
         $adminactionlog->action_desc = $action_desc;
-        $adminactionlog->ip = $ip;
+        $adminactionlog->ip = ip($request->getServerParams());
         $adminactionlog->created_at = Carbon::now();
 
         $adminactionlog->save();

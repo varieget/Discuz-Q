@@ -124,7 +124,7 @@ class SaveQuestionToDatabase
                             throw new Exception(trans('post.thread_reward_expired_time_is_null'));
                         }
 
-                        $min_time = date("Y-m-d H:i:s",strtotime("+1 days",time()));
+                        $min_time = date("Y-m-d H:i:s", strtotime("+1 days",time()));
                         if($questionData['expired_at'] < $min_time){
                             throw new Exception(trans('post.thread_reward_expired_time_limit_fail'));
                         }
@@ -174,7 +174,7 @@ class SaveQuestionToDatabase
                             'is_onlooker' => $actor->can('canBeOnlooker') ? $isOnlooker : false,
                             'expired_at' => Carbon::today()->addDays(Question::EXPIRED_DAY),
                         ];
-                        $question = Question::query()->updateOrCreate(['thread_id'=>$post->thread_id],$build);
+                        $question = Question::query()->updateOrCreate(['thread_id'=> $post->thread_id], $build);
                         $questionId = $question->id;
                         if ($isDraft == 0) {
                             $question = Question::build($build);
@@ -235,7 +235,7 @@ class SaveQuestionToDatabase
                     $this->connection->commit();
                 } catch (Exception $e) {
                     $this->connection->rollback();
-
+                    app('log')->info('用户'.$actor->username.'创建问答帖失败，数据回滚！异常订单ID为：' . $order->id . ';异常错误记录：' . $e->getMessage());
                     throw $e;
                 }
 

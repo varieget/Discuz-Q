@@ -38,9 +38,7 @@ class GroupPermissionAddCommand extends AbstractCommand
             'createThread.' . Thread::TYPE_OF_IMAGE . '.position',
             'createThread.' . Thread::TYPE_OF_AUDIO . '.position',
             'createThread.' . Thread::TYPE_OF_QUESTION . '.position',
-            'createThread.' . Thread::TYPE_OF_GOODS . '.position',
-            'createThread.' . Thread::TYPE_OF_TEXT . '.redPacket',
-            'createThread.' . Thread::TYPE_OF_LONG . '.redPacket'
+            'createThread.' . Thread::TYPE_OF_GOODS . '.position'
         ];
 
         $permission = Permission::query()

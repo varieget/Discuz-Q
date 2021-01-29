@@ -232,9 +232,7 @@ class UpdateUser
         if (! $isSelf) {
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                '更改了用户【'. $old_username .'】为【'. $username .'】',
-                $_SERVER['REMOTE_ADDR'],
-                Carbon::now()
+                '更改了用户【'. $old_username .'】为【'. $username .'】'
             );
         }
 
@@ -287,9 +285,7 @@ class UpdateUser
         if (! $isSelf) {
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                '更改了用户【'. $user->username .'】的密码',
-                $_SERVER['REMOTE_ADDR'],
-                Carbon::now()
+                '更改了用户【'. $user->username .'】的密码'
             );
         }
 
@@ -410,9 +406,7 @@ class UpdateUser
         );
         AdminActionLog::createAdminActionLog(
             $this->actor->id,
-            '更改了用户【'. $user->username .'】的用户状态为【'. $status_desc[$status] .'】',
-            $_SERVER['REMOTE_ADDR'],
-            Carbon::now()
+            '更改了用户【'. $user->username .'】的用户状态为【'. $status_desc[$status] .'】'
         );
     }
 
@@ -465,9 +459,7 @@ class UpdateUser
 
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                '更改了用户【'. $user->username .'】的用户角色为【'. $groupName['name'] .'】',
-                $_SERVER['REMOTE_ADDR'],
-                Carbon::now()
+                '更改了用户【'. $user->username .'】的用户角色为【'. $groupName['name'] .'】'
             );
 
             $deleteGroups = array_diff($oldGroups->keys()->toArray(), $newGroups->toArray());

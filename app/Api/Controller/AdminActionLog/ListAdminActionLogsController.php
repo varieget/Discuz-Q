@@ -24,6 +24,7 @@ use App\Models\AdminActionLog;
 use App\Repositories\AdminActionLogsRepository;
 use Discuz\Api\Controller\AbstractListController;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Database\Eloquent\Builder;
@@ -104,6 +105,7 @@ class ListAdminActionLogsController extends AbstractListController
      */
     public function data(ServerRequestInterface $request, Document $document)
     {
+        $this->assertAdmin($request->getAttribute('actor'));
         $actor = $request->getAttribute('actor');
 
         $filter = $this->extractFilter($request);

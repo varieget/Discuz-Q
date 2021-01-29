@@ -58,9 +58,7 @@ class DeleteTopic
 
         AdminActionLog::createAdminActionLog(
             $this->actor->id,
-            '删除话题【'. $topicContent .'】',
-            $_SERVER['REMOTE_ADDR'],
-            date('Y-m-d H:m:s', time())
+            '删除话题【'. $topicContent .'】'
         );
 
         return $topic;

@@ -23,7 +23,6 @@ use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
 use App\Models\AdminActionLog;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
@@ -159,9 +158,7 @@ class UpdateUserWallet
 
                 AdminActionLog::createAdminActionLog(
                     $this->actor->id,
-                    $desc . '了用户【'. $userDetail['username'] .'】的余额'. $operate_amount .'元',
-                    $_SERVER['REMOTE_ADDR'],
-                    Carbon::now()
+                    $desc . '了用户【'. $userDetail['username'] .'】的余额'. $operate_amount .'元'
                 );
             }
             
@@ -175,9 +172,7 @@ class UpdateUserWallet
 
                 AdminActionLog::createAdminActionLog(
                     $this->actor->id,
-                    $status_desc . '了用户【'. $userDetail['username'] .'】提现',
-                    $_SERVER['REMOTE_ADDR'],
-                    Carbon::now()
+                    $status_desc . '了用户【'. $userDetail['username'] .'】提现'
                 );
                 
             }

@@ -123,7 +123,11 @@ class ListPaidThreadsController extends AbstractListController
         $offset = $this->extractOffset($request);
         $include = $this->extractInclude($request);
 
-        $order_thread_ids = Order::query()->where(['user_id' => $actor->id, 'status' => 1, 'type' => Order::ORDER_TYPE_THREAD])->pluck('thread_id');
+        $orderType = [Order::ORDER_TYPE_THREAD, ORDER::ORDER_TYPE_ATTACHMENT];
+        $order_thread_ids = Order::query()
+                        ->where(['user_id' => $actor->id, 'status' => 1])
+                        ->whereIn('type', $orderType)
+                        ->pluck('thread_id');
         $thread_ids = $order_thread_ids->toArray();
 
         $query = $this->threads->query()->select('threads.*');

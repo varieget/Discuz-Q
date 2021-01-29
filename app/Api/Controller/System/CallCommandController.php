@@ -88,7 +88,7 @@ class CallCommandController extends AbstractResourceController
             'clear:video'       => VideoClearCommand::class,
             'order:query'       => QueryWechatOrderConmmand::class,
             'reward:expire'     => ThreadRewardExpireCommand::class,
-            'redpacket:expire'  => RedPacketExpireCommand::class,
+            'redPacket:expire'  => RedPacketExpireCommand::class,
             'grouppermission:add'   => GroupPermissionAddCommand::class,
             'setting:add'           => SettingAddCommand::class
         ];

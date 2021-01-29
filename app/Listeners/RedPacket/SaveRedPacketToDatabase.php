@@ -78,14 +78,18 @@ class SaveRedPacketToDatabase
      */
     public function handle(Saved $event)
     {
-
         $post = $event->post;
         $actor = $event->actor;
         $data = $event->data;
+        $info = '访问用户id： ' . $actor->id.
+                ',访问帖子id：' . $post->thread->id.
+                ',post_id：'   . $post->id.
+                ',msg：';
 
         if (($post->thread->type != Thread::TYPE_OF_TEXT || $post->thread->type != Thread::TYPE_OF_LONG)
              && (empty($data['attributes']['redPacket']['money'])
                 || empty($data['attributes']['redPacket']['number']))) {
+            app('log')->info($info . '保存红包到数据库：该用户已经领取过红包了');
             return;
         }
 
@@ -97,6 +101,7 @@ class SaveRedPacketToDatabase
             $id = $data['attributes']['id'];
             if (empty($id)) {
                 if (!($post->is_first == 1 && ($post->wasRecentlyCreated == true))) {
+                    app('log')->info($info . '保存红包到数据库：不是首帖创建内容');
                     return;
                 }
             }
@@ -104,6 +109,7 @@ class SaveRedPacketToDatabase
 
         $thread = Thread::query()->where('id',$post->thread_id)->first();
         if (empty($thread['is_red_packet'])) {
+            app('log')->info($info . '保存红包到数据库：该帖不为红包帖');
             return;
         }
 
@@ -167,7 +173,7 @@ class SaveRedPacketToDatabase
             );
             $redPacket->save();
 
-             $threadData = Arr::get($data, 'relationships');
+            $threadData = Arr::get($data, 'relationships');
             if (! empty($orderSn = $threadData['redpacket']['data']['order_id'])) {
                 /**
                  * Update Order relation thread_id
@@ -214,6 +220,7 @@ class SaveRedPacketToDatabase
             $this->connection->commit();
         } catch (Exception $e) {
             $this->connection->rollback();
+            app('log')->info($info . '保存红包到数据库异常:' . $e->getMessage());
 
             throw $e;
         }

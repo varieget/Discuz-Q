@@ -60,32 +60,36 @@ class ReplyPostMakeRedPacket
         $actor = $event->actor;
         $data = $event->data;
         $type = $event->post->getRelations()['thread']['type'];
+        $info = '访问用户id： ' . $actor->id.
+                ',访问帖子id：' . $post->thread->id.
+                ',post_id：'   . $post->id.
+                ',msg：';
 
         if (!($type == Thread::TYPE_OF_TEXT || $type == Thread::TYPE_OF_LONG)) {
+            app('log')->info($info . '回复领红包：该帖不为文字帖和长文贴');
             return;
         }
 
         if ($post->is_approved == Post::UNAPPROVED) {
+            app('log')->info($info . '回复领红包：该帖未审核');
             return;
         }
 
         if ($post->is_first == 1 || $post->is_comment == 1 || $post->wasRecentlyCreated == false) {
+            app('log')->info($info . '回复领红包：该帖不为首帖、第一条评论');
             return;
-        }
-
-        $currentPostUser = Post::query()->where(['id' => $post->id])->first();
-        $thread = Thread::query()->where(['id' => $currentPostUser['thread_id']])->first();
-        if ($currentPostUser['user_id'] == $thread['user_id']) {
-//            throw new Exception('不可领取自己发布的红包');
         }
 
         $redPacket = RedPacket::query() ->where(['thread_id' => $post->thread_id, 'status' => 1, 'condition' => 0])
                                         ->first();
         if (empty($redPacket) || empty($redPacket['remain_money']) || empty($redPacket['remain_number'])) {
+            app('log')->info($info . '回复领红包：该红包帖无剩余金额和个数');
             return;
         }
 
         //领取过红包的用户不再领取
+        $currentPostUser = Post::query()->where(['id' => $post->id])->first();
+        $thread = Thread::query()->where(['id' => $currentPostUser['thread_id']])->first();
         if ($thread['type'] == Thread::TYPE_OF_TEXT) {
             $change_type = UserWalletLog::TYPE_INCOME_TEXT;
         } else {
@@ -97,6 +101,7 @@ class ReplyPostMakeRedPacket
             'thread_id' => $thread['id']
         ])->first();
         if (!empty($isReceive)) {
+            app('log')->info($info . '回复领红包：该用户已经领取过红包了');
             return;
         }
 

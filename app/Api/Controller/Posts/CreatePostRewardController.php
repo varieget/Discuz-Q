@@ -53,17 +53,23 @@ class CreatePostRewardController implements RequestHandlerInterface
         $attributes = Arr::get($data, 'attributes', []);
         $actor = $request->getAttribute('actor');
         $thread_id = Arr::get($attributes, 'thread_id');
+
+        $checkRewards = preg_match('/^(([1-9][0-9]*)|(([0]\.\d{0,2}|[1-9][0-9]*\.\d{0,2})))$/', $attributes['rewards']);
+        if(!$checkRewards){
+            throw new Exception(trans('post.post_reward_type_error'));
+        }
+
         $rewards = Arr::get($attributes, 'rewards', 0);
         $rewards = floatval(sprintf('%.2f', $rewards));
 
-        if(!isset($thread_id) || empty($thread_id)){
+        if(empty($thread_id)){
             throw new Exception(trans('post.post_reward_does_not_have_thread_id'));
         }
 
         $threadReward = ThreadReward::query()->where('thread_id', $thread_id)->first();
         $remain_money = floatval(sprintf('%.2f', $threadReward['remain_money']));
 
-        if(!isset($threadReward) || empty($threadReward)){
+        if(empty($threadReward)){
             throw new Exception(trans('post.post_reward_detail_not_found'));
         }
 
@@ -92,12 +98,12 @@ class CreatePostRewardController implements RequestHandlerInterface
         }
 
         $threads = Thread::query()->where(['id' => $thread_id, 'is_approved' => 1])->whereNull('deleted_at')->first();
-        if(!isset($threads) || empty($threads)){
+        if(empty($threads)){
             throw new Exception(trans('post.post_reward_thread_detail_not_found'));
         }
 
         $posts = Post::query()->where(['id' => $attributes['post_id'], 'thread_id' => $thread_id, 'is_comment' => 0])->whereNull('deleted_at')->first();
-        if(!isset($posts) || empty($posts)){
+        if(empty($posts)){
             throw new Exception(trans('post.post_reward_post_detail_not_found'));
         }
 
@@ -137,6 +143,7 @@ class CreatePostRewardController implements RequestHandlerInterface
 
         } catch (Exception $e) {
             $this->connection->rollback();
+            app('log')->info('作者' . $actor->username . '悬赏采纳失败，数据回滚！;悬赏问答帖ID为：' . $thread_id . ';异常错误记录：' . $e->getMessage());
             throw $e;
         }
 

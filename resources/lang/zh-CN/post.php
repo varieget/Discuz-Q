@@ -68,4 +68,5 @@ return [
     'post_reward_not_sufficient_funds' => '悬赏金余额不足',
     'post_reward_thread_detail_not_found' => '该帖正在审核或者已被删除',
     'post_reward_post_detail_not_found' => '该评论不是一级评论或者已被删除',
+    'post_reward_type_error' => '悬赏金额类型错误，必须是数字！'
 ];
