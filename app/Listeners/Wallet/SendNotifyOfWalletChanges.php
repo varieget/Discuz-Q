@@ -22,12 +22,14 @@ use App\Events\Wallet\Saved;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\Question;
+use App\Models\Thread;
 use App\Models\UserWalletLog;
 use App\Notifications\Messages\Wechat\ExpiredWechatMessage;
 use App\Notifications\Messages\Wechat\ReceiveRedPacketWechatMessage;
 use App\Notifications\Messages\Wechat\RewardedWechatMessage;
 use App\Notifications\ReceiveRedPacket;
 use App\Notifications\Rewarded;
+use Illuminate\Support\Arr;
 
 class SendNotifyOfWalletChanges
 {
