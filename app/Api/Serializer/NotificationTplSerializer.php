@@ -34,7 +34,7 @@ class NotificationTplSerializer extends AbstractSerializer
     /**
      * @var string[] 禁止修改的系统通知，只能设置开启关闭
      */
-    protected $disabledId = [25, 26, 27, 28, 33, 34, 37, 39, 41, 43];
+    protected $disabledId = [25, 26, 27, 28, 33, 34, 37, 39, 41, 43, 45, 47, 49];
 
     /**
      * @param NotificationTpl $model
