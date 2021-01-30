@@ -88,145 +88,39 @@ class ThreadRewardExpireCommand extends AbstractCommand
                 if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET && ($userWallet->freeze_amount - $item->remain_money < 0)){
                     app('log')->info('过期悬赏错误：悬赏帖(ID为' . $item->thread_id . ')，作者(ID为' . $item->user_id . ')，钱包冻结金额 小于 应返回的悬赏剩余金额，悬赏剩余金额返回失败！');
                 }else{
-                    // Start Transaction
                     $this->connection->beginTransaction();
-                    try {
-                            $postQuery = Post::query();
-                            $postList = $postQuery->where(['thread_id' => $item->thread_id, 'is_approved' => 1, 'is_first' => 0, 'is_comment' => 0])->whereNull('deleted_at')->orderBy('created_at', 'asc')->get();
+                    try{
+                        $change_freeze_amount = 0;
+                        if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
+                            $userWallet->freeze_amount = $userWallet->freeze_amount - $item->remain_money;
+                            $change_freeze_amount = $item->remain_money;
+                        }
+                        $userWallet->available_amount = $userWallet->available_amount + $item->remain_money;
+                        $userWallet->save();
 
-                            $postListArray = empty($postList) ? array() : $postList->toArray();
+                        UserWalletLog::createWalletLog(
+                            $item->user_id,
+                            $item->remain_money,
+                            -$change_freeze_amount,
+                            UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN,
+                            trans('wallet.income_thread_reward_return_desc'),
+                            null,
+                            null,
+                            $item->user_id,
+                            0,
+                            0,
+                            $item->thread_id
+                        );
 
-                            if(empty($postListArray)){
+                        // 发送悬赏问答通知
+                        app(ThreadRewardRepository::class)->returnThreadRewardNotify($item->thread_id, $item->user_id, $item->remain_money, UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN);
 
-                                if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
-                                    $userWallet->freeze_amount = $userWallet->freeze_amount - $item->remain_money;
-                                }
-                                $userWallet->available_amount = $userWallet->available_amount + $item->remain_money;
-                                $userWallet->save();
+                        $item->remain_money = 0;
+                        $item->save();
 
-                                UserWalletLog::createWalletLog(
-                                    $item->user_id,
-                                    $item->remain_money,
-                                    -$item->remain_money,
-                                    UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN,
-                                    trans('wallet.income_thread_reward_return_desc'),
-                                    null,
-                                    null,
-                                    $item->user_id,
-                                    0,
-                                    0,
-                                    $item->thread_id
-                                );
-
-                                // 发送悬赏问答通知
-                                app(ThreadRewardRepository::class)->returnThreadRewardNotify($item->thread_id, $item->user_id, $item->remain_money, UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN);
-
-                                $item->remain_money = 0;
-                                $item->save();
-
-                                // 修改过期后输出
-                                // $this->question('');
-                                // $this->question('该帖子没有评论，钱返回给作者，结束:' . Carbon::now());
-                            }else{
-                                $firstPostId = $postListArray[0]['id'];
-                                $likeCountPostList = $postQuery->where(['thread_id' => $item->thread_id, 'is_approved' => 1, 'is_first' => 0, 'is_comment' => 0])->where('like_count', '>', 0)->whereNull('deleted_at')->orderBy('like_count', 'desc')->get();
-
-                                $likeCountPostListArray = empty($likeCountPostList) ? array() : $likeCountPostList->toArray();
-
-                                if(empty($likeCountPostListArray)){
-                                    // nobody like the reward thread's post,every post's like is zero,so every post's author divide the money
-                                    $divideMoney = $item->remain_money / count($postListArray);
-                                    $divideMoney = floor($divideMoney * 100) / 100;
-
-                                    // 如果还有剩下的钱，分给第一位评论的人吧
-                                    $totalDivideMoney = $divideMoney * count($postList);
-                                    $firstDivideRemainMoney = $divideMoney;
-                                    if($item->remain_money > $totalDivideMoney){
-                                        $firstDivideRemainMoney = $item->remain_money - $totalDivideMoney + $divideMoney;
-                                    }
-
-                                    $postList->map(function ($postItem) use ($item, $divideMoney, $firstDivideRemainMoney, $firstPostId) {
-                                        if($firstPostId == $postItem->id){
-                                            $total = $firstDivideRemainMoney;
-                                        }else{
-                                            $total = $divideMoney;
-                                        }
-                                        $postUserWallet = UserWallet::query()->lockForUpdate()->find($postItem->user_id);
-                                        $postUserWallet->available_amount = $postUserWallet->available_amount + $total;
-                                        $postUserWallet->save();
-
-                                        UserWalletLog::createWalletLog(
-                                            $postItem->user_id,
-                                            $total,
-                                            0,
-                                            UserWalletLog::TYPE_INCOME_THREAD_REWARD_DIVIDE,
-                                            trans('wallet.income_thread_reward_divide_desc'),
-                                            null,
-                                            null,
-                                            $item->user_id,
-                                            0,
-                                            $postItem->id,
-                                            $item->thread_id
-                                        );
-
-                                        // 发送悬赏问答通知
-                                        app(ThreadRewardRepository::class)->returnThreadRewardNotify($item->thread_id, $postItem->user_id, $total, UserWalletLog::TYPE_INCOME_THREAD_REWARD_DIVIDE);
-                                    });
-                                }else{
-                                    // someone like the reward thread's post,those people according to the thumb up divide the money
-                                    $likeCount = array_sum(array_column($likeCountPostListArray, 'like_count'));
-                                    $avgLikeCountMoney = $item->remain_money / $likeCount;
-                                    $avgLikeCountMoney = floor($avgLikeCountMoney * 100) / 100;
-
-                                    // 如果还有剩下的钱，分给第一位评论的人吧
-                                    $totalDivideMoney = $avgLikeCountMoney * $likeCount;
-                                    $firstDivideRemainMoney = 0;
-                                    if($item->remain_money > $totalDivideMoney){
-                                        $firstDivideRemainMoney = $item->remain_money - $totalDivideMoney;
-                                    }
-
-                                    $likeCountPostList->map(function ($postItem) use ($item, $avgLikeCountMoney, $firstDivideRemainMoney, $firstPostId) {
-                                        if($firstPostId == $postItem->id){
-                                            $total = $firstDivideRemainMoney + $avgLikeCountMoney * $postItem->like_count;
-                                        }else{
-                                            $total = $avgLikeCountMoney * $postItem->like_count;
-                                        }
-
-                                        $postUserWallet = UserWallet::query()->lockForUpdate()->find($postItem->user_id);
-                                        $postUserWallet->available_amount = $postUserWallet->available_amount + $total;
-                                        $postUserWallet->save();
-
-                                        UserWalletLog::createWalletLog(
-                                            $postItem->user_id,
-                                            $total,
-                                            0,
-                                            UserWalletLog::TYPE_INCOME_THREAD_REWARD_DISTRIBUTION,
-                                            trans('wallet.income_thread_reward_distribution_desc'),
-                                            null,
-                                            null,
-                                            $item->user_id,
-                                            0,
-                                            $postItem->id,
-                                            $item->thread_id
-                                        );
-
-                                        // 发送悬赏问答通知
-                                        app(ThreadRewardRepository::class)->returnThreadRewardNotify($item->thread_id, $postItem->user_id, $total, UserWalletLog::TYPE_INCOME_THREAD_REWARD_DISTRIBUTION);
-                                    });
-                                }
-
-                                // 减少作者的冻结金额
-                                if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
-                                    $userWallet->freeze_amount = $userWallet->freeze_amount - $item->remain_money;
-                                    $userWallet->save();
-                                }
-
-                                // 清零作者悬赏帖的剩余金额
-                                $item->remain_money = 0;
-                                $item->save();
-                            }
-                            $this->connection->commit();
-                    } catch (Exception $e) {
+                        $this->connection->commit();
+                    }catch (Exception $e) {
+                        app('log')->info('过期悬赏返回错误：悬赏帖(ID为' . $item->thread_id . ')，作者(ID为' . $item->user_id . ')。异常错误记录：' . $e->getMessage());
                         $this->connection->rollback();
                     }
                 }

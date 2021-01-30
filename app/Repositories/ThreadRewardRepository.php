@@ -79,7 +79,7 @@ class ThreadRewardRepository extends AbstractRepository
                 'created_at' => (string)$thread->created_at
             ]),
         ];
-        app('log')->info('ThreadRewardRepository.php文件'. __LINE__ . '行：给被采纳者用户准备悬赏信息用来通知。');
+
         $walletType = $type;
         // Tag 发送悬赏问答通知
         $user->notify(new ThreadRewarded(ThreadRewardedWechatMessage::class, $user, $order, $build, $walletType));

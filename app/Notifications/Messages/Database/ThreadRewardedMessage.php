@@ -56,8 +56,7 @@ class ThreadRewardedMessage extends SimpleMessage
             'order_type' => $this->order->type,  // 1注册 2打赏 3付费主题 4付费用户组
             'notice_type' => Arr::get($this->data, 'notice_types_of'), // 1收入通知 2分成通知 3过期通知
         ];
-        app('log')->info('ThreadRewardedMessage.php文件'. __LINE__ . '行：给被采纳者用户发送通知信息。');
-        app('log')->info(__LINE__ . '行：检查完成。-----------------------------------------------------------------------');
+
         return $build;
     }
 }
