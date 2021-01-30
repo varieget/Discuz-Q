@@ -15,7 +15,7 @@ use Illuminate\Support\Arr;
  */
 class ReceiveRedPacketWechatMessage extends SimpleMessage
 {
-    public $tplId = 1001;
+    public $tplId = 46;
 
     protected $model;
 
@@ -84,14 +84,26 @@ class ReceiveRedPacketWechatMessage extends SimpleMessage
             $threadUrl = $this->url->to('/topic/index?id=' . $threadId);
         }
 
-        return [
-            $actorName,
-            $actualAmount,
-            $this->strWords($message),
-            $orderName, // 1：注册，2：打赏，3：付费主题，4：付费用户组
-            Carbon::now()->toDateTimeString(),
-            $threadUrl,
+        /**
+         * 设置父类 模板数据
+         * @parem $user_name
+         * @parem $order_type_name
+         * @parem $actual_amount
+         * @parem $content
+         */
+        $this->setTemplateData([
+            '{$user_name}'           => $actorName,
+            '{$order_type_name}'     => $orderName,
+            '{$actual_amount}'       => $actualAmount,
+            '{$content}'             => $this->strWords($message),
+        ]);
+
+        // build data
+        $expand = [
+            'redirect_url' => $threadUrl,
         ];
+
+        return $this->compiledArray($expand);
     }
 
 }
