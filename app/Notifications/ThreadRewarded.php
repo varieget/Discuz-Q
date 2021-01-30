@@ -130,10 +130,10 @@ class ThreadRewarded extends AbstractNotification
 
         $newData = (array)$this->data;
         if($this->walletType == UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN){
-            $this->tplId['database'] = 1004;
+            $this->tplId['database'] = 49;
             $this->data = array_merge($newData, ['notice_types_of' => 3]); // 过期通知
         }else{
-            $this->tplId['database'] = 1002;
+            $this->tplId['database'] = 47;
             $this->data = array_merge($newData, ['notice_types_of' => 1]); // 收入通知
         }
 
