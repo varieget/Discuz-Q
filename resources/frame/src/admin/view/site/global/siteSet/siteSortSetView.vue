@@ -2,17 +2,18 @@
   <div class="site-sort-set-box" >
     <div v-show="isShow">
       <!-- 添加内容 -->
-      <p class="sort-desc">添加内容，在首页显示：</p>
+      <p class="sort-desc">默认首页：</p>
 
       <div class="sort-switch-box">
         <div class="sort-switch">
           <el-switch v-model="siteOpenSort" active-color="#336699" inactive-color="#bbbbbb">
           </el-switch>
         </div>
-        <p class="sort-switch-desc">说明：<br/>开启配置后，添加内容在首页显示，是取得下列各维度的并集；排除内容不在首页显示，是在并集中将排除内容抽离。<br/>未点击开启时，会暂存该页面的配置内容；点击开启时，智能排序将生效，但未配置任何内容，则是 显示出全部内容；<br/>开启后，用户可选择按最新排序进行；最新排序是首先是划分版块，然后根据主题的已读未读<br/>（未读的排在前面，已读的排在后面），最后根据时间倒序进行排序</p>
+        <p class="sort-switch-desc">说明：<br/>开启后，增加默认首页的标签，并按照如下规则显示默认首页数据：将勾选“添加内容”取并集，并且将“排除内容”在并集中去掉。</p>
       </div>
 
       <div v-show="siteOpenSort">
+        <p class="sort-desc">添加内容，在首页显示：</p>
 
         <el-card class="box-card" shadow="never">
           <div slot="header" class="clearfix">
