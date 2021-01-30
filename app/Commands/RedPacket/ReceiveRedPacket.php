@@ -113,14 +113,16 @@ class ReceiveRedPacket
             $redPacketData->remain_number = $this->redPacket['remain_number'] - 1;
             $redPacketData->save();
 
-            //减少发帖人冻结金额
-            $data = [
-                'thread_id' => $this->thread['id'],
-                'post_id' => $this->post['id'],
-                'change_type' => $expend_change_type,
-                'change_desc' => $expend_change_desc
-            ];
-            $this->bus->dispatch(new ChangeUserWallet($this->expendUser, UserWallet::OPERATE_DECREASE_FREEZE, $prepareChangeAmount, $data));
+            if($order->payment_type == Order::PAYMENT_TYPE_WALLET){
+                //减少发帖人冻结金额
+                $data = [
+                    'thread_id' => $this->thread['id'],
+                    'post_id' => $this->post['id'],
+                    'change_type' => $expend_change_type,
+                    'change_desc' => $expend_change_desc
+                ];
+                $this->bus->dispatch(new ChangeUserWallet($this->expendUser, UserWallet::OPERATE_DECREASE_FREEZE, $prepareChangeAmount, $data));
+            }
 
             //增加领取人可用金额
             $data = [
@@ -129,7 +131,6 @@ class ReceiveRedPacket
                 'change_type' => $income_change_type,
                 'change_desc' => $income_change_desc
             ];
-
             $this->bus->dispatch(new ChangeUserWallet($this->incomeUser, UserWallet::OPERATE_INCREASE, $prepareChangeAmount, $data));
 
             $this->connection->commit();
