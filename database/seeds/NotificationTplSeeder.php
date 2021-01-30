@@ -269,6 +269,45 @@ class NotificationTplSeeder extends Seeder
                     '{newgroupname}' => '新用户组'
                 ])
             ],
+            /*[
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '得到红包通知',
+                'title' => '得到红包通知',
+                'content' => '你收到了{username}的红包{money}',
+                'vars' => serialize([
+                    '{username}' => '支付用户名',
+                    '{money}' => '悬赏金额',
+                    '{content}' => '内容',
+                    '{ordertype}' => '支付类型',
+                ])
+            ],
+            [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '悬赏问答通知',
+                'title' => '悬赏问答通知',
+                'content' => '你收到了{username}的悬赏{money}',
+                'vars' => serialize([
+                    '{username}' => '支付用户名',
+                    '{money}' => '悬赏金额',
+                    '{content}' => '内容',
+                    '{ordertype}' => '支付类型',
+                ])
+            ],
+            [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '悬赏过期通知',
+                'title' => '悬赏过期通知',
+                'content' => '{content}悬赏已过期',
+                'vars' => serialize([
+                    '{username}' => '支付用户名',
+                    '{money}' => '悬赏金额',
+                    '{content}' => '内容',
+                    '{ordertype}' => '支付类型',
+                ])
+            ],*/
         ];
     }
 
@@ -405,37 +444,37 @@ class NotificationTplSeeder extends Seeder
                 'status' => 1,
                 'type' => 0,
                 'type_name' => '得到红包通知',
-                'title' => '财务通知',
+                'title' => '得到红包通知',
             ],
             46 => [
                 'status' => 0,
                 'type' => 1,
                 'type_name' => '得到红包通知',
-                'title' => '微信财务通知',
+                'title' => '得到红包通知',
             ],
             47 => [
                 'status' => 1,
                 'type' => 0,
                 'type_name' => '悬赏问答通知',
-                'title' => '财务通知',
+                'title' => '悬赏问答通知',
             ],
             48 => [
                 'status' => 0,
                 'type' => 1,
                 'type_name' => '悬赏问答通知',
-                'title' => '微信财务通知',
+                'title' => '悬赏问答通知',
             ],
             49 => [
                 'status' => 1,
                 'type' => 0,
                 'type_name' => '悬赏过期通知',
-                'title' => '内容通知'
+                'title' => '悬赏过期通知'
             ],
             50 => [
                 'status' => 0,
                 'type' => 1,
                 'type_name' => '悬赏过期通知',
-                'title' => '微信内容通知',
+                'title' => '悬赏过期通知',
             ]
         ];
     }
