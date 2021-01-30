@@ -43,7 +43,7 @@ export default {
           <p style="text-indent:2em;">您确定要切换红色三栏版本吗？</p>
           <p style="text-indent:2em;;margin-top:10px;">
             <span style="color:red">温馨小提示：</span>
-            小程序请参考安装手册，重新获取、提交红色三栏的源码哦。
+            小程序请参考安装手册，重新获取、提交红色三栏的源码。
           </p>
         `;
       } else if (this.selectedTheme === 2 && this.newTheme === 1) {
@@ -54,11 +54,11 @@ export default {
           </P>
           <p style="text-indent:2em;margin-top:10px;">
             <span style="color:red;">温馨小提示：</span>
-            小程序请参考安装手册，重新获取、提交蓝色两栏的源码哦。
+            小程序请参考安装手册，重新获取、提交蓝色两栏的源码。
           </p>
         `;
       } else {
-        str = '相同的提交可能不生效哦。'
+        str = '相同的提交可能不生效。'
       }
       this.$confirm(str, '确认信息', {
         dangerouslyUseHTMLString: true,
