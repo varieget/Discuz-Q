@@ -125,7 +125,7 @@ class ReceiveRedPacket extends AbstractNotification
         /**
          * set tpl id
          */
-        $this->tplId['database'] = 1000;
+        $this->tplId['database'] = 45;
         $this->data = array_merge($this->data, ['notice_types_of' => 1]); // 收入通知
         $this->tplId['wechat'] = $this->messageRelationship['wechat']->tplId;
     }

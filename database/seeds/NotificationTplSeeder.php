@@ -401,6 +401,42 @@ class NotificationTplSeeder extends Seeder
                 'type_name' => '问答过期通知',
                 'title' => '微信内容通知',
             ],
+            45 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '得到红包通知',
+                'title' => '财务通知',
+            ],
+            46 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '得到红包通知',
+                'title' => '微信财务通知',
+            ],
+            47 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '悬赏问答通知',
+                'title' => '财务通知',
+            ],
+            48 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '悬赏问答通知',
+                'title' => '微信财务通知',
+            ],
+            49 => [
+                'status' => 1,
+                'type' => 0,
+                'type_name' => '悬赏过期通知',
+                'title' => '内容通知'
+            ],
+            50 => [
+                'status' => 0,
+                'type' => 1,
+                'type_name' => '悬赏过期通知',
+                'title' => '微信内容通知',
+            ]
         ];
     }
 
