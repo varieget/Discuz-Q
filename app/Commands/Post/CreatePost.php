@@ -28,6 +28,7 @@ use App\Models\Thread;
 use App\Models\User;
 use App\Repositories\ThreadRepository;
 use App\Validators\PostValidator;
+use Carbon\Carbon;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
@@ -156,7 +157,7 @@ class CreatePost
 
         $thread = $threads->findOrFail($this->threadId);
 
-        if($thread->is_red_packet != Thread::NOT_HAVE_RED_PACKET){
+        if($thread->is_red_packet != Thread::NOT_HAVE_RED_PACKET && (Carbon::now() - $thread->created_at > 30)){
             $cacheKey = 'thread_red_packet_'.md5($this->actor->id);
             $red_cache = $cache->get($cacheKey);
             if($red_cache){
@@ -242,7 +243,7 @@ class CreatePost
         $post->save();
 
         //这里判断是否为红包贴，如果是红包贴则限制用户回帖时间
-        if($thread->is_red_packet != Thread::NOT_HAVE_RED_PACKET){
+        if($thread->is_red_packet != Thread::NOT_HAVE_RED_PACKET && (Carbon::now() - $thread->created_at > 30)){
             $cacheKey = 'thread_red_packet_'.md5($this->actor->id);
             $cache->put($cacheKey, true, self::LIMIT_RED_PACKET_TIME);
         }
