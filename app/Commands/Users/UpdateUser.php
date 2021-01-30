@@ -391,8 +391,8 @@ class UpdateUser
         $logMsg = Arr::get($attributes, 'refuse_message', '');
 
         // 审核后系统通知事件
-        $this->setRefuseMessage($user,$logMsg);
         $this->events->dispatch(new ChangeUserStatus($user, $logMsg));
+        $this->setRefuseMessage($user,$logMsg);
 
         // 记录用户状态操作日志
         UserActionLogs::writeLog($this->actor, $user, User::enumStatus($status), $logMsg);
