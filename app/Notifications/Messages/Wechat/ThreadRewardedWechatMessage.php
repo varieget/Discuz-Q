@@ -15,7 +15,7 @@ use Illuminate\Support\Arr;
  */
 class ThreadRewardedWechatMessage extends SimpleMessage
 {
-    public $tplId = 1003;
+    public $tplId = 48;
 
     protected $model;
 
@@ -48,15 +48,7 @@ class ThreadRewardedWechatMessage extends SimpleMessage
 
     public function template()
     {
-        $build =  [
-            'title' => $this->getTitle(),
-            'content' => $this->getContent($this->data),
-            'raw' => Arr::get($this->data, 'raw'),
-        ];
-
-        Arr::set($build, 'raw.tpl_id', $this->firstData->id);
-
-        return $build;
+        return ['content' => $this->getWechatContent()];
     }
 
     protected function titleReplaceVars()
@@ -66,16 +58,16 @@ class ThreadRewardedWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
-        $message = Arr::get($data, 'message', '');
-        $threadId = Arr::get($data, 'raw.thread_id', 0);
-        $actualAmount = Arr::get($data, 'raw.actual_amount', 0); // 实际金额
+        $message = Arr::get($this->data, 'message', '');
+        $threadId = Arr::get($this->data, 'raw.thread_id', 0);
+        $actualAmount = Arr::get($this->data, 'raw.actual_amount', 0); // 实际金额
 
         // 获取支付类型
-        $orderName = Order::enumType(Arr::get($data, 'raw.type', 0), function ($args) {
+        $orderName = Order::enumType(Arr::get($this->data, 'raw.type', 0), function ($args) {
             return $args['value'];
         });
 
-        $actorName = Arr::get($data, 'raw.actor_username', '');  // 发送人姓名
+        $actorName = Arr::get($this->data, 'raw.actor_username', '');  // 发送人姓名
 
         // 主题ID为空时跳转到首页
         if (empty($threadId)) {
@@ -84,14 +76,24 @@ class ThreadRewardedWechatMessage extends SimpleMessage
             $threadUrl = $this->url->to('/topic/index?id=' . $threadId);
         }
 
-        return [
-            $actorName,
-            $actualAmount,
-            $this->strWords($message),
-            $orderName, // 1：注册，2：打赏，3：付费主题，4：付费用户组
-            Carbon::now()->toDateTimeString(),
-            $threadUrl,
+        /**
+         * 设置父类 模板数据
+         * @parem $user_name
+         * @parem $order_type_name
+         * @parem $actual_amount
+         * @parem $content
+         */
+        $this->setTemplateData([
+            '{$username}'           => $actorName,
+            '{$order_type_name}'     => $orderName,
+            '{$actual_amount}'       => $actualAmount,
+            '{$content}'             => $this->strWords($message),
+        ]);
+        // build data
+        $expand = [
+            'redirect_url' => $threadUrl,
         ];
+        return $this->compiledArray($expand);
     }
 
 }

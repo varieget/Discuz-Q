@@ -74,12 +74,11 @@ class ThreadRewardRepository extends AbstractRepository
             'raw' => array_merge(Arr::only($orderArr, ['id', 'thread_id', 'type']), [
                 'actor_username' => $actorUser->username,   // 发送人姓名
                 'actual_amount' => $rewards,     // 获取作者实际金额
-                'title' => $thread->title,
-                'content' => $threadContent,
+//                'title' => $thread->title,
+                'content' => $thread->title,
                 'created_at' => (string)$thread->created_at
             ]),
         ];
-
         $walletType = $type;
         // Tag 发送悬赏问答通知
         $user->notify(new ThreadRewarded(ThreadRewardedWechatMessage::class, $user, $order, $build, $walletType));

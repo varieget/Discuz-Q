@@ -42,7 +42,10 @@ class ThreadRewarded extends AbstractNotification
 
     public $walletType;
 
-    public $tplId = [];
+    public $tplId = [
+        'database' => 47,
+        'wechat' => 48,
+    ];
 
     /**
      * @var Collection
@@ -52,7 +55,6 @@ class ThreadRewarded extends AbstractNotification
     public function __construct($message, User $user, $order, $data, $walletType)
     {
         $this->message = app($message);
-
         $this->user = $user;
         $this->order = $order;
         $this->data = $data;
@@ -112,7 +114,7 @@ class ThreadRewarded extends AbstractNotification
     public function toWechat($notifiable)
     {
         $message = $this->getMessage('wechat');
-        $message->setData($this->getTplModel('database'), $this->user, $this->order, $this->data);
+        $message->setData($this->getTplModel('wechat'), $this->user, $this->order, $this->data);
 
         return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
     }
@@ -136,7 +138,8 @@ class ThreadRewarded extends AbstractNotification
             $this->tplId['database'] = 47;
             $this->data = array_merge($newData, ['notice_types_of' => 1]); // 收入通知
         }
-        app('log')->info(__LINE__ . '行：给被采纳者用户准备通知信息的模板。');
+        app('log')->info(__LINE__ . '行：给被采纳者用户准备通知信息的模板。'.$this->messageRelationship['wechat']->tplId);
         $this->tplId['wechat'] = $this->messageRelationship['wechat']->tplId;
+
     }
 }
