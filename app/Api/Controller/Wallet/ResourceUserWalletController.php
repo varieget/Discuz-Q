@@ -80,7 +80,7 @@ class ResourceUserWalletController extends AbstractResourceController
         // 获取当前用户
         $actor = $request->getAttribute('actor');
         $this->assertRegistered($actor);
-        if($actor->id != Arr::get($request->getQueryParams(), 'user_id')){
+        if(!$actor->isAdmin() && $actor->id != Arr::get($request->getQueryParams(), 'user_id')){
             throw new PermissionDeniedException;
         }
         $data = $this->wallet->findOrFail($actor->id);
