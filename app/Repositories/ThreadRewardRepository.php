@@ -25,6 +25,7 @@ use App\Models\Order;
 use App\Models\Post;
 use App\Api\Serializer\ThreadSerializer;
 use App\Api\Serializer\UserSerializer;
+use Carbon\Carbon;
 use Discuz\Foundation\AbstractRepository;
 use Illuminate\Support\Arr;
 use App\Notifications\Messages\Wechat\ThreadRewardedWechatMessage;
@@ -52,6 +53,8 @@ class ThreadRewardRepository extends AbstractRepository
         $query->where(['id' => $thread_id]);
         $thread = $query->first();
 
+        // 查悬赏过期信息
+        $threadReward = ThreadReward::query()->where('thread_id', $thread_id)->first();
         $order = Order::query()->where(['thread_id' => $thread_id])->first();
         $actorUser = User::query()->where(['id' => $thread->user_id])->first();
         $user = User::query()->where(['id' => $user_id])->first();
@@ -74,14 +77,17 @@ class ThreadRewardRepository extends AbstractRepository
             'raw' => array_merge(Arr::only($orderArr, ['id', 'thread_id', 'type']), [
                 'actor_username' => $actorUser->username,   // 发送人姓名
                 'actual_amount' => $rewards,     // 获取作者实际金额
-                'title' => $thread->title,
-                'content' => $threadContent,
+                'content' => $thread->title,
                 'created_at' => (string)$thread->created_at
             ]),
         ];
 
         $walletType = $type;
-        // Tag 发送悬赏问答通知
-        $user->notify(new ThreadRewarded(ThreadRewardedWechatMessage::class, $user, $order, $build, $walletType));
+        if(Carbon::now() > $threadReward['expired_at']){
+            $user->notify(new ThreadRewarded(ThreadRewardedExpiredWechatMessage::class, $user, $order, $build, $walletType));
+        }else{
+            // Tag 发送悬赏问答通知
+            $user->notify(new ThreadRewarded(ThreadRewardedWechatMessage::class, $user, $order, $build, $walletType));
+        }
     }
 }
