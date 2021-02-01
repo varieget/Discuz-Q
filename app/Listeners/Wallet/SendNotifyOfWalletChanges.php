@@ -100,7 +100,7 @@ class SendNotifyOfWalletChanges
                     $build = [
                         'message' => $order->thread->getContentByType(Thread::CONTENT_LENGTH, true),
                         'raw' => array_merge(Arr::only($order->toArray(), ['id', 'thread_id', 'type']), [
-                            'actor_username' => $user,   // 发送人姓名
+                            'actor_username' => $user->username,   // 发送人姓名
                             'actual_amount' => $amount,     // 获取作者实际金额
                         ]),
                     ];
@@ -124,11 +124,10 @@ class SendNotifyOfWalletChanges
                     $build = [
                         'message' => $order->thread->getContentByType(Thread::CONTENT_LENGTH, true),
                         'raw' => array_merge(Arr::only($order->toArray(), ['id', 'thread_id', 'type']), [
-                            'actor_username' => $user,   // 发送人姓名
+                            'actor_username' => $user->username,   // 发送人姓名
                             'actual_amount' => $amount,     // 获取作者实际金额
                         ]),
                     ];
-
                     // Tag 发送得到红包通知
                     $user->notify(new ReceiveRedPacket(ReceiveRedPacketWechatMessage::class, $user, $order, $build));
                     break;
