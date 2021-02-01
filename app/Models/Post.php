@@ -147,8 +147,11 @@ class Post extends Model
     public function getSummaryAttribute()
     {
         $content = Str::of($this->content ?: '');
-
         if ($content->length() > self::SUMMARY_LENGTH) {
+            $subContent = $content->substr(0, self::SUMMARY_LENGTH);
+            if(stristr($subContent,'http')){
+                $content = Str::of(strip_tags($this->formatContent()));
+            }
             $content = static::$formatter->parse(
                 $content->substr(0, self::SUMMARY_LENGTH)->finish(self::SUMMARY_END_WITH)
             );
