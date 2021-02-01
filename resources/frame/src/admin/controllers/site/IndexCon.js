@@ -120,12 +120,12 @@ export default {
             },
             /*FITRUE_default*/ 
             /*IFTRUE_pay*/ 
-            {
-              id: 9,
-              title: "操作日志",
-              name: "operationLog",
-              icon: "iconqitafuwushezhi"
-            },
+            // {
+            //   id: 9,
+            //   title: "操作日志",
+            //   name: "operationLog",
+            //   icon: "iconqitafuwushezhi"
+            // },
             {
               id: 10,
               title: "其他服务设置",
