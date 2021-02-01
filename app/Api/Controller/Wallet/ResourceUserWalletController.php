@@ -83,7 +83,9 @@ class ResourceUserWalletController extends AbstractResourceController
         if(!$actor->isAdmin() && $actor->id != Arr::get($request->getQueryParams(), 'user_id')){
             throw new PermissionDeniedException;
         }
-        $data = $this->wallet->findOrFail($actor->id);
+
+        $user_id = Arr::get($request->getQueryParams(), 'user_id');
+        $data = $this->wallet->findOrFail($user_id);
 
         $data->cash_tax_ratio = $this->setting->get('cash_rate', 'cash', 0);
 
