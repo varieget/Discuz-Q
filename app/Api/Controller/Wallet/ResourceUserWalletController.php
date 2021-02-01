@@ -19,6 +19,7 @@
 namespace App\Api\Controller\Wallet;
 
 use App\Settings\SettingsRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use App\Api\Serializer\UserWalletSerializer;
 use Discuz\Api\Controller\AbstractResourceController;
@@ -79,7 +80,10 @@ class ResourceUserWalletController extends AbstractResourceController
         // 获取当前用户
         $actor = $request->getAttribute('actor');
         $this->assertRegistered($actor);
-        $data = $this->wallet->findOrFail(Arr::get($request->getQueryParams(), 'user_id'), $request->getAttribute('actor'));
+        if($actor->id != Arr::get($request->getQueryParams(), 'user_id')){
+            throw new PermissionDeniedException;
+        }
+        $data = $this->wallet->findOrFail($actor->id);
 
         $data->cash_tax_ratio = $this->setting->get('cash_rate', 'cash', 0);
 
