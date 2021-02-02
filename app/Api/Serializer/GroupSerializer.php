@@ -110,6 +110,7 @@ class GroupSerializer extends AbstractSerializer
      */
     public function getCheckList(){
         $groupsList = Sequence::query()->first();
+        if (empty($groupsList)) return [];
         $groupsList = explode(',',$groupsList['group_ids']);
         return $groupsList;
     }
