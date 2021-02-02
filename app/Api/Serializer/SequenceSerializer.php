@@ -42,8 +42,8 @@ class SequenceSerializer extends AbstractSerializer
     protected function getDefaultAttributes($model)
     {
         return [
-            'category_ids'      => $model->category_ids,
-            'group_ids'         => $model->group_ids,
+            'category_ids'   => $model->category_ids,
+            'group_ids'      => $model->group_ids,
             'users'          => $this->usersList($model->user_ids),
             'topics'         => $this->topicsList($model->topic_ids),
             'threads'        => $model->thread_ids,
@@ -54,30 +54,17 @@ class SequenceSerializer extends AbstractSerializer
     }
 
     /**
-     * @param $categoriesList
-     * @return array
-     */
-    public function categoriesList($category_ids)
-    {
-        return Category::query()->whereIn('id', explode(',', $category_ids))->orderBy('sort')->get();
-    }
-
-    /**
-     * @param $groupsList
-     * @return array
-     */
-    public function groupsList($group_ids)
-    {
-        return Group::query()->whereIn('id', explode(',', $group_ids))->orderBy('id')->get();
-    }
-
-    /**
      * @param $usersList
      * @return array
      */
     public function usersList($user_ids)
     {
-        return User::query()->whereIn('id', explode(',', $user_ids))->orderBy('id')->get();
+        if(!empty($user_ids)){
+            $usersCheckList = User::query()->whereIn('id', explode(',', $user_ids))->orderBy('id')->get();
+        }else{
+            $usersCheckList = array();
+        }
+        return $usersCheckList;
     }
 
     /**
@@ -86,15 +73,11 @@ class SequenceSerializer extends AbstractSerializer
      */
     public function topicsList($topic_ids)
     {
-        return Topic::query()->whereIn('id', explode(',', $topic_ids))->orderBy('id')->get();
-    }
-
-    /**
-     * @param $threadsList
-     * @return array
-     */
-    public function threadsList($thread_ids)
-    {
-        return Thread::query()->whereIn('id', explode(',', $thread_ids))->orderBy('id')->get();
+        if(!empty($topic_ids)){
+            $topicsCheckList = Topic::query()->whereIn('id', explode(',', $topic_ids))->orderBy('id')->get();
+        }else{
+            $topicsCheckList = array();
+        }
+        return $topicsCheckList;
     }
 }
