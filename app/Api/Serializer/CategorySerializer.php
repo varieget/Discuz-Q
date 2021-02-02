@@ -99,6 +99,7 @@ class CategorySerializer extends AbstractSerializer
      */
     public function getCheckList(){
         $sequenceList = Sequence::query()->first();
+        if (empty($sequenceList)) return [];
         $ids = explode(',',$sequenceList['category_ids']);
         return $ids;
     }
