@@ -411,7 +411,7 @@ class ListThreadsController extends AbstractListController
                     }
 
                     if(empty($index_thread_ids)){
-                        $query->where('threads.id', '<', 0);
+                        $query->where('threads.id', '>', 0);
                     }
                 }
             }
