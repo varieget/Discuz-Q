@@ -270,7 +270,11 @@ class ForumSettingSerializer extends AbstractSerializer
 
                 // UCenter设置
                 $attributes['ucenter'] += $this->forumField->getUCenterSettings();
+            } else {
+                $attributes['qcloud']['qcloud_vod_token'] = "";
             }
+        } else {
+            $attributes['qcloud']['qcloud_vod_token'] = "";
         }
 
         return $attributes + Arr::except($model, 'id');
