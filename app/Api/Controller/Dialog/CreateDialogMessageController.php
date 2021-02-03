@@ -62,7 +62,7 @@ class CreateDialogMessageController extends AbstractCreateController
         $attributes = Arr::get($request->getParsedBody(), 'data.attributes');
         $this->validation->make($attributes, [
             'dialog_id'     => 'required|int',
-            'message_text'  => 'required_without:attachment_id|max:10000',
+            'message_text'  => 'required_without:attachment_id|max:450',
             'attachment_id' => 'required_without:message_text|int',
         ])->validate();
 
