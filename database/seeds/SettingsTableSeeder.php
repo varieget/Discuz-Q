@@ -143,7 +143,7 @@ class SettingsTableSeeder extends Seeder
             ],
             [
                 'key' => 'api_freq',    // 允许发布商品帖
-                'value' => '{"get":{"freq":300,"forbidden":20},"post":{"freq":200,"forbidden":30}}',
+                'value' => '{"get":{"freq":500,"forbidden":20},"post":{"freq":200,"forbidden":30}}',
                 'tag' => 'default',
             ]
         ]);
