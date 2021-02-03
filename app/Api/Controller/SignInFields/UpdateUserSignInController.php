@@ -24,15 +24,28 @@ use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
+use Illuminate\Contracts\Validation\Factory;
+use Discuz\Auth\AssertPermissionTrait;
+use App\Models\Setting;
+use Discuz\Auth\Exception\PermissionDeniedException;
 
 class UpdateUserSignInController extends AbstractResourceController
 {
+    use AssertPermissionTrait;
 
     public $serializer = UserSignInSerializer::class;
+
     protected $bus;
 
-    public function __construct(Dispatcher $bus)
+    protected $validation;
+
+    protected $setting;
+
+
+    public function __construct(Dispatcher $bus,Factory $validation,Setting $setting)
     {
+        $this->validation = $validation;
+        $this->setting = $setting;
         $this->bus = $bus;
     }
 
@@ -41,6 +54,22 @@ class UpdateUserSignInController extends AbstractResourceController
         $id = Arr::get($request->getQueryParams(), 'id');
         $actor = $request->getAttribute('actor');
         $data = $request->getParsedBody()->get('data', []);
+
+        foreach ($data['attributes'] as $k=>$v) {
+            $this->validation->make($data['attributes'][$k], [
+                'name'  => 'required_without:message_text|max:100',
+                'fields_ext'  => 'required_without:message_text|max:5000',
+                'fields_desc'  => 'required_without:message_text|max:5000',
+                'remark'  => 'required_without:message_text|max:200',
+            ])->validate();
+        }
+
+        $isOpen = $this->setting->where('key','open_ext_fields')->where('value',1)->count();
+
+        if($isOpen == 0){
+            throw new PermissionDeniedException;
+        }
+
         return $this->bus->dispatch(new UpdateUserSignIn($id, $actor, $data));
     }
 }
