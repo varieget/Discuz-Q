@@ -72,6 +72,7 @@ class ForumSettingSerializer extends AbstractSerializer
                 'open_ext_fields'=>$this->settings->get('open_ext_fields'),
 //                'site_close' => (bool)$this->settings->get('site_close'),
                 'site_manage' => json_decode($this->settings->get('site_manage'), true),
+                'api_freq'    => $actor->isAdmin()?json_decode($this->settings->get('api_freq'), true):null,
                 'site_close_msg'=>$this->settings->get('site_close_msg'),
                 'site_favicon' => $favicon ?: app(UrlGenerator::class)->to('/favicon.ico'),
                 'site_logo' => $logo ?: '',
