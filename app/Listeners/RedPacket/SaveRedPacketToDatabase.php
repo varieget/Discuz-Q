@@ -57,6 +57,10 @@ class SaveRedPacketToDatabase
      */
     protected $bus;
 
+    public $baseInfo = '';
+
+    public $debugInfo = false; // false:默认不输出调试信息到日志上
+
     public function __construct(
         EventDispatcher $eventDispatcher,
         RedPacketValidator $redPacketValidator,
@@ -81,15 +85,15 @@ class SaveRedPacketToDatabase
         $post = $event->post;
         $actor = $event->actor;
         $data = $event->data;
-        $info = '访问用户id： ' . $actor->id.
-                ',访问帖子id：' . $post->thread->id.
-                ',post_id：'   . $post->id.
-                ',msg：';
+        $this->baseInfo =   '访问用户id： ' . $actor->id.
+                            ',访问帖子id：' . $post->thread->id.
+                            ',post_id：'   . $post->id.
+                            ',msg：';
 
         if (($post->thread->type != Thread::TYPE_OF_TEXT || $post->thread->type != Thread::TYPE_OF_LONG)
              && (empty($data['attributes']['redPacket']['money'])
                 || empty($data['attributes']['redPacket']['number']))) {
-            app('log')->info($info . '保存红包到数据库：该用户已经领取过红包了');
+            $this->outDebugInfo('保存红包到数据库：该用户已经领取过红包了');
             return;
         }
 
@@ -101,7 +105,7 @@ class SaveRedPacketToDatabase
             $id = $data['attributes']['id'];
             if (empty($id)) {
                 if (!($post->is_first == 1 && ($post->wasRecentlyCreated == true))) {
-                    app('log')->info($info . '保存红包到数据库：不是首帖创建内容');
+                    $this->outDebugInfo('保存红包到数据库：不是首帖创建内容');
                     return;
                 }
             }
@@ -109,7 +113,7 @@ class SaveRedPacketToDatabase
 
         $thread = Thread::query()->where('id',$post->thread_id)->first();
         if (empty($thread['is_red_packet'])) {
-            app('log')->info($info . '保存红包到数据库：该帖不为红包帖');
+            $this->outDebugInfo('保存红包到数据库：该帖不为红包帖');
             return;
         }
 
@@ -220,14 +224,17 @@ class SaveRedPacketToDatabase
             $this->connection->commit();
         } catch (Exception $e) {
             $this->connection->rollback();
-            app('log')->info($info . '保存红包到数据库异常:' . $e->getMessage());
+            app('log')->info($this->baseInfo . '保存红包到数据库异常:' . $e->getMessage());
 
             throw $e;
         }
 
         // 延迟执行事件
         $this->dispatchEventsFor($redPacket, $actor);
+    }
 
-
+    public function outDebugInfo($info)
+    {
+        app('log')->info($this->baseInfo . $info);
     }
 }
