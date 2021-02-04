@@ -111,6 +111,9 @@ class ReceiveRedPacket
             $redPacketData = RedPacket::query()->lockForUpdate()->find($this->redPacket['id']);
             $redPacketData->remain_money = $this->redPacket['remain_money'] - $prepareChangeAmount;
             $redPacketData->remain_number = $this->redPacket['remain_number'] - 1;
+            if ($redPacketData->remain_money == 0 && $redPacketData->remain_number == 0) {
+                $redPacketData->status = RedPacket::RED_PACKET_STATUS_BROUGHT_OUT; // 2:红包已领完
+            }
             $redPacketData->save();
 
             if($order->payment_type == Order::PAYMENT_TYPE_WALLET){

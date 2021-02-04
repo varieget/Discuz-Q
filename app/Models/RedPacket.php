@@ -46,6 +46,19 @@ class RedPacket extends Model
 
     protected $table = 'thread_red_packets';
 
+    /**
+     * 红包状态
+     */
+    const RED_PACKET_STATUS_OVERDUE     = 0; //红包已过期(暂时无用)
+
+    const RED_PACKET_STATUS_VALID       = 1; //红包未过期
+
+    const RED_PACKET_STATUS_BROUGHT_OUT = 2; //红包已领完
+
+    const RED_PACKET_STATUS_RETURN      = 3; //红包已退还
+
+    const RED_PACKET_STATUS_UNTREATED   = 4; //不作处理的异常红包
+
     public static function creation(
         $thread_id,
         $post_id,

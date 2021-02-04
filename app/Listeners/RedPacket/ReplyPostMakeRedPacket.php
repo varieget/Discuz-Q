@@ -84,7 +84,7 @@ class ReplyPostMakeRedPacket
             return;
         }
 
-        $redPacket = RedPacket::query() ->where(['thread_id' => $post->thread_id, 'status' => 1, 'condition' => 0])
+        $redPacket = RedPacket::query() ->where(['thread_id' => $post->thread_id, 'status' => RedPacket::RED_PACKET_STATUS_VALID, 'condition' => 0])
                                         ->first();
         if (empty($redPacket) || empty($redPacket['remain_money']) || empty($redPacket['remain_number'])) {
             $this->outDebugInfo('回复领红包：该红包帖无剩余金额和个数');
