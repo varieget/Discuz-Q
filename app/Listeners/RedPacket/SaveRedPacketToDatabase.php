@@ -125,7 +125,7 @@ class SaveRedPacketToDatabase
         /**
          * Validator
          *
-         * @see QuestionValidator
+         * @see redPacketValidator
          */
         $threadData['actor'] = $actor;
         //草稿不验证
@@ -135,17 +135,32 @@ class SaveRedPacketToDatabase
 
         $rule = $threadData['redPacket']['rule'];
         $condition = $threadData['redPacket']['condition'];
+
         $likenum = Arr::get($threadData, 'redPacket.likenum', 0);
+        if ($likenum > 250) {
+            throw new Exception(trans('redpacket.likenum_lg_limit'));
+        }
+
         $number = $threadData['redPacket']['number'];
-        $money = $threadData['redPacket']['money'];
+        $money = $threadData['redPacket']['money']; // 总金额
+
+        //红包领取规则 0:定额 1:随机
+        if ($rule == 1 && $number > 200) { // 随机红包金额最大值为 200
+            throw new Exception(trans('redpacket.money_lg_limit'));
+        }
+
         $singleMoney = $money / $number;
+        if ($rule == 0 && $singleMoney > 200) { // 定额红包单个红包金额最大值为 200
+            throw new Exception(trans('redpacket.money_lg_limit'));
+        }
         if ($singleMoney < 0.01) {
-            if ($rule == 1) { //红包领取规则 0：定额 1：随机
+            if ($rule == 1) {
                 throw new Exception(trans('redpacket.redpacket_money_illegal'));
             } else {
                 throw new Exception(trans('redpacket.redpacket_average_money_illegal'));
             }
         }
+
         $remain_money = $money;
         $remain_number = $number;
         $status = 1;

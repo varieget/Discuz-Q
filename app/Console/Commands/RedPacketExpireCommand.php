@@ -117,6 +117,7 @@ class RedPacketExpireCommand extends AbstractCommand
                     $return_change_desc = trans('wallet.return_long');//长文帖红包支出
                 }
                 $data = [
+                    'order_id' => $order['id'],
                     'thread_id' => $item->thread_id,
                     'post_id' => $item->post_id,
                     'change_type' => $return_change_type,

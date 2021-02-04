@@ -116,6 +116,7 @@ class ReceiveRedPacket
             if($order->payment_type == Order::PAYMENT_TYPE_WALLET){
                 //减少发帖人冻结金额
                 $data = [
+                    'order_id' => $order->id,
                     'thread_id' => $this->thread['id'],
                     'post_id' => $this->post['id'],
                     'change_type' => $expend_change_type,
@@ -126,6 +127,7 @@ class ReceiveRedPacket
 
             //增加领取人可用金额
             $data = [
+                'order_id' => $order->id,
                 'thread_id' => $this->thread['id'],
                 'post_id' => $this->post['id'],
                 'change_type' => $income_change_type,
