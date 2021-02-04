@@ -136,7 +136,7 @@ class ReceiveRedPacket
             $this->connection->commit();
         } catch (Exception $e) {
             $this->connection->rollback();
-            app('log')->info('领取红包异常:' . $e->getMessage());
+            app('log')->info('红包ID:'.$this->redPacket['id'].'领取异常:' . $e->getMessage());
 
             throw $e;
         }
