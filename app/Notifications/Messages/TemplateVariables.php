@@ -62,13 +62,12 @@ trait TemplateVariables
         42 => '微信问答回答通知',               // 问答回答通知
         43 => '',                       // 过期通知
         44 => '微信问答提问或过期通知',            // 过期通知
-        44 => '微信问答提问或过期通知',    // 过期通知
-        45 => '得到红包通知',            // 得到红包通知
-        46 => '得到红包通知',            // 得到红包通知
-        47 => '悬赏问答通知',            // 悬赏问答通知
-        48 => '悬赏问答通知',            // 悬赏问答通知
-        49 => '悬赏过期通知',            // 悬赏过期通知
-        50 => '悬赏过期通知',            // 悬赏过期通知
+        45 => '得到红包通知',                 // 得到红包通知
+        46 => '得到红包通知',                 // 得到红包通知
+        47 => '悬赏问答通知',                 // 悬赏问答通知
+        48 => '悬赏问答通知',                 // 悬赏问答通知
+        49 => '悬赏过期通知',                 // 悬赏过期通知
+        50 => '悬赏过期通知',                 // 悬赏过期通知
     ];
 
     /**
@@ -136,6 +135,7 @@ trait TemplateVariables
         40 => '/topic/index?id={$thread_id}',
         42 => '/topic/index?id={$thread_id}',
         44 => '/topic/index?id={$thread_id}',
+        // 红包通知
         46 => '/topic/index?id={$thread_id}',
         48 => '/topic/index?id={$thread_id}',
         50 => '/topic/index?id={$thread_id}',
@@ -143,35 +143,37 @@ trait TemplateVariables
 
     /**
      * 模板唯一字符串
-     *
      * 新通知起名规范：{ 频道名(channel) }.{ 模块名 }.{ 行为(过去式的英文单词) }
      * 注意 频道名 会在 @method comparisonUnique // 方法中拼接，成员属性中只放后两者
      *
      * @var string[]
      */
     protected $uniquelyNotice = [
-        'registered.passed'     => '新用户注册通知',
-        'registered.approved'   => '注册审核通过通知',
-        'registered.unapproved' => '注册审核不通过通知',
-        'post.unapproved'       => '内容审核不通过通知',
-        'post.approved'         => '内容审核通过通知',
-        'post.deleted'          => '内容删除通知',
-        'post.essence'          => '内容精华通知',
-        'post.sticky'           => '内容置顶通知',
-        'post.update'           => '内容修改通知',
-        'user.disable'          => '用户禁用通知',
-        'user.normal'           => '用户解除禁用通知',
-        'user.group'            => '用户角色调整通知',
-        'post.replied'          => '内容回复通知',
-        'post.liked'            => '内容点赞通知',
-        'post.paid'             => '内容支付通知',
-        'post.reminded'         => '内容@通知',
-        'withdraw.noticed'      => '提现通知',
-        'withdraw.withdraw'     => '提现失败通知',
-        'divide.income'         => '分成收入通知',
-        'question.asked'        => '问答提问通知',
-        'question.answered'     => '问答回答通知',
-        'question.expired'      => '问答过期通知',
+        'registered.passed'         => '新用户注册通知',
+        'registered.approved'       => '注册审核通过通知',
+        'registered.unapproved'     => '注册审核不通过通知',
+        'post.unapproved'           => '内容审核不通过通知',
+        'post.approved'             => '内容审核通过通知',
+        'post.deleted'              => '内容删除通知',
+        'post.essence'              => '内容精华通知',
+        'post.sticky'               => '内容置顶通知',
+        'post.update'               => '内容修改通知',
+        'user.disable'              => '用户禁用通知',
+        'user.normal'               => '用户解除禁用通知',
+        'user.group'                => '用户角色调整通知',
+        'post.replied'              => '内容回复通知',
+        'post.liked'                => '内容点赞通知',
+        'post.paid'                 => '内容支付通知',
+        'post.reminded'             => '内容@通知',
+        'withdraw.noticed'          => '提现通知',
+        'withdraw.withdraw'         => '提现失败通知',
+        'divide.income'             => '分成收入通知',
+        'question.asked'            => '问答提问通知',
+        'question.answered'         => '问答回答通知',
+        'question.expired'          => '问答过期通知',
+        'red_packet.gotten'         => '得到红包通知',
+        'question.rewarded'         => '悬赏问答通知',
+        'question.rewarded.expired' => '悬赏过期通知',
     ];
 
     /**

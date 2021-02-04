@@ -17,9 +17,7 @@ namespace App\Notifications;
 
 use App\Models\User;
 use App\Models\UserWalletLog;
-use App\Models\Order;
 use App\Notifications\Messages\Database\ThreadRewardedMessage;
-use App\Notifications\Messages\Wechat\ThreadRewardedWechatMessage;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Discuz\Notifications\NotificationManager;
 use Illuminate\Support\Collection;
@@ -43,8 +41,8 @@ class ThreadRewarded extends AbstractNotification
     public $walletType;
 
     public $tplId = [
-        'database' => 47,
-        'wechat' => 48,
+        'database' => 'system.question.rewarded',
+        'wechat' => 'wechat.question.rewarded',
     ];
 
     /**
@@ -132,10 +130,10 @@ class ThreadRewarded extends AbstractNotification
 
         $newData = (array)$this->data;
         if($this->walletType == UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN){
-            $this->tplId['database'] = 49;
+            $this->tplId['database'] = 'system.question.rewarded.expired';
             $this->data = array_merge($newData, ['notice_types_of' => 3]); // 过期通知
         }else{
-            $this->tplId['database'] = 47;
+            $this->tplId['database'] = 'system.question.rewarded';
             $this->data = array_merge($newData, ['notice_types_of' => 1]); // 收入通知
         }
         app('log')->info(__LINE__ . '行：给被采纳者用户准备通知信息的模板。'.$this->messageRelationship['wechat']->tplId);

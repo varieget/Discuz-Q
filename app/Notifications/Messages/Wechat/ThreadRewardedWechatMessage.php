@@ -3,7 +3,6 @@
 namespace App\Notifications\Messages\Wechat;
 
 use App\Models\Order;
-use Carbon\Carbon;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Support\Arr;
@@ -15,7 +14,7 @@ use Illuminate\Support\Arr;
  */
 class ThreadRewardedWechatMessage extends SimpleMessage
 {
-    public $tplId = 48;
+    public $tplId = 'wechat.question.rewarded';
 
     protected $model;
 
