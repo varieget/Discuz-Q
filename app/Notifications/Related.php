@@ -38,8 +38,8 @@ class Related extends AbstractNotification
     public $data;
 
     public $tplId = [
-        'database' => 28,
-        'wechat' => 32,
+        'database' => 'system.post.reminded',
+        'wechat' => 'wechat.post.reminded',
     ];
 
     public function __construct(User $actor, Post $post, $data = [])

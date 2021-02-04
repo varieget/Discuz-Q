@@ -130,9 +130,9 @@ class Questioned extends AbstractNotification
 
         // set tpl id
         if ($this->message instanceof QuestionedWechatMessage) {
-            $this->tplId['database'] = 39;
+            $this->tplId['database'] = 'system.question.asked';
         } elseif ($this->message instanceof QuestionedAnswerWechatMessage) {
-            $this->tplId['database'] = 41;
+            $this->tplId['database'] = 'system.question.answered';
         }
         $this->tplId['wechat'] = $this->messageRelationship['wechat']->tplId; // 40 、 42
     }

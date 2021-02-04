@@ -130,12 +130,12 @@ class Rewarded extends AbstractNotification
          */
         if ($this->message instanceof RewardedWechatMessage) {
             // 内容支付通知
-            $this->tplId['database'] = 27;
+            $this->tplId['database'] = 'system.post.paid';
             $this->data = array_merge($this->data, ['notice_types_of' => 1]); // 收入通知
         }
         if ($this->message instanceof RewardedScaleWechatMessage) {
             // 内容支付分成通知
-            $this->tplId['database'] = 37;
+            $this->tplId['database'] = 'system.divide.income';
             // 分成通知
             $this->data = array_merge($this->data, [
                 'notice_types_of' => 2,
@@ -144,7 +144,7 @@ class Rewarded extends AbstractNotification
         }
         if ($this->message instanceof ExpiredWechatMessage) {
             // 打赏过期通知
-            $this->tplId['database'] = 43;
+            $this->tplId['database'] = 'system.question.expired';
             $this->data = array_merge($this->data, ['notice_types_of' => 3]); // 过期通知
         }
         // 31 内容支付通知  38 内容支付分成通知  44 过期通知

@@ -16,7 +16,7 @@ use Illuminate\Contracts\Routing\UrlGenerator;
  */
 class QuestionedAnswerWechatMessage extends SimpleMessage
 {
-    public $tplId = 42;
+    public $tplId = 'wechat.question.answered';
 
     /**
      * @var Question $question

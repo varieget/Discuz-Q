@@ -38,8 +38,8 @@ class Liked extends AbstractNotification
     public $data;
 
     public $tplId = [
-        'database' => 26,
-        'wechat' => 30,
+        'database' => 'system.post.liked',
+        'wechat' => 'wechat.post.liked',
     ];
 
     public function __construct(User $actor, Post $post, $data = [])
@@ -74,7 +74,7 @@ class Liked extends AbstractNotification
 
     public function getTplModel($type)
     {
-        return self::$tplData->where('id', $this->tplId[$type])->first();
+        return self::$tplData->where('notice_id', $this->tplId[$type])->first();
     }
 
     public function toDatabase($notifiable)
@@ -87,6 +87,15 @@ class Liked extends AbstractNotification
 
     public function toWechat($notifiable)
     {
+        $message = app(LikedWechatMessage::class);
+        $message->setData($this->getTplModel('wechat'), $this->actor, $this->post, $this->data);
+
+        return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
+    }
+
+    public function toMiniProgram($notifiable)
+    {
+        dd(55555);
         $message = app(LikedWechatMessage::class);
         $message->setData($this->getTplModel('wechat'), $this->actor, $this->post, $this->data);
 

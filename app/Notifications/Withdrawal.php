@@ -110,14 +110,14 @@ class Withdrawal extends AbstractNotification
         if (UserWalletCash::notificationByWhich($status)) {
             // 提现通知
             $this->tplId = [
-                'database' => 33,
-                'wechat'   => 35,
+                'database' => 'system.withdraw.noticed',
+                'wechat'   => 'wechat.withdraw.noticed',
             ];
         } else {
             // 提现失败通知
             $this->tplId = [
-                'database' => 34,
-                'wechat'   => 36,
+                'database' => 'system.withdraw.withdraw',
+                'wechat'   => 'wechat.withdraw.withdraw',
             ];
         }
     }

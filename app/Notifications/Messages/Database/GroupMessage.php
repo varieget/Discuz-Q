@@ -10,7 +10,7 @@ use Illuminate\Support\Arr;
  */
 class GroupMessage extends SimpleMessage
 {
-    public $tplId = 12;
+    public $tplId = 'system.user.group';
 
     protected $actor;
 

@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  * Class NotificationTpl
  *
  * @property int $id
+ * @property string $notice_id
  * @property int $status
  * @property int $type
  * @property int $type_name
@@ -55,6 +56,23 @@ class NotificationTpl extends Model
 
     public $table = 'notification_tpls';
 
+    protected $fillable = [
+        'status',
+        'type',
+        'type_name',
+        'title',
+        'content',
+        'vars',
+        'template_id',
+        'first_data',
+        'keywords_data',
+        'remark_data',
+        'color',
+        'redirect_type',
+        'redirect_url',
+        'page_path',
+    ];
+
     /**
      * {@inheritdoc}
      */
@@ -81,6 +99,21 @@ class NotificationTpl extends Model
         3 => '企业微信',
         4 => '小程序通知',
     ];
+
+    /**
+     * Create a new user notification_tpl
+     *
+     * @param array $attributes
+     * @return static
+     */
+    public static function build(array $attributes)
+    {
+        $distribute = new static;
+
+        $distribute->fill($attributes);
+
+        return $distribute;
+    }
 
     /**
      * 根据 值/类型 获取对应值

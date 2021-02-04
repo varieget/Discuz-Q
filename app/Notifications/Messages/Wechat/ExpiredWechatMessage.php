@@ -15,7 +15,7 @@ use Illuminate\Contracts\Routing\UrlGenerator;
  */
 class ExpiredWechatMessage extends SimpleMessage
 {
-    public $tplId = 44;
+    public $tplId = 'wechat.question.expired';
 
     /**
      * @var Question $question

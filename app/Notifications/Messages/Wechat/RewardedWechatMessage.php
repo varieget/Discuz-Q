@@ -14,7 +14,7 @@ use Illuminate\Contracts\Routing\UrlGenerator;
  */
 class RewardedWechatMessage extends SimpleMessage
 {
-    public $tplId = 31;
+    public $tplId = 'wechat.post.paid';
 
     /**
      * @var Order $order

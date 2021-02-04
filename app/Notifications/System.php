@@ -137,8 +137,8 @@ class System extends AbstractNotification
             // set other message relationship
             $this->messageRelationship['wechat'] = app(GroupWechatMessage::class);
             // set tpl id
-            $this->tplId['database'] = $this->messageRelationship['database']->tplId; // 12
-            $this->tplId['wechat'] = $this->messageRelationship['wechat']->tplId; // 24
+            $this->tplId['database'] = $this->messageRelationship['database']->tplId; // system.user.group
+            $this->tplId['wechat'] = $this->messageRelationship['wechat']->tplId; // wechat.user.group
         }
 
         // Post 通知
@@ -162,7 +162,7 @@ class System extends AbstractNotification
             // set tpl id
             $sendType = $this->data['send_type'];
             if (! is_null($sendType)) {
-                $this->tplId[$sendType] = $this->messageRelationship[$sendType]->tplId; // 1 数据库通知 / 13 微信通知
+                $this->tplId[$sendType] = $this->messageRelationship[$sendType]->tplId; // registered.passed 数据库通知/微信通知
             }
         }
     }
@@ -184,28 +184,28 @@ class System extends AbstractNotification
             if ($originStatus == 1) {
                 // 帐号解除禁用通知
                 $this->tplId = [
-                    'database' => 11,
-                    'wechat' => 23,
+                    'database' => 'system.user.normal',
+                    'wechat' => 'wechat.user.normal',
                 ];
             } else {
                 // 注册审核通过通知
                 $this->tplId = [
-                    'database' => 2,
-                    'wechat' => 14,
+                    'database' => 'system.registered.approved',
+                    'wechat' => 'wechat.registered.approved',
                 ];
             }
         } else {
             if ($originStatus == 0 && $status == 1) {
                 // 用户禁用通知
                 $this->tplId = [
-                    'database' => 10,
-                    'wechat' => 22,
+                    'database' => 'system.user.disable',
+                    'wechat' => 'wechat.user.disable',
                 ];
             } elseif ($originStatus == 2 && $status == 3) { // 2审核中 变 审核拒绝
                 // 注册审核不通过通知
                 $this->tplId = [
-                    'database' => 3,
-                    'wechat' => 15,
+                    'database' => 'system.registered.unapproved',
+                    'wechat' => 'wechat.registered.unapproved',
                 ];
             } else {
                 // 错误状态下：2审核中变成禁用等 是不允许的
@@ -232,43 +232,43 @@ class System extends AbstractNotification
             case PostMessage::NOTIFY_EDIT_CONTENT_TYPE:
                 // 内容修改通知
                 $this->tplId = [
-                    'database' => 9,
-                    'wechat' => 21,
+                    'database' => 'system.post.update',
+                    'wechat' => 'wechat.post.update',
                 ];
                 break;
             case PostMessage::NOTIFY_APPROVED_TYPE:
                 // 内容审核通过通知
                 $this->tplId = [
-                    'database' => 5,
-                    'wechat' => 16,
+                    'database' => 'system.post.approved',
+                    'wechat' => 'wechat.post.approved',
                 ];
                 break;
             case PostMessage::NOTIFY_UNAPPROVED_TYPE:
                 // 内容审核不通过/内容忽略 通知
                 $this->tplId = [
-                    'database' => 4,
-                    'wechat' => 17,
+                    'database' => 'system.post.unapproved',
+                    'wechat' => 'wechat.post.unapproved',
                 ];
                 break;
             case PostMessage::NOTIFY_DELETE_TYPE:
                 // 内容删除通知
                 $this->tplId = [
-                    'database' => 6,
-                    'wechat' => 18,
+                    'database' => 'system.post.deleted',
+                    'wechat' => 'wechat.post.deleted',
                 ];
                 break;
             case PostMessage::NOTIFY_ESSENCE_TYPE:
                 // 内容精华通知
                 $this->tplId = [
-                    'database' => 7,
-                    'wechat' => 19,
+                    'database' => 'system.post.essence',
+                    'wechat' => 'wechat.post.essence',
                 ];
                 break;
             case PostMessage::NOTIFY_STICKY_TYPE:
                 // 内容置顶通知
                 $this->tplId = [
-                    'database' => 8,
-                    'wechat' => 20,
+                    'database' => 'system.post.sticky',
+                    'wechat' => 'wechat.post.sticky',
                 ];
                 break;
             default:

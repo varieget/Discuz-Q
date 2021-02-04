@@ -38,8 +38,8 @@ class Replied extends AbstractNotification
     public $data;
 
     public $tplId = [
-        'database' => 25,
-        'wechat' => 29,
+        'database' => 'system.post.replied',
+        'wechat' => 'wechat.post.replied',
     ];
 
     public function __construct(User $actor, Post $post, $data = [])

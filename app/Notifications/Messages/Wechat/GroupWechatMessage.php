@@ -10,7 +10,7 @@ use Illuminate\Contracts\Routing\UrlGenerator;
  */
 class GroupWechatMessage extends SimpleMessage
 {
-    public $tplId = 24;
+    public $tplId = 'wechat.user.group';
 
     protected $user;
 
