@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\System;
 
+use App\Console\Commands\AbnormalOrderDealCommand;
 use App\Console\Commands\AttachmentClearCommand;
 use App\Console\Commands\AvatarClearCommand;
 use App\Console\Commands\FinanceCreateCommand;
@@ -86,7 +87,8 @@ class CallCommandController extends AbstractResourceController
             'clear:video'       => VideoClearCommand::class,
             'order:query'       => QueryWechatOrderConmmand::class,
             'reward:expire'     => ThreadRewardExpireCommand::class,
-            'redPacket:expire'  => RedPacketExpireCommand::class
+            'redPacket:expire'  => RedPacketExpireCommand::class,
+            'abnormalOrder:clear'   => AbnormalOrderDealCommand::class,
         ];
         $command = Arr::get($request->getQueryParams(), 'name');
         if (!Arr::has($commandList, $command)) {
