@@ -20,7 +20,6 @@ namespace App\Listeners\Wallet;
 
 use App\Events\Wallet\Saved;
 use App\Models\Order;
-use App\Models\Post;
 use App\Models\Question;
 use App\Models\Thread;
 use App\Models\UserWalletLog;

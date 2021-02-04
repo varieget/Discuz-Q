@@ -59,7 +59,7 @@ class RedPacket extends Model
         $status,
         $thread_red_packet
     ) {
-        if (!$thread_red_packet->id) {
+        if (empty($thread_red_packet->id)) {
             $thread_red_packet = new static;
         }
 
