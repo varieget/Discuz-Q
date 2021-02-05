@@ -58,9 +58,9 @@ class CreateUserSignInController extends AbstractCreateController
 
         foreach ($data as $k=>$v) {
             $this->validation->make($data[$k]['attributes'], [
-                'name'  => 'required_without:message_text|max:100',
-                'fields_ext'  => 'required_without:message_text|max:5000',
-                'fields_desc'  => 'required_without:message_text|max:5000',
+                'name'  => 'sometimes|max:20',
+                'fields_ext'  => 'sometimes|max:450',
+                'fields_desc'  => 'sometimes|max:450',
             ])->validate();
         }
 
