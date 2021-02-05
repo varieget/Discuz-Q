@@ -53,7 +53,7 @@ class UpdateGroupsController extends AbstractListController
 
         foreach ($multipleData as $k=>$v) {
             $this->validation->make($multipleData[$k]['attributes'], [
-                'name'  => 'required_without:message_text|max:100',
+                'name'  => 'required_without:message_text|max:255',
             ])->validate();
         }
 
