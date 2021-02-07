@@ -19,6 +19,7 @@ namespace App\Api\Controller\SignInFields;
 
 use App\Api\Serializer\UserSignInSerializer;
 use App\Commands\SignInFields\CreateUserSignIn;
+use App\Models\User;
 use Discuz\Api\Controller\AbstractCreateController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
@@ -64,10 +65,11 @@ class CreateUserSignInController extends AbstractCreateController
             ])->validate();
         }
 
-        $isOpen = $this->setting->where('key','open_ext_fields')->where('value',1)->count();
-
-        if($isOpen == 0){
-            throw new PermissionDeniedException;
+        if ($actor->status != User::STATUS_NEED_FIELDS) {
+            $isOpen = $this->setting->where('key', 'open_ext_fields')->where('value', 1)->count();
+            if ($isOpen == 0) {
+                throw new PermissionDeniedException;
+            }
         }
 
         return $this->bus->dispatch(new CreateUserSignIn($actor,$data,$ip,$port));
