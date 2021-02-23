@@ -223,6 +223,8 @@ class CreatePost
 
         $post->content = $censor->checkText($post->content);
 
+        $content = $post->content;
+
         if(mb_strlen($post->content)>49999){
             throw new \Exception('字数超出限制');
         }
@@ -267,7 +269,7 @@ class CreatePost
         // });
 
         $post->rewards = floatval(sprintf('%.2f', $post->getPostReward()));
-
+        $post->content != $content && $post->content = $content;
         return $post;
     }
 }
