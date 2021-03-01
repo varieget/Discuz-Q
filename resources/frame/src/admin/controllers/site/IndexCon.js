@@ -3,6 +3,9 @@
  */
 import webDb from "../../../helpers/webDbHelper";
 import appConfig from "../../../../../frame/config/appConfig";
+import Card from '@/admin/view/site/common/card/card';
+import CardRow from '@/admin/view/site/common/card/cardRow';
+
 export default {
   data: function() {
     return {
@@ -331,7 +334,12 @@ export default {
       sideSubmenu: [], //侧边栏子菜单
       sideSubmenuSelect: "", //侧边栏子菜单选中
 
-      userName: "" //用户名
+      userName: "", //用户名
+
+      dialogVisible: false, // 云API配置弹框
+      secretId:'', 
+      secretKey:'',
+      appId:'',
     };
   },
   methods: {
@@ -422,6 +430,8 @@ export default {
         default:
           this.sideList = [];
       }
+
+      this.checkQcloud();
     },
 
     /*
@@ -537,6 +547,7 @@ export default {
           this.$router.push({ path: "/admin/other-service-set" });
           break;
       }
+      this.checkQcloud();
     },
 
     /*
@@ -761,15 +772,98 @@ export default {
     quitClick() {
       localStorage.clear();
       this.$router.push({ path: "/admin/login" });
+    },
+
+    // 判断腾讯云云api是否配置
+    checkQcloud() {
+      this.appFetch({
+        url: "checkQcloud",
+        method: "get",
+        data: {}
+      }).then(data => {
+        if (!data.readdata._data.isBuildQcloud) {
+          this.dialogVisible = true;
+          this.tencentCloudList()//初始化云API配置
+        }
+      })
+      .catch(error => {});
+    },
+
+    tencentCloudList(){
+      this.appFetch({
+        url:'forum',
+        method:'get',
+        data:{
+
+        }
+      }).then(res=>{
+        if (res.errors){
+          this.$message.error(res.errors[0].code);
+        }else {
+          this.appId = res.readdata._data.qcloud.qcloud_app_id
+          this.secretId = res.readdata._data.qcloud.qcloud_secret_id
+          this.secretKey = res.readdata._data.qcloud.qcloud_secret_key
+        }
+      })
+    },
+    async  Submission(){
+      try{
+        await this.appFetch({
+        url:'settings',
+        method:'post',
+        data:{
+          "data":[
+            {
+              "attributes":{
+                "key":'qcloud_app_id',
+                "value":this.appId,
+                "tag": "qcloud"
+              }
+            },
+            {
+              "attributes":{
+                "key":'qcloud_secret_id',
+                "value":this.secretId,
+                "tag": "qcloud",
+              }
+              },
+              {
+                "attributes":{
+                  "key":'qcloud_secret_key',
+                  "value":this.secretKey,
+                  "tag": "qcloud",
+                }
+              }
+
+          ]
+        }
+      }).then(res=>{
+        if(res.errors){
+          throw new Error(res.errors[0].code);
+        }
+          this.$message({ message: '提交成功', type: 'success' });
+      })
+      }
+        catch(err){
+          this.$message({
+            showClose: true,
+            message: err
+          });
+        }
     }
   },
   created() {
     this.setDataStatus();
     this.userName = webDb.getLItem("username");
+    this.checkQcloud();
   },
   watch: {
     $route() {
       this.setDataStatus();
     }
+  },
+  components:{
+    Card,
+    CardRow
   }
 };
