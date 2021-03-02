@@ -230,7 +230,7 @@ class CreateThread
 
         $thread->save();
 
-        app(SequenceRepository::class)->updateSequenceCache($thread->id);
+        app(SequenceRepository::class)->updateSequenceCache($thread->id, 'add');
 
         try {
             $post = $bus->dispatch(
