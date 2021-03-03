@@ -127,6 +127,7 @@ class UpdateSequenceController implements RequestHandlerInterface
         $query->where('threads.is_approved', 1);
         $query->where('threads.is_draft', 0);
         $query->whereNull('threads.deleted_at');
+        $query->whereNotNull('threads.user_id');
         $query->orderBy('threads.created_at', 'desc');
         $index_thread_ids['thread_count'] = $query->count();
         $index_thread_ids['ids'] = $query->limit(20)->offset(0)->pluck('id')->toArray();
