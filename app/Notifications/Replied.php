@@ -21,6 +21,8 @@ namespace App\Notifications;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\Messages\Database\RepliedMessage;
+use App\Notifications\Messages\MiniProgram\RepliedMiniProgramMessage;
+use App\Notifications\Messages\Sms\RepliedSmsMessage;
 use App\Notifications\Messages\Wechat\RepliedWechatMessage;
 use Discuz\Notifications\NotificationManager;
 
@@ -38,8 +40,10 @@ class Replied extends AbstractNotification
     public $data;
 
     public $tplId = [
-        'database' => 'system.post.replied',
-        'wechat' => 'wechat.post.replied',
+        'database'    => 'system.post.replied',
+        'wechat'      => 'wechat.post.replied',
+        'sms'         => 'sms.post.replied',
+        'miniProgram' => 'miniprogram.post.replied',
     ];
 
     public function __construct(User $actor, Post $post, $data = [])
@@ -91,6 +95,22 @@ class Replied extends AbstractNotification
         $message->setData($this->getTplModel('wechat'), $this->actor, $this->post, $this->data);
 
         return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
+    }
+
+    public function toSms($notifiable)
+    {
+        $message = app(RepliedSmsMessage::class);
+        $message->setData($this->getTplModel('sms'), $this->actor, $this->post, $this->data);
+
+        return (new NotificationManager)->driver('sms')->setNotification($message)->build();
+    }
+
+    public function toMiniProgram($notifiable)
+    {
+        $message = app(RepliedMiniProgramMessage::class);
+        $message->setData($this->getTplModel('miniProgram'), $this->actor, $this->post, $this->data);
+
+        return (new NotificationManager)->driver('miniProgram')->setNotification($message)->build();
     }
 
 }

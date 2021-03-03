@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications\Messages\Wechat;
+namespace App\Notifications\Messages\MiniProgram;
 
 use App\Models\Order;
 use App\Models\Thread;
@@ -8,11 +8,11 @@ use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
 /**
- * 内容支付通知 - 微信
+ * 内容支付通知 - 小程序
  *
- * @package App\Notifications\Messages\Wechat
+ * @package App\Notifications\Messages\MiniProgram
  */
-class RewardedWechatMessage extends SimpleMessage
+class RewardedMiniProgramMessage extends SimpleMessage
 {
     /**
      * @var Order $order
@@ -48,7 +48,7 @@ class RewardedWechatMessage extends SimpleMessage
 
     public function template()
     {
-        return ['content' => $this->getWechatContent()];
+        return ['content' => $this->getMiniProgramContent()];
     }
 
     protected function titleReplaceVars()
@@ -113,11 +113,7 @@ class RewardedWechatMessage extends SimpleMessage
         ]);
 
         // build data
-        $expand = [
-            'redirect_url' => $this->url->to('/topic/index?id=' . $this->order->thread_id),
-        ];
-
-        return $this->compiledArray($expand);
+        return $this->compiledArray();
     }
 
 }

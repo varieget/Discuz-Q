@@ -11,8 +11,6 @@ use Illuminate\Support\Arr;
  */
 class RegisterMessage extends SimpleMessage
 {
-    public $tplId = 'system.registered.passed';
-
     protected $actor;
 
     protected $data;

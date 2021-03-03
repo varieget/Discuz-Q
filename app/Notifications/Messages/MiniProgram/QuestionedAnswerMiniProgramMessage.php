@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications\Messages\Wechat;
+namespace App\Notifications\Messages\MiniProgram;
 
 use App\Models\Question;
 use App\Models\Thread;
@@ -9,11 +9,12 @@ use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
 /**
- * 过期通知 - 微信
+ * 问答回答通知 - 小程序
+ * Class QuestionedAnswerMiniProgramMessage
  *
- * @package App\Notifications\Messages\Wechat
+ * @package App\Notifications\Messages\MiniProgram
  */
-class ExpiredWechatMessage extends SimpleMessage
+class QuestionedAnswerMiniProgramMessage extends SimpleMessage
 {
     /**
      * @var Question $question
@@ -21,9 +22,9 @@ class ExpiredWechatMessage extends SimpleMessage
     protected $question;
 
     /**
-     * @var User $user
+     * @var User $actor
      */
-    protected $user;
+    protected $actor;
 
     /**
      * @var UrlGenerator
@@ -37,11 +38,12 @@ class ExpiredWechatMessage extends SimpleMessage
 
     public function setData(...$parameters)
     {
-        [$firstData, $user, $question] = $parameters;
+        [$firstData, $actor, $question] = $parameters;
         // set parent tpl data
         $this->firstData = $firstData;
 
-        $this->user = $user;
+        // 提问人 / 被提问人
+        $this->actor = $actor;
         $this->question = $question;
 
         $this->template();
@@ -49,7 +51,7 @@ class ExpiredWechatMessage extends SimpleMessage
 
     public function template()
     {
-        return ['content' => $this->getWechatContent()];
+        return ['content' => $this->getMiniProgramContent()];
     }
 
     protected function titleReplaceVars()
@@ -60,22 +62,25 @@ class ExpiredWechatMessage extends SimpleMessage
     public function contentReplaceVars($data)
     {
         $threadTitle = $this->question->thread->getContentByType(Thread::CONTENT_LENGTH, true);
+        $questionContent = $this->question->getContentFormat(Question::CONTENT_LENGTH, true);
 
         /**
          * 设置父类 模板数据
-         * @parem $user_id 提问人用户ID (可用于跳转到用户信息)
-         * @parem $user_name 提问人
+         * @parem $user_id 回答人用户ID (可用于跳转到用户信息)
+         * @parem $user_name 回答人姓名
          * @parem $be_user_name 被提问人
-         * @parem $question_price 提问价格 (解冻金额)
+         * @parem $question_content 回答的内容
+         * @parem $question_price 提问价格
          * @parem $question_created_at 提问创建时间
          * @parem $question_expired_at 提问过期时间
          * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
          */
         $this->setTemplateData([
-            '{$user_id}'             => $this->question->user->id,
-            '{$user_name}'           => $this->question->user->username,
+            '{$user_id}'             => $this->actor->id,
+            '{$user_name}'           => $this->actor->username,
             '{$be_user_name}'        => $this->question->beUser->username,
+            '{$question_content}'    => $this->strWords($questionContent),
             '{$question_price}'      => $this->question->price,
             '{$question_created_at}' => $this->question->created_at,
             '{$question_expired_at}' => $this->question->expired_at,
@@ -84,11 +89,7 @@ class ExpiredWechatMessage extends SimpleMessage
         ]);
 
         // build data
-        $expand = [
-            'redirect_url' => $this->url->to('/topic/index?id=' . $this->question->thread_id),
-        ];
-
-        return $this->compiledArray($expand);
+        return $this->compiledArray();
     }
 
 }

@@ -16,6 +16,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Class NotificationTpl
@@ -41,9 +43,11 @@ class NotificationTpl extends Model
 {
     const OPEN = 1;
 
-    const SYSTEM_NOTICE = 0; // 数据库（系统）通知
-
-    const WECHAT_NOTICE = 1; // 微信通知
+    const SYSTEM_NOTICE            = 0; // 数据库（系统）通知
+    const WECHAT_NOTICE            = 1; // 微信通知
+    const SMS_NOTICE               = 2; // 短信通知
+    const ENTERPRISE_WECHAT_NOTICE = 3; // 企业微信通知
+    const MINI_PROGRAM_NOTICE      = 4; // 小程序通知
 
     /**
      * 跳转类型：0无跳转 1跳转H5 2跳转小程序
@@ -57,6 +61,7 @@ class NotificationTpl extends Model
     public $table = 'notification_tpls';
 
     protected $fillable = [
+        'notice_id',
         'status',
         'type',
         'type_name',
@@ -87,9 +92,9 @@ class NotificationTpl extends Model
     protected static $status = [
         'database'         => 0,
         'wechat'           => 1,
-        'sms'              => 2, // 待定暂未使用
+        'sms'              => 2,
         'enterpriseWeChat' => 3,
-        'miniProgram'      => 4, // 待定暂未使用
+        'miniProgram'      => 4,
     ];
 
     protected static $typeName = [
@@ -196,6 +201,44 @@ class NotificationTpl extends Model
         }
 
         return json_encode($result);
+    }
+
+    /**
+     * 短信通知 - 数据格式
+     *
+     * @param $arr
+     * @return Collection
+     */
+    public static function getSmsFormat($arr)
+    {
+        $keywords = $arr['keywords'];
+
+        /**
+         * 短信每个变量的长度限制12个字符。如果要取消限制，需要申请企业认证
+         *
+         * @url https://cloud.tencent.com/developer/ask/189879
+         */
+        return collect($keywords)->map(function ($item) {
+            if (Str::length($item) > 12) {
+                // 截取字符串
+                $item = Str::of($item)->substr(0, 9) . '...';
+            }
+
+            return $item;
+        });
+    }
+
+    /**
+     * 小程序通知 - 数据格式
+     *
+     * @param $arr
+     * @return Collection
+     */
+    public static function getMiniProgramContent($arr)
+    {
+        return collect($arr)->map(function ($item, $key) {
+            return $result[$key] = ['value' => $item];
+        });
     }
 
 }

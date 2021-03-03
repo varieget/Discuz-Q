@@ -21,6 +21,8 @@ namespace App\Notifications;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\Messages\Database\LikedMessage;
+use App\Notifications\Messages\MiniProgram\LikedMiniProgramMessage;
+use App\Notifications\Messages\Sms\LikedSmsMessage;
 use App\Notifications\Messages\Wechat\LikedWechatMessage;
 use Discuz\Notifications\NotificationManager;
 
@@ -38,8 +40,10 @@ class Liked extends AbstractNotification
     public $data;
 
     public $tplId = [
-        'database' => 'system.post.liked',
-        'wechat' => 'wechat.post.liked',
+        'database'    => 'system.post.liked',
+        'wechat'      => 'wechat.post.liked',
+        'sms'         => 'sms.post.liked',
+        'miniProgram' => 'miniprogram.post.liked',
     ];
 
     public function __construct(User $actor, Post $post, $data = [])
@@ -93,13 +97,20 @@ class Liked extends AbstractNotification
         return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
     }
 
+    public function toSms($notifiable)
+    {
+        $message = app(LikedSmsMessage::class);
+        $message->setData($this->getTplModel('sms'), $this->actor, $this->post, $this->data);
+
+        return (new NotificationManager)->driver('sms')->setNotification($message)->build();
+    }
+
     public function toMiniProgram($notifiable)
     {
-        dd(55555);
-        $message = app(LikedWechatMessage::class);
-        $message->setData($this->getTplModel('wechat'), $this->actor, $this->post, $this->data);
+        $message = app(LikedMiniProgramMessage::class);
+        $message->setData($this->getTplModel('miniProgram'), $this->actor, $this->post, $this->data);
 
-        return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
+        return (new NotificationManager)->driver('miniProgram')->setNotification($message)->build();
     }
 
 }

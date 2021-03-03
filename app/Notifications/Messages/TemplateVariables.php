@@ -211,6 +211,7 @@ trait TemplateVariables
      */
     protected function comparisonUnique(string $typeName, int $type) : string
     {
+        // 通知类型: 0系统 1微信 2短信 3企业微信 4小程序通知
         switch ($type) {
             default:
             case 0:
@@ -218,6 +219,12 @@ trait TemplateVariables
                 break;
             case 1:
                 $prefix = 'wechat.';
+                break;
+            case 2:
+                $prefix = 'sms.';
+                break;
+            case 4:
+                $prefix = 'miniprogram.';
                 break;
         }
 

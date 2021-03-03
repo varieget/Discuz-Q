@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Notifications\Messages\Wechat;
+namespace App\Notifications\Messages\MiniProgram;
 
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
 /**
- * 用户角色调整通知 - 微信
+ * 用户角色调整通知 - 小程序
  */
-class GroupWechatMessage extends SimpleMessage
+class GroupMiniProgramMessage extends SimpleMessage
 {
     protected $user;
 
@@ -37,7 +37,7 @@ class GroupWechatMessage extends SimpleMessage
 
     public function template()
     {
-        return ['content' => $this->getWechatContent($this->data)];
+        return ['content' => $this->getMiniProgramContent($this->data)];
     }
 
     protected function titleReplaceVars()
@@ -66,11 +66,7 @@ class GroupWechatMessage extends SimpleMessage
         ]);
 
         // build data
-        $expand = [
-            'redirect_url' => $this->url->to(''),
-        ];
-
-        return $this->compiledArray($expand);
+        return $this->compiledArray();
     }
 
 }

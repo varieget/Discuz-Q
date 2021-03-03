@@ -23,6 +23,14 @@ use App\Notifications\Messages\Database\GroupMessage;
 use App\Notifications\Messages\Database\PostMessage;
 use App\Notifications\Messages\Database\RegisterMessage;
 use App\Notifications\Messages\Database\StatusMessage;
+use App\Notifications\Messages\MiniProgram\GroupMiniProgramMessage;
+use App\Notifications\Messages\MiniProgram\PostMiniProgramMessage;
+use App\Notifications\Messages\MiniProgram\RegisterMiniProgramMessage;
+use App\Notifications\Messages\MiniProgram\StatusMiniProgramMessage;
+use App\Notifications\Messages\Sms\GroupSmsMessage;
+use App\Notifications\Messages\Sms\PostSmsMessage;
+use App\Notifications\Messages\Sms\RegisterSmsMessage;
+use App\Notifications\Messages\Sms\StatusSmsMessage;
 use App\Notifications\Messages\Wechat\GroupWechatMessage;
 use App\Notifications\Messages\Wechat\PostWechatMessage;
 use App\Notifications\Messages\Wechat\RegisterWechatMessage;
@@ -40,7 +48,10 @@ class System extends AbstractNotification
 
     protected $message;
 
-    public $tplId = [];
+    /**
+     * @var array
+     */
+    public $tplId;
 
     /**
      * @var Collection
@@ -113,9 +124,26 @@ class System extends AbstractNotification
         return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
     }
 
+    public function toSms($notifiable)
+    {
+        $message = $this->getMessage('sms');
+        $message->setData($this->getTplModel('sms'), $this->actor, $this->data);
+
+        return (new NotificationManager)->driver('sms')->setNotification($message)->build();
+    }
+
+    public function toMiniProgram($notifiable)
+    {
+        $message = $this->getMessage('miniProgram');
+        $message->setData($this->getTplModel('miniProgram'), $this->actor, $this->data);
+
+        return (new NotificationManager)->driver('miniProgram')->setNotification($message)->build();
+    }
+
     /**
      * 初始化对应通知类型
      * TODO 尽量拆分通知为独立通知 Message，该方法最好不再叠加新通知类型（通知列表接口查询时传输类型数组筛选，就可做到每种通知的独立性）
+     *
      * @see Liked Tag 新通知参考类
      */
     protected function initNoticeMessage()
@@ -128,28 +156,32 @@ class System extends AbstractNotification
         if ($this->message instanceof StatusMessage) {
             // set other message relationship
             $this->messageRelationship['wechat'] = app(StatusWechatMessage::class);
+            $this->messageRelationship['sms'] = app(StatusSmsMessage::class);
+            $this->messageRelationship['miniProgram'] = app(StatusMiniProgramMessage::class);
             // set tpl id
             $this->discTpl($this->actor->status, $this->actor->getRawOriginal('status'));
-        }
-
-        // 用户组变更通知
+        } // 用户组变更通知
         elseif ($this->message instanceof GroupMessage) {
             // set other message relationship
             $this->messageRelationship['wechat'] = app(GroupWechatMessage::class);
+            $this->messageRelationship['sms'] = app(GroupSmsMessage::class);
+            $this->messageRelationship['miniProgram'] = app(GroupMiniProgramMessage::class);
             // set tpl id
-            $this->tplId['database'] = $this->messageRelationship['database']->tplId; // system.user.group
-            $this->tplId['wechat'] = $this->messageRelationship['wechat']->tplId; // wechat.user.group
-        }
-
-        // Post 通知
+            $this->tplId = [
+                'database'    => 'system.user.group',
+                'wechat'      => 'wechat.user.group',
+                'sms'         => 'sms.user.group',
+                'miniProgram' => 'miniprogram.user.group',
+            ];
+        } // Post 通知
         elseif ($this->message instanceof PostMessage) {
             // set other message relationship
             $this->messageRelationship['wechat'] = app(PostWechatMessage::class);
+            $this->messageRelationship['sms'] = app(PostSmsMessage::class);
+            $this->messageRelationship['miniProgram'] = app(PostMiniProgramMessage::class);
             // set tpl id of the notify type
             $this->postTpl();
-        }
-
-        // 注册通知
+        } // 注册通知
         elseif ($this->message instanceof RegisterMessage || $this->message instanceof RegisterWechatMessage) {
             // 分别发送通知类型，因为注册时有未绑定公众号的用户，获取不到 openId
             if (! isset($this->data['send_type'])) {
@@ -159,11 +191,15 @@ class System extends AbstractNotification
             if ($this->message instanceof RegisterWechatMessage) {
                 $this->messageRelationship['wechat'] = app(RegisterWechatMessage::class);
             }
+            $this->messageRelationship['sms'] = app(RegisterSmsMessage::class);
+            $this->messageRelationship['miniProgram'] = app(RegisterMiniProgramMessage::class);
             // set tpl id
-            $sendType = $this->data['send_type'];
-            if (! is_null($sendType)) {
-                $this->tplId[$sendType] = $this->messageRelationship[$sendType]->tplId; // registered.passed 数据库通知/微信通知
-            }
+            $this->tplId = [
+                'database'    => 'system.registered.passed',
+                'wechat'      => 'wechat.registered.passed',
+                'sms'         => 'sms.registered.passed',
+                'miniProgram' => 'miniprogram.registered.passed',
+            ];
         }
     }
 
@@ -184,28 +220,36 @@ class System extends AbstractNotification
             if ($originStatus == 1) {
                 // 帐号解除禁用通知
                 $this->tplId = [
-                    'database' => 'system.user.normal',
-                    'wechat' => 'wechat.user.normal',
+                    'database'    => 'system.user.normal',
+                    'wechat'      => 'wechat.user.normal',
+                    'sms'         => 'sms.user.normal',
+                    'miniProgram' => 'miniprogram.user.normal',
                 ];
             } else {
                 // 注册审核通过通知
                 $this->tplId = [
-                    'database' => 'system.registered.approved',
-                    'wechat' => 'wechat.registered.approved',
+                    'database'    => 'system.registered.approved',
+                    'wechat'      => 'wechat.registered.approved',
+                    'sms'         => 'sms.registered.approved',
+                    'miniProgram' => 'miniprogram.registered.approved',
                 ];
             }
         } else {
             if ($originStatus == 0 && $status == 1) {
                 // 用户禁用通知
                 $this->tplId = [
-                    'database' => 'system.user.disable',
-                    'wechat' => 'wechat.user.disable',
+                    'database'    => 'system.user.disable',
+                    'wechat'      => 'wechat.user.disable',
+                    'sms'         => 'sms.user.disable',
+                    'miniProgram' => 'miniprogram.user.disable',
                 ];
             } elseif ($originStatus == 2 && $status == 3) { // 2审核中 变 审核拒绝
                 // 注册审核不通过通知
                 $this->tplId = [
-                    'database' => 'system.registered.unapproved',
-                    'wechat' => 'wechat.registered.unapproved',
+                    'database'    => 'system.registered.unapproved',
+                    'wechat'      => 'wechat.registered.unapproved',
+                    'sms'         => 'sms.registered.unapproved',
+                    'miniProgram' => 'miniprogram.registered.unapproved',
                 ];
             } else {
                 // 错误状态下：2审核中变成禁用等 是不允许的
@@ -232,43 +276,55 @@ class System extends AbstractNotification
             case PostMessage::NOTIFY_EDIT_CONTENT_TYPE:
                 // 内容修改通知
                 $this->tplId = [
-                    'database' => 'system.post.update',
-                    'wechat' => 'wechat.post.update',
+                    'database'    => 'system.post.update',
+                    'wechat'      => 'wechat.post.update',
+                    'sms'         => 'sms.post.update',
+                    'miniProgram' => 'miniprogram.post.update',
                 ];
                 break;
             case PostMessage::NOTIFY_APPROVED_TYPE:
                 // 内容审核通过通知
                 $this->tplId = [
-                    'database' => 'system.post.approved',
-                    'wechat' => 'wechat.post.approved',
+                    'database'    => 'system.post.approved',
+                    'wechat'      => 'wechat.post.approved',
+                    'sms'         => 'sms.post.approved',
+                    'miniProgram' => 'miniprogram.post.approved',
                 ];
                 break;
             case PostMessage::NOTIFY_UNAPPROVED_TYPE:
                 // 内容审核不通过/内容忽略 通知
                 $this->tplId = [
-                    'database' => 'system.post.unapproved',
-                    'wechat' => 'wechat.post.unapproved',
+                    'database'    => 'system.post.unapproved',
+                    'wechat'      => 'wechat.post.unapproved',
+                    'sms'         => 'sms.post.unapproved',
+                    'miniProgram' => 'miniprogram.post.unapproved',
                 ];
                 break;
             case PostMessage::NOTIFY_DELETE_TYPE:
                 // 内容删除通知
                 $this->tplId = [
-                    'database' => 'system.post.deleted',
-                    'wechat' => 'wechat.post.deleted',
+                    'database'    => 'system.post.deleted',
+                    'wechat'      => 'wechat.post.deleted',
+                    'sms'         => 'sms.post.deleted',
+                    'miniProgram' => 'miniprogram.post.deleted',
                 ];
                 break;
             case PostMessage::NOTIFY_ESSENCE_TYPE:
                 // 内容精华通知
                 $this->tplId = [
-                    'database' => 'system.post.essence',
-                    'wechat' => 'wechat.post.essence',
+                    'database'    => 'system.post.essence',
+                    'wechat'      => 'wechat.post.essence',
+                    'sms'         => 'sms.post.essence',
+                    'miniProgram' => 'miniprogram.post.essence',
                 ];
                 break;
             case PostMessage::NOTIFY_STICKY_TYPE:
                 // 内容置顶通知
                 $this->tplId = [
-                    'database' => 'system.post.sticky',
-                    'wechat' => 'wechat.post.sticky',
+                    'database'    => 'system.post.sticky',
+                    'wechat'      => 'wechat.post.sticky',
+                    'sms'         => 'sms.post.sticky',
+                    'miniProgram' => 'miniprogram.post.sticky',
                 ];
                 break;
             default:

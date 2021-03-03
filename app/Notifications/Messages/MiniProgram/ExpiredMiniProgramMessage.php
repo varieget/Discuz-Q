@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications\Messages\Wechat;
+namespace App\Notifications\Messages\MiniProgram;
 
 use App\Models\Question;
 use App\Models\Thread;
@@ -9,11 +9,11 @@ use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
 /**
- * 过期通知 - 微信
+ * 过期通知 - 小程序
  *
- * @package App\Notifications\Messages\Wechat
+ * @package App\Notifications\Messages\MiniProgram
  */
-class ExpiredWechatMessage extends SimpleMessage
+class ExpiredMiniProgramMessage extends SimpleMessage
 {
     /**
      * @var Question $question
@@ -49,7 +49,7 @@ class ExpiredWechatMessage extends SimpleMessage
 
     public function template()
     {
-        return ['content' => $this->getWechatContent()];
+        return ['content' => $this->getMiniProgramContent()];
     }
 
     protected function titleReplaceVars()
@@ -84,11 +84,7 @@ class ExpiredWechatMessage extends SimpleMessage
         ]);
 
         // build data
-        $expand = [
-            'redirect_url' => $this->url->to('/topic/index?id=' . $this->question->thread_id),
-        ];
-
-        return $this->compiledArray($expand);
+        return $this->compiledArray();
     }
 
 }

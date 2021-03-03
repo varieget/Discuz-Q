@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications\Messages\Wechat;
+namespace App\Notifications\Messages\MiniProgram;
 
 use App\Models\User;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -8,9 +8,9 @@ use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
 /**
- * 用户注册通知 - 微信
+ * 用户注册通知 - 小程序
  */
-class RegisterWechatMessage extends SimpleMessage
+class RegisterMiniProgramMessage extends SimpleMessage
 {
     /**
      * @var User $actor
@@ -45,7 +45,7 @@ class RegisterWechatMessage extends SimpleMessage
 
     public function template()
     {
-        return ['content' => $this->getWechatContent()];
+        return ['content' => $this->getMiniProgramContent()];
     }
 
     protected function titleReplaceVars()
@@ -90,11 +90,7 @@ class RegisterWechatMessage extends SimpleMessage
         ]);
 
         // build data
-        $expand = [
-            'redirect_url' => $this->url->to(''),
-        ];
-
-        return $this->compiledArray($expand);
+        return $this->compiledArray();
     }
 
 }

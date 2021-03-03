@@ -16,8 +16,6 @@ use Illuminate\Contracts\Routing\UrlGenerator;
  */
 class QuestionedWechatMessage extends SimpleMessage
 {
-    public $tplId = 'wechat.question.asked';
-
     /**
      * @var Question $question
      */

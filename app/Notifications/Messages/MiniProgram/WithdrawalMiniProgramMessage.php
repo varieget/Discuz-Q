@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications\Messages\Wechat;
+namespace App\Notifications\Messages\MiniProgram;
 
 use App\Models\User;
 use App\Models\UserWalletCash;
@@ -8,12 +8,12 @@ use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
 /**
- * 提现通知/提现失败通知 - 微信
- * Class WithdrawalWechatMessage
+ * 提现通知/提现失败通知 - 小程序
+ * Class WithdrawalMiniProgramMessage
  *
- * @package App\Notifications\Messages\Wechat
+ * @package App\Notifications\Messages\MiniProgram
  */
-class WithdrawalWechatMessage extends SimpleMessage
+class WithdrawalMiniProgramMessage extends SimpleMessage
 {
     /**
      * @var UserWalletCash $cash
@@ -49,7 +49,7 @@ class WithdrawalWechatMessage extends SimpleMessage
 
     public function template()
     {
-        return ['content' => $this->getWechatContent()];
+        return ['content' => $this->getMiniProgramContent()];
     }
 
     protected function titleReplaceVars()
@@ -88,11 +88,7 @@ class WithdrawalWechatMessage extends SimpleMessage
         ]);
 
         // build data
-        $expand = [
-            'redirect_url' => $this->url->to(''),
-        ];
-
-        return $this->compiledArray($expand);
+        return $this->compiledArray();
     }
 
 }
