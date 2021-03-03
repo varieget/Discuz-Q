@@ -61,7 +61,7 @@
               value="createThread.0.redPacket"
               @click.native="changeExpandItem('createThread.0.redPacket')"
             ></el-option>
-            <el-option 
+            <el-option
               label="位置"
               value="createThread.0.position"
               @click.native="changeExpandItem('createThread.0.position')"
@@ -90,12 +90,12 @@
             placeholder="请选择扩展功能"
             @remove-tag="changeExpandItem"
           >
-            <el-option 
+            <el-option
               label="红包"
               value="createThread.1.redPacket"
               @click.native="changeExpandItem('createThread.1.redPacket')"
             ></el-option>
-            <el-option 
+            <el-option
               label="位置"
               value="createThread.1.position"
               @click.native="changeExpandItem('createThread.1.position')"

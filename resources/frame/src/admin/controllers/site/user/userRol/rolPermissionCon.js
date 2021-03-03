@@ -21,7 +21,6 @@ export default {
       canBeOnlooker: false, // 是否可以设置围观
       categoriesList: [], // 分类列表
       selectList: {
-        /*IFTRUE_pay*/
         "createThread.0":[], //发布文字帖扩展项
         "createThread.1":[], //发布帖子扩展项
         "createThread.2":[], //发布视频帖扩展项
@@ -29,7 +28,6 @@ export default {
         "createThread.4":[], //发布语音帖扩展项
         "createThread.5":[], //发布问答扩展项
         "createThread.6":[], //发布商品帖扩展项
-        /*FITRUE_pay*/
         'viewThreads': [], // 查看主题列表扩展
         'createThread':[], // 发布主题扩展项
         'thread.reply':[], // 回复主题扩展项
@@ -87,7 +85,6 @@ export default {
       selectText: '全选', //全选文字
       checkAllPermission: [], //所有操作权限
       temporaryChecked: [], //接口返回权限
-      /*IFTRUE_pay*/
       // 7项发布功能权限的状态
       pubFunc:{
         "createThread.0.disabled":false,
@@ -118,7 +115,6 @@ export default {
         'thread.freeViewPosts.4',
         'thread.freeViewPosts.5'
       ]
-      /*FITRUE_pay*/
     };
   },
   watch: {
@@ -185,7 +181,6 @@ export default {
           if (!this.allowtobuy) {
             this.value = false;
           }
-          /*IFTRUE_pay*/
           // 根据全局设置，判断发布权限前7项是否可选
           this.pubFunc['createThread.0.disabled']=res.readdata._data.set_site.site_create_thread0===0;
           this.pubFunc['createThread.1.disabled']=res.readdata._data.set_site.site_create_thread1===0;
@@ -194,7 +189,6 @@ export default {
           this.pubFunc['createThread.4.disabled']=res.readdata._data.set_site.site_create_thread4===0;
           this.pubFunc['createThread.5.disabled']=res.readdata._data.set_site.site_create_thread5===0;
           this.pubFunc['createThread.6.disabled']=res.readdata._data.set_site.site_create_thread6===0;
-          /*FITRUE_pay*/
         }
       });
     },
@@ -409,51 +403,49 @@ export default {
       this.checked = checked;
     },
     // 扩展项回显
-    /*IFTRUE_default*/
-    setSelectValue(data) {
-      const checkedData = data;
-      const selectList = this.selectList;
-      const selectItem = [
-        'viewThreads',
-        'createThread',
-        'thread.reply',
-        'thread.edit',
-        'thread.hide',
-        'thread.essence',
-        'thread.viewPosts',
-        'thread.editPosts',
-        'thread.hidePosts',
-        'thread.canBeReward',
-        'thread.editOwnThreadOrPost',
-        'thread.hideOwnThreadOrPost',
-        'thread.freeViewPosts.1',
-        'thread.freeViewPosts.2',
-        'thread.freeViewPosts.3',
-        'thread.freeViewPosts.4',
-        'thread.freeViewPosts.5',
-      ];
-      checkedData.forEach((value, index) => {
-        // 全局的回显
-        if (selectItem.indexOf(value) !== -1) {
-          selectList[value].push("");
-        }
-        // 分类的回显
-        if (value.indexOf("category") !== -1) {
-          const splitIndex = value.indexOf(".");
-          const obj = value.substring(splitIndex + 1);
-          const id = value.substring(8, splitIndex);
-          if (selectList[obj] && checkedData.indexOf(obj) === -1) {
-            selectList[obj].push(id);
-          }
-          if (checkedData.indexOf(obj) !== -1) {
-            checkedData.splice(index, 1);
-          }
-        }
-      });
-      this.selectList = selectList;
-      this.checked = checkedData;
-    },
-    /*FITRUE_default*/
+    // setSelectValue(data) {
+    //   const checkedData = data;
+    //   const selectList = this.selectList;
+    //   const selectItem = [
+    //     'viewThreads',
+    //     'createThread',
+    //     'thread.reply',
+    //     'thread.edit',
+    //     'thread.hide',
+    //     'thread.essence',
+    //     'thread.viewPosts',
+    //     'thread.editPosts',
+    //     'thread.hidePosts',
+    //     'thread.canBeReward',
+    //     'thread.editOwnThreadOrPost',
+    //     'thread.hideOwnThreadOrPost',
+    //     'thread.freeViewPosts.1',
+    //     'thread.freeViewPosts.2',
+    //     'thread.freeViewPosts.3',
+    //     'thread.freeViewPosts.4',
+    //     'thread.freeViewPosts.5',
+    //   ];
+    //   checkedData.forEach((value, index) => {
+    //     // 全局的回显
+    //     if (selectItem.indexOf(value) !== -1) {
+    //       selectList[value].push("");
+    //     }
+    //     // 分类的回显
+    //     if (value.indexOf("category") !== -1) {
+    //       const splitIndex = value.indexOf(".");
+    //       const obj = value.substring(splitIndex + 1);
+    //       const id = value.substring(8, splitIndex);
+    //       if (selectList[obj] && checkedData.indexOf(obj) === -1) {
+    //         selectList[obj].push(id);
+    //       }
+    //       if (checkedData.indexOf(obj) !== -1) {
+    //         checkedData.splice(index, 1);
+    //       }
+    //     }
+    //   });
+    //   this.selectList = selectList;
+    //   this.checked = checkedData;
+    // },
     // 清除某项下拉
     clearItem(value, obj) {
       let item = "";
@@ -474,44 +466,42 @@ export default {
       }
     },
     //全选/取消全选
-    /*IFTRUE_default*/
-    handleCheckAllChange(val) {
-      if (val) {
-        this.checkAllPermission.forEach(item => {
-          if(this.checked.indexOf(item) == -1){
-            this.checked.push(item);
-          }
-        })
-        this.setSelectValue(this.checked);
-        this.checkAll = true;
-      } else {
-        this.checked = [];
-        // this.temporaryChecked.forEach(item => {
-        //   this.checked.push(item._data.permission);
-        // });
-        this.selectList = {
-          'viewThreads': [],
-          'createThread':[],
-          'thread.reply':[],
-          'thread.edit':[],
-          'thread.hide':[],
-          'thread.essence':[],
-          'thread.viewPosts':[],
-          'thread.editPosts':[],
-          'thread.hidePosts':[],
-          'thread.canBeReward': [],
-          'thread.editOwnThreadOrPost': [],
-          'thread.hideOwnThreadOrPost': [],
-          'thread.freeViewPosts.1':[],
-          'thread.freeViewPosts.2':[],
-          'thread.freeViewPosts.3':[],
-          'thread.freeViewPosts.4':[],
-          'thread.freeViewPosts.5':[],
-        };
-        this.checkAll = false;
-      }
-    },
-    /*FITRUE_default*/
+    // handleCheckAllChange(val) {
+    //   if (val) {
+    //     this.checkAllPermission.forEach(item => {
+    //       if(this.checked.indexOf(item) == -1){
+    //         this.checked.push(item);
+    //       }
+    //     })
+    //     this.setSelectValue(this.checked);
+    //     this.checkAll = true;
+    //   } else {
+    //     this.checked = [];
+    //     // this.temporaryChecked.forEach(item => {
+    //     //   this.checked.push(item._data.permission);
+    //     // });
+    //     this.selectList = {
+    //       'viewThreads': [],
+    //       'createThread':[],
+    //       'thread.reply':[],
+    //       'thread.edit':[],
+    //       'thread.hide':[],
+    //       'thread.essence':[],
+    //       'thread.viewPosts':[],
+    //       'thread.editPosts':[],
+    //       'thread.hidePosts':[],
+    //       'thread.canBeReward': [],
+    //       'thread.editOwnThreadOrPost': [],
+    //       'thread.hideOwnThreadOrPost': [],
+    //       'thread.freeViewPosts.1':[],
+    //       'thread.freeViewPosts.2':[],
+    //       'thread.freeViewPosts.3':[],
+    //       'thread.freeViewPosts.4':[],
+    //       'thread.freeViewPosts.5':[],
+    //     };
+    //     this.checkAll = false;
+    //   }
+    // },
     checkSelect() {
 
       if (this.checked.indexOf('switch.createThread') !== -1) {
@@ -620,7 +610,6 @@ export default {
     },
 
 
-    /*IFTRUE_pay*/
     // 发帖权限7项的扩展项切换状态时，有就加入权限组，否则清除
     changeExpandItem(val) {
       if (this.selectList[val.slice(0, 14)].includes(val)) {
@@ -650,10 +639,10 @@ export default {
           }).then(() => {
             this.checked.push(val);
           }).catch(() => {
-            this.selectList[val.slice(0, 14)] = 
+            this.selectList[val.slice(0, 14)] =
               this.selectList[val.slice(0, 14)].filter(item => item !== val);
           });
-        } 
+        }
       } else {
         this.checked = this.checked.filter(item => item !== val);
       }
@@ -696,7 +685,7 @@ export default {
       this.selectList = selectList;
       this.checked = checkedData;
     },
- 
+
     // 全选切换
     handleCheckAllChange(val) {
       this.checked = [];
@@ -741,14 +730,13 @@ export default {
         }
         // 4 分类扩展全选
         this.checked.push(...this.expandItem)
-       
+
         this.checkAll = true;
         this.setSelectValue(this.checked);
       } else {
         this.checkAll = false;
       }
     },
-    /*FITRUE_pay*/ 
   },
   created() {
     this.groupId = this.$route.query.id;
