@@ -77,11 +77,12 @@
 
     </el-container>
     <el-dialog
+      title="最后一步"
       class="index-qcloud-dialog"
-      width="480px"
+      width="422px"
       :visible.sync="dialogVisible"
       :before-close="handleClose">
-      <Card header="最后一步，配置腾讯云云API信息"></Card>
+      <Card header="配置腾讯云的云API信息"></Card>
       <Card header="Secretid：" class="input-box" style="margin-top:5PX">
         <el-input v-model="secretId" clearable></el-input>
       </Card>
@@ -92,12 +93,12 @@
       <el-button type="primary" @click='Submission' class="dialog-button">提交</el-button>
       <div class="dialog-des">
         <h2>说明：</h2>
-        <div>云API可帮助站长快捷的按需使用腾讯云的云能力，提升站点性能和功能；也可帮助腾讯云旗下的Discuz! Q团队更好的改进产品。</div>
+        <div>云 API 获取免费，可帮助站长快捷的按需开通腾讯云的能力，提升站点功能和性能。也可帮助腾讯云旗下的 Discuz! Q 团队更好的改进产品。</div>
       </div>
       <div class="dialog-des">
         <h2>获取方式：</h2>
-        <div>1. <a href="https://cloud.tencent.com/" target="_blank">登录腾讯云</a></div>
-        <div>2. 账号-访问管理-访问密钥-<a href="https://cloud.tencent.com/" target="_blank">API密钥管理</a>（主账号和子账号密钥均可）</div>
+        <div>1. <a href="https://cloud.tencent.com/login" target="_blank">登录腾讯云</a></div>
+        <div>2. 账号-访问管理-访问密钥-<a href="https://console.cloud.tencent.com/cam/capi" target="_blank">API密钥管理</a>（主账号和子账号密钥均可）</div>
       </div>
     </el-dialog>
   </div>

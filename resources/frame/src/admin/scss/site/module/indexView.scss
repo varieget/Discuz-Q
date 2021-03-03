@@ -257,10 +257,10 @@
 
 .index-qcloud-dialog {
   .el-dialog__body {
-    padding: 0PX 50PX 30PX;
+    font-size: 12px;
 
-    .card-box .not-main {
-      text-align: center;
+    .card-box {
+      padding: 0px 0px 10px;
     }
     .card-box .card-box__header {
       margin-bottom: 0PX;
@@ -270,18 +270,32 @@
       padding: 0;
 
       .card-box__header .card-title {
-        line-height: 35PX;
+        line-height: 30PX;
+      }
+
+      .el-input--suffix .el-input__inner {
+        border-radius: 0px;
+        height: 30px;
+        line-height: 30px;
       }
     }
     .dialog-des {
       margin-top: 10PX;
-      line-height: 25PX;
+      line-height: 20PX;
       font-size: 12px;
+
+      a {
+        color: #1d1dff;
+        text-decoration: underline;
+      }
     }
 
     .dialog-button {
-      margin: 15PX 0;
+      background:#027db4;
+      border-radius: 0px;
+      margin: 18PX 0 15PX;
       width: 100%;
+      border: none;
     }
   }
 }
