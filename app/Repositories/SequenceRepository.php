@@ -80,6 +80,7 @@ class SequenceRepository extends AbstractRepository
         $query->where('threads.is_approved', 1);
         $query->where('threads.is_draft', 0);
         $query->whereNull('threads.deleted_at');
+        $query->whereNotNull('threads.user_id');
         $query->orderBy('threads.created_at', 'desc');
         $offset = ($page['number'] - 1) * $page['limit'];
         $index_thread_ids['thread_count'] = $query->count();
