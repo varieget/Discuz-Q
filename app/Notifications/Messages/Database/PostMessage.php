@@ -60,7 +60,7 @@ class PostMessage extends SimpleMessage
 
         return [
             $this->post->user->username,
-            $this->filterSpecialChar ? $this->strWords($message) : $message,
+            $message,
             Arr::get($data, 'refuse', '无'),
         ];
     }
