@@ -78,7 +78,7 @@ class Related extends AbstractNotification
 
     public function getTplModel($type)
     {
-        return self::$tplData->where('id', $this->tplId[$type])->first();
+        return self::$tplData->where('notice_id', $this->tplId[$type])->first();
     }
 
     public function toDatabase($notifiable)
