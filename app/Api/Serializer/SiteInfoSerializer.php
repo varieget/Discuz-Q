@@ -38,7 +38,7 @@ class SiteInfoSerializer extends AbstractSerializer
 
         // 待审核主题数
         $unapprovedThreads = Thread::where('is_approved', Thread::UNAPPROVED)
-            ->whereNull('deleted_at')->whereNotNull('user_id')->count();
+            ->where('is_draft', 0)->whereNull('deleted_at')->whereNotNull('user_id')->count();
 
         // 待审核回复数
         $unapprovedPosts = Post::where('is_approved', Post::UNAPPROVED)
