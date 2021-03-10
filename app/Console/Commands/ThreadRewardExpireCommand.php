@@ -91,16 +91,29 @@ class ThreadRewardExpireCommand extends AbstractCommand
                     $this->connection->beginTransaction();
                     try{
                         $change_freeze_amount = 0;
-                        if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
-                            $userWallet->freeze_amount = $userWallet->freeze_amount - $item->remain_money;
-                            $change_freeze_amount = $item->remain_money;
+                        $remain_money = $item->remain_money;
+
+                        // 通过订单实付金额、用户钱包流水统计实际已悬赏的金额，获取真实的剩余金额
+                        $postRewardLog = UserWalletLog::query()->where('thread_id', $item->thread_id)->get()->toArray();
+                        $rewardTotal = 0;
+                        if(!empty($postRewardLog)){
+                            $rewardTotal = array_sum(array_column($postRewardLog, 'change_available_amount'));
                         }
-                        $userWallet->available_amount = $userWallet->available_amount + $item->remain_money;
+                        $trueRemainMoney = $threadRewardOrder['amount'] - $rewardTotal;
+                        if($trueRemainMoney !== $item->remain_money){
+                            $remain_money = $trueRemainMoney;
+                        }
+                        if($threadRewardOrder['payment_type'] == Order::PAYMENT_TYPE_WALLET){
+                            $userWallet->freeze_amount = $userWallet->freeze_amount - $remain_money;
+                            $change_freeze_amount = $remain_money;
+                        }
+
+                        $userWallet->available_amount = $userWallet->available_amount + $remain_money;
                         $userWallet->save();
 
                         UserWalletLog::createWalletLog(
                             $item->user_id,
-                            $item->remain_money,
+                            $remain_money,
                             -$change_freeze_amount,
                             UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN,
                             trans('wallet.income_thread_reward_return_desc'),
@@ -113,7 +126,7 @@ class ThreadRewardExpireCommand extends AbstractCommand
                         );
 
                         // 发送悬赏问答通知
-                        app(ThreadRewardRepository::class)->returnThreadRewardNotify($item->thread_id, $item->user_id, $item->remain_money, UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN);
+                        app(ThreadRewardRepository::class)->returnThreadRewardNotify($item->thread_id, $item->user_id, $remain_money, UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN);
 
                         $item->remain_money = 0;
                         $item->save();
