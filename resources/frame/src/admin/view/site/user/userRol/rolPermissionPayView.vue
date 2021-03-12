@@ -66,6 +66,11 @@
               value="createThread.0.position"
               @click.native="changeExpandItem('createThread.0.position')"
               ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.0.anonymous"
+              @click.native="changeExpandItem('createThread.0.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -100,6 +105,11 @@
               value="createThread.1.position"
               @click.native="changeExpandItem('createThread.1.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.1.anonymous"
+              @click.native="changeExpandItem('createThread.1.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -133,6 +143,11 @@
               value="createThread.2.position"
               @click.native="changeExpandItem('createThread.2.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.2.anonymous"
+              @click.native="changeExpandItem('createThread.2.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -162,6 +177,11 @@
               value="createThread.3.position"
               @click.native="changeExpandItem('createThread.3.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.3.anonymous"
+              @click.native="changeExpandItem('createThread.3.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -195,6 +215,11 @@
               value="createThread.4.position"
               @click.native="changeExpandItem('createThread.4.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.4.anonymous"
+              @click.native="changeExpandItem('createThread.4.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -230,6 +255,11 @@
               value="createThread.5.position"
               @click.native="changeExpandItem('createThread.5.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.5.anonymous"
+              @click.native="changeExpandItem('createThread.5.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -259,6 +289,11 @@
               value="createThread.6.position"
               @click.native="changeExpandItem('createThread.6.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.6.anonymous"
+              @click.native="changeExpandItem('createThread.6.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card>
