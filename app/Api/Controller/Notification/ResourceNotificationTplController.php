@@ -48,7 +48,15 @@ class ResourceNotificationTplController extends AbstractListController
 
         $type_name = Arr::get($request->getQueryParams(), 'type_name');
 
-        $query = NotificationTpl::query()->where('type_name', $type_name)->orderBy('type');
+        $tpl = NotificationTpl::query();
+
+        $tpl->when(Arr::has($request->getQueryParams(), 'type'), function ($query) use ($request) {
+            $query->where('type', (int) Arr::get($request->getQueryParams(), 'type'));
+        });
+
+        $typeNames = explode(',', $type_name);
+
+        $query = $tpl->whereIn('type_name', $typeNames)->orderBy('type');
 
         return $query->get();
     }
