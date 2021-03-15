@@ -43,9 +43,6 @@ class ResourceNotificationTplController extends AbstractListController
      */
     protected function data(ServerRequestInterface $request, Document $document)
     {
-        $actor = $request->getAttribute('actor');
-        $this->assertAdmin($actor);
-
         $type_name = Arr::get($request->getQueryParams(), 'type_name');
 
         $tpl = NotificationTpl::query();
