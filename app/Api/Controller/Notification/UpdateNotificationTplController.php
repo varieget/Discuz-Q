@@ -97,8 +97,8 @@ class UpdateNotificationTplController extends AbstractListController
                     $notificationTpl->content = Arr::get($attributes, 'content');
                 }
                 break;
-            case 1:
-                if ($notificationTpl->status == 1) {
+            default:
+                if (in_array($notificationTpl->status, [1, 2, 3, 4])) {
                     $this->validation->make($attributes, [
                         'template_id' => 'filled',
                     ])->validate();
