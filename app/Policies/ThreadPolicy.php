@@ -183,6 +183,14 @@ class ThreadPolicy extends AbstractPolicy
      */
     public function viewPosts(User $actor, Thread $thread)
     {
+        if (
+            $thread->user_id == $actor->id
+            && $thread->is_approved == Thread::APPROVED
+            && (! $thread->deleted_at || $thread->deleted_user_id == $actor->id)
+        ) {
+            return true;
+        }
+        
         $request = app('request');
         $referer = Arr::get($request->getServerParams(), 'HTTP_REFERER');
         if(strstr($referer, 'postpay')){
@@ -200,14 +208,6 @@ class ThreadPolicy extends AbstractPolicy
             }
 
             return false;
-        }
-
-        if (
-            $thread->user_id == $actor->id
-            && $thread->is_approved == Thread::APPROVED
-            && (! $thread->deleted_at || $thread->deleted_user_id == $actor->id)
-        ) {
-            return true;
         }
     }
 }

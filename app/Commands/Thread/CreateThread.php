@@ -119,6 +119,18 @@ class CreateThread
 
         $thread_id = Arr::get($attributes, 'id');
         if ($thread_id) {
+            $oldThreadData = Thread::query()->where('id', $thread_id)->first();
+            // 不是本人编辑草稿，报错
+            if($oldThreadData->is_draft == 1 && $oldThreadData->user_id !== $this->actor->id){
+                throw new PermissionDeniedException;
+            }
+            // 正式帖子，不是本人、不是管理员、没有编辑权限，报错
+            if($oldThreadData->is_draft == 0 && $oldThreadData->user_id !== $this->actor->id){
+                if(!$this->actor->isAdmin() && !$this->actor->can('edit', $oldThreadData)){
+                    throw new PermissionDeniedException;
+                }
+            }
+
             $thread = $threads->findOrFail($thread_id, $this->actor);
         }
 
