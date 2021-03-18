@@ -20,6 +20,7 @@ namespace App\Api\Controller\Threads;
 
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\CategorySerializer;
+use App\Api\Serializer\PostGoodsSerializer;
 use App\Api\Serializer\PostSerializer;
 use App\Api\Serializer\QuestionAnswerSerializer;
 use App\Api\Serializer\ThreadRewardSerializer;
@@ -29,15 +30,18 @@ use App\Common\ResponseCode;
 use App\Models\Order;
 use App\Models\PostGoods;
 use App\Models\PostUser;
+use App\Models\Question;
 use App\Models\RedPacket;
 use App\Models\Thread;
 use App\Models\ThreadReward;
+use App\Models\ThreadUser;
 use App\Repositories\UserFollowRepository;
 use Discuz\Base\DzqController;
 
 class ResourceThreadV2Controller extends DzqController
 {
     public $userFollow;
+
 
     //返回的数据一定包含的数据
     public $include = [
@@ -73,11 +77,11 @@ class ResourceThreadV2Controller extends DzqController
     public function main()
     {
         $thread_serialize = $this->app->make(ThreadSerializer::class);
-        $thread_serialize->setRequest($this->request);
+		$thread_serialize->setRequest($this->request);
         $post_serialize = $this->app->make(PostSerializer::class);
-        $post_serialize->setRequest($this->request);
+		$post_serialize->setRequest($this->request);
         $attachment_serialize = $this->app->make(AttachmentSerializer::class);
-        $attachment_serialize->setRequest($this->request);
+		$attachment_serialize->setRequest($this->request);
         $category_serialize = $this->app->make(CategorySerializer::class);
         $category_serialize->setRequest($this->request);
 
@@ -90,23 +94,31 @@ class ResourceThreadV2Controller extends DzqController
         $include = !empty($this->inPut('include')) ? array_unique(array_merge($this->include, explode(',', $this->inPut('include')))) : $this->include;
 
         $data = [];
-/*  暂时不需要缓存，要用缓存的时候注释打开和下面的put注释打开即可
-        $cacheKey = CacheKey::THREAD_RESOURCE_BY_ID.$thread_id;
-        $cache = app('cache');
-        $cacheData = $cache->get($cacheKey);
-        if(!empty($cacheData)){
-            $cacheThread = unserialize($cacheData);
-            $cache_thread_id = $cacheThread['thread']['id'];
-            $cache_thread = Thread::find($cache_thread_id);
-            if(!$stopViewCount){
-                $cache_thread->increment('view_count');
-                $cacheThread['thread']['viewCount'] ++;
-            }
-            return $this->outPut(ResponseCode::SUCCESS,'', $cacheThread);
-        }
-*/
+        /*  暂时不需要缓存，要用缓存的时候注释打开和下面的put注释打开即可
+                $cacheKey = CacheKey::THREAD_RESOURCE_BY_ID.$thread_id;
+                $cache = app('cache');
+                $cacheData = $cache->get($cacheKey);
+                if(!empty($cacheData)){
+                    $cacheThread = unserialize($cacheData);
+                    $cache_thread_id = $cacheThread['thread']['id'];
+                    $cache_thread = Thread::find($cache_thread_id);
+                    if(!$stopViewCount){
+                        $cache_thread->increment('view_count');
+                        $cacheThread['thread']['viewCount'] ++;
+                    }
+                    return $this->outPut(ResponseCode::SUCCESS,'', $cacheThread);
+                }
+        */
         if(in_array($thread->type, array_keys($this->switch_include))){
             $include = array_merge($include, $this->switch_include[$thread->type]);
+        }
+        foreach ($this->relation as $key => $val){
+            $this->loadOrderUsers($thread, $val);
+            if(empty($thread->$key)){
+                $data[$key] = [];
+            }else{
+                $data[$key] = $thread->$key;
+            }
         }
         $thread->loadMissing($include);
 
@@ -117,7 +129,8 @@ class ResourceThreadV2Controller extends DzqController
         $data['author']['follow'] = $this->userFollow->findFollowDetail($this->user->id, $thread->user->id);
         $data['author']['isReal'] = isset($thread->user->realname) && $thread->user->realname != null ? true : false;
         $data['author']['groups'] = $thread->user->groups->map(function ($item){
-            return  $item->isDisplay = boolval($item->isDisplay);
+            $item->isDisplay = boolval($item->isDisplay);
+            return $item->only(['id','name','isDisplay']);
         });
 
 
@@ -179,14 +192,7 @@ class ResourceThreadV2Controller extends DzqController
             }
         }
 
-        foreach ($this->relation as $key => $val){
-            $this->loadOrderUsers($thread, Order::ORDER_TYPE_REWARD);
-            if(empty($thread->$key)){
-                $data[$key] = [];
-            }else{
-                $data[$key] = $thread->$key;
-            }
-        }
+
 
         // 问答贴设置当前用户
         /*
