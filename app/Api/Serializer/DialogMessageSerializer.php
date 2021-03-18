@@ -18,6 +18,7 @@
 
 namespace App\Api\Serializer;
 
+use Carbon\Carbon;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Routing\UrlGenerator;
