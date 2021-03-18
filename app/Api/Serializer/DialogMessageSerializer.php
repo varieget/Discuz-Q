@@ -44,12 +44,13 @@ class DialogMessageSerializer extends AbstractSerializer
     {
         $image_url = '';
         if($model->attachment_id){
-            if ($model->is_remote) {
+            $attachment = $model->attachment;
+            if ($attachment->is_remote) {
                 $image_url = $this->settings->get('qcloud_cos_sign_url', 'qcloud', true)
-                    ? $this->filesystem->disk('attachment_cos')->temporaryUrl($model->full_path, Carbon::now()->addDay())
-                    : $this->filesystem->disk('attachment_cos')->url($model->full_path);
+                    ? $this->filesystem->disk('attachment_cos')->temporaryUrl($attachment->full_path, Carbon::now()->addDay())
+                    : $this->filesystem->disk('attachment_cos')->url($attachment->full_path);
             } else {
-                $image_url = $this->filesystem->disk('attachment')->url($model->full_path);
+                $image_url = $this->filesystem->disk('attachment')->url($attachment->full_path);
             }
         }
 
