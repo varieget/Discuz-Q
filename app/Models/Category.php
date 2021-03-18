@@ -21,6 +21,7 @@ namespace App\Models;
 use App\Models\Thread;
 use App\Events\Category\Created;
 use Carbon\Carbon;
+use Discuz\Base\DzqModel;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -40,7 +41,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property Carbon $updated_at
  * @property int $parentid
  */
-class Category extends Model
+class Category extends DzqModel
 {
     use EventGeneratorTrait;
     use ScopeVisibilityTrait;
@@ -201,5 +202,52 @@ class Category extends Model
     public static function getIdsWhereCannot(User $user, string $permission): array
     {
         return static::getIdsWherePermission($user, $permission, false);
+    }
+
+    public function hasThreads($id)
+    {
+        $category  = Category::query()->findOrFail($id);
+
+        $childCategoryIds = array();
+        if($category->parentid == 0){
+            $childCategoryIds = Category::query()->where('parentid', $category->id)->pluck('id')->toArray();
+        }
+
+        $threads = Thread::query()
+                ->where('category_id', $id)
+                ->orWhereIn('category_id', $childCategoryIds)
+                ->where('is_approved', Thread::APPROVED)
+                ->where('is_draft', Thread::IS_NOT_DRAFT)
+                ->whereNull('deleted_at')
+                ->whereNotNull('user_id')
+                ->get()->toArray();
+        if(!empty($threads)){
+            return true;
+        }
+        return false;
+    }
+
+    public function getValidCategoryIds(User $user,$categoryids = []){
+        $groups = $user->groups->toArray();
+        if(empty($groups)){
+            return  false;
+        }
+        $groupIds = array_column($groups, 'id');
+        $permissions = Permission::categoryPermissions($groupIds);
+        $cids = self::query()->pluck('id')->toArray();
+        if($user->isAdmin()){
+            return $cids;
+        }
+        $p = [];
+        foreach ($cids as $cid) {
+            $viewThreadStr = 'category' . $cid . '.viewThreads';
+            in_array($viewThreadStr, $permissions) && $p[] = $cid;
+        }
+        if(empty($categoryids)){
+            $categoryids = $p;
+        }else{
+            $categoryids = array_intersect($categoryids,$p);
+        }
+        return $categoryids;
     }
 }

@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Copyright (C) 2020 Tencent Cloud.
+ * Copyright (C) 2021 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,27 +17,23 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+
 use Discuz\Base\DzqModel;
 
-/**
- * Models a post-user state record in the database.
- *
- * @property int $user_id
- * @property int $thread_id
- * @property Carbon|null $created_at
- * @property Thread $thread
- * @property User $user
- */
-class PostUser extends DzqModel
+class GroupUser extends DzqModel
 {
-    protected $table = 'post_user';
-    public function likedUsers()
-    {
-        return $this->hasOne(User::class);
+
+    protected $table = 'group_user';
+
+    public static $relationGroups = 'groups';
+
+
+    public function groups(){
+        return $this->hasOne(Group::class,'id','group_id');
     }
-    public function getPostIdsByUid($postIds,$userId){
-        return  self::query()->whereIn('post_id',$postIds)->where('user_id',$userId)
-            ->get()->pluck('post_id')->toArray();
+
+    public function getGroupInfo($userIds){
+        return  GroupUser::query()->whereIn('user_id',$userIds)
+            ->with(GroupUser::$relationGroups)->get()->toArray();
     }
 }
