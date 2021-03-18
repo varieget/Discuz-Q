@@ -465,3 +465,5 @@ $route->get('/sticks.v2', 'sticks.v2', ApiController\Threads\ListStickThreadsV2C
 $route->get('/categories.v2', 'categories.v2', ApiController\Category\ListCategoriesV2Controller::class);
 
 $route->get('/threads.detail.v2', 'threads.detail.v2', ApiController\Threads\ResourceThreadV2Controller::class);
+
+$route->get('/posts.v2', 'posts.v2', ApiController\Posts\ListPostsV2Controller::class);
