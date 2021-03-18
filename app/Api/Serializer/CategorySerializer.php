@@ -34,7 +34,7 @@ class CategorySerializer extends AbstractSerializer
      * @param Category $model
      * @return array
      */
-    protected function getDefaultAttributes($model)
+    public function getDefaultAttributes($model)
     {
         return [
             'id'                => $model->id,
