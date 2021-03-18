@@ -37,6 +37,7 @@ class CategorySerializer extends AbstractSerializer
     protected function getDefaultAttributes($model)
     {
         return [
+            'id'                => $model->id,
             'name'              => $model->name,
             'description'       => $model->description,
             'icon'              => $model->icon,
