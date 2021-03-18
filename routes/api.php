@@ -463,3 +463,5 @@ $route->get('/checkQcloud', 'checkQcloud',  ApiController\CheckQcloudController:
 $route->get('/threads.v2', 'threads.v2', ApiController\Threads\ListThreadsV2Controller::class);
 $route->get('/sticks.v2', 'sticks.v2', ApiController\Threads\ListStickThreadsV2Controller::class);
 $route->get('/categories.v2', 'categories.v2', ApiController\Category\ListCategoriesV2Controller::class);
+
+$route->get('/threads.detail.v2', 'threads.detail.v2', ApiController\Threads\ResourceThreadV2Controller::class);
