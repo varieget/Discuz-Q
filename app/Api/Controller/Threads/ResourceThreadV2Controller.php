@@ -125,7 +125,7 @@ class ResourceThreadV2Controller extends DzqController
         $data['thread'] = $thread_serialize->getDefaultAttributes($thread);
         $data['category'] = $category_serialize->getDefaultAttributes($thread->category);
 
-        $data['author'] = $thread->user && $thread->user->groups->makeHidden('pivot') ? $thread->user  : [];
+        $data['author'] = $thread->user && $thread->user->groups->makeHidden('pivot') ? $thread->user->toArray()  : [];
         $data['author']['follow'] = $this->userFollow->findFollowDetail($this->user->id, $thread->user->id);
         $data['author']['isReal'] = isset($thread->user->realname) && $thread->user->realname != null ? true : false;
         $data['author']['groups'] = $thread->user->groups->map(function ($item){
