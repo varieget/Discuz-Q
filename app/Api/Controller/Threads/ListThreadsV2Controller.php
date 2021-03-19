@@ -370,7 +370,7 @@ class ListThreadsV2Controller extends DzqController
         $essence = null;
         $types = [];
         $categoryids = [];
-        $sort = 1;
+        $sort = 2;
         $attention = 0;
         isset($filter['sticky']) && $stick = $filter['sticky'];
         isset($filter['essence']) && $essence = $filter['essence'];
