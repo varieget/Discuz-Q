@@ -125,7 +125,7 @@ class ResourceThreadV2Controller extends DzqController
         $data['thread'] = $thread_serialize->getDefaultAttributes($thread);
         $data['category'] = $category_serialize->getDefaultAttributes($thread->category);
 
-        $data['author'] = $thread->user && $thread->user->groups->makeHidden('pivot') ? $thread->user  : [];
+        $data['author'] = $thread->user && $thread->user->groups->makeHidden('pivot') ? $thread->user->toArray()  : [];
         $data['author']['follow'] = $this->userFollow->findFollowDetail($this->user->id, $thread->user->id);
         $data['author']['isReal'] = isset($thread->user->realname) && $thread->user->realname != null ? true : false;
         $data['author']['groups'] = $thread->user->groups->map(function ($item){
@@ -165,11 +165,14 @@ class ResourceThreadV2Controller extends DzqController
                 }
                 $question_serialize->setRequest($this->request);
                 $data['question'] = $question_serialize->getDefaultAttributes($thread->question);
-                $data['question']['beUser'] = $thread->question->beUser->only(['id','username','avatar','groups']);
-                $data['question']['beUser']['isReal'] = isset($thread->question->beUser->realname) && $thread->question->beUser->realname != null ? true : false;
-                $data['question']['beUser']['groups'] = $thread->question->beUser->groups->map(function ($item, $key){
-                    return  $item->only(['id', 'name']);
-                });
+                $data['question']['beUser'] = $thread->question->beUser ? $thread->question->beUser->only(['id','username','avatar','groups']) : [];
+                if(!empty($data['question']['beUser'])){
+                    $data['question']['beUser']['isReal'] = isset($thread->question->beUser->realname) && $thread->question->beUser->realname != null ? true : false;
+                    $data['question']['beUser']['groups'] = $thread->question->beUser->groups->map(function ($item){
+                        return  $item->only(['id', 'name']);
+                    });
+                }
+
                 $data['question']['images'] = [];
                 if(!empty($thread->question->images)){
                     foreach ($thread->question->images as $val){
@@ -229,6 +232,9 @@ class ResourceThreadV2Controller extends DzqController
 
 //        $cache->put($cacheKey, serialize($data), 5*60);
         $data = $this->camelData($data);
+
+        //为了兼容前端
+        if(empty($data['thread']['questionTypeAndMoney']))  $data['thread']['questionTypeAndMoney'] = ['type' => 1];
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
 
     }
