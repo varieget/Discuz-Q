@@ -151,15 +151,7 @@ class CreateThread
 
             if (!empty($red_money)) {
                 $this->assertCan($this->actor, 'createThread.' . $thread->type . '.redPacket');
-
-                if ($thread->type === Thread::TYPE_OF_TEXT) {
-                    $thread->is_red_packet = Thread::HAVE_RED_PACKET;//0:未添加红包，1:有添加红包
-                } else {
-                    //长文帖价格参数和附件参数必须为0才允许添加红包
-                    if(empty((float) Arr::get($attributes, 'price')) && empty((float) Arr::get($attributes, 'attachment_price'))) {
-                        $thread->is_red_packet = Thread::HAVE_RED_PACKET;
-                    }
-                }
+                $thread->is_red_packet = Thread::HAVE_RED_PACKET;//0:未添加红包，1:有添加红包
             }
         }
 
