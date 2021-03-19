@@ -20,7 +20,6 @@ namespace App\Api\Controller\Category;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Permission;
-use App\Models\Sequence;
 use Discuz\Base\DzqController;
 
 class ListCategoriesV2Controller extends DzqController
@@ -61,7 +60,7 @@ class ListCategoriesV2Controller extends DzqController
         // 获取一级分类的二级子类
         foreach ($categoriesFather as $key => $value) {
             if(isset($categoriesChild[$value['pid']])){
-                $categoriesFather[$key]['searchIds'] = array_merge($value['searchIds'],array_column($categoriesChild[$value['pid']], 'pid'));
+                $categoriesFather[$key]['searchIds'] = array_merge($value['searchIds'], array_column($categoriesChild[$value['pid']], 'pid'));
                 $categoriesFather[$key]['children'] = $categoriesChild[$value['pid']];
             }else{
                 $categoriesFather[$key]['children'] = [];
