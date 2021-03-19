@@ -240,8 +240,16 @@ class Category extends DzqModel
         }
         $p = [];
         foreach ($cids as $cid) {
-            $viewThreadStr = 'category' . $cid . '.viewThreads';
-            in_array($viewThreadStr, $permissions) && $p[] = $cid;
+            $viewThread0 = 'switch.viewThreads';
+            $viewThread1 = 'category' . $cid . '.viewThreads';
+            if(in_array($viewThread0, $permissions)){
+                $p[] = $cid;
+                continue;
+            }
+            if(in_array($viewThread1, $permissions)){
+                $p[] = $cid;
+                continue;
+            }
         }
         if(empty($categoryids)){
             $categoryids = $p;
