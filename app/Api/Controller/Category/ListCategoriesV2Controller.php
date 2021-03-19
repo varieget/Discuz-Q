@@ -40,18 +40,11 @@ class ListCategoriesV2Controller extends DzqController
             ->orderBy('sort')
             ->get()->toArray();
 
-        // 智能排序-内容分类选项
-        $sequenceData = Sequence::query()->first();
-        $checkedIds = [];
-        if(!empty($sequenceData)){
-            $checkedIds = explode(',', $sequenceData['category_ids']);
-        }
-
         $categoriesFather = [];
         $categoriesChild = [];
 
         foreach ($categories as $category) {
-            $category['searchIds'] = $category['pid'];
+            $category['searchIds'] = [$category['pid']];
 
             // 二级子类集合
             if($category['parentid'] !== 0){
@@ -68,7 +61,7 @@ class ListCategoriesV2Controller extends DzqController
         // 获取一级分类的二级子类
         foreach ($categoriesFather as $key => $value) {
             if(isset($categoriesChild[$value['pid']])){
-                $categoriesFather[$key]['searchIds'] = implode(',', array_column($categoriesChild[$value['pid']], 'pid'));
+                $categoriesFather[$key]['searchIds'] = array_merge($value['searchIds'],array_column($categoriesChild[$value['pid']], 'pid'));
                 $categoriesFather[$key]['children'] = $categoriesChild[$value['pid']];
             }else{
                 $categoriesFather[$key]['children'] = [];
