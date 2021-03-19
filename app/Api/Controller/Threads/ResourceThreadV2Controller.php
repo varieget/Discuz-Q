@@ -232,6 +232,9 @@ class ResourceThreadV2Controller extends DzqController
 
 //        $cache->put($cacheKey, serialize($data), 5*60);
         $data = $this->camelData($data);
+
+        //为了兼容前端
+        if(empty($data['thread']['questionTypeAndMoney']))  $data['thread']['questionTypeAndMoney'] = ['type' => 1];
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
 
     }
