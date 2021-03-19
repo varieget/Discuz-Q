@@ -28,7 +28,7 @@ class ListStickThreadsV2Controller extends DzqController
     public function main()
     {
         $categoryId = $this->inPut('categoryId');
-        $threads = Thread::query()->select(['id','category_id', 'title']);
+        $threads = Thread::query()->select(['id', 'category_id', 'title']);
         if (!empty($categoryId)) {
             if (!is_array($categoryId)) {
                 $categoryId = [$categoryId];
@@ -46,19 +46,25 @@ class ListStickThreadsV2Controller extends DzqController
             ->where('is_first', Post::FIRST_YES)
             ->get()->pluck(null, 'thread_id');
         $data = [];
+        $linkString = '';
         foreach ($threads as $thread) {
             $title = $thread['title'];
             $id = $thread['id'];
             if (empty($title)) {
                 if (isset($posts[$id])) {
-                    $title = $posts[$id]['summary_text'];
+                    $title = Post::instance()->getContentSummary($thread['id']);
                 }
             }
+            $linkString .= $title;
             $data [] = [
                 'pid' => $thread['id'],
-                'categoryId'=>$thread['category_id'],
+                'categoryId' => $thread['category_id'],
                 'title' => $title
             ];
+        }
+        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
+        foreach ($data as &$item) {
+            $item['title'] = str_replace($search, $replace, $item['title']);
         }
         $this->outPut(ResponseCode::SUCCESS, '', $data);
     }

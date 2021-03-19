@@ -780,4 +780,50 @@ class Thread extends DzqModel
         }
         return $data;
     }
+    /**
+     * @desc 获取本次查询要替换的特殊符号
+     * @param $linkString
+     * @return array[]
+     */
+    public function getReplaceString($linkString)
+    {
+        preg_match_all('/:[a-z]+:/i', $linkString, $m1);
+        preg_match_all('/@.+? /', $linkString, $m2);
+        preg_match_all('/#.+?#/', $linkString, $m3);
+        $m1 = array_unique($m1[0]);
+        $m2 = array_unique($m2[0]);
+        $m3 = array_unique($m3[0]);
+        $m2 = str_replace(['@', ''], '', $m2);
+        $m3 = str_replace('#', '', $m3);
+        $search = [];
+        $replace = [];
+        $emojis = Emoji::query()->select('code', 'url')->whereIn('code', $m1)->get()->map(function ($item) use ($search) {
+            $item['url'] = Utils::getDzqDomain() . '/' . $item['url'];
+            $item['html'] = sprintf('<img style="display:inline-block;vertical-align:top" src="%s" alt="ciya" class="qq-emotion">', $item['url']);
+            return $item;
+        })->toArray();
+        $ats = User::query()->select('id', 'username')->whereIn('username', $m2)->get()->map(function ($item) {
+            $item['username'] = '@' . $item['username'];
+            $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
+            return $item;
+        })->toArray();
+        $topics = Topic::query()->select('id', 'content')->whereIn('content', $m3)->get()->map(function ($item) {
+            $item['content'] = '#' . $item['content'] . '#';
+            $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
+            return $item;
+        })->toArray();
+        foreach ($emojis as $emoji) {
+            $search[] = $emoji['code'];
+            $replace[] = $emoji['html'];
+        }
+        foreach ($ats as $at) {
+            $search[] = $at['username'];
+            $replace[] = $at['html'];
+        }
+        foreach ($topics as $topic) {
+            $search[] = $topic['content'];
+            $replace[] = $topic['html'];
+        }
+        return [$search, $replace];
+    }
 }

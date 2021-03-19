@@ -69,12 +69,12 @@ class ListThreadsV2Controller extends DzqController
         $posts = Post::instance()->getPosts($threadIds);
         $postsByThreadId = array_column($posts, null, 'thread_id');
         $postIds = array_column($posts, 'id');
-        $likedPostIds = PostUser::instance()->getPostIdsByUid($postIds,$this->user->id);
+        $likedPostIds = PostUser::instance()->getPostIdsByUid($postIds, $this->user->id);
         $attachments = Attachment::instance()->getAttachments($postIds, [Attachment::TYPE_OF_FILE, Attachment::TYPE_OF_IMAGE]);
         $attachmentsByPostId = Utils::pluckArray($attachments, 'type_id');
         $threadRewards = ThreadReward::instance()->getRewards($threadIds);
         $result = [];
-        $str = '';
+        $linkString = '';
         foreach ($threadList as $thread) {
             $userId = $thread['user_id'];
             $user = null;
@@ -89,25 +89,25 @@ class ListThreadsV2Controller extends DzqController
             $post = null;
             if (!empty($postsByThreadId[$thread['id']])) {
                 !empty($postsByThreadId[$thread['id']]) && $post = $postsByThreadId[$thread['id']];
-                if(!empty($post['id']) && !empty($attachmentsByPostId[$post['id']])){
+                if (!empty($post['id']) && !empty($attachmentsByPostId[$post['id']])) {
                     $attachments = $attachmentsByPostId[$post['id']];
                 }
             }
-            $thread = $this->getThread($thread,$post,$likedPostIds, $permissions);
-            $str .= $thread['summary'];
+            $thread = $this->getThread($thread, $post, $likedPostIds, $permissions);
+            $linkString .= $thread['summary'];
             $rewards = null;
-            if(isset($threadRewards[$thread['pid']])){
+            if (isset($threadRewards[$thread['pid']])) {
                 $rewards = $threadRewards[$thread['pid']];
             }
             $result[] = [
                 'user' => $user,
                 'group' => $group,
-                'rewards'=>$rewards,
+                'rewards' => $rewards,
                 'thread' => $thread,
                 'attachment' => $this->getAttachment($attachments, $serializer),
             ];
         }
-        list($search, $replace) = $this->getReplaceString($str);
+        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
         foreach ($result as &$item) {
             $thread = $item['thread'];
             $item['thread']['summary'] = str_replace($search, $replace, $thread['summary']);
@@ -117,54 +117,7 @@ class ListThreadsV2Controller extends DzqController
         $this->outPut(ResponseCode::SUCCESS, '', $threads);
     }
 
-    /**
-     * @desc 获取本次查询要替换的特殊符号
-     * @param $str
-     * @return array[]
-     */
-    private function getReplaceString($str)
-    {
-        preg_match_all('/:[a-z]+:/i', $str, $m1);
-        preg_match_all('/@.+? /', $str, $m2);
-        preg_match_all('/#.+?#/', $str, $m3);
-        $m1 = array_unique($m1[0]);
-        $m2 = array_unique($m2[0]);
-        $m3 = array_unique($m3[0]);
-        $m2 = str_replace(['@', ''], '', $m2);
-        $m3 = str_replace('#', '', $m3);
-        $search = [];
-        $replace = [];
-        $emojis = Emoji::query()->select('code', 'url')->whereIn('code', $m1)->get()->map(function ($item) use ($search) {
-            $item['url'] = Utils::getDzqDomain() . '/' . $item['url'];
-            $item['html'] = sprintf('<img style="display:inline-block;vertical-align:top" src="%s" alt="ciya" class="qq-emotion">', $item['url']);
-            return $item;
-        })->toArray();
-        $ats = User::query()->select('id', 'username')->whereIn('username', $m2)->get()->map(function ($item) {
-            $item['username'] = '@' . $item['username'];
-            $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
-            return $item;
-        })->toArray();
-        $topics = Topic::query()->select('id', 'content')->whereIn('content', $m3)->get()->map(function ($item) {
-            $item['content'] = '#' . $item['content'] . '#';
-            $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
-            return $item;
-        })->toArray();
-        foreach ($emojis as $emoji) {
-            $search[] = $emoji['code'];
-            $replace[] = $emoji['html'];
-        }
-        foreach ($ats as $at) {
-            $search[] = $at['username'];
-            $replace[] = $at['html'];
-        }
-        foreach ($topics as $topic) {
-            $search[] = $topic['content'];
-            $replace[] = $topic['html'];
-        }
-        return [$search, $replace];
-    }
-
-    private function getThread($thread,$firstPost,$likedPostIds, $permissions)
+    private function getThread($thread, $firstPost, $likedPostIds, $permissions)
     {
         $data = [
             'pid' => $thread['id'],
@@ -187,11 +140,11 @@ class ListThreadsV2Controller extends DzqController
             'diffCreatedAt' => Utils::diffTime($thread['created_at']),
             'isRedPacket' => $thread['is_red_packet'],
             'canViewPost' => $this->canViewPosts($thread, $permissions),
-            'canLike' =>true,
-            'isLiked'=>false,
-            'likedCount'=>0,
-            'firstPostId'=>null,
-            'replyCount'=>0,
+            'canLike' => true,
+            'isLiked' => false,
+            'likedCount' => 0,
+            'firstPostId' => null,
+            'replyCount' => 0,
             'extension' => null
         ];
         //点赞相关属性
@@ -254,9 +207,10 @@ class ListThreadsV2Controller extends DzqController
         return false;
     }
 
-    private function canLikeThread($permissions){
+    private function canLikeThread($permissions)
+    {
         $permission = 'thread.likePosts';
-        return in_array($permission,$permissions);
+        return in_array($permission, $permissions);
     }
 
     private function getAttachment($attachments, $serializer)
