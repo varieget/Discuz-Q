@@ -957,7 +957,7 @@ class User extends DzqModel
 
     public function getUserName($userId)
     {
-        $user = self::query()->find($userId)->first();
+        $user = self::query()->find($userId);
         if (empty($user)) return null;
         return $user->username;
     }
