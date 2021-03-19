@@ -165,11 +165,14 @@ class ResourceThreadV2Controller extends DzqController
                 }
                 $question_serialize->setRequest($this->request);
                 $data['question'] = $question_serialize->getDefaultAttributes($thread->question);
-                $data['question']['beUser'] = $thread->question->beUser->only(['id','username','avatar','groups']);
-                $data['question']['beUser']['isReal'] = isset($thread->question->beUser->realname) && $thread->question->beUser->realname != null ? true : false;
-                $data['question']['beUser']['groups'] = $thread->question->beUser->groups->map(function ($item, $key){
-                    return  $item->only(['id', 'name']);
-                });
+                $data['question']['beUser'] = $thread->question->beUser ? $thread->question->beUser->only(['id','username','avatar','groups']) : [];
+                if(!empty($data['question']['beUser'])){
+                    $data['question']['beUser']['isReal'] = isset($thread->question->beUser->realname) && $thread->question->beUser->realname != null ? true : false;
+                    $data['question']['beUser']['groups'] = $thread->question->beUser->groups->map(function ($item){
+                        return  $item->only(['id', 'name']);
+                    });
+                }
+
                 $data['question']['images'] = [];
                 if(!empty($thread->question->images)){
                     foreach ($thread->question->images as $val){
