@@ -115,7 +115,8 @@ export default {
         'thread.freeViewPosts.4',
         'thread.freeViewPosts.5'
       ],
-      mapCategoryId: new Map()
+      mapCategoryId: new Map(),
+      keyValue: 0
     };
   },
   watch: {
@@ -437,16 +438,20 @@ export default {
         this.selectList[obj] = value.filter( v => v[0] !== "");
         selectPermission.shift();
         checked = checked.filter( item => item !== obj);
-        checked = [...new Set([...checked, ...selectPermission])]
+        checked = [...checked, ...selectPermission];
+
+      } else if(selectPermission.includes(obj)) {
+        // 非全选-选中全选
+        this.selectList[obj].splice(1);
+        checked = checked.filter( item => !selectPermission.includes(item));
+        checked.push(obj);
+        this.keyValue = Math.random();
       } else {
-        if(selectPermission.includes(obj)) {
-          // 非全选-选中全选
-          this.selectList[obj].splice(1)
-          selectPermission.splice(1)
-        }
-        // 过滤掉当前权限所有相关权限，然后再添加当前选中权限
-        checked = checked.filter( item => !item.includes(obj));
-        checked.push(...selectPermission, `switch.${obj}`);
+        // 非全选-选中一二级分类项
+        checked = checked.filter( item => {
+          return !(item.includes('category') && item.includes(obj));
+        });
+        checked = [...checked, ...selectPermission];
       }
       this.checked = checked;
     },
@@ -457,13 +462,16 @@ export default {
       checked = checked.filter(v => v !== removedPermission);
       this.selectList[obj].shift();
       this.checked = checked;
+      this.keyValue = Math.random();
     },
     changeChecked(value, obj) {
-      if (!value) {
-        const checkedData = this.checked;
-        this.selectList[obj] = [];
-        this.checked = checkedData.filter(v => v !== obj);
-      }
+      if (value) return;
+      const checkedData = this.checked;
+      const selectedPermission = this.selectList[obj].map(item => {
+        return item[0] ? `category${item[item.length - 1]}.${obj}` : obj;
+      })
+      this.checked = checkedData.filter(v => !selectedPermission.includes(v));
+      this.selectList[obj] = [];
     },
     checkSelect() {
 
@@ -608,6 +616,13 @@ export default {
       } else {
         this.checked = this.checked.filter(item => item !== val);
       }
+    },
+    // 发帖权限切换选中状态
+    changePostChecked(value, obj) {
+      if (value) return;
+      const checkedData = this.checked;
+      this.checked = checkedData.filter(v => !this.selectList[obj].includes(v));
+      this.selectList[obj] = [];
     },
 
     // 全选切换

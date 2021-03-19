@@ -17,7 +17,7 @@ export default {
       // 统计数据列表
       dataList: [
         {
-          title: "今日活跃数",
+          title: "今日活跃用户数",
           num: "0",
           key: "activeUserNumToday",
         },
