@@ -48,7 +48,7 @@ class ListThreadsV2Controller extends DzqController
         $homeSequence = $this->inPut('homeSequence');//默认首页
         $cache = app('cache');
         $key = md5(json_encode($filter) . $perPage . $homeSequence);
-        $currentPage == 1 && $this->getCache($cache,$key);
+//        $currentPage == 1 && $this->getCache($cache,$key);
         $serializer = $this->app->make(AttachmentSerializer::class);
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
@@ -352,6 +352,7 @@ class ListThreadsV2Controller extends DzqController
                 $query->whereIn('tp1.topic_id', $blockTopicIds);
             });
         }
+        $threads = $threads->orderByDesc('th1.created_at');
         return $this->pagination($currentPage, $perPage, $threads);
     }
 

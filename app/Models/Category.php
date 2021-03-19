@@ -236,9 +236,6 @@ class Category extends DzqModel
         $groupIds = array_column($groups, 'id');
         $permissions = Permission::categoryPermissions($groupIds);
         $cids = self::query()->pluck('id')->toArray();
-        if($user->isAdmin() || in_array('viewThreads', $permissions)){
-            return $categoryids;
-        }
         $p = [];
         if ($user->isAdmin()) {
             $p = $cids;
