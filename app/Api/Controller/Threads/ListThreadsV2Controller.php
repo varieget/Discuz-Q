@@ -236,15 +236,22 @@ class ListThreadsV2Controller extends DzqController
 
     private function canViewPosts($thread, $permissions)
     {
-        $canViewPost = true;
-        if (!$this->user->isAdmin()) {
-            $viewPostStr = 'category' . $thread['category_id'] . '.thread.viewPosts';
-            !in_array($viewPostStr, $permissions) && $canViewPost = false;
+        $t1 = implode('|', $permissions);
+        preg_match_all('/category\d+?\.thread\.viewPosts/i', $t1, $m1);
+        if ($this->user->isAdmin() || $this->user->id == $thread['user_id']) {
+            return true;
         }
-        if ($this->user->id == $thread['user_id']) {
-            $canViewPost = true;
+        if (empty($m1[0])) {//没有匹配到
+            if (in_array('switch.thread.viewPosts', $permissions)) {
+                return true;
+            }
+        } else {
+            $viewPostStr1 = 'category' . $thread['category_id'] . '.thread.viewPosts';
+            if (in_array($viewPostStr1, $permissions)) {
+                return true;
+            }
         }
-        return $canViewPost;
+        return false;
     }
 
     private function canLikeThread($permissions){

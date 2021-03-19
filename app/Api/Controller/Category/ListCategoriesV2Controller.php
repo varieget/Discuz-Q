@@ -17,7 +17,6 @@
 
 namespace App\Api\Controller\Category;
 
-use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Permission;
@@ -26,14 +25,8 @@ use Discuz\Base\DzqController;
 
 class ListCategoriesV2Controller extends DzqController
 {
-
     public function main()
     {
-        $cache = app('cache');
-        $data = $cache->get(CacheKey::LIST_CATEGORIES);
-        if (!empty($data)) {
-            $this->outPut(ResponseCode::SUCCESS, '', unserialize($data));
-        }
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
         $permissions = Permission::query()->whereIn('group_id', $groupIds)->get()->toArray();
@@ -58,16 +51,6 @@ class ListCategoriesV2Controller extends DzqController
         $categoriesChild = [];
 
         foreach ($categories as $category) {
-            $createThreadPermission = 'category' . $category['pid'] . '.createThread';
-            // 全局或单个分类创建权限
-            if(in_array('createThread', $permissions) || in_array($createThreadPermission, $permissions)){
-                $category['canCreateThread'] = true;
-            }else{
-                $category['canCreateThread'] = false;
-            }
-
-            // 智能排序-内容分类被选中
-            $category['checked'] = in_array($category['pid'], $checkedIds) ? 1 : 0;
             $category['searchIds'] = $category['pid'];
 
             // 二级子类集合
@@ -92,7 +75,6 @@ class ListCategoriesV2Controller extends DzqController
             }
         }
 
-        $cache->put(CacheKey::LIST_CATEGORIES, serialize($categoriesFather));
         $this->outPut(ResponseCode::SUCCESS, '', $categoriesFather);
     }
 }
