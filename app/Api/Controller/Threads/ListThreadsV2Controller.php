@@ -48,7 +48,7 @@ class ListThreadsV2Controller extends DzqController
         $homeSequence = $this->inPut('homeSequence');//默认首页
         $cache = app('cache');
         $key = md5(json_encode($filter) . $perPage . $homeSequence);
-        $currentPage == 1 && $this->getCache($cache,$key);
+//        $currentPage == 1 && $this->getCache($cache,$key);//cache
         $serializer = $this->app->make(AttachmentSerializer::class);
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
@@ -236,15 +236,20 @@ class ListThreadsV2Controller extends DzqController
 
     private function canViewPosts($thread, $permissions)
     {
-        $canViewPost = true;
         if (!$this->user->isAdmin()) {
-            $viewPostStr = 'category' . $thread['category_id'] . '.thread.viewPosts';
-            !in_array($viewPostStr, $permissions) && $canViewPost = false;
+            $viewPostStr0 = 'switch.thread.viewPosts';
+            $viewPostStr1 = 'category' . $thread['category_id'] . '.thread.viewPosts';
+            if(in_array($viewPostStr1,$permissions)){
+                return true;
+            }
+            if(in_array($viewPostStr0,$permissions)){
+                return  true;
+            }
         }
         if ($this->user->id == $thread['user_id']) {
-            $canViewPost = true;
+            return true;
         }
-        return $canViewPost;
+        return false;
     }
 
     private function canLikeThread($permissions){
