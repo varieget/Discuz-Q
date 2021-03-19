@@ -44,7 +44,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.0')"
+              @change="changePostChecked($event,'createThread.0')"
               >发布文字</el-checkbox
             >
           </CardRow>
@@ -83,7 +83,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.1')"
+              @change="changePostChecked($event,'createThread.1')"
               >发布帖子</el-checkbox
             >
           </CardRow>
@@ -123,7 +123,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.2')"
+              @change="changePostChecked($event,'createThread.2')"
               >发布视频</el-checkbox
             >
           </CardRow>
@@ -160,7 +160,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.3')"
+              @change="changePostChecked($event,'createThread.3')"
               >发布图片</el-checkbox
             >
           </CardRow>
@@ -195,7 +195,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.4')"
+              @change="changePostChecked($event,'createThread.4')"
               >发布语音</el-checkbox
             >
           </CardRow>
@@ -235,7 +235,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.5')"
+              @change="changePostChecked($event,'createThread.5')"
               >发布问答</el-checkbox
             >
           </CardRow>
@@ -272,7 +272,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.6')"
+              @change="changePostChecked($event,'createThread.6')"
               >发布商品</el-checkbox
             >
           </CardRow>
@@ -390,7 +390,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList.createThread"
             :options="categoriesList"
@@ -422,7 +422,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.reply']"
             :options="categoriesList"
@@ -455,7 +455,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.canBeReward']"
             :options="categoriesList"
@@ -492,7 +492,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList.viewThreads"
             :options="categoriesList"
@@ -521,7 +521,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.viewPosts']"
             :options="categoriesList"
@@ -550,7 +550,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.1']"
             :options="categoriesList"
@@ -579,7 +579,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.2']"
             :options="categoriesList"
@@ -608,7 +608,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.3']"
             :options="categoriesList"
@@ -637,7 +637,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.4']"
             :options="categoriesList"
@@ -666,7 +666,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.5']"
             :options="categoriesList"
@@ -758,7 +758,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.essence']"
             :options="categoriesList"
@@ -790,7 +790,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.edit']"
             :options="categoriesList"
@@ -822,7 +822,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.hide']"
             :options="categoriesList"
@@ -854,7 +854,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.editPosts']"
             :options="categoriesList"
@@ -886,7 +886,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.hidePosts']"
             :options="categoriesList"
@@ -918,7 +918,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.editOwnThreadOrPost']"
             :options="categoriesList"
@@ -950,7 +950,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.hideOwnThreadOrPost']"
             :options="categoriesList"
