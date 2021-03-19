@@ -99,7 +99,7 @@ class AttachmentSerializer extends AbstractSerializer
         ];
 
         // 图片缩略图地址
-        if ($model->type == Attachment::TYPE_OF_IMAGE) {
+        if (in_array($model->type, [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
             if ($model->getAttribute('blur')) {
                 $attributes['thumbUrl'] = $url;
             } else {
