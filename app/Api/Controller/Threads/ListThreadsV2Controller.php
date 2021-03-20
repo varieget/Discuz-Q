@@ -25,6 +25,7 @@ use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Emoji;
 use App\Models\GroupUser;
+use App\Models\Order;
 use App\Models\Permission;
 use App\Models\Post;
 use App\Models\PostGoods;
@@ -73,12 +74,16 @@ class ListThreadsV2Controller extends DzqController
         $attachments = Attachment::instance()->getAttachments($postIds, [Attachment::TYPE_OF_FILE, Attachment::TYPE_OF_IMAGE]);
         $attachmentsByPostId = Utils::pluckArray($attachments, 'type_id');
         $threadRewards = ThreadReward::instance()->getRewards($threadIds);
+
+        $paidThreadIds = Order::query()->whereIn('thread_id', $threadIds)
+            ->where('user_id', $this->user->id)->where('status', Order::ORDER_STATUS_PAID)
+            ->get()->pluck('thread_id')->toArray();
         $result = [];
         $linkString = '';
         foreach ($threadList as $thread) {
             $userId = $thread['user_id'];
             $user = [
-                'userName'=>'匿名用户'
+                'userName' => '匿名用户'
             ];
             if (!$thread['is_anonymous'] && !empty($users[$userId])) {
                 $user = $this->getUserInfo($users[$userId]);
@@ -95,6 +100,7 @@ class ListThreadsV2Controller extends DzqController
                     $attachments = $attachmentsByPostId[$post['id']];
                 }
             }
+            $attachment = $this->filterAttachment($thread, $paidThreadIds, $attachments, $serializer);
             $thread = $this->getThread($thread, $post, $likedPostIds, $permissions);
             $linkString .= $thread['summary'];
             $rewards = null;
@@ -106,7 +112,7 @@ class ListThreadsV2Controller extends DzqController
                 'group' => $group,
                 'rewards' => $rewards,
                 'thread' => $thread,
-                'attachment' => $this->getAttachment($attachments, $serializer),
+                'attachment' => $attachment,
             ];
         }
         list($search, $replace) = Thread::instance()->getReplaceString($linkString);
@@ -117,6 +123,40 @@ class ListThreadsV2Controller extends DzqController
         $threads['pageData'] = $result;
         $currentPage == 1 && $this->putCache($cache, $key, $threads);
         $this->outPut(ResponseCode::SUCCESS, '', $threads);
+    }
+
+    private function canViewThread($thread, $paidThreadIds)
+    {
+        return $this->user->id == $thread['user_id'] || $this->user->isAdmin() || in_array($thread['id'], $paidThreadIds);
+    }
+
+    /**
+     * @desc 筛选在列表是否展示图片附件
+     * @param $thread
+     * @param $paidThreadIds
+     * @param $attachments
+     * @param $serializer
+     * @return array
+     */
+    private function filterAttachment($thread, $paidThreadIds, $attachments, $serializer)
+    {
+        $attachment = [];
+        if ($this->canViewThread($thread, $paidThreadIds)) {
+            $attachment = $this->getAttachment($attachments, $serializer);
+        } else {
+            if ($thread['price'] == 0) {
+                $attachment = $this->getAttachment($attachments, $serializer);
+            }
+            //附件收费
+            if ($thread['attachment_price'] > 0) {
+                $attachment = $this->getAttachment($attachments, $serializer);
+                $attachment = array_filter($attachment, function ($item) {
+                    $fileType = strtolower($item['fileType']);
+                    return strstr($fileType, 'image');
+                });
+            }
+        }
+        return $attachment;
     }
 
     private function getThread($thread, $firstPost, $likedPostIds, $permissions)
