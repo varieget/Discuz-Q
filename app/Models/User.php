@@ -464,17 +464,17 @@ class User extends DzqModel
      */
     public function refreshQuestionCount()
     {
-        $this->question_count = Thread::query()
-            ->join('thread_rewards', 'threads.id', '=', 'thread_rewards.thread_id')
-            ->where('threads.type', Thread::TYPE_OF_QUESTION)
-            ->where('threads.is_approved', Thread::APPROVED)
-            ->where('is_draft', '<>', 1)
-//            ->where('threads.is_anonymous', false)
-            ->whereNull('threads.deleted_at')
-            ->where(function (Builder $query) {
-                $query->where('threads.user_id', $this->id)->orWhere('thread_rewards.answer_id', $this->id);
-            })
-            ->count();
+        $userId = $this->id;
+        $query = Thread::query();
+        $query->where('threads.type', Thread::TYPE_OF_QUESTION);
+        $query->where('threads.is_approved', Thread::APPROVED);
+        $query->where('threads.is_draft', '<>', 1);
+        $query->whereNull('threads.deleted_at');
+        $query->leftJoin('questions', 'threads.id', '=', 'questions.thread_id');
+        $query->where(function (Builder $query) use ($userId) {
+            $query->where('threads.user_id', $userId)->orWhere('questions.be_user_id', $userId);
+        });
+        $this->question_count = $query->count();
 
         return $this;
     }
