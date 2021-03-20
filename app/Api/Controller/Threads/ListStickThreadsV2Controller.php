@@ -27,13 +27,13 @@ class ListStickThreadsV2Controller extends DzqController
 
     public function main()
     {
-        $categoryId = $this->inPut('categoryId');
+        $categoryIds = $this->inPut('categoryIds');
         $threads = Thread::query()->select(['id', 'category_id', 'title']);
-        if (!empty($categoryId)) {
-            if (!is_array($categoryId)) {
-                $categoryId = [$categoryId];
+        if (!empty($categoryIds)) {
+            if (!is_array($categoryIds)) {
+                $categoryIds = [$categoryIds];
             }
-            $threads = $threads->whereIn('category_id', $categoryId);
+            $threads = $threads->whereIn('category_id', $categoryIds);
         }
         $threads = $threads
             ->where('is_sticky', 1)
