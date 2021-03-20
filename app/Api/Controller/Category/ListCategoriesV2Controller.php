@@ -43,6 +43,14 @@ class ListCategoriesV2Controller extends DzqController
         $categoriesChild = [];
 
         foreach ($categories as $category) {
+            $createThreadPermission = 'category' . $category['pid'] . '.createThread';
+            // 全局或单个分类创建权限
+            if(in_array('createThread', $permissions) || in_array($createThreadPermission, $permissions)){
+                $category['canCreateThread'] = true;
+            }else{
+                $category['canCreateThread'] = false;
+            }
+
             $category['searchIds'] = (int)$category['pid'];
 
             // 二级子类集合
