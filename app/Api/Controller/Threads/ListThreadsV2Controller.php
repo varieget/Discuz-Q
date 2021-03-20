@@ -77,7 +77,9 @@ class ListThreadsV2Controller extends DzqController
         $linkString = '';
         foreach ($threadList as $thread) {
             $userId = $thread['user_id'];
-            $user = [];
+            $user = [
+                'userName'=>'匿名用户'
+            ];
             if (!$thread['is_anonymous'] && !empty($users[$userId])) {
                 $user = $this->getUserInfo($users[$userId]);
             }
