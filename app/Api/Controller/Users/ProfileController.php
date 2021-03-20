@@ -22,6 +22,7 @@ use App\Api\Serializer\UserProfileSerializer;
 use App\Api\Serializer\UserSerializer;
 use App\Models\Dialog;
 use App\Models\Group;
+use App\Models\Setting;
 use App\Models\User;
 use App\Repositories\UserFollowRepository;
 use App\Repositories\UserRepository;
@@ -78,7 +79,19 @@ class ProfileController extends AbstractResourceController
         }
 
         // 付费模式是否过期
-        $user->paid = ! in_array(Group::UNPAID, $actor->groups->pluck('id')->toArray());
+        //$user->paid = ! in_array(Group::UNPAID, $actor->groups->pluck('id')->toArray());
+        $user->paid=true;
+        //付费模式
+        $siteModeInfo = Setting::where([['key', 'site_mode1'], ['tag', 'default']])->get();
+        if($siteModeInfo[0] && $siteModeInfo[0]['value']=="pay"){
+            //过期时间
+            $currentTime = date('Y-m-d H:i:s');
+            if($user->expired_at > $currentTime){
+                $user->paid=true;
+            }else{
+                $user->paid=false;
+            }
+        }
 
         $include = $this->extractInclude($request);
 
