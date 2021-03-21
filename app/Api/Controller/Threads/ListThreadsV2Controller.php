@@ -231,20 +231,12 @@ class ListThreadsV2Controller extends DzqController
 
     private function canViewPosts($thread, $permissions)
     {
-        $t1 = implode('|', $permissions);
-        preg_match_all('/category\d+?\.thread\.viewPosts/i', $t1, $m1);
         if ($this->user->isAdmin() || $this->user->id == $thread['user_id']) {
             return true;
         }
-        if (empty($m1[0])) {//没有匹配到
-            if (in_array('switch.thread.viewPosts', $permissions)) {
-                return true;
-            }
-        } else {
-            $viewPostStr1 = 'category' . $thread['category_id'] . '.thread.viewPosts';
-            if (in_array($viewPostStr1, $permissions)) {
-                return true;
-            }
+        $viewPostStr = 'category' . $thread['category_id'] . '.thread.viewPosts';
+        if (in_array('thread.viewPosts', $permissions) || in_array($viewPostStr, $permissions)) {
+            return true;
         }
         return false;
     }
@@ -367,7 +359,7 @@ class ListThreadsV2Controller extends DzqController
         $essence = null;
         $types = [];
         $categoryids = [];
-        $sort = 2;
+        $sort = 1;
         $attention = 0;
         isset($filter['sticky']) && $stick = $filter['sticky'];
         isset($filter['essence']) && $essence = $filter['essence'];
@@ -378,7 +370,7 @@ class ListThreadsV2Controller extends DzqController
 
         $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
         if (!$categoryids) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '类别参数错误或没有该类别浏览权限');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
         //评论排序
         $threads = Thread::query()
