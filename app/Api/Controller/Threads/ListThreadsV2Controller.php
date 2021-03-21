@@ -370,7 +370,7 @@ class ListThreadsV2Controller extends DzqController
 
         $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
         if (!$categoryids) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '类别参数错误或没有该类别浏览权限');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
         //评论排序
         $threads = Thread::query()
