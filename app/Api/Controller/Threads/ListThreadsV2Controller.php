@@ -377,7 +377,7 @@ class ListThreadsV2Controller extends DzqController
             ->whereNull('threads.deleted_at')
             ->where('is_sticky', $stick)
             ->where('is_draft', Thread::IS_NOT_DRAFT);
-        !is_null($essence) && $threads = $threads->where('is_essence', $essence);
+        !empty($essence) && $threads = $threads->where('is_essence', $essence);
         if ($sort == Thread::SORT_BY_THREAD) {//按照发帖时间排序
             $threads->orderByDesc('threads.created_at');
         } else if ($sort == Thread::SORT_BY_POST) {//按照评论时间排序
