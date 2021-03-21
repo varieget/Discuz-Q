@@ -27,7 +27,7 @@ class ListStickThreadsV2Controller extends DzqController
 
     public function main()
     {
-        $categoryIds = $this->inPut('categoryIds');
+        $categoryIds = $this->inPut('categoryids');
         $threads = Thread::query()->select(['id', 'category_id', 'title']);
         if (!empty($categoryIds)) {
             if (!is_array($categoryIds)) {
