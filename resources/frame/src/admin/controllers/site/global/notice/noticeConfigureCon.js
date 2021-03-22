@@ -53,12 +53,11 @@ export default {
         } else if (type === 'miniKeyWord') {
           this.miniKeyWord.push('')
         }
-
-        console.log(this.appletsList, 'this.appletsList')
       },
       // 点击删除图标
       delectClick(index, type) {
         if (type === 'appletsList') {
+          this.showClick = true;
           this.appletsList.splice(index, 1);
         } else if (type === 'smsKeyWord') {
           this.smsKeyWord.splice(index, 1);
@@ -168,6 +167,10 @@ export default {
         let data = [];
         // 系统通知提交数据
         if (this.showSystem === true){
+          if (this.systemList.content === '') {
+            this.$message.error('请填写通知内容');
+            return;
+          }
           data.push({
             'attributes':{
               "id": this.systemList.tpl_id,
@@ -228,6 +231,19 @@ export default {
 
         // 短信通知提交数据
         if (this.showSms === true) {
+          if (this.smsList.template_id === '') {
+            this.$message.error('请填写短信模版ID');
+            return;
+          }
+          for (let key in this.smsKeyWord) {
+            if (key >= 2) {
+              break;
+            }
+            if (!this.smsKeyWord[key]) {
+            this.$message.error('请填写keywords');
+            return;  
+            }
+          }
           data.push({
             'attributes':{
               "id": this.smsList.tpl_id,
@@ -248,6 +264,23 @@ export default {
 
       // 小程序订阅提交数据
       if (this.showMini === true) {
+        if (this.miniProgramList.template_id === '') {
+          this.$message.error('请填写小程序模版ID');
+          return;
+        }
+        for (let key in this.miniKeyWord) {
+          if (key >= 2) {
+            break;
+          }
+          if (!this.miniKeyWord[key]) {
+          this.$message.error('请填写keywords');
+          return;  
+          }
+        }
+         if (this.miniProgramList.page_path === '') {
+          this.$message.error('请填写小程序路径');
+          return;      
+        }
         data.push({
           'attributes':{
             "id": this.miniProgramList.tpl_id,
