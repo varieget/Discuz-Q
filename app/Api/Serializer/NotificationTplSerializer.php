@@ -75,6 +75,8 @@ class NotificationTplSerializer extends AbstractSerializer
             'redirect_url'       => (string) $model->redirect_url,
             'page_path'          => (string) $model->page_path,
             'disabled'           => $model->type === NotificationTpl::SYSTEM_NOTICE && in_array($model->notice_id, $this->disabledId),
+            'is_error'           => $model->is_error,
+            'error_msg'          => json_decode($model->error_msg),
         ];
     }
 

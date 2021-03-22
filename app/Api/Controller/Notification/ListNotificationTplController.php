@@ -60,7 +60,7 @@ class ListNotificationTplController extends AbstractListController
         $limit = $this->extractLimit($request);
         $offset = $this->extractOffset($request);
 
-        $tpl = NotificationTpl::all(['id', 'status', 'type', 'type_name'])->groupBy('type_name');
+        $tpl = NotificationTpl::all(['id', 'status', 'type', 'type_name', 'is_error', 'error_msg'])->groupBy('type_name');
 
         $total = $tpl->count();
 
@@ -91,13 +91,25 @@ class ListNotificationTplController extends AbstractListController
         return $data->map(function (Collection $item, $index) {
             // Splicing typeName
             $typeName = '';
-            $item->each(function ($value) use (&$typeName) {
+            $errorArr = [];
+            $item->each(function ($value) use (&$typeName, &$errorArr) {
                 if ($value->status) {
                     $typeName = $typeName . (string) NotificationTpl::enumTypeName($value->type, '、');
+                    // 判断是否有配置错误，前端标红
+                    if ($value->is_error) {
+                        $errorArr[$value->type] = [
+                            'is_error' => $value->is_error,
+                            'error_msg' => $value->error_msg,
+                        ];
+                    }
                 }
             });
 
-            return ['name' => $index, 'type_status' => trim($typeName, '、')];
+            return [
+                'name' => $index,
+                'type_status' => trim($typeName, '、'),
+                'error' => $errorArr,
+            ];
         })->values();
     }
 }

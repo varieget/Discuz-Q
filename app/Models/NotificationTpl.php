@@ -18,6 +18,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use s9e\RegexpBuilder\Builder;
 
 /**
  * Class NotificationTpl
@@ -38,6 +39,8 @@ use Illuminate\Support\Str;
  * @property string $redirect_type
  * @property string $redirect_url
  * @property string $page_path
+ * @property int $is_error
+ * @property string $error_msg
  */
 class NotificationTpl extends Model
 {
@@ -76,6 +79,8 @@ class NotificationTpl extends Model
         'redirect_type',
         'redirect_url',
         'page_path',
+        'is_error',
+        'error_msg',
     ];
 
     /**
@@ -156,6 +161,30 @@ class NotificationTpl extends Model
     }
 
     /**
+     * 模板发送失败，写入错误
+     *
+     * @param NotificationTpl $notificationData
+     * @param int $errCode 错误编号
+     * @param string $errMsg 错误信息
+     * @param array $sendBuild 发送的数据
+     */
+    public static function writeError(NotificationTpl $notificationData, $errCode, $errMsg, $sendBuild)
+    {
+        /** @var Builder $buildError */
+        $buildError = [
+            'id'         => $notificationData->id,
+            'type_name'  => $notificationData->type_name,
+            'send_build' => $sendBuild,
+            'err_code'   => $errCode,
+            'err_msg'    => $errMsg ?: 'unknown mistake',
+        ];
+
+        $notificationData->is_error = 1;
+        $notificationData->error_msg = $buildError;
+        $notificationData->save();
+    }
+
+    /**
      * 微信通知 - 数据格式
      *
      * @param $arr
@@ -166,7 +195,7 @@ class NotificationTpl extends Model
         $result = [
             'data'         => [
                 'first'    => [
-                    'value' => $arr['first'],
+                    'value' => $arr['first'] ?? '',
                     'color' => $arr['color']['first_color'] ?? '#173177',
                 ],
                 'keyword1' => [
@@ -178,11 +207,11 @@ class NotificationTpl extends Model
                     'color' => $arr['color']['keyword2_color'] ?? '#173177',
                 ],
                 'remark'   => [
-                    'value' => $arr['remark'],
+                    'value' => $arr['remark'] ?? '',
                     'color' => $arr['color']['remark_color'] ?? '#173177',
                 ],
             ],
-            'redirect_url' => $arr['redirect_url'],
+            'redirect_url' => $arr['redirect_url'] ?? '',
         ];
 
         /**
@@ -192,7 +221,7 @@ class NotificationTpl extends Model
             $keyword = 'keyword' . $i;
             if (array_key_exists($keyword, $arr)) {
                 $result['data'][$keyword] = [
-                    'value' => $arr[$keyword],
+                    'value' => $arr[$keyword] ?? '',
                     'color' => $arr['color']['keyword' . $i . '_color'] ?? '#173177',
                 ];
             } else {
@@ -211,7 +240,7 @@ class NotificationTpl extends Model
      */
     public static function getSmsFormat($arr)
     {
-        $keywords = $arr['keywords'];
+        $keywords = $arr['keywords'] ?? '';
 
         /**
          * 短信每个变量的长度限制12个字符。如果要取消限制，需要申请企业认证
