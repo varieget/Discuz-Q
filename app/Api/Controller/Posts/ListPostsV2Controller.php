@@ -82,7 +82,8 @@ class ListPostsV2Controller extends DzqController
     {
         $query->where('posts.is_first', false)
             ->whereNull('posts.deleted_at')
-            ->where('posts.is_comment', false);
+            ->where('posts.is_comment', false)
+            ->where('posts.is_approved', Post::APPROVED);
 
         if ($sort) {
             $field = ltrim(Str::snake($sort), '-');
