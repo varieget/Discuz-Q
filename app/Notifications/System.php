@@ -18,6 +18,7 @@
 
 namespace App\Notifications;
 
+use App\Models\Post;
 use App\Models\User;
 use App\Notifications\Messages\Database\GroupMessage;
 use App\Notifications\Messages\Database\PostMessage;
@@ -273,7 +274,7 @@ class System extends AbstractNotification
         }
 
         switch ($this->data['notify_type']) {
-            case PostMessage::NOTIFY_EDIT_CONTENT_TYPE:
+            case Post::NOTIFY_EDIT_CONTENT_TYPE:
                 // 内容修改通知
                 $this->tplId = [
                     'database'    => 'system.post.update',
@@ -282,7 +283,7 @@ class System extends AbstractNotification
                     'miniProgram' => 'miniprogram.post.update',
                 ];
                 break;
-            case PostMessage::NOTIFY_APPROVED_TYPE:
+            case Post::NOTIFY_APPROVED_TYPE:
                 // 内容审核通过通知
                 $this->tplId = [
                     'database'    => 'system.post.approved',
@@ -291,7 +292,7 @@ class System extends AbstractNotification
                     'miniProgram' => 'miniprogram.post.approved',
                 ];
                 break;
-            case PostMessage::NOTIFY_UNAPPROVED_TYPE:
+            case Post::NOTIFY_UNAPPROVED_TYPE:
                 // 内容审核不通过/内容忽略 通知
                 $this->tplId = [
                     'database'    => 'system.post.unapproved',
@@ -300,7 +301,7 @@ class System extends AbstractNotification
                     'miniProgram' => 'miniprogram.post.unapproved',
                 ];
                 break;
-            case PostMessage::NOTIFY_DELETE_TYPE:
+            case Post::NOTIFY_DELETE_TYPE:
                 // 内容删除通知
                 $this->tplId = [
                     'database'    => 'system.post.deleted',
@@ -309,7 +310,7 @@ class System extends AbstractNotification
                     'miniProgram' => 'miniprogram.post.deleted',
                 ];
                 break;
-            case PostMessage::NOTIFY_ESSENCE_TYPE:
+            case Post::NOTIFY_ESSENCE_TYPE:
                 // 内容精华通知
                 $this->tplId = [
                     'database'    => 'system.post.essence',
@@ -318,7 +319,7 @@ class System extends AbstractNotification
                     'miniProgram' => 'miniprogram.post.essence',
                 ];
                 break;
-            case PostMessage::NOTIFY_STICKY_TYPE:
+            case Post::NOTIFY_STICKY_TYPE:
                 // 内容置顶通知
                 $this->tplId = [
                     'database'    => 'system.post.sticky',
