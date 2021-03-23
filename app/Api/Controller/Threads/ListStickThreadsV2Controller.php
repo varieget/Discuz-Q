@@ -20,6 +20,7 @@ namespace App\Api\Controller\Threads;
 use App\Common\ResponseCode;
 use App\Models\Post;
 use App\Models\Thread;
+use App\Models\Category;
 use Discuz\Base\DzqController;
 
 class ListStickThreadsV2Controller extends DzqController
@@ -33,8 +34,15 @@ class ListStickThreadsV2Controller extends DzqController
             if (!is_array($categoryIds)) {
                 $categoryIds = [$categoryIds];
             }
+        }
+
+        $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
+        if (!$categoryIds) {
+            $this->outPut(ResponseCode::SUCCESS, '', []);
+        }else{
             $threads = $threads->whereIn('category_id', $categoryIds);
         }
+
         $threads = $threads
             ->where('is_sticky', 1)
             ->whereNull('deleted_at')
