@@ -120,6 +120,12 @@ class Thread extends DzqModel
 
     const HAVE_RED_PACKET = 1;
 
+    const THREAD_VIDEO_STATUS_TRANSCODING = 0; //转码中
+
+    const THREAD_VIDEO_STATUS_COMPLETE = 1; //转码完成
+
+    const THREAD_VIDEO_STATUS_FAIL = 2; //转码失败
+
     /**
      * 通知内容展示长度(字)
      */
