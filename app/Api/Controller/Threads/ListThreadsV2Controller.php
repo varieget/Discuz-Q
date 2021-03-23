@@ -292,7 +292,14 @@ class ListThreadsV2Controller extends DzqController
     {
         $sequence = Sequence::query()->first();
         if (empty($sequence)) return false;
+
+        $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
+        $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
+        if (!$categoryIds) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
+        }
+
         !empty($sequence['group_ids']) && $groupIds = explode(',', $sequence['group_ids']);
         !empty($sequence['user_ids']) && $userIds = explode(',', $sequence['user_ids']);
         !empty($sequence['topic_ids']) && $topicIds = explode(',', $sequence['topic_ids']);
