@@ -45,7 +45,7 @@ class ListCategoriesV2Controller extends DzqController
         foreach ($categories as $category) {
             $createThreadPermission = 'category' . $category['pid'] . '.createThread';
             // 全局或单个分类创建权限
-            if (in_array('createThread', $permissions) || in_array($createThreadPermission, $permissions)||$this->user->isAdmin()) {
+            if (in_array('createThread', $permissions) || in_array($createThreadPermission, $permissions) || $this->user->isAdmin()) {
                 $category['canCreateThread'] = true;
             } else {
                 $category['canCreateThread'] = false;
@@ -60,7 +60,7 @@ class ListCategoriesV2Controller extends DzqController
 
             // 一级分类 --- 全局或单个分类查看权限
             $viewPermission = 'category' . $category['pid'] . '.viewThreads';
-            if ($category['parentid'] == 0 && (in_array('viewThreads', $permissions) || in_array($viewPermission, $permissions)||$this->user->isAdmin())) {
+            if ($category['parentid'] == 0 && (in_array('viewThreads', $permissions) || in_array($viewPermission, $permissions) || $this->user->isAdmin())) {
                 $categoriesFather[] = $category;
             }
         }
