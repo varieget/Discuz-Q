@@ -80,16 +80,15 @@ class ProfileController extends AbstractResourceController
 
         // 付费模式是否过期
         $user->paid = ! in_array(Group::UNPAID, $actor->groups->pluck('id')->toArray());
-        if(!$actor->isAdmin()){
+        if (!$actor->isAdmin()) {
             //付费模式
-            $siteModeInfo = Setting::where([['key', 'site_mode'], ['tag', 'default']])->get();
-            if($siteModeInfo[0] && $siteModeInfo[0]['value']=="pay"){
-                //过期时间
-                $currentTime = date('Y-m-d H:i:s');
-                if($user->expired_at > $currentTime){
-                    $user->paid=true;
-                }else{
-                    $user->paid=null;
+            $siteMode = $this->settings->get('site_mode');
+            $siteExpire = $this->settings->get('site_expire');
+            if ($siteMode == 'pay' && !empty($siteExpire) && !empty($user->expired_at)) {
+                if (strtotime($user->expired_at) > time()) {
+                    $user->paid = false;
+                } else {
+                    $user->paid = true;
                 }
             }
         }
