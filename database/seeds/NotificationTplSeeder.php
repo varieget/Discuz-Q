@@ -40,13 +40,13 @@ class NotificationTplSeeder extends Seeder
         $notificationTpl->insert($system);
 
         // 添加微信通知
-        $wechat = $this->getFilterTpl(false, ['wechat']);
+        $wechat = $this->getFilterTpl(false, ['wechat', 'miniProgram']);
         $notificationTpl->insert($wechat);
 
         /**
          * 注意：由于数据格式不一致，分开 insert 执行
          */
-        $simplified = $this->getFilterTpl(false, ['sms', 'miniProgram']);
+        $simplified = $this->getFilterTpl(false, ['sms']);
         $notificationTpl->insert($simplified);
     }
 
@@ -87,7 +87,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('新用户注册通知', 1),
                 'type_name' => '新用户注册通知',
                 'title'     => '微信注册通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('新用户注册通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('新用户注册通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -95,7 +95,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('注册审核通过通知', 1),
                 'type_name' => '注册审核通过通知',
                 'title'     => '微信注册审核通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('注册审核通过通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('注册审核通过通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -103,7 +103,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('注册审核不通过通知', 1),
                 'type_name' => '注册审核不通过通知',
                 'title'     => '微信注册审核通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('注册审核不通过通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('注册审核不通过通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -111,7 +111,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容审核通过通知', 1),
                 'type_name' => '内容审核通过通知',
                 'title'     => '微信内容审核通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容审核通过通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容审核通过通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -119,7 +119,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容审核不通过通知', 1),
                 'type_name' => '内容审核不通过通知',
                 'title'     => '微信内容审核通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容审核不通过通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容审核不通过通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -127,7 +127,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容删除通知', 1),
                 'type_name' => '内容删除通知',
                 'title'     => '微信内容通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容删除通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容删除通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -135,7 +135,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容精华通知', 1),
                 'type_name' => '内容精华通知',
                 'title'     => '微信内容通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容精华通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容精华通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -143,7 +143,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容置顶通知', 1),
                 'type_name' => '内容置顶通知',
                 'title'     => '微信内容通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容置顶通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容置顶通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -151,7 +151,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容修改通知', 1),
                 'type_name' => '内容修改通知',
                 'title'     => '微信内容通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容修改通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容修改通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -159,7 +159,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('用户禁用通知', 1),
                 'type_name' => '用户禁用通知',
                 'title'     => '微信用户通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('用户禁用通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('用户禁用通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -167,7 +167,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('用户解除禁用通知', 1),
                 'type_name' => '用户解除禁用通知',
                 'title'     => '微信用户通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('用户解除禁用通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('用户解除禁用通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -175,7 +175,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('用户角色调整通知', 1),
                 'type_name' => '用户角色调整通知',
                 'title'     => '微信角色通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('用户角色调整通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('用户角色调整通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -183,7 +183,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容回复通知', 1),
                 'type_name' => '内容回复通知',
                 'title'     => '微信内容通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容回复通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容回复通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -191,7 +191,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容点赞通知', 1),
                 'type_name' => '内容点赞通知',
                 'title'     => '微信内容通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容点赞通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容点赞通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -199,7 +199,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容支付通知', 1),
                 'type_name' => '内容支付通知',
                 'title'     => '微信内容通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容支付通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容支付通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -207,7 +207,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容@通知', 1),
                 'type_name' => '内容@通知',
                 'title'     => '微信内容通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('内容@通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容@通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -215,7 +215,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('提现通知', 1),
                 'type_name' => '提现通知',
                 'title'     => '微信财务通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('提现通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('提现通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -223,7 +223,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('提现失败通知', 1),
                 'type_name' => '提现失败通知',
                 'title'     => '微信财务通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('提现失败通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('提现失败通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -231,7 +231,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('分成收入通知', 1),
                 'type_name' => '分成收入通知',
                 'title'     => '微信内容通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('分成收入通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('分成收入通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -239,7 +239,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('问答提问通知', 1),
                 'type_name' => '问答提问通知',
                 'title'     => '微信问答通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('问答提问通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('问答提问通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -247,7 +247,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('问答回答通知', 1),
                 'type_name' => '问答回答通知',
                 'title'     => '微信问答通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('问答回答通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('问答回答通知', 1)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -255,7 +255,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('问答过期通知', 1),
                 'type_name' => '问答过期通知',
                 'title'     => '微信问答通知',
-                'page_path' => $this->initPagePath[$this->comparisonUnique('问答过期通知', 1)] ?? '',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('问答过期通知', 1)) ?? '',
             ],
         ];
     }
@@ -687,6 +687,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('新用户注册通知', 4),
                 'type_name' => '新用户注册通知',
                 'title'     => '小程序注册通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('新用户注册通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -694,6 +695,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('注册审核通过通知', 4),
                 'type_name' => '注册审核通过通知',
                 'title'     => '小程序注册审核通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('注册审核通过通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -701,6 +703,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('注册审核不通过通知', 4),
                 'type_name' => '注册审核不通过通知',
                 'title'     => '小程序注册审核通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('注册审核不通过通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -708,6 +711,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容审核通过通知', 4),
                 'type_name' => '内容审核通过通知',
                 'title'     => '小程序内容审核通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容审核通过通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -715,6 +719,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容审核不通过通知', 4),
                 'type_name' => '内容审核不通过通知',
                 'title'     => '小程序内容审核通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容审核不通过通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -722,6 +727,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容删除通知', 4),
                 'type_name' => '内容删除通知',
                 'title'     => '小程序内容通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容删除通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -729,6 +735,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容精华通知', 4),
                 'type_name' => '内容精华通知',
                 'title'     => '小程序内容通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容精华通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -736,6 +743,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容置顶通知', 4),
                 'type_name' => '内容置顶通知',
                 'title'     => '小程序内容通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容置顶通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -743,6 +751,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容修改通知', 4),
                 'type_name' => '内容修改通知',
                 'title'     => '小程序内容通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容修改通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -750,6 +759,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('用户禁用通知', 4),
                 'type_name' => '用户禁用通知',
                 'title'     => '小程序用户通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('用户禁用通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -757,6 +767,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('用户解除禁用通知', 4),
                 'type_name' => '用户解除禁用通知',
                 'title'     => '小程序用户通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('用户解除禁用通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -764,6 +775,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('用户角色调整通知', 4),
                 'type_name' => '用户角色调整通知',
                 'title'     => '小程序角色通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('用户角色调整通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -771,6 +783,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容回复通知', 4),
                 'type_name' => '内容回复通知',
                 'title'     => '小程序内容通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容回复通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -778,6 +791,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容点赞通知', 4),
                 'type_name' => '内容点赞通知',
                 'title'     => '小程序内容通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容点赞通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -785,6 +799,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容支付通知', 4),
                 'type_name' => '内容支付通知',
                 'title'     => '小程序内容通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容支付通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -792,6 +807,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('内容@通知', 4),
                 'type_name' => '内容@通知',
                 'title'     => '小程序内容通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('内容@通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -799,6 +815,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('提现通知', 4),
                 'type_name' => '提现通知',
                 'title'     => '小程序财务通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('提现通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -806,6 +823,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('提现失败通知', 4),
                 'type_name' => '提现失败通知',
                 'title'     => '小程序财务通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('提现失败通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -813,6 +831,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('分成收入通知', 4),
                 'type_name' => '分成收入通知',
                 'title'     => '小程序内容通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('分成收入通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -820,6 +839,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('问答提问通知', 4),
                 'type_name' => '问答提问通知',
                 'title'     => '小程序问答通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('问答提问通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -827,6 +847,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('问答回答通知', 4),
                 'type_name' => '问答回答通知',
                 'title'     => '小程序问答通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('问答回答通知', 4)) ?? '',
             ],
             [
                 'status'    => 0,
@@ -834,6 +855,7 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('问答过期通知', 4),
                 'type_name' => '问答过期通知',
                 'title'     => '小程序问答通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('问答过期通知', 4)) ?? '',
             ],
             [
                 'status' => 1,
