@@ -79,16 +79,23 @@ class ProfileController extends AbstractResourceController
         }
 
         // 付费模式是否过期
-        $user->paid = ! in_array(Group::UNPAID, $actor->groups->pluck('id')->toArray());
+        $user->paid = !in_array(Group::UNPAID, $actor->groups->pluck('id')->toArray());
         if (!$actor->isAdmin()) {
             //付费模式
             $siteMode = $this->settings->get('site_mode');
             $siteExpire = $this->settings->get('site_expire');
             if ($siteMode == 'pay' && !empty($siteExpire) && !empty($user->expired_at)) {
-                if (strtotime($user->expired_at) > time()) {
-                    $user->paid = false;
+                $t1 = strtotime($user->expired_at);
+                $t2 = time();
+                $diffTime = abs($t1 - $t2);
+                if ($diffTime < 3600) {
+
                 } else {
-                    $user->paid = true;
+                    if ($t1 > $t2) {
+                        $user->paid = false;
+                    } else {
+                        $user->paid = true;
+                    }
                 }
             }
         }
