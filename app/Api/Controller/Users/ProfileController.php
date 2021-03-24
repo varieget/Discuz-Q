@@ -88,14 +88,9 @@ class ProfileController extends AbstractResourceController
                 $t1 = strtotime($user->expired_at);
                 $t2 = time();
                 $diffTime = abs($t1 - $t2);
-                if ($diffTime < 3600) {
-
-                } else {
-                    if ($t1 > $t2) {
-                        $user->paid = false;
-                    } else {
-                        $user->paid = true;
-                    }
+                if ($diffTime >= 3600 && $t1 < $t2) {
+                    $user->paid = false;
+                    //兜底逻辑,防止异常情况下判断错误
                 }
             }
         }
