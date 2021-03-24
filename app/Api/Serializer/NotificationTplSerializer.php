@@ -56,7 +56,7 @@ class NotificationTplSerializer extends AbstractSerializer
      */
     protected function getDefaultAttributes($model)
     {
-        $trans = 'template_variables.' . ($this->templateVariables[$model->id] ?? '');
+        $trans = 'template_variables.' . ($this->getTemplateVariables($model->notice_id) ?? '');
 
         return [
             'tpl_id'             => $model->id,

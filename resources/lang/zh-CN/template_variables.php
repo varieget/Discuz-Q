@@ -116,6 +116,7 @@ return [
         '{$message_change}'       => '修改帖子的内容（对应操作时，该字段有效）',
         '{$thread_id}'            => '主题ID（可用于跳转参数）',
         '{$thread_title}'         => '主题标题/首帖内容（如果有标题则是标题内容，没有则是首帖内容）',
+        '{$notify_type}'          => '内容操作状态 (修改/不通过/通过/精华/置顶/删除)',
         '{$reason}'               => '原因（默认字符串"无"）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
