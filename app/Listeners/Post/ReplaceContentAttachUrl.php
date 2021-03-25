@@ -97,7 +97,7 @@ class ReplaceContentAttachUrl
             });
 
             $post->parsedContent = $xml;
-            $post->parseContentHtml = '';
+            $post->parseContentHtml = $post->content;
 
             if(!empty($post->content)){
                 $will_parse_content = $post->content;
