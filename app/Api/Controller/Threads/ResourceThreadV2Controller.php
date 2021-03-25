@@ -27,7 +27,7 @@ use App\Api\Serializer\ThreadRewardSerializer;
 use App\Api\Serializer\ThreadSerializer;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
-use App\Events\Post\GetContent;
+use App\Formatter\Formatter;
 use App\Models\Attachment;
 use App\Models\Order;
 use App\Models\Post;
@@ -141,6 +141,8 @@ class ResourceThreadV2Controller extends DzqController
         $this->parseContent($thread->firstPost, $this->request);
 
         $data['firstPost'] = $post_serialize->getDefaultAttributes($thread->firstPost);
+        //为了前端编辑帖子，这里重写了 content
+        $data['firstPost']['content'] = $thread->firstPost->parseContentHtml;
         $data['firstPost']['canLike'] = (bool) $this->user->can('like', $thread->firstPost);
         if ($likeState = $thread->firstPost->likeState) {
             $data['firstPost']['isLiked'] = true;
@@ -330,6 +332,17 @@ class ResourceThreadV2Controller extends DzqController
 
             return $attributes;
         });
+
+        $will_parse_content = $post->content;
+        $post->parseContentHtml = preg_replace_callback(
+            '((!\[[^\]]*\])(\((https[^\)]*) ("\d+")\)))',
+            function($m) use ($attachments){
+                $id = trim($m[4], '"');
+
+                return $m[1].'('.$attachments[$id].' '.$m[4].')';
+            },
+            $will_parse_content
+        );
 
         $post->parsedContent = $xml;
     }
