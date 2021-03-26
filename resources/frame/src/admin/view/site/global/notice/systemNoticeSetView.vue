@@ -25,6 +25,19 @@
             label="通知方式"
             align="center"
           >
+          <template slot-scope="scope">
+              <span
+                class="notice_type"
+                :class="item.is_error === 1 && 'notice_type_error'"
+                v-for="(item, index) in scope.row._data.type_status"
+                :key="item.type"
+                @click="handleError(item)"
+              >
+                {{ item.type + (index < scope.row._data.type_status.length -1? "、" : "") }}
+              </span>
+              <!-- <span v-if="scope.row._data.status === 1" class="iconfont iconicon_select" ></span>
+              <span v-else class="iconfont iconicon_"  ></span> -->
+            </template>
             <!-- <template slot-scope="scope">
               <span v-if="scope.row._data.status === 1" class="iconfont iconicon_select" ></span>
               <span v-else class="iconfont iconicon_"  ></span>

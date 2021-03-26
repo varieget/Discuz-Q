@@ -13,7 +13,8 @@ export default {
       tableData: [],
       pageNum: 1,
       pageLimit: 20,
-      total: 0
+      total: 0,
+      type: [],
       // pageCount: 0
     };
   },
@@ -38,7 +39,6 @@ export default {
             console.log(res, 'res');
             this.tableData = res.readdata;
             this.total = res.meta.total;
-            // this.pageCount = res.meta.pageCount;
           }
         })
         .catch(err => {});
@@ -81,7 +81,6 @@ export default {
       return (this.pageNum - 1) * this.pageLimit + $index + 1;
     },
     handleCurrentChange(val) {
-      console.log("val~~~", val);
       this.pageNum = val;
       this.getNoticeList();
     },
@@ -91,7 +90,17 @@ export default {
         path: "/admin/notice-configure",
         query: { id: id,typeName: typeName }
       });
-    }
+    },
+    // 通知类型的点击事件
+    handleError(item) {
+      if (item.is_error === 1) {
+        console.log('122344');
+        this.$message({
+          type: "error",
+          message: JSON.parse(item.error_msg),
+        });
+      }
+}
   },
 
   components: {
