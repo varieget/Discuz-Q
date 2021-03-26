@@ -100,6 +100,7 @@ class ThreadVideo extends DzqModel
             return false;
         }
         return [
+            'pid'=>$video['id'],
             'fileName' => $video['file_name'],
             'height' => $video['height'],
             'width' => $video['width'],
