@@ -22,6 +22,8 @@ use App\Api\Serializer\NotificationTplSerializer;
 use App\Models\NotificationTpl;
 use Discuz\Api\Controller\AbstractListController;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Contracts\Setting\SettingsRepository;
+use EasyWeChat\Factory;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
@@ -34,6 +36,18 @@ class ResourceNotificationTplController extends AbstractListController
      * {@inheritdoc}
      */
     public $serializer = NotificationTplSerializer::class;
+
+    protected $settings;
+
+    /**
+     * WechatChannel constructor.
+     *
+     * @param SettingsRepository $settings
+     */
+    public function __construct(SettingsRepository $settings)
+    {
+        $this->settings = $settings;
+    }
 
     /**
      * @param ServerRequestInterface $request
@@ -55,6 +69,53 @@ class ResourceNotificationTplController extends AbstractListController
 
         $query = $tpl->whereIn('type_name', $typeNames)->orderBy('type');
 
-        return $query->get();
+        $data = $query->get();
+
+        /**
+         * 检测是否存在小程序通知，查询小程序模板变量 key 值
+         *
+         * @URL 订阅消息参数值内容限制说明: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
+         */
+        $miniProgram = $data->where('type', NotificationTpl::MINI_PROGRAM_NOTICE);
+        if ($miniProgram->isNotEmpty()) {
+            $data->map(function ($item) {
+                if ($item->type == NotificationTpl::MINI_PROGRAM_NOTICE) {
+                    $keys = $this->getMiniProgramKeys($item->template_id);
+                    $item->keys = $keys;
+                }
+            });
+        }
+
+        return $data;
+    }
+
+    private function getMiniProgramKeys($templateId)
+    {
+        $appID = $this->settings->get('miniprogram_app_id', 'wx_miniprogram');
+        $secret = $this->settings->get('miniprogram_app_secret', 'wx_miniprogram');
+
+        $app = Factory::miniProgram([
+            'app_id' => $appID,
+            'secret' => $secret,
+        ]);
+
+        $response = $app->subscribe_message->getTemplates();
+        if (! isset($response['errcode']) || $response['errcode'] != 0 || count($response['data']) == 0) {
+            return [];
+        }
+
+        $collect = collect($response['data']);
+        $template = $collect->where('priTmplId', $templateId)->first();
+        if (is_null($template)) {
+            return [];
+        }
+
+        $content = $template['content'];
+        $regex = '/{{(?<key>.*)\.DATA/';
+        if (preg_match_all($regex, $content, $keys)) {
+            return $keys['key'];
+        }
+
+        return [];
     }
 }

@@ -67,6 +67,7 @@ class NotificationTplSerializer extends AbstractSerializer
             'content'            => $model->content,
             'template_id'        => $model->template_id,
             'template_variables' => $trans === 'template_variables.' ? [] : trans($trans),
+            'keys'               => $model->keys ?? [],
             'first_data'         => $model->first_data,
             'keywords_data'      => $model->keywords_data ? explode(',', $model->keywords_data) : [],
             'remark_data'        => $model->remark_data,
