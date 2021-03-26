@@ -38,7 +38,6 @@ use App\Models\ThreadVideo;
 use App\Models\Topic;
 use App\Models\User;
 use App\Models\Setting;
-use Discuz\Common\PubEnum;
 use Discuz\Base\DzqController;
 
 class ListThreadsV2Controller extends DzqController
@@ -315,9 +314,8 @@ class ListThreadsV2Controller extends DzqController
             ->where('th1.is_approved', Thread::APPROVED)
             ->where('th1.is_draft', Thread::IS_NOT_DRAFT);
 
-        $platform = Thread::requestFrom();
-        $settings = Setting::query()->where(['key' => 'miniprogram_video', 'tag' => 'wx_miniprogram'])->first();
-        if(!$settings->value && $platform == PubEnum::MinProgram){
+        $platform = Setting::requestFrom();
+        if(!$platform){
             $threads = $threads->where('th1.type', '<>', Thread::TYPE_OF_VIDEO);
         }
 
@@ -396,9 +394,8 @@ class ListThreadsV2Controller extends DzqController
             ->where('is_approved', Thread::APPROVED);
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
 
-        $platform = Thread::requestFrom();
-        $settings = Setting::query()->where(['key' => 'miniprogram_video', 'tag' => 'wx_miniprogram'])->first();
-        if(!$settings->value && $platform == PubEnum::MinProgram){
+        $platform = Setting::requestFrom();
+        if(!$platform){
             $threads = $threads->where('threads.type', '<>', Thread::TYPE_OF_VIDEO);
         }
 
