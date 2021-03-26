@@ -90,7 +90,7 @@ class BasicPostSerializer extends AbstractSerializer
         ];
 
         //更新 content 中的图片url，这里新增一个字段主要用户编辑
-        $attributes['parseContentHtml'] = '';
+        $attributes['parseContentHtml'] = $attributes['content'];
         if(!empty($model->parseContentHtml)){
             $attributes['parseContentHtml'] = $model->parseContentHtml;
         }
