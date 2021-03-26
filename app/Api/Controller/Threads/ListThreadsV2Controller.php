@@ -314,8 +314,8 @@ class ListThreadsV2Controller extends DzqController
             ->where('th1.is_approved', Thread::APPROVED)
             ->where('th1.is_draft', Thread::IS_NOT_DRAFT);
 
-        $platform = Setting::requestFrom();
-        if(!$platform){
+        $miniProgramVideo = Setting::isMiniProgram();
+        if(!$miniProgramVideo){
             $threads = $threads->where('th1.type', '<>', Thread::TYPE_OF_VIDEO);
         }
 
@@ -394,8 +394,8 @@ class ListThreadsV2Controller extends DzqController
             ->where('is_approved', Thread::APPROVED);
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
 
-        $platform = Setting::requestFrom();
-        if(!$platform){
+        $miniProgramVideo = Setting::isMiniProgram();
+        if(!$miniProgramVideo){
             $threads = $threads->where('threads.type', '<>', Thread::TYPE_OF_VIDEO);
         }
 

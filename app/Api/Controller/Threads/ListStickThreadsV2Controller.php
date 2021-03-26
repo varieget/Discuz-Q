@@ -37,8 +37,8 @@ class ListStickThreadsV2Controller extends DzqController
             }
         }
 
-        $platform = Setting::requestFrom();
-        if(!$platform){
+        $miniProgramVideo = Setting::isMiniProgram();
+        if(!$miniProgramVideo){
             $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
         }
 
