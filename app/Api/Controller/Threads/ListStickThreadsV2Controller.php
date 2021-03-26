@@ -21,6 +21,7 @@ use App\Common\ResponseCode;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\Category;
+use App\Models\Setting;
 use Discuz\Base\DzqController;
 
 class ListStickThreadsV2Controller extends DzqController
@@ -34,6 +35,11 @@ class ListStickThreadsV2Controller extends DzqController
             if (!is_array($categoryIds)) {
                 $categoryIds = [$categoryIds];
             }
+        }
+
+        $miniProgramVideo = Setting::isMiniProgram();
+        if(!$miniProgramVideo){
+            $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
         }
 
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
