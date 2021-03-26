@@ -131,7 +131,7 @@ class Setting extends Model
         }
     }
 
-    public static function requestFrom()
+    public static function isMiniProgram()
     {
         $request = app('request');
         $headers = $request->getHeaders();
