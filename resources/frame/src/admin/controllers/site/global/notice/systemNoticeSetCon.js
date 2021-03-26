@@ -94,10 +94,14 @@ export default {
     // 通知类型的点击事件
     handleError(item) {
       if (item.is_error === 1) {
-        console.log('122344');
-        this.$message({
-          type: "error",
-          message: JSON.parse(item.error_msg),
+        this.$alert({
+          confirmButtonText: JSON.parse(item.error_msg),
+          callback: action => {
+            this.$message({
+              type: 'info',
+              message: `action: ${ action }`
+            });
+          }
         });
       }
 }
