@@ -142,7 +142,7 @@ class ResourceThreadV2Controller extends DzqController
 
         $data['firstPost'] = $post_serialize->getDefaultAttributes($thread->firstPost);
         //为了前端编辑帖子，这里重写了 content
-        $data['firstPost']['content'] = $thread->firstPost->parseContentHtml;
+        $data['firstPost']['parseContentHtml'] = !empty($thread->firstPost->parseContentHtml) ? $thread->firstPost->parseContentHtml : $data['firstPost']['content'];
         $data['firstPost']['canLike'] = (bool) $this->user->can('like', $thread->firstPost);
         if ($likeState = $thread->firstPost->likeState) {
             $data['firstPost']['isLiked'] = true;
@@ -334,15 +334,20 @@ class ResourceThreadV2Controller extends DzqController
         });
 
         $will_parse_content = $post->content;
-        $post->parseContentHtml = preg_replace_callback(
-            '((!\[[^\]]*\])(\((https[^\)]*) ("\d+")\)))',
-            function($m) use ($attachments){
-                $id = trim($m[4], '"');
+        $post->parseContentHtml = $will_parse_content;
+        if(!empty($post->content) && !empty($attachments)){
+            $post->parseContentHtml = preg_replace_callback(
+                '((!\[[^\]]*\])(\((https[^\)]*) ("\d+")\)))',
+                function($m) use ($attachments){
+                    if(!empty($m)){
+                        $id = trim($m[4], '"');
+                        return $m[1].'('.$attachments[$id].' '.$m[4].')';
+                    }
+                },
+                $will_parse_content
+            );
+        }
 
-                return $m[1].'('.$attachments[$id].' '.$m[4].')';
-            },
-            $will_parse_content
-        );
 
         $post->parsedContent = $xml;
     }

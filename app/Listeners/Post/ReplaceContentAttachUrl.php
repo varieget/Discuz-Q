@@ -99,14 +99,15 @@ class ReplaceContentAttachUrl
             $post->parsedContent = $xml;
             $post->parseContentHtml = $post->content;
 
-            if(!empty($post->content)){
+            if(!empty($post->content) && !empty($attachments)){
                 $will_parse_content = $post->content;
                 $parseContentHtml = preg_replace_callback(
                     '((!\[[^\]]*\])(\((https[^\)]*) ("\d+")\)))',
                     function($m) use ($attachments){
-                        $id = trim($m[4], '"');
-
-                        return $m[1].'('.$attachments[$id].' '.$m[4].')';
+                        if(!empty($m)){
+                            $id = trim($m[4], '"');
+                            return $m[1].'('.$attachments[$id].' '.$m[4].')';
+                        }
                     },
                     $will_parse_content
                 );
