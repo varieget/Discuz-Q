@@ -67,6 +67,7 @@ export default {
       },
       // 通知方式切换
       noticeListChange(data) {
+        console.log(data, 'data')
         this.showSystem = data.includes("0");
         this.showWx = data.includes("1");
         this.showMini = data.includes("4");
@@ -92,7 +93,7 @@ export default {
               }
             }
             if (this.systemList.status) {
-              this.noticeList.push("0");
+              !this.noticeList.includes("0") && this.noticeList.push("0")
               this.showSystem = true
             } else {
               this.showSystem = false
@@ -112,7 +113,7 @@ export default {
               ? this.wxList.keywords_data
               : ['', ''];
               if (this.wxList.status) {
-                this.noticeList.push("1");
+                !this.noticeList.includes("1") && this.noticeList.push("1")
                 this.showWx = true;
               } else {
                 this.showWx = false;
@@ -133,9 +134,9 @@ export default {
                 }
               }
               if (this.smsList.status) {
-                this.noticeList.push("2");
+                !this.noticeList.includes("2") && this.noticeList.push("2")
                 this.showSms = true;
-              } else {
+              }else {
                 this.showSms = false;
               }
           }
@@ -154,9 +155,9 @@ export default {
                 }
               }
               if (this.miniProgramList.status) {
-                this.noticeList.push("4");
+                !this.noticeList.includes("4") && this.noticeList.push("4")
                 this.showMini = true;
-              } else {
+              }else {
                 this.showMini = false
               }
           }
