@@ -201,10 +201,10 @@ class ListThreadsV2Controller extends DzqController
         }
         switch ($thread['type']) {
             case Thread::TYPE_OF_IMAGE:
-            case Thread::TYPE_OF_AUDIO:
             case Thread::TYPE_OF_TEXT:
                 $data['title'] = Post::instance()->getContentSummary($thread['id']);
                 break;
+            case Thread::TYPE_OF_AUDIO:
             case Thread::TYPE_OF_VIDEO:
                 $data['title'] = Post::instance()->getContentSummary($thread['id']);
                 $data['extension'] = [
