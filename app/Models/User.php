@@ -499,10 +499,10 @@ class User extends DzqModel
     {
         static $cachedAll = null;
         if (is_null($cachedAll)) {
-            $cachedAll = $this->unreadNotifications()->selectRaw('type,count(*) as count')
-                ->groupBy('type')->pluck('type', 'count')->map(function ($val) {
-                    return class_basename($val);
-                })->flip();
+            $cachedAll = $this->unreadNotifications()
+                ->selectRaw('type,count(*) as count')
+                ->groupBy('type')
+                ->pluck('count', 'type');
 
             if ($this->getSkin() == SettingCache::BLUE_SKIN_CODE) {
                 // 蓝版不显示红版的通知消息类型
@@ -510,9 +510,8 @@ class User extends DzqModel
                     ->whereNull('read_at')
                     ->whereNotIn('type', ['receiveredpacket', 'threadrewarded'])
                     ->selectRaw('type,count(*) as count')
-                    ->groupBy('type')->pluck('type', 'count')->map(function ($val) {
-                        return class_basename($val);
-                    })->flip();
+                    ->groupBy('type')
+                    ->pluck('count', 'type');
             }
         }
         return $cachedAll;
@@ -531,7 +530,6 @@ class User extends DzqModel
 
         return $this->groups->contains(Group::ADMINISTRATOR_ID);
     }
-
 
     /**
      * Check whether or not the user is a guest.
@@ -954,11 +952,12 @@ class User extends DzqModel
         return self::query()->whereIn('id', $userIds)->get()->toArray();
     }
 
-
     public function getUserName($userId)
     {
         $user = self::query()->find($userId);
-        if (empty($user)) return null;
+        if (empty($user)) {
+            return null;
+        }
         return $user->username;
     }
 }
