@@ -76,6 +76,7 @@ export default {
       ],
       value: "",
       purchasePrice: "",
+      lowestPrice: "", // 被提问的最低价格
       dyedate: "",
       ispad: "",
       allowtobuy: "",
@@ -258,6 +259,12 @@ export default {
       console.log('checkedData', checkedData);
       const selectList = this.selectList;
       checkedData.forEach((value, index) => {
+
+        // 最低金额回显
+        if (value.indexOf('canBeAsked.money.') === 0 ) {
+          this.lowestPrice = value.slice(17,value.length);
+        }
+
         // 1 红包、位置、匿名权限回显
         if(
           value.includes("redPacket")
@@ -349,17 +356,21 @@ export default {
       } else {
         checked = checked.filter(v => v !== "other.canInviteUserScale");
       }
+      const param = {
+        data: {
+          attributes: {
+            groupId: this.groupId,
+            permissions: checked,
+          }
+        }
+      }
+      if (checked.indexOf('canBeAsked') > 0) {
+        param.data.attributes.can_be_asked_money = this.lowestPrice
+      }
       this.appFetch({
         url: "groupPermission",
         method: "post",
-        data: {
-          data: {
-            attributes: {
-              groupId: this.groupId,
-              permissions: checked
-            }
-          }
-        }
+        data: param
       })
         .then(res => {
           if (res.errors) {
