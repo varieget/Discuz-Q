@@ -122,6 +122,9 @@ export default {
   },
   watch: {
     checked(val){
+      if (val.indexOf('canBeAsked') !== -1 && this.lowestPrice === '') {
+        this.$message.error('最低金额不能为空');
+      }
       let isEqual = true;
       this.checkAllPermission.forEach(item => {
         if(val.indexOf(item) === -1){
@@ -146,6 +149,12 @@ export default {
     }
   },
   methods: {
+    getLowestPrice: function(e) {
+      if (Number(e) < 0) {
+        this.$message.error('最低金额不能小于0');
+      }
+      this.getSiteInfo();
+    },
     duedata: function(evn) {
       this.duedata = evn.replace(/[^\d]/g, "");
     },
@@ -587,6 +596,10 @@ export default {
           this.$message.error("请选择删除自己的主题或回复权限");
           return false;
         }
+      }
+      if (this.checked.indexOf('canBeAsked') !== -1 && this.lowestPrice === '') {
+        this.$message.error('最低金额不能为空');
+        return false;
       }
       return true;
     },

@@ -160,6 +160,7 @@
             :disabled="checked.indexOf('canBeAsked') === -1"
             @input="getLowestPrice"
             v-model="lowestPrice"
+            min="0"
           ></el-input>
         </Card>
         <Card>
