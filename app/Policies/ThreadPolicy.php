@@ -193,7 +193,7 @@ class ThreadPolicy extends AbstractPolicy
         
         $request = app('request');
         $referer = Arr::get($request->getServerParams(), 'HTTP_REFERER');
-        if(strstr($referer, 'postpay')){
+        if(strstr($referer, 'postpay') || (strstr($referer, 'post') && strstr($referer, 'operating=edit'))){
             // 如果是草稿帖，只能作者本人查看
             if($thread->is_draft && $thread->user_id == $actor->id){
                 return true;
