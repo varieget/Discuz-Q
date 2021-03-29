@@ -201,8 +201,9 @@ class ThreadPolicy extends AbstractPolicy
 
             // 如果不是草稿帖
             if(!$thread->is_draft){
-                // 是作者本人且拥有自我编辑权限，或者是管理员，才能查看->编辑
-                if(($thread->user_id == $actor->id && $actor->can('editOwnThreadOrPost', $thread)) || $actor->isAdmin()){
+                // 是作者本人且拥有自我编辑权限；或是管理员；或是拥有前台编辑主题的权限的人，可查看-编辑
+                if(($thread->user_id == $actor->id && $actor->can('editOwnThreadOrPost', $thread)) || 
+                    $actor->isAdmin() || $actor->can('edit', $thread)){
                     return true;
                 }
             }
