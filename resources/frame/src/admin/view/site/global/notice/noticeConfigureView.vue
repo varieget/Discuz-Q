@@ -39,19 +39,12 @@
     <Card header="">
     <div class="applets-box">
       <div class="applets-box-content">
-      <CardRow row :description="miniDes">
-      <div v-for="(item, index) in miniKeyWord" :key="index" class="applets">
-        <span class="applets-title">keyword{{index + 1}}:</span>
-        <el-input type="input" v-model="miniKeyWord[index]"  class="applets-input"></el-input>
-        <span class="iconfont iconicon_delect iconhuishouzhan" @click="delectClick(index, 'miniKeyWord')" v-show="index>1"></span>
-      </div>
-      <div class="applets">
-      <span class="applets-titles"></span>
-      <TableContAdd
-        @tableContAddClick="tableContAdd('miniKeyWord')"
-        cont="添加关键字"
-      ></TableContAdd>
-      </div>
+      <CardRow row :description="miniDes+miniTips">
+    <div v-for="(item, index) in keyList" :key="index" class="applets">
+      <div class="applets-titles">{{item}}</div>
+      <el-input type="input" v-if ="keyList.length > 0" v-model="miniKeyWord[index]"  class="applets-input"></el-input>
+    </div>
+
       </CardRow>
     <CardRow row description="请填写正确的小程序路径，填写错误将导致用户无法接收到消息通知">
       <div class="applets">
@@ -134,7 +127,7 @@
       <div class="applets-box-content">
       <CardRow row :description="smsDes">
       <div v-for="(item, index) in smsKeyWord" :key="index" class="applets">
-        <span class="applets-title">keyword{{index + 1}}:</span>
+        <span class="applets-title">变量{{"{" + (index + 1) + "}"}}:</span>
         <el-input type="input" v-model="smsKeyWord[index]"  class="applets-input"></el-input>
         <span class="iconfont iconicon_delect iconhuishouzhan" @click="delectClick(index, 'smsKeyWord')"></span>
       </div>

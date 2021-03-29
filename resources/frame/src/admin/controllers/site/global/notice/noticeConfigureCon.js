@@ -28,6 +28,8 @@ export default {
         smsKeyWord: [],       //短信keyword数组
         miniKeyWord: [],      //小程序keyword数组
         showClick: true,      //微信通知keyword超过五个不显示增加
+        keyList: [],
+        miniTips:''
       }
     },
     components: {
@@ -144,10 +146,13 @@ export default {
           // 小程序通知
           if (res.readdata[3]) {
             this.miniProgramList = res.readdata[3]._data;
+            this.keyList = this.miniProgramList.keys;
+            console.log(this.keyList, 'this.keyList');
             this.miniKeyWord = this.miniProgramList.keywords_data.length > 0
               ? this.miniProgramList.keywords_data
               : ['', ''];
               let vars = this.miniProgramList.template_variables;
+              this.miniTips = '\n<a href="https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html">订阅消息参数值内容限制说明</a>填写错误将导致用户无法接收到消息通知'
               if (vars) {
                 this.miniDes = '请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。\n\n可以使用如下变量：\n';
                 for (let key in vars) {
