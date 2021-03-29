@@ -80,7 +80,7 @@ class ResourceNotificationTplController extends AbstractListController
         if ($miniProgram->isNotEmpty()) {
             $data->map(function ($item) {
                 if ($item->type == NotificationTpl::MINI_PROGRAM_NOTICE) {
-                    $keys = $this->getMiniProgramKeys($item->template_id);
+                    $keys = $this->getMiniProgramKeys($item);
                     $item->keys = $keys;
                 }
             });
@@ -89,7 +89,7 @@ class ResourceNotificationTplController extends AbstractListController
         return $data;
     }
 
-    private function getMiniProgramKeys($templateId)
+    private function getMiniProgramKeys(NotificationTpl $item)
     {
         $appID = $this->settings->get('miniprogram_app_id', 'wx_miniprogram');
         $secret = $this->settings->get('miniprogram_app_secret', 'wx_miniprogram');
@@ -100,12 +100,16 @@ class ResourceNotificationTplController extends AbstractListController
         ]);
 
         $response = $app->subscribe_message->getTemplates();
+
         if (! isset($response['errcode']) || $response['errcode'] != 0 || count($response['data']) == 0) {
+            $errMsg = $response['errmsg'] ?? '';
+            NotificationTpl::writeError($item, $response['errcode'], $errMsg, []);
+
             return [];
         }
 
         $collect = collect($response['data']);
-        $template = $collect->where('priTmplId', $templateId)->first();
+        $template = $collect->where('priTmplId', $item->template_id)->first();
         if (is_null($template)) {
             return [];
         }

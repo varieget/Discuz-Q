@@ -77,7 +77,7 @@ class NotificationTplSerializer extends AbstractSerializer
             'page_path'          => (string) $model->page_path,
             'disabled'           => $model->type === NotificationTpl::SYSTEM_NOTICE && in_array($model->notice_id, $this->disabledId),
             'is_error'           => $model->is_error,
-            'error_msg'          => json_decode($model->error_msg),
+            'error_msg'          => $model->error_msg,
         ];
     }
 

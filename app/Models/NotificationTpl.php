@@ -86,7 +86,10 @@ class NotificationTpl extends Model
     /**
      * {@inheritdoc}
      */
-    protected $casts = ['color' => 'array'];
+    protected $casts = [
+        'color' => 'array',
+        'error_msg' => 'array',
+    ];
 
     /**
      * 枚举 - type
