@@ -94,8 +94,9 @@ export default {
     // 通知类型的点击事件
     handleError(item) {
       if (item.is_error === 1) {
-        let json = JSON.parse(item.error_msg);
-        let str = JSON.stringify(json.send_build);
+        let json = item.error_msg;
+        let str = JSON.stringify(json.send_build) || '';
+
         this.$alert(`
           <div class="notice_error_info">
             <div class="notice_error_title">Code</div>
