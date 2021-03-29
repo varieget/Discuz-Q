@@ -102,9 +102,10 @@ class QuestionAnswerMakeMoney
             }
 
             // 站长分成回答金额
-            $siteAuthorScale = $this->settings->get('site_author_scale');
-            $authorRatio = $siteAuthorScale / 10;
-            $authorPrice = $price * $authorRatio;
+//            $siteAuthorScale = $this->settings->get('site_author_scale');
+//            $authorRatio = $siteAuthorScale / 10;
+//            $authorPrice = $price * $authorRatio;
+            $authorPrice = $price;
 
             // available amount increase
             $actorData = [
