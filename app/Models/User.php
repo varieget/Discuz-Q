@@ -118,7 +118,8 @@ class User extends DzqModel
         'username',
         'password',
         'mobile',
-        'bind_type'
+        'bind_type',
+        'updated_at'
     ];
 
     const STATUS_NORMAL = 0;//正常
