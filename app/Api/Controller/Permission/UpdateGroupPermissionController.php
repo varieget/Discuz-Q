@@ -72,6 +72,11 @@ class UpdateGroupPermissionController extends AbstractListController
         $group = Group::query()->findOrFail((int) Arr::get($attributes, 'groupId'));
 
         $oldPermissions = Permission::query()->where('group_id', $group->id)->pluck('permission');
+        foreach ($attributes['permissions'] as $k=>$value){
+            if(strpos($value,'canBeAsked.money') !== false){
+                unset($attributes['permissions'][$k]);
+            }
+        }
 
         // 合并默认权限，去空，去重
         $newPermissions = collect(Arr::get($attributes, 'permissions'))
@@ -80,6 +85,18 @@ class UpdateGroupPermissionController extends AbstractListController
             ->unique();
 
         Permission::query()->where('group_id', $group->id)->delete();
+
+        $can_be_asked_money = Arr::get($attributes, 'can_be_asked_money');
+        $newPermissionsArr = $newPermissions->toArray();
+        if(in_array('canBeAsked',$newPermissionsArr)){
+            if(isset($can_be_asked_money)){
+                $newPermissionsArr[]='canBeAsked.money.'.$can_be_asked_money;
+                $newPermissions = collect($newPermissionsArr);
+            }else{
+                $newPermissionsArr[]='canBeAsked.money.0';
+                $newPermissions = collect($newPermissionsArr);
+            }
+        }
 
         Permission::query()->insert($newPermissions->map(function ($item) use ($group) {
             return ['group_id' => $group->id, 'permission' => $item];
