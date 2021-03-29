@@ -49,15 +49,21 @@ class ClearDisabledSettings
         // 关闭公众号配置时 关闭 PC 微信扫码登录  & 注册与登陆模式充值为用户名模式
         if (! $this->settings->get('offiaccount_close', 'wx_offiaccount')) {
             $this->settings->set('oplatform_close', '0', 'wx_oplatform');
-            $this->settings->set('register_type', '0', 'default');
+            if($this->settings->get('register_type','default') == 2){
+                $this->settings->set('register_type', '0', 'default');
+            }
         }
         //关闭小程序登陆时 注册与登陆模式充值为用户名模式
         if(! $this->settings->get('miniprogram_close', 'wx_miniprogram')){
-            $this->settings->set('register_type', '0', 'default');
+            if($this->settings->get('register_type','default') == 2){
+                $this->settings->set('register_type', '0', 'default');
+            }
         }
         //关闭 PC 微信扫码登陆时  注册与登陆模式充值为用户名模式
         if(! $this->settings->get('oplatform_close', 'wx_oplatform')){
-            $this->settings->set('register_type', '0', 'default');
+            if($this->settings->get('register_type','default') == 2){
+                $this->settings->set('register_type', '0', 'default');
+            }
         }
 
 
