@@ -23,7 +23,6 @@ use App\Common\ResponseCode;
 use App\Common\Utils;
 use App\Models\Attachment;
 use App\Models\Category;
-use App\Models\Emoji;
 use App\Models\GroupUser;
 use App\Models\Order;
 use App\Models\Permission;
@@ -35,9 +34,7 @@ use App\Models\Sequence;
 use App\Models\Thread;
 use App\Models\ThreadReward;
 use App\Models\ThreadVideo;
-use App\Models\Topic;
 use App\Models\User;
-use App\Models\Setting;
 use Discuz\Base\DzqController;
 
 class ListThreadsV2Controller extends DzqController
@@ -50,7 +47,7 @@ class ListThreadsV2Controller extends DzqController
         $homeSequence = $this->inPut('homeSequence');//默认首页
         $cache = app('cache');
         $key = md5(json_encode($filter) . $perPage . $homeSequence);
-//        $currentPage == 1 && $this->getCache($cache,$key);
+        $currentPage == 1 && $this->getCache($cache,$key);
         $serializer = $this->app->make(AttachmentSerializer::class);
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
