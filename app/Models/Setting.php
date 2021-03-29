@@ -131,7 +131,7 @@ class Setting extends Model
         }
     }
 
-    public static function isMiniProgram()
+    public static function isMiniProgramVideoOn()
     {
         $request = app('request');
         $headers = $request->getHeaders();
@@ -140,8 +140,7 @@ class Setting extends Model
         $serverStr = strtolower(json_encode($server, 256));
 
         if (strstr($serverStr, 'miniprogram') || strstr($headersStr, 'miniprogram') || 
-            strstr($serverStr, 'MicroMessenger') || strstr($headersStr, 'MicroMessenger') || 
-            strstr($server['HTTP_USER_AGENT'], 'MicroMessenger')) {
+            strstr($headersStr, 'compress')) {
             $settings = Setting::query()->where(['key' => 'miniprogram_video', 'tag' => 'wx_miniprogram'])->first();
             if(!$settings->value){
                 return false;

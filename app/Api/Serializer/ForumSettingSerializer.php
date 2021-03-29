@@ -267,8 +267,11 @@ class ForumSettingSerializer extends AbstractSerializer
         }
 
         // 微信小程序请求时判断视频开关
+        $headers = $this->request->getHeaders();
+        $headersStr = strtolower(json_encode($headers, 256));
         if (! $this->settings->get('miniprogram_video', 'wx_miniprogram') &&
-            strpos(Arr::get($this->request->getServerParams(), 'HTTP_X_APP_PLATFORM'), 'wx_miniprogram') !== false) {
+            (strpos(Arr::get($this->request->getServerParams(), 'HTTP_X_APP_PLATFORM'), 'wx_miniprogram') !== false || strpos($headersStr, 'miniprogram') !== false || 
+                strpos($headersStr, 'compress') !== false)) {
             $attributes['other']['can_create_thread_video'] = false;
         }
         //判断三种注册方式是否置灰禁用
