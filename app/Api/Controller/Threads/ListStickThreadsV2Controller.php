@@ -66,7 +66,7 @@ class ListStickThreadsV2Controller extends DzqController
             $id = $thread['id'];
             if (empty($title)) {
                 if (isset($posts[$id])) {
-                    $title = Post::instance()->getContentSummary($thread['id']);
+                    $title = Post::instance()->getContentSummary($posts[$id]);
                 }
             }
             $linkString .= $title;
