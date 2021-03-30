@@ -37,10 +37,10 @@ class ListStickThreadsV2Controller extends DzqController
             }
         }
 
-        // $miniProgramVideo = Setting::isMiniProgram();
-        // if(!$miniProgramVideo){
-        //     $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
-        // }
+        $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
+        if(!$isMiniProgramVideoOn){
+            $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
+        }
 
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         if (!$categoryIds) {
@@ -66,7 +66,7 @@ class ListStickThreadsV2Controller extends DzqController
             $id = $thread['id'];
             if (empty($title)) {
                 if (isset($posts[$id])) {
-                    $title = Post::instance()->getContentSummary($thread['id']);
+                    $title = Post::instance()->getContentSummary($posts[$id]);
                 }
             }
             $linkString .= $title;
