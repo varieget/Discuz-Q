@@ -236,9 +236,10 @@ class ResourceThreadV2Controller extends DzqController
         $data['isPaidAttachment'] = !empty($thread->attachment_price) ? true : false;
 
 
+        $thread->timestamps = false;
         if(!$stopViewCount)     $thread->increment('view_count');
 
-//        $cache->put($cacheKey, serialize($data), 5*60);
+
         $data = $this->camelData($data);
 
         //为了兼容前端
