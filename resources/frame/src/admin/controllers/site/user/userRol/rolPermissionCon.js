@@ -18,6 +18,7 @@ export default {
       scale: 0, // 提成比例
       bindPhoneDisabled: false, // 是否开启短信验证
       wechatPayment: false, // 是否开启微信支付
+      isReward: false, // 是否开启打赏功能
       canBeOnlooker: false, // 是否可以设置围观
       categoriesList: [], // 分类列表
       selectList: {
@@ -238,6 +239,7 @@ export default {
       this.realNameDisabled = data.qcloud.qcloud_faceid === false;
       this.bindPhoneDisabled =  data.qcloud.qcloud_sms === false;
       this.wechatPayment = data.paycenter.wxpay_close === false;
+      this.isReward = data.set_site.site_can_reward === 1;
       this.canBeOnlooker = siteData.site_onlooker_price > 0;
       this.allowtobuy = siteData.site_pay_group_close;
       if (!this.allowtobuy) {
