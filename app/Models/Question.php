@@ -318,6 +318,11 @@ class Question extends DzqModel
         $buserIds = array($question['be_user_id']);
         $groups = GroupUser::instance()->getGroupInfo($buserIds);
         $groups = array_column($groups, null, 'be_user_id');
+
+        $users = User::instance()->getUsers($buserIds);
+        $users = array_column($users, null, 'id');
+        $users = $users[1];
+
         return [
             'threadId' => $question['thread_id'],
             'userId' => $question['user_id'],
@@ -328,6 +333,7 @@ class Question extends DzqModel
             'price' => $question['price'],
             'onlookerUnitPrice' => $question['onlooker_unit_price'],
             'onlookerPrice' => $question['onlooker_price'],
+            'isReal' => $this->getIsReal($users['realname']),
             'onlookerNumber' => $question['onlooker_number'],
             'isOnlooker' => $question['is_onlooker'],
             'isAnswer' => $question['is_answer'],
@@ -348,7 +354,11 @@ class Question extends DzqModel
 
     private function getGroupInfo($groups)
     {
-        return [
+        if(empty($groups)){
+            return [];
+        }
+
+        return  [
             'groupName' => $groups[0]['groups']['name'],
             'isDisplay' => $groups[0]['groups']['is_display'],
         ];
