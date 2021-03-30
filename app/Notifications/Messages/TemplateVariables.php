@@ -130,31 +130,35 @@ trait TemplateVariables
      */
     protected $initPagePath = [
         // 注册相关内容 -> 跳转到首页
-        'registered.passed'     => '/pages/home/index', // 首页
-        'registered.approved'   => '/pages/home/index',
-        'registered.unapproved' => '/pages/home/index',
-        'post.approved'         => '/topic/index?id={$thread_id}',                             // 内容审核通过通知
-        'post.unapproved'       => '/topic/index?id={$thread_id}',                             // 内容审核不通过通知
-        'post.deleted'          => '/pages/home/index',                                        // 内容删除 跳首页
-        'post.essence'          => '/topic/index?id={$thread_id}',                             // 精华 -> 帖子详情页
-        'post.sticky'           => '/topic/index?id={$thread_id}',                             // 置顶 -> 帖子详情页
-        'post.update'           => '/topic/index?id={$thread_id}',                             // 修改 -> 帖子详情页
-        'user.disable'          => '/pages/notice/notice?title=系统通知&type=system',              // 用户禁用 -> "系统通知" 页
-        'user.normal'           => '/pages/notice/notice?title=系统通知&type=system',              // 用户解除 -> "系统通知" 页
-        'user.group'            => '/pages/notice/notice?title=系统通知&type=system',              // 用户角色 -> "系统通知" 页
-        'post.replied'          => '/pages/notice/notice?title=回复我的&type=replied',             // 内容回复通知 -> "回复我的" 通知页
-        'post.liked'            => '/pages/notice/notice?title=点赞我的&type=liked',               // 内容点赞通知 -> "点赞我的" 通知页
-        'post.paid'             => '/pages/notice/notice?title=财务通知&type=rewarded,withdrawal', // "财务通知" 页
-        'post.reminded'         => '/topic/index?id={$thread_id}',                             // @通知 跳详情页
+        'registered.passed'         => '/pages/home/index', // 首页
+        'registered.approved'       => '/pages/home/index',
+        'registered.unapproved'     => '/pages/home/index',
+        'post.approved'             => '/topic/index?id={$thread_id}',                             // 内容审核通过通知
+        'post.unapproved'           => '/topic/index?id={$thread_id}',                             // 内容审核不通过通知
+        'post.deleted'              => '/pages/home/index',                                        // 内容删除 跳首页
+        'post.essence'              => '/topic/index?id={$thread_id}',                             // 精华 -> 帖子详情页
+        'post.sticky'               => '/topic/index?id={$thread_id}',                             // 置顶 -> 帖子详情页
+        'post.update'               => '/topic/index?id={$thread_id}',                             // 修改 -> 帖子详情页
+        'user.disable'              => '/pages/notice/notice?title=系统通知&type=system',              // 用户禁用 -> "系统通知" 页
+        'user.normal'               => '/pages/notice/notice?title=系统通知&type=system',              // 用户解除 -> "系统通知" 页
+        'user.group'                => '/pages/notice/notice?title=系统通知&type=system',              // 用户角色 -> "系统通知" 页
+        'post.replied'              => '/pages/notice/notice?title=回复我的&type=replied',             // 内容回复通知 -> "回复我的" 通知页
+        'post.liked'                => '/pages/notice/notice?title=点赞我的&type=liked',               // 内容点赞通知 -> "点赞我的" 通知页
+        'post.paid'                 => '/pages/notice/notice?title=财务通知&type=rewarded,withdrawal', // "财务通知" 页
+        'post.reminded'             => '/topic/index?id={$thread_id}',                             // @通知 跳详情页
         // 提现通知、提现失败通知
-        'withdraw.noticed'      => '/pages/my/withdrawalslist',                                // 个人中心-我的钱包-提现记录页
-        'withdraw.withdraw'     => '/pages/my/withdrawalslist',
+        'withdraw.noticed'          => '/pages/my/withdrawalslist',                                // 个人中心-我的钱包-提现记录页
+        'withdraw.withdraw'         => '/pages/my/withdrawalslist',
         // 分成收入通知
-        'divide.income'         => '/pages/my/walletlist',                                     // 个人中心-我的钱包-钱包明细页
+        'divide.income'             => '/pages/my/walletlist',                                     // 个人中心-我的钱包-钱包明细页
         // 问答通知都跳主题详情页
-        'question.asked'        => '/topic/index?id={$thread_id}',
-        'question.answered'     => '/topic/index?id={$thread_id}',
-        'question.expired'      => '/topic/index?id={$thread_id}',
+        'question.asked'            => '/topic/index?id={$thread_id}',
+        'question.answered'         => '/topic/index?id={$thread_id}',
+        'question.expired'          => '/topic/index?id={$thread_id}',
+        // 红包通知
+        'red_packet.gotten'         => '/topic/index?id={$thread_id}',
+        'question.rewarded'         => '/topic/index?id={$thread_id}',
+        'question.rewarded.expired' => '/topic/index?id={$thread_id}',
     ];
 
     /**
@@ -165,28 +169,31 @@ trait TemplateVariables
      * @var string[]
      */
     protected $uniquelyNotice = [
-        'registered.passed'     => '新用户注册通知',
-        'registered.approved'   => '注册审核通过通知',
-        'registered.unapproved' => '注册审核不通过通知',
-        'post.unapproved'       => '内容审核不通过通知',
-        'post.approved'         => '内容审核通过通知',
-        'post.deleted'          => '内容删除通知',
-        'post.essence'          => '内容精华通知',
-        'post.sticky'           => '内容置顶通知',
-        'post.update'           => '内容修改通知',
-        'user.disable'          => '用户禁用通知',
-        'user.normal'           => '用户解除禁用通知',
-        'user.group'            => '用户角色调整通知',
-        'post.replied'          => '内容回复通知',
-        'post.liked'            => '内容点赞通知',
-        'post.paid'             => '内容支付通知',
-        'post.reminded'         => '内容@通知',
-        'withdraw.noticed'      => '提现通知',
-        'withdraw.withdraw'     => '提现失败通知',
-        'divide.income'         => '分成收入通知',
-        'question.asked'        => '问答提问通知',
-        'question.answered'     => '问答回答通知',
-        'question.expired'      => '问答过期通知',
+        'registered.passed'         => '新用户注册通知',
+        'registered.approved'       => '注册审核通过通知',
+        'registered.unapproved'     => '注册审核不通过通知',
+        'post.unapproved'           => '内容审核不通过通知',
+        'post.approved'             => '内容审核通过通知',
+        'post.deleted'              => '内容删除通知',
+        'post.essence'              => '内容精华通知',
+        'post.sticky'               => '内容置顶通知',
+        'post.update'               => '内容修改通知',
+        'user.disable'              => '用户禁用通知',
+        'user.normal'               => '用户解除禁用通知',
+        'user.group'                => '用户角色调整通知',
+        'post.replied'              => '内容回复通知',
+        'post.liked'                => '内容点赞通知',
+        'post.paid'                 => '内容支付通知',
+        'post.reminded'             => '内容@通知',
+        'withdraw.noticed'          => '提现通知',
+        'withdraw.withdraw'         => '提现失败通知',
+        'divide.income'             => '分成收入通知',
+        'question.asked'            => '问答提问通知',
+        'question.answered'         => '问答回答通知',
+        'question.expired'          => '问答过期通知',
+        'red_packet.gotten'         => '得到红包通知',
+        'question.rewarded'         => '悬赏问答通知',
+        'question.rewarded.expired' => '悬赏过期通知',
     ];
 
     /**
