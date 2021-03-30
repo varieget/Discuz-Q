@@ -274,15 +274,13 @@ export default {
           this.$message.error('请填写小程序模版ID');
           return;
         }
-        console.log(this.keyList, 'his.keyList')
-        if (this.keyList.length >0) {
-          this.miniKeyWord.forEach(item=> {
-            console.log(item, 'eee')
-            if (item === '') {
-              this.$message.error('请填写keywords');
+        if (this.keyList.length > 0) {
+          for (let i = 0, len = this.miniKeyWord.length; i < len; i++) {
+            if (this.miniKeyWord[i] === "") {
+              this.$message.error("请填写keywords");
+              return;
             }
-          })
-          return; 
+          }
         }
          if (this.miniProgramList.page_path === '') {
           this.$message.error('请填写小程序路径');
