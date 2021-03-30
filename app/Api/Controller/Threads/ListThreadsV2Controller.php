@@ -278,7 +278,8 @@ class ListThreadsV2Controller extends DzqController
         return [
             'pid' => $group['group_id'],
             'groupName' => $group['groups']['name'],
-            'groupIcon' => $group['groups']['icon']
+            'groupIcon' => $group['groups']['icon'],
+            'isDisplay' => $group['groups']['is_display']
         ];
     }
 
