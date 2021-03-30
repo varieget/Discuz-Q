@@ -111,8 +111,11 @@ export default {
             <div class="notice_error_message">${str}</div>
           </div>`,
           `${json.type_name}（${item.type}）`, {
-          dangerouslyUseHTMLString: true
-        });
+          dangerouslyUseHTMLString: true,
+        }).catch(() => {
+          console.log('点击了关闭')
+        })
+
       }
     }
   },
