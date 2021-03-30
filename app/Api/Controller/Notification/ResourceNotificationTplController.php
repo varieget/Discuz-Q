@@ -23,7 +23,7 @@ use App\Models\NotificationTpl;
 use Discuz\Api\Controller\AbstractListController;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Contracts\Setting\SettingsRepository;
-use EasyWeChat\Factory;
+use Discuz\Wechat\EasyWechatTrait;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
@@ -31,6 +31,7 @@ use Tobscure\JsonApi\Document;
 class ResourceNotificationTplController extends AbstractListController
 {
     use AssertPermissionTrait;
+    use EasyWechatTrait;
 
     /**
      * {@inheritdoc}
@@ -87,39 +88,5 @@ class ResourceNotificationTplController extends AbstractListController
         }
 
         return $data;
-    }
-
-    private function getMiniProgramKeys(NotificationTpl $item)
-    {
-        $appID = $this->settings->get('miniprogram_app_id', 'wx_miniprogram');
-        $secret = $this->settings->get('miniprogram_app_secret', 'wx_miniprogram');
-
-        $app = Factory::miniProgram([
-            'app_id' => $appID,
-            'secret' => $secret,
-        ]);
-
-        $response = $app->subscribe_message->getTemplates();
-
-        if (! isset($response['errcode']) || $response['errcode'] != 0 || count($response['data']) == 0) {
-            $errMsg = $response['errmsg'] ?? '';
-            NotificationTpl::writeError($item, $response['errcode'], $errMsg, []);
-
-            return [];
-        }
-
-        $collect = collect($response['data']);
-        $template = $collect->where('priTmplId', $item->template_id)->first();
-        if (is_null($template)) {
-            return [];
-        }
-
-        $content = $template['content'];
-        $regex = '/{{(?<key>.*)\.DATA/';
-        if (preg_match_all($regex, $content, $keys)) {
-            return $keys['key'];
-        }
-
-        return [];
     }
 }

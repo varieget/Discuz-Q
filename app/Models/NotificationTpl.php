@@ -15,6 +15,7 @@
 
 namespace App\Models;
 
+use Discuz\Wechat\EasyWechatTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -44,6 +45,8 @@ use s9e\RegexpBuilder\Builder;
  */
 class NotificationTpl extends Model
 {
+    use EasyWechatTrait;
+
     const OPEN = 1;
 
     const SYSTEM_NOTICE            = 0; // 数据库（系统）通知
@@ -171,7 +174,7 @@ class NotificationTpl extends Model
      * @param string $errMsg 错误信息
      * @param array $sendBuild 发送的数据
      */
-    public static function writeError(NotificationTpl $notificationData, $errCode, $errMsg, $sendBuild)
+    public static function writeError(NotificationTpl $notificationData, $errCode, $errMsg, $sendBuild = [])
     {
         /**
          * 43101 用户拒绝接受消息 并不是配置报错
@@ -271,11 +274,18 @@ class NotificationTpl extends Model
      * 小程序通知 - 数据格式
      *
      * @param $arr
+     * @param array $keys
      * @return Collection
      */
-    public static function getMiniProgramContent($arr)
+    public static function getMiniProgramContent($arr, array $keys)
     {
-        return collect($arr)->map(function ($item, $key) {
+        $arr = array_values($arr);
+        $build = [];
+        foreach ($keys as $k => $v) {
+            $build[$v] = $arr[$k];
+        }
+
+        return collect($build)->map(function ($item, $key) {
             return $result[$key] = ['value' => $item];
         });
     }
