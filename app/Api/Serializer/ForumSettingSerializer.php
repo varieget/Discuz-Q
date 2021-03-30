@@ -25,6 +25,7 @@ use App\Models\User;
 use App\Settings\ForumSettingField;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Common\PubEnum;
+use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Support\Arr;
@@ -123,8 +124,10 @@ class ForumSettingSerializer extends AbstractSerializer
                 'site_create_thread4' => $this->settings->get('site_create_thread4') == "" ? 1 : (int)$this->settings->get('site_create_thread4'),
                 'site_create_thread5' => $this->settings->get('site_create_thread5') == "" ? 1 : (int)$this->settings->get('site_create_thread5'),
                 'site_create_thread6' => $this->settings->get('site_create_thread6') == "" ? 1 : (int)$this->settings->get('site_create_thread6'),
+                'site_can_reward'     => $this->settings->get('site_can_reward') == "" ? 1 : (int)$this->settings->get('site_can_reward'),
                 'site_skin' => $site_skin
             ],
+
 
             // 注册设置
             'set_reg' => [
