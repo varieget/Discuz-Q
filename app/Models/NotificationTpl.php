@@ -87,7 +87,7 @@ class NotificationTpl extends Model
      * {@inheritdoc}
      */
     protected $casts = [
-        'color' => 'array',
+        'color'     => 'array',
         'error_msg' => 'array',
     ];
 
@@ -173,18 +173,25 @@ class NotificationTpl extends Model
      */
     public static function writeError(NotificationTpl $notificationData, $errCode, $errMsg, $sendBuild)
     {
-        /** @var Builder $buildError */
-        $buildError = [
-            'id'         => $notificationData->id,
-            'type_name'  => $notificationData->type_name,
-            'send_build' => $sendBuild,
-            'err_code'   => $errCode,
-            'err_msg'    => $errMsg ?: 'unknown mistake',
-        ];
+        /**
+         * 43101 用户拒绝接受消息 并不是配置报错
+         *
+         * @URL errcode 的合法值 https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
+         */
+        if (! in_array((int) $errCode, [43101])) {
+            /** @var Builder $buildError */
+            $buildError = [
+                'id'         => $notificationData->id,
+                'type_name'  => $notificationData->type_name,
+                'send_build' => $sendBuild,
+                'err_code'   => $errCode,
+                'err_msg'    => $errMsg ?: 'unknown mistake',
+            ];
 
-        $notificationData->is_error = 1;
-        $notificationData->error_msg = $buildError;
-        $notificationData->save();
+            $notificationData->is_error = 1;
+            $notificationData->error_msg = $buildError;
+            $notificationData->save();
+        }
     }
 
     /**
