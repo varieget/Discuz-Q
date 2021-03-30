@@ -181,8 +181,9 @@ class ListThreadsV2Controller extends DzqController
             'diffCreatedAt' => Utils::diffTime($thread['created_at']),
             'isRedPacket' => $thread['is_red_packet'],
             'canViewPost' => $this->canViewPosts($thread, $permissions),
-            'canLike' => true,
-            'isLiked' => false,
+            'canLike' =>true,
+            'isLiked'=>false,
+            'isDraft'=>$thread['is_draft'],
             'likedCount' => 0,
             'firstPostId' => null,
             'replyCount' => 0,
@@ -264,6 +265,7 @@ class ListThreadsV2Controller extends DzqController
             'groupIcon' => $group['groups']['icon']
         ];
     }
+
 
     private function getUserInfo($user)
     {

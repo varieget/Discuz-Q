@@ -315,9 +315,13 @@ class Question extends DzqModel
         if (empty($question)) {
             return false;
         }
+        $buserIds = array($question['be_user_id']);
+        $groups = GroupUser::instance()->getGroupInfo($buserIds);
+        $groups = array_column($groups, null, 'be_user_id');
         return [
             'threadId' => $question['thread_id'],
             'userId' => $question['user_id'],
+            'group' =>  $this->getGroupInfo($groups),
             'beUserId' => $question['be_user_id'],
             'beUserName' => User::instance()->getUserName($question['be_user_id']),
             'content' => $this->getContentSummary($question['content']),
@@ -339,5 +343,24 @@ class Question extends DzqModel
             $content = Str::substr($content, 0, self::SUMMARY_LENGTH) . self::SUMMARY_END_WITH;
         }
         return $content;
+    }
+
+
+    private function getGroupInfo($groups)
+    {
+        return [
+            'groupName' => $groups[0]['groups']['name'],
+            'isDisplay' => $groups[0]['groups']['is_display'],
+        ];
+    }
+
+
+    private function getIsReal($realname)
+    {
+        if (isset($realname) && $realname != null) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
