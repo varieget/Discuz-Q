@@ -251,24 +251,6 @@ class Order extends Model
         return $bossAmount = $this->calculateAuthorAmount(); // 作者实际分成金额
     }
 
-    /**
-     * 计算问答站长和作者实际金额数
-     *
-     * @return float $bossAmount 上级实际分成金额数
-     */
-    public function calculateQuestionMasterAmount()
-    {
-        // 站长作者分成配置
-        $siteAuthorScale = 10;
-
-        $orderAmount = $this->amount; // 订单金额
-        $authorRatio = $siteAuthorScale / 10;
-
-        $payeeAmount = sprintf('%.2f', ($orderAmount * $authorRatio));
-        $this->master_amount = $orderAmount - $payeeAmount; // 站长分成金额
-
-        return $bossAmount = $this->calculateAuthorAmount(); // 作者实际分成金额
-    }
 
     /**
      * 计算围观问答人/答题人分红
