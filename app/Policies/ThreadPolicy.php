@@ -144,7 +144,8 @@ class ThreadPolicy extends AbstractPolicy
             if(Arr::get($request->getParsedBody(), 'data.attributes')){
                 $attributes = Arr::get($request->getParsedBody(), 'data.attributes', '');
             }
-            if(isset($attributes['is_old_draft']) && $attributes['is_old_draft'] == 1){
+
+            if($thread->user_id == $actor->id && isset($attributes['is_draft']) && isset($attributes['is_old_draft']) && $attributes['is_old_draft'] == 1){
                 return true;
             }
         }
@@ -188,6 +189,26 @@ class ThreadPolicy extends AbstractPolicy
             && (! $thread->deleted_at || $thread->deleted_user_id == $actor->id)
         ) {
             return true;
+        }
+        
+        $request = app('request');
+        $referer = Arr::get($request->getServerParams(), 'HTTP_REFERER');
+        if(strstr($referer, 'postpay') || (strstr($referer, 'post') && strstr($referer, 'operating=edit'))){
+            // 如果是草稿帖，只能作者本人查看
+            if($thread->is_draft && $thread->user_id == $actor->id){
+                return true;
+            }
+
+            // 如果不是草稿帖
+            if(!$thread->is_draft){
+                // 是作者本人且拥有自我编辑权限；或是管理员；或是拥有前台编辑主题的权限的人，可查看-编辑
+                if(($thread->user_id == $actor->id && $actor->can('editOwnThreadOrPost', $thread)) || 
+                    $actor->isAdmin() || $actor->can('edit', $thread)){
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

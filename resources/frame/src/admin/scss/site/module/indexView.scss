@@ -126,6 +126,7 @@
 
       .index-main-con__side-title{
         height: 42PX;
+        padding-bottom: 10PX;
         border-bottom: 1PX solid $borderColor;
         span{
           font-size:18PX;
@@ -177,7 +178,7 @@
 
       .index-main-con__side-footer{
         position: absolute;
-        bottom: 30PX;
+        bottom: 10PX;
         left: 50%;
         transform: translateX(-50%);
         white-space: nowrap;
@@ -229,15 +230,8 @@
           span{
             color: $descColor;
             cursor: pointer;
-            /*IFTRUE_pay*/
-            margin-right: 20PX;
-            /*FITRUE_pay*/
-          }
-          /*IFTRUE_default*/ 
-          span:first-of-type{
             margin-right: 20PX;
           }
-          /*FITRUE_deafult*/ 
 
           .is-active{
             color: $main;
@@ -253,4 +247,50 @@
 
   }
 
+}
+
+.index-qcloud-dialog {
+  .el-dialog__body {
+    padding: 5px 20px 30px;
+    font-size: 12px;
+
+    .card-box {
+      padding: 0px 0px 10px;
+    }
+    .card-box .card-box__header {
+      margin-bottom: 0PX;
+    }
+
+    .input-box {
+      padding: 0;
+
+      .card-box__header .card-title {
+        line-height: 30PX;
+      }
+
+      .el-input--suffix .el-input__inner {
+        border-radius: 0px;
+        height: 30px;
+        line-height: 30px;
+      }
+    }
+    .dialog-des {
+      margin-top: 10PX;
+      line-height: 20PX;
+      font-size: 12px;
+
+      a {
+        color: #1d1dff;
+        text-decoration: underline;
+      }
+    }
+
+    .dialog-button {
+      background:#027db4;
+      border-radius: 0px;
+      margin: 18PX 0 15PX;
+      width: 100%;
+      border: none;
+    }
+  }
 }

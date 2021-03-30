@@ -133,6 +133,12 @@ class ResourceAnalysisGoodsController extends AbstractResourceController
             }
         }
 
+        //过滤域名
+        $readyContent = $this->processUrl($readyContent, $domainUrl[0]);
+
+        //过滤ip
+        $readyContent = $this->processStr($readyContent);
+
         // Regular Expression Url
         $extractionUrlRegex = '/(https|http):\/\/(?<url>[0-9a-z.]+)/i';
         if (! preg_match($extractionUrlRegex, $this->address, $match)) {
@@ -278,5 +284,36 @@ class ResourceAnalysisGoodsController extends AbstractResourceController
     protected function getDefaultIconUrl($imgName)
     {
         return $this->url->to('/images/goods/' . $imgName);
+    }
+
+    //过滤ip
+    protected function processStr($url){
+
+        preg_match_all("/\d+\.\d+\.\d+\.\d+/",$url,$arr);
+        if(!empty($arr[0])){
+            foreach ($arr[0] as $tcp){
+                $isVaildIp = preg_match("/^(((1?\d{1,2})|(2[0-4]\d)|(25[0-5]))\.){3}((1?\d{1,2})|(2[0-4]\d)|(25[0-5]))$/",$tcp);
+                if($isVaildIp > 0){
+                    $url = str_replace($tcp,'',$url);
+                }
+            }
+        }
+
+        return $url;
+    }
+
+    //过滤域名
+    protected function processUrl($url,$str){
+
+        $url = str_replace($str,'########',$url);
+        preg_match_all('/https:\/\/(([^:\/]*?)\.(?<url>.+?\.(cn|com)))/i', $url, $arr);
+        preg_match_all('/http:\/\/(([^:\/]*?)\.(?<url>.+?\.(cn|com)))/i', $url, $arr1);
+
+        $merge = array_merge($arr[0],$arr1[0]);
+        foreach ($merge as $merV) {
+            $url = str_replace($merV,'',$url);
+        }
+
+        return str_replace('########',$str,$url);
     }
 }

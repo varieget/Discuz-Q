@@ -18,9 +18,11 @@
 
 namespace App\Models;
 
+use App\Settings\SettingsRepository;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
+use Discuz\Base\DzqModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -42,7 +44,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Thread $thread
  * @property Post $post
  */
-class ThreadVideo extends Model
+class ThreadVideo extends DzqModel
 {
     const TYPE_OF_VIDEO = 0; // 视频
 
@@ -54,6 +56,11 @@ class ThreadVideo extends Model
 
     const VIDEO_STATUS_FAIL = 2;        // 转码失败
 
+
+    private $typeDic = [
+        self::TYPE_OF_AUDIO => '音频',
+        self::TYPE_OF_VIDEO => '视频'
+    ];
     /**
      * {@inheritdoc}
      */
@@ -85,5 +92,34 @@ class ThreadVideo extends Model
     public function post()
     {
         return $this->belongsTo(Post::class);
+    }
+
+    public function getThreadVideo($threadId)
+    {
+        $video = self::query()->where(['thread_id' => $threadId, 'status' => self::VIDEO_STATUS_SUCCESS])->first();
+        if (empty($video)) {
+            return false;
+        }
+        $settings = app(SettingsRepository::class);
+        $mediaUrl = $video['media_url'];
+        $urlKey = $settings->get('qcloud_vod_url_key', 'qcloud');
+        $urlExpire = (int)$settings->get('qcloud_vod_url_expire', 'qcloud');
+        if ($urlKey && $urlExpire && !empty($mediaUrl)) {
+            $currentTime = Carbon::now()->timestamp;
+            $dir = Str::beforeLast(parse_url($mediaUrl)['path'], '/') . '/';
+            $t = dechex($currentTime + $urlExpire);
+            $us = Str::random(10);
+            $sign = md5($urlKey . $dir . $t . $us);
+            $mediaUrl = $mediaUrl . '?t=' . $t . '&us=' . $us . '&sign=' . $sign;
+        }
+        return [
+            'pid' => $video['id'],
+            'fileName' => $video['file_name'],
+            'height' => $video['height'],
+            'width' => $video['width'],
+            'duration' => $video['duration'],
+            'mediaUrl' => $mediaUrl,
+            'coverUrl' => $video['cover_url']
+        ];
     }
 }

@@ -84,16 +84,15 @@ module.exports = {
   exportUser: "/export/users?", //用户信息导出
   statistic: "/statistic/finance", //获取资金概况
   statisticChart: "/statistic/financeChart", //获取盈利图表数据
+  statisticPanel: "/statistic/firstChart", //首页数据看板数据
   noticeList: "/notification/tpl", //通知设置列表
   notification: "/notification/tpl/", //修改系统消息模版[通知设置]
   noticeConfigure: "/notification/tpl/", //通知配置列表,
   noticeDetail:"/notification/tpl/detail", // 通知
-  /*IFTRUE_pay*/ 
   sequence:"/sequence", // 智能排序数据
   randomUsers:"/random/users", // 推荐用户
   randomTopics:"/random/topics", // 推荐话题
   adminactionlog: "/adminactionlog", // 操作日志
-  /*FITRUE_pay*/
   switchskin: "/switchskin", // 皮肤切换
 
   wxPcUrl: "/oauth/wechat/web/user", //获取微信pcUrl
@@ -104,4 +103,5 @@ module.exports = {
   reports: '/reports', //举报列表
   reportsBatch: '/reports/batch', //删除举报
   clearCache: '/cache', // 缓存相关
+  checkQcloud: '/checkQcloud', // 判断腾讯云云api是否配置
 };

@@ -26,6 +26,7 @@ use App\Models\UserWalletLog;
 use App\Formatter\Formatter;
 use Carbon\Carbon;
 use DateTime;
+use Discuz\Base\DzqModel;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
 use Discuz\SpecialChar\SpecialCharServer;
@@ -72,7 +73,7 @@ use Illuminate\Support\Str;
  * @property string $parsedContent
  * @package App\Models
  */
-class Post extends Model
+class Post extends DzqModel
 {
     use EventGeneratorTrait;
     use ScopeVisibilityTrait;
@@ -98,6 +99,15 @@ class Post extends Model
 
     const IGNORED = 2;
 
+
+    const FIRST_YES = 1;
+    const FIRST_NO = 0;
+
+    const COMMENT_YES = 1;
+    const COMMENT_NO = 0;
+
+    const APPROVED_YES = 1;
+    const APPROVED_NO = 0;
     /**
      * {@inheritdoc}
      */
@@ -173,13 +183,16 @@ class Post extends Model
      */
     public function getSummaryTextAttribute()
     {
-        $content = Str::of(strip_tags($this->formatContent()));
+       $content = Str::of($this->content ?: '');
 
         if ($content->length() > self::SUMMARY_LENGTH) {
-            $content = $content->substr(0, self::SUMMARY_LENGTH)->finish(self::SUMMARY_END_WITH);
-        }
 
-        return $content->__toString();
+            $content = static::$formatter->parse(
+                $content->substr(0, self::SUMMARY_LENGTH)->finish(self::SUMMARY_END_WITH)
+            );
+            $content = static::$formatter->render($content);
+        }
+        return str_replace('<br>', '', $content);
     }
 
     /**
@@ -190,7 +203,7 @@ class Post extends Model
      */
     public function getContentAttribute($value)
     {
-        return static::$formatter->unparse($value);
+        return html_entity_decode(strip_tags($value), ENT_QUOTES, 'UTF-8');
     }
 
     /**
@@ -626,6 +639,7 @@ class Post extends Model
         $cacheKey0 = CacheKey::POST_RESOURCE_BY_ID . '0' . $threadId;
         $cacheKey1 = CacheKey::POST_RESOURCE_BY_ID . '1' . $threadId;
         $cache = app('cache');
+        $cache->forget(CacheKey::LIST_V2_THREADS);
         $f1 = $cache->forget($cacheKey0);
         $f2 = $cache->forget($cacheKey1);
         return $f1 || $f2;
@@ -634,7 +648,9 @@ class Post extends Model
     public function getPostReward()
     {
         $this->removePostCache();
-        $thread = Thread::query()->where('id', $this->thread_id)->first();
+        $thread = ($this->relationLoaded('thread') && array_key_exists('type', $this->thread->attributes))
+            ? $this->thread
+            : Thread::query()->select(['id', 'type'])->where('id', $this->thread_id)->first();
         $this->rewards = 0;
         if($thread->type == Thread::TYPE_OF_QUESTION){
             $this->rewards = UserWalletLog::query()
@@ -642,5 +658,35 @@ class Post extends Model
                 ->sum('change_available_amount');
         }
         return $this->rewards;
+    }
+
+
+    public function getPosts($threadIds)
+    {
+        return self::query()
+            ->whereIn('thread_id', $threadIds)
+            ->whereNull('reply_user_id')
+            ->whereNull('deleted_at')
+            ->where([
+                'is_first' => self::FIRST_YES,
+                'is_comment' => self::COMMENT_NO,
+                'is_approved' => self::APPROVED_YES
+            ])
+            ->get()->toArray();
+    }
+
+    public function getContentSummary($post, &$postId = false)
+    {
+//        $post = self::query()->where(['thread_id' => $threadId, 'is_first' => self::FIRST_YES])->first();
+        if (empty($post)) {
+            return '';
+        } else {
+            $content = strip_tags($post['content']);
+            if (mb_strlen($content) > self::SUMMARY_LENGTH) {
+                $content = Str::substr($content, 0, self::SUMMARY_LENGTH) . self::SUMMARY_END_WITH;
+            }
+            $postId == true && $postId = $post['id'];
+            return $content;
+        }
     }
 }
