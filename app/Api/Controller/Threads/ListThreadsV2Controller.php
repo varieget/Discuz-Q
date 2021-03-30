@@ -73,10 +73,9 @@ class ListThreadsV2Controller extends DzqController
         $attachments = Attachment::instance()->getAttachments($postIds, [Attachment::TYPE_OF_FILE, Attachment::TYPE_OF_IMAGE]);
         $attachmentsByPostId = Utils::pluckArray($attachments, 'type_id');
         $threadRewards = ThreadReward::instance()->getRewards($threadIds);
+        $paidThreadIds = $this->getPayArr($threadIds,Order::ORDER_TYPE_ATTACHMENT);
+        $pay = $this->getPayArr($threadIds,Order::ORDER_TYPE_THREAD);
 
-        $paidThreadIds = Order::query()->whereIn('thread_id', $threadIds)
-            ->where('user_id', $this->user->id)->where('status', Order::ORDER_STATUS_PAID)
-            ->get()->pluck('thread_id')->toArray();
         $result = [];
         $linkString = '';
         foreach ($threadList as $thread) {
@@ -100,7 +99,8 @@ class ListThreadsV2Controller extends DzqController
                 }
             }
             $attachment = $this->filterAttachment($thread, $paidThreadIds, $attachments, $serializer);
-            $thread = $this->getThread($thread, $post, $likedPostIds, $permissions);
+            $thread = $this->getThread($thread, $post, $likedPostIds, $permissions, $pay);
+
             $linkString .= $thread['summary'];
             $rewards = null;
             if (isset($threadRewards[$thread['pid']])) {
@@ -122,6 +122,21 @@ class ListThreadsV2Controller extends DzqController
         $threads['pageData'] = $result;
         $currentPage == 1 && $this->putCache($cache, $key, $threads);
         $this->outPut(ResponseCode::SUCCESS, '', $threads);
+    }
+
+    private function getPayArr($threadIds,$type){
+        $data = [];
+        $getOrder = Order::query()->whereIn('thread_id', $threadIds)
+            ->where('user_id', $this->user->id)
+            ->where('status', Order::ORDER_STATUS_PAID)
+            ->get()->toArray();
+
+        foreach ($getOrder as $key => $val) {
+            if($val['type'] == $type ){
+                $data[] = $val['thread_id'];
+            }
+        }
+        return $data;
     }
 
     private function canViewThread($thread, $paidThreadIds)
@@ -158,10 +173,11 @@ class ListThreadsV2Controller extends DzqController
         return $attachment;
     }
 
-    private function getThread($thread, $firstPost, $likedPostIds, $permissions)
+    private function getThread($thread, $firstPost, $likedPostIds, $permissions, $pay)
     {
         $data = [
             'pid' => $thread['id'],
+            'paid' => $this->canViewThread($thread,$pay),
             'type' => $thread['type'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
