@@ -19,7 +19,6 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\SettingCache;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -485,13 +484,6 @@ class User extends DzqModel
         static $cached = null;
         if (is_null($cached)) {
             $cached = $this->unreadNotifications()->count();
-
-            if ($this->getSkin() == SettingCache::BLUE_SKIN_CODE) {
-                // 蓝版不显示红版的通知消息类型
-                $cached = $this->notifications()->whereNull('read_at')
-                    ->whereNotIn('type', ['receiveredpacket', 'threadrewarded'])
-                    ->count();
-            }
         }
         return $cached;
     }
@@ -504,17 +496,6 @@ class User extends DzqModel
                 ->groupBy('type')->pluck('type', 'count')->map(function ($val) {
                     return class_basename($val);
                 })->flip();
-
-            if ($this->getSkin() == SettingCache::BLUE_SKIN_CODE) {
-                // 蓝版不显示红版的通知消息类型
-                $cachedAll = $this->notifications()
-                    ->whereNull('read_at')
-                    ->whereNotIn('type', ['receiveredpacket', 'threadrewarded'])
-                    ->selectRaw('type,count(*) as count')
-                    ->groupBy('type')->pluck('type', 'count')->map(function ($val) {
-                        return class_basename($val);
-                    })->flip();
-            }
         }
         return $cachedAll;
     }
@@ -960,12 +941,6 @@ class User extends DzqModel
             'userName' => $user['username'],
             'rejectReason' => $user['reject_reason']
         ];
-    }
-
-    public function getSkin()
-    {
-        $skin = app(SettingCache::class)->getSiteSkin();
-        return $skin;
     }
 
     public function getUsers($userIds)
