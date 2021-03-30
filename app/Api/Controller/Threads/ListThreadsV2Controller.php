@@ -54,7 +54,7 @@ class ListThreadsV2Controller extends DzqController
         $groupIds = array_column($groups, 'id');
         $permissions = Permission::categoryPermissions($groupIds);
         if ($homeSequence) {
-            $threads = $this->getDefaultHomeThreads($currentPage, $perPage);
+            $threads = $this->getDefaultHomeThreads($filter,$currentPage, $perPage);
         } else {
             $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
         }
@@ -302,21 +302,24 @@ class ListThreadsV2Controller extends DzqController
 
     /**
      * @desc 获取默认排序首页数据
+     * @param $filter
      * @param $currentPage
      * @param $perPage
      * @return array|bool
      */
-    private function getDefaultHomeThreads($currentPage, $perPage)
+    private function getDefaultHomeThreads($filter,$currentPage, $perPage)
     {
         $sequence = Sequence::query()->first();
         if (empty($sequence)) return false;
-
         $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         if (!$categoryIds) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
+
+        if (empty($filter)) $filter = [];
+        isset($filter['types']) && $types = $filter['types'];
 
         !empty($sequence['group_ids']) && $groupIds = explode(',', $sequence['group_ids']);
         !empty($sequence['user_ids']) && $userIds = explode(',', $sequence['user_ids']);
@@ -335,7 +338,9 @@ class ListThreadsV2Controller extends DzqController
         if(!$isMiniProgramVideoOn){
             $threads = $threads->where('th1.type', '<>', Thread::TYPE_OF_VIDEO);
         }
-
+        if (!empty($types)) {
+            $threads = $threads->whereIn('type', $types);
+        }
         if (!empty($categoryIds)) {
             $threads = $threads->whereIn('th1.category_id', $categoryIds);
         }
