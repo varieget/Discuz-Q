@@ -179,20 +179,37 @@ class NotificationTpl extends Model
         /**
          * 43101 用户拒绝接受消息 并不是配置报错
          *
-         * @URL errcode 的合法值 https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
+         * @URL err_code 的合法值 https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
          */
         if (! in_array((int) $errCode, [43101])) {
-            /** @var Builder $buildError */
-            $buildError = [
-                'id'         => $notificationData->id,
-                'type_name'  => $notificationData->type_name,
-                'send_build' => $sendBuild,
-                'err_code'   => $errCode,
-                'err_msg'    => $errMsg ?: 'unknown mistake',
-            ];
+            // 查询当前是否已经存有错误
+            if ($notificationData->is_error) {
+                /** @var Builder $buildError */
+                $buildError = $notificationData->error_msg;
 
-            $notificationData->is_error = 1;
+                // 检测是否已经存在过相同 error code，不存在则拼接多个 error code
+                $errCodes = explode('、', $buildError['err_code']);
+                if (! in_array($errCode, $errCodes)) {
+                    $buildError['err_code'] .= '、' . $errCode;
+                    $buildError['err_msg'] .= ' #@@@# ' . $errMsg;
+                } else {
+                    return;
+                }
+            } else {
+                /** @var Builder $buildError */
+                $buildError = [
+                    'id'         => $notificationData->id,
+                    'type_name'  => $notificationData->type_name,
+                    'send_build' => $sendBuild,
+                    'err_code'   => $errCode,
+                    'err_msg'    => $errMsg ?: 'unknown mistake',
+                ];
+
+                $notificationData->is_error = 1;
+            }
+
             $notificationData->error_msg = $buildError;
+
             $notificationData->save();
         }
     }
@@ -282,7 +299,7 @@ class NotificationTpl extends Model
         $arr = array_values($arr);
         $build = [];
         foreach ($keys as $k => $v) {
-            $build[$v] = $arr[$k];
+            $build[$v] = $arr[$k] ?? '';
         }
 
         $data = collect($build)->map(function ($item, $key) {
