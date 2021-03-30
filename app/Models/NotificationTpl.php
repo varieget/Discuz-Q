@@ -275,9 +275,9 @@ class NotificationTpl extends Model
      *
      * @param $arr
      * @param array $keys
-     * @return Collection
+     * @return array
      */
-    public static function getMiniProgramContent($arr, array $keys)
+    public static function getMiniProgramContent($arr, array $keys) : array
     {
         $arr = array_values($arr);
         $build = [];
@@ -285,9 +285,11 @@ class NotificationTpl extends Model
             $build[$v] = $arr[$k];
         }
 
-        return collect($build)->map(function ($item, $key) {
+        $data = collect($build)->map(function ($item, $key) {
             return $result[$key] = ['value' => $item];
         });
+
+        return $data->toArray();
     }
 
 }
