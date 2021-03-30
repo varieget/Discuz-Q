@@ -120,7 +120,7 @@ trait NotifyTrait
 
                 case Order::ORDER_TYPE_QUESTION:
                     // 提问时，计算站长分成，以及作者实际获取金额
-                    $this->orderInfo->calculateQuestionMasterAmount();
+                    $this->orderInfo->calculateMasterAmount();
                     $this->orderInfo->save();
                     return $this->orderInfo;
 
