@@ -38,12 +38,14 @@ class ListStickThreadsV2Controller extends DzqController
             }
         }
 
-        $groups = $this->user->groups->toArray();
-        $groupIds = array_column($groups, 'id');
-        $permissions = Permission::categoryPermissions($groupIds);
+        $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
         if(!$isMiniProgramVideoOn){
             $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
         }
+
+        $groups = $this->user->groups->toArray();
+        $groupIds = array_column($groups, 'id');
+        $permissions = Permission::categoryPermissions($groupIds);
 
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         if (!$categoryIds) {
