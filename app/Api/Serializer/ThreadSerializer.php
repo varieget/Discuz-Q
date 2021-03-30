@@ -122,7 +122,12 @@ class ThreadSerializer extends AbstractSerializer
 
         // 匿名（最后设置匿名，避免其他地方取不到用户）
         if ($model->is_anonymous && $model->user->id != $this->actor->id) {
-            $model->user = new Anonymous;
+            if (!empty($model->user->updated_at)) {
+                $updated_at = $model->user->updated_at;
+            } else {
+                $updated_at = '';
+            }
+            $model->user = new Anonymous([], $updated_at);
         }
 
         return $attributes;
