@@ -795,6 +795,18 @@ class User extends DzqModel
     public function hasPermission($permission, bool $condition = true)
     {
         if ($this->isAdmin()) {
+            $global_permissions = array_values(Setting::$global_permission);
+            $judge_permissions = array_intersect($permission, $global_permissions);
+            if(!empty($judge_permissions)){
+                foreach ($global_permissions as $key => $val){
+                    if(!empty(array_intersect($val, $judge_permissions))){          //如果在对应的全局中，则判断这个全局功能权限是否开启
+                        if($this->settings->get($key, 'default') == 0){
+                            return false;
+                        }
+                    }
+                }
+            }
+
             return true;
         }
 
