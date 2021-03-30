@@ -22,7 +22,6 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\Category;
 use App\Models\Setting;
-use Discuz\Common\PubEnum;
 use Discuz\Base\DzqController;
 
 class ListStickThreadsV2Controller extends DzqController
@@ -38,9 +37,8 @@ class ListStickThreadsV2Controller extends DzqController
             }
         }
 
-        $platform = Thread::requestFrom();
-        $settings = Setting::query()->where(['key' => 'miniprogram_video', 'tag' => 'wx_miniprogram'])->first();
-        if(!$settings->value && $platform == PubEnum::MinProgram){
+        $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
+        if(!$isMiniProgramVideoOn){
             $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
         }
 
@@ -68,7 +66,7 @@ class ListStickThreadsV2Controller extends DzqController
             $id = $thread['id'];
             if (empty($title)) {
                 if (isset($posts[$id])) {
-                    $title = Post::instance()->getContentSummary($thread['id']);
+                    $title = Post::instance()->getContentSummary($posts[$id]);
                 }
             }
             $linkString .= $title;

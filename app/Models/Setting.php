@@ -130,4 +130,23 @@ class Setting extends Model
             $value = static::$encrypt->encrypt($value);
         }
     }
+
+    public static function isMiniProgramVideoOn()
+    {
+        $request = app('request');
+        $headers = $request->getHeaders();
+        $server = $request->getServerParams();
+        $headersStr = strtolower(json_encode($headers, 256));
+        $serverStr = strtolower(json_encode($server, 256));
+
+        if (strstr($serverStr, 'miniprogram') || strstr($headersStr, 'miniprogram') || 
+            strstr($headersStr, 'compress')) {
+            $settings = Setting::query()->where(['key' => 'miniprogram_video', 'tag' => 'wx_miniprogram'])->first();
+            if(!$settings->value){
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
