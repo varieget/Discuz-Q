@@ -153,7 +153,6 @@ export default {
       if (Number(e) < 0) {
         this.$message.error('最低金额不能小于0');
       }
-      this.getSiteInfo();
     },
     duedata: function(evn) {
       this.duedata = evn.replace(/[^\d]/g, "");

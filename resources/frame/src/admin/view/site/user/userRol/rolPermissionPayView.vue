@@ -314,10 +314,7 @@
             <el-checkbox
               v-model="checked"
               label="canBeAsked"
-              :disabled="
-                $router.history.current.query.id === '1' ||
-                  $router.history.current.query.id === '7'
-              "
+              :disabled="$router.history.current.query.id === '7'"
               >允许被提问</el-checkbox
             >
           </CardRow>
@@ -457,8 +454,7 @@
               label="switch.thread.canBeReward"
               @change="changeChecked($event,'thread.canBeReward')"
               :disabled="
-                $router.history.current.query.id === '1' ||
-                  $router.history.current.query.id === '7' ||
+                $router.history.current.query.id === '7' ||
                   wechatPayment
               "
               >允许被打赏</el-checkbox
