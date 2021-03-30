@@ -18,6 +18,7 @@
 namespace App\Api\Controller\Threads;
 
 use App\Common\ResponseCode;
+use App\Models\Permission;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\Category;
@@ -37,7 +38,9 @@ class ListStickThreadsV2Controller extends DzqController
             }
         }
 
-        $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
+        $groups = $this->user->groups->toArray();
+        $groupIds = array_column($groups, 'id');
+        $permissions = Permission::categoryPermissions($groupIds);
         if(!$isMiniProgramVideoOn){
             $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
         }
@@ -73,7 +76,8 @@ class ListStickThreadsV2Controller extends DzqController
             $data [] = [
                 'pid' => $thread['id'],
                 'categoryId' => $thread['category_id'],
-                'title' => $title
+                'title' => $title,
+                'canViewPosts' => $this->canViewPosts($thread, $permissions)
             ];
         }
         list($search, $replace) = Thread::instance()->getReplaceString($linkString);
@@ -81,5 +85,18 @@ class ListStickThreadsV2Controller extends DzqController
             $item['title'] = str_replace($search, $replace, $item['title']);
         }
         $this->outPut(ResponseCode::SUCCESS, '', $data);
+    }
+
+
+    private function canViewPosts($thread, $permissions)
+    {
+        if ($this->user->isAdmin() || $this->user->id == $thread['user_id']) {
+            return true;
+        }
+        $viewPostStr = 'category' . $thread['category_id'] . '.thread.viewPosts';
+        if (in_array('thread.viewPosts', $permissions) || in_array($viewPostStr, $permissions)) {
+            return true;
+        }
+        return false;
     }
 }
