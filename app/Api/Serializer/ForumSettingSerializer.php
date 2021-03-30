@@ -124,7 +124,7 @@ class ForumSettingSerializer extends AbstractSerializer
                 'site_create_thread4' => $this->settings->get('site_create_thread4') == "" ? 1 : (int)$this->settings->get('site_create_thread4'),
                 'site_create_thread5' => $this->settings->get('site_create_thread5') == "" ? 1 : (int)$this->settings->get('site_create_thread5'),
                 'site_create_thread6' => $this->settings->get('site_create_thread6') == "" ? 1 : (int)$this->settings->get('site_create_thread6'),
-                'site_can_reward'     => $this->settings->get('site_can_reward') == "" ? 1 : (int)$this->settings->get('site_can_reward'),
+                'site_can_reward'     => !empty($this->settings->get('site_can_reward')) ? (int)$this->settings->get('site_can_reward') : 0,
                 'site_skin' => $site_skin
             ],
 

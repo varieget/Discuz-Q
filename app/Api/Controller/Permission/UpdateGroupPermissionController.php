@@ -81,12 +81,17 @@ class UpdateGroupPermissionController extends AbstractListController
 
         // 查看请求的权限中是否有与全局权限相交的，如果有需要判断
         $request_permissions = $attributes['permissions'] ?? [];
-        $global_permissions = array_values(Setting::$global_permission);
+        $global_permissions = [];
+        $setting_global_permission = Setting::$global_permission;
+        foreach ($setting_global_permission as $val){
+            $global_permissions = array_merge($global_permissions, $val);
+        }
         $judge_permissions = array_intersect($request_permissions, $global_permissions);
+        $settings = app(SettingsRepository::class);
         if(!empty($judge_permissions)){
-            foreach ($global_permissions as $key => $val){
+            foreach ($setting_global_permission as $key => $val){
                 if(!empty(array_intersect($val, $judge_permissions))){          //如果在对应的全局中，则判断这个全局功能权限是否开启
-                    if($this->settings->get($key, 'default') == 0){
+                    if($settings->get($key, 'default') == 0){
                         throw new PermissionDeniedException($key. 'permission_denied');
                     }
                 }
