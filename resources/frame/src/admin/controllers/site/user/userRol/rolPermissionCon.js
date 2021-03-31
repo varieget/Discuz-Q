@@ -77,6 +77,7 @@ export default {
       ],
       value: "",
       purchasePrice: "",
+      lowestPrice: "", // 被提问的最低价格
       dyedate: "",
       ispad: "",
       allowtobuy: "",
@@ -122,6 +123,9 @@ export default {
   },
   watch: {
     checked(val){
+      if (val.indexOf('canBeAsked') !== -1 && this.lowestPrice === '') {
+        this.$message.error('最低金额不能为空');
+      }
       let isEqual = true;
       this.checkAllPermission.forEach(item => {
         if(val.indexOf(item) === -1){
@@ -146,6 +150,11 @@ export default {
     }
   },
   methods: {
+    getLowestPrice: function(e) {
+      if (Number(e) < 0) {
+        this.$message.error('最低金额不能小于0');
+      }
+    },
     duedata: function(evn) {
       this.duedata = evn.replace(/[^\d]/g, "");
     },
@@ -260,6 +269,12 @@ export default {
       console.log('checkedData', checkedData);
       const selectList = this.selectList;
       checkedData.forEach((value, index) => {
+
+        // 最低金额回显
+        if (value.indexOf('canBeAsked.money.') === 0 ) {
+          this.lowestPrice = value.slice(17,value.length);
+        }
+
         // 1 红包、位置、匿名权限回显
         if(
           value.includes("redPacket")
@@ -351,17 +366,21 @@ export default {
       } else {
         checked = checked.filter(v => v !== "other.canInviteUserScale");
       }
+      const param = {
+        data: {
+          attributes: {
+            groupId: this.groupId,
+            permissions: checked,
+          }
+        }
+      }
+      if (checked.indexOf('canBeAsked') > 0) {
+        param.data.attributes.can_be_asked_money = this.lowestPrice
+      }
       this.appFetch({
         url: "groupPermission",
         method: "post",
-        data: {
-          data: {
-            attributes: {
-              groupId: this.groupId,
-              permissions: checked
-            }
-          }
-        }
+        data: param
       })
         .then(res => {
           if (res.errors) {
@@ -578,6 +597,10 @@ export default {
           this.$message.error("请选择删除自己的主题或回复权限");
           return false;
         }
+      }
+      if (this.checked.indexOf('canBeAsked') !== -1 && this.lowestPrice === '') {
+        this.$message.error('最低金额不能为空');
+        return false;
       }
       return true;
     },
