@@ -22,6 +22,7 @@ use App\Api\Serializer\UserProfileSerializer;
 use App\Api\Serializer\UserSerializer;
 use App\Models\Dialog;
 use App\Models\Group;
+use App\Models\Setting;
 use App\Models\User;
 use App\Repositories\UserFollowRepository;
 use App\Repositories\UserRepository;
@@ -78,7 +79,21 @@ class ProfileController extends AbstractResourceController
         }
 
         // 付费模式是否过期
-        $user->paid = ! in_array(Group::UNPAID, $actor->groups->pluck('id')->toArray());
+        $user->paid = !in_array(Group::UNPAID, $actor->groups->pluck('id')->toArray());
+        if (!$actor->isAdmin()) {
+            //付费模式
+            $siteMode = $this->settings->get('site_mode');
+            $siteExpire = $this->settings->get('site_expire');
+            if ($siteMode == 'pay' && !empty($siteExpire) && !empty($user->expired_at)) {
+                $t1 = strtotime($user->expired_at);
+                $t2 = time();
+                $diffTime = abs($t1 - $t2);
+                if ($diffTime >= 3600 && $t1 < $t2) {
+                    $user->paid = false;
+                    //兜底逻辑,防止异常情况下判断错误
+                }
+            }
+        }
 
         $include = $this->extractInclude($request);
 

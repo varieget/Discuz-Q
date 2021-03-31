@@ -61,7 +61,31 @@ class ThreadSerializer extends AbstractSerializer
 
         $gate = $this->gate->forUser($this->actor);
 
+        $group = $model->user->getRelation('groups')->toArray();
+
+        $canBeReward = false;
+        $canBeRewardPermission = false;
+        //特殊处理管理员区分
+        if($group[0]['id'] == 1){
+            //特殊处理
+            $actorPermissions = $model->user->getPermissions();
+            if($actorPermissions){
+                if(in_array('thread.canBeReward',$actorPermissions)){
+                    $canBeRewardPermission = true;
+                }
+            }
+            if($model->price == 0 && $canBeRewardPermission){
+                $canBeReward = true;
+            }
+        }else{
+            if($model->price == 0 && $this->gate->forUser($model->user)->allows('canBeReward', $model)){
+                $canBeReward = true;
+            }
+        }
+
+
         $attributes = [
+            'id'                => $model->id,
             'type'              => (int) $model->type,
             'title'             => $model->title,
             'price'             => $model->price,
@@ -83,7 +107,7 @@ class ThreadSerializer extends AbstractSerializer
             'isSite'            => (bool) $model->is_site,
             'isAnonymous'       => (bool) $model->is_anonymous,
             'isDraft'           => (bool) $model->is_draft,
-            'canBeReward'       => $model->price == 0 && $this->gate->forUser($model->user)->allows('canBeReward', $model),
+            'canBeReward'       => $canBeReward,
             'canViewPosts'      => $gate->allows('viewPosts', $model),
             'canReply'          => $gate->allows('reply', $model),
             'canApprove'        => $gate->allows('approve', $model),
@@ -121,7 +145,12 @@ class ThreadSerializer extends AbstractSerializer
 
         // 匿名（最后设置匿名，避免其他地方取不到用户）
         if ($model->is_anonymous && $model->user->id != $this->actor->id) {
-            $model->user = new Anonymous;
+            if (!empty($model->user->updated_at)) {
+                $updated_at = $model->user->updated_at;
+            } else {
+                $updated_at = '';
+            }
+            $model->user = new Anonymous([], $updated_at);
         }
 
         return $attributes;

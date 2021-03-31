@@ -30,7 +30,7 @@
           </el-switch>
             </template>
           </el-table-column>
-          
+
           <!-- <el-table-column
             width="100">
             <template slot-scope="scope">
@@ -40,7 +40,7 @@
 
           <el-table-column>
             <template slot-scope="scope">
-              <el-button v-if="scope.row._data.id !== '1'" :disabled="addStatus && tableData.length-1 === scope.$index" type="text" @click="$router.push({path:'/admin/rol-permission',query:{id:scope.row._data.id,name:scope.row._data.name}})">设置</el-button>
+              <el-button :disabled="addStatus && tableData.length-1 === scope.$index" type="text" @click="$router.push({path:'/admin/rol-permission',query:{id:scope.row._data.id,name:scope.row._data.name}})">设置</el-button>
               <el-popover
                 width="100"
                 placement="top"
