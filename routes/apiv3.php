@@ -16,5 +16,13 @@
  */
 use App\Api\Controller as ApiController;
 
+/*
+|--------------------------------------------------------------------------
+| 注册/登录
+|--------------------------------------------------------------------------
+*/
+//二维码生成
+$route->get('/users/pc/wechat/h5.genqrcode', 'pc.wechat.h5.qrcode', ApiController\UsersV3\WechatH5QrCodeController::class);
+
 
 
