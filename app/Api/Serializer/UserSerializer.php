@@ -146,6 +146,26 @@ class UserSerializer extends AbstractSerializer
             $attributes['avatarUrl'] = ! empty($attributes['avatarUrl']) ? $attributes['avatarUrl'] : $this->qqAvatar($model);
         }
 
+        //获取被提问最低金额
+        if($model->id !== $this->actor->id && $model->can('canBeAsked')){
+            $can_be_asked_money = 0;
+            $actorPermissions = $model->getPermissions();
+            $can_be_asked_money_str = '';
+            foreach ($actorPermissions as $value){
+                if(strpos($value,'canBeAsked.money') !== false){
+                    $can_be_asked_money_str = $value;
+                    break;
+                }
+            }
+            if(strlen($can_be_asked_money_str)>0){
+                $can_be_asked_money_arr = explode('.',$can_be_asked_money_str);
+                $can_be_asked_money = (int)$can_be_asked_money_arr[2];
+            }
+            $attributes += [
+                'canBeAskedMoney' => $can_be_asked_money,
+            ];
+        }
+
         return $attributes;
     }
 
