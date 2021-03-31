@@ -25,6 +25,7 @@ use App\Models\User;
 use Discuz\Cache\CacheManager;
 use Discuz\Foundation\Application;
 use Discuz\Http\UrlGenerator;
+use Illuminate\Support\Str;
 use s9e\TextFormatter\Configurator;
 use s9e\TextFormatter\Unparser;
 
@@ -207,6 +208,10 @@ class BaseFormatter
     protected function getRenderer()
     {
         spl_autoload_register(function ($class) {
+            if (!Str::startsWith($class, 'Renderer')) {
+                return;
+            }
+
             if (file_exists($file = $this->cacheDir.'/'.$class.'.php')) {
                 include $file;
             } else {
