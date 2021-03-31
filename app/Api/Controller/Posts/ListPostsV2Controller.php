@@ -165,6 +165,7 @@ class ListPostsV2Controller extends DzqController
             'replyCount' => $post['reply_count'],
             'likeCount' => $post['like_count'],
             'createdAt' => optional($post->created_at)->format('Y-m-d H:i:s'),
+            'updatedAt' => optional($post->updated_at)->format('Y-m-d H:i:s'),
             'isFirst' => $post['is_first'],
             'isComment' => $post['is_comment'],
             'isApproved' => $post['is_approved'],
