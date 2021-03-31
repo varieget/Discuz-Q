@@ -48,13 +48,13 @@ class ListThreadsV2Controller extends DzqController
         $homeSequence = $this->inPut('homeSequence');//默认首页
         $cache = app('cache');
         $key = md5(json_encode($filter) . $perPage . $homeSequence);
-        $currentPage == 1 && $this->getCache($cache,$key);
+        $currentPage == 1 && $this->getCache($cache, $key);
         $serializer = $this->app->make(AttachmentSerializer::class);
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
         $permissions = Permission::categoryPermissions($groupIds);
         if ($homeSequence) {
-            $threads = $this->getDefaultHomeThreads($filter,$currentPage, $perPage);
+            $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         } else {
             $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
         }
@@ -73,8 +73,8 @@ class ListThreadsV2Controller extends DzqController
         $attachments = Attachment::instance()->getAttachments($postIds, [Attachment::TYPE_OF_FILE, Attachment::TYPE_OF_IMAGE]);
         $attachmentsByPostId = Utils::pluckArray($attachments, 'type_id');
         $threadRewards = ThreadReward::instance()->getRewards($threadIds);
-        $paidThreadIds = $this->getPayArr($threadIds,Order::ORDER_TYPE_ATTACHMENT);
-        $pay = $this->getPayArr($threadIds,Order::ORDER_TYPE_THREAD);
+        $paidThreadIds = $this->getPayArr($threadIds, Order::ORDER_TYPE_ATTACHMENT);
+        $pay = $this->getPayArr($threadIds, Order::ORDER_TYPE_THREAD);
 
         $result = [];
         $linkString = '';
@@ -124,7 +124,8 @@ class ListThreadsV2Controller extends DzqController
         $this->outPut(ResponseCode::SUCCESS, '', $threads);
     }
 
-    private function getPayArr($threadIds,$type){
+    private function getPayArr($threadIds, $type)
+    {
         $data = [];
         $getOrder = Order::query()->whereIn('thread_id', $threadIds)
             ->where('user_id', $this->user->id)
@@ -132,7 +133,7 @@ class ListThreadsV2Controller extends DzqController
             ->get()->toArray();
 
         foreach ($getOrder as $key => $val) {
-            if($val['type'] == $type ){
+            if ($val['type'] == $type) {
                 $data[] = $val['thread_id'];
             }
         }
@@ -177,7 +178,7 @@ class ListThreadsV2Controller extends DzqController
     {
         $data = [
             'pid' => $thread['id'],
-            'paid' => $this->canViewThread($thread,$pay),
+            'paid' => $this->canViewThread($thread, $pay),
             'type' => $thread['type'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
@@ -197,9 +198,9 @@ class ListThreadsV2Controller extends DzqController
             'diffCreatedAt' => Utils::diffTime($thread['created_at']),
             'isRedPacket' => $thread['is_red_packet'],
             'canViewPost' => $this->canViewPosts($thread, $permissions),
-            'canLike' =>true,
-            'isLiked'=>false,
-            'isDraft'=>$thread['is_draft'],
+            'canLike' => true,
+            'isLiked' => false,
+            'isDraft' => $thread['is_draft'],
             'likedCount' => 0,
             'firstPostId' => null,
             'replyCount' => 0,
@@ -307,7 +308,7 @@ class ListThreadsV2Controller extends DzqController
      * @param $perPage
      * @return array|bool
      */
-    private function getDefaultHomeThreads($filter,$currentPage, $perPage)
+    private function getDefaultHomeThreads($filter, $currentPage, $perPage)
     {
         $sequence = Sequence::query()->first();
         if (empty($sequence)) return false;
@@ -335,7 +336,7 @@ class ListThreadsV2Controller extends DzqController
             ->where('th1.is_draft', Thread::IS_NOT_DRAFT);
 
         $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
-        if(!$isMiniProgramVideoOn){
+        if (!$isMiniProgramVideoOn) {
             $threads = $threads->where('th1.type', '<>', Thread::TYPE_OF_VIDEO);
         }
         if (!empty($types)) {
@@ -417,7 +418,7 @@ class ListThreadsV2Controller extends DzqController
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
 
         $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
-        if(!$isMiniProgramVideoOn){
+        if (!$isMiniProgramVideoOn) {
             $threads = $threads->where('threads.type', '<>', Thread::TYPE_OF_VIDEO);
         }
 
