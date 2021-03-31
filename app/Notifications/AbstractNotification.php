@@ -30,10 +30,10 @@ abstract class AbstractNotification extends Notification
     {
         $values = array_values($tplId);
         if (self::$tplData) {
-            self::$tplData->whereIn('id', $values);
+            self::$tplData->whereIn('notice_id', $values);
         }
 
-        self::$tplData = NotificationTpl::query()->whereIn('id', $values)->get();
+        self::$tplData = NotificationTpl::query()->whereIn('notice_id', $values)->get();
     }
 
     protected function getNotificationChannels()
