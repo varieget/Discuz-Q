@@ -172,6 +172,7 @@ class ListPostsV2Controller extends DzqController
             'canApprove' => $this->gate->allows('approve', $post),
             'canDelete' => $this->gate->allows('delete', $post),
             'canHide' => $this->gate->allows('hide', $post),
+            'canEdit' => $this->gate->allows('edit', $post),
             'user' => $this->getUser($post->user),
             'images' => $post->images->map(function (Attachment $image) {
                 return $this->attachmentSerializer->getDefaultAttributes($image);
