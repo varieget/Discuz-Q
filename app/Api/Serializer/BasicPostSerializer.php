@@ -68,6 +68,7 @@ class BasicPostSerializer extends AbstractSerializer
         )->unique()->values();
 
         $attributes = [
+            'id'                => $model->id,
             'replyPostId'       => $model->reply_post_id,
             'replyUserId'       => $model->reply_user_id,
             'commentPostId'     => $model->comment_post_id,
@@ -87,6 +88,13 @@ class BasicPostSerializer extends AbstractSerializer
             'canHide'           => $gate->allows('hide', $model),
             'contentAttachIds'  => $contentAttachIds,
         ];
+
+        //更新 content 中的图片url，这里新增一个字段主要用户编辑
+        $attributes['parseContentHtml'] = $attributes['content'];
+        if(!empty($model->parseContentHtml)){
+            $attributes['parseContentHtml'] = $model->parseContentHtml;
+        }
+
 
         if ($canEdit || $this->actor->id === $model->user_id) {
             $attributes += [

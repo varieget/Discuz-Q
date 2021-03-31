@@ -25,6 +25,7 @@ use App\Models\User;
 use App\Settings\ForumSettingField;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Common\PubEnum;
+use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Support\Arr;
@@ -68,6 +69,49 @@ class ForumSettingSerializer extends AbstractSerializer
             $site_favicon = $favicon ?: app(UrlGenerator::class)->to('/favicon.png');
         }
 
+        $can_be_asked_money = 0;
+        $can_be_asked = false;
+        //获取提问最低价格
+        $group = $actor->getRelation('groups')->toArray();
+        //区分管理员和其他用户组
+        if($group[0]['id'] == 1){
+            //特殊处理
+            $actorPermissions = $actor->getPermissions();
+            if($actorPermissions){
+                if(in_array('canBeAsked',$actorPermissions)){
+                    $can_be_asked = true;
+                }
+
+                $can_be_asked_money_str = '';
+                foreach ($actorPermissions as $value){
+                    if(strpos($value,'canBeAsked.money') !== false){
+                        $can_be_asked_money_str = $value;
+                        break;
+                    }
+                }
+                if(strlen($can_be_asked_money_str)>0){
+                    $can_be_asked_money_arr = explode('.',$can_be_asked_money_str);
+                    $can_be_asked_money = (int)$can_be_asked_money_arr[2];
+                }
+            }
+        }else{
+            $can_be_asked = $actor->can('canBeAsked');
+            if($actor->can('canBeAsked')){
+                $can_be_asked_money_str = '';
+                $actorPermissions = $actor->getPermissions();
+                foreach ($actorPermissions as $value){
+                    if(strpos($value,'canBeAsked.money') !== false){
+                        $can_be_asked_money_str = $value;
+                        break;
+                    }
+                }
+                if(strlen($can_be_asked_money_str)>0){
+                    $can_be_asked_money_arr = explode('.',$can_be_asked_money_str);
+                    $can_be_asked_money = (int)$can_be_asked_money_arr[2];
+                }
+            }
+        }
+
         $attributes = [
             // 站点设置
             'set_site' => [
@@ -104,8 +148,10 @@ class ForumSettingSerializer extends AbstractSerializer
                 'site_create_thread4' => $this->settings->get('site_create_thread4') == "" ? 1 : (int)$this->settings->get('site_create_thread4'),
                 'site_create_thread5' => $this->settings->get('site_create_thread5') == "" ? 1 : (int)$this->settings->get('site_create_thread5'),
                 'site_create_thread6' => $this->settings->get('site_create_thread6') == "" ? 1 : (int)$this->settings->get('site_create_thread6'),
+                'site_can_reward'     => !empty($this->settings->get('site_can_reward')) ? (int)$this->settings->get('site_can_reward') : 0,
                 'site_skin' => $site_skin
             ],
+
 
             // 注册设置
             'set_reg' => [
@@ -193,6 +239,13 @@ class ForumSettingSerializer extends AbstractSerializer
                 'can_create_thread_goods_position'      => $actor->can('createThread.' . Thread::TYPE_OF_GOODS . '.position'),     // 发布商品位置
                 'can_create_thread_red_packet'          => $actor->can('createThread.' . Thread::TYPE_OF_TEXT . '.redPacket'),     // 发文字帖红包
                 'can_create_thread_long_red_packet'     => $actor->can('createThread.' . Thread::TYPE_OF_LONG . '.redPacket'),     // 发长文帖红包
+                'can_create_thread_anonymous'           => $actor->can('createThread.' . Thread::TYPE_OF_TEXT . '.anonymous'),      // 发布文字匿名发布
+                'can_create_thread_long_anonymous'      => $actor->can('createThread.' . Thread::TYPE_OF_LONG . '.anonymous'),      // 发布长文匿名发布
+                'can_create_thread_video_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_VIDEO . '.anonymous'),     // 发布视频匿名发布
+                'can_create_thread_image_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_IMAGE . '.anonymous'),     // 发布图片匿名发布
+                'can_create_thread_audio_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_AUDIO . '.anonymous'),     // 发布语音匿名发布
+                'can_create_thread_question_anonymous'  => $actor->can('createThread.' . Thread::TYPE_OF_QUESTION . '.anonymous'),  // 发布问答匿名发布
+                'can_create_thread_goods_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_GOODS . '.anonymous'),     // 发布商品匿名发布
 
                 // 至少在一个分类下有发布权限
                 'can_create_thread_in_category' => (bool) Category::getIdsWhereCan($actor, 'createThread'),
@@ -203,7 +256,8 @@ class ForumSettingSerializer extends AbstractSerializer
 
                 // 其他
                 'initialized_pay_password' => (bool) $actor->pay_password,              // 是否初始化支付密码
-                'can_be_asked' => $actor->can('canBeAsked'),                            // 是否允许被提问
+                'can_be_asked' => $can_be_asked,                            // 是否允许被提问
+                'can_be_asked_money' => $can_be_asked_money,
                 'can_be_onlooker' => $this->settings->get('site_onlooker_price') > 0 && $actor->can('canBeOnlooker'),           // 是否允许被围观
                 'create_thread_with_captcha' => ! $actor->isAdmin() && $actor->can('createThreadWithCaptcha'),                  // 发布内容需要验证码
                 'publish_need_real_name' => ! $actor->isAdmin() && $actor->can('publishNeedRealName') && ! $actor->realname,    // 发布内容需要实名认证
@@ -240,8 +294,11 @@ class ForumSettingSerializer extends AbstractSerializer
         }
 
         // 微信小程序请求时判断视频开关
+        $headers = $this->request->getHeaders();
+        $headersStr = strtolower(json_encode($headers, 256));
         if (! $this->settings->get('miniprogram_video', 'wx_miniprogram') &&
-            strpos(Arr::get($this->request->getServerParams(), 'HTTP_X_APP_PLATFORM'), 'wx_miniprogram') !== false) {
+            (strpos(Arr::get($this->request->getServerParams(), 'HTTP_X_APP_PLATFORM'), 'wx_miniprogram') !== false || strpos($headersStr, 'miniprogram') !== false || 
+                strpos($headersStr, 'compress') !== false)) {
             $attributes['other']['can_create_thread_video'] = false;
         }
         //判断三种注册方式是否置灰禁用

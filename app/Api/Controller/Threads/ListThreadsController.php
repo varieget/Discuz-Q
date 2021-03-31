@@ -213,7 +213,8 @@ class ListThreadsController extends AbstractListController
         $limit = $this->extractLimit($request);
         $offset = $this->extractOffset($request);
         $include = $this->extractInclude($request);
-        $page = $params['page'];
+        $page = isset($params['page']) ? $params['page'] : 1;
+        
 
         $threads = $this->search($actor, $filter, $sort, $limit, $offset, $page);
 
@@ -538,6 +539,11 @@ class ListThreadsController extends AbstractListController
         // 回复数（小于）
         if ($postCountLt = Arr::get($filter, 'postCountLt')) {
             $query->where('threads.post_count', '<=', $postCountLt);
+        }
+
+        // 主题ID（等于）
+        if ($threadID = Arr::get($filter, 'threadID')) {
+            $query->where('threads.id', '=', $threadID);
         }
 
         // 精华帖

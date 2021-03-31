@@ -44,7 +44,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.0')"
+              @change="changePostChecked($event,'createThread.0')"
               >发布文字</el-checkbox
             >
           </CardRow>
@@ -66,6 +66,11 @@
               value="createThread.0.position"
               @click.native="changeExpandItem('createThread.0.position')"
               ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.0.anonymous"
+              @click.native="changeExpandItem('createThread.0.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -78,7 +83,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.1')"
+              @change="changePostChecked($event,'createThread.1')"
               >发布帖子</el-checkbox
             >
           </CardRow>
@@ -100,6 +105,11 @@
               value="createThread.1.position"
               @click.native="changeExpandItem('createThread.1.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.1.anonymous"
+              @click.native="changeExpandItem('createThread.1.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -113,7 +123,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.2')"
+              @change="changePostChecked($event,'createThread.2')"
               >发布视频</el-checkbox
             >
           </CardRow>
@@ -133,6 +143,11 @@
               value="createThread.2.position"
               @click.native="changeExpandItem('createThread.2.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.2.anonymous"
+              @click.native="changeExpandItem('createThread.2.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -145,7 +160,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.3')"
+              @change="changePostChecked($event,'createThread.3')"
               >发布图片</el-checkbox
             >
           </CardRow>
@@ -162,6 +177,11 @@
               value="createThread.3.position"
               @click.native="changeExpandItem('createThread.3.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.3.anonymous"
+              @click.native="changeExpandItem('createThread.3.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -175,7 +195,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.4')"
+              @change="changePostChecked($event,'createThread.4')"
               >发布语音</el-checkbox
             >
           </CardRow>
@@ -195,6 +215,11 @@
               value="createThread.4.position"
               @click.native="changeExpandItem('createThread.4.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.4.anonymous"
+              @click.native="changeExpandItem('createThread.4.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -210,7 +235,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.5')"
+              @change="changePostChecked($event,'createThread.5')"
               >发布问答</el-checkbox
             >
           </CardRow>
@@ -230,6 +255,11 @@
               value="createThread.5.position"
               @click.native="changeExpandItem('createThread.5.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.5.anonymous"
+              @click.native="changeExpandItem('createThread.5.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card class="hasSelect">
@@ -242,7 +272,7 @@
                 $router.history.current.query.id === '1' ||
                 $router.history.current.query.id === '7'
               "
-              @change="changeChecked($event,'createThread.6')"
+              @change="changePostChecked($event,'createThread.6')"
               >发布商品</el-checkbox
             >
           </CardRow>
@@ -259,6 +289,11 @@
               value="createThread.6.position"
               @click.native="changeExpandItem('createThread.6.position')"
             ></el-option>
+            <el-option
+              label="匿名发布"
+              value="createThread.6.anonymous"
+              @click.native="changeExpandItem('createThread.6.anonymous')"
+              ></el-option>
           </el-select>
         </Card>
         <Card>
@@ -274,18 +309,25 @@
             >
           </CardRow>
         </Card>
-        <Card>
+        <Card class="hasSelect">
           <CardRow description="允许成为发布问答时的提问对象">
             <el-checkbox
               v-model="checked"
               label="canBeAsked"
-              :disabled="
-                $router.history.current.query.id === '1' ||
-                  $router.history.current.query.id === '7'
-              "
+              :disabled="$router.history.current.query.id === '7'"
               >允许被提问</el-checkbox
             >
           </CardRow>
+          <el-input
+            style="position: absolute;left: 45%;top: 0;height: 40PX;width: 340PX"
+            clearable
+            placeholder="被提问的最低价格"
+            type="number"
+            :disabled="checked.indexOf('canBeAsked') === -1"
+            @input="getLowestPrice"
+            v-model="lowestPrice"
+            min="0"
+          ></el-input>
         </Card>
         <Card>
           <CardRow
@@ -355,7 +397,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList.createThread"
             :options="categoriesList"
@@ -387,7 +429,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.reply']"
             :options="categoriesList"
@@ -412,15 +454,14 @@
               label="switch.thread.canBeReward"
               @change="changeChecked($event,'thread.canBeReward')"
               :disabled="
-                $router.history.current.query.id === '1' ||
-                  $router.history.current.query.id === '7' ||
+                $router.history.current.query.id === '7' ||
                   wechatPayment
               "
               >允许被打赏</el-checkbox
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.canBeReward']"
             :options="categoriesList"
@@ -457,7 +498,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList.viewThreads"
             :options="categoriesList"
@@ -486,7 +527,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.viewPosts']"
             :options="categoriesList"
@@ -515,7 +556,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.1']"
             :options="categoriesList"
@@ -544,7 +585,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.2']"
             :options="categoriesList"
@@ -573,7 +614,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.3']"
             :options="categoriesList"
@@ -602,7 +643,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.4']"
             :options="categoriesList"
@@ -631,7 +672,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.freeViewPosts.5']"
             :options="categoriesList"
@@ -723,7 +764,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.essence']"
             :options="categoriesList"
@@ -755,7 +796,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.edit']"
             :options="categoriesList"
@@ -787,7 +828,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.hide']"
             :options="categoriesList"
@@ -819,7 +860,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.editPosts']"
             :options="categoriesList"
@@ -851,7 +892,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.hidePosts']"
             :options="categoriesList"
@@ -883,7 +924,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.editOwnThreadOrPost']"
             :options="categoriesList"
@@ -915,7 +956,7 @@
             >
           </CardRow>
           <el-cascader
-            :key="Math.random()"
+            :key="keyValue"
             placeholder="请选择"
             v-model="selectList['thread.hideOwnThreadOrPost']"
             :options="categoriesList"
