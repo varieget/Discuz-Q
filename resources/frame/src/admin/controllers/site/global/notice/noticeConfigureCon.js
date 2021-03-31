@@ -45,7 +45,6 @@ export default {
     methods: {
       // 点击添加关键字
       tableContAdd(type, index) {
-        console.log(index, 'index')
         if (type === 'appletsList' && this.appletsList.length <= 4) {
           this.appletsList.push('');
         } else if (type === 'appletsList' && this.appletsList.length > 4) {
@@ -69,7 +68,6 @@ export default {
       },
       // 通知方式切换
       noticeListChange(data) {
-        console.log(data, 'data')
         this.showSystem = data.includes("0");
         this.showWx = data.includes("1");
         this.showMini = data.includes("4");
@@ -83,7 +81,6 @@ export default {
           splice: `?type_name=${this.typeName}`,
           data: {}
         }).then(res => {
-          console.log(res, 'res');
           // 系统通知数据
           if (res.readdata[0]) {
             this.systemList = res.readdata[0]._data;
@@ -147,7 +144,6 @@ export default {
           if (res.readdata[3]) {
             this.miniProgramList = res.readdata[3]._data;
             this.keyList = this.miniProgramList.keys;
-            console.log(this.keyList, 'this.keyList');
             this.miniKeyWord = this.miniProgramList.keywords_data.length > 0
               ? this.miniProgramList.keywords_data
               : ['', ''];
