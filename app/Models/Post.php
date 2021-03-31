@@ -675,9 +675,9 @@ class Post extends DzqModel
             ->get()->toArray();
     }
 
-    public function getContentSummary($threadId, &$postId = false)
+    public function getContentSummary($post, &$postId = false)
     {
-        $post = self::query()->where(['thread_id' => $threadId, 'is_first' => self::FIRST_YES])->first();
+//        $post = self::query()->where(['thread_id' => $threadId, 'is_first' => self::FIRST_YES])->first();
         if (empty($post)) {
             return '';
         } else {

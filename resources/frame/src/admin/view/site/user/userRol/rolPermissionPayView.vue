@@ -449,7 +449,8 @@
               :disabled="
                 $router.history.current.query.id === '1' ||
                   $router.history.current.query.id === '7' ||
-                  wechatPayment
+                  wechatPayment || 
+                  !isReward
               "
               >允许被打赏</el-checkbox
             >

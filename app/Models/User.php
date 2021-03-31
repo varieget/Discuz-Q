@@ -19,7 +19,6 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\SettingCache;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -118,7 +117,8 @@ class User extends DzqModel
         'username',
         'password',
         'mobile',
-        'bind_type'
+        'bind_type',
+        'updated_at'
     ];
 
     const STATUS_NORMAL = 0;//正常
@@ -484,13 +484,6 @@ class User extends DzqModel
         static $cached = null;
         if (is_null($cached)) {
             $cached = $this->unreadNotifications()->count();
-
-            if ($this->getSkin() == SettingCache::BLUE_SKIN_CODE) {
-                // 蓝版不显示红版的通知消息类型
-                $cached = $this->notifications()->whereNull('read_at')
-                    ->whereNotIn('type', ['receiveredpacket', 'threadrewarded'])
-                    ->count();
-            }
         }
         return $cached;
     }
@@ -503,17 +496,6 @@ class User extends DzqModel
                 ->groupBy('type')->pluck('type', 'count')->map(function ($val) {
                     return class_basename($val);
                 })->flip();
-
-            if ($this->getSkin() == SettingCache::BLUE_SKIN_CODE) {
-                // 蓝版不显示红版的通知消息类型
-                $cachedAll = $this->notifications()
-                    ->whereNull('read_at')
-                    ->whereNotIn('type', ['receiveredpacket', 'threadrewarded'])
-                    ->selectRaw('type,count(*) as count')
-                    ->groupBy('type')->pluck('type', 'count')->map(function ($val) {
-                        return class_basename($val);
-                    })->flip();
-            }
         }
         return $cachedAll;
     }
@@ -795,6 +777,24 @@ class User extends DzqModel
     public function hasPermission($permission, bool $condition = true)
     {
         if ($this->isAdmin()) {
+            if(!is_array($permission))  $permission = [$permission];
+            $global_permissions = [];
+            $setting_global_permission = Setting::$global_permission;
+            foreach ($setting_global_permission as $val){
+                $global_permissions = array_merge($global_permissions, $val);
+            }
+            $judge_permissions = array_intersect($permission, $global_permissions);
+            $settings = app(SettingsRepository::class);
+            if(!empty($judge_permissions)){
+                foreach ($setting_global_permission as $key => $val){
+                    if(!empty(array_intersect($val, $judge_permissions))){          //如果在对应的全局中，则判断这个全局功能权限是否开启
+                        if($settings->get($key, 'default') == 0){
+                            return false;
+                        }
+                    }
+                }
+            }
+
             return true;
         }
 
@@ -941,12 +941,6 @@ class User extends DzqModel
             'userName' => $user['username'],
             'rejectReason' => $user['reject_reason']
         ];
-    }
-
-    public function getSkin()
-    {
-        $skin = app(SettingCache::class)->getSiteSkin();
-        return $skin;
     }
 
     public function getUsers($userIds)
