@@ -48,13 +48,13 @@ class ListThreadsV2Controller extends DzqController
         $homeSequence = $this->inPut('homeSequence');//默认首页
         $cache = app('cache');
         $key = md5(json_encode($filter) . $perPage . $homeSequence);
-        $currentPage == 1 && $this->getCache($cache,$key);
+        $currentPage == 1 && $this->getCache($cache, $key);
         $serializer = $this->app->make(AttachmentSerializer::class);
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
         $permissions = Permission::categoryPermissions($groupIds);
         if ($homeSequence) {
-            $threads = $this->getDefaultHomeThreads($currentPage, $perPage);
+            $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         } else {
             $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
         }
@@ -73,10 +73,9 @@ class ListThreadsV2Controller extends DzqController
         $attachments = Attachment::instance()->getAttachments($postIds, [Attachment::TYPE_OF_FILE, Attachment::TYPE_OF_IMAGE]);
         $attachmentsByPostId = Utils::pluckArray($attachments, 'type_id');
         $threadRewards = ThreadReward::instance()->getRewards($threadIds);
+        $paidThreadIds = $this->getPayArr($threadIds, Order::ORDER_TYPE_ATTACHMENT);
+        $pay = $this->getPayArr($threadIds, Order::ORDER_TYPE_THREAD);
 
-        $paidThreadIds = Order::query()->whereIn('thread_id', $threadIds)
-            ->where('user_id', $this->user->id)->where('status', Order::ORDER_STATUS_PAID)
-            ->get()->pluck('thread_id')->toArray();
         $result = [];
         $linkString = '';
         foreach ($threadList as $thread) {
@@ -100,7 +99,8 @@ class ListThreadsV2Controller extends DzqController
                 }
             }
             $attachment = $this->filterAttachment($thread, $paidThreadIds, $attachments, $serializer);
-            $thread = $this->getThread($thread, $post, $likedPostIds, $permissions);
+            $thread = $this->getThread($thread, $post, $likedPostIds, $permissions, $pay);
+
             $linkString .= $thread['summary'];
             $rewards = null;
             if (isset($threadRewards[$thread['pid']])) {
@@ -122,6 +122,22 @@ class ListThreadsV2Controller extends DzqController
         $threads['pageData'] = $result;
         $currentPage == 1 && $this->putCache($cache, $key, $threads);
         $this->outPut(ResponseCode::SUCCESS, '', $threads);
+    }
+
+    private function getPayArr($threadIds, $type)
+    {
+        $data = [];
+        $getOrder = Order::query()->whereIn('thread_id', $threadIds)
+            ->where('user_id', $this->user->id)
+            ->where('status', Order::ORDER_STATUS_PAID)
+            ->get()->toArray();
+
+        foreach ($getOrder as $key => $val) {
+            if ($val['type'] == $type) {
+                $data[] = $val['thread_id'];
+            }
+        }
+        return $data;
     }
 
     private function canViewThread($thread, $paidThreadIds)
@@ -158,10 +174,11 @@ class ListThreadsV2Controller extends DzqController
         return $attachment;
     }
 
-    private function getThread($thread, $firstPost, $likedPostIds, $permissions)
+    private function getThread($thread, $firstPost, $likedPostIds, $permissions, $pay)
     {
         $data = [
             'pid' => $thread['id'],
+            'paid' => $this->canViewThread($thread, $pay),
             'type' => $thread['type'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
@@ -183,6 +200,7 @@ class ListThreadsV2Controller extends DzqController
             'canViewPost' => $this->canViewPosts($thread, $permissions),
             'canLike' => true,
             'isLiked' => false,
+            'isDraft' => $thread['is_draft'],
             'likedCount' => 0,
             'firstPostId' => null,
             'replyCount' => 0,
@@ -261,9 +279,11 @@ class ListThreadsV2Controller extends DzqController
         return [
             'pid' => $group['group_id'],
             'groupName' => $group['groups']['name'],
-            'groupIcon' => $group['groups']['icon']
+            'groupIcon' => $group['groups']['icon'],
+            'isDisplay' => $group['groups']['is_display']
         ];
     }
+
 
     private function getUserInfo($user)
     {
@@ -283,21 +303,24 @@ class ListThreadsV2Controller extends DzqController
 
     /**
      * @desc 获取默认排序首页数据
+     * @param $filter
      * @param $currentPage
      * @param $perPage
      * @return array|bool
      */
-    private function getDefaultHomeThreads($currentPage, $perPage)
+    private function getDefaultHomeThreads($filter, $currentPage, $perPage)
     {
         $sequence = Sequence::query()->first();
         if (empty($sequence)) return false;
-
         $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         if (!$categoryIds) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
+
+        if (empty($filter)) $filter = [];
+        isset($filter['types']) && $types = $filter['types'];
 
         !empty($sequence['group_ids']) && $groupIds = explode(',', $sequence['group_ids']);
         !empty($sequence['user_ids']) && $userIds = explode(',', $sequence['user_ids']);
@@ -313,10 +336,12 @@ class ListThreadsV2Controller extends DzqController
             ->where('th1.is_draft', Thread::IS_NOT_DRAFT);
 
         $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
-        if(!$isMiniProgramVideoOn){
+        if (!$isMiniProgramVideoOn) {
             $threads = $threads->where('th1.type', '<>', Thread::TYPE_OF_VIDEO);
         }
-
+        if (!empty($types)) {
+            $threads = $threads->whereIn('type', $types);
+        }
         if (!empty($categoryIds)) {
             $threads = $threads->whereIn('th1.category_id', $categoryIds);
         }
@@ -393,7 +418,7 @@ class ListThreadsV2Controller extends DzqController
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
 
         $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
-        if(!$isMiniProgramVideoOn){
+        if (!$isMiniProgramVideoOn) {
             $threads = $threads->where('threads.type', '<>', Thread::TYPE_OF_VIDEO);
         }
 
