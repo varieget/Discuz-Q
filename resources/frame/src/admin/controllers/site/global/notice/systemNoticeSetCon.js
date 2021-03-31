@@ -12,7 +12,8 @@ export default {
       tableData: [],
       pageNum: 1,
       pageLimit: 20,
-      total: 0
+      total: 0,
+      type: [],
       // pageCount: 0
     };
   },
@@ -34,10 +35,8 @@ export default {
           if (res.errors) {
             this.$message.error(res.errors[0].code);
           } else {
-            console.log(res, 'res');
             this.tableData = res.readdata;
             this.total = res.meta.total;
-            // this.pageCount = res.meta.pageCount;
           }
         })
         .catch(err => {});
@@ -80,7 +79,6 @@ export default {
       return (this.pageNum - 1) * this.pageLimit + $index + 1;
     },
     handleCurrentChange(val) {
-      console.log("val~~~", val);
       this.pageNum = val;
       this.getNoticeList();
     },
@@ -115,7 +113,6 @@ export default {
         }).catch(() => {
           console.log('点击了关闭')
         })
-
       }
     }
   },
