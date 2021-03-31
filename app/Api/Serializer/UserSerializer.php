@@ -158,8 +158,8 @@ class UserSerializer extends AbstractSerializer
                 }
             }
             if(strlen($can_be_asked_money_str)>0){
-                $can_be_asked_money_arr = explode('.',$can_be_asked_money_str);
-                $can_be_asked_money = (int)$can_be_asked_money_arr[2];
+                $money = str_replace('canBeAsked.money.','',$can_be_asked_money_str);
+                $can_be_asked_money = sprintf("%.2f",$money);
             }
             $attributes += [
                 'canBeAskedMoney' => $can_be_asked_money,
