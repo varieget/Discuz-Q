@@ -492,10 +492,10 @@ class User extends DzqModel
     {
         static $cachedAll = null;
         if (is_null($cachedAll)) {
-            $cachedAll = $this->unreadNotifications()->selectRaw('type,count(*) as count')
-                ->groupBy('type')->pluck('type', 'count')->map(function ($val) {
-                    return class_basename($val);
-                })->flip();
+            $cachedAll = $this->unreadNotifications()
+                ->selectRaw('type,count(*) as count')
+                ->groupBy('type')
+                ->pluck('count', 'type');
         }
         return $cachedAll;
     }
@@ -513,7 +513,6 @@ class User extends DzqModel
 
         return $this->groups->contains(Group::ADMINISTRATOR_ID);
     }
-
 
     /**
      * Check whether or not the user is a guest.
@@ -795,6 +794,17 @@ class User extends DzqModel
                 }
             }
 
+            $admin_permissions = Permission::$admin_specified_permission;
+            $admin_own_permissions = $this->getPermissions();
+            if(!empty($permission)){
+                $judge_permission = array_intersect($permission,$admin_permissions);
+                if(!empty($judge_permission)){
+                    $judge_own_permission = array_diff($judge_permission,$admin_own_permissions);
+                    if(!empty($judge_own_permission)){
+                        return false;
+                    }
+                }
+            }
             return true;
         }
 
@@ -948,11 +958,12 @@ class User extends DzqModel
         return self::query()->whereIn('id', $userIds)->get()->toArray();
     }
 
-
     public function getUserName($userId)
     {
         $user = self::query()->find($userId);
-        if (empty($user)) return null;
+        if (empty($user)) {
+            return null;
+        }
         return $user->username;
     }
 }
