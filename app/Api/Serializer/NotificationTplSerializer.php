@@ -81,6 +81,7 @@ class NotificationTplSerializer extends AbstractSerializer
         ];
 
         if ($model->type == NotificationTpl::MINI_PROGRAM_NOTICE) {
+            // 小程序通知模板统一，触发点的提示语
             $result['mini_program_prompt'] = trans('template_variables.notice_prompt.' . $model->type_name);
         }
 
