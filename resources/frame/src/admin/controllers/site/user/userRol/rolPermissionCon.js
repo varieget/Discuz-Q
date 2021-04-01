@@ -124,7 +124,7 @@ export default {
   watch: {
     checked(val){
       if (val.indexOf('canBeAsked') !== -1 && this.lowestPrice === '') {
-        this.$message.error('最低金额不能为空');
+        this.$message.error('允许被提问的最低金额未填写');
       }
       let isEqual = true;
       this.checkAllPermission.forEach(item => {
@@ -152,7 +152,7 @@ export default {
   methods: {
     getLowestPrice: function(e) {
       if (Number(e) < 0) {
-        this.$message.error('最低金额不能小于0');
+        this.$message.error('允许被提问的最低金额不能小于0');
       }
     },
     duedata: function(evn) {
@@ -599,7 +599,7 @@ export default {
         }
       }
       if (this.checked.indexOf('canBeAsked') !== -1 && this.lowestPrice === '') {
-        this.$message.error('最低金额不能为空');
+        this.$message.error('允许被提问的最低金额未填写');
         return false;
       }
       return true;
