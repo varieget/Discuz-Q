@@ -242,9 +242,9 @@ trait TemplateVariables
      *
      * @param string $typeName
      * @param int $type
-     * @return string
+     * @return string|null
      */
-    protected function comparisonUnique(string $typeName, int $type) : string
+    protected function comparisonUnique(string $typeName, int $type)
     {
         // 通知类型: 0系统 1微信 2短信 3企业微信 4小程序通知
         switch ($type) {
@@ -263,6 +263,14 @@ trait TemplateVariables
                 break;
         }
 
-        return $prefix . array_search($typeName, $this->uniquelyNotice);
+        // 搜索定义的唯一标识名单
+        $result = array_search($typeName, $this->uniquelyNotice);
+
+        // 未搜索到时返回 null 值
+        if (! $result) {
+            return null;
+        }
+
+        return $prefix . $result;
     }
 }
