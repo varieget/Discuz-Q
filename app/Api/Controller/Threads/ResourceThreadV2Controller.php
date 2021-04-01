@@ -307,7 +307,7 @@ class ResourceThreadV2Controller extends DzqController
             ->keyBy('id')
             ->map(function (Attachment $attachment) use ($attachmentSerializer) {
                 if ($attachment->type === Attachment::TYPE_OF_IMAGE) {
-                    return $attachmentSerializer->getDefaultAttributes($attachment)['thumbUrl'];
+                    return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
                 } elseif ($attachment->type === Attachment::TYPE_OF_FILE) {
                     return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
                 }
