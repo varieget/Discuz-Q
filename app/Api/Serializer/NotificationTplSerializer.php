@@ -58,7 +58,7 @@ class NotificationTplSerializer extends AbstractSerializer
     {
         $trans = 'template_variables.' . ($this->getTemplateVariables($model->notice_id) ?? '');
 
-        return [
+        $result = [
             'tpl_id'             => $model->id,
             'status'             => $model->status,
             'type'               => $model->type,
@@ -79,6 +79,12 @@ class NotificationTplSerializer extends AbstractSerializer
             'is_error'           => $model->is_error,
             'error_msg'          => $model->error_msg,
         ];
+
+        if ($model->type == NotificationTpl::MINI_PROGRAM_NOTICE) {
+            $result['mini_program_prompt'] = trans('template_variables.notice_prompt.' . $model->type_name);
+        }
+
+        return $result;
     }
 
     /**
