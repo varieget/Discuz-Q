@@ -53,7 +53,7 @@ class ResourceThreadV2Controller extends DzqController
         'firstPost.likedUsers:id,username,avatar',
         'firstPost.mentionUsers:id,username,avatar',
         'user:id,username,avatar,follow_count as followCount',
-        'user.groups:id,name,is_display as isDisplay',
+        'user.groups:id,name,is_display as isDisplay,updated_at as updatedAt',
         'category:id,name,description'
     ];
 
