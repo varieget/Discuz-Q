@@ -77,7 +77,7 @@ export default {
       ],
       value: "",
       purchasePrice: "",
-      lowestPrice: "", // 被提问的最低价格
+      // lowestPrice: "", // 被提问的最低价格
       dyedate: "",
       ispad: "",
       allowtobuy: "",
@@ -147,12 +147,12 @@ export default {
     }
   },
   methods: {
-    getLowestPrice: function(e) {
-      if (Number(e) < 0) {
-        this.lowestPrice = '';
-        this.$message.error('允许被提问的最低金额不能小于0');
-      }
-    },
+    // getLowestPrice: function(e) {
+    //   if (Number(e) < 0) {
+    //     this.lowestPrice = '';
+    //     this.$message.error('允许被提问的最低金额不能小于0');
+    //   }
+    // },
     duedata: function(evn) {
       this.duedata = evn.replace(/[^\d]/g, "");
     },
@@ -269,9 +269,9 @@ export default {
       checkedData.forEach((value, index) => {
 
         // 最低金额回显
-        if (value.indexOf('canBeAsked.money.') === 0 ) {
-          this.lowestPrice = value.slice(17,value.length);
-        }
+        // if (value.indexOf('canBeAsked.money.') === 0 ) {
+        //   this.lowestPrice = value.slice(17,value.length);
+        // }
 
         // 1 红包、位置、匿名权限回显
         if(
@@ -364,10 +364,10 @@ export default {
       } else {
         checked = checked.filter(v => v !== "other.canInviteUserScale");
       }
-      if (checked.includes('canBeAsked') > 0) {
-        checked = checked.filter(item => !item.includes("canBeAsked.money"));
-        checked.push(`canBeAsked.money.${this.lowestPrice}`)
-      }
+      // if (checked.includes('canBeAsked') > 0) {
+      //   checked = checked.filter(item => !item.includes("canBeAsked.money"));
+      //   checked.push(`canBeAsked.money.${this.lowestPrice}`)
+      // }
       const param = {
         data: {
           attributes: {
@@ -601,10 +601,10 @@ export default {
           return false;
         }
       }
-      if (this.checked.indexOf('canBeAsked') !== -1 && this.lowestPrice === '') {
-        this.$message.error('允许被提问的最低金额未填写');
-        return false;
-      }
+      // if (this.checked.indexOf('canBeAsked') !== -1 && this.lowestPrice === '') {
+      //   this.$message.error('允许被提问的最低金额未填写');
+      //   return false;
+      // }
       return true;
     },
 
