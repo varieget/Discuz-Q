@@ -793,18 +793,6 @@ class User extends DzqModel
                     }
                 }
             }
-
-            $admin_permissions = Permission::$admin_specified_permission;
-            $admin_own_permissions = $this->getPermissions();
-            if(!empty($permission)){
-                $judge_permission = array_intersect($permission,$admin_permissions);
-                if(!empty($judge_permission)){
-                    $judge_own_permission = array_diff($judge_permission,$admin_own_permissions);
-                    if(!empty($judge_own_permission)){
-                        return false;
-                    }
-                }
-            }
             return true;
         }
 

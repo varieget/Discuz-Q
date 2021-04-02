@@ -88,7 +88,6 @@ class UserSerializer extends AbstractSerializer
             'registerReason'    => $model->register_reason,                 // 注册原因
             'banReason'         => '',                                      // 禁用原因
             'denyStatus'        => (bool) $model->denyStatus,
-            'canBeAsked'        => $model->id !== $this->actor->id && $model->can('canBeAsked'), // 是否允许被提问
         ];
 
         $whitelist = [
@@ -144,26 +143,6 @@ class UserSerializer extends AbstractSerializer
         }
         if($model->bind_type == 2) {
             $attributes['avatarUrl'] = ! empty($attributes['avatarUrl']) ? $attributes['avatarUrl'] : $this->qqAvatar($model);
-        }
-
-        //获取被提问最低金额
-        if($model->id !== $this->actor->id && $model->can('canBeAsked')){
-            $can_be_asked_money = 0;
-            $actorPermissions = $model->getPermissions();
-            $can_be_asked_money_str = '';
-            foreach ($actorPermissions as $value){
-                if(strpos($value,'canBeAsked.money') !== false){
-                    $can_be_asked_money_str = $value;
-                    break;
-                }
-            }
-            if(strlen($can_be_asked_money_str)>0){
-                $money = str_replace('canBeAsked.money.','',$can_be_asked_money_str);
-                $can_be_asked_money = sprintf("%.2f",$money);
-            }
-            $attributes += [
-                'canBeAskedMoney' => $can_be_asked_money,
-            ];
         }
 
         return $attributes;
