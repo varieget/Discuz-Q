@@ -50,7 +50,7 @@ export default {
         } else if (type === 'appletsList' && this.appletsList.length > 4) {
           this.showClick = false;
         } else if (type === 'smsKeyWord') {
-          this.smsKeyWord.push('');    
+          this.smsKeyWord.push('');
         } else if (type === 'miniKeyWord') {
           this.miniKeyWord.push('')
         }
@@ -148,7 +148,7 @@ export default {
               ? this.miniProgramList.keywords_data
               : ['', ''];
               let vars = this.miniProgramList.template_variables;
-              this.miniTips = '\n<a href="https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html">订阅消息参数值内容限制说明</a>填写错误将导致用户无法接收到消息通知'
+              this.miniTips = '\n<a href="https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html" target="_blank">订阅消息参数值内容限制说明</a>填写错误将导致用户无法接收到消息通知'
               if (vars) {
                 this.miniDes = '请输入模板消息详细内容对应的变量。关键字个数需与已添加的模板一致。\n\n可以使用如下变量：\n';
                 for (let key in vars) {
@@ -188,7 +188,7 @@ export default {
               "id": this.systemList.tpl_id,
               "status": 0,
             }
-          });   
+          });
         }
         // 微信通知提交数据
         if (this.showWx === true){
@@ -202,12 +202,12 @@ export default {
             }
             if (!this.appletsList[key]) {
             this.$message.error('请填写keywords');
-            return;  
+            return;
             }
           }
           if (this.wxList.remark_data === '') {
             this.$message.error('请填写remark');
-            return;     
+            return;
           }
           data.push({
             'attributes':{
@@ -228,7 +228,7 @@ export default {
               "id": this.wxList.tpl_id,
               "status": 0,
             }
-          }); 
+          });
         }
 
         // 短信通知提交数据
@@ -243,7 +243,7 @@ export default {
             }
             if (!this.smsKeyWord[key]) {
             this.$message.error('请填写keywords');
-            return;  
+            return;
             }
           }
           data.push({
@@ -280,7 +280,7 @@ export default {
         }
          if (this.miniProgramList.page_path === '') {
           this.$message.error('请填写小程序路径');
-          return;      
+          return;
         }
         data.push({
           'attributes':{

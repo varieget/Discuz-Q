@@ -39,20 +39,24 @@ use App\Models\Thread;
 use App\Models\ThreadReward;
 use App\Models\ThreadUser;
 use App\Repositories\UserFollowRepository;
+use App\Settings\SettingsRepository;
+use Carbon\Carbon;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Support\Str;
 use s9e\TextFormatter\Utils;
 
 class ResourceThreadV2Controller extends DzqController
 {
     public $userFollow;
+    public $settings;
 
     //返回的数据一定包含的数据
     public $include = [
         'firstPost',
         'firstPost.likedUsers:id,username,avatar',
         'firstPost.mentionUsers:id,username,avatar',
-        'user:id,username,avatar,follow_count as followCount',
+        'user:id,username,avatar,follow_count as followCount,updated_at as updatedAt',
         'user.groups:id,name,is_display as isDisplay',
         'category:id,name,description'
     ];
@@ -74,9 +78,10 @@ class ResourceThreadV2Controller extends DzqController
     ];
 
 
-    public function __construct(UserFollowRepository $userFollow)
+    public function __construct(UserFollowRepository $userFollow, SettingsRepository $settings)
     {
         $this->userFollow = $userFollow;
+        $this->settings = $settings;
     }
 
     public function main()
@@ -154,6 +159,18 @@ class ResourceThreadV2Controller extends DzqController
         $data['likedUsers'] = $thread->firstPost->likedUsers ?? [];
         $data['mentionUsers'] = $thread->firstPost->mentionUsers ?? [];
         $data['images'] = [];
+        if(in_array($thread->type, [Thread::TYPE_OF_VIDEO, Thread::TYPE_OF_AUDIO])){
+            $urlKey = $this->settings->get('qcloud_vod_url_key', 'qcloud');
+            $urlExpire = (int) $this->settings->get('qcloud_vod_url_expire', 'qcloud');
+            if ($urlKey && $urlExpire && $thread->threadVideo->mediaUrl) {
+                $currentTime = Carbon::now()->timestamp;
+                $dir = Str::beforeLast(parse_url($thread->threadVideo->mediaUrl)['path'], '/') . '/';
+                $t = dechex($currentTime+$urlExpire);
+                $us = Str::random(10);
+                $sign = md5($urlKey . $dir . $t . $us);
+                $thread->threadVideo->mediaUrl = $thread->threadVideo->mediaUrl . '?t=' . $t . '&us='. $us . '&sign='.$sign;
+            }
+        }
         switch ($thread->type){
             case Thread::TYPE_OF_VIDEO:
                 $data['threadVideo'] = $thread->threadVideo ?? [];
@@ -307,7 +324,7 @@ class ResourceThreadV2Controller extends DzqController
             ->keyBy('id')
             ->map(function (Attachment $attachment) use ($attachmentSerializer) {
                 if ($attachment->type === Attachment::TYPE_OF_IMAGE) {
-                    return $attachmentSerializer->getDefaultAttributes($attachment)['thumbUrl'];
+                    return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
                 } elseif ($attachment->type === Attachment::TYPE_OF_FILE) {
                     return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
                 }

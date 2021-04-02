@@ -431,7 +431,8 @@ class ListThreadsV2Controller extends DzqController
         //关注
         if ($attention == 1 && !empty($this->user)) {
             $threads->leftJoin('user_follow', 'user_follow.to_user_id', '=', 'threads.user_id')
-                ->where('user_follow.from_user_id', $this->user->id);
+                ->where('user_follow.from_user_id', $this->user->id)
+                ->where('is_anonymous',0);
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
         !empty($types) && $threads->whereIn('type', $types);
