@@ -110,11 +110,14 @@ class UpdateNotificationTplController extends AbstractListController
                 }
 
                 if (Arr::has($attributes, 'template_id')) {
-                    $notificationTpl->template_id = Arr::get($attributes, 'template_id');
+                    $templateId = Arr::get($attributes, 'template_id');
+                    if ($notificationTpl->template_id != $templateId) {
+                        $notificationTpl->template_id = Arr::get($attributes, 'template_id');
 
-                    // 判断是否修改了小程序模板，清除小程序查询模板的缓存
-                    if ($notificationTpl->type == NotificationTpl::MINI_PROGRAM_NOTICE) {
-                        app('cache')->forget(CacheKey::NOTICE_MINI_PROGRAM_TEMPLATES);
+                        // 判断是否修改了小程序模板，清除小程序查询模板的缓存
+                        if ($notificationTpl->type == NotificationTpl::MINI_PROGRAM_NOTICE) {
+                            app('cache')->forget(CacheKey::NOTICE_MINI_PROGRAM_TEMPLATES);
+                        }
                     }
                 }
                 break;
