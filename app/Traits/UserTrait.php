@@ -116,8 +116,8 @@ trait UserTrait
         if ($canBeAsked = Arr::get($filter, 'canBeAsked')) {
             $groupIds = Permission::query()
                 ->where('permission', 'canBeAsked')
-                ->pluck('group_id');
-                //->add(Group::ADMINISTRATOR_ID);
+                ->pluck('group_id')
+                ->add(Group::ADMINISTRATOR_ID);
 
             $query->join('group_user', 'group_user.user_id', '=', 'users.id')
                 ->where('user_id', '<>', $actor->id);
