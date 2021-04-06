@@ -197,9 +197,10 @@ export default {
 			const a = date.split(' ')[0].split('-');
 			const index = date.indexOf(' ');
 			const day = new Date(a[0], a[1], 0).getDate();
-			const b = date.substring(index - 2, index)
+			const b = date.substring(0, index - 2)
+			const c = date.substring(index)
 			
-			return date.split(b).join(day);
+			return b + day + c;
 		},
 		/*
     * 盈利统计月
