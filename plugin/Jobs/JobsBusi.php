@@ -18,9 +18,9 @@
 namespace Plugin\Jobs;
 
 
-use App\Modules\ThreadTos\DzqTosBaseBusi;
+use App\Modules\ThreadTom\DzqTomBaseBusi;
 
-class JobsBusi extends DzqTosBaseBusi
+class JobsBusi extends DzqTomBaseBusi
 {
 
 }

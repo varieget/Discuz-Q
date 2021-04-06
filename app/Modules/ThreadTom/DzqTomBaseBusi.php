@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-namespace App\Modules\ThreadTos;
+namespace App\Modules\ThreadTom;
 
 use Illuminate\Support\Arr;
 
@@ -26,7 +26,7 @@ use Illuminate\Support\Arr;
  * @method  select()
  * @method  userfunc()
  */
-abstract class DzqTosBaseBusi
+abstract class DzqTomBaseBusi
 {
     private $operation = null;
     public $body = [];

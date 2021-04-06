@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-namespace App\Modules\ThreadTos;
+namespace App\Modules\ThreadTom;
 
 
-trait TosTrait
+trait TomTrait
 {
 
     private $operations = ['create', 'delete', 'update', 'select'];

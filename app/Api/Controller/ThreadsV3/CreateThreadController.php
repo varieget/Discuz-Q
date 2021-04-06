@@ -21,12 +21,12 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Models\ThreadHot;
 use App\Models\ThreadObject;
 use App\Models\ThreadText;
-use App\Modules\ThreadTos\TosTrait;
+use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
 
 class CreateThreadController extends DzqController
 {
-    use TosTrait;
+    use TomTrait;
 
     public function main()
     {

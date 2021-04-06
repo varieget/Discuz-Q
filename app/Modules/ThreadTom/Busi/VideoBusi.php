@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-namespace App\Modules\ThreadTos\Busi;
+namespace App\Modules\ThreadTom\Busi;
 
 
-use App\Modules\ThreadTos\DzqTosBaseBusi;
+use App\Modules\ThreadTom\DzqTomBaseBusi;
 
-class VideoBusi extends DzqTosBaseBusi
+class VideoBusi extends DzqTomBaseBusi
 {
 
     public function create()
