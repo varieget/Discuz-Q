@@ -467,3 +467,6 @@ $route->get('/categories.v2', 'categories.v2', ApiController\Category\ListCatego
 $route->get('/threads.detail.v2', 'threads.detail.v2', ApiController\Threads\ResourceThreadV2Controller::class);
 
 $route->get('/posts.v2', 'posts.v2', ApiController\Posts\ListPostsV2Controller::class);
+
+
+$route->post('/thread.create.v3','thread.create.v3',ApiController\ThreadsV3\CreateThreadController::class);
