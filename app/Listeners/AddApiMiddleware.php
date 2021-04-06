@@ -36,7 +36,7 @@ class AddApiMiddleware
 
     public function handle(ConfigMiddleware $event)
     {
-        $event->pipe->pipe($this->app->make(ClearSessionMiddleware::class));
+        // $event->pipe->pipe($this->app->make(ClearSessionMiddleware::class));
         $event->pipe->pipe($this->app->make(FakeHttpMethods::class));
         $event->pipe->pipe($this->app->make(OperationLogMiddleware::class));
         $event->pipe->pipe($this->app->make(CheckPaidUserGroupMiddleware::class));

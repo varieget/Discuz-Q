@@ -18,10 +18,12 @@
 
 namespace App\Api\Middleware;
 
+use App\Common\CacheKey;
 use App\Events\Group\PaidGroup;
 use App\Models\Group;
 use App\Models\GroupPaidUser;
 use App\Models\User;
+use Discuz\Cache\CacheManager;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Carbon;
 use Psr\Http\Message\ResponseInterface;
@@ -31,11 +33,15 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class CheckPaidUserGroupMiddleware implements MiddlewareInterface
 {
-    public $events;
+    const CHECK_INTERVAL = 30;
 
-    public function __construct(Dispatcher $events)
+    public $events;
+    protected $cache;
+
+    public function __construct(Dispatcher $events, CacheManager $cache)
     {
         $this->events = $events;
+        $this->cache = $cache;
     }
 
     /**
@@ -46,31 +52,35 @@ class CheckPaidUserGroupMiddleware implements MiddlewareInterface
         /** @var User $actor */
         $actor = $request->getAttribute('actor');
 
-        if ($actor->groups->count() && !$actor->isGuest()) {
-            //检查到期付费用户组
-            $groups = $actor->groups()->where('is_paid', Group::IS_PAID)->get();
+        $ttl = static::CHECK_INTERVAL;
+        // 通过加锁，避免每次请求都判断
+        if ($this->cache->add(CacheKey::CHECK_PAID_GROUP.$actor->id, 'lock', mt_rand($ttl, $ttl + 10))) {
+            if ($actor->groups->count() && !$actor->isGuest()) {
+                //检查到期付费用户组
+                $groups = $actor->groups()->where('is_paid', Group::IS_PAID)->get();
 
-            if ($groups->count()) {
-                $now = Carbon::now();
-                foreach ($groups as $group => $group_item) {
-                    if (empty($group_item->pivot->expiration_time)) {
-                        //免费组变为收费组
-                        $this->events->dispatch(
-                            new PaidGroup($group_item->id, $actor)
-                        );
-                    } elseif ($group_item->pivot->expiration_time < $now) {
-                        GroupPaidUser::query()
-                            ->where('group_id', $group_item->pivot->group_id)
-                            ->where('user_id', $group_item->pivot->user_id)
-                            ->update(['deleted_at' => $now, 'delete_type' => GroupPaidUser::DELETE_TYPE_EXPIRE]);
-                        $actor->groups()->detach($group_item);
+                if ($groups->count()) {
+                    $now = Carbon::now();
+                    foreach ($groups as $group => $group_item) {
+                        if (empty($group_item->pivot->expiration_time)) {
+                            //免费组变为收费组
+                            $this->events->dispatch(
+                                new PaidGroup($group_item->id, $actor)
+                            );
+                        } elseif ($group_item->pivot->expiration_time < $now) {
+                            GroupPaidUser::query()
+                                ->where('group_id', $group_item->pivot->group_id)
+                                ->where('user_id', $group_item->pivot->user_id)
+                                ->update(['deleted_at' => $now, 'delete_type' => GroupPaidUser::DELETE_TYPE_EXPIRE]);
+                            $actor->groups()->detach($group_item);
+                        }
                     }
                 }
-            }
 
-            // 如果付费用户组到期后用户没有其他用户组，将其添加到默认用户组
-            if (! $actor->groups()->count()) {
-                $actor->resetGroup();
+                // 如果付费用户组到期后用户没有其他用户组，将其添加到默认用户组
+                if (! $actor->groups()->count()) {
+                    $actor->resetGroup();
+                }
             }
         }
 
