@@ -151,7 +151,9 @@ class System extends AbstractNotification
     {
         $this->messageRelationship = collect();
         // init database message
-        $this->messageRelationship['database'] = $this->message;
+        if (! $this->message instanceof RegisterWechatMessage) {
+            $this->messageRelationship['database'] = $this->message;
+        }
 
         // 用户状态通知
         if ($this->message instanceof StatusMessage) {
@@ -190,6 +192,7 @@ class System extends AbstractNotification
             }
             // set other message relationship
             if ($this->message instanceof RegisterWechatMessage) {
+                $this->messageRelationship['database'] = app(RegisterMessage::class);
                 $this->messageRelationship['wechat'] = app(RegisterWechatMessage::class);
             }
             $this->messageRelationship['sms'] = app(RegisterSmsMessage::class);
