@@ -89,7 +89,7 @@ class CreateThreadController extends DzqController
 //            ]
         ];
 
-        list($text, $json) = $this->tosDispatcher($json);
+        list($text, $json) = $this->tomDispatcher($json);
         $this->createThread($text, $json);
         $this->outPut(0, '', [$text, $json]);
     }

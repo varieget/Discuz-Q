@@ -28,7 +28,7 @@ trait TomTrait
      * @param $tosArray
      * @return array
      */
-    private function tosDispatcher($tosArray)
+    private function tomDispatcher($tosArray)
     {
         $config = TomConfig::$map;
         $text = '';

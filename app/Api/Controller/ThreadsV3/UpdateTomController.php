@@ -20,7 +20,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 use Discuz\Base\DzqController;
 
-class DeleteTosController extends DzqController
+class UpdateTomController extends DzqController
 {
 
     public function main()
