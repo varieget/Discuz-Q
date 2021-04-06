@@ -74,6 +74,9 @@ trait TemplateVariables
         'system.question.asked'        => '',                       // 问答提问通知
         'system.question.answered'     => '',                       // 问答回答通知
         'system.question.expired'      => '',                       // 过期通知
+        'system.red_packet.gotten'     => '',                       //得到红包通知
+        'system.question.rewarded'     => '',                       //悬赏问答通知
+        'system.question.rewarded.expired' => '',                   //悬赏过期通知
         'registered.passed'            => '微信新用户注册通知',              // 新用户注册通知
         'registered.approved'          => '微信用户状态通知',               // 注册审核通过通知
         'registered.unapproved'        => '微信用户状态通知',               // 注册审核不通过通知
@@ -96,6 +99,9 @@ trait TemplateVariables
         'question.asked'               => '微信问答提问或过期通知',            // 问答提问通知
         'question.answered'            => '微信问答回答通知',               // 问答回答通知
         'question.expired'             => '微信问答提问或过期通知',            // 过期通知
+        'red_packet.gotten'            => '得到红包通知',                  //得到红包通知
+        'question.rewarded'            => '悬赏问答通知',                  //悬赏问答通知
+        'question.rewarded.expired'    => '悬赏过期通知',                  //悬赏过期通知
     ];
 
     protected $configTypeName = [
