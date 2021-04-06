@@ -98,7 +98,7 @@ class ListThreadsV2Controller extends DzqController
                     $attachments = $attachmentsByPostId[$post['id']];
                 }
             }
-            $attachment = $this->filterAttachment($thread, $paidThreadIds, $attachments, $serializer);
+            $attachment = $this->filterAttachment($thread, $paidThreadIds, $pay, $attachments, $serializer);
             $thread = $this->getThread($thread, $post, $likedPostIds, $permissions, $pay);
 
             $linkString .= $thread['summary'];
@@ -153,18 +153,18 @@ class ListThreadsV2Controller extends DzqController
      * @param $serializer
      * @return array
      */
-    private function filterAttachment($thread, $paidThreadIds, $attachments, $serializer)
+    private function filterAttachment($thread, $paidThreadIds, $pay, $attachments, $serializer)
     {
         $attachment = [];
-        if ($this->canViewThread($thread, $paidThreadIds)) {
+        if ($this->canViewThread($thread, $paidThreadIds) || $this->canViewThread($thread, $pay)) {
             $attachment = $this->getAttachment($attachments, $thread, $serializer);
         } else {
             if ($thread['price'] == 0) {
                 $attachment = $this->getAttachment($attachments, $thread, $serializer);
             }
-            //附件收费
-            if ($thread['attachment_price'] > 0 || $thread['price'] > 0) {
 
+            //附件收费
+            if ($thread['attachment_price'] > 0 || ($thread['type'] == Thread::TYPE_OF_IMAGE && $thread['price'] > 0)) {
                 $attachment = $this->getAttachment($attachments, $thread, $serializer);
                 $attachment = array_filter($attachment, function ($item) {
                     $fileType = strtolower($item['fileType']);
