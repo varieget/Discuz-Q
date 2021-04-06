@@ -242,7 +242,7 @@ class ResourceThreadV2Controller extends DzqController
             $redPacket = RedPacket::query()->where('thread_id', $thread_id)->first();
             $data['redPacket'] = $redPacket ? $redPacket->toArray() : [];
         }
-        $data['canFavorite'] = (bool) $this->user->can('favorite', $thread->firstPost);
+        $data['canFavorite'] = (bool) $this->user->can('favorite', $thread);
 
         if ($favoriteState = $thread->favoriteState) {
             $data['isFavorite'] = true;
