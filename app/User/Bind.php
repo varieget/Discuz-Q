@@ -60,7 +60,7 @@ class Bind
      * @param int $rebind 是否更换绑定
      * @throws Exception
      */
-    public function withToken($token, $user, $rebind = null)
+    public function withToken($token, &$user, $rebind = null)
     {
         $session = SessionToken::get($token);
         $scope = Arr::get($session, 'scope');
@@ -94,6 +94,7 @@ class Bind
              * @see UserWechatObserver
              */
             $wechat->save();
+            $user = $user->setRelation('wechat', $wechat);
         }
         if ($scope === 'ucenter') {
             $payload = Arr::get($session, 'payload');
