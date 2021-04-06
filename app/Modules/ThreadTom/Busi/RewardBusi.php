@@ -18,7 +18,9 @@
 namespace App\Modules\ThreadTom\Busi;
 
 
-class RewardBusi
+use App\Modules\ThreadTom\TomBaseBusi;
+
+class RewardBusi extends TomBaseBusi
 {
 
 }

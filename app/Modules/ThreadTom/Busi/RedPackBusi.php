@@ -18,7 +18,9 @@
 namespace App\Modules\ThreadTom\Busi;
 
 
-class RedPackBusi
+use App\Modules\ThreadTom\TomBaseBusi;
+
+class RedPackBusi extends TomBaseBusi
 {
 
 }

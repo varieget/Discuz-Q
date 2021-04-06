@@ -18,7 +18,9 @@
 namespace App\Modules\ThreadTom\Busi;
 
 
-class VoiceBusi
+use App\Modules\ThreadTom\TomBaseBusi;
+
+class VoiceBusi extends TomBaseBusi
 {
 
 }

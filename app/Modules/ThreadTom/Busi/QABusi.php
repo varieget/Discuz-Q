@@ -18,7 +18,9 @@
 namespace App\Modules\ThreadTom\Busi;
 
 
-class QABusi
+use App\Modules\ThreadTom\TomBaseBusi;
+
+class QABusi extends TomBaseBusi
 {
 
 }
