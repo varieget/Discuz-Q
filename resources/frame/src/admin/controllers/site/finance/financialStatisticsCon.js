@@ -193,6 +193,14 @@ export default {
 		changeOrder() {
 			this.orderStatistics();
 		},
+		getDateInfo(date){
+			const a = date.split(' ')[0].split('-');
+			const index = date.indexOf(' ');
+			const day = new Date(a[0], a[1], 0).getDate();
+			const b = date.substring(index - 2, index)
+			
+			return date.split(b).join(day);
+		},
 		/*
     * 盈利统计月
     * */
@@ -201,7 +209,7 @@ export default {
 				this.valueMouth = ['', '']
 			} else if (this.valueMouth[0] !== '' && this.valueMouth[1] !== '') {
 				this.valueMouth[0] = this.valueMouth[0] + '-00-00-00';
-				this.valueMouth[1] = this.valueMouth[1] + '-24-00-00';
+				this.valueMouth[1] = this.getDateInfo(this.valueMouth[1]) + '-24-00-00';
 			}
 			// this.currentPaga = 1;
 			this.earningsStatistics();
