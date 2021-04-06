@@ -26,7 +26,7 @@ use Illuminate\Support\Arr;
  * @method  select()
  * @method  userfunc()
  */
-abstract class DzqTomBaseBusi
+abstract class TomBaseBusi
 {
     private $operation = null;
     public $body = [];

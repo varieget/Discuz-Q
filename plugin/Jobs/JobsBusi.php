@@ -18,9 +18,9 @@
 namespace Plugin\Jobs;
 
 
-use App\Modules\ThreadTom\DzqTomBaseBusi;
+use App\Modules\ThreadTom\TomBaseBusi;
 
-class JobsBusi extends DzqTomBaseBusi
+class JobsBusi extends TomBaseBusi
 {
 
 }

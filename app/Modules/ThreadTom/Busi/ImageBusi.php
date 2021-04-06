@@ -17,9 +17,9 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
-use App\Modules\ThreadTom\DzqTomBaseBusi;
+use App\Modules\ThreadTom\TomBaseBusi;
 
-class ImageBusi extends DzqTomBaseBusi
+class ImageBusi extends TomBaseBusi
 {
     public function create()
     {
