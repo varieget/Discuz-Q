@@ -30,7 +30,7 @@ trait TomTrait
      */
     private function tosDispatcher($tosArray)
     {
-        $config = Config::$map;
+        $config = TomConfig::$map;
         $text = '';
         $json = [];
         foreach ($tosArray as $k => $v) {
