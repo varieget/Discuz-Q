@@ -163,7 +163,8 @@ class ListThreadsV2Controller extends DzqController
                 $attachment = $this->getAttachment($attachments, $thread, $serializer);
             }
             //附件收费
-            if ($thread['attachment_price'] > 0) {
+            if ($thread['attachment_price'] > 0 || $thread['price'] > 0) {
+
                 $attachment = $this->getAttachment($attachments, $thread, $serializer);
                 $attachment = array_filter($attachment, function ($item) {
                     $fileType = strtolower($item['fileType']);
