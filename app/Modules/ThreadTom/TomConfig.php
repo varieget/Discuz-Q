@@ -52,7 +52,7 @@ class TomConfig
             'service' => \App\Modules\ThreadTom\Busi\QABusi::class
         ],
         106 => [
-            'enName' => 'RED_PACKET',
+            'enName' => 'REDPACK',
             'desc' => '红包',
             'service' => \App\Modules\ThreadTom\Busi\RedPackBusi::class
         ],
