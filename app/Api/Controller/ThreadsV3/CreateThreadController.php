@@ -19,7 +19,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Models\ThreadHot;
-use App\Models\ThreadObject;
+use App\Models\ThreadTom;
 use App\Models\ThreadText;
 use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
@@ -125,7 +125,7 @@ class CreateThreadController extends DzqController
 
         //todo 批量插入
         foreach ($json as $k => $v) {
-            $tObject = new ThreadObject();
+            $tObject = new ThreadTom();
             $tObject->setRawAttributes([
                 'thread_id' => $tText->id,
                 'type' => 100,

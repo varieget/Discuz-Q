@@ -20,7 +20,8 @@ namespace App\Models;
 
 use Discuz\Base\DzqModel;
 
-class ThreadObject extends DzqModel
+class ThreadTom extends DzqModel
 {
+    protected $table = 'thread_tom';
 
 }

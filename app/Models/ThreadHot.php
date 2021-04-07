@@ -22,5 +22,6 @@ use Discuz\Base\DzqModel;
 
 class ThreadHot extends DzqModel
 {
+    protected $table = 'thread_hot';
 
 }

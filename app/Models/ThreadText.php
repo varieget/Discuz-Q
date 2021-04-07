@@ -23,6 +23,7 @@ use Illuminate\Support\Str;
 
 class ThreadText extends DzqModel
 {
+    protected $table = 'thread_text';
     const SUMMARY_LENGTH = 80;
 
     /**
