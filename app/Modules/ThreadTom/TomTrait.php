@@ -37,9 +37,9 @@ trait TomTrait
             if ($k == 'text') {
                 $text = $v;
             } else {
-                if (isset($v['tosId']) && isset($v['operation']) && isset($v['body'])) {
+                if (isset($v['tomId']) && isset($v['operation']) && isset($v['body'])) {
                     if (in_array($v['operation'], $this->operations)) {
-                        $tosId = $v['tosId'];
+                        $tosId = $v['tomId'];
                         $operation = $v['operation'];
                         $body = $v['body'];
                         if (isset($config[$tosId])) {

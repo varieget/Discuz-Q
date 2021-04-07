@@ -30,10 +30,11 @@ class CreateThreadController extends DzqController
 
     public function main()
     {
-        $json = [
+        $data = $this->inPut('data');
+        $data = [
             'text' => '<p>去年11月以来，中国海关总署宣布，{$0}因从澳大利亚多地进口的原木{$1}中检出检疫性有害{$2}生物，根据相关法律暂停{$3}</p>',
             '$0' => [
-                'tosId' => 101,//图片
+                'tomId' => 101,//图片
                 'operation' => 'create',
                 'body' => [
                     'imageIds' => [10, 11, 12],
@@ -41,14 +42,14 @@ class CreateThreadController extends DzqController
                 ]
             ],
             '$1' => [
-                'tosId' => 103,//视频
+                'tomId' => 103,//视频
                 'operation' => 'create',
                 'body' => [
                     'videoIds' => [6, 7],
                 ]
             ],
 //            '$2' => [
-//                'tosId' => 104,//商品
+//                'tomId' => 104,//商品
 //                'operation' => 'create',
 //                'body' => [
 //                    'goodsName' => '小米10 双模5G 骁龙865 1亿像素8K电影相机 对称式立体声 12GB+256GB 钛银黑',
@@ -58,7 +59,7 @@ class CreateThreadController extends DzqController
 //                ]
 //            ],
 //            '$3' => [
-//                'tosId' => 108,//投票
+//                'tomId' => 108,//投票
 //                'operation' => 'create',
 //                'body' => [
 //                    'options' => [
@@ -89,7 +90,7 @@ class CreateThreadController extends DzqController
 //            ]
         ];
 
-        list($text, $json) = $this->tomDispatcher($json);
+        list($text, $json) = $this->tomDispatcher($data);
         $this->createThread($text, $json);
         $this->outPut(0, '', [$text, $json]);
     }
