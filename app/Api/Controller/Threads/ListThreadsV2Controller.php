@@ -50,7 +50,7 @@ class ListThreadsV2Controller extends DzqController
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
         $permissions = Permission::categoryPermissions($groupIds);
-        $threads = $this->getFilterThreadsList($page, $filter, $perPage, $homeSequence);
+        $threads = $this->getOriginThreads($page, $filter, $perPage, $homeSequence);
         $threadList = $threads['pageData'];
         !$threads && $threadList = [];
         $userIds = array_unique(array_column($threadList, 'user_id'));
