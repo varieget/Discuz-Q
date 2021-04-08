@@ -98,6 +98,7 @@ class ReceiveRedPacketWechatMessage extends SimpleMessage
             '{$order_type_name}'     => $orderName,
             '{$actual_amount}'       => $actualAmount,
             '{$content}'             => $this->strWords($message),
+            '{$thread_id}'           => $threadId
         ]);
         // build data
         $expand = [

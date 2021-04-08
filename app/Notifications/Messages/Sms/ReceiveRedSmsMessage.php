@@ -54,8 +54,7 @@ class ReceiveRedSmsMessage extends SimpleMessage
 
     public function template()
     {
-
-        return ['content' => $this->getSmsContent()];
+        return $this->getSmsContent();
     }
 
     protected function titleReplaceVars()
@@ -84,10 +83,10 @@ class ReceiveRedSmsMessage extends SimpleMessage
          * @parem $content
          */
         $this->setTemplateData([
-            '{$username}'           => $actorName,
+            '{$username}'            => $actorName,
             '{$order_type_name}'     => $orderName,
             '{$actual_amount}'       => $actualAmount,
-            '{$content}'             => $this->strWords($message),
+            '{$content}'             => $this->strWords($message)
         ]);
         return $this->compiledArray();
     }

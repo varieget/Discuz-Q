@@ -7,7 +7,7 @@ use App\Models\Thread;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Support\Arr;
 
-class ThreadRewardedMessage extends SimpleMessage
+class ThreadRewardedExpiredMessage extends SimpleMessage
 {
     protected $user;
 
@@ -23,7 +23,7 @@ class ThreadRewardedMessage extends SimpleMessage
     public function setData(...$parameters)
     {
         // 解构赋值
-        [$firstData, $user, $order, $data] = $parameters;
+        [$firstData, $user, $order,$data] = $parameters;
         // set parent tpl data
         $this->firstData = $firstData;
         $this->user = $user;
