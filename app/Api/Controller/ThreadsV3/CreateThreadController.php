@@ -32,6 +32,7 @@ class CreateThreadController extends DzqController
 
     public function main()
     {
+        $this->limitCreateThread();
         //发帖权限
         $categoryId = $this->inPut('categoryId');
         $title = $this->inPut('title');
@@ -176,6 +177,18 @@ class CreateThreadController extends DzqController
             ];
         }
         ThreadTom::query()->insert($attrs);
+    }
+
+    private function limitCreateThread()
+    {
+        $threadFirst = ThreadText::query()
+            ->select(['id', 'user_id', 'category_id', 'created_at'])
+            ->where('user_id', $this->user->id)
+            ->orderByDesc('created_at')->first();
+        //发帖间隔时间30s
+        if (!empty($threadFirst) && (time() - strtotime($threadFirst['created_at'])) < 30) {
+            $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，稍后重试');
+        }
     }
 
 }
