@@ -26,6 +26,14 @@ class ThreadText extends DzqModel
     protected $table = 'thread_text';
     const SUMMARY_LENGTH = 80;
 
+
+    const STATUS_DELETE = -1;//删除
+    const STATUS_WAIT_AUDIT = 0;//待审核
+    const STATUS_OK = 1;//正常
+    const STATUS_DRAFT = 2;//草稿
+    const STATUS_HIDDEN = 3;//隐藏
+    const STATUS_REJECT = 4;//审核驳回
+
     /**
      * 摘要结尾
      */

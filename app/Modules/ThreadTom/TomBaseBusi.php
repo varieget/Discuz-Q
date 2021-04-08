@@ -28,14 +28,16 @@ use Illuminate\Support\Arr;
  */
 abstract class TomBaseBusi
 {
+    private $tomId = null;
     private $operation = null;
     public $body = [];
     private $permissions = [];
 
-    public function __construct($operation, $body)
+    public function __construct($tomId,$operation, $body)
     {
         $this->operation = $operation;
         $this->body = $body;
+        $this->tomId = $tomId;
         $this->operationValid();
         //todo 查询用户组的权限数组
     }
@@ -43,16 +45,32 @@ abstract class TomBaseBusi
     private function operationValid()
     {
         if (!method_exists($this, $this->operation)) {
-            throw new \Exception('操作类型[' . $this->operation . ']不存在');
+            throw new \Exception(sprintf('operation [%s] not exist in [%s]',$this->operation,static::class));
         }
     }
 
     /**
-     * 帖子对象存储获取对象入参
+     * @desc 帖子对象存储获取对象入参
      * @param $key
      * @return array|\ArrayAccess|mixed
      */
-    public function getParams($key){
-        return Arr::get($this->body,$key);
+    public function getParams($key)
+    {
+        return Arr::get($this->body, $key);
     }
+
+    /**
+     * @desc输出结果写入到thread_tom表的value值
+     * @param $array
+     * @return array
+     */
+    public function jsonReturn($array)
+    {
+        return [
+            'tomId' => $this->tomId,
+            'operation' => $this->operation,
+            'body' => $array
+        ];
+    }
+
 }

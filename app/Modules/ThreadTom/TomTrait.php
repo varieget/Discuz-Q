@@ -18,6 +18,8 @@
 namespace App\Modules\ThreadTom;
 
 
+use App\Models\Permission;
+
 trait TomTrait
 {
 
@@ -39,13 +41,13 @@ trait TomTrait
             } else {
                 if (isset($v['tomId']) && isset($v['operation']) && isset($v['body'])) {
                     if (in_array($v['operation'], $this->operations)) {
-                        $tosId = $v['tomId'];
+                        $tomId = $v['tomId'];
                         $operation = $v['operation'];
                         $body = $v['body'];
-                        if (isset($config[$tosId])) {
+                        if (isset($config[$tomId])) {
                             try {
-                                $service = new \ReflectionClass($config[$tosId]['service']);
-                                $service = $service->newInstanceArgs([$operation, $body]);
+                                $service = new \ReflectionClass($config[$tomId]['service']);
+                                $service = $service->newInstanceArgs([$tomId,$operation, $body]);
                                 method_exists($service, $operation) && $json[$k] = $service->$operation();
                             } catch (\ReflectionException $e) {
                             }
@@ -55,6 +57,29 @@ trait TomTrait
             }
         }
         return [$text, $json];
+    }
+
+    private function canCreateThread($user, $categoryId)
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+        $permissions = Permission::getUserPermissions($user);
+        $permission = 'category' . $categoryId . '.createThread';
+        if (in_array('createThread', $permissions) || in_array($permission, $permissions)) {
+            return true;
+        }
+        return false;
+    }
+
+    private function canViewThread($user,$categoryId){
+
+    }
+    private function canEditThread(){
+
+    }
+    private function canDeleteThread(){
+
     }
 
 }

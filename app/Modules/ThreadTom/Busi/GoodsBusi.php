@@ -23,4 +23,18 @@ use App\Modules\ThreadTom\TomBaseBusi;
 class GoodsBusi extends TomBaseBusi
 {
 
+    public function create()
+    {
+        return $this->jsonReturn($this->body);
+    }
+
+    public function delete()
+    {
+        return true;
+    }
+
+    public function update()
+    {
+        return $this->jsonReturn($this->body);
+    }
 }

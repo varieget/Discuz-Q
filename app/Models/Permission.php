@@ -76,5 +76,11 @@ class Permission extends Model
         return $permissions;
     }
 
+    public static function getUserPermissions($user){
+        $groups = $user->groups->toArray();
+        $groupIds = array_column($groups, 'id');
+        return  Permission::categoryPermissions($groupIds);
+    }
+
 
 }

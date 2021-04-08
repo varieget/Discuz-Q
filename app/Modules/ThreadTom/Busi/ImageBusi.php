@@ -28,57 +28,56 @@ class ImageBusi extends TomBaseBusi
         $desc = $this->getParams('desc');
 
 
-
-
-
         //todo logic
 
 
-
-        return [
+        return $this->jsonReturn(
             [
-                'id'=>1,
-                'user_id'=>5,
-                'type_id'=>5,
-                'order'=>0,
-                'type'=>1,
-                'is_remote'=>0,
-                'is_approved'=>1,
-                'attachment'=>'NFRFVwledPOg7fsIUqB5gkSHZpwuuAOfrhO48q5O.jpeg',
-                'file_path'=>'public/attachments/2021/02/26/',
-                'file_name'=>'0000.zip',
-                'file_size'=>'2006583',
-                'file_type'=>'application/zip'
-            ],
-            [
-                'id'=>2,
-                'user_id'=>5,
-                'type_id'=>5,
-                'order'=>0,
-                'type'=>1,
-                'is_remote'=>0,
-                'is_approved'=>1,
-                'attachment'=>'NFRFVwledPOg7fsIUqB5gkSHZpwuuAOfrhO48q5O.jpeg',
-                'file_path'=>'public/attachments/2021/02/26/',
-                'file_name'=>'0000.zip',
-                'file_size'=>'2006583',
-                'file_type'=>'application/zip'
-            ],
-            [
-                'id'=>3,
-                'user_id'=>5,
-                'type_id'=>5,
-                'order'=>0,
-                'type'=>1,
-                'is_remote'=>0,
-                'is_approved'=>1,
-                'attachment'=>'NFRFVwledPOg7fsIUqB5gkSHZpwuuAOfrhO48q5O.jpeg',
-                'file_path'=>'public/attachments/2021/02/26/',
-                'file_name'=>'0000.zip',
-                'file_size'=>'2006583',
-                'file_type'=>'application/zip'
+                [
+                    'id' => 1,
+                    'user_id' => 5,
+                    'type_id' => 5,
+                    'order' => 0,
+                    'type' => 1,
+                    'is_remote' => 0,
+                    'is_approved' => 1,
+                    'attachment' => 'NFRFVwledPOg7fsIUqB5gkSHZpwuuAOfrhO48q5O.jpeg',
+                    'file_path' => 'public/attachments/2021/02/26/',
+                    'file_name' => '0000.zip',
+                    'file_size' => '2006583',
+                    'file_type' => 'application/zip'
+                ],
+                [
+                    'id' => 2,
+                    'user_id' => 5,
+                    'type_id' => 5,
+                    'order' => 0,
+                    'type' => 1,
+                    'is_remote' => 0,
+                    'is_approved' => 1,
+                    'attachment' => 'NFRFVwledPOg7fsIUqB5gkSHZpwuuAOfrhO48q5O.jpeg',
+                    'file_path' => 'public/attachments/2021/02/26/',
+                    'file_name' => '0000.zip',
+                    'file_size' => '2006583',
+                    'file_type' => 'application/zip'
+                ],
+                [
+                    'id' => 3,
+                    'user_id' => 5,
+                    'type_id' => 5,
+                    'order' => 0,
+                    'type' => 1,
+                    'is_remote' => 0,
+                    'is_approved' => 1,
+                    'attachment' => 'NFRFVwledPOg7fsIUqB5gkSHZpwuuAOfrhO48q5O.jpeg',
+                    'file_path' => 'public/attachments/2021/02/26/',
+                    'file_name' => '0000.zip',
+                    'file_size' => '2006583',
+                    'file_type' => 'application/zip'
+                ]
             ]
-        ];
+        );
+
     }
 
 
