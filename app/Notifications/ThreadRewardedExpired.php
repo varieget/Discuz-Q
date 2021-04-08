@@ -17,9 +17,9 @@ namespace App\Notifications;
 
 use App\Models\User;
 use App\Models\UserWalletLog;
-use App\Notifications\Messages\Database\ThreadRewardedMessage;
-use App\Notifications\Messages\Wechat\ThreadRewardedWechatMessage;
-use App\Notifications\Messages\Sms\ThreadRewardedSmsMessage;
+use App\Notifications\Messages\Database\ThreadRewardedExpiredMessage;
+use App\Notifications\Messages\Wechat\ThreadRewardedExpiredWechatMessage;
+use App\Notifications\Messages\Sms\ThreadRewardedExpiredSmsMessage;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Discuz\Notifications\NotificationManager;
 use Illuminate\Support\Collection;
@@ -29,7 +29,7 @@ use Illuminate\Support\Collection;
  *
  * @package App\Notifications
  */
-class ThreadRewarded extends AbstractNotification
+class ThreadRewardedExpired extends AbstractNotification
 {
     public $user;
 
@@ -40,9 +40,9 @@ class ThreadRewarded extends AbstractNotification
     public $walletType;
 
     public $tplId = [
-        'database' => 'system.question.rewarded',
-        'wechat'   => 'wechat.question.rewarded',
-        'sms'      => 'sms.question.rewarded'
+        'database' => 'system.question.rewarded.expired',
+        'wechat'   => 'wechat.question.rewarded.expired',
+        'sms'      => 'sms.question.rewarded.expired'
     ];
 
     /**
@@ -96,22 +96,21 @@ class ThreadRewarded extends AbstractNotification
 
     public function toDatabase($notifiable)
     {
-        $message = app(ThreadRewardedMessage::class);
+        $message = app(ThreadRewardedExpiredMessage::class);
         $message->setData($this->getTplModel('database'), $this->user, $this->order, $this->data);
         return (new NotificationManager)->driver('database')->setNotification($message)->build();
-
     }
 
     public function toWechat($notifiable)
     {
-        $message = app(ThreadRewardedWechatMessage::class);
+        $message = app(ThreadRewardedExpiredWechatMessage::class);
         $message->setData($this->getTplModel('wechat'), $this->user, $this->order, $this->data);
         return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
     }
 
     public function toSms($notifiable)
     {
-        $message = app(ThreadRewardedSmsMessage::class);
+        $message = app(ThreadRewardedExpiredSmsMessage::class);
         $message->setData($this->getTplModel('sms'), $this->user, $this->order, $this->data);
         return (new NotificationManager)->driver('sms')->setNotification($message)->build();
     }
