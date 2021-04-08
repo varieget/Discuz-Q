@@ -48,22 +48,31 @@ class SettingsRepository implements ContractsSettingRepository
             return $this->settings;
         }
 
-        $ttl = static::CACHE_TTL;
-        $settings = $this->cache->remember(
-            CacheKey::SETTINGS,
-            mt_rand($ttl, $ttl + 10),
-            function () {
-                $settings = [];
-                Setting::all()->each(function ($setting) use (&$settings) {
-                    $tag = $setting['tag'] ?? 'default';
-                    $settings[$tag][$setting['key']] = $setting['value'];
+        if (app()->config('middleware_cache')) {
+            $ttl = static::CACHE_TTL;
+            $settings = $this->cache->remember(
+                CacheKey::SETTINGS,
+                mt_rand($ttl, $ttl + 10),
+                function () {
+                    return $this->getAllFromDatabase();
                 });
-                return $settings;
-            });
+        } else {
+            $settings = $this->getAllFromDatabase();
+        }
 
         $this->settings = collect($settings);
 
         return $this->settings;
+    }
+
+    protected function getAllFromDatabase()
+    {
+        $settings = [];
+        Setting::all()->each(function ($setting) use (&$settings) {
+            $tag = $setting['tag'] ?? 'default';
+            $settings[$tag][$setting['key']] = $setting['value'];
+        });
+        return $settings;
     }
 
     public function get($key, $tag = 'default', $default = '')
