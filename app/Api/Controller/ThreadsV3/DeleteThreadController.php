@@ -18,13 +18,29 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\ResponseCode;
+use App\Models\ThreadText;
+use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
 
 class DeleteThreadController extends DzqController
 {
+    use TomTrait;
 
     public function main()
     {
-        // TODO: Implement main() method.
+        $threadId = $this->inPut('threadId');
+        $thread = ThreadText::query()->where('user_id', $this->user->id)->where('id', $threadId)->first();
+        if (empty($thread)) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
+        if (!$this->canDeleteThread($this->user, $thread->category_id, $thread->user_id)) {
+            $this->outPut(ResponseCode::UNAUTHORIZED);
+        }
+        $thread->status = ThreadText::STATUS_DELETE;
+        if ($thread->save()) {
+            $this->outPut(ResponseCode::SUCCESS);
+        }
+        $this->outPut(ResponseCode::DB_ERROR, '删除失败');
     }
 }

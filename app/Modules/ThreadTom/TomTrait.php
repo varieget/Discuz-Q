@@ -19,6 +19,7 @@ namespace App\Modules\ThreadTom;
 
 
 use App\Models\Permission;
+use App\Models\User;
 
 trait TomTrait
 {
@@ -47,7 +48,7 @@ trait TomTrait
                         if (isset($config[$tomId])) {
                             try {
                                 $service = new \ReflectionClass($config[$tomId]['service']);
-                                $service = $service->newInstanceArgs([$tomId,$operation, $body]);
+                                $service = $service->newInstanceArgs([$tomId, $operation, $body]);
                                 method_exists($service, $operation) && $json[$k] = $service->$operation();
                             } catch (\ReflectionException $e) {
                             }
@@ -59,7 +60,7 @@ trait TomTrait
         return [$text, $json];
     }
 
-    private function canCreateThread($user, $categoryId)
+    private function canCreateThread(User $user, $categoryId)
     {
         if ($user->isAdmin()) {
             return true;
@@ -72,14 +73,33 @@ trait TomTrait
         return false;
     }
 
-    private function canViewThread($user,$categoryId){
+    private function canViewThread($user, $categoryId)
+    {
 
     }
-    private function canEditThread(){
+
+    private function canEditThread()
+    {
 
     }
-    private function canDeleteThread(){
 
+    private function canDeleteThread(User $user, $categoryId, $threadUserId = null)
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+        $permissions = Permission::getUserPermissions($user);
+        $permission = 'category' . $categoryId . '.thread.hide';
+        if (in_array('thread.hide', $permissions) || in_array($permission, $permissions)) {
+            return true;
+        }
+        if (!empty($threadUserId) && $user->id == $threadUserId) {
+            $permission = 'category' . $categoryId . '.thread.hideOwnThreadOrPost';
+            if (in_array('thread.hideOwnThreadOrPost', $permissions) || in_array($permission, $permissions)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
