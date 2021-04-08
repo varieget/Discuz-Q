@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Models\UserWalletLog;
 use App\Notifications\Messages\Database\ThreadRewardedMessage;
 use App\Notifications\Messages\Wechat\ThreadRewardedWechatMessage;
+use App\Notifications\Messages\Sms\ThreadRewardedSmsMessage;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Discuz\Notifications\NotificationManager;
 use Illuminate\Support\Collection;
@@ -40,7 +41,8 @@ class ThreadRewarded extends AbstractNotification
 
     public $tplId = [
         'database' => 'system.question.rewarded',
-        'wechat' => 'wechat.question.rewarded',
+        'wechat'   => 'wechat.question.rewarded',
+        'sms'      => 'sms.question.rewarded'
     ];
 
     /**
@@ -105,5 +107,12 @@ class ThreadRewarded extends AbstractNotification
         $message = app(ThreadRewardedWechatMessage::class);
         $message->setData($this->getTplModel('wechat'), $this->user, $this->order, $this->data);
         return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
+    }
+
+    public function toSms($notifiable)
+    {
+        $message = app(ThreadRewardedSmsMessage::class);
+        $message->setData($this->getTplModel('sms'), $this->user, $this->order, $this->data);
+        return (new NotificationManager)->driver('sms')->setNotification($message)->build();
     }
 }
