@@ -110,36 +110,35 @@ class CreateThreadController extends DzqController
             'isAnonymous' => $isAnonymous,
             'summary' => $summary
         ];
-        list($text, $json) = $this->tomDispatcher($content);
-        $this->createThread($text, $json, $params);
+        $this->createThread($content, $params);
         $this->outPut(ResponseCode::SUCCESS);
     }
 
 
     /**
      * @desc 发布一个新帖子
-     * @param $text
-     * @param $json
+     * @param $content
      * @param $params
+     * @return bool
      */
-    private function createThread($text, $json, $params)
+    private function createThread($content, $params)
     {
         $db = $this->getDB();
         $db->beginTransaction();
         try {
-            $this->executeEloquent($text, $json, $params);
+            $this->executeEloquent($content, $params);
             $db->commit();
             return true;
         } catch (\Exception $e) {
             $db->rollBack();
             $this->info('createThread_error_' . $this->user->id, $e->getMessage());
-//            $this->outPut(ResponseCode::DB_ERROR, 'log:createThread_error_' . $this->user->id);
             $this->outPut(ResponseCode::DB_ERROR, $e->getMessage());
         }
     }
 
-    private function executeEloquent($text, $json, $params)
+    private function executeEloquent($content, $params)
     {
+        list($text, $json) = $this->tomDispatcher($content);
         //插入text数据
         $tText = new ThreadText();
         list($ip, $port) = $this->getIpPort();
@@ -149,7 +148,7 @@ class CreateThreadController extends DzqController
             'title' => $params['title'],
             'summary' => empty($params['summary']) ? $tText->getSummary($text) : $params['summary'],
             'text' => $text,
-            'status' => ThreadText::STATUS_OK,
+            'status' => ThreadText::STATUS_ACTIVE,
             'ip' => $ip,
             'port' => $port
         ];

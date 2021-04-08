@@ -24,4 +24,6 @@ class ThreadTom extends DzqModel
 {
     protected $table = 'thread_tom';
 
+    const STATUS_ACTIVE = 0;
+    const STATUS_DELETE = -1;
 }
