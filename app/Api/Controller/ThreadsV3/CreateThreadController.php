@@ -37,8 +37,6 @@ class CreateThreadController extends DzqController
         $title = $this->inPut('title');
         $content = $this->inPut('content');
         $position = $this->inPut('position');
-        $ip = $this->inPut('ip');
-        $port = $this->inPut('port');
         $isAnonymous = $this->inPut('anonymous');//非必须
         $summary = $this->inPut('summary');//非必须
         if (!in_array($categoryId, Category::instance()->getValidCategoryIds($this->user))) {
@@ -108,8 +106,6 @@ class CreateThreadController extends DzqController
             'title' => $title,
             'content' => $content,
             'position' => $position,
-            'ip' => $ip,
-            'port' => $port,
             'isAnonymous' => $isAnonymous,
             'summary' => $summary
         ];
@@ -145,13 +141,16 @@ class CreateThreadController extends DzqController
     {
         //插入text数据
         $tText = new ThreadText();
+        list($ip, $port) = $this->getIpPort();
         $data = [
             'user_id' => $this->user->id,
             'category_id' => $params['categoryId'],
             'title' => $params['title'],
             'summary' => empty($params['summary']) ? $tText->getSummary($text) : $params['summary'],
             'text' => $text,
-            'status' => ThreadText::STATUS_OK
+            'status' => ThreadText::STATUS_OK,
+            'ip' => $ip,
+            'port' => $port
         ];
         if (!empty($params['position'])) {
             $data['longitude'] = $params['position']['longitude'];
