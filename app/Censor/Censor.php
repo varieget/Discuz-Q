@@ -20,7 +20,9 @@ namespace App\Censor;
 
 use App\Models\Attachment;
 use App\Models\StopWord;
+use App\Common\ResponseCode;
 use Discuz\Contracts\Setting\SettingsRepository;
+use Discuz\Base\DzqController;
 use Discuz\Foundation\Application;
 use Discuz\Qcloud\QcloudManage;
 use Discuz\Wechat\EasyWechatTrait;
@@ -124,6 +126,7 @@ class Censor
         }
 
         if ($this->isMod && ($type == 'signature' || $type == 'dialog')) {
+            DzqController::outPutV3(ResponseCode::CONTENT_BANNED,ResponseCode::$codeMap[ResponseCode::CONTENT_BANNED]);
             throw new CensorNotPassedException('content_banned');
         }
 
