@@ -128,7 +128,6 @@ class CreateThreadController extends DzqController
         try {
             $this->executeEloquent($content, $params);
             $db->commit();
-            return true;
         } catch (\Exception $e) {
             $db->rollBack();
             $this->info('createThread_error_' . $this->user->id, $e->getMessage());

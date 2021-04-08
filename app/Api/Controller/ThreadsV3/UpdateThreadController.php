@@ -50,7 +50,6 @@ class UpdateThreadController extends DzqController
         try {
             $this->executeEloquent($thread, $content);
             $db->commit();
-            return true;
         } catch (\Exception $e) {
             $db->rollBack();
             $this->info('updateThread_error_' . $this->user->id, $e->getMessage());
@@ -62,6 +61,13 @@ class UpdateThreadController extends DzqController
     {
         list($text, $tomJson) = $this->tomDispatcher($content);
         //更新thread_text
+        $this->saveThreadText($thread, $text);
+        //更新thread_tom
+        $this->saveThreadTom($thread, $tomJson);
+    }
+
+    private function saveThreadText($thread, $text)
+    {
         $title = $this->inPut('title');//非必填项
         $categoryId = $this->inPut('categoryId');
         $position = $this->inPut('position');
@@ -88,8 +94,11 @@ class UpdateThreadController extends DzqController
             $thread->location = $position['location'];
         }
         $thread->save();
+    }
+
+    private function saveThreadTom($thread, $tomJson)
+    {
         $threadId = $thread->id;
-        //更新thread_tom
         foreach ($tomJson as $key => $value) {
             $tomId = $value['tomId'];
             $operation = $value['operation'];
@@ -114,11 +123,10 @@ class UpdateThreadController extends DzqController
                         ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'status' => ThreadTom::STATUS_ACTIVE])
                         ->update(['value' => json_encode($body, 256)]);
                     break;
-                case $this->SELECT_FUNC:
-                    break;
                 default:
-                    $this->outPut(ResponseCode::UNKNOWN_ERROR, 'func not exist.');
+                    $this->outPut(ResponseCode::UNKNOWN_ERROR, 'operation ' . $operation . ' not exist.');
             }
         }
+
     }
 }
