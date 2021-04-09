@@ -127,6 +127,5 @@ class UpdateThreadController extends DzqController
                     $this->outPut(ResponseCode::UNKNOWN_ERROR, 'operation ' . $operation . ' not exist.');
             }
         }
-
     }
 }
