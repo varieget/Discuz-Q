@@ -38,6 +38,7 @@ use App\Models\RedPacket;
 use App\Models\Thread;
 use App\Models\ThreadReward;
 use App\Models\ThreadUser;
+use App\Models\ThreadVideo;
 use App\Repositories\UserFollowRepository;
 use App\Settings\SettingsRepository;
 use Carbon\Carbon;
@@ -166,6 +167,11 @@ class ResourceThreadV2Controller extends DzqController
         }
         switch ($thread->type){
             case Thread::TYPE_OF_VIDEO:
+                $threadVideo = ThreadVideo::query()->where(['thread_id' => $thread->id, 'status' => 1, 'type' => 0])->first();
+                if(empty($threadVideo)){        //如果没有转码成功的就去最后一个草稿
+                    $threadVideo = ThreadVideo::query()->where(['thread_id' => $thread->id, 'status' => 0])->orderBy('id', 'desc')->first();
+                }
+                $thread->threadVideo = $threadVideo;
                 if ($urlKey && $urlExpire && $thread->threadVideo->mediaUrl) {
                     $currentTime = Carbon::now()->timestamp;
                     $dir = Str::beforeLast(parse_url($thread->threadVideo->mediaUrl)['path'], '/') . '/';
@@ -177,6 +183,11 @@ class ResourceThreadV2Controller extends DzqController
                 $data['threadVideo'] = $thread->threadVideo ?? [];
                 break;
             case Thread::TYPE_OF_AUDIO:
+                $threadAudio = ThreadVideo::query()->where(['thread_id' => $thread->id, 'status' => 1, 'type' => 1])->first();
+                if(empty($threadAudio)){        //如果没有转码成功的就去最后一个草稿
+                    $threadAudio = ThreadVideo::query()->where(['thread_id' => $thread->id, 'status' => 0, 'type' => 1])->orderBy('id', 'desc')->first();
+                }
+                $thread->threadAudio = $threadAudio;
                 if ($urlKey && $urlExpire && $thread->threadAudio->mediaUrl) {
                     $currentTime = Carbon::now()->timestamp;
                     $dir = Str::beforeLast(parse_url($thread->threadAudio->mediaUrl)['path'], '/') . '/';
