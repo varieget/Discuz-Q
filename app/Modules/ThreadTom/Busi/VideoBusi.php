@@ -68,7 +68,7 @@ class VideoBusi extends TomBaseBusi
 
     public function select()
     {
-        return [
+        return $this->jsonReturn([
             [
                 'status' => 2,
                 'reason' => '',
@@ -91,6 +91,6 @@ class VideoBusi extends TomBaseBusi
                 'media_url' => 'http://1500003868.vod2.myqcloud.com/43832669vodtranscq1500003868/3731d4935285890814874837502/v.f100010.mp4',
                 'cover_url' => 'http://1500003868.vod2.myqcloud.com/43832669vodtranscq1500003868/3731d4935285890814874837502/animatedGraphics/v.f20000.gif'
             ]
-        ];
+        ]);
     }
 }

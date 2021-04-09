@@ -37,4 +37,11 @@ class GoodsBusi extends TomBaseBusi
     {
         return $this->jsonReturn($this->body);
     }
+
+    public function select()
+    {
+        return $this->jsonReturn([
+            'class' => 'GoodsBusi'
+        ]);
+    }
 }

@@ -90,7 +90,7 @@ class ImageBusi extends TomBaseBusi
 
     public function select()
     {
-        return [
+        return $this->jsonReturn( [
             [
                 'attachment' => 'QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4.jpeg',
                 'extension' => 'jpeg',
@@ -139,6 +139,6 @@ class ImageBusi extends TomBaseBusi
                 'typeId' => 109,
                 'url' => "http://dev.discuz.com/storage/attachments/2021/03/30/QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4.jpeg"
             ]
-        ];
+        ]);
     }
 }
