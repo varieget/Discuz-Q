@@ -42,9 +42,7 @@ trait TomTrait
         $tomJsons = [];
         foreach ($tomContent as $k => $v) {
             if (strpos($k, '$') == 0) {
-                if (!empty($operation)) {
-                    $v['operation'] = $operation;
-                }
+                !empty($operation) && $v['operation'] = $operation;
                 if (isset($v['tomId']) && isset($v['operation']) && isset($v['body'])) {
                     if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
                         $tomId = $v['tomId'];

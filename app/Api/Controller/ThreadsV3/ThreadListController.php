@@ -18,13 +18,16 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
 
 class ThreadListController extends DzqController
 {
 
+    use TomTrait;
+
     public function main()
     {
-        // TODO: Implement main() method.
+
     }
 }
