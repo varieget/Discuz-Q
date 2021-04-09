@@ -24,4 +24,7 @@ class ThreadTom extends DzqModel
 {
     protected $table = 'thread_tom';
 
+    protected $dateFormat = 'U';
+
+
 }
