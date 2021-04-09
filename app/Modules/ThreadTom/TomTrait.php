@@ -33,17 +33,18 @@ trait TomTrait
     /**
      * @desc 支持一次提交包含新建或者更新或者删除等各种类型混合
      * @param $tomContent
+     * @param null $operation
      * @return array
      */
-    private function tomDispatcher($tomContent)
+    private function tomDispatcher($tomContent, $operation = null)
     {
         $config = TomConfig::$map;
-        $text = '';
-        $tomJson = [];
+        $tomJsons = [];
         foreach ($tomContent as $k => $v) {
-            if ($k == 'text') {
-                $text = $v;
-            } else {
+            if (strpos($k, '$') == 0) {
+                if (!empty($operation)) {
+                    $v['operation'] = $operation;
+                }
                 if (isset($v['tomId']) && isset($v['operation']) && isset($v['body'])) {
                     if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
                         $tomId = $v['tomId'];
@@ -53,7 +54,7 @@ trait TomTrait
                             try {
                                 $service = new \ReflectionClass($config[$tomId]['service']);
                                 $service = $service->newInstanceArgs([$tomId, $operation, $body]);
-                                method_exists($service, $operation) && $tomJson[$k] = $service->$operation();
+                                method_exists($service, $operation) && $tomJsons[$k] = $service->$operation();
                             } catch (\ReflectionException $e) {
                             }
                         }
@@ -61,7 +62,7 @@ trait TomTrait
                 }
             }
         }
-        return [$text, $tomJson];
+        return $tomJsons;
     }
 
     private function canCreateThread(User $user, $categoryId)

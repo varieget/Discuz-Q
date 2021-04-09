@@ -19,7 +19,6 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
-use App\Models\Category;
 use App\Models\ThreadHot;
 use App\Models\ThreadTom;
 use App\Models\ThreadText;
@@ -40,9 +39,6 @@ class CreateThreadController extends DzqController
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');//非必须
         $summary = $this->inPut('summary');//非必须
-        if (!in_array($categoryId, Category::instance()->getValidCategoryIds($this->user))) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, $categoryId . '不合法');
-        }
         if (!$this->canCreateThread($this->user, $categoryId)) {
             $this->outPut(ResponseCode::UNAUTHORIZED);
         }
@@ -137,7 +133,8 @@ class CreateThreadController extends DzqController
 
     private function executeEloquent($content, $params)
     {
-        list($text, $json) = $this->tomDispatcher($content);
+        $text = $content['text'];
+        $tomJsons = $this->tomDispatcher($content);
         //插入text数据
         $tText = new ThreadText();
         list($ip, $port) = $this->getIpPort();
@@ -166,7 +163,7 @@ class CreateThreadController extends DzqController
         $tHot->save();
         //插入tom数据
         $attrs = [];
-        foreach ($json as $key => $value) {
+        foreach ($tomJsons as $key => $value) {
             $attrs[] = [
                 'thread_id' => $threadId,
                 'tom_type' => $value['tomId'],

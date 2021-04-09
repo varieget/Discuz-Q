@@ -472,4 +472,7 @@ $route->get('/posts.v2', 'posts.v2', ApiController\Posts\ListPostsV2Controller::
 $route->post('/thread.create.v3','thread.create.v3',ApiController\ThreadsV3\CreateThreadController::class);
 $route->post('/thread.delete.v3','thread.delete.v3',ApiController\ThreadsV3\DeleteThreadController::class);
 $route->post('/thread.update.v3','thread.update.v3',ApiController\ThreadsV3\UpdateThreadController::class);
+$route->post('/tom.delete.v3','tom.delete.v3',ApiController\ThreadsV3\DeleteTomController::class);
+$route->post('/tom.update.v3','tom.update.v3',ApiController\ThreadsV3\UpdateTomController::class);
+
 

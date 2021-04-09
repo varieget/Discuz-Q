@@ -59,11 +59,12 @@ class UpdateThreadController extends DzqController
 
     private function executeEloquent(ThreadText $thread, $content)
     {
-        list($text, $tomJson) = $this->tomDispatcher($content);
+        $text = $content['text'];
+        $tomJsons = $this->tomDispatcher($content);
         //更新thread_text
         $this->saveThreadText($thread, $text);
         //更新thread_tom
-        $this->saveThreadTom($thread, $tomJson);
+        $this->saveThreadTom($thread, $tomJsons);
     }
 
     private function saveThreadText($thread, $text)
@@ -120,7 +121,7 @@ class UpdateThreadController extends DzqController
                     break;
                 case $this->UPDATE_FUNC:
                     ThreadTom::query()
-                        ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'status' => ThreadTom::STATUS_ACTIVE])
+                        ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'key' => $key, 'status' => ThreadTom::STATUS_ACTIVE])
                         ->update(['value' => json_encode($body, 256)]);
                     break;
                 default:
