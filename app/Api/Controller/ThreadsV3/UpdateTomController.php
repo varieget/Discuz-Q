@@ -18,13 +18,19 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\ResponseCode;
+use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
 
 class UpdateTomController extends DzqController
 {
 
+    use TomTrait;
+
     public function main()
     {
-
+        if (!$this->canUpdateTom()) {
+            $this->outPut(ResponseCode::UNAUTHORIZED);
+        }
     }
 }

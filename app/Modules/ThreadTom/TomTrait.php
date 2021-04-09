@@ -128,4 +128,14 @@ trait TomTrait
         return false;
     }
 
+    private function canUpdateTom()
+    {
+        return true;
+    }
+
+    private function canDeleteTom()
+    {
+        return true;
+    }
+
 }
