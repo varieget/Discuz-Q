@@ -48,56 +48,6 @@ class CreateThreadController extends DzqController
             'address' => 'required',
             'location' => 'required'
         ]);
-//        $data = [
-//            'text' => '<p>去年11月以来，中国海关总署宣布，{$0}因从澳大利亚多地进口的原木{$1}中检出检疫性有害{$2}生物，根据相关法律暂停{$3}</p>',
-//            '$0' => [
-//                'tomId' => 101,//图片
-//                'operation' => 'create',
-//                'body' => [
-//                    'imageIds' => [10, 11, 12],
-//                    'desc' => '中国海关总署宣布'
-//                ]
-//            ],
-//            '$1' => [
-//                'tomId' => 103,//视频
-//                'operation' => 'create',
-//                'body' => [
-//                    'videoIds' => [6, 7],
-//                ]
-//            ],
-//            '$2' => [
-//                'tomId' => 104,//商品
-//                'operation' => 'create',
-//                'body' => [
-//                    'detail_content' => '小米10 双模5G 骁龙865 1亿像素8K电影相机 对称式立体声 12GB+256GB 钛银黑',
-//                    'goodsUrl' => 'https://item.jd.com/100010534221.html',
-//                    'imageUrl' => '',
-//                    'price' => 250,
-//                ]
-//            ],
-//            '$3' => [
-//                'tomId' => 108,//投票
-//                'operation' => 'create',
-//                'body' => [
-//                    'options' => [
-//                        [
-//                            'title' => '涨停',
-//                        ],
-//                        [
-//                            'title' => '上涨5%',
-//                        ],
-//                        [
-//                            'title' => '下降5%',
-//                        ],
-//                        [
-//                            'title' => '跌停',
-//                        ]
-//                    ],
-//                    'question' => '你觉得明天700能涨多少？',
-//                    'expiredTime' => '2021-04-02 20:00:00'
-//                ]
-//            ]
-//        ];
         $params = [
             'categoryId' => $categoryId,
             'title' => $title,
