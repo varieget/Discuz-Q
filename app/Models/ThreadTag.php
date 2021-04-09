@@ -24,6 +24,10 @@ class ThreadTag extends DzqModel
 {
     protected $table = 'thread_tag';
 
+    /**
+     * @desc 异步执行更新帖子类型标签
+     * @param ThreadTom $tom
+     */
     public function updateThreadTag(ThreadTom $tom)
     {
 
