@@ -20,13 +20,17 @@ namespace App\Models;
 
 use Discuz\Base\DzqModel;
 
-class ThreadTom extends DzqModel
+class ThreadTag extends DzqModel
 {
-    protected $table = 'thread_tom';
+    protected $table = 'thread_tag';
 
-    protected $dateFormat = 'U';
+    /**
+     * @desc 异步执行更新帖子类型标签
+     * @param ThreadTom $tom
+     */
+    public function updateThreadTag(ThreadTom $tom)
+    {
 
+    }
 
-    const STATUS_ACTIVE = 0;
-    const STATUS_DELETE = -1;
 }

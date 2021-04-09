@@ -19,7 +19,6 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
-use App\Models\Category;
 use App\Models\ThreadHot;
 use App\Models\ThreadTom;
 use App\Models\ThreadText;
@@ -32,18 +31,14 @@ class CreateThreadController extends DzqController
 
     public function main()
     {
+        $this->limitCreateThread();
         //发帖权限
         $categoryId = $this->inPut('categoryId');
         $title = $this->inPut('title');
         $content = $this->inPut('content');
         $position = $this->inPut('position');
-        $ip = $this->inPut('ip');
-        $port = $this->inPut('port');
         $isAnonymous = $this->inPut('anonymous');//非必须
         $summary = $this->inPut('summary');//非必须
-        if (!in_array($categoryId, Category::instance()->getValidCategoryIds($this->user))) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, $categoryId . '不合法');
-        }
         if (!$this->canCreateThread($this->user, $categoryId)) {
             $this->outPut(ResponseCode::UNAUTHORIZED);
         }
@@ -53,105 +48,55 @@ class CreateThreadController extends DzqController
             'address' => 'required',
             'location' => 'required'
         ]);
-//        $data = [
-//            'text' => '<p>去年11月以来，中国海关总署宣布，{$0}因从澳大利亚多地进口的原木{$1}中检出检疫性有害{$2}生物，根据相关法律暂停{$3}</p>',
-//            '$0' => [
-//                'tomId' => 101,//图片
-//                'operation' => 'create',
-//                'body' => [
-//                    'imageIds' => [10, 11, 12],
-//                    'desc' => '中国海关总署宣布'
-//                ]
-//            ],
-//            '$1' => [
-//                'tomId' => 103,//视频
-//                'operation' => 'create',
-//                'body' => [
-//                    'videoIds' => [6, 7],
-//                ]
-//            ],
-//            '$2' => [
-//                'tomId' => 104,//商品
-//                'operation' => 'create',
-//                'body' => [
-//                    'detail_content' => '小米10 双模5G 骁龙865 1亿像素8K电影相机 对称式立体声 12GB+256GB 钛银黑',
-//                    'goodsUrl' => 'https://item.jd.com/100010534221.html',
-//                    'imageUrl' => '',
-//                    'price' => 250,
-//                ]
-//            ],
-//            '$3' => [
-//                'tomId' => 108,//投票
-//                'operation' => 'create',
-//                'body' => [
-//                    'options' => [
-//                        [
-//                            'title' => '涨停',
-//                        ],
-//                        [
-//                            'title' => '上涨5%',
-//                        ],
-//                        [
-//                            'title' => '下降5%',
-//                        ],
-//                        [
-//                            'title' => '跌停',
-//                        ]
-//                    ],
-//                    'question' => '你觉得明天700能涨多少？',
-//                    'expiredTime' => '2021-04-02 20:00:00'
-//                ]
-//            ]
-//        ];
         $params = [
             'categoryId' => $categoryId,
             'title' => $title,
             'content' => $content,
             'position' => $position,
-            'ip' => $ip,
-            'port' => $port,
             'isAnonymous' => $isAnonymous,
             'summary' => $summary
         ];
-        list($text, $json) = $this->tomDispatcher($content);
-        $this->createThread($text, $json, $params);
+        $this->createThread($content, $params);
         $this->outPut(ResponseCode::SUCCESS);
     }
 
 
     /**
      * @desc 发布一个新帖子
-     * @param $text
-     * @param $json
+     * @param $content
      * @param $params
+     * @return bool
      */
-    private function createThread($text, $json, $params)
+    private function createThread($content, $params)
     {
         $db = $this->getDB();
         $db->beginTransaction();
         try {
-            $this->executeEloquent($text, $json, $params);
+            $this->executeEloquent($content, $params);
             $db->commit();
-            return true;
         } catch (\Exception $e) {
             $db->rollBack();
             $this->info('createThread_error_' . $this->user->id, $e->getMessage());
-//            $this->outPut(ResponseCode::DB_ERROR, 'log:createThread_error_' . $this->user->id);
             $this->outPut(ResponseCode::DB_ERROR, $e->getMessage());
         }
     }
 
-    private function executeEloquent($text, $json, $params)
+    private function executeEloquent($content, $params)
     {
+        $text = $content['text'];
+        $tomJsons = $this->tomDispatcher($content);
         //插入text数据
         $tText = new ThreadText();
+        list($ip, $port) = $this->getIpPort();
         $data = [
             'user_id' => $this->user->id,
             'category_id' => $params['categoryId'],
             'title' => $params['title'],
             'summary' => empty($params['summary']) ? $tText->getSummary($text) : $params['summary'],
             'text' => $text,
-            'status' => ThreadText::STATUS_OK
+            'status' => ThreadText::STATUS_ACTIVE,
+            'ip' => $ip,
+            'port' => $port
         ];
         if (!empty($params['position'])) {
             $data['longitude'] = $params['position']['longitude'];
@@ -168,7 +113,7 @@ class CreateThreadController extends DzqController
         $tHot->save();
         //插入tom数据
         $attrs = [];
-        foreach ($json as $key => $value) {
+        foreach ($tomJsons as $key => $value) {
             $attrs[] = [
                 'thread_id' => $threadId,
                 'tom_type' => $value['tomId'],
@@ -177,6 +122,18 @@ class CreateThreadController extends DzqController
             ];
         }
         ThreadTom::query()->insert($attrs);
+    }
+
+    private function limitCreateThread()
+    {
+        $threadFirst = ThreadText::query()
+            ->select(['id', 'user_id', 'category_id', 'created_at'])
+            ->where('user_id', $this->user->id)
+            ->orderByDesc('created_at')->first();
+        //发帖间隔时间30s
+        if (!empty($threadFirst) && (time() - strtotime($threadFirst['created_at'])) < 30) {
+            $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，稍后重试');
+        }
     }
 
 }

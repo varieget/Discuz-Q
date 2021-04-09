@@ -19,36 +19,40 @@ namespace App\Modules\ThreadTom;
 
 
 use App\Models\Permission;
+use App\Models\User;
 
 trait TomTrait
 {
 
-    private $operations = ['create', 'delete', 'update', 'select'];
+    private $CREATE_FUNC = 'create';
+    private $DELETE_FUNC = 'delete';
+    private $UPDATE_FUNC = 'update';
+    private $SELECT_FUNC = 'select';
+
 
     /**
      * @desc 支持一次提交包含新建或者更新或者删除等各种类型混合
-     * @param $tosArray
+     * @param $tomContent
+     * @param null $operation
      * @return array
      */
-    private function tomDispatcher($tosArray)
+    private function tomDispatcher($tomContent, $operation = null)
     {
         $config = TomConfig::$map;
-        $text = '';
-        $json = [];
-        foreach ($tosArray as $k => $v) {
-            if ($k == 'text') {
-                $text = $v;
-            } else {
+        $tomJsons = [];
+        foreach ($tomContent as $k => $v) {
+            if (strpos($k, '$') == 0) {
+                !empty($operation) && $v['operation'] = $operation;
                 if (isset($v['tomId']) && isset($v['operation']) && isset($v['body'])) {
-                    if (in_array($v['operation'], $this->operations)) {
+                    if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
                         $tomId = $v['tomId'];
                         $operation = $v['operation'];
                         $body = $v['body'];
                         if (isset($config[$tomId])) {
                             try {
                                 $service = new \ReflectionClass($config[$tomId]['service']);
-                                $service = $service->newInstanceArgs([$tomId,$operation, $body]);
-                                method_exists($service, $operation) && $json[$k] = $service->$operation();
+                                $service = $service->newInstanceArgs([$tomId, $operation, $body]);
+                                method_exists($service, $operation) && $tomJsons[$k] = $service->$operation();
                             } catch (\ReflectionException $e) {
                             }
                         }
@@ -56,10 +60,10 @@ trait TomTrait
                 }
             }
         }
-        return [$text, $json];
+        return $tomJsons;
     }
 
-    private function canCreateThread($user, $categoryId)
+    private function canCreateThread(User $user, $categoryId)
     {
         if ($user->isAdmin()) {
             return true;
@@ -72,14 +76,65 @@ trait TomTrait
         return false;
     }
 
-    private function canViewThread($user,$categoryId){
-
+    private function canViewThreadDetail($user, $categoryId)
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+        $permissions = Permission::getUserPermissions($user);
+        $permission = 'category' . $categoryId . '.thread.viewPosts';
+        if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
+            return true;
+        }
+        //todo 免费查看付费贴、付费图片、付费语音、付费问答
+        return false;
     }
-    private function canEditThread(){
 
+    private function canEditThread(User $user, $categoryId, $threadUserId = null)
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+        $permissions = Permission::getUserPermissions($user);
+        $permission = 'category' . $categoryId . '.thread.edit';
+        if (in_array('thread.edit', $permissions) || in_array($permission, $permissions)) {
+            return true;
+        }
+        if (!empty($threadUserId) && $user->id == $threadUserId) {
+            $permission = 'category' . $categoryId . '.thread.editOwnThreadOrPost';
+            if (in_array('thread.editOwnThreadOrPost', $permissions) || in_array($permission, $permissions)) {
+                return true;
+            }
+        }
     }
-    private function canDeleteThread(){
 
+    private function canDeleteThread(User $user, $categoryId, $threadUserId = null)
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+        $permissions = Permission::getUserPermissions($user);
+        $permission = 'category' . $categoryId . '.thread.hide';
+        if (in_array('thread.hide', $permissions) || in_array($permission, $permissions)) {
+            return true;
+        }
+        if (!empty($threadUserId) && $user->id == $threadUserId) {
+            $permission = 'category' . $categoryId . '.thread.hideOwnThreadOrPost';
+            if (in_array('thread.hideOwnThreadOrPost', $permissions) || in_array($permission, $permissions)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function canUpdateTom()
+    {
+        return true;
+    }
+
+    private function canDeleteTom()
+    {
+        return true;
     }
 
 }
