@@ -25,6 +25,6 @@ class DeleteTomController extends DzqController
 
     public function main()
     {
-        // TODO: Implement main() method.
+
     }
 }

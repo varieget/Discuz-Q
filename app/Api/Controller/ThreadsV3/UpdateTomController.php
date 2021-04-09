@@ -25,6 +25,6 @@ class UpdateTomController extends DzqController
 
     public function main()
     {
-        // TODO: Implement main() method.
+
     }
 }
