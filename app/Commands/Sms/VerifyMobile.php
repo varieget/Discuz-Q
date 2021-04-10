@@ -145,10 +145,12 @@ class VerifyMobile
 
         //小程序绑定
         $js_code = Arr::get($this->params, 'js_code');
-        $iv = Arr::get($this->params, 'iv');
-        $encryptedData = Arr::get($this->params, 'encryptedData');
-        if ($js_code && $iv && $encryptedData) {
-            $this->bind->bindMiniprogram($js_code, $iv, $encryptedData, null, $this->mobileCode->user);
+//        $iv = Arr::get($this->params, 'iv');
+//        $encryptedData = Arr::get($this->params, 'encryptedData');
+        $noAES = Arr::get($this->params, 'noAES');
+        if ($js_code && $noAES) {
+//            $this->bind->bindMiniprogram($js_code, $iv, $encryptedData, null, $this->mobileCode->user);
+            $this->bind->bindMiniprogramByCode($js_code, $user);
         }
 
         //手机号登录需要填写扩展字段审核的场景
