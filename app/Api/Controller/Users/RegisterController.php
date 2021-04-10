@@ -95,12 +95,12 @@ class RegisterController extends AbstractCreateController
         /**小程序使用**/
         $js_code = Arr::get($attributes, 'js_code');
         $noAES = Arr::get($attributes, 'noAES');
-//        $iv = Arr::get($attributes, 'iv');
-//        $encryptedData = Arr::get($attributes, 'encryptedData');
+        $iv = Arr::get($attributes, 'iv');
+        $encryptedData = Arr::get($attributes, 'encryptedData');
 
         //手机号或者无感模式下，若公众号或小程序的参数都不存在，则不可使用该接口
         if($registerType == 1 || $registerType == 2) {
-            if(empty($token) && empty($js_code) && empty($noAES)) {
+            if(empty($token) && empty($js_code) ) {
                 throw new RegisterException('Register Method Error');
             }
             if(! empty($token)) {
@@ -116,7 +116,7 @@ class RegisterController extends AbstractCreateController
             ) {
                 throw new RegisterException('Register Mini Token Error');
             }*/
-            if(! empty($js_code) || empty($noAES)) {
+            if(! empty($js_code)) {
                 throw new RegisterException('Register Mini Token Error');
             }
         }
@@ -136,9 +136,14 @@ class RegisterController extends AbstractCreateController
             }
         }
         //绑定小程序信息
-        if ($js_code && $noAES) {
+        if ($js_code && $iv && $encryptedData && ! $noAES) {
+            $this->bind->bindMiniprogram($js_code, $iv, $encryptedData, $rebind, $user);
+        }
+
+        if($js_code && $noAES) {
             $this->bind->bindMiniprogramByCode($js_code,  $user);
         }
+
 
         //绑定手机号
         /* if ($mobileToken = Arr::get($attributes, 'mobileToken')) {
