@@ -110,7 +110,7 @@ class UpdateThreadController extends DzqController
                         'thread_id' => $threadId,
                         'tom_type' => $tomId,
                         'key' => $key,
-                        'value' => $body,
+                        'value' => json_encode($body,256),
                         'status' => ThreadTom::STATUS_ACTIVE
                     ]);
                     break;

@@ -64,14 +64,15 @@ trait TomTrait
             if (isset($v['tomId']) && isset($v['operation']) && isset($v['body'])) {
                 if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
                     $tomId = $v['tomId'];
-                    $operation = $v['operation'];
+                    $op = $v['operation'];
                     $body = $v['body'];
                     if (isset($config[$tomId])) {
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
-                            $service = $service->newInstanceArgs([$tomId, $operation, $body]);
-                            method_exists($service, $operation) && $tomJsons[$k] = $service->$operation();
+                            $service = $service->newInstanceArgs([$tomId, $op, $body]);
+                            method_exists($service, $op) && $tomJsons[$k] = $service->$op();
                         } catch (\ReflectionException $e) {
+                            dd($e->getMessage());
                         }
                     }
                 }
