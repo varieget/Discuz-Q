@@ -60,7 +60,7 @@ class UpdateThreadController extends DzqController
     private function executeEloquent(ThreadText $thread, $content)
     {
         $text = $content['text'];
-        $tomJsons = $this->tomDispatcher($content);
+        $tomJsons = $this->tomDispatcher($content,null,$thread->id);
         //更新thread_text
         $this->saveThreadText($thread, $text);
         //更新thread_tom

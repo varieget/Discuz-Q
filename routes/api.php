@@ -341,9 +341,10 @@ $route->delete('/dialog/{id}', 'dialog.delete', ApiController\Dialog\DeleteDialo
 */
 
 $route->post('/reports', 'reports.create', ApiController\Report\CreateReportsController::class);
-$route->get('/reports', 'reports.list', ApiController\Report\ListReportsController::class);
 $route->patch('/reports/batch', 'reports.batchUpdate', ApiController\Report\BatchUpdateReportsController::class);
 $route->delete('/reports/batch/{ids}', 'reports.batchDelete', ApiController\Report\BatchDeleteReportsController::class);
+
+$route->get('/reports', 'reports.list', ApiController\Report\ListReportsController::class);
 
 /*
 |--------------------------------------------------------------------------

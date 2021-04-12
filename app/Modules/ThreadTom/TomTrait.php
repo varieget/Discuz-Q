@@ -19,6 +19,7 @@ namespace App\Modules\ThreadTom;
 
 
 use App\Models\Permission;
+use App\Models\ThreadTom;
 use App\Models\User;
 
 trait TomTrait
@@ -34,27 +35,43 @@ trait TomTrait
      * @desc 支持一次提交包含新建或者更新或者删除等各种类型混合
      * @param $tomContent
      * @param null $operation
+     * @param null $threadId
      * @return array
      */
-    private function tomDispatcher($tomContent, $operation = null)
+    private function tomDispatcher($tomContent, $operation = null, $threadId = null)
     {
         $config = TomConfig::$map;
         $tomJsons = [];
-        foreach ($tomContent as $k => $v) {
-            if (strpos($k, '$') == 0) {
-                !empty($operation) && $v['operation'] = $operation;
-                if (isset($v['tomId']) && isset($v['operation']) && isset($v['body'])) {
-                    if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
-                        $tomId = $v['tomId'];
-                        $operation = $v['operation'];
-                        $body = $v['body'];
-                        if (isset($config[$tomId])) {
-                            try {
-                                $service = new \ReflectionClass($config[$tomId]['service']);
-                                $service = $service->newInstanceArgs([$tomId, $operation, $body]);
-                                method_exists($service, $operation) && $tomJsons[$k] = $service->$operation();
-                            } catch (\ReflectionException $e) {
-                            }
+        $indexes = $tomContent['indexes'];
+        foreach ($indexes as $k => $v) {
+            !empty($operation) && $v['operation'] = $operation;
+            if (!isset($v['operation'])) {
+                if (empty($v['body'])) {
+                    $v['operation'] = $this->DELETE_FUNC;
+                } else {//create/update
+                    if (empty($threadId)) {
+                        $v['operation'] = $this->CREATE_FUNC;
+                    } else {
+                        $exist = ThreadTom::query()->where(['thread_id' => $threadId, 'tom_type' => $v['tomId'], 'key' => $k, 'status' => ThreadTom::STATUS_ACTIVE])->exists();
+                        if ($exist) {
+                            $v['operation'] = $this->UPDATE_FUNC;
+                        } else {
+                            $v['operation'] = $this->CREATE_FUNC;
+                        }
+                    }
+                }
+            }
+            if (isset($v['tomId']) && isset($v['operation']) && isset($v['body'])) {
+                if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
+                    $tomId = $v['tomId'];
+                    $operation = $v['operation'];
+                    $body = $v['body'];
+                    if (isset($config[$tomId])) {
+                        try {
+                            $service = new \ReflectionClass($config[$tomId]['service']);
+                            $service = $service->newInstanceArgs([$tomId, $operation, $body]);
+                            method_exists($service, $operation) && $tomJsons[$k] = $service->$operation();
+                        } catch (\ReflectionException $e) {
                         }
                     }
                 }
