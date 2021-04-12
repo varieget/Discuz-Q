@@ -17,128 +17,61 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
+use App\Common\ResponseCode;
 use App\Modules\ThreadTom\TomBaseBusi;
+use App\Models\Attachment;
+use App\Models\ThreadTom;
 
 class ImageBusi extends TomBaseBusi
 {
+
     public function create()
     {
+        $input = $this->verification();
 
-        $imageIds = $this->getParams('imageIds');
-        $desc = $this->getParams('desc');
+        $attachment = Attachment::query()
+            ->whereIn('id',$input['imageIds'])
+            ->where('type',Attachment::TYPE_OF_IMAGE)
+            ->get()
+            ->toArray();
 
+        if(empty($attachment)){
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, ResponseCode::$codeMap[ResponseCode::RESOURCE_NOT_FOUND]);
+        }
 
-        //todo logic
-
-
-        return $this->jsonReturn(
-            [
-                [
-                    'id' => 1,
-                    'user_id' => 5,
-                    'type_id' => 5,
-                    'order' => 0,
-                    'type' => 1,
-                    'is_remote' => 0,
-                    'is_approved' => 1,
-                    'attachment' => 'NFRFVwledPOg7fsIUqB5gkSHZpwuuAOfrhO48q5O.jpeg',
-                    'file_path' => 'public/attachments/2021/02/26/',
-                    'file_name' => '0000.zip',
-                    'file_size' => '2006583',
-                    'file_type' => 'application/zip'
-                ],
-                [
-                    'id' => 2,
-                    'user_id' => 5,
-                    'type_id' => 5,
-                    'order' => 0,
-                    'type' => 1,
-                    'is_remote' => 0,
-                    'is_approved' => 1,
-                    'attachment' => 'NFRFVwledPOg7fsIUqB5gkSHZpwuuAOfrhO48q5O.jpeg',
-                    'file_path' => 'public/attachments/2021/02/26/',
-                    'file_name' => '0000.zip',
-                    'file_size' => '2006583',
-                    'file_type' => 'application/zip'
-                ],
-                [
-                    'id' => 3,
-                    'user_id' => 5,
-                    'type_id' => 5,
-                    'order' => 0,
-                    'type' => 1,
-                    'is_remote' => 0,
-                    'is_approved' => 1,
-                    'attachment' => 'NFRFVwledPOg7fsIUqB5gkSHZpwuuAOfrhO48q5O.jpeg',
-                    'file_path' => 'public/attachments/2021/02/26/',
-                    'file_name' => '0000.zip',
-                    'file_size' => '2006583',
-                    'file_type' => 'application/zip'
-                ]
-            ]
-        );
-
+        return $this->jsonReturn($attachment);
     }
-
 
     public function update()
     {
-        return $this->jsonReturn([
-           'name'=>'hello'
-        ]);
+        return $this->create();
     }
 
-    public function select()
+    public function delete()
     {
-        return $this->jsonReturn( [
-            [
-                'attachment' => 'QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4.jpeg',
-                'extension' => 'jpeg',
-                'fileName' => "11.jpeg",
-                'filePath' => "public/attachments/2021/03/30/",
-                'fileSize' => 260739,
-                'fileType' => "image/jpeg",
-                'id' => 166,
-                'isApproved' => 1,
-                'isRemote' => false,
-                'order' => 0,
-                'thumbUrl' => "http://dev.discuz.com/storage/attachments/2021/03/30/QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4_thumb.jpeg",
-                'type' => 1,
-                'typeId' => 109,
-                'url' => "http://dev.discuz.com/storage/attachments/2021/03/30/QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4.jpeg"
-            ],
-            [
-                'attachment' => 'QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4.jpeg',
-                'extension' => 'jpeg',
-                'fileName' => "11.jpeg",
-                'filePath' => "public/attachments/2021/03/30/",
-                'fileSize' => 260739,
-                'fileType' => "image/jpeg",
-                'id' => 166,
-                'isApproved' => 1,
-                'isRemote' => false,
-                'order' => 0,
-                'thumbUrl' => "http://dev.discuz.com/storage/attachments/2021/03/30/QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4_thumb.jpeg",
-                'type' => 1,
-                'typeId' => 109,
-                'url' => "http://dev.discuz.com/storage/attachments/2021/03/30/QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4.jpeg"
-            ],
-            [
-                'attachment' => 'QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4.jpeg',
-                'extension' => 'jpeg',
-                'fileName' => "11.jpeg",
-                'filePath' => "public/attachments/2021/03/30/",
-                'fileSize' => 260739,
-                'fileType' => "image/jpeg",
-                'id' => 166,
-                'isApproved' => 1,
-                'isRemote' => false,
-                'order' => 0,
-                'thumbUrl' => "http://dev.discuz.com/storage/attachments/2021/03/30/QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4_thumb.jpeg",
-                'type' => 1,
-                'typeId' => 109,
-                'url' => "http://dev.discuz.com/storage/attachments/2021/03/30/QlOUPSnF4ylp64UUicDXJhawB129OZS3n7i7zwa4.jpeg"
-            ]
-        ]);
+        $deleteId = $this->getParams('deleteId');
+
+        $threadTom = ThreadTom::query()
+            ->where('id',$deleteId)
+            ->update(['status'=>-1]);
+
+        if ($threadTom) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    public function verification()
+    {
+        $input = [
+            'imageIds' => $this->getParams('imageIds'),
+        ];
+        $rules = [
+            'imageIds' => 'required|array',
+        ];
+        $this->dzqValidate($input, $rules);
+
+        return $input;
     }
 }
