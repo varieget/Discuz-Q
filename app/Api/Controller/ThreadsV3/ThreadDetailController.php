@@ -72,15 +72,17 @@ class ThreadDetailController extends DzqController
             ])->get()->toArray();
         $tomContent = [];
         foreach ($threadTom as $item) {
-            $tomContent[$item['key']] = [
+            $tomContent['indexes'][$item['key']] = [
                 'tomId' => $item['tom_type'],
                 'operation' => $this->SELECT_FUNC,
                 'body' => json_decode($item['value'], true)
             ];
         }
         $tomJsons = $this->tomDispatcher($tomContent, $this->SELECT_FUNC);
-        $content = ['text' => $threadText['text']];
-        $content += $tomJsons;
+        $content = [
+            'text' => $threadText['text'],
+            'indexes'=>$tomJsons
+        ];
         return $content;
     }
 
