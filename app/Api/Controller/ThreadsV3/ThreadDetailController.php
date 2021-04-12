@@ -17,7 +17,6 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
 use App\Common\ResponseCode;
 use App\Models\ThreadHot;
 use App\Models\ThreadText;

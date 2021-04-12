@@ -34,6 +34,9 @@ class ThreadText extends DzqModel
     const STATUS_HIDDEN = 3;//隐藏
     const STATUS_REJECT = 4;//审核驳回
 
+    const FIELD_YES = 1;
+    const FIELD_NO = 0;
+
     /**
      * 摘要结尾
      */

@@ -90,6 +90,21 @@ trait TomTrait
         return false;
     }
 
+    private function canViewThread($user, $categoryId)
+    {
+        return true;
+//        if ($user->isAdmin()) {
+//            return true;
+//        }
+//        $permissions = Permission::getUserPermissions($user);
+//        $permission = 'category' . $categoryId . '.thread.viewPosts';
+//        if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
+//            return true;
+//        }
+//        //todo 免费查看付费贴、付费图片、付费语音、付费问答
+//        return false;
+    }
+
     private function canEditThread(User $user, $categoryId, $threadUserId = null)
     {
         if ($user->isAdmin()) {
