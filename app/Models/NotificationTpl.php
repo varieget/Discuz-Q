@@ -173,45 +173,70 @@ class NotificationTpl extends Model
      * @param int $errCode 错误编号
      * @param string $errMsg 错误信息
      * @param array $sendBuild 发送的数据
+     * @return bool
      */
-    public static function writeError(NotificationTpl $notificationData, $errCode, $errMsg, $sendBuild = [])
+    public static function writeError(NotificationTpl $notificationData, $errCode, $errMsg, $sendBuild = []) : bool
     {
         /**
+         * 微信小程序
+         *
          * 43101 用户拒绝接受消息 并不是配置报错
          *
          * @URL err_code 的合法值 https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
          */
-        if (! in_array((int) $errCode, [43101])) {
-            // 查询当前是否已经存有错误
-            if ($notificationData->is_error) {
-                /** @var Builder $buildError */
-                $buildError = $notificationData->error_msg;
-
-                // 检测是否已经存在过相同 error code，不存在则拼接多个 error code
-                $errCodes = explode('、', $buildError['err_code']);
-                if (! in_array($errCode, $errCodes)) {
-                    $buildError['err_code'] .= '、' . $errCode;
-                    $buildError['err_msg'] .= ' #@@@# ' . $errMsg;
-                } else {
-                    return;
-                }
-            } else {
-                /** @var Builder $buildError */
-                $buildError = [
-                    'id'         => $notificationData->id,
-                    'type_name'  => $notificationData->type_name,
-                    'send_build' => $sendBuild,
-                    'err_code'   => $errCode,
-                    'err_msg'    => $errMsg ?: 'unknown mistake',
-                ];
-
-                $notificationData->is_error = 1;
+        if ($notificationData->type == NotificationTpl::MINI_PROGRAM_NOTICE) {
+            if (in_array((int) $errCode, [43101])) {
+                return false;
             }
-
-            $notificationData->error_msg = $buildError;
-
-            $notificationData->save();
         }
+
+        /**
+         * 短信
+         *
+         * 1023 单个手机号30秒内下发短信条数超过设定的上限
+         * 1024 单个手机号1小时内下发短信条数超过设定的上限
+         * 1025 单个手机号日下发短信条数超过设定的上限
+         * 1026	单个手机号下发相同内容超过设定的上限
+         *
+         * @URL err_code 的合法值 https://cloud.tencent.com/document/product/382/49316
+         */
+        if ($notificationData->type == NotificationTpl::SMS_NOTICE) {
+            if (in_array((int) $errCode, [1023, 1024, 1025, 1026])) {
+                return false;
+            }
+        }
+
+        // 查询当前是否已经存有错误
+        if ($notificationData->is_error) {
+            /** @var Builder $buildError */
+            $buildError = $notificationData->error_msg;
+
+            // 检测是否已经存在过相同 error code，不存在则拼接多个 error code
+            $errCodes = explode('、', $buildError['err_code']);
+            if (! in_array($errCode, $errCodes)) {
+                $buildError['err_code'] .= '、' . $errCode;
+                $buildError['err_msg'] .= ' #@@@# ' . $errMsg;
+            } else {
+                return true;
+            }
+        } else {
+            /** @var Builder $buildError */
+            $buildError = [
+                'id'         => $notificationData->id,
+                'type_name'  => $notificationData->type_name,
+                'send_build' => $sendBuild,
+                'err_code'   => $errCode,
+                'err_msg'    => $errMsg ?: 'unknown mistake',
+            ];
+
+            $notificationData->is_error = 1;
+        }
+
+        $notificationData->error_msg = $buildError;
+
+        $notificationData->save();
+
+        return true;
     }
 
     /**

@@ -43,21 +43,14 @@ class ListThreadsV2Controller extends DzqController
     public function main()
     {
         $filter = $this->inPut('filter');
-        $currentPage = $this->inPut('page');
+        $page = $this->inPut('page');
         $perPage = $this->inPut('perPage');
         $homeSequence = $this->inPut('homeSequence');//默认首页
-        $cache = app('cache');
-        $key = md5(json_encode($filter) . $perPage . $homeSequence);
-//        $currentPage == 1 && $this->getCache($cache, $key);
         $serializer = $this->app->make(AttachmentSerializer::class);
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
         $permissions = Permission::categoryPermissions($groupIds);
-        if ($homeSequence) {
-            $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
-        } else {
-            $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
-        }
+        $threads = $this->getOriginThreads($page, $filter, $perPage, $homeSequence);
         $threadList = $threads['pageData'];
         !$threads && $threadList = [];
         $userIds = array_unique(array_column($threadList, 'user_id'));
@@ -81,6 +74,7 @@ class ListThreadsV2Controller extends DzqController
         foreach ($threadList as $thread) {
             $userId = $thread['user_id'];
             $user = [
+                'pid' => -1,
                 'userName' => '匿名用户'
             ];
             if ((!$thread['is_anonymous'] && !empty($users[$userId])) || $this->user->id == $thread['user_id']) {
@@ -98,7 +92,7 @@ class ListThreadsV2Controller extends DzqController
                     $attachments = $attachmentsByPostId[$post['id']];
                 }
             }
-            $attachment = $this->filterAttachment($thread, $paidThreadIds, $attachments, $serializer);
+            $attachment = $this->filterAttachment($thread, $paidThreadIds, $pay, $attachments, $serializer);
             $thread = $this->getThread($thread, $post, $likedPostIds, $permissions, $pay);
 
             $linkString .= $thread['summary'];
@@ -120,8 +114,37 @@ class ListThreadsV2Controller extends DzqController
             $item['thread']['summary'] = str_replace($search, $replace, $thread['summary']);
         }
         $threads['pageData'] = $result;
-        $currentPage == 1 && $this->putCache($cache, $key, $threads);
         $this->outPut(ResponseCode::SUCCESS, '', $threads);
+    }
+
+    private function getFilterThreadsList($page, $filter, $perPage, $homeSequence)
+    {
+        $cache = app('cache');
+        $key = md5(json_encode($filter) . $perPage . $homeSequence);
+        if ($page == 1) {
+            $threads = $this->getCache($cache, $key);
+//            $threads = false;
+            if (!$threads) {
+                $threads = $this->getOriginThreads($page, $filter, $perPage, $homeSequence);
+                $this->putCache($cache, $key, $threads);
+                return $threads;
+            } else {
+                return $threads;
+            }
+        } else {
+            $threads = $this->getOriginThreads($page, $filter, $perPage, $homeSequence);
+        }
+        return $threads;
+    }
+
+    private function getOriginThreads($page, $filter, $perPage, $homeSequence)
+    {
+        if ($homeSequence) {
+            $threads = $this->getDefaultHomeThreads($filter, $page, $perPage);
+        } else {
+            $threads = $this->getFilterThreads($filter, $page, $perPage);
+        }
+        return $threads;
     }
 
     private function getPayArr($threadIds, $type)
@@ -149,22 +172,23 @@ class ListThreadsV2Controller extends DzqController
      * @desc 筛选在列表是否展示图片附件
      * @param $thread
      * @param $paidThreadIds
+     * @param $pay
      * @param $attachments
      * @param $serializer
      * @return array
      */
-    private function filterAttachment($thread, $paidThreadIds, $attachments, $serializer)
+    private function filterAttachment($thread, $paidThreadIds, $pay, $attachments, $serializer)
     {
         $attachment = [];
-        if ($this->canViewThread($thread, $paidThreadIds)) {
+        if ($this->canViewThread($thread, $paidThreadIds) || $this->canViewThread($thread, $pay)) {
             $attachment = $this->getAttachment($attachments, $thread, $serializer);
         } else {
             if ($thread['price'] == 0) {
                 $attachment = $this->getAttachment($attachments, $thread, $serializer);
             }
-            //附件收费
-            if ($thread['attachment_price'] > 0 || $thread['price'] > 0) {
 
+            //附件收费
+            if ($thread['attachment_price'] > 0 || ($thread['type'] == Thread::TYPE_OF_IMAGE && $thread['price'] > 0)) {
                 $attachment = $this->getAttachment($attachments, $thread, $serializer);
                 $attachment = array_filter($attachment, function ($item) {
                     $fileType = strtolower($item['fileType']);
@@ -261,6 +285,9 @@ class ListThreadsV2Controller extends DzqController
 
     private function canLikeThread($permissions)
     {
+        if ($this->user->isAdmin()) {
+            return true;
+        }
         $permission = 'thread.likePosts';
         return in_array($permission, $permissions);
     }
@@ -433,7 +460,7 @@ class ListThreadsV2Controller extends DzqController
         if ($attention == 1 && !empty($this->user)) {
             $threads->leftJoin('user_follow', 'user_follow.to_user_id', '=', 'threads.user_id')
                 ->where('user_follow.from_user_id', $this->user->id)
-                ->where('is_anonymous',0);
+                ->where('is_anonymous', 0);
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
         !empty($types) && $threads->whereIn('type', $types);
@@ -447,9 +474,10 @@ class ListThreadsV2Controller extends DzqController
         if ($data) {
             $data = unserialize($data);
             if (isset($data[$key])) {
-                $this->outPut(0, '', $data[$key]);
+                return $data[$key];
             }
         }
+        return false;
     }
 
     private function putCache($cache, $key, $threads)

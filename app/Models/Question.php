@@ -321,7 +321,7 @@ class Question extends DzqModel
 
         $users = User::instance()->getUsers($buserIds);
         $users = array_column($users, null, 'id');
-        $users = $users[1];
+        $users = !empty($users[1]['realname']) ? $users[1]['realname'] : array();
 
         return [
             'threadId' => $question['thread_id'],

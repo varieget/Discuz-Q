@@ -1,21 +1,29 @@
 <?php
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-namespace App\Notifications\Messages\Wechat;
+namespace App\Notifications\Messages\Sms;
 
 use App\Models\Order;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Support\Arr;
 
-/**
- * 悬赏问答通知 - 微信
- *
- * @package App\Notifications\Messages\Wechat
- */
-class ThreadRewardedWechatMessage extends SimpleMessage
+class ReceiveRedSmsMessage extends SimpleMessage
 {
-    public $tplId = 'wechat.question.rewarded';
-
     protected $model;
 
     protected $actor;
@@ -37,7 +45,6 @@ class ThreadRewardedWechatMessage extends SimpleMessage
         [$firstData, $actor, $model, $data] = $parameters;
         // set parent tpl data
         $this->firstData = $firstData;
-
         $this->actor = $actor;
         $this->model = $model;
         $this->data = $data;
@@ -47,7 +54,7 @@ class ThreadRewardedWechatMessage extends SimpleMessage
 
     public function template()
     {
-        return ['content' => $this->getWechatContent()];
+        return $this->getSmsContent();
     }
 
     protected function titleReplaceVars()
@@ -58,7 +65,6 @@ class ThreadRewardedWechatMessage extends SimpleMessage
     public function contentReplaceVars($data)
     {
         $message = Arr::get($this->data, 'message', '');
-        $threadId = Arr::get($this->data, 'raw.thread_id', 0);
         $actualAmount = Arr::get($this->data, 'raw.actual_amount', 0); // 实际金额
 
         // 获取支付类型
@@ -68,12 +74,6 @@ class ThreadRewardedWechatMessage extends SimpleMessage
 
         $actorName = Arr::get($this->data, 'raw.actor_username', '');  // 发送人姓名
 
-        // 主题ID为空时跳转到首页
-        if (empty($threadId)) {
-            $threadUrl = $this->url->to('');
-        } else {
-            $threadUrl = $this->url->to('/topic/index?id=' . $threadId);
-        }
 
         /**
          * 设置父类 模板数据
@@ -86,14 +86,9 @@ class ThreadRewardedWechatMessage extends SimpleMessage
             '{$username}'            => $actorName,
             '{$order_type_name}'     => $orderName,
             '{$actual_amount}'       => $actualAmount,
-            '{$content}'             => $this->strWords($message),
-            '{$thread_id}'           => $threadId
+            '{$content}'             => $this->strWords($message)
         ]);
-        // build data
-        $expand = [
-            'redirect_url' => $threadUrl,
-        ];
-        return $this->compiledArray($expand);
+        return $this->compiledArray();
     }
 
 }

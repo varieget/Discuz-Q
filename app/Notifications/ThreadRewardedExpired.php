@@ -16,35 +16,33 @@
 namespace App\Notifications;
 
 use App\Models\User;
-use App\Notifications\Messages\Database\ReceiveRedPacketMessage;
-use App\Notifications\Messages\MiniProgram\ReceiveRedPacketMiniProgramMessage;
-use App\Notifications\Messages\Sms\ReceiveRedSmsMessage;
-use App\Notifications\Messages\Wechat\ReceiveRedPacketWechatMessage;
+use App\Models\UserWalletLog;
+use App\Notifications\Messages\Database\ThreadRewardedExpiredMessage;
+use App\Notifications\Messages\Wechat\ThreadRewardedExpiredWechatMessage;
+use App\Notifications\Messages\Sms\ThreadRewardedExpiredSmsMessage;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Discuz\Notifications\NotificationManager;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 /**
- * 得到红包通知
+ * 得到悬赏通知
  *
  * @package App\Notifications
  */
-class ReceiveRedPacket extends AbstractNotification
+class ThreadRewardedExpired extends AbstractNotification
 {
     public $user;
 
-    public $model;
+    public $order;
 
     public $data;
 
-    protected $message;
+    public $walletType;
 
     public $tplId = [
-        'database'    => 'system.red_packet.gotten',
-        'wechat'      => 'wechat.red_packet.gotten',
-        'sms'         => 'sms.red_packet.gotten',
-        'miniProgram' => 'miniprogram.red_packet.gotten'
+        'database' => 'system.question.rewarded.expired',
+        'wechat'   => 'wechat.question.rewarded.expired',
+        'sms'      => 'sms.question.rewarded.expired'
     ];
 
     /**
@@ -52,12 +50,13 @@ class ReceiveRedPacket extends AbstractNotification
      */
     protected $messageRelationship;
 
-    public function __construct(User $user, Model $model, $data = [])
+    public function __construct(User $user, $order, $data, $walletType)
     {
         $this->setTemplate();
         $this->user = $user;
-        $this->model = $model;
+        $this->order = $order;
         $this->data = $data;
+        $this->walletType = $walletType;
     }
 
     /**
@@ -97,32 +96,22 @@ class ReceiveRedPacket extends AbstractNotification
 
     public function toDatabase($notifiable)
     {
-        $message = app(ReceiveRedPacketMessage::class);
-        $message->setData($this->getTplModel('database'), $this->user, $this->model, $this->data);
-
+        $message = app(ThreadRewardedExpiredMessage::class);
+        $message->setData($this->getTplModel('database'), $this->user, $this->order, $this->data);
         return (new NotificationManager)->driver('database')->setNotification($message)->build();
     }
 
     public function toWechat($notifiable)
     {
-        $message = app(ReceiveRedPacketWechatMessage::class);
-        $message->setData($this->getTplModel('wechat'), $this->user, $this->model, $this->data);
+        $message = app(ThreadRewardedExpiredWechatMessage::class);
+        $message->setData($this->getTplModel('wechat'), $this->user, $this->order, $this->data);
         return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
     }
 
     public function toSms($notifiable)
     {
-        $message = app(ReceiveRedSmsMessage::class);
-        $message->setData($this->getTplModel('sms'), $this->user, $this->model, $this->data);
+        $message = app(ThreadRewardedExpiredSmsMessage::class);
+        $message->setData($this->getTplModel('sms'), $this->user, $this->order, $this->data);
         return (new NotificationManager)->driver('sms')->setNotification($message)->build();
     }
-
-    public function toMiniProgram($notifiable)
-    {
-        $message = app(ReceiveRedPacketMiniProgramMessage::class);
-        $message->setData($this->getTplModel('miniProgram'), $this->user, $this->model, $this->data);
-
-        return (new NotificationManager)->driver('miniProgram')->setNotification($message)->build();
-    }
-
 }
