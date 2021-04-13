@@ -339,6 +339,7 @@ class ListThreadsV2Controller extends DzqController
     private function getDefaultHomeThreads($filter, $currentPage, $perPage)
     {
         $sequence = Sequence::query()->first();
+        $totalThreadCount = Thread::query()->count();
         if (empty($sequence)) return false;
         $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
@@ -406,7 +407,7 @@ class ListThreadsV2Controller extends DzqController
             });
         }
         $threads = $threads->orderByDesc('th1.created_at');
-        return $this->pagination($currentPage, $perPage, $threads);
+        return $this->pagination($currentPage, $perPage, $threads,$totalThreadCount);
     }
 
     private function getFilterThreads($filter, $currentPage, $perPage)
@@ -437,6 +438,9 @@ class ListThreadsV2Controller extends DzqController
         if (!$categoryids) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
+
+        $totalThreadCount = Thread::query()->count();
+
         //评论排序
         $threads = Thread::query()
             ->whereNull('threads.deleted_at')
@@ -464,7 +468,7 @@ class ListThreadsV2Controller extends DzqController
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
         !empty($types) && $threads->whereIn('type', $types);
-        $threads = $this->pagination($currentPage, $perPage, $threads);
+        $threads = $this->pagination($currentPage, $perPage, $threads, $totalThreadCount);
         return $threads;
     }
 

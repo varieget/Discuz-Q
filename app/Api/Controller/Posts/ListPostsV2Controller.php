@@ -75,7 +75,9 @@ class ListPostsV2Controller extends DzqController
 
         $this->applyFilters($query, $filters, $sort);
 
-        return $this->pagination($page, $perPage, $query, false);
+        $totalPostCount = $query->count();
+
+        return $this->pagination($page, $perPage, $query, $totalPostCount, false);
     }
 
     protected function applyFilters(Builder $query, array $filters, $sort)
