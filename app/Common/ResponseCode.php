@@ -18,6 +18,8 @@
 namespace App\Common;
 
 
+use function Complex\sec;
+
 class ResponseCode
 {
     const SUCCESS = 0;
@@ -49,6 +51,10 @@ class ResponseCode
     const NOT_FOUND_USER_WECHAT = -7006;
     const PC_QRCODE_TIME_FAIL = -7007;
     const GEN_QRCODE_TYPE_ERROR = -7008;
+    const MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR = -7009;
+    const MINI_PROGRAM_QR_CODE_ERROR = -7010;
+    const PC_BIND_ERROR = -7011;
+    const MINI_PROGRAM_SCHEME_ERROR = -7012;
 
 
     public static $codeMap = [
@@ -76,5 +82,9 @@ class ResponseCode
         self::NOT_FOUND_USER_WECHAT => '未找到微信用户',
         self::PC_QRCODE_TIME_FAIL => '扫码登录失败',
         self::GEN_QRCODE_TYPE_ERROR => '生成二维码参数类型错误',
+        self::MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR => '全局token获取失败',
+        self::MINI_PROGRAM_QR_CODE_ERROR => '小程序二维码生成失败',
+        self::PC_BIND_ERROR => '绑定失败',
+        self::MINI_PROGRAM_SCHEME_ERROR => '生成scheme失败'
     ];
 }

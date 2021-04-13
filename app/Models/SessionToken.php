@@ -86,7 +86,7 @@ class SessionToken extends Model
 
         $now = Carbon::now();
 
-        $token->token = Str::random(40);
+        $token->token = Str::random(32);
         $token->scope = $scope;
         $token->payload = $payload;
         $token->user_id = $userId;

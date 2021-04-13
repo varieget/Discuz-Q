@@ -57,9 +57,9 @@ class WechatH5QrCodeController extends DzqController
      */
     //todo 对接前端时更换路由
     static $qrcodeTypeAndRouteMap = [
-        'pc_login'              => '/pages/user/pc-login',
+        'pc_login'              => '/apiv3/users/wechat/h5.oauth',
         'pc_bind'               => '/pages/user/pc-relation',
-        'mobile_browser_login'  => '/pages/user/pc-login',
+        'mobile_browser_login'  => '/apiv3/users/wechat/h5.oauth',
         'mobile_browser_bind'   => '/pages/user/pc-relation'
     ];
 
@@ -88,19 +88,28 @@ class WechatH5QrCodeController extends DzqController
         if(! in_array($type, self::$qrcodeType)) {
             $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
         }
-
-        //跳转路由选择
-        $route = self::$qrcodeTypeAndRouteMap[$type];
-        $actor = $this->user;
-        if($actor && $actor->id) {
-            $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
-        } else {
-            $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type]);
+        //手机浏览器绑定则由前端传session_token
+        $sessionToken = $this->inPut('session_token');
+        if($type == 'mobile_browser_bind' && ! $sessionToken) {
+            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
         }
-        // create token
-        $token->save();
 
-        $locationUrl = $this->url->action($route, ['session_token' => $token->token]);
+        if($type != 'mobile_browser_bind') {
+            //跳转路由选择
+            $route = self::$qrcodeTypeAndRouteMap[$type];
+            $actor = $this->user;
+            if($actor && $actor->id) {
+                $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
+            } else {
+                $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type]);
+            }
+            // create token
+            $token->save();
+
+            $sessionToken = $token->token;
+        }
+
+        $locationUrl = $this->url->action($route, ['session_token' => $sessionToken]);
 
         $qrCode = new QrCode($locationUrl);
 
@@ -109,8 +118,8 @@ class WechatH5QrCodeController extends DzqController
         $baseImg = 'data:image/png;base64,' . base64_encode($binary);
 
         $data = [
-            'session_token' => $token->token,
-            'base64_img' => $baseImg,
+            'sessionToken' => $sessionToken,
+            'base64Img' => $baseImg,
         ];
 
         $this->outPut(ResponseCode::SUCCESS, '', $data);
