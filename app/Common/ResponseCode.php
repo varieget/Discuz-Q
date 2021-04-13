@@ -18,6 +18,8 @@
 namespace App\Common;
 
 
+use function Complex\sec;
+
 class ResponseCode
 {
     const SUCCESS = 0;
@@ -32,6 +34,9 @@ class ResponseCode
     const RESOURCE_EXIST = -4003;
     const RESOURCE_NOT_FOUND = -4004;
     const RESOURCE_IN_USE = -4005;
+    const CONTENT_BANNED = -4006;
+    const VALIDATE_REJECT = -4007;
+    const VALIDATE_IGNORE = -4008;
 
     const NET_ERROR = -5001;
     const INTERNAL_ERROR = -5002;
@@ -49,7 +54,18 @@ class ResponseCode
     const NOT_FOUND_USER_WECHAT = -7006;
     const PC_QRCODE_TIME_FAIL = -7007;
     const GEN_QRCODE_TYPE_ERROR = -7008;
-
+    const MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR = -7009;
+    const MINI_PROGRAM_QR_CODE_ERROR = -7010;
+    const PC_BIND_ERROR = -7011;
+    const MINI_PROGRAM_SCHEME_ERROR = -7012;
+    const DECRYPT_CODE_FAILURE = -7013;
+    const MOBILE_IS_ALREADY_BIND = -7031;
+    const REGISTER_CLOSE = -7032;
+    const REGISTER_TYPE_ERROR = -7033;
+    const USER_UPDATE_ERROR = -7034;
+    const ACCOUNT_HAS_BEEN_BOUND = -7034;
+    const ACCOUNT_WECHAT_IS_NULL = -7035;
+    const BIND_ERROR = -7036;
 
     public static $codeMap = [
         self::JUMP_TO_LOGIN => '跳转到登录页',
@@ -62,6 +78,9 @@ class ResponseCode
         self::RESOURCE_EXIST => '资源已存在',
         self::RESOURCE_NOT_FOUND => '资源不存在',
         self::RESOURCE_IN_USE => '资源被占用',
+        self::CONTENT_BANNED => '内容被禁用',
+        self::VALIDATE_REJECT => '拒绝验证',
+        self::VALIDATE_IGNORE => '忽略验证',
         self::NET_ERROR => '网络错误',
         self::INTERNAL_ERROR => '内部系统错误',
         self::EXTERNAL_API_ERROR => '外部接口错误',
@@ -76,5 +95,17 @@ class ResponseCode
         self::NOT_FOUND_USER_WECHAT => '未找到微信用户',
         self::PC_QRCODE_TIME_FAIL => '扫码登录失败',
         self::GEN_QRCODE_TYPE_ERROR => '生成二维码参数类型错误',
+        self::MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR => '全局token获取失败',
+        self::MINI_PROGRAM_QR_CODE_ERROR => '小程序二维码生成失败',
+        self::PC_BIND_ERROR => '绑定失败',
+        self::MINI_PROGRAM_SCHEME_ERROR => '生成scheme失败'
+        self::DECRYPT_CODE_FAILURE => '解密邀请码失败',
+        self::REGISTER_CLOSE => '站点关闭注册',
+        self::MOBILE_IS_ALREADY_BIND => '手机号已被绑定',
+        self::REGISTER_TYPE_ERROR => '注册类型错误',
+        self::USER_UPDATE_ERROR => 'cannot use the same password.',
+        self::ACCOUNT_HAS_BEEN_BOUND => 'account has been bound.',
+        self::ACCOUNT_WECHAT_IS_NULL => 'account wechat is null.',
+        self::BIND_ERROR => 'bind error.',
     ];
 }
