@@ -26,3 +26,27 @@ $route->get('/users/pc/wechat/h5.genqrcode', 'pc.wechat.h5.qrcode', ApiControlle
 
 
 
+
+
+
+//手机号（不区分端）
+$route->post('/users/sms.send', 'sms.send', ApiController\UsersV3\SmsSendController::class);
+$route->post('/users/sms.verify', 'sms.verify', ApiController\UsersV3\SmsVerifyController::class);
+$route->post('/users/sms.login', 'sms.login', ApiController\UsersV3\SmsLoginController::class);
+$route->post('/users/sms.bind', 'sms.bind', ApiController\UsersV3\SmsBindController::class);
+$route->post('/users/sms.rebind', 'sms.rebind', ApiController\UsersV3\SmsRebindController::class);
+$route->post('/users/sms.reset.pwd', 'sms.reset.pwd', ApiController\UsersV3\SmsResetPwdController::class);
+$route->post('/users/sms.reset.pay.pwd', 'sms.reset.pay.pwd', ApiController\UsersV3\SmsResetPayPwdController::class);
+
+//H5登录
+$route->post('/users/wechat/h5.oauth', 'wechat.h5.oauth', ApiController\UsersV3\WechatH5OauthController::class);
+$route->post('/users/wechat/h5.login', 'wechat.h5.login', ApiController\UsersV3\WechatH5LoginController::class);
+$route->post('/users/wechat/h5.bind', 'wechat.h5.bind', ApiController\UsersV3\WechatH5BindController::class);
+$route->post('/users/wechat/h5.rebind', 'wechat.h5.rebind', ApiController\UsersV3\WechatH5RebindController::class);
+
+//小程序
+$route->post('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiController\UsersV3\WechatMiniprogramLoginController::class);
+$route->post('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\UsersV3\WechatMiniprogramBindController::class);
+$route->post('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\UsersV3\WechatMiniprogramRebindController::class);
+
+

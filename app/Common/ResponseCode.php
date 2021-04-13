@@ -50,6 +50,13 @@ class ResponseCode
     const PC_QRCODE_TIME_FAIL = -7007;
     const GEN_QRCODE_TYPE_ERROR = -7008;
 
+    const MOBILE_IS_ALREADY_BIND = -7031;
+    const REGISTER_CLOSE = -7032;
+    const REGISTER_TYPE_ERROR = -7033;
+    const USER_UPDATE_ERROR = -7034;
+    const ACCOUNT_HAS_BEEN_BOUND = -7034;
+    const ACCOUNT_WECHAT_IS_NULL = -7035;
+    const BIND_ERROR = -7036;
 
     public static $codeMap = [
         self::JUMP_TO_LOGIN => '跳转到登录页',
@@ -76,5 +83,13 @@ class ResponseCode
         self::NOT_FOUND_USER_WECHAT => '未找到微信用户',
         self::PC_QRCODE_TIME_FAIL => '扫码登录失败',
         self::GEN_QRCODE_TYPE_ERROR => '生成二维码参数类型错误',
+
+        self::MOBILE_IS_ALREADY_BIND => '手机号已被绑定',
+        self::REGISTER_CLOSE => '注册关闭',
+        self::REGISTER_TYPE_ERROR => '注册类型错误',
+        self::USER_UPDATE_ERROR => 'cannot use the same password.',
+        self::ACCOUNT_HAS_BEEN_BOUND => 'account has been bound.',
+        self::ACCOUNT_WECHAT_IS_NULL => 'account wechat is null.',
+        self::BIND_ERROR => 'bind error.',
     ];
 }
