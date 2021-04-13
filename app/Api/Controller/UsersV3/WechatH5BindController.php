@@ -49,8 +49,8 @@ class WechatH5BindController extends DzqController
 
     public function main()
     {
-        $sessionId  = $this->inPut('sessionId');
         $code       = $this->inPut('code');
+        $sessionId  = $this->inPut('sessionId');
         $request    = $this ->request
                             ->withAttribute('session', new SessionToken())
                             ->withAttribute('sessionId', $sessionId);
@@ -67,13 +67,15 @@ class WechatH5BindController extends DzqController
 
         $driver = $this->socialite->driver($this->getDriver());
         $wxuser = $driver->user();
-
 //        $wxuser = UserWechat::query()
 //                ->where('id', 2)
 //                ->first();
 
         /** @var User $actor */
         $actor = $this->user;
+//        $actor = User::query()
+//                    ->where('id', 2)
+//                    ->first();
 
         $this->db->beginTransaction();
         try {

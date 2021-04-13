@@ -98,14 +98,14 @@ class ResponseCode
         self::MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR => '全局token获取失败',
         self::MINI_PROGRAM_QR_CODE_ERROR => '小程序二维码生成失败',
         self::PC_BIND_ERROR => '绑定失败',
-        self::MINI_PROGRAM_SCHEME_ERROR => '生成scheme失败'
+        self::MINI_PROGRAM_SCHEME_ERROR => '生成scheme失败',
         self::DECRYPT_CODE_FAILURE => '解密邀请码失败',
         self::REGISTER_CLOSE => '站点关闭注册',
         self::MOBILE_IS_ALREADY_BIND => '手机号已被绑定',
         self::REGISTER_TYPE_ERROR => '注册类型错误',
-        self::USER_UPDATE_ERROR => 'cannot use the same password.',
-        self::ACCOUNT_HAS_BEEN_BOUND => 'account has been bound.',
-        self::ACCOUNT_WECHAT_IS_NULL => 'account wechat is null.',
-        self::BIND_ERROR => 'bind error.',
+        self::USER_UPDATE_ERROR => '不可以使用相同的密码',
+        self::ACCOUNT_HAS_BEEN_BOUND => '账户已经被绑定',
+        self::ACCOUNT_WECHAT_IS_NULL => '账户微信为空',
+        self::BIND_ERROR => '绑定错误',
     ];
 }
