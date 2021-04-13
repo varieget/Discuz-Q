@@ -77,13 +77,14 @@ class WechatH5LoginController extends DzqController
 
     public function main()
     {
-        $sessionId      = $this->inPut('sessionId');
-        $sessionToken   = $this->inPut('session_token');
         $code           = $this->inPut('code');
-        $state          = $this->inPut('state');
+        $sessionId      = $this->inPut('sessionId');
+//        $state          = $this->inPut('state');
         $inviteCode     = $this->inPut('inviteCode');
 //        $register       = empty($this->inPut('register')) ? 0 :$this->inPut('register');
         $register       = 1;
+        $sessionToken   = $this->inPut('sessionToken');
+//        $sessionToken   = $this->inPut('session_token');
 //        $rebind         = empty($this->inPut('rebind')) ? 0 : $this->inPut('rebind');
         $rebind         = 0;
 

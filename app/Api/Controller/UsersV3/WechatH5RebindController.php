@@ -49,8 +49,8 @@ class WechatH5RebindController extends DzqController
 
     public function main()
     {
-        $sessionId  = $this->inPut('sessionId');
         $code       = $this->inPut('code');
+        $sessionId  = $this->inPut('sessionId');
         $request    = $this ->request
                             ->withAttribute('session', new SessionToken())
                             ->withAttribute('sessionId', $sessionId);
@@ -70,6 +70,9 @@ class WechatH5RebindController extends DzqController
 
         /** @var User $actor */
         $actor = $this->user;
+//        $actor = User::query()
+//                    ->where('id', 2)
+//                    ->first();
 
         $this->db->beginTransaction();
         try {
@@ -92,9 +95,12 @@ class WechatH5RebindController extends DzqController
             // 更新微信用户信息
             $wechatUser = new UserWechat();
             if (!$actor->isGuest() && !is_null($actor->wechat)) {
+                //删除用户原先绑定的微信信息
+                UserWechat::query()->where('user_id', $actor->id)->delete();
+
                 $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
 
-                // 登陆用户且没有绑定||换绑微信 添加微信绑定关系
+                //添加新的换绑的微信信息
                 $wechatUser->user_id = $actor->id;
                 $wechatUser->setRelation('user', $actor);
                 $wechatUser->save();
