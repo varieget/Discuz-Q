@@ -26,6 +26,9 @@ class ThreadText extends DzqModel
     protected $table = 'thread_text';
     const SUMMARY_LENGTH = 80;
 
+    protected $dateFormat = 'U';
+
+
 
     const STATUS_DELETE = -1;//删除
     const STATUS_WAIT_AUDIT = 0;//待审核
