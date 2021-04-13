@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\Users;
+namespace App\Api\Controller\UsersV3;
 
-use App\Api\Serializer\TokenSerializer;
-use App\Api\Serializer\UserProfileSerializer;
 use App\Commands\Users\AutoRegisterUser;
 use App\Commands\Users\GenJwtToken;
+use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Exceptions\NoUserException;
 use App\Models\SessionToken;
@@ -31,10 +30,9 @@ use App\Notifications\Messages\Wechat\RegisterWechatMessage;
 use App\Notifications\System;
 use App\Settings\SettingsRepository;
 use App\User\Bound;
-use Discuz\Api\Controller\AbstractResourceController;
 use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Auth\Guest;
+use Discuz\Base\DzqController;
 use Discuz\Contracts\Socialite\Factory;
 use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -44,66 +42,60 @@ use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-abstract class AbstractWechatUserController extends AbstractResourceController
+class WechatH5LoginController extends DzqController
 {
     use AssertPermissionTrait;
-
     protected $socialite;
-
     protected $bus;
-
     protected $cache;
-
     protected $validation;
-
     protected $events;
-
     protected $settings;
-
     protected $bound;
-
     protected $db;
 
-    public $serializer = TokenSerializer::class;
-
-    public function __construct(Factory $socialite, Dispatcher $bus, Repository $cache, ValidationFactory $validation, Events $events, SettingsRepository $settings, Bound $bound, ConnectionInterface $db)
-    {
-        $this->socialite = $socialite;
-        $this->bus = $bus;
-        $this->cache = $cache;
-        $this->validation = $validation;
-        $this->events = $events;
-        $this->settings = $settings;
-        $this->bound = $bound;
-        $this->db = $db;
+    public function __construct(
+        Factory             $socialite,
+        Dispatcher          $bus,
+        Repository          $cache,
+        ValidationFactory   $validation,
+        Events              $events,
+        SettingsRepository  $settings,
+        Bound               $bound,
+        ConnectionInterface $db
+    ){
+        $this->socialite    = $socialite;
+        $this->bus          = $bus;
+        $this->cache        = $cache;
+        $this->validation   = $validation;
+        $this->events       = $events;
+        $this->settings     = $settings;
+        $this->bound        = $bound;
+        $this->db           = $db;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param Document $document
-     * @return mixed
-     * @throws NoUserException
-     * @throws PermissionDeniedException
-     * @throws Exception
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    public function main()
     {
-        $sessionId = Arr::get($request->getQueryParams(), 'sessionId');
+        $sessionId      = $this->inPut('sessionId');
+        $sessionToken   = $this->inPut('session_token');
+        $code           = $this->inPut('code');
+        $state          = $this->inPut('state');
+        $inviteCode     = $this->inPut('inviteCode');
+//        $register       = empty($this->inPut('register')) ? 0 :$this->inPut('register');
+        $register       = 1;
+//        $rebind         = empty($this->inPut('rebind')) ? 0 : $this->inPut('rebind');
+        $rebind         = 0;
 
-        $sessionToken = Arr::get($request->getQueryParams(), 'session_token', null);
-
-        $request = $request->withAttribute('session', new SessionToken())->withAttribute('sessionId', $sessionId);
+        $request = $this->request->withAttribute('session', new SessionToken())->withAttribute('sessionId', $sessionId);
 
         $this->validation->make([
-            'code' => Arr::get($request->getQueryParams(), 'code'),
-            'sessionId' => Arr::get($request->getQueryParams(), 'sessionId'),
-        ], [
-            'code' => 'required',
-            'sessionId' => 'required'
-        ])->validate();
+                                    'code'      => $code,
+                                    'sessionId' => $sessionId,
+                                ], [
+                                    'code'      => 'required',
+                                    'sessionId' => 'required'
+                                ])->validate();
 
         $this->socialite->setRequest($request);
 
@@ -111,7 +103,7 @@ abstract class AbstractWechatUserController extends AbstractResourceController
         $wxuser = $driver->user();
 
         /** @var User $actor */
-        $actor = $request->getAttribute('actor');
+        $actor = $this->user;
 
         $this->db->beginTransaction();
         try {
@@ -126,15 +118,15 @@ abstract class AbstractWechatUserController extends AbstractResourceController
         }
         $wechatlog = app('wechatLog');
         $wechatlog->info('wechat_info', [
-            'wechat_user' => $wechatUser == null ? '': $wechatUser->toArray(),
-            'user_info' => $wechatUser->user == null ? '' : $wechatUser->user->toArray(),
-            'rebind' => Arr::get($request->getQueryParams(), 'rebind', 0),
-            'register' => Arr::get($request->getQueryParams(), 'register', 0)
+            'wechat_user'   => $wechatUser == null ? '': $wechatUser->toArray(),
+            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray(),
+            'rebind'        => $rebind,
+            'register'      => $register
         ]);
         // 换绑时直接返回token供后续操作使用
-        if ($rebind = Arr::get($request->getQueryParams(), 'rebind', 0)) {
-            $this->error($wxuser, new Guest(), $wechatUser, $rebind, $sessionToken);
-        }
+//        if ($rebind) {
+//            $this->error($wxuser, new Guest(), $wechatUser, $rebind, $sessionToken);
+//        }
 
         if (!$wechatUser || !$wechatUser->user) {
             // 更新微信用户信息
@@ -144,16 +136,18 @@ abstract class AbstractWechatUserController extends AbstractResourceController
             $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
 
             // 自动注册
-            if (Arr::get($request->getQueryParams(), 'register', 0) && $actor->isGuest()) {
+            if ($actor->isGuest()) {
                 // 站点关闭注册
                 if (!(bool)$this->settings->get('register_close')) {
                     $this->db->rollBack();
-                    throw new PermissionDeniedException('register_close');
+                    $this->outPut(ResponseCode::REGISTER_CLOSE,
+                                        ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
+                    );
                 }
 
-                $data['code'] = Arr::get($request->getQueryParams(), 'inviteCode');
-                $data['username'] = Str::of($wechatUser->nickname)->substr(0, 15);
-                $data['register_reason'] = trans('user.register_by_wechat_h5');
+                $data['code']               = $inviteCode;
+                $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
+                $data['register_reason']    = trans('user.register_by_wechat_h5');
                 $user = $this->bus->dispatch(
                     new AutoRegisterUser($request->getAttribute('actor'), $data)
                 );
@@ -181,7 +175,9 @@ abstract class AbstractWechatUserController extends AbstractResourceController
             // 登陆用户和微信绑定不同时，微信已绑定用户，抛出异常
             if (!$actor->isGuest() && $actor->id != $wechatUser->user_id) {
                 $this->db->rollBack();
-                throw new Exception('account_has_been_bound');
+                $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND,
+                                    ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
+                );
             }
 
             // 登陆用户和微信绑定相同，更新微信信息
@@ -209,7 +205,7 @@ abstract class AbstractWechatUserController extends AbstractResourceController
 
             //微信扫码登录，待审核状态
             if ($response->getStatusCode() === 200) {
-                if($wechatUser->user->status!=User::STATUS_MOD){
+                if($wechatUser->user->status != User::STATUS_MOD){
                     $this->events->dispatch(new Logind($wechatUser->user));
                 }
             }
@@ -217,13 +213,12 @@ abstract class AbstractWechatUserController extends AbstractResourceController
             $accessToken = json_decode($response->getBody());
 
             // bound
-            if (Arr::has($request->getQueryParams(), 'session_token')) {
+            if ($sessionToken) {
                 $accessToken = $this->bound->pcLogin($sessionToken, $accessToken, ['user_id' => $wechatUser->user->id]);
             }
 
-            return $accessToken;
+            $this->outPut(ResponseCode::SUCCESS, '', $accessToken);
         }
-
         $this->error($wxuser, $actor, $wechatUser, null, $sessionToken);
     }
 
@@ -247,8 +242,7 @@ abstract class AbstractWechatUserController extends AbstractResourceController
         $wechatUser->save();
         $this->db->commit();
         if ($actor->id) {
-            $this->serializer = UserProfileSerializer::class;
-            return $actor;
+            $this->outPut(ResponseCode::SUCCESS, '', $actor);
         }
 
         $token = SessionToken::generate($this->getDriver(), $rawUser);
@@ -273,13 +267,8 @@ abstract class AbstractWechatUserController extends AbstractResourceController
                 $sessionTokenQuery->save();
             }
         }
-
-        throw $noUserException;
+        $this->outPut(ResponseCode::NET_ERROR, '', $noUserException);
     }
-
-    abstract protected function getDriver();
-
-    abstract protected function getType();
 
     protected function fixData($rawUser, $actor)
     {
@@ -287,5 +276,15 @@ abstract class AbstractWechatUserController extends AbstractResourceController
         unset($data['openid'], $data['language']);
         $data['privilege'] = serialize($data['privilege']);
         return $data;
+    }
+
+    protected function getDriver()
+    {
+        return 'wechat';
+    }
+
+    protected function getType()
+    {
+        return 'mp_openid';
     }
 }

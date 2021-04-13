@@ -127,7 +127,10 @@ class ResourceThreadV2Controller extends DzqController
             if(empty($thread->$key)){
                 $data[$key] = [];
             }else{
-                $data[$key] = $thread->$key;
+                $data[$key] = $thread->$key->map(function ($item){
+                    $item->avatarUrl = $item->avatar;
+                    return $item->only(['id','username','avatarUrl']);
+                });
             }
         }
         $thread->loadMissing($include);
@@ -156,7 +159,14 @@ class ResourceThreadV2Controller extends DzqController
             $data['firstPost']['isLiked'] = false;
         }
 
-        $data['likedUsers'] = $thread->firstPost->likedUsers ?? [];
+        if($thread->firstPost->likedUsers){
+            $data['likedUsers'] = $thread->firstPost->likedUsers->map(function ($item){
+                    $item->avatarUrl = $item->avatar;
+                    return $item->only(['id','username','avatarUrl','pivot']);
+                });
+        }else{
+            $data['likedUsers'] = [];
+        }
         $data['mentionUsers'] = $thread->firstPost->mentionUsers ?? [];
         $data['images'] = [];
         $urlKey = ''; $urlExpire = 0;
@@ -242,7 +252,7 @@ class ResourceThreadV2Controller extends DzqController
             $redPacket = RedPacket::query()->where('thread_id', $thread_id)->first();
             $data['redPacket'] = $redPacket ? $redPacket->toArray() : [];
         }
-        $data['canFavorite'] = (bool) $this->user->can('favorite', $thread->firstPost);
+        $data['canFavorite'] = (bool) $this->user->can('favorite', $thread);
 
         if ($favoriteState = $thread->favoriteState) {
             $data['isFavorite'] = true;

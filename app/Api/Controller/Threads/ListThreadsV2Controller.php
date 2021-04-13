@@ -48,7 +48,7 @@ class ListThreadsV2Controller extends DzqController
         $homeSequence = $this->inPut('homeSequence');//默认首页
         $cache = app('cache');
         $key = md5(json_encode($filter) . $perPage . $homeSequence);
-        $currentPage == 1 && $this->getCache($cache, $key);
+//        $currentPage == 1 && $this->getCache($cache, $key);
         $serializer = $this->app->make(AttachmentSerializer::class);
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
@@ -163,7 +163,8 @@ class ListThreadsV2Controller extends DzqController
                 $attachment = $this->getAttachment($attachments, $thread, $serializer);
             }
             //附件收费
-            if ($thread['attachment_price'] > 0) {
+            if ($thread['attachment_price'] > 0 || $thread['price'] > 0) {
+
                 $attachment = $this->getAttachment($attachments, $thread, $serializer);
                 $attachment = array_filter($attachment, function ($item) {
                     $fileType = strtolower($item['fileType']);

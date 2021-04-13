@@ -257,6 +257,30 @@ class NotificationTplSeeder extends Seeder
                 'title'     => '微信问答通知',
                 'page_path' => $this->getInitPagePath($this->comparisonUnique('问答过期通知', 1)) ?? '',
             ],
+            [
+                'status'    => 0,
+                'type'      => 1,
+                'notice_id' => $this->comparisonUnique('得到红包通知', 1),
+                'type_name' => '得到红包通知',
+                'title'     => '微信红包通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('得到红包通知', 1)) ?? '',
+            ],
+            [
+                'status'    => 0,
+                'type'      => 1,
+                'notice_id' => $this->comparisonUnique('悬赏问答通知', 1),
+                'type_name' => '悬赏问答通知',
+                'title'     => '微信悬赏通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('悬赏问答通知', 1)) ?? '',
+            ],
+            [
+                'status'    => 0,
+                'type'      => 1,
+                'notice_id' => $this->comparisonUnique('悬赏过期通知', 1),
+                'type_name' => '悬赏过期通知',
+                'title'     => '微信悬赏通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('悬赏过期通知', 1)) ?? '',
+            ],
         ];
     }
 
@@ -504,7 +528,33 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '',
                 'vars'      => '',
             ],
-
+            [
+                'status'    => 1,
+                'type'      => 0,
+                'notice_id' => $this->comparisonUnique('得到红包通知', 0),
+                'type_name' => '得到红包通知',
+                'title'     => '红包通知',
+                'content'   => '',
+                'vars'      => '',
+            ],
+            [
+                'status'    => 1,
+                'type'      => 0,
+                'notice_id' => $this->comparisonUnique('悬赏问答通知', 0),
+                'type_name' => '悬赏问答通知',
+                'title'     => '悬赏通知',
+                'content'   => '',
+                'vars'      => '',
+            ],
+            [
+                'status'    => 1,
+                'type'      => 0,
+                'notice_id' => $this->comparisonUnique('悬赏过期通知', 0),
+                'type_name' => '悬赏过期通知',
+                'title'     => '悬赏通知',
+                'content'   => '',
+                'vars'      => '',
+            ],
         ];
     }
 
@@ -669,6 +719,27 @@ class NotificationTplSeeder extends Seeder
                 'notice_id' => $this->comparisonUnique('问答过期通知', 2),
                 'type_name' => '问答过期通知',
                 'title'     => '短信问答通知',
+            ],
+            [
+                'status'    => 0,
+                'type'      => 2,
+                'notice_id' => $this->comparisonUnique('得到红包通知', 2),
+                'type_name' => '得到红包通知',
+                'title'     => '短信红包通知',
+            ],
+            [
+                'status'    => 0,
+                'type'      => 2,
+                'notice_id' => $this->comparisonUnique('悬赏问答通知', 2),
+                'type_name' => '悬赏问答通知',
+                'title'     => '短信悬赏通知',
+            ],
+            [
+                'status'    => 0,
+                'type'      => 2,
+                'notice_id' => $this->comparisonUnique('悬赏过期通知', 2),
+                'type_name' => '悬赏过期通知',
+                'title'     => '短信悬赏通知',
             ],
         ];
     }
@@ -858,47 +929,29 @@ class NotificationTplSeeder extends Seeder
                 'page_path' => $this->getInitPagePath($this->comparisonUnique('问答过期通知', 4)) ?? '',
             ],
             [
-                'status' => 1,
-                'type' => 0,
-                'notice_id' => $this->comparisonUnique('得到红包通知', 0),
+                'status'    => 0,
+                'type'      => 4,
+                'notice_id' => $this->comparisonUnique('得到红包通知', 4),
                 'type_name' => '得到红包通知',
-                'title' => '得到红包通知',
+                'title'     => '小程序红包通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('得到红包通知', 4)) ?? '',
             ],
             [
-                'status' => 0,
-                'type' => 1,
-                'notice_id' => $this->comparisonUnique('得到红包通知', 1),
-                'type_name' => '得到红包通知',
-                'title' => '得到红包通知',
-            ],
-            [
-                'status' => 1,
-                'type' => 0,
-                'notice_id' => $this->comparisonUnique('悬赏问答通知', 0),
+                'status'    => 0,
+                'type'      => 4,
+                'notice_id' => $this->comparisonUnique('悬赏问答通知', 4),
                 'type_name' => '悬赏问答通知',
-                'title' => '悬赏问答通知',
+                'title'     => '小程序悬赏通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('悬赏问答通知', 4)) ?? '',
             ],
             [
-                'status' => 0,
-                'type' => 1,
-                'notice_id' => $this->comparisonUnique('悬赏问答通知', 1),
-                'type_name' => '悬赏问答通知',
-                'title' => '悬赏问答通知',
-            ],
-            [
-                'status' => 1,
-                'type' => 0,
-                'notice_id' => $this->comparisonUnique('悬赏过期通知', 0),
+                'status'    => 0,
+                'type'      => 4,
+                'notice_id' => $this->comparisonUnique('悬赏过期通知', 4),
                 'type_name' => '悬赏过期通知',
-                'title' => '悬赏过期通知'
+                'title'     => '小程序悬赏通知',
+                'page_path' => $this->getInitPagePath($this->comparisonUnique('悬赏过期通知', 4)) ?? '',
             ],
-            [
-                'status' => 0,
-                'type' => 1,
-                'notice_id' => $this->comparisonUnique('悬赏过期通知', 1),
-                'type_name' => '悬赏过期通知',
-                'title' => '悬赏过期通知',
-            ]
         ];
     }
 
