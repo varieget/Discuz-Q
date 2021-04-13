@@ -17,12 +17,25 @@
 
 namespace App\Models;
 
-
 use Discuz\Base\DzqModel;
 
+/**
+ * @property int $id
+ * @property int $thread_id
+ * @property int $comment_count
+ * @property int $view_count
+ * @property int $reward_count
+ * @property int $pay_count
+ * @property string $last_post_time
+ * @property int $last_post_user
+ * @property string $create_at
+ * @property string $update_at
+ */
 class ThreadHot extends DzqModel
 {
     protected $table = 'thread_hot';
+    
+
 
 
     public function getHotData($threadHot)
