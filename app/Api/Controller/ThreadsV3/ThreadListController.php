@@ -20,7 +20,9 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Thread;
+use App\Models\ThreadHot;
 use App\Models\ThreadText;
+use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
 
@@ -34,8 +36,7 @@ class ThreadListController extends DzqController
         $filter = $this->inPut('filter');
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
-        $sequence = $this->inPut('homeSequence');//默认首页
-
+        $sequence = $this->inPut('sequence');//默认首页
         $categoryId = $this->inPut('categoryId');
         if (!$this->canViewThread($this->user, $categoryId)) {
             $this->outPut(ResponseCode::UNAUTHORIZED);
@@ -46,8 +47,54 @@ class ThreadListController extends DzqController
             $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
         }
         $threadList = $threads['pageData'];
-        $threadIds = array_column($threadList,'id');
-        $this->outPut(0,'',$threadIds);
+        $threadIds = array_column($threadList, 'id');
+        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
+        $threadHot = ThreadHot::query()
+            ->whereIn('thread_id', $threadIds)
+            ->get()->pluck(null, 'thread_id');
+        $inPutToms = [];
+        foreach ($toms as $tom) {
+            $inPutToms[$tom['thread_id']][$tom['key']] = [
+                'threadId' => $tom['thread_id'],
+                'tomId' => $tom['tom_type'],
+                'operation' => $this->SELECT_FUNC,
+                'body' => $tom['value']
+            ];
+        }
+
+        $pageData = [];
+        foreach ($threadList as $item) {
+            $threadId = $item['id'];
+            $content = [
+                'text' => $item['text'],
+                'indexes' => null
+            ];
+            if (isset($inPutToms[$threadId])) {
+                $content['indexes'] = $this->tomDispatcher($inPutToms[$threadId]);
+            }
+            $position = [
+                'longitude' => $item['longitude'],
+                'latitude' => $item['latitude'],
+                'address' => $item['address'],
+                'location' => $item['location']
+            ];
+            $pageData[] = [
+                'threadId' => $threadId,
+                'userId' => $item['user_id'],
+                'categoryId' => $item['category_id'],
+                'title' => $item['title'],
+                'summary' => $item['summary'],
+                'position' => $position,
+                'isSticky' => $item['is_sticky'],
+                'isEssence' => $item['is_essence'],
+                'isAnonymous' => $item['is_anonymous'],//匿名贴不传userid
+                'isSite' => $item['is_site'],
+                'hotData' => ThreadHot::instance()->getHotData($threadHot),
+                'content' => $content
+            ];
+        }
+        $threads['pageData'] = $pageData;
+        $this->outPut(0, '', $threads);
     }
 
     function getFilterThreads($filter, $currentPage, $perPage)
@@ -104,7 +151,9 @@ class ThreadListController extends DzqController
         return $threads;
     }
 
-    function getDefaultHomeThreads($filter, $currentPage, $perPage){
+    function getDefaultHomeThreads($filter, $currentPage, $perPage)
+    {
+        return $this->pagination($currentPage, $perPage, null);
 
     }
 }

@@ -24,4 +24,17 @@ class ThreadHot extends DzqModel
 {
     protected $table = 'thread_hot';
 
+
+    public function getHotData($threadHot)
+    {
+        return [
+            'commentCount' => $threadHot['comment_count'],
+            'viewCount' => $threadHot['view_count'],
+            'shareCount' => $threadHot['share_count'],
+            'rewardCount' => $threadHot['reward_count'],
+            'payCount' => $threadHot['pay_count'],
+            'lastPostTime' => $threadHot['last_post_time'],
+            'lastPostUser' => $threadHot['last_post_user']
+        ];
+    }
 }

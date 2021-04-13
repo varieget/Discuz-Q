@@ -57,7 +57,7 @@ class ThreadDetailController extends DzqController
             'isEssence' => $threadText['is_essence'],
             'isAnonymous' => $threadText['is_anonymous'],
             'isSite' => $threadText['is_site'],
-            'hotData' => $this->getHotData($threadHot),
+            'hotData' => ThreadHot::instance()->getHotData($threadHot),
             'content' => $this->getContent($threadId, $threadText)
         ];
         $this->outPut(ResponseCode::SUCCESS, '', $result);
@@ -84,18 +84,5 @@ class ThreadDetailController extends DzqController
             'indexes'=>$tomJsons
         ];
         return $content;
-    }
-
-    private function getHotData($threadHot)
-    {
-        return [
-            'commentCount' => $threadHot['comment_count'],
-            'viewCount' => $threadHot['view_count'],
-            'shareCount' => $threadHot['share_count'],
-            'rewardCount' => $threadHot['reward_count'],
-            'payCount' => $threadHot['pay_count'],
-            'lastPostTime' => $threadHot['last_post_time'],
-            'lastPostUser' => $threadHot['last_post_user']
-        ];
     }
 }

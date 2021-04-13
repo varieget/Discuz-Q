@@ -32,12 +32,14 @@ abstract class TomBaseBusi
     private $operation = null;
     public $body = [];
     private $permissions = [];
+    private $threadId = null;
 
-    public function __construct($tomId,$operation, $body)
+    public function __construct($threadId, $tomId, $operation, $body)
     {
         $this->operation = $operation;
         $this->body = $body;
         $this->tomId = $tomId;
+        $this->threadId = $threadId;
         $this->operationValid();
         //todo 查询用户组的权限数组
     }
@@ -45,7 +47,7 @@ abstract class TomBaseBusi
     private function operationValid()
     {
         if (!method_exists($this, $this->operation)) {
-            throw new \Exception(sprintf('operation [%s] not exist in [%s]',$this->operation,static::class));
+            throw new \Exception(sprintf('operation [%s] not exist in [%s]', $this->operation, static::class));
         }
     }
 
@@ -66,11 +68,15 @@ abstract class TomBaseBusi
      */
     public function jsonReturn($array)
     {
-        return [
+        $ret = [
             'tomId' => $this->tomId,
             'operation' => $this->operation,
             'body' => $array
         ];
+        if (!empty($this->threadId)) {
+            $ret['threadId'] = $this->threadId;
+        }
+        return $ret;
     }
 
 }

@@ -42,7 +42,11 @@ trait TomTrait
     {
         $config = TomConfig::$map;
         $tomJsons = [];
-        $indexes = $tomContent['indexes'];
+        if (isset($tomContent['indexes'])) {
+            $indexes = $tomContent['indexes'];
+        } else {
+            $indexes = $tomContent;
+        }
         foreach ($indexes as $k => $v) {
             !empty($operation) && $v['operation'] = $operation;
             if (!isset($v['operation'])) {
@@ -69,10 +73,13 @@ trait TomTrait
                     if (isset($config[$tomId])) {
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
-                            $service = $service->newInstanceArgs([$tomId, $op, $body]);
+                            if (empty($v['threadId'])) {
+                                $service = $service->newInstanceArgs([null, $tomId, $op, $body]);
+                            } else {
+                                $service = $service->newInstanceArgs([$v['threadId'], $tomId, $op, $body]);
+                            }
                             method_exists($service, $op) && $tomJsons[$k] = $service->$op();
                         } catch (\ReflectionException $e) {
-                            dd($e->getMessage());
                         }
                     }
                 }
