@@ -470,5 +470,6 @@ $route->post('/threads/update.v2', 'threads.update.v2', ApiController\Threads\Up
 
 $route->get('/posts.v2', 'posts.v2', ApiController\Posts\ListPostsV2Controller::class);
 $route->post('/posts.update.v2', 'posts.update.v2', ApiController\Posts\UpdatePostV2Controller::class);
+$route->post('/posts.v2', 'posts.v2', ApiController\Posts\CreatePostV2Controller::class);
 
 
