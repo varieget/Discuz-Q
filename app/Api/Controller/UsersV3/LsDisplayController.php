@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\UserWechat;
@@ -30,11 +31,11 @@ class LsDisplayController extends DzqController
     public function main()
     {
         $status = true;
-        if(User::query('id')->where('bind_type',User::BIND_NOT)->count() > 0){
+        if(User::query('id')->where('bind_type',AuthUtils::DEFAULT)->count() > 0){
             $status = false;
         }
 
-        return $this->outPut(ResponseCode::SUCCESS, '',$status);
+        return $this->outPut(ResponseCode::SUCCESS, '',['status' => $status]);
     }
 
 }
