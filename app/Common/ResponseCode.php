@@ -62,7 +62,7 @@ class ResponseCode
     const MOBILE_IS_ALREADY_BIND = -7031;
     const REGISTER_CLOSE = -7032;
     const REGISTER_TYPE_ERROR = -7033;
-    const USER_UPDATE_ERROR = -7034;
+    const USER_UPDATE_ERROR = -7050;
     const ACCOUNT_HAS_BEEN_BOUND = -7034;
     const ACCOUNT_WECHAT_IS_NULL = -7035;
     const BIND_ERROR = -7036;

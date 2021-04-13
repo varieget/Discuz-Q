@@ -23,6 +23,7 @@ use App\Models\SessionToken;
 use App\Models\User;
 use App\Settings\SettingsRepository;
 use App\User\Bind;
+use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Guest;
 use Discuz\Base\DzqController;
@@ -35,7 +36,7 @@ use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
 
-class WechatMiniProgramRebindController extends DzqController
+class WechatMiniProgramRebindController extends AuthBaseController
 {
     use AssertPermissionTrait;
     use EasyWechatTrait;
@@ -48,6 +49,7 @@ class WechatMiniProgramRebindController extends DzqController
     protected $settings;
     protected $bind;
     protected $db;
+    protected $bound;
 
     public function __construct(
         Factory             $socialite,
@@ -57,7 +59,8 @@ class WechatMiniProgramRebindController extends DzqController
         Events              $events,
         SettingsRepository  $settings,
         Bind                $bind,
-        ConnectionInterface $db
+        ConnectionInterface $db,
+        Bound               $bound
     ){
         $this->socialite    = $socialite;
         $this->bus          = $bus;
@@ -67,6 +70,7 @@ class WechatMiniProgramRebindController extends DzqController
         $this->settings     = $settings;
         $this->bind         = $bind;
         $this->db           = $db;
+        $this->bound        = $bound;
     }
 
     public function main()
@@ -78,6 +82,7 @@ class WechatMiniProgramRebindController extends DzqController
         $iv             = $this->inPut('iv');
         $encryptedData  = $this->inPut('encryptedData');
         $code           = $this->inPut('code');
+        $sessionToken   = $this->inPut('session_token');
         $rebind         = 0;
         $register       = 1;
 
@@ -121,6 +126,12 @@ class WechatMiniProgramRebindController extends DzqController
             $wechatUser->save();
 
             $this->db->commit();
+
+            // PC扫码使用
+            if ($sessionToken) {
+                $accessToken = $this->bound->pcMiniProgramRebind($sessionToken, '', ['user_id' => $wechatUser->user->id]);
+            }
+
             $this->outPut(ResponseCode::SUCCESS, '', $actor);
         } else {
             $this->outPut(ResponseCode::NET_ERROR,

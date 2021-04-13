@@ -28,7 +28,7 @@ use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Support\Carbon;
 
-class SmsRebindController extends DzqController
+class SmsRebindController extends AuthBaseController
 {
     use QcloudTrait;
 

@@ -31,7 +31,7 @@ use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 
-class SmsVerifyController extends DzqController
+class SmsVerifyController extends AuthBaseController
 {
     protected $mobileCodeRepository;
     protected $bus;

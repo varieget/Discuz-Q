@@ -36,7 +36,7 @@ use Illuminate\Support\Carbon;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
 
-class SmsLoginController extends DzqController
+class SmsLoginController extends AuthBaseController
 {
     protected $mobileCodeRepository;
     protected $bus;
@@ -95,7 +95,7 @@ class SmsLoginController extends DzqController
             $this->outPut(ResponseCode::NET_ERROR, ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
         }
 
-//        $mobileCode->changeState(MobileCode::USED_STATE);
+        $mobileCode->changeState(MobileCode::USED_STATE);
         $mobileCode->save();
 
         //register new user
