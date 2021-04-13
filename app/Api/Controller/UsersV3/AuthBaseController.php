@@ -21,18 +21,29 @@ use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use Discuz\Base\DzqController;
 
-class MiniProgramPcBindPollController extends AuthBaseController
+abstract class AuthBaseController extends DzqController
 {
 
-    public function main()
+    /**
+     * 获取扫码后token登录信息数据
+     * @return SessionToken
+     */
+    public function getScanCodeToken()
     {
-        $token = $this->getScanCodeToken();
-
-        if (isset($token->payload['bind']) && $token->payload['bind']) {
-            // 绑定成功
-            $this->outPut(ResponseCode::SUCCESS, '', $token->payload);
+        $sessionToken = $this->inPut('session_token');
+        $token = SessionToken::get($sessionToken);
+        if (empty($token)) {
+            // 二维码已失效，扫码超时
+            $this->outPut(ResponseCode::PC_QRCODE_TIME_OUT, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_TIME_OUT]);
         }
 
-        $this->outPut(ResponseCode::PC_BIND_ERROR, ResponseCode::$codeMap[ResponseCode::PC_BIND_ERROR]);
+        if (is_null($token->payload)) {
+            // 扫码中
+            $this->outPut(ResponseCode::PC_QRCODE_SCANNING_CODE, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_SCANNING_CODE]);
+        }
+
+        return $token;
     }
+
+
 }
