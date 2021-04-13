@@ -19,6 +19,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
 use App\Models\Category;
+use App\Models\Thread;
 use App\Models\ThreadText;
 use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
@@ -33,18 +34,24 @@ class ThreadListController extends DzqController
         $filter = $this->inPut('filter');
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
+        $sequence = $this->inPut('homeSequence');//默认首页
 
         $categoryId = $this->inPut('categoryId');
         if (!$this->canViewThread($this->user, $categoryId)) {
             $this->outPut(ResponseCode::UNAUTHORIZED);
         }
-
-        $categoryIds = Category::instance()->getValidCategoryIds($this->user,$categoryId);
-
-        $threadTexts = $this->filterThreadTexts($filter, $currentPage, $perPage);
-
+        if ($sequence) {
+            $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
+        } else {
+            $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
+        }
+        $threadList = $threads['pageData'];
+        $threadIds = array_column($threadList,'id');
+        $this->outPut(0,'',$threadIds);
     }
-    function getFilterThreads($filter, $currentPage, $perPage){
+
+    function getFilterThreads($filter, $currentPage, $perPage)
+    {
         if (empty($filter)) $filter = [];
         $this->dzqValidate($filter, [
             'sticky' => 'integer|in:0,1',
@@ -54,11 +61,10 @@ class ThreadListController extends DzqController
             'sort' => 'integer|in:1,2,3',
             'attention' => 'integer|in:0,1',
         ]);
-        $stick = 0;
         $essence = null;
         $types = [];
         $categoryids = [];
-        $sort = 1;
+        $sort = ThreadText::SORT_BY_CREATE_TIME;
         $attention = 0;
         isset($filter['sticky']) && $stick = $filter['sticky'];
         isset($filter['essence']) && $essence = $filter['essence'];
@@ -71,18 +77,34 @@ class ThreadListController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
         $threads = ThreadText::query()
-            ->where(['is_stick'=>ThreadText::FIELD_NO,'status'=>ThreadText::STATUS_ACTIVE]);
+            ->from('thread_text as text')
+            ->where(['is_sticky' => ThreadText::FIELD_NO, 'status' => ThreadText::STATUS_ACTIVE]);
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
 
-        if(empty($types)){
-//            $threads = $threads->leftJoin('thread_tag','thread_text','=',)
-
+        if (!empty($types)) {
+            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'text.user_id')
+                ->whereIn('tag', $types);
         }
 
+        if (!empty($sort)) {
+            if ($sort == ThreadText::SORT_BY_CREATE_TIME) {//按照发帖时间排序
+                $threads->orderByDesc('text.created_at');
+            } else if ($sort == ThreadText::SORT_BY_LAST_POST_TIME) {//按照评论时间排序
+                $threads->leftJoin('thread_hot as hot', 'text.id', '=', 'hot.thread_id');
+                $threads->orderByDesc('hot.last_post_time');
+            }
+        }
+        //关注
+        if ($attention == 1 && !empty($this->user)) {
+            $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'text.user_id')
+                ->where('follow.from_user_id', $this->user->id);
+        }
+        !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
+        $threads = $this->pagination($currentPage, $perPage, $threads);
+        return $threads;
+    }
 
-
-
-
+    function getDefaultHomeThreads($filter, $currentPage, $perPage){
 
     }
 }

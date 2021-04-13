@@ -37,6 +37,13 @@ class ThreadText extends DzqModel
     const FIELD_YES = 1;
     const FIELD_NO = 0;
 
+    const SORT_BY_CREATE_TIME = 1;
+    const SORT_BY_LAST_POST_TIME = 2;
+    const SORT_BY_COMMENT_COUNT = 3;
+    const SORT_BY_VIEW_COUNT = 4;
+    const SORT_BY_SHARE_COUNT = 5;
+    const SORT_BY_REWARD_COUNT = 6;
+    const SORT_BY_PAY_COUNT = 7;
     /**
      * 摘要结尾
      */
