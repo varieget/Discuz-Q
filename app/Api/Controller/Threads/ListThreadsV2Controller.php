@@ -338,8 +338,7 @@ class ListThreadsV2Controller extends DzqController
      */
     private function getDefaultHomeThreads($filter, $currentPage, $perPage)
     {
-        $sequence = Sequence::query()->first();
-        $totalThreadCount = Thread::query()->count();
+        $sequence = Sequence::query()->first();        
         if (empty($sequence)) return false;
         $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
@@ -406,6 +405,7 @@ class ListThreadsV2Controller extends DzqController
                 $query->whereIn('tp1.topic_id', $blockTopicIds);
             });
         }
+        $totalThreadCount = $threads->count();
         $threads = $threads->orderByDesc('th1.created_at');
         return $this->pagination($currentPage, $perPage, $threads,$totalThreadCount);
     }
@@ -437,9 +437,7 @@ class ListThreadsV2Controller extends DzqController
         $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
         if (!$categoryids) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
-        }
-
-        $totalThreadCount = Thread::query()->count();
+        }       
 
         //评论排序
         $threads = Thread::query()
@@ -454,12 +452,6 @@ class ListThreadsV2Controller extends DzqController
             $threads = $threads->where('threads.type', '<>', Thread::TYPE_OF_VIDEO);
         }
 
-        if ($sort == Thread::SORT_BY_THREAD) {//按照发帖时间排序
-            $threads->orderByDesc('threads.created_at');
-        } else if ($sort == Thread::SORT_BY_POST) {//按照评论时间排序
-            //添加评论字段posted_at
-            $threads->orderByDesc('threads.posted_at');
-        }
         //关注
         if ($attention == 1 && !empty($this->user)) {
             $threads->leftJoin('user_follow', 'user_follow.to_user_id', '=', 'threads.user_id')
@@ -468,6 +460,15 @@ class ListThreadsV2Controller extends DzqController
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
         !empty($types) && $threads->whereIn('type', $types);
+        $totalThreadCount = $threads->count();
+
+        if ($sort == Thread::SORT_BY_THREAD) {//按照发帖时间排序
+            $threads->orderByDesc('threads.created_at');
+        } else if ($sort == Thread::SORT_BY_POST) {//按照评论时间排序
+            //添加评论字段posted_at
+            $threads->orderByDesc('threads.posted_at');
+        }
+
         $threads = $this->pagination($currentPage, $perPage, $threads, $totalThreadCount);
         return $threads;
     }
