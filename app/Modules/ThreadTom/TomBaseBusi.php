@@ -17,7 +17,10 @@
 
 namespace App\Modules\ThreadTom;
 
+use App\Common\ResponseCode;
+use Discuz\Http\DiscuzResponseFactory;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * @method  create()
@@ -71,6 +74,43 @@ abstract class TomBaseBusi
             'operation' => $this->operation,
             'body' => $array
         ];
+    }
+
+    /*
+     * 接口出参
+     */
+    public function outPut($code, $msg = '', $data = [])
+    {
+        if (empty($msg)) {
+            if (ResponseCode::$codeMap[$code]) {
+                $msg = ResponseCode::$codeMap[$code];
+            }
+        }
+        $data = [
+            'Code' => $code,
+            'Message' => $msg,
+            'Data' => $data,
+            'RequestId' => Str::uuid(),
+            'RequestTime' => date('Y-m-d H:i:s')
+        ];
+        $crossHeaders = DiscuzResponseFactory::getCrossHeaders();
+        foreach ($crossHeaders as $k => $v) {
+            header($k . ':' . $v);
+        }
+        header('Content-Type:application/json; charset=utf-8', true, 200);
+        exit(json_encode($data, 256));
+    }
+    /*
+     * 入参判断
+     */
+    public function dzqValidate($inputArray, array $rules, array $messages = [], array $customAttributes = [])
+    {
+        try {
+            $validate = app('validator');
+            $validate->validate($inputArray, $rules);
+        } catch (\Exception $e) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, $e->getMessage());
+        }
     }
 
 }

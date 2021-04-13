@@ -17,10 +17,61 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
-
+use App\Common\ResponseCode;
 use App\Modules\ThreadTom\TomBaseBusi;
+use App\Models\ThreadTom;
+use App\Models\ThreadVideo;
 
 class VoiceBusi extends TomBaseBusi
 {
 
+    public function create()
+    {
+        $input = $this->verification();
+
+        $threadVideo = ThreadVideo::query()
+            ->whereIn('id',$input['audioIds'])
+            ->where('type',ThreadVideo::TYPE_OF_AUDIO)
+            ->get()
+            ->toArray();
+
+        if(empty($threadVideo)){
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, ResponseCode::$codeMap[ResponseCode::RESOURCE_NOT_FOUND]);
+        }
+
+        return $this->jsonReturn($threadVideo);
+    }
+
+    public function update()
+    {
+        return $this->create();
+    }
+
+    public function delete()
+    {
+        $deleteId = $this->getParams('deleteId');
+
+        $threadTom = ThreadTom::query()
+            ->where('id',$deleteId)
+            ->update(['status'=>-1]);
+
+        if ($threadTom) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function verification()
+    {
+        $input = [
+            'audioIds' => $this->getParams('audioIds'),
+        ];
+        $rules = [
+            'audioIds' => 'required|array',
+        ];
+        $this->dzqValidate($input, $rules);
+
+        return $input;
+    }
 }
