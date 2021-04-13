@@ -38,7 +38,7 @@ use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Str;
 
-class WechatMiniProgramLoginController extends DzqController
+class WechatMiniProgramLoginController extends AuthBaseController
 {
     use AssertPermissionTrait;
     use EasyWechatTrait;
