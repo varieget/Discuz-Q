@@ -133,14 +133,6 @@ class User extends DzqModel
      */
     const NAME_ID_NUMBER_MATCH = 0;
 
-    /*
-     * 用户绑定
-     */
-    const BIND_NOT = 0;     //都没有绑定
-    const BIND_MOILE = 1;   //绑定手机号
-    const BIND_QQ = 2;      //绑定QQ
-    const BIND_WECHAT = 3;  //绑定微信
-
     public static $statusMap = [
         self::STATUS_NORMAL => '正常',
         self::STATUS_BAN => '禁用',
