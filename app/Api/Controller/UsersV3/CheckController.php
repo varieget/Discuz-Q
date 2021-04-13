@@ -57,7 +57,7 @@ class CheckController extends DzqController
             $isExist = true;
         }
 
-        return $this->outPut(ResponseCode::SUCCESS, '',$isExist);
+        return $this->outPut(ResponseCode::SUCCESS, '',['status' => $isExist]);
     }
 
 }
