@@ -26,7 +26,6 @@ class ThreadText extends DzqModel
     protected $table = 'thread_text';
     const SUMMARY_LENGTH = 80;
 
-    protected $dateFormat = 'U';
 
 
 
