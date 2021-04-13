@@ -21,22 +21,12 @@ use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use Discuz\Base\DzqController;
 
-class WechatPcLoginPollController extends DzqController
+class WechatPcLoginPollController extends AuthBaseController
 {
 
     public function main()
     {
-        $sessionToken = $this->inPut('session_token');
-        $token = SessionToken::get($sessionToken);
-        if (empty($token)) {
-            // 二维码已失效，扫码超时
-            $this->outPut(ResponseCode::PC_QRCODE_TIME_OUT, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_TIME_OUT]);
-        }
-
-        if (is_null($token->payload)) {
-            // 扫码中
-            $this->outPut(ResponseCode::PC_QRCODE_SCANNING_CODE, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_SCANNING_CODE]);
-        }
+        $token = $this->getScanCodeToken();
 
         if (isset($token->payload['code'])) {
             if (empty($token->payload['code'])) {
@@ -54,7 +44,6 @@ class WechatPcLoginPollController extends DzqController
         }
 
         $data = $token->payload;
-        $data['pc_login'] = true; // 用于序列化判断
         $data['user_id'] = $token->user_id; // 用于序列化返回 user_id
 
         $this->outPut(ResponseCode::SUCCESS, '', $data);

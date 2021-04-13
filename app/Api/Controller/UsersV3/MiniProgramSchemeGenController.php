@@ -19,11 +19,10 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\User\MiniprogramSchemeManage;
-use Discuz\Base\DzqController;
 use Discuz\Wechat\EasyWechatTrait;
 use GuzzleHttp\Client;
 
-class MiniProgramSchemeGenController extends DzqController
+class MiniProgramSchemeGenController extends AuthBaseController
 {
     use EasyWechatTrait;
 

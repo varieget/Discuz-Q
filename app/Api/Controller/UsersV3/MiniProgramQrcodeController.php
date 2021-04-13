@@ -19,7 +19,6 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
-use App\User\MiniprogramGlobalAccessTokenManage;
 use Discuz\Base\DzqController;
 use App\Settings\SettingsRepository;
 use Discuz\Wechat\EasyWechatTrait;
@@ -59,14 +58,12 @@ class MiniProgramQrcodeController extends DzqController
 
     protected $httpClient;
 
-    protected $globalAccessTokenManage;
     protected $accessToken;
 
-    public function __construct(SettingsRepository $settingsRepository, MiniprogramGlobalAccessTokenManage $globalAccessTokenManage)
+    public function __construct(SettingsRepository $settingsRepository)
     {
         $this->settingsRepository = $settingsRepository;
         $this->httpClient = new Client();
-        $this->globalAccessTokenManage = $globalAccessTokenManage;
     }
 
     public function main()
