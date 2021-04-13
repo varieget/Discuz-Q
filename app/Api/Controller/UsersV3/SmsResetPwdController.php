@@ -29,7 +29,7 @@ use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Support\Carbon;
 
-class SmsResetPwdController extends DzqController
+class SmsResetPwdController extends AuthBaseController
 {
     use QcloudTrait;
 

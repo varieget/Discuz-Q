@@ -22,38 +22,42 @@ use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
+use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Socialite\Factory;
 use Exception;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 
-class WechatH5RebindController extends DzqController
+class WechatH5RebindController extends AuthBaseController
 {
     use AssertPermissionTrait;
     protected $socialite;
     protected $validation;
     protected $db;
+    protected $bound;
 
     public function __construct(
         Factory             $socialite,
         ValidationFactory   $validation,
-        ConnectionInterface $db
+        ConnectionInterface $db,
+        Bound               $bound
     ){
         $this->socialite    = $socialite;
         $this->validation   = $validation;
         $this->db           = $db;
+        $this->bound        = $bound;
     }
 
     public function main()
     {
-        $code       = $this->inPut('code');
-        $sessionId  = $this->inPut('sessionId');
-        $request    = $this ->request
-                            ->withAttribute('session', new SessionToken())
-                            ->withAttribute('sessionId', $sessionId);
+        $code           = $this->inPut('code');
+        $sessionId      = $this->inPut('sessionId');
+        $sessionToken   = $this->inPut('session_token');
+        $request        = $this ->request
+                                ->withAttribute('session', new SessionToken())
+                                ->withAttribute('sessionId', $sessionId);
 
         $this->validation->make([
                                     'code' => $code,
@@ -105,6 +109,12 @@ class WechatH5RebindController extends DzqController
                 $wechatUser->setRelation('user', $actor);
                 $wechatUser->save();
                 $this->db->commit();
+
+                // PC扫码使用
+                if ($sessionToken) {
+                    $accessToken = $this->bound->pcH5Rebind($sessionToken, '', ['user_id' => $wechatUser->user->id]);
+                }
+
                 $this->outPut(ResponseCode::SUCCESS, '', $actor);
             } else {
                 $this->db->rollBack();

@@ -43,7 +43,7 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-class WechatH5LoginController extends DzqController
+class WechatH5LoginController extends AuthBaseController
 {
     use AssertPermissionTrait;
     protected $socialite;
@@ -83,8 +83,7 @@ class WechatH5LoginController extends DzqController
         $inviteCode     = $this->inPut('inviteCode');
 //        $register       = empty($this->inPut('register')) ? 0 :$this->inPut('register');
         $register       = 1;
-        $sessionToken   = $this->inPut('sessionToken');
-//        $sessionToken   = $this->inPut('session_token');
+        $sessionToken   = $this->inPut('session_token');
 //        $rebind         = empty($this->inPut('rebind')) ? 0 : $this->inPut('rebind');
         $rebind         = 0;
 
