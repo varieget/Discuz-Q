@@ -32,6 +32,9 @@ class ResponseCode
     const RESOURCE_EXIST = -4003;
     const RESOURCE_NOT_FOUND = -4004;
     const RESOURCE_IN_USE = -4005;
+    const CONTENT_BANNED = -4006;
+    const VALIDATE_REJECT = -4007;
+    const VALIDATE_IGNORE = -4008;
 
     const NET_ERROR = -5001;
     const INTERNAL_ERROR = -5002;
@@ -49,6 +52,7 @@ class ResponseCode
     const NOT_FOUND_USER_WECHAT = -7006;
     const PC_QRCODE_TIME_FAIL = -7007;
     const GEN_QRCODE_TYPE_ERROR = -7008;
+    const DECRYPT_CODE_FAILURE = -7009;
 
     const MOBILE_IS_ALREADY_BIND = -7031;
     const REGISTER_CLOSE = -7032;
@@ -69,6 +73,9 @@ class ResponseCode
         self::RESOURCE_EXIST => '资源已存在',
         self::RESOURCE_NOT_FOUND => '资源不存在',
         self::RESOURCE_IN_USE => '资源被占用',
+        self::CONTENT_BANNED => '内容被禁用',
+        self::VALIDATE_REJECT => '拒绝验证',
+        self::VALIDATE_IGNORE => '忽略验证',
         self::NET_ERROR => '网络错误',
         self::INTERNAL_ERROR => '内部系统错误',
         self::EXTERNAL_API_ERROR => '外部接口错误',
@@ -83,9 +90,9 @@ class ResponseCode
         self::NOT_FOUND_USER_WECHAT => '未找到微信用户',
         self::PC_QRCODE_TIME_FAIL => '扫码登录失败',
         self::GEN_QRCODE_TYPE_ERROR => '生成二维码参数类型错误',
-
+        self::DECRYPT_CODE_FAILURE => '解密邀请码失败',
+        self::REGISTER_CLOSE => '站点关闭注册',
         self::MOBILE_IS_ALREADY_BIND => '手机号已被绑定',
-        self::REGISTER_CLOSE => '注册关闭',
         self::REGISTER_TYPE_ERROR => '注册类型错误',
         self::USER_UPDATE_ERROR => 'cannot use the same password.',
         self::ACCOUNT_HAS_BEEN_BOUND => 'account has been bound.',

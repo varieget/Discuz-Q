@@ -18,8 +18,10 @@
 
 namespace App\Listeners\User;
 
+use App\Common\ResponseCode;
 use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqController;
 use Discuz\Http\DiscuzResponseFactory;
 
 class ValidateLogin
@@ -35,6 +37,7 @@ class ValidateLogin
 
     private function exceptionResponse($userId, $msg)
     {
+        DzqController::outPutV3(ResponseCode::INVALID_PARAMETER,$msg,User::getUserReject($userId));
         $crossHeaders = DiscuzResponseFactory::getCrossHeaders();
         foreach ($crossHeaders as $k => $v) {
             header($k . ':' . $v);

@@ -24,7 +24,18 @@ use App\Api\Controller as ApiController;
 //二维码生成
 $route->get('/users/pc/wechat/h5.genqrcode', 'pc.wechat.h5.qrcode', ApiController\UsersV3\WechatH5QrCodeController::class);
 
+//登录
+$route->post('/users/username.login', 'username.login', ApiController\UsersV3\LoginController::class);
 
+//注册
+$route->post('/users/username.register', 'username.register', ApiController\UsersV3\RegisterController::class);
+
+
+//控制用户名密码入口是否展示
+$route->get('/users/username.login.isdisplay', 'username.login.isdisplay', ApiController\UsersV3\LsDisplayController::class);
+
+//用户昵称检测
+$route->get('/users/username.check', 'username.check', ApiController\UsersV3\CheckController::class);
 
 
 
@@ -48,5 +59,6 @@ $route->post('/users/wechat/h5.rebind', 'wechat.h5.rebind', ApiController\UsersV
 $route->post('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiController\UsersV3\WechatMiniprogramLoginController::class);
 $route->post('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\UsersV3\WechatMiniprogramBindController::class);
 $route->post('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\UsersV3\WechatMiniprogramRebindController::class);
+
 
 
