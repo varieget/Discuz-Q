@@ -74,7 +74,7 @@ trait TomTrait
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
                             if (empty($v['threadId'])) {
-                                $service = $service->newInstanceArgs([null, $tomId, $op, $body]);
+                                $service = $service->newInstanceArgs([$threadId, $tomId, $op, $body]);
                             } else {
                                 $service = $service->newInstanceArgs([$v['threadId'], $tomId, $op, $body]);
                             }

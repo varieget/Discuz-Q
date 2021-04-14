@@ -84,7 +84,6 @@ class CreateThreadController extends DzqController
     private function executeEloquent($content, $params)
     {
         $text = $content['text'];
-        $tomJsons = $this->tomDispatcher($content);
         //插入text数据
         $tText = new ThreadText();
         list($ip, $port) = $this->getIpPort();
@@ -113,6 +112,7 @@ class CreateThreadController extends DzqController
         $tHot->save();
         //插入tom数据
         $attrs = [];
+        $tomJsons = $this->tomDispatcher($content,null,$threadId);
         foreach ($tomJsons as $key => $value) {
             $attrs[] = [
                 'thread_id' => $threadId,
