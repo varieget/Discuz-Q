@@ -31,11 +31,11 @@ use Illuminate\Support\Str;
  */
 abstract class TomBaseBusi
 {
-    private $tomId = null;
-    private $operation = null;
+    public $tomId = null;
+    public $operation = null;
     public $body = [];
     private $permissions = [];
-    private $threadId = null;
+    public $threadId = null;
 
     public function __construct($threadId, $tomId, $operation, $body)
     {
