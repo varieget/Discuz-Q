@@ -24,7 +24,6 @@ use App\Models\User;
 use App\Models\UserWechat;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Socialite\Factory;
 use Exception;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
@@ -54,19 +53,23 @@ class WechatH5BindController extends AuthBaseController
     public function main()
     {
         $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('sessionId');
+        $sessionId      = $this->inPut('session_id');
         $sessionToken   = $this->inPut('session_token');
+
+        //调试用
+//        $sessionId      = $this->inPut('sessionId');
+
         $request        = $this ->request
                                 ->withAttribute('session', new SessionToken())
                                 ->withAttribute('sessionId', $sessionId);
 
-        $this->validation->make([
-                                    'code'      => $code,
-                                    'sessionId' => $sessionId,
-                                ], [
-                                    'code'      => 'required',
-                                    'sessionId' => 'required'
-                                ])->validate();
+        $this->dzqValidate([
+                                'code'      => $code,
+                                'sessionId' => $sessionId,
+                            ], [
+                                'code'      => 'required',
+                                'sessionId' => 'required'
+                            ]);
 
         $this->socialite->setRequest($request);
 
@@ -114,30 +117,12 @@ class WechatH5BindController extends AuthBaseController
                 $accessToken = $this->bound->pcH5Bind($sessionToken, '', ['user_id' => $wechatUser->user->id]);
             }
 
-            $this->outPut(ResponseCode::SUCCESS, '', $actor);
+            $this->outPut(ResponseCode::SUCCESS, '', []);
         } else {
             $this->db->rollBack();
             $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND,
-                                ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
+                          ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
             );
         }
-    }
-
-    protected function fixData($rawUser, $actor)
-    {
-        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, $this->getType() => $rawUser['openid']]);
-        unset($data['openid'], $data['language']);
-        $data['privilege'] = serialize($data['privilege']);
-        return $data;
-    }
-
-    protected function getDriver()
-    {
-        return 'wechat';
-    }
-
-    protected function getType()
-    {
-        return 'mp_openid';
     }
 }

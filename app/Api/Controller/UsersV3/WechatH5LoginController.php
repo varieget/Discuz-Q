@@ -31,12 +31,9 @@ use App\Notifications\System;
 use App\Settings\SettingsRepository;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Guest;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Socialite\Factory;
 use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
@@ -48,7 +45,6 @@ class WechatH5LoginController extends AuthBaseController
     use AssertPermissionTrait;
     protected $socialite;
     protected $bus;
-    protected $cache;
     protected $validation;
     protected $events;
     protected $settings;
@@ -58,7 +54,6 @@ class WechatH5LoginController extends AuthBaseController
     public function __construct(
         Factory             $socialite,
         Dispatcher          $bus,
-        Repository          $cache,
         ValidationFactory   $validation,
         Events              $events,
         SettingsRepository  $settings,
@@ -67,7 +62,6 @@ class WechatH5LoginController extends AuthBaseController
     ){
         $this->socialite    = $socialite;
         $this->bus          = $bus;
-        $this->cache        = $cache;
         $this->validation   = $validation;
         $this->events       = $events;
         $this->settings     = $settings;
@@ -78,24 +72,24 @@ class WechatH5LoginController extends AuthBaseController
     public function main()
     {
         $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('sessionId');
-//        $state          = $this->inPut('state');
-        $inviteCode     = $this->inPut('inviteCode');
-//        $register       = empty($this->inPut('register')) ? 0 :$this->inPut('register');
-        $register       = 1;
+        $sessionId      = $this->inPut('session_id');
+        $inviteCode     = $this->inPut('invite_code');
         $sessionToken   = $this->inPut('session_token');
-//        $rebind         = empty($this->inPut('rebind')) ? 0 : $this->inPut('rebind');
-        $rebind         = 0;
 
-        $request = $this->request->withAttribute('session', new SessionToken())->withAttribute('sessionId', $sessionId);
+        //调试用
+//        $sessionId      = $this->inPut('sessionId');
+//        $inviteCode     = $this->inPut('inviteCode');
 
-        $this->validation->make([
-                                    'code'      => $code,
-                                    'sessionId' => $sessionId,
-                                ], [
-                                    'code'      => 'required',
-                                    'sessionId' => 'required'
-                                ])->validate();
+        $request = $this->request   ->withAttribute('session', new SessionToken())
+                                    ->withAttribute('sessionId', $sessionId);
+
+        $this->dzqValidate([
+                                'code'      => $code,
+                                'sessionId' => $sessionId,
+                            ], [
+                                'code'      => 'required',
+                                'sessionId' => 'required'
+                            ]);
 
         $this->socialite->setRequest($request);
 
@@ -119,14 +113,8 @@ class WechatH5LoginController extends AuthBaseController
         $wechatlog = app('wechatLog');
         $wechatlog->info('wechat_info', [
             'wechat_user'   => $wechatUser == null ? '': $wechatUser->toArray(),
-            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray(),
-            'rebind'        => $rebind,
-            'register'      => $register
+            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray()
         ]);
-        // 换绑时直接返回token供后续操作使用
-//        if ($rebind) {
-//            $this->error($wxuser, new Guest(), $wechatUser, $rebind, $sessionToken);
-//        }
 
         if (!$wechatUser || !$wechatUser->user) {
             // 更新微信用户信息
@@ -141,7 +129,7 @@ class WechatH5LoginController extends AuthBaseController
                 if (!(bool)$this->settings->get('register_close')) {
                     $this->db->rollBack();
                     $this->outPut(ResponseCode::REGISTER_CLOSE,
-                                        ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
+                                  ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
                     );
                 }
 
@@ -176,7 +164,7 @@ class WechatH5LoginController extends AuthBaseController
             if (!$actor->isGuest() && $actor->id != $wechatUser->user_id) {
                 $this->db->rollBack();
                 $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND,
-                                    ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
+                              ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
                 );
             }
 
@@ -217,8 +205,9 @@ class WechatH5LoginController extends AuthBaseController
                 $accessToken = $this->bound->pcLogin($sessionToken, $accessToken, ['user_id' => $wechatUser->user->id]);
             }
 
-            $this->outPut(ResponseCode::SUCCESS, '', $accessToken);
+            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData(collect($accessToken)));
         }
+
         $this->error($wxuser, $actor, $wechatUser, null, $sessionToken);
     }
 
@@ -242,7 +231,7 @@ class WechatH5LoginController extends AuthBaseController
         $wechatUser->save();
         $this->db->commit();
         if ($actor->id) {
-            $this->outPut(ResponseCode::SUCCESS, '', $actor);
+            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($actor));
         }
 
         $token = SessionToken::generate($this->getDriver(), $rawUser);
@@ -267,24 +256,8 @@ class WechatH5LoginController extends AuthBaseController
                 $sessionTokenQuery->save();
             }
         }
-        $this->outPut(ResponseCode::NET_ERROR, '', $noUserException);
-    }
 
-    protected function fixData($rawUser, $actor)
-    {
-        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, $this->getType() => $rawUser['openid']]);
-        unset($data['openid'], $data['language']);
-        $data['privilege'] = serialize($data['privilege']);
-        return $data;
-    }
-
-    protected function getDriver()
-    {
-        return 'wechat';
-    }
-
-    protected function getType()
-    {
-        return 'mp_openid';
+        $this->outPut(ResponseCode::NET_ERROR, ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
+//        $this->outPut(ResponseCode::NET_ERROR, '', $noUserException);
     }
 }

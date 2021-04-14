@@ -21,18 +21,13 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\User;
-use App\Settings\SettingsRepository;
 use App\User\Bind;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Guest;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Socialite\Factory;
 use Discuz\Wechat\EasyWechatTrait;
 use Exception;
-use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Cache\Repository;
-use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
 
@@ -42,32 +37,20 @@ class WechatMiniProgramRebindController extends AuthBaseController
     use EasyWechatTrait;
 
     protected $socialite;
-    protected $bus;
-    protected $cache;
     protected $validation;
-    protected $events;
-    protected $settings;
     protected $bind;
     protected $db;
     protected $bound;
 
     public function __construct(
         Factory             $socialite,
-        Dispatcher          $bus,
-        Repository          $cache,
         ValidationFactory   $validation,
-        Events              $events,
-        SettingsRepository  $settings,
         Bind                $bind,
         ConnectionInterface $db,
         Bound               $bound
     ){
         $this->socialite    = $socialite;
-        $this->bus          = $bus;
-        $this->cache        = $cache;
         $this->validation   = $validation;
-        $this->events       = $events;
-        $this->settings     = $settings;
         $this->bind         = $bind;
         $this->db           = $db;
         $this->bound        = $bound;
@@ -81,10 +64,8 @@ class WechatMiniProgramRebindController extends AuthBaseController
         $js_code        = $this->inPut('js_code');
         $iv             = $this->inPut('iv');
         $encryptedData  = $this->inPut('encryptedData');
-        $code           = $this->inPut('code');
-        $sessionToken   = $this->inPut('session_token');
+        $sessionToken   = $this->inPut('session_token');// PC扫码使用
         $rebind         = 0;
-        $register       = 1;
 
         $request = $this->request->withAttribute('session', new SessionToken())->withAttribute('sessionId', $sessionId);
 
@@ -92,11 +73,11 @@ class WechatMiniProgramRebindController extends AuthBaseController
                     'iv'            => $iv,
                     'encryptedData' => $encryptedData
         ];
-        $this->validation->make($data,[  'js_code'       => 'required',
-                                         'iv'            => 'required',
-                                         'encryptedData' => 'required'
-                                     ]
-        )->validate();
+        $this->dzqValidate($data,[
+            'js_code'       => 'required',
+            'iv'            => 'required',
+            'encryptedData' => 'required'
+        ]);
 
         $this->socialite->setRequest($request);
 
@@ -113,8 +94,8 @@ class WechatMiniProgramRebindController extends AuthBaseController
         } catch (Exception $e) {
             $this->db->rollback();
             $this->outPut(ResponseCode::NET_ERROR,
-                                ResponseCode::$codeMap[ResponseCode::NET_ERROR] ,
-                                $e->getMessage()
+                          ResponseCode::$codeMap[ResponseCode::NET_ERROR] ,
+                          $e->getMessage()
             );
         }
 
@@ -135,29 +116,11 @@ class WechatMiniProgramRebindController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', $actor);
         } else {
             $this->outPut(ResponseCode::NET_ERROR,
-                                ResponseCode::$codeMap[ResponseCode::NET_ERROR]
+                          ResponseCode::$codeMap[ResponseCode::NET_ERROR]
             );
         }
 
         $this->db->commit();
-        $this->outPut(ResponseCode::SUCCESS, '', $actor);
-    }
-
-    protected function fixData($rawUser, $actor)
-    {
-        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, $this->getType() => $rawUser['openid']]);
-        unset($data['openid'], $data['language']);
-        $data['privilege'] = serialize($data['privilege']);
-        return $data;
-    }
-
-    protected function getDriver()
-    {
-        return 'wechat';
-    }
-
-    protected function getType()
-    {
-        return 'mp_openid';
+        $this->outPut(ResponseCode::SUCCESS, '', []);
     }
 }
