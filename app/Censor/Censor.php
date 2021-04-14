@@ -126,7 +126,7 @@ class Censor
         }
 
         if ($this->isMod && ($type == 'signature' || $type == 'dialog')) {
-            DzqController::outPutV3(ResponseCode::CONTENT_BANNED,ResponseCode::$codeMap[ResponseCode::CONTENT_BANNED]);
+//            DzqController::outPutV3(ResponseCode::CONTENT_BANNED,ResponseCode::$codeMap[ResponseCode::CONTENT_BANNED]);
             throw new CensorNotPassedException('content_banned');
         }
 

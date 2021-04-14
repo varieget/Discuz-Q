@@ -42,6 +42,7 @@ class ResponseCode
     const INTERNAL_ERROR = -5002;
     const DB_ERROR = -5003;
     const EXTERNAL_API_ERROR = -5004;
+    const CENSOR_NOT_PASSED = -5005;
 
     const UNKNOWN_ERROR = -6001;
     const DEBUG_ERROR = -6002;
@@ -59,17 +60,17 @@ class ResponseCode
     const PC_BIND_ERROR = -7011;
     const MINI_PROGRAM_SCHEME_ERROR = -7012;
     const DECRYPT_CODE_FAILURE = -7013;
-
+    const REGISTER_DECRYPT_CODE_FAILED = -7014;
     const MOBILE_IS_ALREADY_BIND = -7031;
     const REGISTER_CLOSE = -7032;
     const REGISTER_TYPE_ERROR = -7033;
     const USER_UPDATE_ERROR = -7034;
     const VERIFY_OLD_PHONE_NUMBER = -7035;
     const ENTER_NEW_PHONE_NUMBER = -7036;
-
-    const ACCOUNT_HAS_BEEN_BOUND = -7051;
-    const ACCOUNT_WECHAT_IS_NULL = -7052;
-    const BIND_ERROR = -7053;
+    const ACCOUNT_HAS_BEEN_BOUND = -7037;
+    const ACCOUNT_WECHAT_IS_NULL = -7038;
+    const BIND_ERROR = -7039;
+    const LOGIN_FAILED = -7040;
 
     public static $codeMap = [
         self::JUMP_TO_LOGIN => '跳转到登录页',
@@ -104,17 +105,16 @@ class ResponseCode
         self::PC_BIND_ERROR => '绑定失败',
         self::MINI_PROGRAM_SCHEME_ERROR => '生成scheme失败',
         self::DECRYPT_CODE_FAILURE => '解密邀请码失败',
-
         self::MOBILE_IS_ALREADY_BIND => '手机号已被绑定',
         self::REGISTER_CLOSE => '站点关闭注册',
         self::REGISTER_TYPE_ERROR => '注册类型错误',
         self::USER_UPDATE_ERROR => '不可以使用相同的密码',
         self::VERIFY_OLD_PHONE_NUMBER => '请验证旧的手机号',
         self::ENTER_NEW_PHONE_NUMBER => '请输入新的手机号',
-
         self::ACCOUNT_HAS_BEEN_BOUND => '账户已经被绑定',
         self::ACCOUNT_WECHAT_IS_NULL => '账户微信为空',
         self::BIND_ERROR => '绑定错误',
-
+        self::CENSOR_NOT_PASSED => '敏感词校验未通过',
+        self::REGISTER_DECRYPT_CODE_FAILED => '解密邀请码失败'
     ];
 }
