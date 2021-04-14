@@ -53,19 +53,23 @@ class WechatH5RebindController extends AuthBaseController
     public function main()
     {
         $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('sessionId');
+        $sessionId      = $this->inPut('session_id');
         $sessionToken   = $this->inPut('session_token');
+
+        //调试用
+//        $sessionId      = $this->inPut('sessionId');
+
         $request        = $this ->request
                                 ->withAttribute('session', new SessionToken())
                                 ->withAttribute('sessionId', $sessionId);
 
-        $this->validation->make([
-                                    'code' => $code,
-                                    'sessionId' => $sessionId,
-                                ], [
-                                    'code' => 'required',
-                                    'sessionId' => 'required'
-                                ])->validate();
+        $this->dzqValidate([
+                                'code'      => $code,
+                                'sessionId' => $sessionId,
+                            ], [
+                                'code'      => 'required',
+                                'sessionId' => 'required'
+                            ]);
 
         $this->socialite->setRequest($request);
 
@@ -86,6 +90,11 @@ class WechatH5RebindController extends AuthBaseController
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();
+
+            //调试用
+//            $wechatUser = UserWechat::query()
+//            ->where('id', '=', 27)
+//            ->first();
         } catch (Exception $e) {
             $this->db->rollBack();
         }
@@ -95,7 +104,7 @@ class WechatH5RebindController extends AuthBaseController
             'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray()
         ]);
 
-        if (!$wechatUser) {
+        if ($wechatUser) {
             // 更新微信用户信息
             $wechatUser = new UserWechat();
             if (!$actor->isGuest() && !is_null($actor->wechat)) {
@@ -115,36 +124,18 @@ class WechatH5RebindController extends AuthBaseController
                     $accessToken = $this->bound->pcH5Rebind($sessionToken, '', ['user_id' => $wechatUser->user->id]);
                 }
 
-                $this->outPut(ResponseCode::SUCCESS, '', $actor);
+                $this->outPut(ResponseCode::SUCCESS, '', []);
             } else {
                 $this->db->rollBack();
                 $this->outPut(ResponseCode::ACCOUNT_WECHAT_IS_NULL,
-                                    ResponseCode::$codeMap[ResponseCode::ACCOUNT_WECHAT_IS_NULL]
+                              ResponseCode::$codeMap[ResponseCode::ACCOUNT_WECHAT_IS_NULL]
                 );
             }
         } else {
             $this->db->rollBack();
             $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND,
-                                ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
+                          ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
             );
         }
-    }
-
-    protected function fixData($rawUser, $actor)
-    {
-        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, $this->getType() => $rawUser['openid']]);
-        unset($data['openid'], $data['language']);
-        $data['privilege'] = serialize($data['privilege']);
-        return $data;
-    }
-
-    protected function getDriver()
-    {
-        return 'wechat';
-    }
-
-    protected function getType()
-    {
-        return 'mp_openid';
     }
 }

@@ -19,42 +19,9 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
-use App\Models\MobileCode;
-use App\Repositories\MobileCodeRepository;
-use Discuz\Base\DzqController;
-use Discuz\Contracts\Setting\SettingsRepository;
-use Discuz\Qcloud\QcloudTrait;
-use Illuminate\Contracts\Cache\Repository as CacheRepository;
-use Illuminate\Contracts\Validation\Factory as ValidationFactory;
-use Illuminate\Support\Carbon;
 
 class SmsBindController extends AuthBaseController
 {
-    use QcloudTrait;
-
-    const CODE_EXCEPTION = 5; //单位：分钟
-    const CODE_INTERVAL = 60; //单位：秒
-
-    protected $validation;
-    protected $cache;
-    protected $mobileCodeRepository;
-    protected $settings;
-    protected $mobileCode;
-
-    public function __construct(
-        ValidationFactory       $validation,
-        CacheRepository         $cache,
-        MobileCodeRepository    $mobileCodeRepository,
-        SettingsRepository      $settings,
-        MobileCode              $mobileCode
-    ) {
-        $this->validation           = $validation;
-        $this->cache                = $cache;
-        $this->mobileCodeRepository = $mobileCodeRepository;
-        $this->settings             = $settings;
-        $this->mobileCode           = $mobileCode;
-    }
-
     public function main()
     {
         $mobile = $this->inPut('mobile');
@@ -64,36 +31,27 @@ class SmsBindController extends AuthBaseController
         $data['mobile'] = $mobile;
         $data['code']   = $code;
 
-        $this->validation->make($data, [
+        $this->dzqValidate($data, [
             'mobile'    => 'required',
             'code'      => 'required'
-        ])->validate();
+        ]);
 
-        /**
-         * @var MobileCode $mobileCode
-         **/
-        $mobileCode = $this->mobileCodeRepository->getSmsCode($mobile, 'bind');
-
-        if (!$mobileCode || $mobileCode->code !== $code || $mobileCode->expired_at < Carbon::now()) {
-            $this->outPut(ResponseCode::NET_ERROR, ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
-        }
-
-        $mobileCode->changeState(MobileCode::USED_STATE);
-        $mobileCode->save();
+        $mobileCode = $this->changeMobileCodeState($mobile, 'bind', $code);
 
         // 判断手机号是否已经被绑定
-        if ($this->user->mobile) {
+        if ($mobileCode->user->mobile) {
             $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND,
-                                ResponseCode::$codeMap[ResponseCode::MOBILE_IS_ALREADY_BIND]
+                          ResponseCode::$codeMap[ResponseCode::MOBILE_IS_ALREADY_BIND]
             );
         }
 
         if ($this->user->exists) {
             $this->user->changeMobile($mobileCode->mobile);
             $this->user->save();
-            $this->mobileCode->user = $this->user;
+
+            $this->outPut(ResponseCode::SUCCESS, '', []);
         }
 
-        $this->outPut(ResponseCode::SUCCESS, '', $this->mobileCode->user);
+        $this->outPut(ResponseCode::NET_ERROR,ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
     }
 }

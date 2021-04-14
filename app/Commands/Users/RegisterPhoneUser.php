@@ -78,7 +78,9 @@ class RegisterPhoneUser
             $this->data['expired_at'] = Carbon::now();
         }
 
-        $user = User::register(Arr::only($this->data, ['username', 'mobile', 'password', 'register_ip', 'register_port', 'register_reason', 'status']));
+        $this->data['nickname'] = $this->data['username'];
+
+        $user = User::register(Arr::only($this->data, ['username', 'nickname','mobile', 'password', 'register_ip', 'register_port', 'register_reason', 'status']));
 
         $this->events->dispatch(
             new Saving($user, $this->actor, $this->data)

@@ -22,58 +22,37 @@ use App\Commands\Users\GenJwtToken;
 use App\Commands\Users\RegisterPhoneUser;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
-use App\Exceptions\SmsCodeVerifyException;
-use App\Models\MobileCode;
 use App\Models\User;
-use App\Repositories\MobileCodeRepository;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
-use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
 class SmsLoginController extends AuthBaseController
 {
-    protected $mobileCodeRepository;
     protected $bus;
-    protected $validation;
-    private $mobileCode;
-    private $settings;
-    private $events;
+    protected $settings;
+    protected $events;
 
     public function __construct(
-        MobileCodeRepository    $mobileCodeRepository,
-        Dispatcher              $bus,
-        Factory                 $validation,
-        MobileCode              $mobileCode,
-        SettingsRepository      $settings,
-        Events                  $events
+        Dispatcher          $bus,
+        SettingsRepository  $settings,
+        Events              $events
     ){
-        $this->mobileCodeRepository = $mobileCodeRepository;
-        $this->bus                  = $bus;
-        $this->validation           = $validation;
-        $this->mobileCode           = $mobileCode;
-        $this->settings             = $settings;
-        $this->events               = $events;
+        $this->bus      = $bus;
+        $this->settings = $settings;
+        $this->events   = $events;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param Document $document
-     * @return mixed
-     * @throws SmsCodeVerifyException
-     */
     public function main()
     {
         $mobile     = $this->inPut('mobile');
         $code       = $this->inPut('code');
-        $inviteCode = $this->inPut('inviteCode');
+        $inviteCode = $this->inPut('invite_code');
         $ip         = ip($this->request->getServerParams());
         $port       = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
+
+//        $inviteCode = $this->inPut('inviteCode');// 调试用
 
         $data = array();
         $data['mobile'] = $mobile;
@@ -81,27 +60,19 @@ class SmsLoginController extends AuthBaseController
         $data['ip']     = $ip;
         $data['port']   = $port;
 
-        $this->validation->make($data, [
+        $this->dzqValidate($data, [
             'mobile'    => 'required',
             'code'      => 'required'
-        ])->validate();
+        ]);
 
-        /**
-         * @var MobileCode $mobileCode
-        **/
-        $mobileCode = $this->mobileCodeRepository->getSmsCode($mobile, 'login');
-
-        if (!$mobileCode || $mobileCode->code !== $code || $mobileCode->expired_at < Carbon::now()) {
-            $this->outPut(ResponseCode::NET_ERROR, ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
-        }
-
-        $mobileCode->changeState(MobileCode::USED_STATE);
-        $mobileCode->save();
+        $mobileCode = $this->changeMobileCodeState($mobile, 'login', $code);
 
         //register new user
         if (is_null($mobileCode->user)) {
             if (!(bool)$this->settings->get('register_close')) {
-                $this->outPut(ResponseCode::REGISTER_CLOSE, ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]);
+                $this->outPut(ResponseCode::REGISTER_CLOSE,
+                              ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
+                );
             }
 
             $data['register_ip']    = $ip;
@@ -120,8 +91,8 @@ class SmsLoginController extends AuthBaseController
                 new Logind($mobileCode->user)
             );
         }
-        //login
 
+        //login
         $params = [
             'username' => $mobileCode->user->username,
             'password' => ''
@@ -131,6 +102,7 @@ class SmsLoginController extends AuthBaseController
             new GenJwtToken($params)
         );
 
-        $this->outPut(ResponseCode::SUCCESS, '', json_decode($response->getBody()));
+        $result = $this->camelData(collect(json_decode($response->getBody())));
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

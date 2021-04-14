@@ -124,7 +124,7 @@ class SmsRegisterController extends DzqController
         //若参数与配置不为手机号注册，抛异常不再执行
         if($type != 'register' || $registerType != 1) {
             $this->outPut(ResponseCode::REGISTER_TYPE_ERROR,
-                                ResponseCode::$codeMap[ResponseCode::REGISTER_TYPE_ERROR]
+                          ResponseCode::$codeMap[ResponseCode::REGISTER_TYPE_ERROR]
             );
         }
 
