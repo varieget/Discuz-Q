@@ -66,6 +66,7 @@ class ResponseCode
     const ACCOUNT_HAS_BEEN_BOUND = -7034;
     const ACCOUNT_WECHAT_IS_NULL = -7035;
     const BIND_ERROR = -7036;
+    const LOGIN_FAILED = -7037;
 
     public static $codeMap = [
         self::JUMP_TO_LOGIN => '跳转到登录页',
