@@ -37,10 +37,6 @@ class ThreadListController extends DzqController
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
         $sequence = $this->inPut('sequence');//默认首页
-        $categoryId = $this->inPut('categoryId');
-        if (!$this->canViewThread($this->user, $categoryId)) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
-        }
         if ($sequence) {
             $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         } else {
