@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -19,7 +18,7 @@
 namespace App\Api\Controller\UsersV3;
 
 
-class LoginController extends AbstractLoginBaseController
+class MobileBrowserLoginController extends AbstractLoginBaseController
 {
-    protected  $type = 'username_login';
+    protected $type = 'mobilebrowser_username_login';
 }
