@@ -18,12 +18,14 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
+use App\Models\MobileCode;
 use App\Models\SessionToken;
+use App\Repositories\MobileCodeRepository;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Carbon;
 
 abstract class AuthBaseController extends DzqController
 {
-
     /**
      * 获取扫码后token登录信息数据
      * @return SessionToken
@@ -45,5 +47,43 @@ abstract class AuthBaseController extends DzqController
         return $token;
     }
 
+    /**
+     * 修改手机验证码的状态
+     * @return MobileCode
+     */
+    public function changeMobileCodeState($mobile, $type, $code)
+    {
+        $mobileCodeRepository = app(mobileCodeRepository::class);
+        /**
+         * @var MobileCode $mobileCode
+         **/
+        $mobileCode = $mobileCodeRepository->getSmsCode($mobile, $type);
 
+        if (!$mobileCode || $mobileCode->code !== $code || $mobileCode->expired_at < Carbon::now()) {
+            $this->outPut(ResponseCode::NET_ERROR, ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
+        }
+
+        $mobileCode->changeState(MobileCode::USED_STATE);
+        $mobileCode->save();
+
+        return $mobileCode;
+    }
+
+    protected function getDriver()
+    {
+        return 'wechat';
+    }
+
+    protected function getType()
+    {
+        return 'mp_openid';
+    }
+
+    protected function fixData($rawUser, $actor)
+    {
+        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, $this->getType() => $rawUser['openid']]);
+        unset($data['openid'], $data['language']);
+        $data['privilege'] = serialize($data['privilege']);
+        return $data;
+    }
 }
