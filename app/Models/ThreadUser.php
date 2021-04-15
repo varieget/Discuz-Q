@@ -19,7 +19,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Discuz\Base\DzqModel;
 
 /**
  * Models a thread-user state record in the database.
@@ -30,6 +30,10 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property Thread $thread
  * @property User $user
  */
-class ThreadUser extends Pivot
+class ThreadUser extends DzqModel
 {
+    //收藏
+    const TYPE_FAVOR = 0;
+    //点赞
+    const TYPE_LIKE = 1;
 }

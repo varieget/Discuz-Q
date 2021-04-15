@@ -19,9 +19,10 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
-use App\Models\ThreadHot;
+use App\Models\Post;
+use App\Models\Thread;
+use App\Models\ThreadTag;
 use App\Models\ThreadTom;
-use App\Models\ThreadText;
 use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
 
@@ -34,11 +35,6 @@ class CreateThreadController extends DzqController
         $this->limitCreateThread();
         //发帖权限
         $categoryId = $this->inPut('categoryId');
-        $title = $this->inPut('title');
-        $content = $this->inPut('content');
-        $position = $this->inPut('position');
-        $isAnonymous = $this->inPut('anonymous');//非必须
-        $summary = $this->inPut('summary');//非必须
         if (!$this->canCreateThread($this->user, $categoryId)) {
             $this->outPut(ResponseCode::UNAUTHORIZED);
         }
@@ -48,32 +44,23 @@ class CreateThreadController extends DzqController
             'address' => 'required',
             'location' => 'required'
         ]);
-        $params = [
-            'categoryId' => $categoryId,
-            'title' => $title,
-            'content' => $content,
-            'position' => $position,
-            'isAnonymous' => $isAnonymous,
-            'summary' => $summary
-        ];
-        $this->createThread($content, $params);
-        $this->outPut(ResponseCode::SUCCESS);
+        $result = $this->createThread();
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 
 
     /**
      * @desc 发布一个新帖子
-     * @param $content
-     * @param $params
-     * @return bool
      */
-    private function createThread($content, $params)
+    private function createThread()
     {
         $db = $this->getDB();
         $db->beginTransaction();
         try {
-            $this->executeEloquent($content, $params);
+            $result = $this->executeEloquent();
+            //todo 发帖后的消息通知等
             $db->commit();
+            return $result;
         } catch (\Exception $e) {
             $db->rollBack();
             $this->info('createThread_error_' . $this->user->id, $e->getMessage());
@@ -81,38 +68,63 @@ class CreateThreadController extends DzqController
         }
     }
 
-    private function executeEloquent($content, $params)
+    private function executeEloquent()
     {
-        $text = $content['text'];
-        //插入text数据
-        $tText = new ThreadText();
-        list($ip, $port) = $this->getIpPort();
-        $data = [
-            'user_id' => $this->user->id,
-            'category_id' => $params['categoryId'],
-            'title' => $params['title'],
-            'summary' => empty($params['summary']) ? $tText->getSummary($text) : $params['summary'],
-            'text' => $text,
-            'status' => ThreadText::STATUS_ACTIVE,
-            'ip' => $ip,
-            'port' => $port
+        $content = $this->inPut('content');
+        //插入thread数据
+        $thread = new Thread();
+        $userId = $this->user->id;
+        $categoryId = $this->inPut('categoryId');
+        $title = $this->inPut('title');//title没有则自动生成
+        $price = $this->inPut('price');
+        $attachmentPrice = $this->inPut('attachmentPrice');
+        $freeWords = $this->inPut('freeWords');
+        $position = $this->inPut('position');
+        $isAnonymous = $this->inPut('anonymous');
+        $dataThread = [
+            'user_id' => $userId,
+            'category_id' => $categoryId,
+            'title' => $title,
         ];
-        if (!empty($params['position'])) {
-            $data['longitude'] = $params['position']['longitude'];
-            $data['latitude'] = $params['position']['latitude'];
-            $data['address'] = $params['position']['address'];
-            $data['location'] = $params['position']['location'];
+        !empty($price) && $dataThread['price'] = $price;
+        !empty($attachmentPrice) && $dataThread['attachmentPrice'] = $attachmentPrice;
+        !empty($freeWords) && $dataThread['free_words'] = $freeWords;
+        if (!empty($position)) {
+            $dataThread['longitude'] = $position['longitude'];
+            $dataThread['latitude'] = $position['latitude'];
+            $dataThread['address'] = $position['address'];
+            $dataThread['location'] = $position['location'];
+        } else {
+            $dataThread['address'] = '';
+            $dataThread['location'] = '';
         }
-        $tText->setRawAttributes($data);
-        $tText->save();
-        $threadId = $tText->id;
-        //插入hot数据
-        $tHot = new ThreadHot();
-        $tHot->thread_id = $threadId;
-        $tHot->save();
+        //todo 判断是否需要审核
+        $dataThread['is_approved'] = Thread::BOOL_YES;
+        !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
+        $thread->setRawAttributes($dataThread);
+        $thread->save();
+        $threadId = $thread->id;
+
+        //插入post数据
+        $text = $content['text'];
+        $post = new Post();
+        list($ip, $port) = $this->getIpPort();
+        $dataPost = [
+            'user_id' => $userId,
+            'thread_id' => $threadId,
+            'content' => $text,
+            'ip' => $ip,
+            'port' => $port,
+            'is_first' => Post::FIRST_YES,
+            'is_approved' => Post::APPROVED
+        ];
+        $post->setRawAttributes($dataPost);
+        $post->save();
         //插入tom数据
+        $indexes = $content['indexes'];
         $attrs = [];
-        $tomJsons = $this->tomDispatcher($content,null,$threadId);
+        $tomJsons = $this->tomDispatcher($indexes, null, $threadId);
+        $tags = [];
         foreach ($tomJsons as $key => $value) {
             $attrs[] = [
                 'thread_id' => $threadId,
@@ -120,13 +132,41 @@ class CreateThreadController extends DzqController
                 'key' => $key,
                 'value' => json_encode($value['body'], 256)
             ];
+            $tags[] = [
+                'thread_id' => $threadId,
+                'tag' => $value['tomId']
+            ];
         }
         ThreadTom::query()->insert($attrs);
+        //添加tag类型
+        ThreadTag::query()->insert($tags);
+
+        return $this->getResult($thread, $tomJsons);
+    }
+
+    private function getResult($thread, $tomJsons)
+    {
+        return [
+            'threadId'=>$thread['id'],
+            'userId' => $thread['user_id'],
+            'categoryId' => $thread['category_id'],
+            'title' => $thread['title'],
+            'price' => $thread['price'],
+            'attachmentPrice' => $thread['attachmentPrice'],
+            'position' => [
+                'longitude' => $thread['longitude'],
+                'latitude' => $thread['latitude'],
+                'address' => $thread['address'],
+                'location' => $thread['location']
+            ],
+            'isAnonymous' => $thread['is_anonymous'],
+            'content' => $this->tomDispatcher($tomJsons, $this->SELECT_FUNC)
+        ];
     }
 
     private function limitCreateThread()
     {
-        $threadFirst = ThreadText::query()
+        $threadFirst = Thread::query()
             ->select(['id', 'user_id', 'category_id', 'created_at'])
             ->where('user_id', $this->user->id)
             ->orderByDesc('created_at')->first();
@@ -135,5 +175,4 @@ class CreateThreadController extends DzqController
             $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，稍后重试');
         }
     }
-
 }

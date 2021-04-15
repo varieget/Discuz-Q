@@ -20,11 +20,12 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\GroupUser;
+use App\Models\Order;
 use App\Models\Sequence;
-use App\Models\Thread;
 use App\Models\ThreadHot;
 use App\Models\ThreadText;
 use App\Models\ThreadTom;
+use App\Models\ThreadUser;
 use App\Models\User;
 use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
@@ -54,6 +55,18 @@ class ThreadListController extends DzqController
         $users = array_column($users, null, 'id');
         $threadIds = array_column($threadList, 'id');
         $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
+
+        //获取点赞列表
+        $likeList = ThreadUser::query()->whereIn('thread_id',$threadIds)->where('type',ThreadUser::TYPE_LIKE)
+            ->orderByDesc('created_at')->limit(2);
+        //获取支付和打赏列表
+        $payList = Order::query()->whereIn('thread_id',$threadIds)
+            ->where('status',Order::ORDER_STATUS_PAID)
+            ->orderByDesc('created_at')->limit(2);
+
+
+
+
         $threadHot = ThreadHot::query()
             ->whereIn('thread_id', $threadIds)
             ->get()->pluck(null, 'thread_id');
