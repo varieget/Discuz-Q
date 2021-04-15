@@ -21,9 +21,10 @@ use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\GroupUser;
 use App\Models\Order;
+use App\Models\Post;
+use App\Models\PostUser;
 use App\Models\Sequence;
-use App\Models\ThreadHot;
-use App\Models\ThreadText;
+use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\ThreadUser;
 use App\Models\User;
@@ -41,7 +42,7 @@ class ThreadListController extends DzqController
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
         $sequence = $this->inPut('sequence');//默认首页
-        if ($sequence) {
+        if (empty($sequence)) {
             $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         } else {
             $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
@@ -54,22 +55,25 @@ class ThreadListController extends DzqController
         $users = User::instance()->getUsers($userIds);
         $users = array_column($users, null, 'id');
         $threadIds = array_column($threadList, 'id');
-        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
+
+        $posts = Post::instance()->getPosts($threadIds);
+        $postsByThreadId = array_column($posts, null, 'thread_id');
+        $postIds = array_column($posts, 'id');
+
+        $likedPostIds = PostUser::instance()->getPostIdsByUid($postIds, $this->user->id);
 
         //获取点赞列表
-        $likeList = ThreadUser::query()->whereIn('thread_id',$threadIds)->where('type',ThreadUser::TYPE_LIKE)
+        $likeList = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('type', ThreadUser::TYPE_LIKE)
             ->orderByDesc('created_at')->limit(2);
         //获取支付和打赏列表
-        $payList = Order::query()->whereIn('thread_id',$threadIds)
-            ->where('status',Order::ORDER_STATUS_PAID)
-            ->orderByDesc('created_at')->limit(2);
+        $orders = Order::query()->whereIn('thread_id', $threadIds)
+            ->where('user_id', $this->user->id)
+            ->where('status', Order::ORDER_STATUS_PAID)
+            ->get()->toArray();
 
 
+        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
 
-
-        $threadHot = ThreadHot::query()
-            ->whereIn('thread_id', $threadIds)
-            ->get()->pluck(null, 'thread_id');
         $inPutToms = [];
         foreach ($toms as $tom) {
             $inPutToms[$tom['thread_id']][$tom['key']] = [
@@ -95,7 +99,7 @@ class ThreadListController extends DzqController
             }
             $threadId = $thread['id'];
             $content = [
-                'text' => $thread['text'],
+                'text' => Post::instance()->getContentSummary($postsByThreadId[$thread['id']]),
                 'indexes' => null
             ];
             if (isset($inPutToms[$threadId])) {
@@ -120,7 +124,6 @@ class ThreadListController extends DzqController
                 'isEssence' => $thread['is_essence'],
                 'isAnonymous' => $thread['is_anonymous'],//匿名贴不传userid
                 'isSite' => $thread['is_site'],
-                'hotData' => ThreadHot::instance()->getHotData($threadHot),
                 'content' => $content
             ];
         }
@@ -131,7 +134,7 @@ class ThreadListController extends DzqController
     private function getGroupInfo($group)
     {
         return [
-            'pid' => $group['group_id'],
+            'id' => $group['group_id'],
             'groupName' => $group['groups']['name'],
             'groupIcon' => $group['groups']['icon'],
             'isDisplay' => $group['groups']['is_display']
@@ -141,7 +144,7 @@ class ThreadListController extends DzqController
     private function getUserInfo($user)
     {
         return [
-            'pid' => $user['id'],
+            'id' => $user['id'],
             'userName' => $user['username'],
             'avatar' => $user['avatar'],
             'threadCount' => $user['thread_count'],
@@ -168,7 +171,7 @@ class ThreadListController extends DzqController
         $essence = null;
         $types = [];
         $categoryids = [];
-        $sort = ThreadText::SORT_BY_CREATE_TIME;
+        $sort = Thread::SORT_BY_THREAD;
         $attention = 0;
         isset($filter['sticky']) && $stick = $filter['sticky'];
         isset($filter['essence']) && $essence = $filter['essence'];
@@ -180,27 +183,25 @@ class ThreadListController extends DzqController
         if (!$categoryids) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
-        $threads = ThreadText::query()
-            ->from('thread_text as text')
-            ->where(['is_sticky' => ThreadText::FIELD_NO, 'status' => ThreadText::STATUS_ACTIVE]);
+        $threads = $this->getThreads();
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
 
         if (!empty($types)) {
-            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'text.user_id')
+            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.user_id')
                 ->whereIn('tag', $types);
         }
 
         if (!empty($sort)) {
-            if ($sort == ThreadText::SORT_BY_CREATE_TIME) {//按照发帖时间排序
-                $threads->orderByDesc('text.created_at');
-            } else if ($sort == ThreadText::SORT_BY_LAST_POST_TIME) {//按照评论时间排序
-                $threads->leftJoin('thread_hot as hot', 'text.id', '=', 'hot.thread_id');
+            if ($sort == Thread::SORT_BY_THREAD) {//按照发帖时间排序
+                $threads->orderByDesc('th.created_at');
+            } else if ($sort == Thread::SORT_BY_POST) {//按照评论时间排序
+                $threads->leftJoin('thread_hot as hot', 'th.id', '=', 'hot.thread_id');
                 $threads->orderByDesc('hot.last_post_time');
             }
         }
         //关注
         if ($attention == 1 && !empty($this->user)) {
-            $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'text.user_id')
+            $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'th.user_id')
                 ->where('follow.from_user_id', $this->user->id);
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
@@ -229,40 +230,38 @@ class ThreadListController extends DzqController
         !empty($sequence['block_user_ids']) && $blockUserIds = explode(',', $sequence['block_user_ids']);
         !empty($sequence['block_topic_ids']) && $blockTopicIds = explode(',', $sequence['block_topic_ids']);
         !empty($sequence['block_thread_ids']) && $blockThreadIds = explode(',', $sequence['block_thread_ids']);
-        $threads = ThreadText::query()
-            ->from('thread_text as text')
-            ->where(['is_sticky' => ThreadText::FIELD_NO, 'status' => ThreadText::STATUS_ACTIVE]);
+        $threads = $this->getThreads();
         if (!empty($categoryIds)) {
-            $threads = $threads->whereIn('text.category_id', $categoryIds);
+            $threads = $threads->whereIn('th.category_id', $categoryIds);
         }
         if (!empty($types)) {
-            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'text.user_id')
+            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.user_id')
                 ->whereIn('tag', $types);
         }
         if (!empty($groupIds)) {
             $threads = $threads
-                ->leftJoin('group_user as g1', 'g1.user_id', '=', 'text.user_id')
+                ->leftJoin('group_user as g1', 'g1.user_id', '=', 'th.user_id')
                 ->whereIn('g1.group_id', $groupIds);
         }
         if (!empty($topicIds)) {
             $threads = $threads
-                ->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'text.id')
+                ->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'th.id')
                 ->whereIn('topic.topic_id', $topicIds);
         }
         if (!empty($userIds)) {
-            $threads = $threads->whereIn('text.user_id', $userIds);
+            $threads = $threads->whereIn('th.user_id', $userIds);
         }
         if (!empty($threadIds)) {
-            $threads = $threads->whereIn('text.id', $threadIds);
+            $threads = $threads->whereIn('th.id', $threadIds);
         }
         if (!empty($blockUserIds)) {
             $threads->whereNotExists(function ($query) use ($blockUserIds) {
-                $query->whereIn('text.user_id', $blockUserIds);
+                $query->whereIn('th.user_id', $blockUserIds);
             });
         }
         if (!empty($blockThreadIds)) {
             $threads->whereNotExists(function ($query) use ($blockThreadIds) {
-                $query->whereIn('text.id', $blockThreadIds);
+                $query->whereIn('th.id', $blockThreadIds);
             });
         }
         if (!empty($blockTopicIds)) {
@@ -270,7 +269,17 @@ class ThreadListController extends DzqController
                 $query->whereIn('topic.topic_id', $blockTopicIds);
             });
         }
-        $threads = $threads->orderByDesc('text.created_at');
+        $threads = $threads->orderByDesc('th.created_at');
         return $this->pagination($currentPage, $perPage, $threads);
+    }
+
+    private function getThreads()
+    {
+        return Thread::query()
+            ->from('threads as th')
+            ->whereNull('th.deleted_at')
+            ->where('is_sticky', Thread::BOOL_NO)
+            ->where('is_draft', Thread::IS_NOT_DRAFT)
+            ->where('is_approved', Thread::APPROVED);
     }
 }
