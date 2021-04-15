@@ -62,8 +62,8 @@ class SmsSendController extends AuthBaseController
         $actor              = $this->user;
         $mobile             = $this->inPut('mobile');
         $type               = $this->inPut('type');
-        $captcha_ticket     = $this->inPut('captcha_ticket');
-        $captcha_rand_str   = $this->inPut('captcha_rand_str');
+        $captcha_ticket     = $this->inPut('captchaTicket');
+        $captcha_rand_str   = $this->inPut('captchaRandStr');
         $ip                 = ip($this->request->getServerParams());
 
         $data = array();
@@ -72,8 +72,13 @@ class SmsSendController extends AuthBaseController
         $data['captcha']    = [
             $captcha_ticket,
             $captcha_rand_str,
-            $ip,
+            $ip
         ];
+
+        $this->dzqValidate($data, [
+//            'captcha'   => [new Captcha],
+            'type'      => 'required|in:' . implode(',', $this->type)
+        ]);
 
         // 直接使用用户手机号
         if ($type === 'verify' || $type === 'reset_pay_pwd') {
@@ -130,9 +135,7 @@ class SmsSendController extends AuthBaseController
         }
 
         $this->dzqValidate($data, [
-            'captcha'   => [new Captcha],
-            'mobile'    => $mobileRule,
-            'type'      => 'required|in:' . implode(',', $this->type),
+            'mobile'    => $mobileRule
         ]);
 
         $mobileCode = $this->mobileCodeRepository->getSmsCode($data['mobile'], $type);

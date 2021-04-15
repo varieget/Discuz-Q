@@ -69,19 +69,9 @@ abstract class AuthBaseController extends DzqController
         return $mobileCode;
     }
 
-    protected function getDriver()
-    {
-        return 'wechat';
-    }
-
-    protected function getType()
-    {
-        return 'mp_openid';
-    }
-
     protected function fixData($rawUser, $actor)
     {
-        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, $this->getType() => $rawUser['openid']]);
+        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, 'mp_openid' => $rawUser['openid']]);
         unset($data['openid'], $data['language']);
         $data['privilege'] = serialize($data['privilege']);
         return $data;

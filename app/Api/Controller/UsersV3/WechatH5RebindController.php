@@ -30,7 +30,7 @@ use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 
-class WechatH5RebindController extends AuthBaseController
+class WechatH5RebindController extends WechatH5AuthBaseController
 {
     use AssertPermissionTrait;
     protected $socialite;
@@ -53,11 +53,8 @@ class WechatH5RebindController extends AuthBaseController
     public function main()
     {
         $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('session_id');
-        $sessionToken   = $this->inPut('session_token');
-
-        //调试用
-//        $sessionId      = $this->inPut('sessionId');
+        $sessionId      = $this->inPut('sessionId');
+        $sessionToken   = $this->inPut('sessionToken');
 
         $request        = $this ->request
                                 ->withAttribute('session', new SessionToken())
@@ -73,7 +70,7 @@ class WechatH5RebindController extends AuthBaseController
 
         $this->socialite->setRequest($request);
 
-        $driver = $this->socialite->driver($this->getDriver());
+        $driver = $this->socialite->driver('wechat');
         $wxuser = $driver->user();
 
         /** @var User $actor */
@@ -86,7 +83,7 @@ class WechatH5RebindController extends AuthBaseController
         try {
             /** @var UserWechat $wechatUser */
             $wechatUser = UserWechat::query()
-                ->where($this->getType(), $wxuser->getId())
+                ->where('mp_openid', $wxuser->getId())
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();

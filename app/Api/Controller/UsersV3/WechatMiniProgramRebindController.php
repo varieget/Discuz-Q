@@ -61,10 +61,11 @@ class WechatMiniProgramRebindController extends AuthBaseController
         $actor          = $this->user;
         $sessionId      = $this->inPut('sessionId');
         $user           = !$actor->isGuest() ? $actor : new Guest();
-        $js_code        = $this->inPut('js_code');
+        $js_code        = $this->inPut('jsCode');
         $iv             = $this->inPut('iv');
         $encryptedData  = $this->inPut('encryptedData');
-        $sessionToken   = $this->inPut('session_token');// PC扫码使用
+        $sessionToken   = $this->inPut('sessionToken');// PC扫码使用
+//        $token          = SessionToken::get($sessionToken);
         $rebind         = 0;
 
         $request = $this->request->withAttribute('session', new SessionToken())->withAttribute('sessionId', $sessionId);
@@ -81,7 +82,7 @@ class WechatMiniProgramRebindController extends AuthBaseController
 
         $this->socialite->setRequest($request);
 
-        $driver = $this->socialite->driver($this->getDriver());
+        $driver = $this->socialite->driver('wechat');
         $wxuser = $driver->user();
 
         /** @var User $actor */

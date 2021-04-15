@@ -68,7 +68,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
     {
         $actor          = $this->user;
         $user           = !$actor->isGuest() ? $actor : new Guest();
-        $js_code        = $this->inPut('js_code');
+        $js_code        = $this->inPut('jsCode');
         $iv             = $this->inPut('iv');
         $encryptedData  = $this->inPut('encryptedData');
         $code           = $this->inPut('code');

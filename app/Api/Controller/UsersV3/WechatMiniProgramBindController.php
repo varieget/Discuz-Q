@@ -54,10 +54,10 @@ class WechatMiniProgramBindController extends AuthBaseController
     {
         $actor          = $this->user;
         $user           = !$actor->isGuest() ? $actor : new Guest();
-        $js_code        = $this->inPut('js_code');
+        $js_code        = $this->inPut('jsCode');
         $iv             = $this->inPut('iv');
         $encryptedData  = $this->inPut('encryptedData');
-        $sessionToken   = $this->inPut('session_token');// PC扫码使用
+        $sessionToken   = $this->inPut('sessionToken');// PC扫码使用
         $rebind         = 0;
 
         $data = [   'js_code'       => $js_code,

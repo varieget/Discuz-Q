@@ -40,7 +40,7 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-class WechatH5LoginController extends AuthBaseController
+class WechatH5LoginController extends WechatH5AuthBaseController
 {
     use AssertPermissionTrait;
     protected $socialite;
@@ -71,14 +71,11 @@ class WechatH5LoginController extends AuthBaseController
 
     public function main()
     {
-        $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('session_id');
-        $inviteCode     = $this->inPut('invite_code');
-        $sessionToken   = $this->inPut('session_token');
+        $inviteCode     = $this->inPut('inviteCode');
 
-        //调试用
-//        $sessionId      = $this->inPut('sessionId');
-//        $inviteCode     = $this->inPut('inviteCode');
+        $code           = $this->inPut('code');
+        $sessionId      = $this->inPut('sessionId');
+        $sessionToken   = $this->inPut('sessionToken');//PC扫码使用
 
         $request = $this->request   ->withAttribute('session', new SessionToken())
                                     ->withAttribute('sessionId', $sessionId);
@@ -93,7 +90,7 @@ class WechatH5LoginController extends AuthBaseController
 
         $this->socialite->setRequest($request);
 
-        $driver = $this->socialite->driver($this->getDriver());
+        $driver = $this->socialite->driver('wechat');
         $wxuser = $driver->user();
 
         /** @var User $actor */
@@ -103,7 +100,7 @@ class WechatH5LoginController extends AuthBaseController
         try {
             /** @var UserWechat $wechatUser */
             $wechatUser = UserWechat::query()
-                ->where($this->getType(), $wxuser->getId())
+                ->where('mp_openid', $wxuser->getId())
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();
@@ -234,7 +231,7 @@ class WechatH5LoginController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($actor));
         }
 
-        $token = SessionToken::generate($this->getDriver(), $rawUser);
+        $token = SessionToken::generate('wechat', $rawUser);
         $token->save();
 
         $noUserException = new NoUserException();

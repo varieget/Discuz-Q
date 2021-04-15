@@ -48,7 +48,7 @@ class SmsLoginController extends AuthBaseController
     {
         $mobile     = $this->inPut('mobile');
         $code       = $this->inPut('code');
-        $inviteCode = $this->inPut('invite_code');
+        $inviteCode = $this->inPut('inviteCode');
         $ip         = ip($this->request->getServerParams());
         $port       = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
 
