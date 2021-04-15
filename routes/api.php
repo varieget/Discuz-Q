@@ -472,4 +472,6 @@ $route->get('/posts.v2', 'posts.v2', ApiController\Posts\ListPostsV2Controller::
 $route->post('/posts.update.v2', 'posts.update.v2', ApiController\Posts\UpdatePostV2Controller::class);
 $route->post('/posts.v2', 'posts.v2', ApiController\Posts\CreatePostV2Controller::class);
 
+$route->get('/forum.v2', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
+
 
