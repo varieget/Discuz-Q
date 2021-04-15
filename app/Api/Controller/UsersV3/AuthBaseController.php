@@ -76,4 +76,41 @@ abstract class AuthBaseController extends DzqController
         $data['privilege'] = serialize($data['privilege']);
         return $data;
     }
+
+    protected function getWechatH5Param()
+    {
+        $code           = $this->inPut('code');
+        $sessionId      = $this->inPut('sessionId');
+
+        $request        = $this->request
+            ->withAttribute('session', new SessionToken())
+            ->withAttribute('sessionId', $sessionId);
+
+        $this->dzqValidate([
+                               'code'      => $code,
+                               'sessionId' => $sessionId,
+                           ], [
+                               'code'      => 'required',
+                               'sessionId' => 'required'
+                           ]);
+
+        $this->socialite->setRequest($request);
+
+        $driver = $this->socialite->driver('wechat');
+        $wxuser = $driver->user();
+
+        return $data = [
+            'request'   =>  $request,
+            'wxuser'    =>  $wxuser
+        ];
+    }
+
+    protected function recordWechatLog($wechatUser)
+    {
+        $wechatlog = app('wechatLog');
+        $wechatlog->info('wechat_info', [
+            'wechat_user'   => $wechatUser == null ? '': $wechatUser->toArray(),
+            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray()
+        ]);
+    }
 }

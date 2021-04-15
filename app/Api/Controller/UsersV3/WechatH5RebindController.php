@@ -19,7 +19,6 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
-use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
 use App\User\Bound;
@@ -30,7 +29,7 @@ use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 
-class WechatH5RebindController extends WechatH5AuthBaseController
+class WechatH5RebindController extends AuthBaseController
 {
     use AssertPermissionTrait;
     protected $socialite;
@@ -52,29 +51,10 @@ class WechatH5RebindController extends WechatH5AuthBaseController
 
     public function main()
     {
-        $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('sessionId');
-        $sessionToken   = $this->inPut('sessionToken');
-
-        $request        = $this ->request
-                                ->withAttribute('session', new SessionToken())
-                                ->withAttribute('sessionId', $sessionId);
-
-        $this->dzqValidate([
-                                'code'      => $code,
-                                'sessionId' => $sessionId,
-                            ], [
-                                'code'      => 'required',
-                                'sessionId' => 'required'
-                            ]);
-
-        $this->socialite->setRequest($request);
-
-        $driver = $this->socialite->driver('wechat');
-        $wxuser = $driver->user();
-
-        /** @var User $actor */
-        $actor = $this->user;
+        $param          = $this->getWechatH5Param();
+        $wxuser         = $param['wxuser'];
+        $sessionToken   = $this->inPut('sessionToken');//PC扫码使用
+        $actor          = $this->user;
 //        $actor = User::query()
 //                    ->where('id', 2)
 //                    ->first();
@@ -90,16 +70,13 @@ class WechatH5RebindController extends WechatH5AuthBaseController
 
             //调试用
 //            $wechatUser = UserWechat::query()
-//            ->where('id', '=', 27)
+//            ->where('id', '=', 29)
 //            ->first();
         } catch (Exception $e) {
             $this->db->rollBack();
         }
-        $wechatlog = app('wechatLog');
-        $wechatlog->info('wechat_info', [
-            'wechat_user'   => $wechatUser == null ? '': $wechatUser->toArray(),
-            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray()
-        ]);
+
+        $this->recordWechatLog($wechatUser);
 
         if ($wechatUser) {
             // 更新微信用户信息
@@ -118,7 +95,7 @@ class WechatH5RebindController extends WechatH5AuthBaseController
 
                 // PC扫码使用
                 if ($sessionToken) {
-                    $accessToken = $this->bound->pcH5Rebind($sessionToken, '', ['user_id' => $wechatUser->user->id]);
+                    $this->bound->rebindVoid($sessionToken, $wechatUser);
                 }
 
                 $this->outPut(ResponseCode::SUCCESS, '', []);

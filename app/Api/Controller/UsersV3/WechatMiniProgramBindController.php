@@ -104,11 +104,7 @@ class WechatMiniProgramBindController extends AuthBaseController
 
                 // PC扫码使用
                 if ($sessionToken) {
-                    $accessToken = $this->bound->pcMiniProgramBind(
-                        $sessionToken,
-                        '',
-                        ['user_id' => $wechatUser->user->id]
-                    );
+                    $this->bound->bindVoid($sessionToken, $wechatUser);
                 }
         }
         $this->outPut(ResponseCode::SUCCESS, '', []);
