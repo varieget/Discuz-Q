@@ -23,6 +23,7 @@ use function Complex\sec;
 class ResponseCode
 {
     const SUCCESS = 0;
+    const SITE_CLOSED = -1001;
 
     const JUMP_TO_LOGIN = -3001;
     const JUMP_TO_REGISTER = -3002;
@@ -61,6 +62,7 @@ class ResponseCode
     const MINI_PROGRAM_SCHEME_ERROR = -7012;
     const DECRYPT_CODE_FAILURE = -7013;
     const REGISTER_DECRYPT_CODE_FAILED = -7014;
+    const NOT_AUTHENTICATED = -7015;
     const MOBILE_IS_ALREADY_BIND = -7031;
     const REGISTER_CLOSE = -7032;
     const REGISTER_TYPE_ERROR = -7033;
@@ -73,6 +75,7 @@ class ResponseCode
     const LOGIN_FAILED = -7040;
 
     public static $codeMap = [
+        self::SITE_CLOSED => '站点已关闭',
         self::JUMP_TO_LOGIN => '跳转到登录页',
         self::JUMP_TO_AUDIT=>'跳转到审核页',
         self::JUMP_TO_HOME_INDEX=>'跳转到首页',

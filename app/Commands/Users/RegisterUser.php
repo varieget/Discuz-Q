@@ -96,7 +96,6 @@ class RegisterUser
                 }
             }
         }
-
         // 敏感词校验
         //用户名校验
         $censor->checkText(Arr::get($this->data, 'username'), 'username');
