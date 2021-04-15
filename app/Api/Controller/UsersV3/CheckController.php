@@ -40,24 +40,25 @@ class CheckController extends DzqController
 
     public function main()
     {
-        $data = [
-            'username' => $this->inPut('username')
-        ];
-
-        $isExist = false;
-
-        $this->censor->checkText($data['username'], 'username');
-
-        if(empty($data['username']) || mb_strlen($data['username'],'UTF8') > 15){
-            $isExist = true;
+        $username = $this->inPut('username');
+        //去除字符串中空格
+        $username = str_replace(' ', '', $username);
+        //敏感词检查
+        $this->censor->checkText($username, 'username');
+        if(strlen($username) == 0) {
+            return $this->outPut(ResponseCode::NAME_LENGTH_ERROR, '用户名不能为空');
         }
-
-        $userNameCount = User::query()->where('username',$data['username'])->count();
+        //长度检查
+        if(mb_strlen($username,'UTF8') > 15){
+            return $this->outPut(ResponseCode::NAME_LENGTH_ERROR);
+        }
+        //重名检查
+        $userNameCount = User::query()->where('username', $username)->count('id');
         if($userNameCount > 0){
-            $isExist = true;
+            return $this->outPut(ResponseCode::USERNAME_HAD_EXIST);
         }
 
-        return $this->outPut(ResponseCode::SUCCESS, '',['status' => $isExist]);
+        return $this->outPut(ResponseCode::SUCCESS);
     }
 
 }

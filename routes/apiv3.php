@@ -36,7 +36,7 @@ $route->post('/users/username.register', 'username.register', ApiController\User
 //控制用户名密码入口是否展示
 $route->get('/users/username.login.isdisplay', 'username.login.isdisplay', ApiController\UsersV3\LsDisplayController::class);
 //用户昵称检测
-$route->get('/users/username.check', 'username.check', ApiController\UsersV3\CheckController::class);
+$route->post('/users/username.check', 'username.check', ApiController\UsersV3\CheckController::class);
 //手机号（不区分端）
 $route->post('/users/sms.send', 'sms.send', ApiController\UsersV3\SmsSendController::class);
 $route->post('/users/sms.verify', 'sms.verify', ApiController\UsersV3\SmsVerifyController::class);

@@ -73,6 +73,8 @@ class ResponseCode
     const ACCOUNT_WECHAT_IS_NULL = -7038;
     const BIND_ERROR = -7039;
     const LOGIN_FAILED = -7040;
+    const NAME_LENGTH_ERROR = -7041;
+    const USERNAME_HAD_EXIST = -7042;
 
     public static $codeMap = [
         self::SITE_CLOSED => '站点已关闭',
@@ -118,6 +120,8 @@ class ResponseCode
         self::ACCOUNT_WECHAT_IS_NULL => '账户微信为空',
         self::BIND_ERROR => '绑定错误',
         self::CENSOR_NOT_PASSED => '敏感词校验未通过',
-        self::REGISTER_DECRYPT_CODE_FAILED => '解密邀请码失败'
+        self::REGISTER_DECRYPT_CODE_FAILED => '解密邀请码失败',
+        self::NAME_LENGTH_ERROR => '用户名或昵称长度超过15个字符',
+        self::USERNAME_HAD_EXIST => '用户名已经存在'
     ];
 }
