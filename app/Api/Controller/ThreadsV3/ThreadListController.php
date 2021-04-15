@@ -60,11 +60,15 @@ class ThreadListController extends DzqController
         $postsByThreadId = array_column($posts, null, 'thread_id');
         $postIds = array_column($posts, 'id');
 
-        $likedPostIds = PostUser::instance()->getPostIdsByUid($postIds, $this->user->id);
+//        $likedPostIds = PostUser::query()->whereIn('post_id',$postIds)
+//
+//
+//            ->get()->toArray();
+
 
         //获取点赞列表
-        $likeList = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('type', ThreadUser::TYPE_LIKE)
-            ->orderByDesc('created_at')->limit(2);
+//        $likeList = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('type', ThreadUser::TYPE_LIKE)
+//            ->orderByDesc('created_at')->limit(2);
         //获取支付和打赏列表
         $orders = Order::query()->whereIn('thread_id', $threadIds)
             ->where('user_id', $this->user->id)
@@ -114,21 +118,38 @@ class ThreadListController extends DzqController
             $result[] = [
                 'user' => $user,
                 'group' => $group,
+                'likeReward' => $this->getLikeReward(),
                 'threadId' => $threadId,
                 'userId' => $thread['user_id'],
                 'categoryId' => $thread['category_id'],
                 'title' => $thread['title'],
-                'summary' => $thread['summary'],
+                'postCount' => $thread['post_count'] - 1,
                 'position' => $position,
                 'isSticky' => $thread['is_sticky'],
                 'isEssence' => $thread['is_essence'],
-                'isAnonymous' => $thread['is_anonymous'],//匿名贴不传userid
                 'isSite' => $thread['is_site'],
                 'content' => $content
             ];
         }
         $threads['pageData'] = $result;
         $this->outPut(0, '', $threads);
+    }
+
+    private function getLikeReward()
+    {
+        return [
+            'users' => [
+                [
+                    'userId' => 5,
+                    'avatar' => ''
+                ],
+                [
+                    'userId' => 5,
+                    'avatar' => ''
+                ]
+            ],
+            'count' => 100
+        ];
     }
 
     private function getGroupInfo($group)
