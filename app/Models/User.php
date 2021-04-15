@@ -116,6 +116,7 @@ class User extends DzqModel
         'id',
         'username',
         'password',
+        'nickname',
         'mobile',
         'bind_type',
         'updated_at'
@@ -331,6 +332,13 @@ class User extends DzqModel
     public function changeSignature($signature)
     {
         $this->signature = $signature;
+
+        return $this;
+    }
+
+    public function changeNickname($nickname)
+    {
+        $this->nickname = $nickname;
 
         return $this;
     }

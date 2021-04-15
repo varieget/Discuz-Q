@@ -20,7 +20,9 @@ namespace App\Censor;
 
 use App\Models\Attachment;
 use App\Models\StopWord;
+use App\Common\ResponseCode;
 use Discuz\Contracts\Setting\SettingsRepository;
+use Discuz\Base\DzqController;
 use Discuz\Foundation\Application;
 use Discuz\Qcloud\QcloudManage;
 use Discuz\Wechat\EasyWechatTrait;
@@ -37,7 +39,7 @@ class Censor
     /**
      * @var array
      */
-    public $allowTypes = ['ugc', 'username', 'signature', 'dialog'];
+    public $allowTypes = ['ugc', 'username', 'signature', 'dialog', 'nickname'];
 
     /**
      * 是否合法（放入待审核）
