@@ -111,7 +111,7 @@ class WechatMiniProgramRebindController extends AuthBaseController
 
             // PC扫码使用
             if ($sessionToken) {
-                $accessToken = $this->bound->pcMiniProgramRebind($sessionToken, '', ['user_id' => $wechatUser->user->id]);
+                $this->bound->rebindVoid($sessionToken, $wechatUser);
             }
 
             $this->outPut(ResponseCode::SUCCESS, '', $actor);

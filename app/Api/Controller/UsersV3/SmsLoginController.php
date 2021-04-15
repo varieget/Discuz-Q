@@ -103,6 +103,14 @@ class SmsLoginController extends AuthBaseController
         );
 
         $result = $this->camelData(collect(json_decode($response->getBody())));
+
+        $user = User::query()->where('id', '=', $mobileCode->user->id)->first();
+        if (empty($user['nickname'])) {
+            $result['isMissRequireInfo'] = true;
+        } else {
+            $result['isMissRequireInfo'] = false;
+        }
+
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }
