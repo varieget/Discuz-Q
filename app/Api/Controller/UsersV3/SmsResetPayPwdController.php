@@ -32,31 +32,25 @@ class SmsResetPayPwdController extends AuthBaseController
 
     public function main()
     {
-        $mobile                     = $this->inPut('mobile');
-        $code                       = $this->inPut('code');
+        $param                      = $this->getSmsParam('reset_pay_pwd');
+        $mobileCode                 = $param['mobileCode'];
         $pay_password               = $this->inPut('payPassword');
         $pay_password_confirmation  = $this->inPut('payPasswordConfirmation');
 
         $data = array();
-        $data['mobile']                         = $mobile;
-        $data['code']                           = $code;
-        $data['payPassword']                   = $pay_password;
-        $data['payPasswordConfirmation']      = $pay_password_confirmation;
+        $data['payPassword']                = $pay_password;
+        $data['payPasswordConfirmation']    = $pay_password_confirmation;
 
         $this->dzqValidate($data, [
-            'mobile'                        => 'required',
-            'code'                          => 'required',
             'payPassword'                   => 'required',
             'payPasswordConfirmation'       => 'required',
         ]);
 
-        $mobileCode = $this->changeMobileCodeState($mobile, 'reset_pay_pwd', $code);
-
         if ($mobileCode->user && isset($pay_password)) {
             $this->validator->valid([
-                                        'payPassword' => $pay_password,
-                                        'payPasswordConfirmation' => $pay_password_confirmation,
-                                    ]);
+                'payPassword'               => $pay_password,
+                'payPasswordConfirmation'   => $pay_password_confirmation,
+            ]);
 
             // 验证新密码与原密码不能相同
             if ($mobileCode->user->checkWalletPayPassword($pay_password)) {

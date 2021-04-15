@@ -46,26 +46,11 @@ class SmsLoginController extends AuthBaseController
 
     public function main()
     {
-        $mobile     = $this->inPut('mobile');
-        $code       = $this->inPut('code');
+        $param      = $this->getSmsParam('login');
+        $mobileCode = $param['mobileCode'];
         $inviteCode = $this->inPut('inviteCode');
         $ip         = ip($this->request->getServerParams());
         $port       = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
-
-//        $inviteCode = $this->inPut('inviteCode');// 调试用
-
-        $data = array();
-        $data['mobile'] = $mobile;
-        $data['code']   = $code;
-        $data['ip']     = $ip;
-        $data['port']   = $port;
-
-        $this->dzqValidate($data, [
-            'mobile'    => 'required',
-            'code'      => 'required'
-        ]);
-
-        $mobileCode = $this->changeMobileCodeState($mobile, 'login', $code);
 
         //register new user
         if (is_null($mobileCode->user)) {
