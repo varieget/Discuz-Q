@@ -74,9 +74,9 @@ trait TomTrait
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
                             if (empty($v['threadId'])) {
-                                $service = $service->newInstanceArgs([$threadId, $tomId, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user,$threadId, $tomId, $op, $body]);
                             } else {
-                                $service = $service->newInstanceArgs([$v['threadId'], $tomId, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user,$v['threadId'], $tomId, $op, $body]);
                             }
                             method_exists($service, $op) && $tomJsons[$k] = $service->$op();
                         } catch (\ReflectionException $e) {

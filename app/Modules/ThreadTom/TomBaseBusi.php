@@ -18,6 +18,7 @@
 namespace App\Modules\ThreadTom;
 
 use App\Common\ResponseCode;
+use App\Models\User;
 use Discuz\Http\DiscuzResponseFactory;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -34,15 +35,17 @@ abstract class TomBaseBusi
     public $tomId = null;
     public $operation = null;
     public $body = [];
-    private $permissions = [];
+    public $permissions = [];
     public $threadId = null;
+    public $user = null;
 
-    public function __construct($threadId, $tomId, $operation, $body)
+    public function __construct(User $user,$threadId, $tomId, $operation, $body)
     {
         $this->operation = $operation;
         $this->body = $body;
         $this->tomId = $tomId;
         $this->threadId = $threadId;
+        $this->user = $user;
         $this->operationValid();
         //todo 查询用户组的权限数组
     }
