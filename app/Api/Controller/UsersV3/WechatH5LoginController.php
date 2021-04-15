@@ -40,7 +40,7 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-class WechatH5LoginController extends WechatH5AuthBaseController
+class WechatH5LoginController extends AuthBaseController
 {
     use AssertPermissionTrait;
     protected $socialite;
@@ -71,30 +71,12 @@ class WechatH5LoginController extends WechatH5AuthBaseController
 
     public function main()
     {
+        $param          = $this->getWechatH5Param();
+        $request        = $param['request'];
+        $wxuser         = $param['wxuser'];
         $inviteCode     = $this->inPut('inviteCode');
-
-        $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('sessionId');
         $sessionToken   = $this->inPut('sessionToken');//PC扫码使用
-
-        $request = $this->request   ->withAttribute('session', new SessionToken())
-                                    ->withAttribute('sessionId', $sessionId);
-
-        $this->dzqValidate([
-                                'code'      => $code,
-                                'sessionId' => $sessionId,
-                            ], [
-                                'code'      => 'required',
-                                'sessionId' => 'required'
-                            ]);
-
-        $this->socialite->setRequest($request);
-
-        $driver = $this->socialite->driver('wechat');
-        $wxuser = $driver->user();
-
-        /** @var User $actor */
-        $actor = $this->user;
+        $actor          = $this->user;
 
         $this->db->beginTransaction();
         try {
