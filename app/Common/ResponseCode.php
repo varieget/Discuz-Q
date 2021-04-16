@@ -23,6 +23,7 @@ use function Complex\sec;
 class ResponseCode
 {
     const SUCCESS = 0;
+    const SITE_CLOSED = -1001;
 
     const JUMP_TO_LOGIN = -3001;
     const JUMP_TO_REGISTER = -3002;
@@ -42,6 +43,7 @@ class ResponseCode
     const INTERNAL_ERROR = -5002;
     const DB_ERROR = -5003;
     const EXTERNAL_API_ERROR = -5004;
+    const CENSOR_NOT_PASSED = -5005;
 
     const UNKNOWN_ERROR = -6001;
     const DEBUG_ERROR = -6002;
@@ -59,17 +61,27 @@ class ResponseCode
     const PC_BIND_ERROR = -7011;
     const MINI_PROGRAM_SCHEME_ERROR = -7012;
     const DECRYPT_CODE_FAILURE = -7013;
-    const NEED_BIND_USER_OR_CREATE_USER = -7014;
+
+    const NEED_BIND_USER_OR_CREATE_USER = -7016;
+
+    const REGISTER_DECRYPT_CODE_FAILED = -7014;
+    const NOT_AUTHENTICATED = -7015;
+
     const MOBILE_IS_ALREADY_BIND = -7031;
     const REGISTER_CLOSE = -7032;
     const REGISTER_TYPE_ERROR = -7033;
-    const USER_UPDATE_ERROR = -7050;
-    const ACCOUNT_HAS_BEEN_BOUND = -7034;
-    const ACCOUNT_WECHAT_IS_NULL = -7035;
-    const BIND_ERROR = -7036;
-    const LOGIN_FAILED = -7037;
+    const USER_UPDATE_ERROR = -7034;
+    const VERIFY_OLD_PHONE_NUMBER = -7035;
+    const ENTER_NEW_PHONE_NUMBER = -7036;
+    const ACCOUNT_HAS_BEEN_BOUND = -7037;
+    const ACCOUNT_WECHAT_IS_NULL = -7038;
+    const BIND_ERROR = -7039;
+    const LOGIN_FAILED = -7040;
+    const NAME_LENGTH_ERROR = -7041;
+    const USERNAME_HAD_EXIST = -7042;
 
     public static $codeMap = [
+        self::SITE_CLOSED => '站点已关闭',
         self::JUMP_TO_LOGIN => '跳转到登录页',
         self::JUMP_TO_AUDIT=>'跳转到审核页',
         self::JUMP_TO_HOME_INDEX=>'跳转到首页',
@@ -102,13 +114,19 @@ class ResponseCode
         self::PC_BIND_ERROR => '绑定失败',
         self::MINI_PROGRAM_SCHEME_ERROR => '生成scheme失败',
         self::DECRYPT_CODE_FAILURE => '解密邀请码失败',
-        self::REGISTER_CLOSE => '站点关闭注册',
         self::MOBILE_IS_ALREADY_BIND => '手机号已被绑定',
+        self::REGISTER_CLOSE => '站点关闭注册',
         self::REGISTER_TYPE_ERROR => '注册类型错误',
         self::USER_UPDATE_ERROR => '不可以使用相同的密码',
+        self::VERIFY_OLD_PHONE_NUMBER => '请验证旧的手机号',
+        self::ENTER_NEW_PHONE_NUMBER => '请输入新的手机号',
         self::ACCOUNT_HAS_BEEN_BOUND => '账户已经被绑定',
         self::ACCOUNT_WECHAT_IS_NULL => '账户微信为空',
         self::BIND_ERROR => '绑定错误',
-        self::NEED_BIND_USER_OR_CREATE_USER => '需要绑定或注册用户'
+        self::NEED_BIND_USER_OR_CREATE_USER => '需要绑定或注册用户',
+        self::CENSOR_NOT_PASSED => '敏感词校验未通过',
+        self::REGISTER_DECRYPT_CODE_FAILED => '解密邀请码失败',
+        self::NAME_LENGTH_ERROR => '用户名或昵称长度超过15个字符',
+        self::USERNAME_HAD_EXIST => '用户名已经存在'
     ];
 }

@@ -19,12 +19,10 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
-use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Socialite\Factory;
 use Exception;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
@@ -53,31 +51,14 @@ class WechatH5BindController extends AuthBaseController
 
     public function main()
     {
-        $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('sessionId');
-        $sessionToken   = $this->inPut('session_token');
-        $request        = $this ->request
-                                ->withAttribute('session', new SessionToken())
-                                ->withAttribute('sessionId', $sessionId);
+        $param          = $this->getWechatH5Param();
+        $wxuser         = $param['wxuser'];
+        $sessionToken   = $this->inPut('sessionToken');//PC扫码使用
+        $actor          = $this->user;
 
-        $this->validation->make([
-                                    'code'      => $code,
-                                    'sessionId' => $sessionId,
-                                ], [
-                                    'code'      => 'required',
-                                    'sessionId' => 'required'
-                                ])->validate();
-
-        $this->socialite->setRequest($request);
-
-        $driver = $this->socialite->driver($this->getDriver());
-        $wxuser = $driver->user();
 //        $wxuser = UserWechat::query()
 //                ->where('id', 2)
 //                ->first();
-
-        /** @var User $actor */
-        $actor = $this->user;
 //        $actor = User::query()
 //                    ->where('id', 2)
 //                    ->first();
@@ -86,7 +67,7 @@ class WechatH5BindController extends AuthBaseController
         try {
             /** @var UserWechat $wechatUser */
             $wechatUser = UserWechat::query()
-                ->where($this->getType(), $wxuser->getId())
+                ->where('mp_openid', $wxuser->getId())
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();
@@ -94,11 +75,8 @@ class WechatH5BindController extends AuthBaseController
         } catch (Exception $e) {
             $this->db->rollBack();
         }
-        $wechatlog = app('wechatLog');
-        $wechatlog->info('wechat_info', [
-            'wechat_user'   => $wechatUser == null ? '': $wechatUser->toArray(),
-            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray()
-        ]);
+
+        $this->recordWechatLog($wechatUser);
 
         if (!$wechatUser) {
             $wechatUser = new UserWechat();
@@ -111,33 +89,15 @@ class WechatH5BindController extends AuthBaseController
 
             // PC扫码使用
             if ($sessionToken) {
-                $accessToken = $this->bound->pcH5Bind($sessionToken, '', ['user_id' => $wechatUser->user->id]);
+                $this->bound->bindVoid($sessionToken, $wechatUser);
             }
 
-            $this->outPut(ResponseCode::SUCCESS, '', $actor);
+            $this->outPut(ResponseCode::SUCCESS, '', []);
         } else {
             $this->db->rollBack();
             $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND,
-                                ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
+                          ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
             );
         }
-    }
-
-    protected function fixData($rawUser, $actor)
-    {
-        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, $this->getType() => $rawUser['openid']]);
-        unset($data['openid'], $data['language']);
-        $data['privilege'] = serialize($data['privilege']);
-        return $data;
-    }
-
-    protected function getDriver()
-    {
-        return 'wechat';
-    }
-
-    protected function getType()
-    {
-        return 'mp_openid';
     }
 }

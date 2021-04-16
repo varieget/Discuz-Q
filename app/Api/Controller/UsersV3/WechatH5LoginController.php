@@ -34,27 +34,47 @@ use Illuminate\Support\Str;
 
 class WechatH5LoginController extends AbstractWechatH5LoginBaseController
 {
+    use AssertPermissionTrait;
+    protected $socialite;
+    protected $bus;
+    protected $validation;
+    protected $events;
+    protected $settings;
+    protected $bound;
+    protected $db;
+
+    public function __construct(
+        Factory             $socialite,
+        Dispatcher          $bus,
+        ValidationFactory   $validation,
+        Events              $events,
+        SettingsRepository  $settings,
+        Bound               $bound,
+        ConnectionInterface $db
+    ){
+        $this->socialite    = $socialite;
+        $this->bus          = $bus;
+        $this->validation   = $validation;
+        $this->events       = $events;
+        $this->settings     = $settings;
+        $this->bound        = $bound;
+        $this->db           = $db;
+    }
+
     public function main()
     {
-//        $state          = $this->inPut('state');
+        $param          = $this->getWechatH5Param();
+        $request        = $param['request'];
+        $wxuser         = $param['wxuser'];
         $inviteCode     = $this->inPut('inviteCode');
-//        $register       = empty($this->inPut('register')) ? 0 :$this->inPut('register');
-        $register       = 1;
-        $sessionToken   = $this->inPut('session_token');
-//        $rebind         = empty($this->inPut('rebind')) ? 0 : $this->inPut('rebind');
-        $rebind         = 0;
-
-        /**  获取用户微信基础信息*/
-        $wxuser = $this->getWxUser();
-
-        /** @var User $actor */
-        $actor = $this->user;
+        $sessionToken   = $this->inPut('sessionToken');//PC扫码使用
+        $actor          = $this->user;
 
         $this->db->beginTransaction();
         try {
             /** @var UserWechat $wechatUser */
             $wechatUser = UserWechat::query()
-                ->where($this->getType(), $wxuser->getId())
+                ->where('mp_openid', $wxuser->getId())
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();
@@ -64,11 +84,8 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
         $wechatlog = app('wechatLog');
         $wechatlog->info('wechat_info', [
             'wechat_user'   => $wechatUser == null ? '': $wechatUser->toArray(),
-            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray(),
-            'rebind'        => $rebind,
-            'register'      => $register
+            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray()
         ]);
-
 
         if (!$wechatUser || !$wechatUser->user) {
             // 更新微信用户信息
@@ -83,7 +100,7 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
                 if (!(bool)$this->settings->get('register_close')) {
                     $this->db->rollBack();
                     $this->outPut(ResponseCode::REGISTER_CLOSE,
-                                        ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
+                                  ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
                     );
                 }
 
@@ -118,7 +135,7 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
             if (!$actor->isGuest() && $actor->id != $wechatUser->user_id) {
                 $this->db->rollBack();
                 $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND,
-                                    ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
+                              ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
                 );
             }
 
@@ -159,8 +176,9 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
                 $accessToken = $this->bound->pcLogin($sessionToken, $accessToken, ['user_id' => $wechatUser->user->id]);
             }
 
-            $this->outPut(ResponseCode::SUCCESS, '', $accessToken);
+            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData(collect($accessToken)));
         }
+
         $this->error($wxuser, $actor, $wechatUser, null, $sessionToken);
     }
 
@@ -184,10 +202,10 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
         $wechatUser->save();
         $this->db->commit();
         if ($actor->id) {
-            $this->outPut(ResponseCode::SUCCESS, '', $actor);
+            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($actor));
         }
 
-        $token = SessionToken::generate($this->getDriver(), $rawUser);
+        $token = SessionToken::generate('wechat', $rawUser);
         $token->save();
 
         $noUserException = new NoUserException();
@@ -209,16 +227,8 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
                 $sessionTokenQuery->save();
             }
         }
-        $this->outPut(ResponseCode::NET_ERROR, '', $noUserException);
+
+        $this->outPut(ResponseCode::NET_ERROR, ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
+//        $this->outPut(ResponseCode::NET_ERROR, '', $noUserException);
     }
-
-    protected function fixData($rawUser, $actor)
-    {
-        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, $this->getType() => $rawUser['openid']]);
-        unset($data['openid'], $data['language']);
-        $data['privilege'] = serialize($data['privilege']);
-        return $data;
-    }
-
-
 }

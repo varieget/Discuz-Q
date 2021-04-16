@@ -39,7 +39,7 @@ class Censor
     /**
      * @var array
      */
-    public $allowTypes = ['ugc', 'username', 'signature', 'dialog'];
+    public $allowTypes = ['ugc', 'username', 'signature', 'dialog', 'nickname'];
 
     /**
      * 是否合法（放入待审核）
@@ -126,7 +126,6 @@ class Censor
         }
 
         if ($this->isMod && ($type == 'signature' || $type == 'dialog')) {
-            DzqController::outPutV3(ResponseCode::CONTENT_BANNED,ResponseCode::$codeMap[ResponseCode::CONTENT_BANNED]);
             throw new CensorNotPassedException('content_banned');
         }
 

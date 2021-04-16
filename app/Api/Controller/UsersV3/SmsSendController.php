@@ -23,10 +23,8 @@ use App\Models\MobileCode;
 use App\Repositories\MobileCodeRepository;
 use App\Rules\Captcha;
 use App\SmsMessages\SendCodeMessage;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Qcloud\QcloudTrait;
-use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Support\Carbon;
 
@@ -38,7 +36,6 @@ class SmsSendController extends AuthBaseController
     const CODE_INTERVAL = 60; //单位：秒
 
     protected $validation;
-    protected $cache;
     protected $mobileCodeRepository;
     protected $settings;
     protected $type = [
@@ -52,12 +49,10 @@ class SmsSendController extends AuthBaseController
 
     public function __construct(
         ValidationFactory       $validation,
-        CacheRepository         $cache,
         MobileCodeRepository    $mobileCodeRepository,
         SettingsRepository      $settings
     ) {
         $this->validation           = $validation;
-        $this->cache                = $cache;
         $this->mobileCodeRepository = $mobileCodeRepository;
         $this->settings             = $settings;
     }
@@ -67,8 +62,8 @@ class SmsSendController extends AuthBaseController
         $actor              = $this->user;
         $mobile             = $this->inPut('mobile');
         $type               = $this->inPut('type');
-        $captcha_ticket     = $this->inPut('captcha_ticket');
-        $captcha_rand_str   = $this->inPut('captcha_rand_str');
+        $captcha_ticket     = $this->inPut('captchaTicket');
+        $captcha_rand_str   = $this->inPut('captchaRandStr');
         $ip                 = ip($this->request->getServerParams());
 
         $data = array();
@@ -77,8 +72,13 @@ class SmsSendController extends AuthBaseController
         $data['captcha']    = [
             $captcha_ticket,
             $captcha_rand_str,
-            $ip,
+            $ip
         ];
+
+        $this->dzqValidate($data, [
+            'captcha'   => [new Captcha],
+            'type'      => 'required|in:' . implode(',', $this->type)
+        ]);
 
         // 直接使用用户手机号
         if ($type === 'verify' || $type === 'reset_pay_pwd') {
@@ -97,7 +97,7 @@ class SmsSendController extends AuthBaseController
             // 判断手机号是否已经被绑定
             if ($actor->mobile) {
                 $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND,
-                                    ResponseCode::$codeMap[ResponseCode::MOBILE_IS_ALREADY_BIND]
+                              ResponseCode::$codeMap[ResponseCode::MOBILE_IS_ALREADY_BIND]
                 );
             }
 
@@ -112,10 +112,14 @@ class SmsSendController extends AuthBaseController
             $mobileRule = [
                 function ($attribute, $value, $fail) use ($actor, $unverified) {
                     if ($unverified) {
-                        $this->outPut(ResponseCode::NET_ERROR,'请验证旧的手机号.');
+                        $this->outPut(ResponseCode::VERIFY_OLD_PHONE_NUMBER,
+                                      ResponseCode::$codeMap[ResponseCode::VERIFY_OLD_PHONE_NUMBER]
+                        );
 //                        $fail('请验证旧的手机号。');
                     } elseif ($value == $actor->getRawOriginal('mobile')) {
-                        $this->outPut(ResponseCode::NET_ERROR,'请输入新的手机号.');
+                        $this->outPut(ResponseCode::ENTER_NEW_PHONE_NUMBER,
+                                      ResponseCode::$codeMap[ResponseCode::ENTER_NEW_PHONE_NUMBER]
+                        );
 //                        $fail('请输入新的手机号。');
                     }
                 },
@@ -130,11 +134,9 @@ class SmsSendController extends AuthBaseController
             $mobileRule = 'required';
         }
 
-        $this->validation->make($data, [
-//            'captcha'   => [new Captcha()],
-            'mobile'    => $mobileRule,
-            'type'      => 'required|in:' . implode(',', $this->type),
-        ])->validate();
+        $this->dzqValidate($data, [
+            'mobile'    => $mobileRule
+        ]);
 
         $mobileCode = $this->mobileCodeRepository->getSmsCode($data['mobile'], $type);
 

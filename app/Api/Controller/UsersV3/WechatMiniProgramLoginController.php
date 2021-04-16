@@ -28,11 +28,9 @@ use App\Settings\SettingsRepository;
 use App\User\Bind;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Guest;
-use Discuz\Base\DzqController;
 use Discuz\Wechat\EasyWechatTrait;
 use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
@@ -44,7 +42,6 @@ class WechatMiniProgramLoginController extends AuthBaseController
     use EasyWechatTrait;
 
     protected $bus;
-    protected $cache;
     protected $validation;
     protected $events;
     protected $settings;
@@ -53,7 +50,6 @@ class WechatMiniProgramLoginController extends AuthBaseController
 
     public function __construct(
         Dispatcher          $bus,
-        Repository          $cache,
         ValidationFactory   $validation,
         Events              $events,
         SettingsRepository  $settings,
@@ -61,7 +57,6 @@ class WechatMiniProgramLoginController extends AuthBaseController
         ConnectionInterface $db
     ){
         $this->bus          = $bus;
-        $this->cache        = $cache;
         $this->validation   = $validation;
         $this->events       = $events;
         $this->settings     = $settings;
@@ -73,7 +68,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
     {
         $actor          = $this->user;
         $user           = !$actor->isGuest() ? $actor : new Guest();
-        $js_code        = $this->inPut('js_code');
+        $js_code        = $this->inPut('jsCode');
         $iv             = $this->inPut('iv');
         $encryptedData  = $this->inPut('encryptedData');
         $code           = $this->inPut('code');
@@ -83,22 +78,29 @@ class WechatMiniProgramLoginController extends AuthBaseController
         $data = [   'js_code'       => $js_code,
                     'iv'            => $iv,
                     'encryptedData' => $encryptedData
-                ];
-        $this->validation->make($data,[   'js_code'       => 'required',
-                                          'iv'            => 'required',
-                                          'encryptedData' => 'required'
-                                           ]
-        )->validate();
+        ];
+        $this->dzqValidate($data,[
+            'js_code'       => 'required',
+            'iv'            => 'required',
+            'encryptedData' => 'required'
+        ]);
 
         // 绑定小程序
         $this->db->beginTransaction();
         try {
-            $wechatUser = $this->bind->bindMiniprogram($js_code, $iv, $encryptedData, $rebind, $user, true);
+            $wechatUser = $this->bind->bindMiniprogram(
+                $js_code,
+                $iv,
+                $encryptedData,
+                $rebind,
+                $user,
+                true
+            );
         } catch (Exception $e) {
             $this->db->rollback();
             $this->outPut(ResponseCode::NET_ERROR,
-                                ResponseCode::$codeMap[ResponseCode::NET_ERROR],
-                                $e->getMessage()
+                          ResponseCode::$codeMap[ResponseCode::NET_ERROR],
+                          $e->getMessage()
             );
         }
 
@@ -109,7 +111,9 @@ class WechatMiniProgramLoginController extends AuthBaseController
             //用户被删除
             if (!$user) {
                 $this->db->rollback();
-                $this->outPut(ResponseCode::BIND_ERROR, ResponseCode::$codeMap[ResponseCode::BIND_ERROR]);
+                $this->outPut(ResponseCode::BIND_ERROR,
+                              ResponseCode::$codeMap[ResponseCode::BIND_ERROR]
+                );
             }
         } else {
             //自动注册
@@ -118,7 +122,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 if (!(bool)$this->settings->get('register_close')) {
                     $this->db->rollback();
                     $this->outPut(ResponseCode::REGISTER_CLOSE,
-                                        ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
+                                  ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
                     );
                 }
 
@@ -141,8 +145,8 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 $noUserException = new NoUserException();
                 $noUserException->setUser(['username' => $wechatUser->nickname, 'headimgurl'=>$wechatUser->headimgurl]);
                 $this->outPut(ResponseCode::NET_ERROR,
-                                    ResponseCode::$codeMap[ResponseCode::NET_ERROR],
-                                    $noUserException
+                              ResponseCode::$codeMap[ResponseCode::NET_ERROR],
+                              $noUserException
                 );
             }
         }
@@ -165,6 +169,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
             }
         }
 
-        $this->outPut(ResponseCode::SUCCESS, '', json_decode($response->getBody()));
+        $result = $this->camelData(collect(json_decode($response->getBody())));
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

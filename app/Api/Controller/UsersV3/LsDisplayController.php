@@ -23,16 +23,30 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\UserWechat;
 use App\Models\UserQq;
+use App\Settings\SettingsRepository;
 use Discuz\Base\DzqController;
 
 class LsDisplayController extends DzqController
 {
 
+    protected $settings;
+
+    public function __construct(SettingsRepository $settingsRepository)
+    {
+        $this->settings = $settingsRepository;
+    }
+
     public function main()
     {
-        $status = true;
-        if(User::query('id')->where('bind_type',AuthUtils::DEFAULT)->count() > 0){
-            $status = false;
+        //用户名密码模式，默认展示用户名和密码登录
+        $registerType = $this->settings->get('register_type');
+        if($registerType == 0) {
+            $this->outPut(ResponseCode::SUCCESS, '',['status' => true]);
+        }
+        //存在未绑定任何第三方的信息用户，则展示用户名和密码登录
+        $status = false;
+        if(User::query()->where('bind_type',AuthUtils::DEFAULT)->count('id') > 0){
+            $status = true;
         }
 
         return $this->outPut(ResponseCode::SUCCESS, '',['status' => $status]);
