@@ -28,54 +28,20 @@ use App\Models\User;
 use App\Models\UserWechat;
 use App\Notifications\Messages\Wechat\RegisterWechatMessage;
 use App\Notifications\System;
-use App\Settings\SettingsRepository;
-use App\User\Bound;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Contracts\Socialite\Factory;
 use Exception;
-use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Events\Dispatcher as Events;
-use Illuminate\Contracts\Validation\Factory as ValidationFactory;
-use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-class WechatH5LoginController extends AuthBaseController
+class WechatH5LoginController extends AbstractWechatH5LoginBaseController
 {
-    use AssertPermissionTrait;
-    protected $socialite;
-    protected $bus;
-    protected $validation;
-    protected $events;
-    protected $settings;
-    protected $bound;
-    protected $db;
 
-    public function __construct(
-        Factory             $socialite,
-        Dispatcher          $bus,
-        ValidationFactory   $validation,
-        Events              $events,
-        SettingsRepository  $settings,
-        Bound               $bound,
-        ConnectionInterface $db
-    ){
-        $this->socialite    = $socialite;
-        $this->bus          = $bus;
-        $this->validation   = $validation;
-        $this->events       = $events;
-        $this->settings     = $settings;
-        $this->bound        = $bound;
-        $this->db           = $db;
-    }
 
     public function main()
     {
-        $param          = $this->getWechatH5Param();
-        $request        = $param['request'];
-        $wxuser         = $param['wxuser'];
-        $inviteCode     = $this->inPut('inviteCode');
-        $sessionToken   = $this->inPut('sessionToken');//PC扫码使用
+        //获取授权后微信用户信息
+        $wxuser         = $this->getWxUser();
+        $inviteCode     = $this->inPut('inviteCode');//邀请码非必须存在
+        $sessionToken   = $this->inPut('sessionToken');//PC扫码使用，非必须存在
         $actor          = $this->user;
 
         $this->db->beginTransaction();
@@ -89,11 +55,6 @@ class WechatH5LoginController extends AuthBaseController
         } catch (Exception $e) {
             $this->db->rollBack();
         }
-        $wechatlog = app('wechatLog');
-        $wechatlog->info('wechat_info', [
-            'wechat_user'   => $wechatUser == null ? '': $wechatUser->toArray(),
-            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray()
-        ]);
 
         if (!$wechatUser || !$wechatUser->user) {
             // 更新微信用户信息
@@ -116,7 +77,7 @@ class WechatH5LoginController extends AuthBaseController
                 $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
                 $data['register_reason']    = trans('user.register_by_wechat_h5');
                 $user = $this->bus->dispatch(
-                    new AutoRegisterUser($request->getAttribute('actor'), $data)
+                    new AutoRegisterUser($this->request->getAttribute('actor'), $data)
                 );
                 $wechatUser->user_id = $user->id;
                 // 先设置关系，为了同步微信头像
