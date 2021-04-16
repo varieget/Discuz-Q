@@ -25,12 +25,15 @@ use App\Models\ThreadVideo;
 class VoiceBusi extends TomBaseBusi
 {
 
+    private $voiceCount = 1;
+
     public function create()
     {
         $input = $this->verification();
 
         $threadVideo = ThreadVideo::query()
-            ->whereIn('id',$input['audioIds'])
+            ->whereIn('id',$input['voiceIds'])
+            ->where('user_id',$this->user['id'])
             ->where('type',ThreadVideo::TYPE_OF_AUDIO)
             ->get()
             ->toArray();
@@ -49,10 +52,10 @@ class VoiceBusi extends TomBaseBusi
 
     public function delete()
     {
-        $deleteId = $this->getParams('deleteId');
+        $voiceId = $this->getParams('voiceId');
 
         $threadTom = ThreadTom::query()
-            ->where('id',$deleteId)
+            ->where('id',$voiceId)
             ->update(['status'=>-1]);
 
         if ($threadTom) {
@@ -65,10 +68,10 @@ class VoiceBusi extends TomBaseBusi
     public function verification()
     {
         $input = [
-            'audioIds' => $this->getParams('audioIds'),
+            'voiceIds' => $this->getParams('voiceIds'),
         ];
         $rules = [
-            'audioIds' => 'required|array',
+            'voiceIds' => 'required|array|min:1|max:'.$this->voiceCount,
         ];
         $this->dzqValidate($input, $rules);
 

@@ -25,12 +25,15 @@ use App\Models\ThreadTom;
 class VideoBusi extends TomBaseBusi
 {
 
+    private $videoCount = 1;
+
     public function create()
     {
         $input = $this->verification();
 
         $threadVideo = ThreadVideo::query()
             ->whereIn('id',$input['videoIds'])
+            ->where('user_id',$this->user['id'])
             ->where('type',ThreadVideo::TYPE_OF_VIDEO)
             ->get()
             ->toArray();
@@ -48,10 +51,10 @@ class VideoBusi extends TomBaseBusi
 
     public function delete()
     {
-        $deleteId = $this->getParams('deleteId');
+        $videoId = $this->getParams('videoId');
 
         $threadTom = ThreadTom::query()
-            ->where('id',$deleteId)
+            ->where('id',$videoId)
             ->update(['status'=>-1]);
 
         if ($threadTom) {
@@ -67,7 +70,7 @@ class VideoBusi extends TomBaseBusi
             'videoIds' => $this->getParams('videoIds'),
         ];
         $rules = [
-            'videoIds' => 'required|array',
+            'videoIds' => 'required|array|min:1|max:'.$this->videoCount,
         ];
         $this->dzqValidate($input, $rules);
 
