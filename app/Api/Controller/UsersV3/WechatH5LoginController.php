@@ -28,19 +28,11 @@ use App\Models\User;
 use App\Models\UserWechat;
 use App\Notifications\Messages\Wechat\RegisterWechatMessage;
 use App\Notifications\System;
-use App\Settings\SettingsRepository;
-use App\User\Bound;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Contracts\Socialite\Factory;
 use Exception;
-use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Events\Dispatcher as Events;
-use Illuminate\Contracts\Validation\Factory as ValidationFactory;
-use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-class WechatH5LoginController extends AuthBaseController
+class WechatH5LoginController extends AbstractWechatH5LoginBaseController
 {
     use AssertPermissionTrait;
     protected $socialite;
@@ -116,7 +108,7 @@ class WechatH5LoginController extends AuthBaseController
                 $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
                 $data['register_reason']    = trans('user.register_by_wechat_h5');
                 $user = $this->bus->dispatch(
-                    new AutoRegisterUser($request->getAttribute('actor'), $data)
+                    new AutoRegisterUser($this->request->getAttribute('actor'), $data)
                 );
                 $wechatUser->user_id = $user->id;
                 // 先设置关系，为了同步微信头像
