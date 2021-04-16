@@ -110,6 +110,8 @@ class ThreadListController extends DzqController
                 'categoryId' => $thread['category_id'],
                 'title' => $thread['title'],
                 'position' => $position,
+                'price' => $thread['price'],
+                'attachmentPrice' => $thread['attachment_price'],
                 'isEssence' => $thread['is_essence'],
                 'content' => $content
             ];

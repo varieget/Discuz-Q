@@ -64,6 +64,8 @@ class ThreadDetailController extends DzqController
                 'address' => $thread['address'],
                 'location' => $thread['location']
             ],
+            'price' => $thread['price'],
+            'attachmentPrice' => $thread['attachment_price'],
             'isSticky' => $thread['is_sticky'],
             'isEssence' => $thread['is_essence'],
             'postCount' => $thread['post_count'],
