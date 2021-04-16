@@ -147,7 +147,7 @@ class CreateThreadController extends DzqController
     private function getResult($thread, $tomJsons)
     {
         return [
-            'threadId'=>$thread['id'],
+            'threadId' => $thread['id'],
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
