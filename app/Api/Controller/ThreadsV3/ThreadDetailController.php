@@ -19,7 +19,9 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
 use App\Models\GroupUser;
+use App\Models\Order;
 use App\Models\Post;
+use App\Models\PostUser;
 use App\Models\Thread;
 use App\Models\ThreadHot;
 use App\Models\ThreadText;
@@ -49,10 +51,11 @@ class ThreadDetailController extends DzqController
         $groups = GroupUser::instance()->getGroupInfo([$user->id]);
 
         $groups = array_column($groups, null, 'user_id');
-
         $result = [
             'user' => ['userName' => '匿名用户'],
             'group' => null,
+            'likeReward' => $this->getLikeReward($thread, $post),
+            'threadId' => $threadId,
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
             'position' => [
@@ -63,23 +66,57 @@ class ThreadDetailController extends DzqController
             ],
             'isSticky' => $thread['is_sticky'],
             'isEssence' => $thread['is_essence'],
-            'isAnonymous' => $thread['is_anonymous'],
-            'isSite' => $thread['is_site'],
             'postCount' => $thread['post_count'],
             'viewCount' => $thread['view_count'],
             'rewardedCount' => $thread['rewarded_count'],
             'paidCount' => $thread['paid_count'],
+            'shareCount' => $thread['share_count'],
             'postedAt' => $thread['posted_at'],
             'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
             'content' => $this->getContent($thread, $post)
         ];
+        $linkString = '';
         if (!empty($groups[$thread['user_id']])) {
             $result['group'] = $this->getGroupInfo($groups[$thread['user_id']]);
         }
         if ((!$thread['is_anonymous'] && !empty($user)) || $this->user->id == $thread['user_id']) {
             $result['user'] = $this->getUserInfo($user);
         }
+        $linkString .= ($result['title'] . $result['content']['text']);
+        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
+        $result['title'] = str_replace($search, $replace, $result['title']);
+        $result['content']['text'] = str_replace($search, $replace, $result['content']['text']);
         $this->outPut(ResponseCode::SUCCESS, '', $result);
+    }
+
+    private function getLikeReward($thread, $post)
+    {
+        $threadId = $thread['id'];
+        $postId = $post['id'];
+        $postUser = PostUser::query()->where('post_id', $postId)->orderByDesc('created_at');
+        $orderUser = Order::query()->where(['thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])->orderByDesc('created_at');
+        $postUser = $postUser->select('user_id', 'created_at')->limit(2)->get()->toArray();
+        $orderUser = $orderUser->select('user_id', 'created_at')->limit(2)->get()->toArray();
+        $mUser = array_merge($postUser, $orderUser);
+        usort($mUser, function ($a, $b) {
+            return strtotime($a['created_at']) < strtotime($b['created_at']);
+        });
+        $mUser = array_slice($mUser, 0, 2);
+        $userIds = array_column($mUser, 'user_id');
+        $users = [];
+        $usersObj = User::query()->whereIn('id', $userIds)->get();
+        foreach ($usersObj as $item) {
+            $users[] = [
+                'userId' => $item->id,
+                'avatar' => $item->avatar,
+                'userName' => $item->username
+            ];
+        }
+        return [
+            'users' => $users,
+            'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
+            'shareCount' => $thread['share_count']
+        ];
     }
 
     private function getGroupInfo($group)
@@ -115,7 +152,7 @@ class ThreadDetailController extends DzqController
             ->where([
                 'thread_id' => $threadId,
                 'status' => ThreadTom::STATUS_ACTIVE
-            ])->get()->toArray();
+            ])->orderBy('key')->get()->toArray();
         $tomContent = [];
         foreach ($threadTom as $item) {
             $tomContent['indexes'][$item['key']] = [
