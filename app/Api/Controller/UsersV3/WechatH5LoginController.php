@@ -28,57 +28,14 @@ use App\Models\User;
 use App\Models\UserWechat;
 use App\Notifications\Messages\Wechat\RegisterWechatMessage;
 use App\Notifications\System;
-use App\Settings\SettingsRepository;
-use App\User\Bound;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Guest;
-use Discuz\Base\DzqController;
-use Discuz\Contracts\Socialite\Factory;
 use Exception;
-use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Cache\Repository;
-use Illuminate\Contracts\Events\Dispatcher as Events;
-use Illuminate\Contracts\Validation\Factory as ValidationFactory;
-use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-class WechatH5LoginController extends AuthBaseController
+class WechatH5LoginController extends AbstractWechatH5LoginBaseController
 {
-    use AssertPermissionTrait;
-    protected $socialite;
-    protected $bus;
-    protected $cache;
-    protected $validation;
-    protected $events;
-    protected $settings;
-    protected $bound;
-    protected $db;
-
-    public function __construct(
-        Factory             $socialite,
-        Dispatcher          $bus,
-        Repository          $cache,
-        ValidationFactory   $validation,
-        Events              $events,
-        SettingsRepository  $settings,
-        Bound               $bound,
-        ConnectionInterface $db
-    ){
-        $this->socialite    = $socialite;
-        $this->bus          = $bus;
-        $this->cache        = $cache;
-        $this->validation   = $validation;
-        $this->events       = $events;
-        $this->settings     = $settings;
-        $this->bound        = $bound;
-        $this->db           = $db;
-    }
-
     public function main()
     {
-        $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('sessionId');
 //        $state          = $this->inPut('state');
         $inviteCode     = $this->inPut('inviteCode');
 //        $register       = empty($this->inPut('register')) ? 0 :$this->inPut('register');
@@ -87,20 +44,8 @@ class WechatH5LoginController extends AuthBaseController
 //        $rebind         = empty($this->inPut('rebind')) ? 0 : $this->inPut('rebind');
         $rebind         = 0;
 
-        $request = $this->request->withAttribute('session', new SessionToken())->withAttribute('sessionId', $sessionId);
-
-        $this->validation->make([
-                                    'code'      => $code,
-                                    'sessionId' => $sessionId,
-                                ], [
-                                    'code'      => 'required',
-                                    'sessionId' => 'required'
-                                ])->validate();
-
-        $this->socialite->setRequest($request);
-
-        $driver = $this->socialite->driver($this->getDriver());
-        $wxuser = $driver->user();
+        /**  获取用户微信基础信息*/
+        $wxuser = $this->getWxUser();
 
         /** @var User $actor */
         $actor = $this->user;
@@ -123,10 +68,7 @@ class WechatH5LoginController extends AuthBaseController
             'rebind'        => $rebind,
             'register'      => $register
         ]);
-        // 换绑时直接返回token供后续操作使用
-//        if ($rebind) {
-//            $this->error($wxuser, new Guest(), $wechatUser, $rebind, $sessionToken);
-//        }
+
 
         if (!$wechatUser || !$wechatUser->user) {
             // 更新微信用户信息
@@ -149,7 +91,7 @@ class WechatH5LoginController extends AuthBaseController
                 $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
                 $data['register_reason']    = trans('user.register_by_wechat_h5');
                 $user = $this->bus->dispatch(
-                    new AutoRegisterUser($request->getAttribute('actor'), $data)
+                    new AutoRegisterUser($this->request->getAttribute('actor'), $data)
                 );
                 $wechatUser->user_id = $user->id;
                 // 先设置关系，为了同步微信头像
@@ -278,13 +220,5 @@ class WechatH5LoginController extends AuthBaseController
         return $data;
     }
 
-    protected function getDriver()
-    {
-        return 'wechat';
-    }
 
-    protected function getType()
-    {
-        return 'mp_openid';
-    }
 }
