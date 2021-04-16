@@ -72,3 +72,15 @@ $route->post('/thread.delete','thread.delete',ApiController\ThreadsV3\DeleteThre
 $route->post('/thread.update','thread.update',ApiController\ThreadsV3\UpdateThreadController::class);
 $route->post('/tom.delete','tom.delete',ApiController\ThreadsV3\DeleteTomController::class);
 $route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomController::class);
+
+$route->post('/thread.share','thread.share',ApiController\ThreadsV3\UpdateThreadShareController::class);
+$route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
+$route->get('/attachments', 'attachments.resource', ApiController\AttachmentV3\ResourceAttachmentController::class);
+$route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
+$route->get('/emoji', 'emoji.list', ApiController\Emoji\ListEmojiController::class);
+$route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
+$route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
+$route->get('/topics.list', 'topics.list', ApiController\TopicV3\ListTopicController::class);
+$route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
+$route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);
+$route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
