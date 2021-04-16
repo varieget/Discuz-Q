@@ -32,9 +32,9 @@ class TomConfig
             'service' => \App\Modules\ThreadTom\Busi\ImageBusi::class
         ],
         102 => [
-            'enName' => 'VOICE',
+            'enName' => 'AUDIO',
             'desc' => '语音',
-            'service' => \App\Modules\ThreadTom\Busi\VoiceBusi::class
+            'service' => \App\Modules\ThreadTom\Busi\AudioBusi::class
         ],
         103 => [
             'enName' => 'VIDEO',
@@ -62,14 +62,9 @@ class TomConfig
             'service' => \App\Modules\ThreadTom\Busi\RewardBusi::class
         ],
         108 => [
-            'enName' => 'VOTE',
-            'desc' => '投票',
-            'service' => \App\Modules\ThreadTom\Busi\VoteBusi::class
-        ],
-        109 => [
-            'enName' => 'QUEUE',
-            'desc' => '排队接龙',
-            'service' => \App\Modules\ThreadTom\Busi\QueueBusi::class
+            'enName' => 'DOC',
+            'desc' => '文件附件',
+            'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
         ]
     ];
 }

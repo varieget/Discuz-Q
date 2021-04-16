@@ -65,7 +65,7 @@ trait TomTrait
                     }
                 }
             }
-            if (isset($v['tomId']) && isset($v['operation']) && isset($v['body'])) {
+            if (isset($v['tomId']) && isset($v['operation'])) {
                 if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
                     $tomId = $v['tomId'];
                     $op = $v['operation'];

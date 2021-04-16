@@ -141,18 +141,25 @@ class CreateThreadController extends DzqController
         //添加tag类型
         ThreadTag::query()->insert($tags);
 
-        return $this->getResult($thread, $tomJsons);
+        return $this->getResult($thread, $post, $tomJsons);
     }
 
-    private function getResult($thread, $tomJsons)
+    private function getResult($thread, $post, $tomJsons)
     {
+
+        $linkString = $thread['title'] . $post['content'];
+        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
+        $content = [
+            'text' => str_replace($search, $replace, $post['content']),
+            'indexes' => $this->tomDispatcher($tomJsons, $this->SELECT_FUNC)
+        ];
         return [
             'threadId' => $thread['id'],
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
-            'title' => $thread['title'],
+            'title' => str_replace($search, $replace, $thread['title']),
             'price' => $thread['price'],
-            'attachmentPrice' => $thread['attachmentPrice'],
+            'attachmentPrice' => $thread['attachment_price'],
             'position' => [
                 'longitude' => $thread['longitude'],
                 'latitude' => $thread['latitude'],
@@ -160,7 +167,7 @@ class CreateThreadController extends DzqController
                 'location' => $thread['location']
             ],
             'isAnonymous' => $thread['is_anonymous'],
-            'content' => $this->tomDispatcher($tomJsons, $this->SELECT_FUNC)
+            'content' => $content
         ];
     }
 

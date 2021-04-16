@@ -84,7 +84,7 @@ class ThreadDetailController extends DzqController
         if ((!$thread['is_anonymous'] && !empty($user)) || $this->user->id == $thread['user_id']) {
             $result['user'] = $this->getUserInfo($user);
         }
-        $linkString .= ($result['title'] . $result['content']['text']);
+        $linkString = $result['title'] . $result['content']['text'];
         list($search, $replace) = Thread::instance()->getReplaceString($linkString);
         $result['title'] = str_replace($search, $replace, $result['title']);
         $result['content']['text'] = str_replace($search, $replace, $result['content']['text']);
@@ -163,7 +163,7 @@ class ThreadDetailController extends DzqController
                 'body' => json_decode($item['value'], true)
             ];
         }
-        $tomJsons = $this->tomDispatcher($tomContent, $this->SELECT_FUNC);
+        $tomJsons = $this->tomDispatcher($tomContent, $this->SELECT_FUNC,$threadId);
         $content = [
             'text' => $post['content'],
             'indexes' => $tomJsons

@@ -39,8 +39,10 @@ abstract class TomBaseBusi
     public $threadId = null;
     public $user = null;
 
+    public $app = null;
     public function __construct(User $user,$threadId, $tomId, $operation, $body)
     {
+        $this->app = app();
         $this->operation = $operation;
         $this->body = $body;
         $this->tomId = $tomId;
@@ -120,6 +122,22 @@ abstract class TomBaseBusi
         } catch (\Exception $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->getMessage());
         }
+    }
+    public function camelData($arr, $ucfirst = false)
+    {
+        if(is_object($arr) && is_callable([$arr, 'toArray']))     $arr = $arr->toArray();
+        if (!is_array($arr)) {
+            //如果非数组原样返回
+            return $arr;
+        }
+        $temp = [];
+        foreach ($arr as $key => $value) {
+            $key1 = Str::camel($key);           // foo_bar  --->  fooBar
+            if ($ucfirst) $key1 = Str::ucfirst($key1);
+            $value1 = self::camelData($value);
+            $temp[$key1] = $value1;
+        }
+        return $temp;
     }
 
 }

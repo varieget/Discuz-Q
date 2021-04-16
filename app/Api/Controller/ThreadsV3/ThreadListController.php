@@ -63,7 +63,7 @@ class ThreadListController extends DzqController
                 'threadId' => $tom['thread_id'],
                 'tomId' => $tom['tom_type'],
                 'operation' => $this->SELECT_FUNC,
-                'body' => $tom['value']
+                'body' => json_decode($tom['value'],true)
             ];
         }
         $result = [];
@@ -91,9 +91,8 @@ class ThreadListController extends DzqController
                 'indexes' => null
             ];
             if (isset($inPutToms[$threadId])) {
-                $content['indexes'] = $this->tomDispatcher($inPutToms[$threadId]);
+                $content['indexes'] = $this->tomDispatcher($inPutToms[$threadId], $this->SELECT_FUNC, $threadId);
             }
-
             $position = [
                 'longitude' => $thread['longitude'],
                 'latitude' => $thread['latitude'],
