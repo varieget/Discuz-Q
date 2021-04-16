@@ -22,7 +22,6 @@ use App\Common\ResponseCode;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
-use App\Models\ThreadText;
 use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
