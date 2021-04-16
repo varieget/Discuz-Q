@@ -34,40 +34,14 @@ use Illuminate\Support\Str;
 
 class WechatH5LoginController extends AbstractWechatH5LoginBaseController
 {
-    use AssertPermissionTrait;
-    protected $socialite;
-    protected $bus;
-    protected $validation;
-    protected $events;
-    protected $settings;
-    protected $bound;
-    protected $db;
 
-    public function __construct(
-        Factory             $socialite,
-        Dispatcher          $bus,
-        ValidationFactory   $validation,
-        Events              $events,
-        SettingsRepository  $settings,
-        Bound               $bound,
-        ConnectionInterface $db
-    ){
-        $this->socialite    = $socialite;
-        $this->bus          = $bus;
-        $this->validation   = $validation;
-        $this->events       = $events;
-        $this->settings     = $settings;
-        $this->bound        = $bound;
-        $this->db           = $db;
-    }
 
     public function main()
     {
-        $param          = $this->getWechatH5Param();
-        $request        = $param['request'];
-        $wxuser         = $param['wxuser'];
-        $inviteCode     = $this->inPut('inviteCode');
-        $sessionToken   = $this->inPut('sessionToken');//PC扫码使用
+        //获取授权后微信用户信息
+        $wxuser         = $this->getWxUser();
+        $inviteCode     = $this->inPut('inviteCode');//邀请码非必须存在
+        $sessionToken   = $this->inPut('sessionToken');//PC扫码使用，非必须存在
         $actor          = $this->user;
 
         $this->db->beginTransaction();
@@ -81,11 +55,6 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
         } catch (Exception $e) {
             $this->db->rollBack();
         }
-        $wechatlog = app('wechatLog');
-        $wechatlog->info('wechat_info', [
-            'wechat_user'   => $wechatUser == null ? '': $wechatUser->toArray(),
-            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray()
-        ]);
 
         if (!$wechatUser || !$wechatUser->user) {
             // 更新微信用户信息
