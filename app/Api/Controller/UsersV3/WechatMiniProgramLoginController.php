@@ -66,33 +66,21 @@ class WechatMiniProgramLoginController extends AuthBaseController
 
     public function main()
     {
-        $actor          = $this->user;
-        $user           = !$actor->isGuest() ? $actor : new Guest();
-        $js_code        = $this->inPut('jsCode');
-        $iv             = $this->inPut('iv');
-        $encryptedData  = $this->inPut('encryptedData');
-        $code           = $this->inPut('code');
-        $rebind         = 0;
-        $register       = 1;
-
-        $data = [   'js_code'       => $js_code,
-                    'iv'            => $iv,
-                    'encryptedData' => $encryptedData
-        ];
-        $this->dzqValidate($data,[
-            'js_code'       => 'required',
-            'iv'            => 'required',
-            'encryptedData' => 'required'
-        ]);
+        $param          = $this->getWechatMiniProgramParam();
+        $jsCode         = $param['jsCode'];
+        $iv             = $param['iv'];
+        $encryptedData  = $param['encryptedData'];
+        $user           = !$this->user->isGuest() ? $this->user : new Guest();
+        $inviteCode     = $this->inPut('inviteCode');
 
         // 绑定小程序
         $this->db->beginTransaction();
         try {
             $wechatUser = $this->bind->bindMiniprogram(
-                $js_code,
+                $jsCode,
                 $iv,
                 $encryptedData,
-                $rebind,
+                0,
                 $user,
                 true
             );
@@ -116,39 +104,28 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 );
             }
         } else {
-            //自动注册
-            if ($register) {
-                //未绑定的用户注册
-                if (!(bool)$this->settings->get('register_close')) {
-                    $this->db->rollback();
-                    $this->outPut(ResponseCode::REGISTER_CLOSE,
-                                  ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
-                    );
-                }
-
-                //注册邀请码
-                $data = array();
-                $data['code']               = $code;
-                $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
-                $data['register_reason']    = trans('user.register_by_wechat_miniprogram');
-                $user = $this->bus->dispatch(
-                    new AutoRegisterUser($this->user, $data)
-                );
-                $wechatUser->user_id = $user->id;
-                // 先设置关系再save，为了同步微信头像
-                $wechatUser->setRelation('user', $user);
-                $wechatUser->save();
-
-                $this->db->commit();
-            } else {
+            //未绑定的用户自动注册
+            if (!(bool)$this->settings->get('register_close')) {
                 $this->db->rollback();
-                $noUserException = new NoUserException();
-                $noUserException->setUser(['username' => $wechatUser->nickname, 'headimgurl'=>$wechatUser->headimgurl]);
-                $this->outPut(ResponseCode::NET_ERROR,
-                              ResponseCode::$codeMap[ResponseCode::NET_ERROR],
-                              $noUserException
+                $this->outPut(ResponseCode::REGISTER_CLOSE,
+                              ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
                 );
             }
+
+            //注册邀请码
+            $data = array();
+            $data['code']               = $inviteCode;
+            $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
+            $data['register_reason']    = trans('user.register_by_wechat_miniprogram');
+            $user = $this->bus->dispatch(
+                new AutoRegisterUser($this->user, $data)
+            );
+            $wechatUser->user_id = $user->id;
+            // 先设置关系再save，为了同步微信头像
+            $wechatUser->setRelation('user', $user);
+            $wechatUser->save();
+
+            $this->db->commit();
         }
         $this->db->commit();
 

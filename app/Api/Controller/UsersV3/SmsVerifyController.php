@@ -19,27 +19,13 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
-use Illuminate\Support\Arr;
 
 class SmsVerifyController extends AuthBaseController
 {
     public function main()
     {
-        $mobile = $this->inPut('mobile');
-        $code   = $this->inPut('code');
-
-        $data = array();
-        $data['mobile'] = $mobile;
-        $data['code']   = $code;
-        $data['ip']     = ip($this->request->getServerParams());
-        $data['port']   = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
-
-        $this->dzqValidate($data, [
-            'mobile'    => 'required',
-            'code'      => 'required'
-        ]);
-
-        $mobileCode = $this->changeMobileCodeState($mobile, 'verify', $code);
+        $param      = $this->getSmsParam('verify');
+        $mobileCode = $param['mobileCode'];
 
         if ($mobileCode->user->exists) {
             $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($mobileCode->user));

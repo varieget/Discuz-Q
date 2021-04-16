@@ -31,22 +31,14 @@ class SmsResetPwdController extends AuthBaseController
 
     public function main()
     {
-        $mobile     = $this->inPut('mobile');
-        $code       = $this->inPut('code');
-        $password   = $this->inPut('password');
-
-        $data = array();
-        $data['mobile']     = $mobile;
-        $data['code']       = $code;
-        $data['password']   = $password;
+        $param              = $this->getSmsParam('reset_pwd');
+        $mobileCode         = $param['mobileCode'];
+        $data['password']   = $this->inPut('password');
+        $password           = $data['password'];
 
         $this->dzqValidate($data, [
-            'mobile'    => 'required',
-            'code'      => 'required',
             'password'  => 'required'
         ]);
-
-        $mobileCode = $this->changeMobileCodeState($mobile, 'rebind', $code);
 
         if ($mobileCode->user && isset($password)) {
             $this->validator->valid([
