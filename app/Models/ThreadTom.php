@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Copyright (C) 2020 Tencent Cloud.
+ * Copyright (C) 2021 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +17,14 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+
 use Discuz\Base\DzqModel;
 
-/**
- * Models a thread-user state record in the database.
- *
- * @property int $user_id
- * @property int $thread_id
- * @property Carbon|null $created_at
- * @property Thread $thread
- * @property User $user
- */
-class ThreadUser extends DzqModel
+class ThreadTom extends DzqModel
 {
-    protected $table = 'thread_user';
+    protected $table = 'thread_tom';
 
+
+    const STATUS_ACTIVE = 0;
+    const STATUS_DELETE = -1;
 }
