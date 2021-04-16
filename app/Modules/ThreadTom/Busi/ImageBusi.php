@@ -25,17 +25,20 @@ use App\Models\ThreadTom;
 class ImageBusi extends TomBaseBusi
 {
 
+    private $imageCount = 9;
+
     public function create()
     {
         $input = $this->verification();
 
         $attachment = Attachment::query()
             ->whereIn('id',$input['imageIds'])
+            ->where('user_id',$this->user['id'])
             ->where('type',Attachment::TYPE_OF_IMAGE)
             ->get()
             ->toArray();
 
-        if(empty($attachment)){
+        if(empty($attachment) || count($input['imageIds']) != count($attachment)){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, ResponseCode::$codeMap[ResponseCode::RESOURCE_NOT_FOUND]);
         }
 
@@ -49,10 +52,10 @@ class ImageBusi extends TomBaseBusi
 
     public function delete()
     {
-        $deleteId = $this->getParams('deleteId');
+        $imageId = $this->getParams('imageId');
 
         $threadTom = ThreadTom::query()
-            ->where('id',$deleteId)
+            ->where('id',$imageId)
             ->update(['status'=>-1]);
 
         if ($threadTom) {
@@ -68,7 +71,7 @@ class ImageBusi extends TomBaseBusi
             'imageIds' => $this->getParams('imageIds'),
         ];
         $rules = [
-            'imageIds' => 'required|array',
+            'imageIds' => 'required|array|min:1|max:'.$this->imageCount,
         ];
         $this->dzqValidate($input, $rules);
 

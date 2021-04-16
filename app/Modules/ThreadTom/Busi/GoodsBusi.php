@@ -17,15 +17,28 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
+use App\Common\ResponseCode;
 use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\ThreadTom;
+use App\Models\PostGoods;
 
 class GoodsBusi extends TomBaseBusi
 {
 
     public function create()
     {
-        return $this->jsonReturn($this->verification());
+        $input = $this->verification();
+
+        $postGoods = PostGoods::query()
+            ->where('id',$input['goodsId'])
+            ->where('user_id',$this->user['id'])
+            ->get()
+            ->toArray();
+
+        if(empty($postGoods)){
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, ResponseCode::$codeMap[ResponseCode::RESOURCE_NOT_FOUND]);
+        }
+        return $this->jsonReturn($postGoods);
     }
 
     public function update()
@@ -35,10 +48,10 @@ class GoodsBusi extends TomBaseBusi
 
     public function delete()
     {
-        $deleteId = $this->getParams('deleteId');
+        $goodsId = $this->getParams('goodsId');
 
         $threadTom = ThreadTom::query()
-            ->where('id',$deleteId)
+            ->where('id',$goodsId)
             ->update(['status'=>-1]);
 
         if ($threadTom) {
@@ -51,26 +64,10 @@ class GoodsBusi extends TomBaseBusi
     public function verification()
     {
         $input = [
-            'platformId' => $this->getParams('platformId'),
-            'title' => $this->getParams('title'),
-            'imagePath' => $this->getParams('imagePath'),
-            'price' => $this->getParams('price'),
-            'type' => $this->getParams('type'),
-            'typeName' => $this->getParams('typeName'),
-            'status' => $this->getParams('status'),
-            'readyContent' => $this->getParams('readyContent'),
-            'detailContent' => $this->getParams('detailContent'),
+            'goodsId' => $this->getParams('goodsId'),
         ];
         $rules = [
-            'platformId' => 'required|int',
-            'title' => 'required|max:200',
-            'imagePath' => 'required|max:250',
-            'price' => 'required:max:15',
-            'type' => 'required|int',
-            'typeName' => 'required|max:250',
-            'status' => 'required|int',
-            'readyContent' => 'required|max:250',
-            'detailContent' => 'required|max:250',
+            'goodsId' => 'required|int',
         ];
         $this->dzqValidate($input, $rules);
 

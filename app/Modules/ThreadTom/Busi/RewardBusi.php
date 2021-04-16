@@ -17,28 +17,58 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
-
+use App\Common\ResponseCode;
 use App\Modules\ThreadTom\TomBaseBusi;
+use App\Models\Order;
+use App\Models\ThreadReward;
 use App\Models\ThreadTom;
 
 class RewardBusi extends TomBaseBusi
 {
     public function create()
     {
-        return $this->jsonReturn($this->verification());
-    }
+        $input = $this->verification();
 
-    public function update()
-    {
-        return $this->create();
+        if(strtotime($input['expiredAt']) < time()+24*60*60){
+            $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
+        }
+
+        $order = Order::query()
+            ->where('order_sn',$input['orderId'])
+            ->first(['id','thread_id','user_id','status','amount','expired_at']);
+
+        if (!empty($order['thread_id']) ||
+            $order['user_id'] != $this->user['id'] ||
+            $order['status'] != Order::ORDER_STATUS_PAID ||
+            strtotime($order['expired_at']) < time()||
+            $order['amount'] != $input['price']) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
+        }
+
+        $order->thread_id = $this->threadId;
+        $order->save();
+
+        if (empty($order['thread_id'])) {
+            $this->outPut(ResponseCode::NOT_FOUND_USER, ResponseCode::$codeMap[ResponseCode::NOT_FOUND_USER]);
+        }
+
+        $threadReward = new ThreadReward;
+        $threadReward->thread_id = $this->threadId;
+        $threadReward->type = $input['type'];
+        $threadReward->user_id = $this->user['id'];
+        $threadReward->money = $input['price'];
+        $threadReward->expired_at = $input['expiredAt'];
+        $threadReward->save();
+
+        return $this->jsonReturn($threadReward);
     }
 
     public function delete()
     {
-        $deleteId = $this->getParams('deleteId');
+        $rewardId = $this->getParams('rewardId');
 
         $threadTom = ThreadTom::query()
-            ->where('id',$deleteId)
+            ->where('id',$rewardId)
             ->update(['status'=>-1]);
 
         if ($threadTom) {
@@ -50,28 +80,16 @@ class RewardBusi extends TomBaseBusi
 
     public function verification(){
         $input = [
-            'threadId' => $this->getParams('threadId'),
-            'postId' => $this->getParams('postId'),
+            'orderId' => $this->getParams('orderId'),
+            'price' => $this->getParams('price'),
             'type' => $this->getParams('type'),
-            'userId' => $this->getParams('userId'),
-            'answerId' => $this->getParams('answerId'),
-            'money' => $this->getParams('money'),
-            'remainMoney' => $this->getParams('remainMoney'),
-            'createdAt' => $this->getParams('createdAt'),
-            'updatedAt' => $this->getParams('updatedAt'),
             'expiredAt' => $this->getParams('expiredAt'),
         ];
         $rules = [
-            'threadId' => 'required|int',
-            'postId' => 'required|int',
-            'type' => 'required|int',
-            'userId' => 'required|int',
-            'answerId' => 'required|int',
-            'money' => 'required|max:10',
-            'remainMoney' => 'required|max:10',
-            'createdAt' => 'date',
-            'updatedAt' => 'date',
-            'expiredAt' => 'required|date',
+            'orderId' => 'required|numeric',
+            'price' => 'required|numeric|min:0.01',
+            'type' => 'required|integer|in:0,1',
+            'expiredAt' => 'required|date'
         ];
         $this->dzqValidate($input, $rules);
 

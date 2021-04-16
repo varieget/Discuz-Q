@@ -17,27 +17,70 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
+use App\Common\ResponseCode;
+use App\Models\User;
+use App\Models\Order;
 use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\ThreadTom;
+use App\Models\Question;
 
 class QABusi extends TomBaseBusi
 {
+
+    private $qaExpiredTime = 7;
+
     public function create()
     {
-        return $this->jsonReturn($this->verification());
+        $input = $this->verification();
+
+        if ($input['beUserId'] == $this->user['id']) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
+        }
+
+        $inUser = User::query('id')->where('id',$input['beUserId'])->count();
+        if (empty($inUser)){
+            $this->outPut(ResponseCode::NOT_FOUND_USER, ResponseCode::$codeMap[ResponseCode::NOT_FOUND_USER]);
+        }
+
+        $order = Order::query()
+            ->where('order_sn',$input['orderId'])
+            ->first(['id','thread_id','user_id','status','amount','expired_at']);
+
+        if (!empty($order['thread_id']) ||
+            $order['user_id'] != $this->user['id'] ||
+            $order['status'] != Order::ORDER_STATUS_PAID ||
+            strtotime($order['expired_at']) < time()||
+            $order['amount'] != $input['price']) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
+        }
+
+        $order->thread_id = $this->threadId;
+        $order->save();
+
+        if (empty($order['thread_id'])) {
+            $this->outPut(ResponseCode::NOT_FOUND_USER, ResponseCode::$codeMap[ResponseCode::NOT_FOUND_USER]);
+        }
+
+        $question = new Question;
+        $question->thread_id = $this->threadId;
+        $question->user_id = $this->user['id'];
+        $question->be_user_id = $input['beUserId'];
+        $question->price = $input['price'];
+        $question->is_onlooker = $input['isOnlooker'];
+        $question->is_answer = Question::TYPE_OF_UNANSWERED;
+        $question->expired_at = date('Y-m-d H:i:s',strtotime("+{$this->qaExpiredTime} day"));
+        $question->save();
+
+        return $this->jsonReturn($question);
     }
 
-    public function update()
-    {
-        return $this->create();
-    }
 
     public function delete()
     {
-        $deleteId = $this->getParams('deleteId');
+        $qaId = $this->getParams('qaId');
 
         $threadTom = ThreadTom::query()
-            ->where('id',$deleteId)
+            ->where('id',$qaId)
             ->update(['status'=>-1]);
 
         if ($threadTom) {
@@ -47,30 +90,21 @@ class QABusi extends TomBaseBusi
         return false;
     }
 
-    public function verification(){
+    public function verification()
+    {
         $input = [
-            'threadId' => $this->getParams('thread_id'),
-            'postId' => $this->getParams('post_id'),
-            'type' => $this->getParams('type'),
-            'userId' => $this->getParams('user_id'),
-            'answerId' => $this->getParams('answer_id'),
-            'money' => $this->getParams('money'),
-            'remainMoney' => $this->getParams('remain_money'),
-            'createdAt' => $this->getParams('created_at'),
-            'updatedAt' => $this->getParams('updatedAt'),
-            'expiredAt' => $this->getParams('expired_at'),
+            'beUserId' => $this->getParams('beUserId'),
+            'isOnlooker' => $this->getParams('isOnlooker'),
+            'orderId' => $this->getParams('orderId'),
+            'price' => $this->getParams('price'),
+            'type' => $this->getParams('type')
         ];
         $rules = [
-            'threadId' => 'required|int',
-            'postId' => 'required|int',
-            'type' => 'required|int',
-            'userId' => 'required|int',
-            'answerId' => 'required|int',
-            'money' => 'required',
-            'remainMoney' => 'required',
-            'createdAt' => 'date',
-            'updatedAt' => 'date',
-            'expiredAt' => 'required|date',
+            'beUserId' => 'required|int',
+            'isOnlooker' => 'required|boolean',
+            'orderId' => 'required|numeric',
+            'price' => 'required|numeric|min:0.01',
+            'type' => 'required|integer|in:0,1'
         ];
         $this->dzqValidate($input, $rules);
 
