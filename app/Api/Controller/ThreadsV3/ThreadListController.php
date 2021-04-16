@@ -67,6 +67,7 @@ class ThreadListController extends DzqController
             ];
         }
         $result = [];
+        $linkString = '';
         foreach ($threadList as $thread) {
             $userId = $thread['user_id'];
             $user = [
@@ -81,13 +82,18 @@ class ThreadListController extends DzqController
             }
             $threadId = $thread['id'];
             $post = $postsByThreadId[$thread['id']];
+            $textCover = false;
+            if (mb_strlen($post['content']) >= 200) {
+                $textCover = true;
+            }
             $content = [
-                'text' => Post::instance()->getContentSummary($post),
+                'text' => $textCover ? $post['content'] : Post::instance()->getContentSummary($post),
                 'indexes' => null
             ];
             if (isset($inPutToms[$threadId])) {
                 $content['indexes'] = $this->tomDispatcher($inPutToms[$threadId]);
             }
+
             $position = [
                 'longitude' => $thread['longitude'],
                 'latitude' => $thread['latitude'],
@@ -99,6 +105,7 @@ class ThreadListController extends DzqController
                 'group' => $group,
                 'likeReward' => $this->getLikeReward($thread, $post),
                 'threadId' => $threadId,
+                'textCover' => $textCover,
                 'userId' => $thread['user_id'],
                 'categoryId' => $thread['category_id'],
                 'title' => $thread['title'],
@@ -106,6 +113,12 @@ class ThreadListController extends DzqController
                 'isEssence' => $thread['is_essence'],
                 'content' => $content
             ];
+            $linkString .= ($thread['title'] . $post['content']);
+        }
+        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
+        foreach ($result as &$item) {
+            $item['title'] = str_replace($search, $replace, $item['title']);
+            $item['content']['text'] = str_replace($search, $replace, $item['content']['text']);
         }
         $threads['pageData'] = $result;
         $this->outPut(0, '', $threads);

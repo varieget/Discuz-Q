@@ -32,5 +32,6 @@ use Discuz\Base\DzqModel;
  */
 class ThreadUser extends DzqModel
 {
+    protected $table = 'thread_user';
 
 }
