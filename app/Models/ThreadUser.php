@@ -32,8 +32,5 @@ use Discuz\Base\DzqModel;
  */
 class ThreadUser extends DzqModel
 {
-    //收藏
-    const TYPE_FAVOR = 0;
-    //点赞
-    const TYPE_LIKE = 1;
+
 }
