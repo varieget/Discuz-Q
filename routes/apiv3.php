@@ -61,5 +61,14 @@ $route->get('/users/mobilebrowser/wechat/miniprogram.bind', 'mobilebrowser.wecha
 //登录页设置昵称
 $route->post('/users/nickname.set', 'users.nickname.set', ApiController\UsersV3\NicknameSettingController::class);
 
-
-
+//帖子查询
+$route->get('/thread.detail','thread.detail',ApiController\ThreadsV3\ThreadDetailController::class);
+$route->get('/thread.list','thread.list',ApiController\ThreadsV3\ThreadListController::class);
+$route->get('/thread.stick','thread.stick',ApiController\ThreadsV3\ThreadStickController::class);
+$route->get('/thread.likedusers','thread.likedusers',ApiController\ThreadsV3\ThreadLikedUsersController::class);
+//帖子变更
+$route->post('/thread.create','thread.create',ApiController\ThreadsV3\CreateThreadController::class);
+$route->post('/thread.delete','thread.delete',ApiController\ThreadsV3\DeleteThreadController::class);
+$route->post('/thread.update','thread.update',ApiController\ThreadsV3\UpdateThreadController::class);
+$route->post('/tom.delete','tom.delete',ApiController\ThreadsV3\DeleteTomController::class);
+$route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomController::class);
