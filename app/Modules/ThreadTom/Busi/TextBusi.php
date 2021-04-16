@@ -24,9 +24,7 @@ class TextBusi extends TomBaseBusi
 {
     public function create()
     {
-        $input = $this->verification();
-
-        return $this->jsonReturn($input);
+        return $this->jsonReturn($this->verification());
     }
 
     public function update()
@@ -36,10 +34,10 @@ class TextBusi extends TomBaseBusi
 
     public function delete()
     {
-        $deleteId = $this->getParams('deleteId');
+        $textId = $this->getParams('textId');
 
         $threadTom = ThreadTom::query()
-            ->where('id',$deleteId)
+            ->where('id',$textId)
             ->update(['status'=>-1]);
 
         if ($threadTom) {
@@ -52,21 +50,9 @@ class TextBusi extends TomBaseBusi
     public function verification(){
         $input = [
             'content' => $this->getParams('content'),
-            'summaryText' => $this->getParams('summaryText'),
-            'summary' => $this->getParams('summary'),
-            'parseContentHtml' => $this->getParams('parseContentHtml'),
-            'contentHtml' => $this->getParams('contentHtml'),
-            'createdAt' => $this->getParams('createdAt'),
-            'updatedAt' => $this->getParams('updatedAt'),
         ];
         $rules = [
-            'content' => 'required|max:5000',
-            'summaryText' => 'required|max:5000',
-            'summary' => 'required|max:5000',
-            'parseContentHtml' => 'required|max:5000',
-            'contentHtml' => 'required|max:5000',
-            'createdAt' => 'date',
-            'updatedAt' => 'date',
+            'content' => 'required|min:1|max:5000',
         ];
         $this->dzqValidate($input, $rules);
 
