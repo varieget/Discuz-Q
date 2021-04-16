@@ -52,4 +52,35 @@ class Bound
 
         return $accessToken;
     }
+
+    /**
+     *
+     * @param $sessionToken
+     */
+    public function bindVoid($sessionToken, $wxuser)
+    {
+        $token = SessionToken::query()->where('token', $sessionToken)->first();
+        $paylod['bind'] = true;
+        $paylod['wxuser'] = $wxuser;
+        if(! empty($token)) {
+            /** @var SessionToken $token */
+            $token->payload = $paylod;
+            $token->save();
+        }
+    }
+
+    /**
+     * @param $sessionToken
+     */
+    public function rebindVoid($sessionToken, $wxuser)
+    {
+        $token = SessionToken::query()->where('token', $sessionToken)->first();
+        $paylod['rebind'] = true;
+        $paylod['wxuser'] = $wxuser;
+        if(! empty($token)) {
+            /** @var SessionToken $token */
+            $token->payload = $paylod;
+            $token->save();
+        }
+    }
 }

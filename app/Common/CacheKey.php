@@ -47,4 +47,9 @@ class CacheKey
 
     // 存储小程序通知模板数据
     public const NOTICE_MINI_PROGRAM_TEMPLATES = 'notice_mini_program_templates';
+    public const AUTH_USER_PREFIX = 'auth_user_';
+
+    public const CHECK_PAID_GROUP = 'check_paid_group_';
+
+    public const SETTINGS = 'settings';
 }

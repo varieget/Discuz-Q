@@ -18,8 +18,11 @@
 
 namespace App\Listeners\User;
 
+use App\Common\ResponseCode;
+use Discuz\Common\Utils;
 use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqController;
 use Discuz\Http\DiscuzResponseFactory;
 
 class BanLogin
@@ -29,9 +32,11 @@ class BanLogin
         $user = $event->user;
         switch ($user->status) {
             case 1:
+                Utils::outPut(ResponseCode::UNAUTHORIZED,ResponseCode::$codeMap[ResponseCode::UNAUTHORIZED]);
                 throw new PermissionDeniedException('ban_user');
                 break;
             case 3:
+                Utils::outPut(ResponseCode::VALIDATE_REJECT,ResponseCode::$codeMap[ResponseCode::VALIDATE_REJECT],User::getUserReject($user->id));
                 $response = [
                     'errors' => [
                         [
@@ -45,6 +50,7 @@ class BanLogin
 //                throw new PermissionDeniedException('validate_reject');
                 break;
             case 4:
+                Utils::outPut(ResponseCode::VALIDATE_IGNORE,ResponseCode::$codeMap[ResponseCode::VALIDATE_IGNORE]);
                 throw new PermissionDeniedException('validate_ignore');
                 break;
         }

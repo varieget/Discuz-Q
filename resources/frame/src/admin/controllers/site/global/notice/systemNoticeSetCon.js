@@ -93,7 +93,6 @@ export default {
     handleError(item) {
       if (item.is_error === 1) {
         let json = item.error_msg;
-        let str = JSON.stringify(json.send_build) || '';
 
         this.$alert(`
           <div class="notice_error_info">
@@ -103,10 +102,6 @@ export default {
           <div class="notice_error_info">
             <div class="notice_error_title">Message</div>
             <div class="notice_error_message">${json.err_msg}</div>
-          </div>
-          <div class="notice_error_info">
-            <div class="notice_error_title">SendData</div>
-            <div class="notice_error_message">${str}</div>
           </div>`,
           `${json.type_name}（${item.type}）`, {
           dangerouslyUseHTMLString: true,

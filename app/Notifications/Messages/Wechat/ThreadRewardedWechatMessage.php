@@ -83,10 +83,11 @@ class ThreadRewardedWechatMessage extends SimpleMessage
          * @parem $content
          */
         $this->setTemplateData([
-            '{$username}'           => $actorName,
+            '{$username}'            => $actorName,
             '{$order_type_name}'     => $orderName,
             '{$actual_amount}'       => $actualAmount,
             '{$content}'             => $this->strWords($message),
+            '{$thread_id}'           => $threadId
         ]);
         // build data
         $expand = [

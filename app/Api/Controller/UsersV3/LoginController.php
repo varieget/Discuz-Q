@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +16,10 @@
  * limitations under the License.
  */
 
-namespace App\Console\Commands;
+namespace App\Api\Controller\UsersV3;
 
 
-use Discuz\Base\DzqCommand;
-
-class ThreadObjectCommand extends DzqCommand
+class LoginController extends AbstractLoginBaseController
 {
-
-    protected function main()
-    {
-        // TODO: Implement main() method.
-    }
+    protected  $type = 'username_login';
 }

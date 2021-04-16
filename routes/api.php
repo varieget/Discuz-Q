@@ -341,10 +341,9 @@ $route->delete('/dialog/{id}', 'dialog.delete', ApiController\Dialog\DeleteDialo
 */
 
 $route->post('/reports', 'reports.create', ApiController\Report\CreateReportsController::class);
+$route->get('/reports', 'reports.list', ApiController\Report\ListReportsController::class);
 $route->patch('/reports/batch', 'reports.batchUpdate', ApiController\Report\BatchUpdateReportsController::class);
 $route->delete('/reports/batch/{ids}', 'reports.batchDelete', ApiController\Report\BatchDeleteReportsController::class);
-
-$route->get('/reports', 'reports.list', ApiController\Report\ListReportsController::class);
 
 /*
 |--------------------------------------------------------------------------
@@ -466,8 +465,16 @@ $route->get('/sticks.v2', 'sticks.v2', ApiController\Threads\ListStickThreadsV2C
 $route->get('/categories.v2', 'categories.v2', ApiController\Category\ListCategoriesV2Controller::class);
 
 $route->get('/threads.detail.v2', 'threads.detail.v2', ApiController\Threads\ResourceThreadV2Controller::class);
+$route->post('/thread.v2', 'threads.create.v2', ApiController\Threads\CreateThreadV2Controller::class);
+$route->post('/threads/update.v2', 'threads.update.v2', ApiController\Threads\UpdateThreadV2Controller::class);
 
 $route->get('/posts.v2', 'posts.v2', ApiController\Posts\ListPostsV2Controller::class);
+$route->post('/posts.update.v2', 'posts.update.v2', ApiController\Posts\UpdatePostV2Controller::class);
+$route->post('/posts.v2', 'posts.v2', ApiController\Posts\CreatePostV2Controller::class);
+
+$route->get('/forum.v2', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
+
+
 
 
 $route->get('/thread.detail.v3','thread.detail.v3',ApiController\ThreadsV3\ThreadDetailController::class);

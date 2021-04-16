@@ -31,7 +31,7 @@
     <div class="system-notice" v-show="showMini">
       <p class="system-title">小程序订阅信息</p>
     <Card header="模板ID：">
-      <CardRow description="请填写小程序订阅消息的模版ID">
+      <CardRow :description="miniProgramList.mini_program_prompt ? `请填写小程序订阅消息的模版ID，此消息的触发操作为「${miniProgramList.mini_program_prompt}」，每一个触发操作最多支持3个不同模板ID的订阅消息` : '请填写模板消息的ID'">
         <el-input type="text" maxlength="75" v-model="miniProgramList.template_id" ></el-input>
       </CardRow>
     </Card>

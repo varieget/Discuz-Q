@@ -38,13 +38,6 @@ class Permission extends Model
     ];
 
     /**
-     * 管理员特定权限
-     */
-    public static $admin_specified_permission = [
-        'switch.thread.canBeReward'
-    ];
-
-    /**
      * {@inheritdoc}
      */
     protected $table = 'group_permission';

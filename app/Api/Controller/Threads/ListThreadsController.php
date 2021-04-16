@@ -508,6 +508,7 @@ class ListThreadsController extends AbstractListController
 
         // 发表于（结束时间）
         if ($createdAtEnd = Arr::get($filter, 'createdAtEnd')) {
+            $createdAtEnd =  date("Y-m-d",strtotime("+1 day",strtotime($createdAtEnd)));
             $query->where('threads.created_at', '<=', $createdAtEnd);
         }
 
@@ -518,6 +519,7 @@ class ListThreadsController extends AbstractListController
 
         // 删除于（结束时间）
         if ($deletedAtEnd = Arr::get($filter, 'deletedAtEnd')) {
+            $deletedAtEnd =  date("Y-m-d",strtotime("+1 day",strtotime($deletedAtEnd)));
             $query->where('threads.deleted_at', '<=', $deletedAtEnd);
         }
 
