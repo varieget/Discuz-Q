@@ -81,7 +81,9 @@ class CreateThreadController extends DzqController
         $freeWords = $this->inPut('freeWords');
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
-        empty($title) && $title = Post::autoGenerateTitle($content);
+        if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
+        if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
+        empty($title) && $title = Post::autoGenerateTitle($content['text']);
         $dataThread = [
             'user_id' => $userId,
             'category_id' => $categoryId,
