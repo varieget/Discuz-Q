@@ -62,16 +62,16 @@ class SmsSendController extends AuthBaseController
         $actor              = $this->user;
         $mobile             = $this->inPut('mobile');
         $type               = $this->inPut('type');
-        $captcha_ticket     = $this->inPut('captchaTicket');
-        $captcha_rand_str   = $this->inPut('captchaRandStr');
+        $captchaTicket     = $this->inPut('captchaTicket');
+        $captchaRandStr   = $this->inPut('captchaRandStr');
         $ip                 = ip($this->request->getServerParams());
 
         $data = array();
         $data['mobile']     = $mobile;
         $data['type']       = $type;
         $data['captcha']    = [
-            $captcha_ticket,
-            $captcha_rand_str,
+            $captchaTicket,
+            $captchaRandStr,
             $ip
         ];
 
@@ -147,8 +147,8 @@ class SmsSendController extends AuthBaseController
         }
 
         $result = $this->smsSend($data['mobile'], new SendCodeMessage([
-            'code' => $mobileCode->code,
-            'expire' => self::CODE_EXCEPTION]
+            'code'      => $mobileCode->code,
+            'expire'    => self::CODE_EXCEPTION]
         ));
 
         if (isset($result['qcloud']['status']) && $result['qcloud']['status'] === 'success') {

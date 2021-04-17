@@ -17,9 +17,11 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\MobileCode;
 use App\Models\SessionToken;
+use App\Models\User;
 use App\Repositories\MobileCodeRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Carbon;
@@ -47,7 +49,7 @@ abstract class AuthBaseController extends DzqController
         return $token;
     }
 
-    protected function getWechatH5Param()
+    public function getWechatH5Param()
     {
         $code           = $this->inPut('code');
         $sessionId      = $this->inPut('sessionId');
@@ -75,7 +77,7 @@ abstract class AuthBaseController extends DzqController
         ];
     }
 
-    protected function recordWechatLog($wechatUser)
+    public function recordWechatLog($wechatUser)
     {
         $wechatlog = app('wechatLog');
         $wechatlog->info('wechat_info', [
@@ -84,7 +86,7 @@ abstract class AuthBaseController extends DzqController
         ]);
     }
 
-    protected function fixData($rawUser, $actor)
+    public function fixData($rawUser, $actor)
     {
         $data = array_merge($rawUser, [
                                         'user_id'   => $actor->id ?: null,
@@ -96,7 +98,7 @@ abstract class AuthBaseController extends DzqController
         return $data;
     }
 
-    protected function getSmsParam($type)
+    public function getSmsParam($type)
     {
         $mobile = $this->inPut('mobile');
         $code   = $this->inPut('code');
@@ -137,7 +139,7 @@ abstract class AuthBaseController extends DzqController
         return $mobileCode;
     }
 
-    protected function getWechatMiniProgramParam()
+    public function getWechatMiniProgramParam()
     {
         $data = [
             'jsCode'            => $this->inPut('jsCode'),
@@ -153,7 +155,23 @@ abstract class AuthBaseController extends DzqController
         return $data;
     }
 
-    protected function updateUserBindType(){
-
+    public function updateUserBindType(){
+//        $mobileCodeRepository = app(AuthUtils::class);
+//        app(AuthUtils);
     }
+
+    public function addUserInfo($user, $result) {
+        if (empty($user['nickname'])) {
+            $result['isMissNickname'] = true;
+        } else {
+            $result['isMissNickname'] = false;
+        }
+
+        $result['userStatus'] = $user->status ?: 0;
+
+        $result['uid'] = $user->id ?: 0;
+
+        return $result;
+    }
+
 }
