@@ -48,6 +48,7 @@ class ResponseCode
     const UNKNOWN_ERROR = -6001;
     const DEBUG_ERROR = -6002;
 
+
     const PC_QRCODE_TIME_OUT = -7001;
     const PC_QRCODE_SCANNING_CODE = -7002;
     const PC_QRCODE_ERROR = -7003;
@@ -80,6 +81,8 @@ class ResponseCode
     const NAME_LENGTH_ERROR = -7041;
     const USERNAME_HAD_EXIST = -7042;
     const SMS_SERVICE_ENABLED = -7043;
+    const NEED_BIND_WECHAT = 8000;
+
 
     public static $codeMap = [
         self::SITE_CLOSED => '站点已关闭',
@@ -130,5 +133,6 @@ class ResponseCode
         self::NAME_LENGTH_ERROR => '用户名或昵称长度超过15个字符',
         self::USERNAME_HAD_EXIST => '用户名已经存在',
         self::SMS_SERVICE_ENABLED => '短信服务未开启',
+        self::NEED_BIND_WECHAT => '需要绑定微信'
     ];
 }

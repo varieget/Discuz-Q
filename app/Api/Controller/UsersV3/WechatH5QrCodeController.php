@@ -119,6 +119,10 @@ class WechatH5QrCodeController extends DzqController
         }
 
         $locationUrl = $this->url->action($route, ['sessionToken' => $sessionToken]);
+        //浏览器点击微信登录直接生成二维码不进行sessionToken生成
+        if($type == 'mobile_browser_login') {
+            $locationUrl = $this->url->action($route);
+        }
 
         $qrCode = new QrCode($locationUrl);
 
@@ -130,6 +134,9 @@ class WechatH5QrCodeController extends DzqController
             'sessionToken' => $sessionToken,
             'base64Img' => $baseImg,
         ];
+        if($type=='mobile_browser_login') {
+            unset($data['sessionToken']);
+        }
 
         $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
