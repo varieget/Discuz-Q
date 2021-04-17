@@ -57,8 +57,17 @@ class Category extends DzqModel
      * @var array
      */
     public static $categoryPermissions = [
-        'viewThreads',                 // 查看帖子列表
-        'createThread',                // 发布帖子
+        'createThread',               // 发布帖子
+        'createThread.0',              // 插入图片
+        'createThread.1',             // 插入视频
+        'createThread.2',             // 插入语音
+        'createThread.3',             // 插入附件
+        'createThread.4',             // 插入商品
+        'createThread.5',             // 插入付费
+        'createThread.6',             // 插入悬赏
+        'createThread.7',             // 插入红包
+        'createThread.8',             // 插入位置
+
         'thread.reply',                // 回复帖子
         'thread.edit',                 // 编辑帖子
         'thread.hide',                 // 删除帖子
