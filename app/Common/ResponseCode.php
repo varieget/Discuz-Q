@@ -75,6 +75,7 @@ class ResponseCode
     const LOGIN_FAILED = -7040;
     const NAME_LENGTH_ERROR = -7041;
     const USERNAME_HAD_EXIST = -7042;
+    const SMS_SERVICE_ENABLED = -7043;
 
     public static $codeMap = [
         self::SITE_CLOSED => '站点已关闭',
@@ -122,6 +123,7 @@ class ResponseCode
         self::CENSOR_NOT_PASSED => '敏感词校验未通过',
         self::REGISTER_DECRYPT_CODE_FAILED => '解密邀请码失败',
         self::NAME_LENGTH_ERROR => '用户名或昵称长度超过15个字符',
-        self::USERNAME_HAD_EXIST => '用户名已经存在'
+        self::USERNAME_HAD_EXIST => '用户名已经存在',
+        self::SMS_SERVICE_ENABLED => '短信服务未开启',
     ];
 }

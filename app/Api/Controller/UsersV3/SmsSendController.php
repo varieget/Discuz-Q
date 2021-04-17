@@ -76,7 +76,7 @@ class SmsSendController extends AuthBaseController
         ];
 
         $this->dzqValidate($data, [
-            'captcha'   => [new Captcha],
+//            'captcha'   => [new Captcha],//暂时注释方便联调走主流程
             'type'      => 'required|in:' . implode(',', $this->type)
         ]);
 
@@ -90,7 +90,9 @@ class SmsSendController extends AuthBaseController
             // 未开启短信服务不发送短信
             $mobileRule = [
                 function ($attribute, $value, $fail) {
-                    $fail('短信服务未开启。');
+                    $this->outPut(ResponseCode::SMS_SERVICE_ENABLED,
+                                  ResponseCode::$codeMap[ResponseCode::SMS_SERVICE_ENABLED]
+                    );
                 },
             ];
         } elseif ($type == 'bind') {

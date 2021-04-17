@@ -34,32 +34,32 @@ class SmsResetPayPwdController extends AuthBaseController
     {
         $param                      = $this->getSmsParam('reset_pay_pwd');
         $mobileCode                 = $param['mobileCode'];
-        $pay_password               = $this->inPut('payPassword');
-        $pay_password_confirmation  = $this->inPut('payPasswordConfirmation');
+        $payPassword                = $this->inPut('payPassword');
+        $payPasswordConfirmation    = $this->inPut('payPasswordConfirmation');
 
         $data = array();
-        $data['payPassword']                = $pay_password;
-        $data['payPasswordConfirmation']    = $pay_password_confirmation;
+        $data['payPassword']                = $payPassword;
+        $data['payPasswordConfirmation']    = $payPasswordConfirmation;
 
         $this->dzqValidate($data, [
             'payPassword'                   => 'required',
             'payPasswordConfirmation'       => 'required',
         ]);
 
-        if ($mobileCode->user && isset($pay_password)) {
+        if ($mobileCode->user && isset($payPassword)) {
             $this->validator->valid([
-                'payPassword'               => $pay_password,
-                'payPasswordConfirmation'   => $pay_password_confirmation,
+                'payPassword'               => $payPassword,
+                'payPasswordConfirmation'   => $payPasswordConfirmation,
             ]);
 
             // 验证新密码与原密码不能相同
-            if ($mobileCode->user->checkWalletPayPassword($pay_password)) {
+            if ($mobileCode->user->checkWalletPayPassword($payPassword)) {
                 $this->outPut(ResponseCode::USER_UPDATE_ERROR,
                               ResponseCode::$codeMap[ResponseCode::USER_UPDATE_ERROR]
                 );
             }
 
-            $mobileCode->user->changePayPassword($pay_password);
+            $mobileCode->user->changePayPassword($payPassword);
             $mobileCode->user->save();
 
             // 清空支付密码错误次数
