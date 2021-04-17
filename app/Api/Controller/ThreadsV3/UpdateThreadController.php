@@ -64,12 +64,13 @@ class UpdateThreadController extends DzqController
 
     private function executeEloquent($thread, $post, $content)
     {
-        $text = $content['text'];
+
         $tomJsons = $this->tomDispatcher($content, null, $thread->id);
-        //更新thread_text
+        //更新thread数据
         $this->saveThread($thread);
-        $this->savePost($post, $text);
-        //更新thread_tom
+        //更新post数据
+        $this->savePost($post, $content);
+        //更新tom数据
         $this->saveThreadTom($thread, $tomJsons);
         return $this->getResult($thread, $post, $tomJsons);
     }
@@ -101,10 +102,10 @@ class UpdateThreadController extends DzqController
         $thread->save();
     }
 
-    private function savePost($post, $text)
+    private function savePost($post, $content)
     {
         list($ip, $port) = $this->getIpPort();
-        $post->content = $text;
+        $post->content = $content['text'];;
         $post->ip = $ip;
         $post->port = $port;
         $post->is_first = Post::FIRST_YES;
