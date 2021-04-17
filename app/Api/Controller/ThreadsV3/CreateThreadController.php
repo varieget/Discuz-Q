@@ -81,6 +81,7 @@ class CreateThreadController extends DzqController
         $freeWords = $this->inPut('freeWords');
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
+        empty($title) && $title = Post::autoGenerateTitle($content);
         $dataThread = [
             'user_id' => $userId,
             'category_id' => $categoryId,
