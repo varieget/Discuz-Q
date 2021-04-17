@@ -120,7 +120,7 @@ abstract class AuthBaseController extends DzqController
      */
     public function changeMobileCodeState($mobile, $type, $code)
     {
-        $mobileCodeRepository = app(mobileCodeRepository::class);
+        $mobileCodeRepository = app(MobileCodeRepository::class);
         /**
          * @var MobileCode $mobileCode
          **/
@@ -152,9 +152,22 @@ abstract class AuthBaseController extends DzqController
         return $data;
     }
 
-    public function updateUserBindType(){
-//        $mobileCodeRepository = app(AuthUtils::class);
-//        app(AuthUtils);
+    public function updateUserBindType($user,$bindType){
+        $authUtils = app(AuthUtils::class);
+        if (!in_array($bindType,$authUtils->getLoginTypeArr())) {
+            $this->outPut(ResponseCode::BIND_TYPE_IS_NULL,
+                          ResponseCode::$codeMap[ResponseCode::BIND_TYPE_IS_NULL]
+            );
+        }
+
+        $existBindType = $authUtils->getBindTypeArrByCombinationBindType($user->bind_type);
+
+        if (!in_array($bindType, $existBindType)) {
+            array_push($existBindType, $bindType);
+            $newBindType  = $authUtils->getBindType($existBindType);
+            $user->bind_type = $newBindType;
+            $user->save();
+        }
     }
 
     public function addUserInfo($user, $result) {
