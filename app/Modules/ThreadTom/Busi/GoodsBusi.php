@@ -17,60 +17,23 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
-use App\Common\ResponseCode;
 use App\Modules\ThreadTom\TomBaseBusi;
-use App\Models\ThreadTom;
-use App\Models\PostGoods;
 
 class GoodsBusi extends TomBaseBusi
 {
 
     public function create()
     {
-        $input = $this->verification();
-
-        $postGoods = PostGoods::query()
-            ->where('id',$input['goodsId'])
-            ->where('user_id',$this->user['id'])
-            ->get()
-            ->toArray();
-
-        if(empty($postGoods)){
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, ResponseCode::$codeMap[ResponseCode::RESOURCE_NOT_FOUND]);
-        }
-        return $this->jsonReturn($postGoods);
+        return $this->jsonReturn($this->body);
     }
 
     public function update()
     {
-        return $this->create();
+        return $this->jsonReturn($this->body);
     }
 
-    public function delete()
+    public function select()
     {
-        $goodsId = $this->getParams('goodsId');
-
-        $threadTom = ThreadTom::query()
-            ->where('id',$goodsId)
-            ->update(['status'=>-1]);
-
-        if ($threadTom) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public function verification()
-    {
-        $input = [
-            'goodsId' => $this->getParams('goodsId'),
-        ];
-        $rules = [
-            'goodsId' => 'required|int',
-        ];
-        $this->dzqValidate($input, $rules);
-
-        return $input;
+        return $this->jsonReturn($this->body);
     }
 }

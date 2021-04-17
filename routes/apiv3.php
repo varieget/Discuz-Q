@@ -70,6 +70,8 @@ $route->get('/thread.detail','thread.detail',ApiController\ThreadsV3\ThreadDetai
 $route->get('/thread.list','thread.list',ApiController\ThreadsV3\ThreadListController::class);
 $route->get('/thread.stick','thread.stick',ApiController\ThreadsV3\ThreadStickController::class);
 $route->get('/thread.likedusers','thread.likedusers',ApiController\ThreadsV3\ThreadLikedUsersController::class);
+$route->get('/tom.detail','tom.detail',ApiController\ThreadsV3\SelectTomController::class);
+
 //帖子变更
 $route->post('/thread.create','thread.create',ApiController\ThreadsV3\CreateThreadController::class);
 $route->post('/thread.delete','thread.delete',ApiController\ThreadsV3\DeleteThreadController::class);
@@ -78,3 +80,15 @@ $route->post('/tom.delete','tom.delete',ApiController\ThreadsV3\DeleteTomControl
 $route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomController::class);
 //首页配置接口
 $route->get('/forum', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
+
+$route->post('/thread.share','thread.share',ApiController\ThreadsV3\UpdateThreadShareController::class);
+$route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
+$route->get('/attachments', 'attachments.resource', ApiController\AttachmentV3\ResourceAttachmentController::class);
+$route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
+$route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
+$route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
+$route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
+$route->get('/topics.list', 'topics.list', ApiController\TopicV3\ListTopicController::class);
+$route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
+$route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);
+$route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);

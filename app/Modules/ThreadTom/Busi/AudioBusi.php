@@ -18,9 +18,27 @@
 namespace App\Modules\ThreadTom\Busi;
 
 
+use App\Models\ThreadVideo;
 use App\Modules\ThreadTom\TomBaseBusi;
 
-class QueueBusi extends TomBaseBusi
+class AudioBusi extends TomBaseBusi
 {
+    public function create()
+    {
+        $audioId = $this->getParams('audioId');
+        return $this->jsonReturn(['audioId' => $audioId]);
+    }
+
+    public function update()
+    {
+        $audioId = $this->getParams('audioId');
+        return $this->jsonReturn(['audioId' => $audioId]);
+    }
+
+    public function select()
+    {
+        $audio = ThreadVideo::instance()->getThreadVideo($this->threadId, ThreadVideo::TYPE_OF_AUDIO, true);
+        return $this->jsonReturn($audio);
+    }
 
 }

@@ -22,35 +22,36 @@ use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Modules\ThreadTom\TomBaseBusi;
 
-class ImageBusi extends TomBaseBusi
+class DocBusi extends TomBaseBusi
 {
     public function create()
     {
-        $imageIds = $this->getParams('imageIds');
-        if(count($imageIds)>9){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'图片数量不能超过9张');
+        $docIds = $this->getParams('docIds');
+        if (count($docIds) > 9) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过9个');
         }
-        return $this->jsonReturn(['imageIds'=>$imageIds]);
+        return $this->jsonReturn(['docIds' => $docIds]);
     }
 
     public function update()
     {
-        $imageIds = $this->getParams('imageIds');
-        if(count($imageIds)>9){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'图片数量不能超过9张');
+        $docIds = $this->getParams('docIds');
+        if (count($docIds) > 9) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过9个');
         }
-        return $this->jsonReturn(['imageIds'=>$imageIds]);
+        return $this->jsonReturn(['docIds' => $docIds]);
     }
 
     public function select()
     {
         $serializer = $this->app->make(AttachmentSerializer::class);
         $result = [];
-        $imageIds = $this->getParams('imageIds');
-        $attachments = Attachment::query()->whereIn('id',$imageIds)->get();
+        $docIds = $this->getParams('docIds');
+        $attachments = Attachment::query()->whereIn('id', $docIds)->get();
         foreach ($attachments as $attachment) {
             $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
         }
         return $this->jsonReturn($result);
     }
+
 }

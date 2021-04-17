@@ -77,7 +77,6 @@ class ThreadDetailController extends DzqController
             'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
             'content' => $this->getContent($thread, $post)
         ];
-        $linkString = '';
         if (!empty($groups[$thread['user_id']])) {
             $result['group'] = $this->getGroupInfo($groups[$thread['user_id']]);
         }
@@ -157,11 +156,7 @@ class ThreadDetailController extends DzqController
             ])->orderBy('key')->get()->toArray();
         $tomContent = [];
         foreach ($threadTom as $item) {
-            $tomContent['indexes'][$item['key']] = [
-                'tomId' => $item['tom_type'],
-                'operation' => $this->SELECT_FUNC,
-                'body' => json_decode($item['value'], true)
-            ];
+            $tomContent['indexes'][$item['key']] = $this->buildTomJson($threadId,$item['tom_type'],$this->SELECT_FUNC,json_decode($item['value'], true));
         }
         $tomJsons = $this->tomDispatcher($tomContent, $this->SELECT_FUNC,$threadId);
         $content = [

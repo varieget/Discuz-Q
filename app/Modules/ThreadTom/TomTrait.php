@@ -74,9 +74,9 @@ trait TomTrait
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
                             if (empty($v['threadId'])) {
-                                $service = $service->newInstanceArgs([$this->user,$threadId, $tomId, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user, $threadId, $tomId, $k, $op, $body]);
                             } else {
-                                $service = $service->newInstanceArgs([$this->user,$v['threadId'], $tomId, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user, $v['threadId'], $tomId, $k, $op, $body]);
                             }
                             method_exists($service, $op) && $tomJsons[$k] = $service->$op();
                         } catch (\ReflectionException $e) {
@@ -86,6 +86,16 @@ trait TomTrait
             }
         }
         return $tomJsons;
+    }
+
+    private function buildTomJson($threadId,$tomId, $operation, $body)
+    {
+        return [
+            'threadId'=>$threadId,
+            'tomId' => $tomId,
+            'operation' => $operation,
+            'body' => $body
+        ];
     }
 
     private function canCreateThread(User $user, $categoryId)

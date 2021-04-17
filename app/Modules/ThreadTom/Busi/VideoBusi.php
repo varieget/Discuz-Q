@@ -17,63 +17,28 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
-use App\Common\ResponseCode;
-use App\Modules\ThreadTom\TomBaseBusi;
+
 use App\Models\ThreadVideo;
-use App\Models\ThreadTom;
+use App\Modules\ThreadTom\TomBaseBusi;
 
 class VideoBusi extends TomBaseBusi
 {
 
-    private $videoCount = 1;
-
     public function create()
     {
-        $input = $this->verification();
-
-        $threadVideo = ThreadVideo::query()
-            ->whereIn('id',$input['videoIds'])
-            ->where('user_id',$this->user['id'])
-            ->where('type',ThreadVideo::TYPE_OF_VIDEO)
-            ->get()
-            ->toArray();
-
-        if(empty($threadVideo)){
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, ResponseCode::$codeMap[ResponseCode::RESOURCE_NOT_FOUND]);
-        }
-        return $this->jsonReturn($threadVideo);
+        $videoId = $this->getParams('videoId');
+        return $this->jsonReturn(['videoId' => $videoId]);
     }
 
     public function update()
     {
-        return $this->create();
-    }
-
-    public function delete()
-    {
         $videoId = $this->getParams('videoId');
-
-        $threadTom = ThreadTom::query()
-            ->where('id',$videoId)
-            ->update(['status'=>-1]);
-
-        if ($threadTom) {
-            return true;
-        }
-
-        return false;
+        return $this->jsonReturn(['videoId' => $videoId]);
     }
 
-    public function verification()
+    public function select()
     {
-        $input = [
-            'videoIds' => $this->getParams('videoIds'),
-        ];
-        $rules = [
-            'videoIds' => 'required|array|min:1|max:'.$this->videoCount,
-        ];
-        $this->dzqValidate($input, $rules);
-
-        return $input;
+        $video =  ThreadVideo::instance()->getThreadVideo($this->threadId,ThreadVideo::TYPE_OF_VIDEO, true);
+        return $this->jsonReturn($video);
     }
 }
