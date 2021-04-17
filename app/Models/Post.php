@@ -727,4 +727,12 @@ class Post extends DzqModel
             return $content;
         }
     }
+
+    public static function getOneActivePost($threadId)
+    {
+        return self::query()
+            ->where(['thread_id' => $threadId, 'is_first' => Post::FIRST_YES, 'is_approved' => Post::APPROVED])
+            ->whereNull('deleted_at')
+            ->first();
+    }
 }

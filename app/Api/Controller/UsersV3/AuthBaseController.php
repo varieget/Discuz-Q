@@ -47,6 +47,74 @@ abstract class AuthBaseController extends DzqController
         return $token;
     }
 
+    protected function getWechatH5Param()
+    {
+        $code           = $this->inPut('code');
+        $sessionId      = $this->inPut('sessionId');
+
+        $request        = $this ->request
+                                ->withAttribute('session', new SessionToken())
+                                ->withAttribute('sessionId', $sessionId);
+
+        $this->dzqValidate([
+            'code'      => $code,
+            'sessionId' => $sessionId,
+        ], [
+            'code'      => 'required',
+            'sessionId' => 'required'
+        ]);
+
+        $this->socialite->setRequest($request);
+
+        $driver = $this->socialite->driver('wechat');
+        $wxuser = $driver->user();
+
+        return $data = [
+            'request'   =>  $request,
+            'wxuser'    =>  $wxuser
+        ];
+    }
+
+    protected function recordWechatLog($wechatUser)
+    {
+        $wechatlog = app('wechatLog');
+        $wechatlog->info('wechat_info', [
+            'wechat_user'   => $wechatUser          == null ? '' : $wechatUser->toArray(),
+            'user_info'     => $wechatUser->user    == null ? '' : $wechatUser->user->toArray()
+        ]);
+    }
+
+    protected function fixData($rawUser, $actor)
+    {
+        $data = array_merge($rawUser, [
+                                        'user_id'   => $actor->id ?: null,
+                                        'mp_openid' => $rawUser['openid']]
+        );
+        unset($data['openid'], $data['language']);
+        $data['privilege'] = serialize($data['privilege']);
+
+        return $data;
+    }
+
+    protected function getSmsParam($type)
+    {
+        $mobile = $this->inPut('mobile');
+        $code   = $this->inPut('code');
+
+        $this->dzqValidate([
+            'mobile'    => $mobile,
+            'code'      => $code
+        ], [
+            'mobile'    => 'required',
+            'code'      => 'required'
+        ]);
+
+        $mobileCode = $this->changeMobileCodeState($mobile, $type, $code);
+        $data ['mobileCode'] = $mobileCode;
+
+        return $data;
+    }
+
     /**
      * 修改手机验证码的状态
      * @return MobileCode
@@ -69,48 +137,23 @@ abstract class AuthBaseController extends DzqController
         return $mobileCode;
     }
 
-    protected function fixData($rawUser, $actor)
+    protected function getWechatMiniProgramParam()
     {
-        $data = array_merge($rawUser, ['user_id' => $actor->id ?: null, 'mp_openid' => $rawUser['openid']]);
-        unset($data['openid'], $data['language']);
-        $data['privilege'] = serialize($data['privilege']);
+        $data = [
+            'jsCode'            => $this->inPut('jsCode'),
+            'iv'                => $this->inPut('iv'),
+            'encryptedData'     => $this->inPut('encryptedData')
+        ];
+        $this->dzqValidate($data, [
+            'jsCode'            => 'required',
+            'iv'                => 'required',
+            'encryptedData'     => 'required'
+       ]);
+
         return $data;
     }
 
-    protected function getWechatH5Param()
-    {
-        $code           = $this->inPut('code');
-        $sessionId      = $this->inPut('sessionId');
+    protected function updateUserBindType(){
 
-        $request        = $this->request
-            ->withAttribute('session', new SessionToken())
-            ->withAttribute('sessionId', $sessionId);
-
-        $this->dzqValidate([
-                               'code'      => $code,
-                               'sessionId' => $sessionId,
-                           ], [
-                               'code'      => 'required',
-                               'sessionId' => 'required'
-                           ]);
-
-        $this->socialite->setRequest($request);
-
-        $driver = $this->socialite->driver('wechat');
-        $wxuser = $driver->user();
-
-        return $data = [
-            'request'   =>  $request,
-            'wxuser'    =>  $wxuser
-        ];
-    }
-
-    protected function recordWechatLog($wechatUser)
-    {
-        $wechatlog = app('wechatLog');
-        $wechatlog->info('wechat_info', [
-            'wechat_user'   => $wechatUser == null ? '': $wechatUser->toArray(),
-            'user_info'     => $wechatUser->user == null ? '' : $wechatUser->user->toArray()
-        ]);
     }
 }

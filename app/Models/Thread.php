@@ -142,6 +142,10 @@ class Thread extends DzqModel
 
     const IS_DRAFT = 1;
 
+
+    const BOOL_YES = 1;
+    const BOOL_NO = 0;
+
     /**
      * {@inheritdoc}
      */
@@ -832,5 +836,17 @@ class Thread extends DzqModel
             $replace[] = $topic['html'];
         }
         return [$search, $replace];
+    }
+
+    public static function getOneActiveThread($threadId)
+    {
+        return self::query()
+            ->where([
+                'id' => $threadId,
+                'is_approved' => Thread::BOOL_YES,
+                'is_draft' => Thread::BOOL_NO,
+            ])
+            ->whereNull('deleted_at')
+            ->first();
     }
 }

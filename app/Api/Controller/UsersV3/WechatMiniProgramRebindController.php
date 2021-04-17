@@ -58,44 +58,39 @@ class WechatMiniProgramRebindController extends AuthBaseController
 
     public function main()
     {
-        $actor          = $this->user;
+        $param          = $this->getWechatMiniProgramParam();
+        $jsCode         = $param['jsCode'];
+        $iv             = $param['iv'];
+        $encryptedData  = $param['encryptedData'];
         $sessionId      = $this->inPut('sessionId');
-        $user           = !$actor->isGuest() ? $actor : new Guest();
-        $js_code        = $this->inPut('jsCode');
-        $iv             = $this->inPut('iv');
-        $encryptedData  = $this->inPut('encryptedData');
+        $user           = !$this->user->isGuest() ? $this->user : new Guest();
         $sessionToken   = $this->inPut('sessionToken');// PC扫码使用
-//        $token          = SessionToken::get($sessionToken);
-        $rebind         = 0;
+        $actor          = $this->user;
 
-        $request = $this->request->withAttribute('session', new SessionToken())->withAttribute('sessionId', $sessionId);
-
-        $data = [   'js_code'       => $js_code,
-                    'iv'            => $iv,
-                    'encryptedData' => $encryptedData
-        ];
-        $this->dzqValidate($data,[
-            'js_code'       => 'required',
-            'iv'            => 'required',
-            'encryptedData' => 'required'
-        ]);
+        $request = $this->request
+                        ->withAttribute('session', new SessionToken())
+                        ->withAttribute('sessionId', $sessionId);
 
         $this->socialite->setRequest($request);
 
         $driver = $this->socialite->driver('wechat');
         $wxuser = $driver->user();
 
-        /** @var User $actor */
-        $actor = $this->user;
-
         // 绑定小程序
         $this->db->beginTransaction();
         try {
-            $wechatUser = $this->bind->bindMiniprogram($js_code, $iv, $encryptedData, $rebind, $user, true);
+            $wechatUser = $this->bind->bindMiniprogram(
+                $jsCode,
+                $iv,
+                $encryptedData,
+                0,
+                $user,
+                true
+            );
         } catch (Exception $e) {
             $this->db->rollback();
             $this->outPut(ResponseCode::NET_ERROR,
-                          ResponseCode::$codeMap[ResponseCode::NET_ERROR] ,
+                          ResponseCode::$codeMap[ResponseCode::NET_ERROR],
                           $e->getMessage()
             );
         }

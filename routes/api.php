@@ -472,4 +472,21 @@ $route->get('/posts.v2', 'posts.v2', ApiController\Posts\ListPostsV2Controller::
 $route->post('/posts.update.v2', 'posts.update.v2', ApiController\Posts\UpdatePostV2Controller::class);
 $route->post('/posts.v2', 'posts.v2', ApiController\Posts\CreatePostV2Controller::class);
 
+$route->get('/forum.v2', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
+
+
+
+
+$route->get('/thread.detail.v3','thread.detail.v3',ApiController\ThreadsV3\ThreadDetailController::class);
+$route->get('/thread.list.v3','thread.list.v3',ApiController\ThreadsV3\ThreadListController::class);
+$route->get('/thread.stick.v3','thread.stick.v3',ApiController\ThreadsV3\ThreadStickController::class);
+$route->get('/thread.likedusers.v3','thread.likedusers.v3',ApiController\ThreadsV3\ThreadLikedUsersController::class);
+
+
+$route->post('/thread.create.v3','thread.create.v3',ApiController\ThreadsV3\CreateThreadController::class);
+$route->post('/thread.delete.v3','thread.delete.v3',ApiController\ThreadsV3\DeleteThreadController::class);
+$route->post('/thread.update.v3','thread.update.v3',ApiController\ThreadsV3\UpdateThreadController::class);
+$route->post('/tom.delete.v3','tom.delete.v3',ApiController\ThreadsV3\DeleteTomController::class);
+$route->post('/tom.update.v3','tom.update.v3',ApiController\ThreadsV3\UpdateTomController::class);
+
 

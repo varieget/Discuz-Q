@@ -52,32 +52,21 @@ class WechatMiniProgramBindController extends AuthBaseController
 
     public function main()
     {
-        $actor          = $this->user;
-        $user           = !$actor->isGuest() ? $actor : new Guest();
-        $js_code        = $this->inPut('jsCode');
-        $iv             = $this->inPut('iv');
-        $encryptedData  = $this->inPut('encryptedData');
-        $sessionToken   = $this->inPut('sessionToken');// PC扫码使用
-        $rebind         = 0;
-
-        $data = [   'js_code'       => $js_code,
-                    'iv'            => $iv,
-                    'encryptedData' => $encryptedData
-        ];
-        $this->dzqValidate($data,[
-            'js_code'       => 'required',
-            'iv'            => 'required',
-            'encryptedData' => 'required'
-        ]);
+        $param          = $this->getWechatMiniProgramParam();
+        $jsCode         = $param['jsCode'];
+        $iv             = $param['iv'];
+        $encryptedData  = $param['encryptedData'];
+        $user           = !$this->user->isGuest() ? $this->user : new Guest();
+        $sessionToken   = $this->inPut('sessionToken');// PC扫码使用;
 
         // 绑定小程序
         $this->db->beginTransaction();
         try {
             $wechatUser = $this->bind->bindMiniprogram(
-                $js_code,
+                $jsCode,
                 $iv,
                 $encryptedData,
-                $rebind,
+                0,
                 $user,
                 true
             );

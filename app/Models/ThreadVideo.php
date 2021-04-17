@@ -94,9 +94,13 @@ class ThreadVideo extends DzqModel
         return $this->belongsTo(Post::class);
     }
 
-    public function getThreadVideo($threadId)
+    public function getThreadVideo($threadId,$type = null, $isV3 = false)
     {
-        $video = self::query()->where(['thread_id' => $threadId, 'status' => self::VIDEO_STATUS_SUCCESS])->first();
+        $video = self::query()->where(['thread_id' => $threadId, 'status' => self::VIDEO_STATUS_SUCCESS]);
+        if($type != null){
+            $video = $video->where('type',$type);
+        }
+        $video = $video->first();
         if (empty($video)) {
             return false;
         }
@@ -112,8 +116,7 @@ class ThreadVideo extends DzqModel
             $sign = md5($urlKey . $dir . $t . $us);
             $mediaUrl = $mediaUrl . '?t=' . $t . '&us=' . $us . '&sign=' . $sign;
         }
-        return [
-            'pid' => $video['id'],
+        $result = [
             'fileName' => $video['file_name'],
             'height' => $video['height'],
             'width' => $video['width'],
@@ -121,5 +124,11 @@ class ThreadVideo extends DzqModel
             'mediaUrl' => $mediaUrl,
             'coverUrl' => $video['cover_url']
         ];
+        if (!$isV3) {
+            $result ['pid'] = $video['id'];
+        } else {
+            $result ['id'] = $video['id'];
+        }
+        return $result;
     }
 }

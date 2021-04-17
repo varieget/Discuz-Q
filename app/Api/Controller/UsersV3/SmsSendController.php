@@ -115,12 +115,10 @@ class SmsSendController extends AuthBaseController
                         $this->outPut(ResponseCode::VERIFY_OLD_PHONE_NUMBER,
                                       ResponseCode::$codeMap[ResponseCode::VERIFY_OLD_PHONE_NUMBER]
                         );
-//                        $fail('请验证旧的手机号。');
                     } elseif ($value == $actor->getRawOriginal('mobile')) {
                         $this->outPut(ResponseCode::ENTER_NEW_PHONE_NUMBER,
                                       ResponseCode::$codeMap[ResponseCode::ENTER_NEW_PHONE_NUMBER]
                         );
-//                        $fail('请输入新的手机号。');
                     }
                 },
                 'required',

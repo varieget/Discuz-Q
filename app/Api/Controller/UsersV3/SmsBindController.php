@@ -24,19 +24,8 @@ class SmsBindController extends AuthBaseController
 {
     public function main()
     {
-        $mobile = $this->inPut('mobile');
-        $code   = $this->inPut('code');
-
-        $data = array();
-        $data['mobile'] = $mobile;
-        $data['code']   = $code;
-
-        $this->dzqValidate($data, [
-            'mobile'    => 'required',
-            'code'      => 'required'
-        ]);
-
-        $mobileCode = $this->changeMobileCodeState($mobile, 'bind', $code);
+        $param      = $this->getSmsParam('bind');
+        $mobileCode = $param['mobileCode'];
 
         // 判断手机号是否已经被绑定
         if ($mobileCode->user->mobile) {

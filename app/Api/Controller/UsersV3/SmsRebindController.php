@@ -26,19 +26,8 @@ class SmsRebindController extends AuthBaseController
 {
     public function main()
     {
-        $mobile = $this->inPut('mobile');
-        $code   = $this->inPut('code');
-
-        $data = array();
-        $data['mobile'] = $mobile;
-        $data['code']   = $code;
-
-        $this->dzqValidate($data, [
-            'mobile'    => 'required',
-            'code'      => 'required'
-        ]);
-
-        $mobileCode = $this->changeMobileCodeState($mobile, 'rebind', $code);
+        $param      = $this->getSmsParam('rebind');
+        $mobileCode = $param['mobileCode'];
 
         if ($this->user->exists) {
             // 删除验证身份的验证码
