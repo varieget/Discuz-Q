@@ -102,7 +102,7 @@ class WechatH5QrCodeController extends DzqController
             $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
         }
 
-        $route = '/apiv3/users/wechat/h5.oauth?'.$redirectUri;
+        $route = '/apiv3/users/wechat/h5.oauth?redirect='.urlencode($redirectUri);
         if($type != 'mobile_browser_bind') {
             //跳转路由选择
 //            $route = self::$qrcodeTypeAndRouteMap[$type];

@@ -78,6 +78,8 @@ $route->post('/thread.delete','thread.delete',ApiController\ThreadsV3\DeleteThre
 $route->post('/thread.update','thread.update',ApiController\ThreadsV3\UpdateThreadController::class);
 $route->post('/tom.delete','tom.delete',ApiController\ThreadsV3\DeleteTomController::class);
 $route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomController::class);
+//首页配置接口
+$route->get('/forum', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
 
 $route->post('/thread.share','thread.share',ApiController\ThreadsV3\UpdateThreadShareController::class);
 $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);

@@ -121,6 +121,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'password_length' => (int)$this->settings->get('password_length'),
                 'password_strength' => empty($this->settings->get('password_strength')) ? [] : explode(',', $this->settings->get('password_strength')),
                 'register_type' => (int)$this->settings->get('register_type', 'default', 0),
+                'is_need_transition' => (bool)$this->settings->get('is_need_transition'),
             ],
 
             // 第三方登录设置
