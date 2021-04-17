@@ -77,7 +77,6 @@ class ThreadDetailController extends DzqController
             'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
             'content' => $this->getContent($thread, $post)
         ];
-        $linkString = '';
         if (!empty($groups[$thread['user_id']])) {
             $result['group'] = $this->getGroupInfo($groups[$thread['user_id']]);
         }
