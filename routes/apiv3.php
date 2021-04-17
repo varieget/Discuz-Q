@@ -81,7 +81,7 @@ $route->post('/thread.share','thread.share',ApiController\ThreadsV3\UpdateThread
 $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
 $route->get('/attachments', 'attachments.resource', ApiController\AttachmentV3\ResourceAttachmentController::class);
 $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
-$route->get('/emoji', 'emoji.list', ApiController\Emoji\ListEmojiController::class);
+$route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
 $route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
 $route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
 $route->get('/topics.list', 'topics.list', ApiController\TopicV3\ListTopicController::class);
