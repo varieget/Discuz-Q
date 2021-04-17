@@ -57,7 +57,7 @@ abstract class TomBaseBusi
     private function operationValid()
     {
         if (!method_exists($this, $this->operation)) {
-            throw new \Exception(sprintf('operation [%s] not exist in [%s]', $this->operation, static::class));
+            $this->outPut(ResponseCode::INTERNAL_ERROR,sprintf('operation [%s] not exist in [%s]', $this->operation, static::class));
         }
     }
 
