@@ -21,11 +21,6 @@ class TomConfig
 {
 
     public static $map = [
-        100 => [
-            'enName' => 'TEXT',
-            'desc' => '自定义文本模块',
-            'service' => \App\Modules\ThreadTom\Busi\TextBusi::class
-        ],
         101 => [
             'enName' => 'IMAGE',
             'desc' => '图片类',
