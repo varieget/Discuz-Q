@@ -102,37 +102,52 @@ class SettingsTableSeeder extends Seeder
                 'tag' => 'default',
             ],
             [
-                'key' => 'site_create_thread0',    // 允许发布文字帖(普通)，0为不允许，1为允许，以下一样
+                'key' => 'site_create_thread',    // 允许发布帖子，0为不允许，1为允许，以下一样
                 'value' => 1,
                 'tag' => 'default',
             ],
             [
-                'key' => 'site_create_thread1',    // 允许发布帖子(长文)
+                'key' => 'site_create_thread0',    // 允许插入图片
                 'value' => 1,
                 'tag' => 'default',
             ],
             [
-                'key' => 'site_create_thread2',    // 允许发布视频帖
+                'key' => 'site_create_thread1',    // 允许插入视频
                 'value' => 1,
                 'tag' => 'default',
             ],
             [
-                'key' => 'site_create_thread3',    //允许发布图片帖
+                'key' => 'site_create_thread2',    //允许插入语音
                 'value' => 1,
                 'tag' => 'default',
             ],
             [
-                'key' => 'site_create_thread4',    // 允许发布语音帖
+                'key' => 'site_create_thread3',    // 允许插入附件
                 'value' => 1,
                 'tag' => 'default',
             ],
             [
-                'key' => 'site_create_thread5',    // 允许发布问答帖(悬赏帖)
+                'key' => 'site_create_thread4',    // 允许插入商品
                 'value' => 0,
                 'tag' => 'default',
             ],
             [
-                'key' => 'site_create_thread6',    // 允许发布商品帖
+                'key' => 'site_create_thread5',    // 允许插入付费
+                'value' => 1,
+                'tag' => 'default',
+            ],
+            [
+                'key' => 'site_create_thread6',    // 允许插入悬赏
+                'value' => 1,
+                'tag' => 'default',
+            ],
+            [
+                'key' => 'site_create_thread7',    // 允许插入红包
+                'value' => 1,
+                'tag' => 'default',
+            ],
+            [
+                'key' => 'site_create_thread8',    // 允许插入位置
                 'value' => 1,
                 'tag' => 'default',
             ],

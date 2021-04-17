@@ -86,6 +86,7 @@ class Setting extends Model
      * 全局中的功能设置权限 -- 关联控制角色中的权限
      */
     public static $global_permission = [
+        'site_create_thread' => ['createThread'],
         'site_create_thread0' => ['createThread.0'],
         'site_create_thread1' => ['createThread.1'],
         'site_create_thread2' => ['createThread.2'],
@@ -93,6 +94,8 @@ class Setting extends Model
         'site_create_thread4' => ['createThread.4'],
         'site_create_thread5' => ['createThread.5'],
         'site_create_thread6' => ['createThread.6'],
+        'site_create_thread7' => ['createThread.7'],
+        'site_create_thread8' => ['createThread.8'],
         'site_can_reward'  =>  ['switch.thread.canBeReward', 'thread.canBeReward']
     ];
 
@@ -162,5 +165,30 @@ class Setting extends Model
         }
 
         return true;
+    }
+
+
+    /*
+ * 更新value值
+ */
+    public static function modifyValue($key, $value, $tag = 'default'){
+        return Setting::query()->where('key',$key)->where('tag',$tag)->update(['value'=>$value]);
+    }
+
+
+    /*
+  * 获取value参数值
+  */
+    public static function getValue($key, $tag = '', $value = ''){
+        if($key){
+            $settings = Setting::query()->where('key',$key);
+        }
+        if($tag){
+            $settings = $settings->where('tag',$tag);
+        }
+        if($value){
+            $settings = $settings->where('value',$value);
+        }
+        return $settings->value('value');
     }
 }

@@ -59,12 +59,7 @@ class ThreadListController extends DzqController
         $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
         $inPutToms = [];
         foreach ($toms as $tom) {
-            $inPutToms[$tom['thread_id']][$tom['key']] = [
-                'threadId' => $tom['thread_id'],
-                'tomId' => $tom['tom_type'],
-                'operation' => $this->SELECT_FUNC,
-                'body' => json_decode($tom['value'],true)
-            ];
+            $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, json_decode($tom['value'], true));
         }
         $result = [];
         $linkString = '';

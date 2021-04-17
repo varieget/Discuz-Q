@@ -18,6 +18,7 @@
 namespace App\Modules\ThreadTom;
 
 use App\Common\ResponseCode;
+use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Http\DiscuzResponseFactory;
 use Illuminate\Support\Arr;
@@ -25,7 +26,6 @@ use Illuminate\Support\Str;
 
 /**
  * @method  create()
- * @method  delete()
  * @method  update()
  * @method  select()
  * @method  userfunc()
@@ -38,9 +38,10 @@ abstract class TomBaseBusi
     public $permissions = [];
     public $threadId = null;
     public $user = null;
-
+    public $key = null;
     public $app = null;
-    public function __construct(User $user,$threadId, $tomId, $operation, $body)
+
+    public function __construct(User $user, $threadId, $tomId, $key, $operation, $body)
     {
         $this->app = app();
         $this->operation = $operation;
@@ -48,6 +49,7 @@ abstract class TomBaseBusi
         $this->tomId = $tomId;
         $this->threadId = $threadId;
         $this->user = $user;
+        $this->key = $key;
         $this->operationValid();
         //todo 查询用户组的权限数组
     }
@@ -55,7 +57,7 @@ abstract class TomBaseBusi
     private function operationValid()
     {
         if (!method_exists($this, $this->operation)) {
-            throw new \Exception(sprintf('operation [%s] not exist in [%s]', $this->operation, static::class));
+            $this->outPut(ResponseCode::INTERNAL_ERROR,sprintf('operation [%s] not exist in [%s]', $this->operation, static::class));
         }
     }
 
@@ -111,6 +113,7 @@ abstract class TomBaseBusi
         header('Content-Type:application/json; charset=utf-8', true, 200);
         exit(json_encode($data, 256));
     }
+
     /*
      * 入参判断
      */
@@ -123,9 +126,10 @@ abstract class TomBaseBusi
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->getMessage());
         }
     }
+
     public function camelData($arr, $ucfirst = false)
     {
-        if(is_object($arr) && is_callable([$arr, 'toArray']))     $arr = $arr->toArray();
+        if (is_object($arr) && is_callable([$arr, 'toArray'])) $arr = $arr->toArray();
         if (!is_array($arr)) {
             //如果非数组原样返回
             return $arr;
@@ -138,6 +142,12 @@ abstract class TomBaseBusi
             $temp[$key1] = $value1;
         }
         return $temp;
+    }
+
+    public function delete()
+    {
+        ThreadTom::deleteTom($this->threadId, $this->tomId, $this->key);
+        return $this->jsonReturn(false);
     }
 
 }
