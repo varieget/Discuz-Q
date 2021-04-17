@@ -147,6 +147,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
         }
 
         $result = $this->camelData(collect(json_decode($response->getBody())));
+        $result = $this->addUserInfo($user, $result);
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

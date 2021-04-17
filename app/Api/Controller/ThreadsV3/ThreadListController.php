@@ -20,20 +20,17 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\GroupUser;
-use App\Models\Order;
 use App\Models\Post;
-use App\Models\PostUser;
 use App\Models\Sequence;
 use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
-use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
 
 class ThreadListController extends DzqController
 {
 
-    use TomTrait;
+    use ThreadTrait;
 
     public function main()
     {
@@ -64,51 +61,13 @@ class ThreadListController extends DzqController
         $result = [];
         $linkString = '';
         foreach ($threadList as $thread) {
-            $userId = $thread['user_id'];
-            $user = [
-                'userName' => '匿名用户'
-            ];
-            if ((!$thread['is_anonymous'] && !empty($users[$userId])) || $this->user->id == $thread['user_id']) {
-                $user = $this->getUserInfo($users[$userId]);
-            }
-            $group = [];
-            if (!empty($groups[$userId])) {
-                $group = $this->getGroupInfo($groups[$userId]);
-            }
             $threadId = $thread['id'];
-            $post = $postsByThreadId[$thread['id']];
-            $textCover = false;
-            if (mb_strlen($post['content']) >= 200) {
-                $textCover = true;
-            }
-            $content = [
-                'text' => $textCover ? $post['content'] : Post::instance()->getContentSummary($post),
-                'indexes' => null
-            ];
-            if (isset($inPutToms[$threadId])) {
-                $content['indexes'] = $this->tomDispatcher($inPutToms[$threadId], $this->SELECT_FUNC, $threadId);
-            }
-            $position = [
-                'longitude' => $thread['longitude'],
-                'latitude' => $thread['latitude'],
-                'address' => $thread['address'],
-                'location' => $thread['location']
-            ];
-            $result[] = [
-                'user' => $user,
-                'group' => $group,
-                'likeReward' => $this->getLikeReward($thread, $post),
-                'threadId' => $threadId,
-                'textCover' => $textCover,
-                'userId' => $thread['user_id'],
-                'categoryId' => $thread['category_id'],
-                'title' => $thread['title'],
-                'position' => $position,
-                'price' => $thread['price'],
-                'attachmentPrice' => $thread['attachment_price'],
-                'isEssence' => $thread['is_essence'],
-                'content' => $content
-            ];
+            $userId = $thread['user_id'];
+            $user = empty($users[$userId]) ? false : $users[$userId];
+            $group = empty($groups[$userId]) ? false : $groups[$userId];
+            $post = empty($postsByThreadId[$threadId]) ? false : $postsByThreadId[$threadId];
+            $tomInput = empty($inPutToms[$threadId]) ? false : $inPutToms[$threadId];
+            $result[] = $this->packThreadDetail($user, $group, $thread, $post, $tomInput);
             $linkString .= ($thread['title'] . $post['content']);
         }
         list($search, $replace) = Thread::instance()->getReplaceString($linkString);
@@ -118,68 +77,6 @@ class ThreadListController extends DzqController
         }
         $threads['pageData'] = $result;
         $this->outPut(0, '', $threads);
-    }
-
-    /**
-     * @desc 获取点赞打赏分享的数量
-     * @param $thread
-     * @param $post
-     * @return array
-     */
-    private function getLikeReward($thread, $post)
-    {
-        $threadId = $thread['id'];
-        $postId = $post['id'];
-        $postUser = PostUser::query()->where('post_id', $postId)->orderByDesc('created_at');
-        $orderUser = Order::query()->where(['thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])->orderByDesc('created_at');
-        $postUser = $postUser->select('user_id', 'created_at')->limit(2)->get()->toArray();
-        $orderUser = $orderUser->select('user_id', 'created_at')->limit(2)->get()->toArray();
-        $mUser = array_merge($postUser, $orderUser);
-        usort($mUser, function ($a, $b) {
-            return strtotime($a['created_at']) < strtotime($b['created_at']);
-        });
-        $mUser = array_slice($mUser, 0, 2);
-        $userIds = array_column($mUser, 'user_id');
-        $users = [];
-        $usersObj = User::query()->whereIn('id', $userIds)->get();
-        foreach ($usersObj as $item) {
-            $users[] = [
-                'userId' => $item->id,
-                'avatar' => $item->avatar,
-                'userName' => $item->username
-            ];
-        }
-        return [
-            'users' => $users,
-            'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
-            'shareCount' => $thread['share_count']
-        ];
-    }
-
-    private function getGroupInfo($group)
-    {
-        return [
-            'groupId' => $group['group_id'],
-            'groupName' => $group['groups']['name'],
-            'groupIcon' => $group['groups']['icon'],
-            'isDisplay' => $group['groups']['is_display']
-        ];
-    }
-
-    private function getUserInfo($user)
-    {
-        return [
-            'userId' => $user['id'],
-            'userName' => $user['username'],
-            'avatar' => $user['avatar'],
-            'threadCount' => $user['thread_count'],
-            'followCount' => $user['follow_count'],
-            'fansCount' => $user['fans_count'],
-            'likedCount' => $user['liked_count'],
-            'questionCount' => $user['question_count'],
-            'isRealName' => !empty($user['realname']),
-            'joinedAt' => date('Y-m-d H:i:s', strtotime($user['joined_at']))
-        ];
     }
 
     function getFilterThreads($filter, $currentPage, $perPage)

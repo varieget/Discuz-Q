@@ -715,17 +715,22 @@ class Post extends DzqModel
 
     public function getContentSummary($post, &$postId = false)
     {
-//        $post = self::query()->where(['thread_id' => $threadId, 'is_first' => self::FIRST_YES])->first();
         if (empty($post)) {
             return '';
         } else {
-            $content = strip_tags($post['content']);
-            if (mb_strlen($content) > self::SUMMARY_LENGTH) {
-                $content = Str::substr($content, 0, self::SUMMARY_LENGTH) . self::SUMMARY_END_WITH;
-            }
+            $content = self::autoGenerateTitle($post['content']);
             $postId == true && $postId = $post['id'];
             return $content;
         }
+    }
+
+    public static function autoGenerateTitle($content)
+    {
+        $content = strip_tags($content);
+        if (mb_strlen($content) > self::SUMMARY_LENGTH) {
+            $content = Str::substr($content, 0, self::SUMMARY_LENGTH) . self::SUMMARY_END_WITH;
+        }
+        return $content;
     }
 
     public static function getOneActivePost($threadId)

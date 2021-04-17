@@ -19,16 +19,16 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
+use App\Models\Group;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
-use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
 
 class CreateThreadController extends DzqController
 {
-    use TomTrait;
+    use ThreadTrait;
 
     public function main()
     {
@@ -72,6 +72,16 @@ class CreateThreadController extends DzqController
     {
         $content = $this->inPut('content');
         //插入thread数据
+        $thread = $this->saveThread($content);
+        //插入post数据
+        $post = $this->savePost($thread, $content);
+        //插入tom数据
+        $tomJsons = $this->saveTom($thread, $content);
+        return $this->getResult($thread, $post, $tomJsons);
+    }
+
+    private function saveThread($content)
+    {
         $thread = new Thread();
         $userId = $this->user->id;
         $categoryId = $this->inPut('categoryId');
@@ -81,6 +91,9 @@ class CreateThreadController extends DzqController
         $freeWords = $this->inPut('freeWords');
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
+        if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
+        if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
+        empty($title) && $title = Post::autoGenerateTitle($content['text']);
         $dataThread = [
             'user_id' => $userId,
             'category_id' => $categoryId,
@@ -103,15 +116,17 @@ class CreateThreadController extends DzqController
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
         $thread->setRawAttributes($dataThread);
         $thread->save();
-        $threadId = $thread->id;
+        return $thread;
+    }
 
-        //插入post数据
+    private function savePost($thread, $content)
+    {
         $text = $content['text'];
         $post = new Post();
         list($ip, $port) = $this->getIpPort();
         $dataPost = [
-            'user_id' => $userId,
-            'thread_id' => $threadId,
+            'user_id' => $this->user->id,
+            'thread_id' => $thread['id'],
             'content' => $text,
             'ip' => $ip,
             'port' => $port,
@@ -120,50 +135,38 @@ class CreateThreadController extends DzqController
         ];
         $post->setRawAttributes($dataPost);
         $post->save();
-        //插入tom数据
+        return $post;
+    }
+
+    private function saveTom($thread, $content)
+    {
         $indexes = $content['indexes'];
         $attrs = [];
-        $tomJsons = $this->tomDispatcher($indexes, null, $threadId);
+        $tomJsons = $this->tomDispatcher($indexes, null, $thread['id']);
         $tags = [];
         foreach ($tomJsons as $key => $value) {
-            $attrs[] = $this->buildTomJson($threadId,$value['tomId'],$key,json_encode($value['body'], 256));
+            $attrs[] = [
+                'thread_id' => $thread['id'],
+                'tom_type' => $value['tomId'],
+                'key' => $key,
+                'value' => json_encode($value['body'], 256)
+            ];
             $tags[] = [
-                'thread_id' => $threadId,
+                'thread_id' => $thread['id'],
                 'tag' => $value['tomId']
             ];
         }
         ThreadTom::query()->insert($attrs);
         //添加tag类型
         ThreadTag::query()->insert($tags);
-
-        return $this->getResult($thread, $post, $tomJsons);
+        return $tomJsons;
     }
 
     private function getResult($thread, $post, $tomJsons)
     {
-
-        $linkString = $thread['title'] . $post['content'];
-        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
-        $content = [
-            'text' => str_replace($search, $replace, $post['content']),
-            'indexes' => $this->tomDispatcher($tomJsons, $this->SELECT_FUNC)
-        ];
-        return [
-            'threadId' => $thread['id'],
-            'userId' => $thread['user_id'],
-            'categoryId' => $thread['category_id'],
-            'title' => str_replace($search, $replace, $thread['title']),
-            'price' => $thread['price'],
-            'attachmentPrice' => $thread['attachment_price'],
-            'position' => [
-                'longitude' => $thread['longitude'],
-                'latitude' => $thread['latitude'],
-                'address' => $thread['address'],
-                'location' => $thread['location']
-            ],
-            'isAnonymous' => $thread['is_anonymous'],
-            'content' => $content
-        ];
+        $user = $this->user;
+        $group = Group::getGroup($user->id);
+        return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
 
     private function limitCreateThread()

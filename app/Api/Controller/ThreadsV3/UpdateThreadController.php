@@ -19,16 +19,17 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
+use App\Models\Group;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
-use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
 
 class UpdateThreadController extends DzqController
 {
-    use TomTrait;
+
+    use ThreadTrait;
 
     public function main()
     {
@@ -63,14 +64,15 @@ class UpdateThreadController extends DzqController
 
     private function executeEloquent($thread, $post, $content)
     {
-        $text = $content['text'];
+
         $tomJsons = $this->tomDispatcher($content, null, $thread->id);
-        //更新thread_text
+        //更新thread数据
         $this->saveThread($thread);
-        $this->savePost($post, $text);
-        //更新thread_tom
+        //更新post数据
+        $this->savePost($post, $content);
+        //更新tom数据
         $this->saveThreadTom($thread, $tomJsons);
-        return $this->getResult($thread, $tomJsons);
+        return $this->getResult($thread, $post, $tomJsons);
     }
 
 
@@ -100,10 +102,10 @@ class UpdateThreadController extends DzqController
         $thread->save();
     }
 
-    private function savePost($post, $text)
+    private function savePost($post, $content)
     {
         list($ip, $port) = $this->getIpPort();
-        $post->content = $text;
+        $post->content = $content['text'];;
         $post->ip = $ip;
         $post->port = $port;
         $post->is_first = Post::FIRST_YES;
@@ -156,23 +158,10 @@ class UpdateThreadController extends DzqController
         ThreadTag::query()->insert($tags);
     }
 
-    private function getResult($thread, $tomJsons)
+    private function getResult($thread, $post, $tomJsons)
     {
-        return [
-            'threadId' => $thread['id'],
-            'userId' => $thread['user_id'],
-            'categoryId' => $thread['category_id'],
-            'title' => $thread['title'],
-            'price' => $thread['price'],
-            'attachmentPrice' => $thread['attachmentPrice'],
-            'position' => [
-                'longitude' => $thread['longitude'],
-                'latitude' => $thread['latitude'],
-                'address' => $thread['address'],
-                'location' => $thread['location']
-            ],
-            'isAnonymous' => $thread['is_anonymous'],
-            'content' => $this->tomDispatcher($tomJsons, $this->SELECT_FUNC)
-        ];
+        $user = $this->user;
+        $group = Group::getGroup($user->id);
+        return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
 }
