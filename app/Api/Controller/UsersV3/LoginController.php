@@ -19,7 +19,74 @@
 namespace App\Api\Controller\UsersV3;
 
 
-class LoginController extends AbstractLoginBaseController
+use App\Commands\Users\GenJwtToken;
+use App\Common\ResponseCode;
+use App\Events\Users\Logind;
+use App\Models\SessionToken;
+use App\Passport\Repositories\UserRepository;
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Contracts\Events\Dispatcher as Events;
+use Illuminate\Validation\Factory as Validator;
+use Discuz\Foundation\Application;
+
+class LoginController extends AuthBaseController
 {
-    protected  $type = 'username_login';
+    protected $bus;
+
+    protected $app;
+
+    protected $events;
+
+    protected $type;
+
+    protected $validator;
+
+    public function __construct(
+        Dispatcher $bus,
+        Application $app,
+        Events $events,
+        Validator $validator
+    )
+    {
+        $this->bus = $bus;
+        $this->app = $app;
+        $this->events = $events;
+        $this->validator = $validator;
+    }
+
+    public function main()
+    {
+        $data = [
+            'username' => $this->inPut('username'),
+            'password' => $this->inPut('password'),
+        ];
+
+        $this->validator->make($data, [
+            'username' => 'required',
+            'password' => 'required',
+        ])->validate();
+
+        $type = $this->inPut('type');
+
+        $response = $this->bus->dispatch(
+            new GenJwtToken($data)
+        );
+
+        $accessToken = json_decode($response->getBody(), true);
+
+        if ($response->getStatusCode() === 200) {
+            $user = $this->app->make(UserRepository::class)->getUser();
+
+            $this->events->dispatch(new Logind($user));
+        }
+        if($type == 'mobilebrowser_username_login') {
+            //手机浏览器登录，需要做绑定前准备
+            $token = SessionToken::generate(SessionToken::WECHAT_MOBILE_BIND, $accessToken , $user->id);
+            $data = array_merge($this->camelData($accessToken),['sessionToken' => $token->token]);
+            $token->save();
+            return $this->outPut(ResponseCode::SUCCESS, '', $data);
+
+        }
+        return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($accessToken));
+    }
 }
