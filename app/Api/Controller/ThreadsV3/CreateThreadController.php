@@ -148,8 +148,7 @@ class CreateThreadController extends DzqController
     {
         $user = $this->user;
         $group = Group::getGroup($user->id);
-        $result = $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
-        return $result;
+        return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
 
     private function limitCreateThread()
