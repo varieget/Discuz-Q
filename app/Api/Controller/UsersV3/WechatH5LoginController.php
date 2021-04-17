@@ -145,7 +145,11 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
                 $accessToken = $this->bound->pcLogin($sessionToken, $accessToken, ['user_id' => $wechatUser->user->id]);
             }
 
-            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData(collect($accessToken)));
+            $result = $this->camelData(collect($accessToken));
+
+            $result = $this->addUserInfo($wechatUser->user, $result);
+
+            $this->outPut(ResponseCode::SUCCESS, '', $result);
         }
 
         $this->error($wxuser, $actor, $wechatUser, null, $sessionToken);
