@@ -88,9 +88,10 @@ trait TomTrait
         return $tomJsons;
     }
 
-    private function buildTomJson($tomId, $operation, $body)
+    private function buildTomJson($threadId,$tomId, $operation, $body)
     {
         return [
+            'threadId'=>$threadId,
             'tomId' => $tomId,
             'operation' => $operation,
             'body' => $body

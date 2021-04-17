@@ -126,12 +126,7 @@ class CreateThreadController extends DzqController
         $tomJsons = $this->tomDispatcher($indexes, null, $threadId);
         $tags = [];
         foreach ($tomJsons as $key => $value) {
-            $attrs[] = [
-                'thread_id' => $threadId,
-                'tom_type' => $value['tomId'],
-                'key' => $key,
-                'value' => json_encode($value['body'], 256)
-            ];
+            $attrs[] = $this->buildTomJson($threadId,$value['tomId'],$key,json_encode($value['body'], 256));
             $tags[] = [
                 'thread_id' => $threadId,
                 'tag' => $value['tomId']
