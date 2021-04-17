@@ -72,7 +72,7 @@ class CreateThreadController extends DzqController
     {
         $content = $this->inPut('content');
         //插入thread数据
-        $thread = $this->saveThread();
+        $thread = $this->saveThread($content);
         //插入post数据
         $post = $this->savePost($thread, $content);
         //插入tom数据
@@ -80,7 +80,7 @@ class CreateThreadController extends DzqController
         return $this->getResult($thread, $post, $tomJsons);
     }
 
-    private function saveThread()
+    private function saveThread($content)
     {
         $thread = new Thread();
         $userId = $this->user->id;
