@@ -97,6 +97,6 @@ class CreateAttachmentController extends DzqController
             @unlink($tmpFileWithExt);
         }
 
-        return $this->outPut(ResponseCode::SUCCESS,'');
+        return $this->outPut(ResponseCode::SUCCESS,'',$attachment);
     }
 }
