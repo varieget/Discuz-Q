@@ -47,7 +47,7 @@ abstract class AuthBaseController extends DzqController
         return $token;
     }
 
-    protected function getWechatH5Param()
+    protected function getWxuser()
     {
         $code           = $this->inPut('code');
         $sessionId      = $this->inPut('sessionId');
@@ -69,10 +69,7 @@ abstract class AuthBaseController extends DzqController
         $driver = $this->socialite->driver('wechat');
         $wxuser = $driver->user();
 
-        return $data = [
-            'request'   =>  $request,
-            'wxuser'    =>  $wxuser
-        ];
+        return $wxuser;
     }
 
     protected function recordWechatLog($wechatUser)
@@ -156,4 +153,5 @@ abstract class AuthBaseController extends DzqController
     protected function updateUserBindType(){
 
     }
+
 }
