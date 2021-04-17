@@ -56,6 +56,13 @@ class WechatH5QrCodeController extends DzqController
      * @var string[]
      */
     //todo 对接前端时更换路由
+    /*static $qrcodeTypeAndRouteMap = [
+        'pc_login'              => '/apiv3/users/wechat/h5.oauth',
+        'pc_bind'               => '/pages/user/pc-relation',
+        'mobile_browser_login'  => '/apiv3/users/wechat/h5.oauth',
+        'mobile_browser_bind'   => '/pages/user/pc-relation'
+    ];*/
+
     static $qrcodeTypeAndRouteMap = [
         'pc_login'              => '/apiv3/users/wechat/h5.oauth',
         'pc_bind'               => '/pages/user/pc-relation',
@@ -88,15 +95,17 @@ class WechatH5QrCodeController extends DzqController
         if(! in_array($type, self::$qrcodeType)) {
             $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
         }
+        $redirectUri = $this->inPut('redirectUri');
         //手机浏览器绑定则由前端传session_token
         $sessionToken = $this->inPut('session_token');
         if($type == 'mobile_browser_bind' && ! $sessionToken) {
             $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
         }
 
+        $route = '/apiv3/users/wechat/h5.oauth?'.$redirectUri;
         if($type != 'mobile_browser_bind') {
             //跳转路由选择
-            $route = self::$qrcodeTypeAndRouteMap[$type];
+//            $route = self::$qrcodeTypeAndRouteMap[$type];
             $actor = $this->user;
             if($actor && $actor->id) {
                 $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
