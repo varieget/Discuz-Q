@@ -28,30 +28,10 @@ class ListEmojiController extends DzqController
     public function main()
     {
         $Emoji = Emoji::all()->toArray();
-        foreach ($Emoji as $k=>$v){
-            $Emoji[$k] = $this->littleHump($v);
+        $url = $this->request->getServerParams()['REQUEST_SCHEME'].'://'.$this->request->getServerParams()['HTTP_HOST'].'/';
+        foreach ( $Emoji as $k=>$v) {
+            $Emoji[$k]['url'] = $url.$v['url'];
         }
-        return $this->outPut(ResponseCode::SUCCESS,'',$Emoji);
-    }
-
-    protected function littleHump($data){
-        $res = [];
-        $keys = array_keys($data);
-        foreach($keys as $val){
-            if(strpos($val,'_')){
-                $str = '';
-                foreach (explode('_',$val) as $k=>$v){
-                    if($k > 0){
-                        $str .= ucfirst($v);
-                    }else{
-                        $str .= $v;
-                    }
-                }
-                $res[$str] = $data[$val];
-            }else{
-                $res[$val] = $data[$val];
-            }
-        }
-        return $res;
+        return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($Emoji));
     }
 }
