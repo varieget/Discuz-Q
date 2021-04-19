@@ -20,6 +20,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\GenJwtToken;
 use App\Commands\Users\RegisterPhoneUser;
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Models\User;
@@ -68,6 +69,8 @@ class SmsLoginController extends AuthBaseController
                 new RegisterPhoneUser($this->user, $data)
             );
             $mobileCode->setRelation('user', $user);
+
+            $this->updateUserBindType($mobileCode->user,AuthUtils::PHONE);
         }
 
         //手机号登录需要填写扩展字段审核的场景

@@ -20,6 +20,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\AutoRegisterUser;
 use App\Commands\Users\GenJwtToken;
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Exceptions\NoUserException;
@@ -124,6 +125,9 @@ class WechatH5LoginController extends AuthBaseController
                 $wechatUser->setRelation('user', $user);
                 $wechatUser->save();
                 $this->db->commit();
+
+                $this->updateUserBindType($user,AuthUtils::WECHAT);
+
                 // 判断是否开启了注册审核
                 if (!(bool)$this->settings->get('register_validate')) {
                     // Tag 发送通知 (在注册绑定微信后 发送注册微信通知)
@@ -137,6 +141,8 @@ class WechatH5LoginController extends AuthBaseController
                     $wechatUser->setRelation('user', $actor);
                     $wechatUser->save();
                     $this->db->commit();
+
+                    $this->updateUserBindType($actor,AuthUtils::WECHAT);
                 }
             }
         } else {
@@ -183,6 +189,8 @@ class WechatH5LoginController extends AuthBaseController
             // bound
             if ($sessionToken) {
                 $accessToken = $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
+
+                $this->updateUserBindType($wechatUser->user,AuthUtils::WECHAT);
             }
 
             $result = $this->camelData(collect($accessToken));
