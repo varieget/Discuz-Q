@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\UserWechat;
@@ -85,6 +86,9 @@ class WechatH5BindController extends AuthBaseController
             $wechatUser->user_id = $actor->id;
             $wechatUser->setRelation('user', $actor);
             $wechatUser->save();
+
+            $this->updateUserBindType($actor,AuthUtils::WECHAT);
+
             $this->db->commit();
 
             // PC扫码使用

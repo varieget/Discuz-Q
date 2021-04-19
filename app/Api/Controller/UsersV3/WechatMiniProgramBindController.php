@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\User\Bind;
 use App\User\Bound;
@@ -79,22 +80,24 @@ class WechatMiniProgramBindController extends AuthBaseController
         }
 
         if ($wechatUser->user_id) {
-                $this->db->rollback();
-                $this->outPut(ResponseCode::BIND_ERROR,
-                              ResponseCode::$codeMap[ResponseCode::BIND_ERROR]
-                );
+            $this->db->rollback();
+            $this->outPut(ResponseCode::BIND_ERROR,
+                          ResponseCode::$codeMap[ResponseCode::BIND_ERROR]
+            );
         } else {
-                $wechatUser->user_id = $user->id;
-                // 先设置关系再save，为了同步微信头像
-                $wechatUser->setRelation('user', $user);
-                $wechatUser->save();
+            $wechatUser->user_id = $user->id;
+            // 先设置关系再save，为了同步微信头像
+            $wechatUser->setRelation('user', $user);
+            $wechatUser->save();
 
-                $this->db->commit();
+            $this->updateUserBindType($user, AuthUtils::WECHAT);
 
-                // PC扫码使用
-                if ($sessionToken) {
-                    $this->bound->bindVoid($sessionToken, $wechatUser);
-                }
+            $this->db->commit();
+
+            // PC扫码使用
+            if ($sessionToken) {
+                $this->bound->bindVoid($sessionToken, $wechatUser);
+            }
         }
         $this->outPut(ResponseCode::SUCCESS, '', []);
     }

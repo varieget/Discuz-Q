@@ -28,18 +28,58 @@ use App\Models\User;
 use App\Models\UserWechat;
 use App\Notifications\Messages\Wechat\RegisterWechatMessage;
 use App\Notifications\System;
+use App\Settings\SettingsRepository;
+use App\User\Bound;
 use Exception;
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Contracts\Events\Dispatcher as Events;
+use Illuminate\Contracts\Validation\Factory as ValidationFactory;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-
-class WechatH5LoginController extends AbstractWechatH5LoginBaseController
+use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Contracts\Socialite\Factory;
+class WechatH5LoginController extends AuthBaseController
 {
+
+    use AssertPermissionTrait;
+    protected $socialite;
+    protected $bus;
+    protected $validation;
+    protected $events;
+    protected $settings;
+    protected $bound;
+    protected $db;
+
+    public function __construct(
+        Factory             $socialite,
+        Dispatcher          $bus,
+        ValidationFactory   $validation,
+        Events              $events,
+        SettingsRepository  $settings,
+        Bound               $bound,
+        ConnectionInterface $db
+    ){
+        $this->socialite    = $socialite;
+        $this->bus          = $bus;
+        $this->validation   = $validation;
+        $this->events       = $events;
+        $this->settings     = $settings;
+        $this->bound        = $bound;
+        $this->db           = $db;
+    }
+
 
 
     public function main()
     {
+        //过渡开关打开
+        if((bool)$this->settings->get('is_need_transition')) {
+            $this->transitionLoginLogicVoid();
+        }
         //获取授权后微信用户信息
-        $wxuser         = $this->getWxUser();
+        $wxuser         = $this->getWxuser();
         $inviteCode     = $this->inPut('inviteCode');//邀请码非必须存在
         $sessionToken   = $this->inPut('sessionToken');//PC扫码使用，非必须存在
         $actor          = $this->user;
@@ -145,7 +185,11 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
                 $accessToken = $this->bound->pcLogin($sessionToken, $accessToken, ['user_id' => $wechatUser->user->id]);
             }
 
-            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData(collect($accessToken)));
+            $result = $this->camelData(collect($accessToken));
+
+            $result = $this->addUserInfo($wechatUser->user, $result);
+
+            $this->outPut(ResponseCode::SUCCESS, '', $result);
         }
 
         $this->error($wxuser, $actor, $wechatUser, null, $sessionToken);
@@ -198,6 +242,62 @@ class WechatH5LoginController extends AbstractWechatH5LoginBaseController
         }
 
         $this->outPut(ResponseCode::NET_ERROR, ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
-//        $this->outPut(ResponseCode::NET_ERROR, '', $noUserException);
+    }
+
+    /**
+     * 过渡阶段微信登录，过渡开关打开走此流程
+     */
+    private function transitionLoginLogicVoid()
+    {
+        /** 获取授权后微信用户基础信息*/
+        $wxuser = $this->getWxUser();
+
+        $this->db->beginTransaction();
+        /** @var UserWechat $wechatUser */
+        $wechatUser = UserWechat::query()
+            ->where('mp_openid', $wxuser->getId())
+            ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
+            ->lockForUpdate()
+            ->first();
+        // 微信信息不存在
+        if(! $wechatUser) {
+            $wechatUser = new UserWechat();
+        }
+
+        if(is_null($wechatUser->user)) {
+            // 站点关闭注册
+            if (!(bool)$this->settings->get('register_close')) {
+                $this->db->rollBack();
+                $this->outPut(ResponseCode::REGISTER_CLOSE,
+                    ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
+                );
+            }
+            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), new User()));
+            $wechatUser->save();//微信信息写入user_wechats
+            $this->db->commit();
+            //生成sessionToken,并把user_wechats 信息写入session_token
+            $token = SessionToken::generate(SessionToken::WECHAT_TRANSITION_LOGIN, (array)$wechatUser);
+            $token->save();
+            $sessionToken = $token->token;
+            //把token返回用户绑定用户使用
+            $this->outPut(ResponseCode::NEED_BIND_USER_OR_CREATE_USER, '', ['sessionToken' => $sessionToken]);
+        }
+
+        // 登陆用户和微信绑定相同，更新微信信息
+        $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $wechatUser->user));
+        $wechatUser->save();
+        $this->db->commit();
+
+        // 生成token
+        $params = [
+            'username' => $wechatUser->user->username,
+            'password' => ''
+        ];
+        GenJwtToken::setUid($wechatUser->user->id);
+        $response = $this->bus->dispatch(
+            new GenJwtToken($params)
+        );
+        $accessToken = json_decode($response->getBody());
+        $this->outPut(ResponseCode::SUCCESS, '', $accessToken);
     }
 }

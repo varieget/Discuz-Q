@@ -97,15 +97,15 @@ class WechatH5QrCodeController extends DzqController
         }
         $redirectUri = $this->inPut('redirectUri');
         //手机浏览器绑定则由前端传session_token
-        $sessionToken = $this->inPut('session_token');
+        $sessionToken = $this->inPut('sessionToken');
         if($type == 'mobile_browser_bind' && ! $sessionToken) {
             $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
         }
 
+        //跳转路由选择
         $route = '/apiv3/users/wechat/h5.oauth?redirect='.urlencode($redirectUri);
         if($type != 'mobile_browser_bind') {
             //跳转路由选择
-//            $route = self::$qrcodeTypeAndRouteMap[$type];
             $actor = $this->user;
             if($actor && $actor->id) {
                 $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
@@ -118,7 +118,11 @@ class WechatH5QrCodeController extends DzqController
             $sessionToken = $token->token;
         }
 
-        $locationUrl = $this->url->action($route, ['session_token' => $sessionToken]);
+        $locationUrl = $this->url->action($route, ['sessionToken' => $sessionToken]);
+        //浏览器点击微信登录直接生成二维码不进行sessionToken生成
+        if($type == 'mobile_browser_login') {
+            $locationUrl = $this->url->action($route);
+        }
 
         $qrCode = new QrCode($locationUrl);
 
@@ -130,6 +134,9 @@ class WechatH5QrCodeController extends DzqController
             'sessionToken' => $sessionToken,
             'base64Img' => $baseImg,
         ];
+        if($type=='mobile_browser_login') {
+            unset($data['sessionToken']);
+        }
 
         $this->outPut(ResponseCode::SUCCESS, '', $data);
     }

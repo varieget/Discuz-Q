@@ -97,4 +97,16 @@ class AuthUtils
         return $bindTypeArr;
     }
 
+    /**
+     * 根据新组合的绑定类型计算出 bind_type 值
+     * @param array $bindTypeArr
+     * @return int
+     */
+    public static function getBindType($bindTypeArr)
+    {
+        $bindTypeArr = is_array($bindTypeArr) ? $bindTypeArr : [];
+        $binType = array_sum($bindTypeArr);
+        return $binType;
+    }
+
 }
