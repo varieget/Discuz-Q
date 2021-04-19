@@ -88,8 +88,8 @@ class LoginController extends AuthBaseController
             $this->events->dispatch(new Logind($user));
 
             //过渡时期微信绑定用户名密码登录的用户
-            if($sessionToken && strlen($sessionToken) > 0) {
-                $this->events->dispatch(new TransitionBind($user, ['sessionToken']));
+            if($sessionToken && strlen($sessionToken) > 0 && (bool)$this->setting->get('is_need_transition')) {
+                $this->events->dispatch(new TransitionBind($user, ['sessionToken' => $sessionToken]));
             }
         }
 
