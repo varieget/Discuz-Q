@@ -98,3 +98,4 @@ $route->get('/users.list', 'users.list', ApiController\UsersV3\UsersListControll
 $route->post('/order.create', 'order.create', ApiController\OrdersV3\CreateOrderController::class);
 $route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\TradeV3\Notify\WechatNotifyController::class);
 $route->post('/trade/pay/order', 'trade.pay.order', ApiController\TradeV3\PayOrderController::class);
+$route->get('/categories', 'categories', ApiController\CategoryV3\ListCategoriesController::class);
