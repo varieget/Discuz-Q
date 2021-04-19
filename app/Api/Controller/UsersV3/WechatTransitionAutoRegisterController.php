@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Censor\Censor;
 use App\Commands\Users\AutoRegisterUser;
 use App\Commands\Users\GenJwtToken;
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Events\Users\TransitionBind;
@@ -100,6 +101,7 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
         $data['code']               = $inviteCode;
         $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
         $data['register_reason']    = trans('user.register_by_wechat_h5');
+        $data['bind_type']          = AuthUtils::WECHAT;
         $user = $this->bus->dispatch(
             new AutoRegisterUser(new User(), $data)
         );
