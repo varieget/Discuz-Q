@@ -153,18 +153,17 @@ abstract class AuthBaseController extends DzqController
     }
 
     public function updateUserBindType($user,$bindType){
-        $authUtils = app(AuthUtils::class);
-        if (!in_array($bindType,$authUtils->getLoginTypeArr())) {
+        if (!in_array($bindType,AuthUtils::getLoginTypeArr())) {
             $this->outPut(ResponseCode::BIND_TYPE_IS_NULL,
                           ResponseCode::$codeMap[ResponseCode::BIND_TYPE_IS_NULL]
             );
         }
 
-        $existBindType = $authUtils->getBindTypeArrByCombinationBindType($user->bind_type);
+        $existBindType = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
 
         if (!in_array($bindType, $existBindType)) {
             array_push($existBindType, $bindType);
-            $newBindType  = $authUtils->getBindType($existBindType);
+            $newBindType  = AuthUtils::getBindType($existBindType);
             $user->bind_type = $newBindType;
             $user->save();
         }

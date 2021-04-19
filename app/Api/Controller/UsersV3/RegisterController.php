@@ -26,6 +26,7 @@ use App\Common\ResponseCode;
 use App\Events\Users\Registered;
 use App\Events\Users\RegisteredCheck;
 use App\Events\Users\Saving;
+use App\Events\Users\TransitionBind;
 use App\Models\Invite;
 use App\Models\SessionToken;
 use App\Models\User;
@@ -73,6 +74,9 @@ class RegisterController extends DzqController
             $this->outPut(ResponseCode::REGISTER_CLOSE,ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]);
 
         }
+        //过度页开关打开需要把微信信息绑定至新用户，只在微信内有效
+        $sessionToken = $this->inPut('sessionToken');
+
         $data = [
             'username' => $this->inPut('username'),
             'password' => $this->inPut('password'),
@@ -86,17 +90,26 @@ class RegisterController extends DzqController
         ];
         //新增参数，注册类型
         $registerType = $this->settings->get('register_type');
-        if($registerType != 0) {
+        if($registerType != 0 && !$sessionToken) {
             $this->outPut(ResponseCode::REGISTER_TYPE_ERROR,ResponseCode::$codeMap[ResponseCode::REGISTER_TYPE_ERROR]);
         }
+
         $user = $this->bus->dispatch(
             new RegisterUser($this->request->getAttribute('actor'), $data)
         );
+        //微信内用户微信绑定新注册用户
+        if($sessionToken) {
+            $data['sessionToken'] = $sessionToken;
+            $this->events->dispatch(
+                new TransitionBind($user, $data)
+            );
+        }
 
         // 注册后的登录检查
         if (!(bool)$this->settings->get('register_validate')) {
             $this->events->dispatch(new RegisteredCheck($user));
         }
+        GenJwtToken::setUid($user->id);
         $response = $this->bus->dispatch(
             new GenJwtToken(Arr::only($data, 'username'))
         );
