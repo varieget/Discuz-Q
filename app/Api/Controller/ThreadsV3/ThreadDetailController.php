@@ -19,7 +19,6 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
 use App\Models\Group;
-use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTom;
