@@ -25,7 +25,6 @@ use App\Models\Sequence;
 use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
-use Carbon\Carbon;
 use Discuz\Base\DzqController;
 
 class ThreadListController extends DzqController
