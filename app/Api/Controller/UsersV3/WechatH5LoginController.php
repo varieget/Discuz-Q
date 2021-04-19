@@ -251,7 +251,6 @@ class WechatH5LoginController extends AuthBaseController
     {
         /** 获取授权后微信用户基础信息*/
         $wxuser = $this->getWxUser();
-
         $this->db->beginTransaction();
         /** @var UserWechat $wechatUser */
         $wechatUser = UserWechat::query()
@@ -263,7 +262,7 @@ class WechatH5LoginController extends AuthBaseController
         if(! $wechatUser) {
             $wechatUser = new UserWechat();
         }
-
+        $userWechatId = $wechatUser ? $wechatUser->id : 0;
         if(is_null($wechatUser->user)) {
             // 站点关闭注册
             if (!(bool)$this->settings->get('register_close')) {
@@ -274,11 +273,13 @@ class WechatH5LoginController extends AuthBaseController
             }
             $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), new User()));
             $wechatUser->save();//微信信息写入user_wechats
+            $userWechatId = $wechatUser->id ? $wechatUser->id : $userWechatId;
             $this->db->commit();
             //生成sessionToken,并把user_wechats 信息写入session_token
-            $token = SessionToken::generate(SessionToken::WECHAT_TRANSITION_LOGIN, (array)$wechatUser);
+            $token = SessionToken::generate(SessionToken::WECHAT_TRANSITION_LOGIN, ['user_wechat_id' => $userWechatId], null, 1800);
             $token->save();
             $sessionToken = $token->token;
+
             //把token返回用户绑定用户使用
             $this->outPut(ResponseCode::NEED_BIND_USER_OR_CREATE_USER, '', ['sessionToken' => $sessionToken]);
         }
