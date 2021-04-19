@@ -185,7 +185,7 @@ class WechatH5LoginController extends AuthBaseController
 
             // bound
             if ($sessionToken) {
-                $accessToken = $this->bound->pcLogin($sessionToken, $accessToken, ['user_id' => $wechatUser->user->id]);
+                $accessToken = $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
             }
 
             $result = $this->camelData(collect($accessToken));
