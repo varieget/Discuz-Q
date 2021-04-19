@@ -27,7 +27,7 @@ use Illuminate\Support\Collection;
 
 class SettingsRepository implements ContractsSettingRepository
 {
-    const CACHE_TTL = 30;
+    const CACHE_TTL = 300;
 
     /**
      * @var Collection
@@ -55,7 +55,8 @@ class SettingsRepository implements ContractsSettingRepository
                 mt_rand($ttl, $ttl + 10),
                 function () {
                     return $this->getAllFromDatabase();
-                });
+                }
+            );
         } else {
             $settings = $this->getAllFromDatabase();
         }

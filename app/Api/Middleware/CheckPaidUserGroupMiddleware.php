@@ -33,7 +33,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class CheckPaidUserGroupMiddleware implements MiddlewareInterface
 {
-    const CHECK_INTERVAL = 30;
+    const CHECK_INTERVAL = 120;
 
     public $events;
     protected $cache;
