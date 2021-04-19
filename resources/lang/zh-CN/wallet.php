@@ -68,4 +68,12 @@ return [
     'cash_type_error'       => '提现方式不存在',
     'cash_mch_invalid'      => '未开启微信企业付款到零钱功能',
 
+    'redpacket_freeze' => '红包冻结',
+    'redpacket_income' => '红包收入',
+    'redpacket_refund' => '红包退款',
+    'question_reward_freeze' => '悬赏冻结',
+    'question_reward_income' => '悬赏收入',
+    'question_reward_refund' => '悬赏退款',
+    'merge_freeze' => '合并订单冻结',
+    'merge_refund' => '合并订单退款'
 ];

@@ -25,6 +25,7 @@ use App\Models\Sequence;
 use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
+use Carbon\Carbon;
 use Discuz\Base\DzqController;
 
 class ThreadListController extends DzqController
@@ -43,7 +44,7 @@ class ThreadListController extends DzqController
         } else {
             $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
         }
-        $threadList = $threads['pageData'];
+        $threadList = $threads['pageData'] ?? [];
         !$threads && $threadList = [];
         $userIds = array_unique(array_column($threadList, 'user_id'));
         $groups = GroupUser::instance()->getGroupInfo($userIds);
@@ -112,6 +113,7 @@ class ThreadListController extends DzqController
             $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.user_id')
                 ->whereIn('tag', $types);
         }
+
         if (!empty($sort)) {
             switch ($sort) {
                 case Thread::SORT_BY_THREAD://按照发帖时间排序
@@ -122,6 +124,7 @@ class ThreadListController extends DzqController
                     $threads->orderByDesc('hot.last_post_time');
                     break;
                 case Thread::SORT_BY_HOT://按照热度排序
+                    $threads->whereBetween('created_at', [Carbon::parse('-7 days'), Carbon::now()]);
                     $threads->orderByDesc('th.view_count');
                     break;
                 default:
@@ -129,6 +132,7 @@ class ThreadListController extends DzqController
                     break;
             }
         }
+
         //关注
         if ($attention == 1 && !empty($this->user)) {
             $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'th.user_id')

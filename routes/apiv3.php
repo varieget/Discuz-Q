@@ -88,7 +88,13 @@ $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\Cr
 $route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
 $route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
 $route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
-$route->get('/topics.list', 'topics.list', ApiController\TopicV3\ListTopicController::class);
 $route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
 $route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
+
+$route->get('/topics.list', 'topics.list', ApiController\TopicV3\TopicListController::class);
+$route->get('/users.list', 'users.list', ApiController\UsersV3\UsersListController::class);
+
+$route->post('/order.create', 'order.create', ApiController\OrdersV3\CreateOrderController::class);
+$route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\TradeV3\Notify\WechatNotifyController::class);
+$route->post('/trade/pay/order', 'trade.pay.order', ApiController\TradeV3\PayOrderController::class);
