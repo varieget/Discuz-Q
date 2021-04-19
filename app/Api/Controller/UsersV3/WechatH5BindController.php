@@ -52,8 +52,7 @@ class WechatH5BindController extends AuthBaseController
 
     public function main()
     {
-        $param          = $this->getWechatH5Param();
-        $wxuser         = $param['wxuser'];
+        $wxuser         = $this->getWxuser();
         $sessionToken   = $this->inPut('sessionToken');//PC扫码使用
         $actor          = $this->user;
 
