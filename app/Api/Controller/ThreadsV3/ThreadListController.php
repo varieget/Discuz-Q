@@ -96,12 +96,14 @@ class ThreadListController extends DzqController
         $categoryids = [];
         $sort = Thread::SORT_BY_THREAD;
         $attention = 0;
+        $search = '';
         isset($filter['sticky']) && $stick = $filter['sticky'];
         isset($filter['essence']) && $essence = $filter['essence'];
         isset($filter['types']) && $types = $filter['types'];
         isset($filter['categoryids']) && $categoryids = $filter['categoryids'];
         isset($filter['sort']) && $sort = $filter['sort'];
         isset($filter['attention']) && $attention = $filter['attention'];
+        isset($filter['search']) && $search = $filter['search'];
         $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
         if (!$categoryids) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
@@ -113,6 +115,13 @@ class ThreadListController extends DzqController
             $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.user_id')
                 ->whereIn('tag', $types);
         }
+        if (!empty($search)) {
+            $threads = $threads->leftJoin('posts as post', 'th.id', '=', 'post.thread_id')
+                ->addSelect('post.content')
+                ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
+                ->whereNull('post.deleted_at')
+                ->where('post.content', 'like', '%' . $search . '%');
+        }
 
         if (!empty($sort)) {
             switch ($sort) {
@@ -120,11 +129,9 @@ class ThreadListController extends DzqController
                     $threads->orderByDesc('th.created_at');
                     break;
                 case Thread::SORT_BY_POST://按照评论时间排序
-                    $threads->leftJoin('thread_hot as hot', 'th.id', '=', 'hot.thread_id');
-                    $threads->orderByDesc('hot.last_post_time');
+                    $threads->orderByDesc('th.posted_at');
                     break;
                 case Thread::SORT_BY_HOT://按照热度排序
-                    $threads->whereBetween('created_at', [Carbon::parse('-7 days'), Carbon::now()]);
                     $threads->orderByDesc('th.view_count');
                     break;
                 default:
@@ -210,10 +217,12 @@ class ThreadListController extends DzqController
     private function getThreadsBuilder()
     {
         return Thread::query()
+            ->select('th.*')
             ->from('threads as th')
             ->whereNull('th.deleted_at')
-            ->where('is_sticky', Thread::BOOL_NO)
-            ->where('is_draft', Thread::IS_NOT_DRAFT)
-            ->where('is_approved', Thread::APPROVED);
+            ->where('th.is_sticky', Thread::BOOL_NO)
+            ->where('th.is_draft', Thread::IS_NOT_DRAFT)
+            ->where('th.is_approved', Thread::APPROVED);
+
     }
 }

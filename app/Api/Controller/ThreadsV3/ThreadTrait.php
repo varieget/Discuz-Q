@@ -43,6 +43,7 @@ trait ThreadTrait
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
+            'viewCount'=>$thread['view_count'],
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
             'isEssence' => $thread['is_essence'],
