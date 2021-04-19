@@ -281,7 +281,7 @@ class WechatH5LoginController extends AuthBaseController
             $sessionToken = $token->token;
 
             //把token返回用户绑定用户使用
-            $this->outPut(ResponseCode::NEED_BIND_USER_OR_CREATE_USER, '', ['sessionToken' => $sessionToken]);
+            $this->outPut(ResponseCode::NEED_BIND_USER_OR_CREATE_USER, '', ['sessionToken' => $sessionToken, 'nickname' => $wechatUser->nickname]);
         }
 
         // 登陆用户和微信绑定相同，更新微信信息
