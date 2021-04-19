@@ -28,9 +28,12 @@ class ListEmojiController extends DzqController
     public function main()
     {
         $Emoji = Emoji::all()->toArray();
-        $url = $this->request->getServerParams()['REQUEST_SCHEME'].'://'.$this->request->getServerParams()['HTTP_HOST'].'/';
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $port = $port == null ? '' : ':' . $port;
+        $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
         foreach ( $Emoji as $k=>$v) {
-            $Emoji[$k]['url'] = $url.$v['url'];
+            $Emoji[$k]['url'] = $path . $v['url'];
         }
         return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($Emoji));
     }
