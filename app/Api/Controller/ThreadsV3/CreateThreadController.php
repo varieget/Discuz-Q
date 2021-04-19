@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Censor\Censor;
 use App\Common\ResponseCode;
 use App\Models\Group;
 use App\Models\Post;
@@ -25,6 +26,7 @@ use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Str;
 
 class CreateThreadController extends DzqController
 {
@@ -58,7 +60,6 @@ class CreateThreadController extends DzqController
         $db->beginTransaction();
         try {
             $result = $this->executeEloquent();
-            //todo 发帖后的消息通知等
             $db->commit();
             return $result;
         } catch (\Exception $e) {
@@ -91,6 +92,7 @@ class CreateThreadController extends DzqController
         $freeWords = $this->inPut('freeWords');
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
+        $isDraft = $this->inPut('draft');
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
         empty($title) && $title = Post::autoGenerateTitle($content['text']);
@@ -112,12 +114,26 @@ class CreateThreadController extends DzqController
             $dataThread['address'] = '';
             $dataThread['location'] = '';
         }
-        //todo 判断是否需要审核
-        $dataThread['is_approved'] = Thread::BOOL_YES;
+        if ($this->boolApproved($title, $content['text'])) {
+            $dataThread['is_approved'] = Thread::BOOL_NO;
+        } else {
+            $dataThread['is_approved'] = Thread::BOOL_YES;
+        }
+        $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
         $thread->setRawAttributes($dataThread);
         $thread->save();
         return $thread;
+    }
+
+    private function boolApproved($title, $text)
+    {
+        $censor = app(Censor::class);
+        $sep = '__' . Str::random(6) . '__';
+        $contentForCheck = $title . $sep . $text;
+        $censor->checkText($contentForCheck);
+//        list($title, $content) = explode($sep, $censor->checkText($contentForCheck));
+        return $censor->isMod;
     }
 
     private function savePost($thread, $content)
