@@ -46,6 +46,12 @@ class ThreadListController extends DzqController
         }
         $threadList = $threads['pageData'] ?? [];
         !$threads && $threadList = [];
+        $threads['pageData'] = $this->getFullThreadData($threadList);
+        $this->outPut(0, '', $threads);
+    }
+
+    private function getFullThreadData($threadList)
+    {
         $userIds = array_unique(array_column($threadList, 'user_id'));
         $groups = GroupUser::instance()->getGroupInfo($userIds);
         $groups = array_column($groups, null, 'user_id');
@@ -76,8 +82,7 @@ class ThreadListController extends DzqController
             $item['title'] = str_replace($search, $replace, $item['title']);
             $item['content']['text'] = str_replace($search, $replace, $item['content']['text']);
         }
-        $threads['pageData'] = $result;
-        $this->outPut(0, '', $threads);
+        return $result;
     }
 
     function getFilterThreads($filter, $currentPage, $perPage)
