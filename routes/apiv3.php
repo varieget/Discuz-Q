@@ -58,8 +58,8 @@ $route->get('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', Api
 //$route->get('/users/mobilebrowser/wechat/h5.bind', 'mobilebrowser.wechat.h5.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
 //$route->post('/users/mobilebrowser/username.login', 'mobilebrowser.username.login', ApiController\UsersV3\MobileBrowserLoginController::class);
 //$route->get('/users/mobilebrowser/wechat/miniprogram.bind', 'mobilebrowser.wechat.miniprogram.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
-//过渡开关打开所走登录流程
-//$route->get('/users/wechat/transition/h5.login', 'wechat.transition.h5.login', ApiController\UsersV3\WechatTransitionH5LoginController::class);
+//过渡开关打开微信绑定自动创建账号
+$route->get('/users/wechat/transition/username.autobind', 'wechat.transition.username.autobind', ApiController\UsersV3\WechatTransitionAutoRegisterController::class);
 
 //登录页设置昵称
 $route->post('/users/nickname.set', 'users.nickname.set', ApiController\UsersV3\NicknameSettingController::class);
