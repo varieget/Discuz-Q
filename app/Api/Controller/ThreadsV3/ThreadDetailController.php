@@ -43,6 +43,7 @@ class ThreadDetailController extends DzqController
         }
         $user = User::query()->where('id', $thread['user_id'])->first();
         $group = Group::getGroup($user['id']);
+        $thread->increment('view_count');
         $result = $this->packThreadDetail($user, $group, $thread, $post, $this->getTomContent($thread), true);
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
