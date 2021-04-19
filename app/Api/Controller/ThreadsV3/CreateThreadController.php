@@ -26,7 +26,6 @@ use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Str;
 
 class CreateThreadController extends DzqController
 {
@@ -102,8 +101,10 @@ class CreateThreadController extends DzqController
             'title' => $title,
             'post_count' => 1
         ];
-        !empty($price) && $dataThread['price'] = $price;
-        !empty($attachmentPrice) && $dataThread['attachmentPrice'] = $attachmentPrice;
+        floatval($price) > 0 && $dataThread['price'] = floatval($price);
+        floatval($attachmentPrice) > 0 && $dataThread['attachment_price'] = floatval($attachmentPrice);
+        floatval($freeWords) > 0 && $dataThread['free_words'] = floatval($freeWords);
+
         !empty($freeWords) && $dataThread['free_words'] = $freeWords;
         if (!empty($position)) {
             $dataThread['longitude'] = $position['longitude'];
@@ -114,7 +115,8 @@ class CreateThreadController extends DzqController
             $dataThread['address'] = '';
             $dataThread['location'] = '';
         }
-        if ($this->boolApproved($title, $content['text'])) {
+        $this->boolApproved($title, $content['text'], $isApproved);
+        if ($isApproved) {
             $dataThread['is_approved'] = Thread::BOOL_NO;
         } else {
             $dataThread['is_approved'] = Thread::BOOL_YES;
@@ -126,15 +128,6 @@ class CreateThreadController extends DzqController
         return $thread;
     }
 
-    private function boolApproved($title, $text)
-    {
-        $censor = app(Censor::class);
-        $sep = '__' . Str::random(6) . '__';
-        $contentForCheck = $title . $sep . $text;
-        $censor->checkText($contentForCheck);
-//        list($title, $content) = explode($sep, $censor->checkText($contentForCheck));
-        return $censor->isMod;
-    }
 
     private function savePost($thread, $content)
     {

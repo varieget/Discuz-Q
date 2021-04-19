@@ -18,12 +18,14 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Censor\Censor;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
 use App\Models\User;
 use App\Modules\ThreadTom\TomTrait;
+use Illuminate\Support\Str;
 
 trait ThreadTrait
 {
@@ -44,6 +46,7 @@ trait ThreadTrait
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
             'viewCount' => $thread['view_count'],
+            'isApproved'=>$thread['is_approved'],
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
             'isEssence' => $thread['is_essence'],
@@ -153,6 +156,24 @@ trait ThreadTrait
             'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
             'shareCount' => $thread['share_count']
         ];
+    }
+
+    /**
+     * @desc 查询是否需要审核
+     * @param $title
+     * @param $text
+     * @param null $isApproved 是否进审核
+     * @return array
+     */
+    private function boolApproved($title, $text, &$isApproved = null)
+    {
+        $censor = app(Censor::class);
+        $sep = '__' . Str::random(6) . '__';
+        $contentForCheck = $title . $sep . $text;
+        $censor->checkText($contentForCheck);
+        list($title, $content) = explode($sep, $censor->checkText($contentForCheck));
+        $isApproved = $censor->isMod;
+        return [$title, $content];
     }
 
 }

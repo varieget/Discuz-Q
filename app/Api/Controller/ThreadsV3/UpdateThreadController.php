@@ -67,7 +67,7 @@ class UpdateThreadController extends DzqController
 
         $tomJsons = $this->tomDispatcher($content, null, $thread->id);
         //更新thread数据
-        $this->saveThread($thread);
+        $this->saveThread($thread, $content);
         //更新post数据
         $this->savePost($post, $content);
         //更新tom数据
@@ -76,12 +76,17 @@ class UpdateThreadController extends DzqController
     }
 
 
-    private function saveThread($thread)
+    private function saveThread($thread, $content)
     {
         $title = $this->inPut('title');//非必填项
         $categoryId = $this->inPut('categoryId');
+        $price = $this->inPut('price');
+        $attachmentPrice = $this->inPut('attachmentPrice');
+        $freeWords = $this->inPut('freeWords');
         $position = $this->inPut('position');
-        $isAnonymous = $this->inPut('anonymous');//非必须
+        $isAnonymous = $this->inPut('anonymous');
+        $isDraft = $this->inPut('draft');
+
         !empty($position) && $this->dzqValidate($position, [
             'longitude' => 'required',
             'latitude' => 'required',
@@ -90,15 +95,23 @@ class UpdateThreadController extends DzqController
         ]);
         !empty($title) && $thread->title = $title;
         !empty($categoryId) && $thread->category_id = $categoryId;
-        !empty($isAnonymous) && $thread->is_anonymous = $isAnonymous;
         if (!empty($position)) {
             $thread->longitude = $position['longitude'];
             $thread->latitude = $position['latitude'];
             $thread->address = $position['address'];
             $thread->location = $position['location'];
         }
-        //todo 判断是否需要审核
-        $dataThread['is_approved'] = Thread::BOOL_YES;
+        floatval($price) > 0 && $thread->price = floatval($price);
+        floatval($attachmentPrice) > 0 && $thread->attachment_price = floatval($attachmentPrice);
+        floatval($freeWords) > 0 && $thread->free_words = floatval($freeWords);
+        $this->boolApproved($title, $content['text'], $isApproved);
+        if ($isApproved) {
+            $thread->is_approved = Thread::BOOL_NO;
+        } else {
+            $thread->is_approved = Thread::BOOL_YES;
+        }
+        $isDraft && $thread->is_draft = Thread::BOOL_YES;
+        !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
         $thread->save();
     }
 

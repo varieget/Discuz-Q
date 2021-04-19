@@ -81,7 +81,7 @@ $route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomControl
 //首页配置接口
 $route->get('/forum', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
 
-$route->post('/thread.share','thread.share',ApiController\ThreadsV3\UpdateThreadShareController::class);
+$route->post('/thread.share','thread.share',ApiController\ThreadsV3\ThreadShareController::class);
 $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
 $route->get('/attachments', 'attachments.resource', ApiController\AttachmentV3\ResourceAttachmentController::class);
 $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
