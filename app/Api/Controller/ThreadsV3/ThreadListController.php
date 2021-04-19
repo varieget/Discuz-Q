@@ -25,6 +25,7 @@ use App\Models\Sequence;
 use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
+use Carbon\Carbon;
 use Discuz\Base\DzqController;
 
 class ThreadListController extends DzqController
@@ -131,6 +132,7 @@ class ThreadListController extends DzqController
                     $threads->orderByDesc('th.posted_at');
                     break;
                 case Thread::SORT_BY_HOT://按照热度排序
+                    $threads->whereBetween('th.created_at', [Carbon::parse('-7 days'), Carbon::now()]);
                     $threads->orderByDesc('th.view_count');
                     break;
                 default:
