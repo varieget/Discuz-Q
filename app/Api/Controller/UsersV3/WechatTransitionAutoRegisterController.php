@@ -21,7 +21,6 @@ namespace App\Api\Controller\UsersV3;
 use App\Censor\Censor;
 use App\Commands\Users\AutoRegisterUser;
 use App\Commands\Users\GenJwtToken;
-use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Events\Users\TransitionBind;
