@@ -127,7 +127,19 @@ class ThreadListController extends DzqController
                 ->whereNull('post.deleted_at')
                 ->where('post.content', 'like', '%' . $search . '%');
         }
+        $this->setFilterSort($threads, $sort);
+        //关注
+        if ($attention == 1 && !empty($this->user)) {
+            $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'th.user_id')
+                ->where('follow.from_user_id', $this->user->id);
+        }
+        !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
+        $threads = $this->pagination($currentPage, $perPage, $threads);
+        return $threads;
+    }
 
+    private function setFilterSort($threads, $sort)
+    {
         if (!empty($sort)) {
             switch ($sort) {
                 case Thread::SORT_BY_THREAD://按照发帖时间排序
@@ -145,15 +157,6 @@ class ThreadListController extends DzqController
                     break;
             }
         }
-
-        //关注
-        if ($attention == 1 && !empty($this->user)) {
-            $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'th.user_id')
-                ->where('follow.from_user_id', $this->user->id);
-        }
-        !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
-        $threads = $this->pagination($currentPage, $perPage, $threads);
-        return $threads;
     }
 
     function getDefaultHomeThreads($filter, $currentPage, $perPage)
