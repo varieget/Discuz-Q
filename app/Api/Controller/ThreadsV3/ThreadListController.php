@@ -112,13 +112,21 @@ class ThreadListController extends DzqController
             $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.user_id')
                 ->whereIn('tag', $types);
         }
-
         if (!empty($sort)) {
-            if ($sort == Thread::SORT_BY_THREAD) {//按照发帖时间排序
-                $threads->orderByDesc('th.created_at');
-            } else if ($sort == Thread::SORT_BY_POST) {//按照评论时间排序
-                $threads->leftJoin('thread_hot as hot', 'th.id', '=', 'hot.thread_id');
-                $threads->orderByDesc('hot.last_post_time');
+            switch ($sort) {
+                case Thread::SORT_BY_THREAD://按照发帖时间排序
+                    $threads->orderByDesc('th.created_at');
+                    break;
+                case Thread::SORT_BY_POST://按照评论时间排序
+                    $threads->leftJoin('thread_hot as hot', 'th.id', '=', 'hot.thread_id');
+                    $threads->orderByDesc('hot.last_post_time');
+                    break;
+                case Thread::SORT_BY_HOT://按照热度排序
+                    $threads->orderByDesc('th.view_count');
+                    break;
+                default:
+                    $threads->orderByDesc('th.created_at');
+                    break;
             }
         }
         //关注
