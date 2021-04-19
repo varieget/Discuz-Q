@@ -79,6 +79,12 @@ class Order extends Model
 
     const ORDER_TYPE_RENEW = 8; //站点付费
 
+    const ORDER_TYPE_REDPACKET = 9; //红包
+
+    const ORDER_TYPE_QUESTION_REWARD = 10; //悬赏
+
+    const ORDER_TYPE_MERGE = 11; // 合并订单
+
     const ORDER_TYPE_TEXT = 20; //文字帖红包
 
     const ORDER_TYPE_LONG = 21; //长文帖红包
@@ -96,7 +102,9 @@ class Order extends Model
 
     const ORDER_STATUS_EXPIRED = 4; //订单已过期
 
-    const ORDER_STATUS_RETURN = 10; //已退款订单
+    const ORDER_STATUS_PART_OF_RETURN = 5; //部分退款
+
+    const ORDER_STATUS_RETURN = 10; //全额退款
 
     const ORDER_STATUS_UNTREATED = 11; //在异常订单处理中不进行处理的订单
 
@@ -148,6 +156,10 @@ class Order extends Model
         5 => '问答回答收入',
         6 => '问答围观收入',
         7 => '付费附件',
+        8 => '站点付费',
+        9 => '红包',
+        10 => '悬赏',
+        11 => '合并订单',
         20 => '文字帖红包',
         21 => '长文帖红包',
     ];
