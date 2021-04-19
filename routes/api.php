@@ -474,8 +474,7 @@ $route->post('/posts.v2', 'posts.v2', ApiController\Posts\CreatePostV2Controller
 
 $route->get('/forum.v2', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
 
-
-
+$route->get('/user.v2', 'user.resource.v2', ApiController\Users\ProfileV2Controller::class);
 
 $route->get('/thread.detail.v3','thread.detail.v3',ApiController\ThreadsV3\ThreadDetailController::class);
 $route->get('/thread.list.v3','thread.list.v3',ApiController\ThreadsV3\ThreadListController::class);
