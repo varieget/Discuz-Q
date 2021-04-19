@@ -78,7 +78,7 @@ class ThreadStickController extends DzqController
             }
             $linkString .= $title;
             $data [] = [
-                'pid' => $thread['id'],
+                'threadId' => $thread['id'],
                 'categoryId' => $thread['category_id'],
                 'title' => $title,
                 'canViewPosts' => $this->canViewPosts($thread, $permissions)
