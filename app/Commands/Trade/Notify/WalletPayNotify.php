@@ -120,6 +120,24 @@ class WalletPayNotify
                     $userWallet->freeze_amount = $userWallet->freeze_amount + $this->data['amount'];
                     $freezeAmount = $this->data['amount'];
                     break;
+                case Order::ORDER_TYPE_REDPACKET:
+                    $change_type = UserWalletLog::TYPE_REDPACKET_FREEZE;
+                    $change_type_lang = 'wallet.redpacket_freeze';
+                    $userWallet->freeze_amount = $userWallet->freeze_amount + $this->data['amount'];
+                    $freezeAmount = $this->data['amount'];
+                    break;
+                case Order::ORDER_TYPE_QUESTION_REWARD:
+                    $change_type = UserWalletLog::TYPE_QUESTION_REWARD_FREEZE;
+                    $change_type_lang = 'wallet.question_reward_freeze';
+                    $userWallet->freeze_amount = $userWallet->freeze_amount + $this->data['amount'];
+                    $freezeAmount = $this->data['amount'];
+                    break;
+                case Order::ORDER_TYPE_MERGE:
+                    $change_type = UserWalletLog::TYPE_MERGE_FREEZE;
+                    $change_type_lang = 'wallet.merge_freeze';
+                    $userWallet->freeze_amount = $userWallet->freeze_amount + $this->data['amount'];
+                    $freezeAmount = $this->data['amount'];
+                    break;
                 default:
                     $change_type = $this->data['type'];
                     $change_type_lang = '';
@@ -134,7 +152,11 @@ class WalletPayNotify
                 $change_type,
                 trans($change_type_lang),
                 null,
-                $this->data['id']
+                $this->data['id'],
+                0,
+                0,
+                0,
+                $this->data['thread_id'] ?? 0
             );
 
             // 支付成功处理
@@ -147,7 +169,7 @@ class WalletPayNotify
             }
             $connection->commit();
             if ($order_info) {
-                app('payLog')->info("微信支付成功,用户id:{$this->data['user_id']}");
+                app('payLog')->info("钱包支付成功,用户id:{$this->data['user_id']}");
                 return [
                     'wallet_pay' => [
                         'result' => 'success',

@@ -16,22 +16,13 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\EmojiV3;
+namespace App\Models;
 
-use App\Common\ResponseCode;
-use App\Models\Emoji;
-use Discuz\Base\DzqController;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
-class ListEmojiController extends DzqController
+class OrderChildren extends Model
 {
-
-    public function main()
-    {
-        $Emoji = Emoji::all()->toArray();
-        $url = $this->request->getServerParams()['REQUEST_SCHEME'].'://'.$this->request->getServerParams()['HTTP_HOST'].'/';
-        foreach ( $Emoji as $k=>$v) {
-            $Emoji[$k]['url'] = $url.$v['url'];
-        }
-        return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($Emoji));
-    }
+    public $timestamps = false;
+    protected $table = 'order_children';
 }

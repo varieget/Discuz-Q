@@ -132,8 +132,9 @@ class Thread extends DzqModel
      */
     const CONTENT_LENGTH = 80;
 
-    const  SORT_BY_THREAD = 1;
-    const  SORT_BY_POST = 2;
+    const  SORT_BY_THREAD = 1;//帖子创建时间排序
+    const  SORT_BY_POST = 2;//评论创建时间排序
+    const SORT_BY_HOT = 3;//热度排序
 
     /**
      * 草稿

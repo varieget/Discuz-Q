@@ -81,6 +81,8 @@ class ResponseCode
     const NAME_LENGTH_ERROR = -7041;
     const USERNAME_HAD_EXIST = -7042;
     const SMS_SERVICE_ENABLED = -7043;
+    const BIND_TYPE_IS_NULL = -7044;
+    
     const NEED_BIND_WECHAT = 8000;
     const NEED_BIND_PHONE = 8001;
 
@@ -135,6 +137,7 @@ class ResponseCode
         self::USERNAME_HAD_EXIST => '用户名已经存在',
         self::SMS_SERVICE_ENABLED => '短信服务未开启',
         self::NEED_BIND_WECHAT => '需要绑定微信',
-        self::NEED_BIND_PHONE  => '需要绑定手机'
+        self::NEED_BIND_PHONE  => '需要绑定手机',
+        self::BIND_TYPE_IS_NULL => '绑定类型不存在',
     ];
 }

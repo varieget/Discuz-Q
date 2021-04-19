@@ -98,6 +98,7 @@ class CreateThreadController extends DzqController
             'user_id' => $userId,
             'category_id' => $categoryId,
             'title' => $title,
+            'post_count' => 1
         ];
         !empty($price) && $dataThread['price'] = $price;
         !empty($attachmentPrice) && $dataThread['attachmentPrice'] = $attachmentPrice;

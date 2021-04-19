@@ -48,12 +48,12 @@ $route->post('/users/sms.reset.pay.pwd', 'sms.reset.pay.pwd', ApiController\User
 //H5登录
 $route->get('/users/wechat/h5.oauth', 'wechat.h5.oauth', ApiController\UsersV3\WechatH5OauthController::class);
 $route->get('/users/wechat/h5.login', 'wechat.h5.login', ApiController\UsersV3\WechatH5LoginController::class);
-$route->post('/users/wechat/h5.bind', 'wechat.h5.bind', ApiController\UsersV3\WechatH5BindController::class);
-$route->post('/users/wechat/h5.rebind', 'wechat.h5.rebind', ApiController\UsersV3\WechatH5RebindController::class);
+$route->get('/users/wechat/h5.bind', 'wechat.h5.bind', ApiController\UsersV3\WechatH5BindController::class);
+$route->get('/users/wechat/h5.rebind', 'wechat.h5.rebind', ApiController\UsersV3\WechatH5RebindController::class);
 //小程序
-$route->post('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiController\UsersV3\WechatMiniprogramLoginController::class);
-$route->post('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\UsersV3\WechatMiniprogramBindController::class);
-$route->post('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\UsersV3\WechatMiniprogramRebindController::class);
+$route->get('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiController\UsersV3\WechatMiniprogramLoginController::class);
+$route->get('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\UsersV3\WechatMiniprogramBindController::class);
+$route->get('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\UsersV3\WechatMiniprogramRebindController::class);
 //手机浏览器（微信外）登录并绑定微信
 //$route->get('/users/mobilebrowser/wechat/h5.bind', 'mobilebrowser.wechat.h5.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
 //$route->post('/users/mobilebrowser/username.login', 'mobilebrowser.username.login', ApiController\UsersV3\MobileBrowserLoginController::class);
@@ -88,7 +88,14 @@ $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\Cr
 $route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
 $route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
 $route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
-$route->get('/topics.list', 'topics.list', ApiController\TopicV3\ListTopicController::class);
 $route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
 $route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
+
+$route->get('/topics.list', 'topics.list', ApiController\TopicV3\TopicListController::class);
+$route->get('/users.list', 'users.list', ApiController\UsersV3\UsersListController::class);
+
+$route->post('/order.create', 'order.create', ApiController\OrdersV3\CreateOrderController::class);
+$route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\TradeV3\Notify\WechatNotifyController::class);
+$route->post('/trade/pay/order', 'trade.pay.order', ApiController\TradeV3\PayOrderController::class);
+$route->get('/categories', 'categories', ApiController\CategoryV3\ListCategoriesController::class);

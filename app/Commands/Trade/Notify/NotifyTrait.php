@@ -20,6 +20,7 @@ namespace App\Commands\Trade\Notify;
 
 use App\Events\Group\PaidGroup;
 use App\Models\Order;
+use App\Models\OrderChildren;
 use App\Models\PayNotify;
 use App\Models\User;
 use App\Models\UserWallet;
@@ -188,6 +189,28 @@ trait NotifyTrait
                 case Order::ORDER_TYPE_LONG:
                     // 添加长文帖红包
                     $this->orderInfo->save();
+                    return $this->orderInfo;
+
+                // 红包支出
+                case Order::ORDER_TYPE_REDPACKET:
+                    $this->orderInfo->save();
+                    return $this->orderInfo;
+
+                // 悬赏支出
+                case Order::ORDER_TYPE_QUESTION_REWARD:
+                    $this->orderInfo->save();
+                    return $this->orderInfo;
+
+                // 合并订单支出
+                case Order::ORDER_TYPE_MERGE:
+                    $this->orderInfo->save();
+                    $orderChildrenInfo = OrderChildren::query()->where('status', Order::ORDER_STATUS_PENDING)->where('order_sn', $this->orderInfo->order_sn)->get();
+                    $orderData = $this->orderInfo;
+                     $orderChildrenInfo->map(function ($orderChildren) use($orderData) {
+                        $orderChildren->status = Order::ORDER_STATUS_PAID;
+                        $orderChildren->thread_id = $orderData->thread_id ?? 0;
+                        $orderChildren->save();
+                     });
                     return $this->orderInfo;
 
                 default:

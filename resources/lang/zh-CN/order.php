@@ -19,8 +19,12 @@ return [
     'order_type_renew'              => '站点付费',
     'order_thread_attachment_error' => '付费附件',
 
-    'order_type_text'               =>'文字帖红包',
-    'order_type_long'               =>'长文帖红包',
+    'order_type_text'               => '文字帖红包',
+    'order_type_long'               => '长文帖红包',
+
+    'order_type_redpacket'          => '支付红包',
+    'order_type_question_reward'    => '支付悬赏',
+    'order_type_merge'              => '红包与悬赏合并支付',
 
     'payee_not_found'               => '收款人不存在',
     'order_group_error'             => '用户组不存在或配置有误',

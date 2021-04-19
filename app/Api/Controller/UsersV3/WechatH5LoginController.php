@@ -46,7 +46,6 @@ class WechatH5LoginController extends AuthBaseController
     use AssertPermissionTrait;
     protected $socialite;
     protected $bus;
-    protected $cache;
     protected $validation;
     protected $events;
     protected $settings;
@@ -56,7 +55,6 @@ class WechatH5LoginController extends AuthBaseController
     public function __construct(
         Factory             $socialite,
         Dispatcher          $bus,
-        Repository          $cache,
         ValidationFactory   $validation,
         Events              $events,
         SettingsRepository  $settings,
@@ -65,7 +63,6 @@ class WechatH5LoginController extends AuthBaseController
     ){
         $this->socialite    = $socialite;
         $this->bus          = $bus;
-        $this->cache        = $cache;
         $this->validation   = $validation;
         $this->events       = $events;
         $this->settings     = $settings;

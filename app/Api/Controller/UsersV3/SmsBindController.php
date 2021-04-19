@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 
 class SmsBindController extends AuthBaseController
@@ -37,6 +38,8 @@ class SmsBindController extends AuthBaseController
         if ($this->user->exists) {
             $this->user->changeMobile($mobileCode->mobile);
             $this->user->save();
+
+            $this->updateUserBindType($mobileCode->user, AuthUtils::PHONE);
 
             $this->outPut(ResponseCode::SUCCESS, '', []);
         }

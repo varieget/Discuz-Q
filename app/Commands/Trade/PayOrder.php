@@ -121,8 +121,10 @@ class PayOrder
         $this->setting = $setting;
         $this->url     = $url;
         $this->userWalletFailLogs = $userWalletFailLogs;
+        if(Arr::get($this->data, 'data.attributes')){
+            $this->data = collect(Arr::get($this->data, 'data.attributes'));
+        }
 
-        $this->data = collect(Arr::get($this->data, 'data.attributes'));
         // 使用钱包支付时，检查是否设置支付密码
         if (
             $this->data->get('payment_type') == Order::PAYMENT_TYPE_WALLET
@@ -220,6 +222,15 @@ class PayOrder
                 break;
             case Order::ORDER_TYPE_LONG:
                 $order_info->body = trans('order.order_type_long');
+                break;
+            case Order::ORDER_TYPE_REDPACKET:
+                $order_info->body = trans('order.order_type_redpacket');
+                break;
+            case Order::ORDER_TYPE_QUESTION_REWARD:
+                $order_info->body = trans('order.order_type_question_reward');
+                break;
+            case Order::ORDER_TYPE_MERGE:
+                $order_info->body = trans('order.order_type_merge');
                 break;
             default:
                 $order_info->body = '';
