@@ -21,9 +21,8 @@ namespace App\Api\Controller\UsersV3;
 use App\Censor\Censor;
 use App\Commands\Users\AutoRegisterUser;
 use App\Commands\Users\GenJwtToken;
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
-use App\Events\Users\Logind;
-use App\Events\Users\TransitionBind;
 use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
@@ -32,7 +31,6 @@ use App\Notifications\System;
 use App\Validators\UserValidator;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
-use Illuminate\Support\Arr;
 use App\Settings\SettingsRepository;
 use Illuminate\Support\Str;
 use Illuminate\Database\ConnectionInterface;
@@ -69,8 +67,14 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
     }
     public function main()
     {
+        if(!(bool)$this->settings->get('is_need_transition')) {
+            $this->outPut(ResponseCode::TRANSITION_NOT_OPEN);
+        }
         //过度页开关打开需要把微信信息绑定至新用户，只在微信内有效
         $sessionToken = $this->inPut('sessionToken');
+        if(! $sessionToken) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
         $token = SessionToken::get($sessionToken);
         if(! $token) {
             //授权信息过期，重新授权
@@ -99,6 +103,7 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
         }
         $data['code']               = $inviteCode;
         $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
+        $data['nickname']           = Str::of($wechatUser->nickname)->substr(0, 15);
         $data['register_reason']    = trans('user.register_by_wechat_h5');
         $data['bind_type']          = AuthUtils::WECHAT;
         $user = $this->bus->dispatch(
@@ -107,6 +112,7 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
         $wechatUser->user_id = $user->id;
         // 先设置关系，为了同步微信头像
         $wechatUser->setRelation('user', $user);
+
         $wechatUser->save();
         $this->db->commit();
         // 判断是否开启了注册审核
