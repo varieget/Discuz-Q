@@ -24,7 +24,6 @@ use App\Models\Permission;
 use App\Models\Post;
 use App\Models\Setting;
 use App\Models\Thread;
-use App\Models\ThreadText;
 use Discuz\Base\DzqController;
 
 class ThreadStickController extends DzqController

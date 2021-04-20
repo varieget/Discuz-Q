@@ -17,7 +17,6 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
 use App\Common\ResponseCode;
 use App\Models\Group;
 use App\Models\Post;
@@ -58,7 +57,6 @@ class CreateThreadController extends DzqController
         $db->beginTransaction();
         try {
             $result = $this->executeEloquent();
-            //todo 发帖后的消息通知等
             $db->commit();
             return $result;
         } catch (\Exception $e) {
@@ -91,6 +89,7 @@ class CreateThreadController extends DzqController
         $freeWords = $this->inPut('freeWords');
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
+        $isDraft = $this->inPut('draft');
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
         empty($title) && $title = Post::autoGenerateTitle($content['text']);
@@ -100,8 +99,10 @@ class CreateThreadController extends DzqController
             'title' => $title,
             'post_count' => 1
         ];
-        !empty($price) && $dataThread['price'] = $price;
-        !empty($attachmentPrice) && $dataThread['attachmentPrice'] = $attachmentPrice;
+        floatval($price) > 0 && $dataThread['price'] = floatval($price);
+        floatval($attachmentPrice) > 0 && $dataThread['attachment_price'] = floatval($attachmentPrice);
+        floatval($freeWords) > 0 && $dataThread['free_words'] = floatval($freeWords);
+
         !empty($freeWords) && $dataThread['free_words'] = $freeWords;
         if (!empty($position)) {
             $dataThread['longitude'] = $position['longitude'];
@@ -112,13 +113,19 @@ class CreateThreadController extends DzqController
             $dataThread['address'] = '';
             $dataThread['location'] = '';
         }
-        //todo 判断是否需要审核
-        $dataThread['is_approved'] = Thread::BOOL_YES;
+        $this->boolApproved($title, $content['text'], $isApproved);
+        if ($isApproved) {
+            $dataThread['is_approved'] = Thread::BOOL_NO;
+        } else {
+            $dataThread['is_approved'] = Thread::BOOL_YES;
+        }
+        $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
         $thread->setRawAttributes($dataThread);
         $thread->save();
         return $thread;
     }
+
 
     private function savePost($thread, $content)
     {

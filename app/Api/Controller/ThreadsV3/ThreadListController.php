@@ -23,8 +23,10 @@ use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\Sequence;
 use App\Models\Thread;
+use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\User;
+use Carbon\Carbon;
 use Discuz\Base\DzqController;
 
 class ThreadListController extends DzqController
@@ -45,6 +47,12 @@ class ThreadListController extends DzqController
         }
         $threadList = $threads['pageData'] ?? [];
         !$threads && $threadList = [];
+        $threads['pageData'] = $this->getFullThreadData($threadList);
+        $this->outPut(0, '', $threads);
+    }
+
+    private function getFullThreadData($threadList)
+    {
         $userIds = array_unique(array_column($threadList, 'user_id'));
         $groups = GroupUser::instance()->getGroupInfo($userIds);
         $groups = array_column($groups, null, 'user_id');
@@ -55,6 +63,10 @@ class ThreadListController extends DzqController
         $postsByThreadId = array_column($posts, null, 'thread_id');
         $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
         $inPutToms = [];
+        $tags = [];
+        ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
+            $tags[$item['thread_id']][] = $item->toArray();
+        });
         foreach ($toms as $tom) {
             $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, json_decode($tom['value'], true));
         }
@@ -67,7 +79,9 @@ class ThreadListController extends DzqController
             $group = empty($groups[$userId]) ? false : $groups[$userId];
             $post = empty($postsByThreadId[$threadId]) ? false : $postsByThreadId[$threadId];
             $tomInput = empty($inPutToms[$threadId]) ? false : $inPutToms[$threadId];
-            $result[] = $this->packThreadDetail($user, $group, $thread, $post, $tomInput);
+            $threadTags = [];
+            isset($tags[$threadId]) && $threadTags = $tags[$threadId];
+            $result[] = $this->packThreadDetail($user, $group, $thread, $post, $tomInput, false, $threadTags);
             $linkString .= ($thread['title'] . $post['content']);
         }
         list($search, $replace) = Thread::instance()->getReplaceString($linkString);
@@ -75,8 +89,7 @@ class ThreadListController extends DzqController
             $item['title'] = str_replace($search, $replace, $item['title']);
             $item['content']['text'] = str_replace($search, $replace, $item['content']['text']);
         }
-        $threads['pageData'] = $result;
-        $this->outPut(0, '', $threads);
+        return $result;
     }
 
     function getFilterThreads($filter, $currentPage, $perPage)
@@ -121,7 +134,19 @@ class ThreadListController extends DzqController
                 ->whereNull('post.deleted_at')
                 ->where('post.content', 'like', '%' . $search . '%');
         }
+        $this->setFilterSort($threads, $sort);
+        //关注
+        if ($attention == 1 && !empty($this->user)) {
+            $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'th.user_id')
+                ->where('follow.from_user_id', $this->user->id);
+        }
+        !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
+        $threads = $this->pagination($currentPage, $perPage, $threads);
+        return $threads;
+    }
 
+    private function setFilterSort($threads, $sort)
+    {
         if (!empty($sort)) {
             switch ($sort) {
                 case Thread::SORT_BY_THREAD://按照发帖时间排序
@@ -131,6 +156,7 @@ class ThreadListController extends DzqController
                     $threads->orderByDesc('th.posted_at');
                     break;
                 case Thread::SORT_BY_HOT://按照热度排序
+                    $threads->whereBetween('th.created_at', [Carbon::parse('-7 days'), Carbon::now()]);
                     $threads->orderByDesc('th.view_count');
                     break;
                 default:
@@ -138,15 +164,6 @@ class ThreadListController extends DzqController
                     break;
             }
         }
-
-        //关注
-        if ($attention == 1 && !empty($this->user)) {
-            $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'th.user_id')
-                ->where('follow.from_user_id', $this->user->id);
-        }
-        !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
-        $threads = $this->pagination($currentPage, $perPage, $threads);
-        return $threads;
     }
 
     function getDefaultHomeThreads($filter, $currentPage, $perPage)

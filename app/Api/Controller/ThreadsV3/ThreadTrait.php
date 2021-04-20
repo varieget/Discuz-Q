@@ -18,18 +18,21 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Censor\Censor;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
 use App\Models\User;
+use App\Modules\ThreadTom\TomConfig;
 use App\Modules\ThreadTom\TomTrait;
+use Illuminate\Support\Str;
 
 trait ThreadTrait
 {
     use TomTrait;
 
-    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false)
+    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [])
     {
         $loginUser = $this->user;
         $userField = $this->getUserInfoField($loginUser, $user, $thread);
@@ -43,13 +46,15 @@ trait ThreadTrait
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
-            'viewCount'=>$thread['view_count'],
+            'viewCount' => $thread['view_count'],
+            'isApproved' => $thread['is_approved'],
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
-            'isEssence' => $thread['is_essence'],
+//            'isEssence' => $thread['is_essence'],
             'user' => $userField,
             'group' => $groupField,
             'likeReward' => $likeRewardField,
+            'displayTag' => $this->getDisplayTagField($thread, $tags),
             'position' => [
                 'longitude' => $thread['longitude'],
                 'latitude' => $thread['latitude'],
@@ -65,6 +70,39 @@ trait ThreadTrait
             $result['content']['text'] = str_replace($search, $replace, $result['content']['text']);
         }
         return $result;
+    }
+
+    /**
+     * @desc 显示在帖子上的标签，目前支持 付费/精华/红包/悬赏 四种
+     * @param $thread
+     * @param $tags
+     * @return bool[]
+     */
+    private function getDisplayTagField($thread, $tags)
+    {
+        $tags = array_column($tags, 'tag');
+        if (empty($tags)) {
+            return null;
+        }
+        $obj = [
+            'isPrice' => false,
+            'isEssence' => false,
+            'isRedPack' => false,
+            'isReward' => false
+        ];
+        if ($thread['price'] > 0 || $thread['attachment_price'] > 0) {
+            $obj['isPrice'] = true;
+        }
+        if ($thread['is_essence']) {
+            $obj['isEssence'] = true;
+        }
+        if (in_array(TomConfig::TOM_REDPACK, $tags)) {
+            $obj['isRedPack'] = true;
+        }
+        if (in_array(TomConfig::TOM_DOC, $tags)) {
+            $obj['isReward'] = true;
+        }
+        return $obj;
     }
 
     private function getContentField($textCover, $thread, $post, $tomInput)
@@ -111,7 +149,7 @@ trait ThreadTrait
         if ((!$thread['is_anonymous'] && !empty($user)) || $loginUser->id == $thread['user_id']) {
             $userResult = [
                 'userId' => $user['id'],
-                'userName' => $user['username'],
+                'userName' => empty($user['nickname']) ? $user['username'] : $user['nickname'],
                 'avatar' => $user['avatar'],
                 'threadCount' => $user['thread_count'],
                 'followCount' => $user['follow_count'],
@@ -153,6 +191,24 @@ trait ThreadTrait
             'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
             'shareCount' => $thread['share_count']
         ];
+    }
+
+    /**
+     * @desc 查询是否需要审核
+     * @param $title
+     * @param $text
+     * @param null $isApproved 是否进审核
+     * @return array
+     */
+    private function boolApproved($title, $text, &$isApproved = null)
+    {
+        $censor = app(Censor::class);
+        $sep = '__' . Str::random(6) . '__';
+        $contentForCheck = $title . $sep . $text;
+        $censor->checkText($contentForCheck);
+        list($title, $content) = explode($sep, $censor->checkText($contentForCheck));
+        $isApproved = $censor->isMod;
+        return [$title, $content];
     }
 
 }

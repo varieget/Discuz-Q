@@ -20,8 +20,10 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\GenJwtToken;
 use App\Commands\Users\RegisterPhoneUser;
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
+use App\Models\SessionToken;
 use App\Models\User;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -47,6 +49,7 @@ class SmsLoginController extends AuthBaseController
     public function main()
     {
         $param      = $this->getSmsParam('login');
+        $type       = $this->inPut('type');
         $mobileCode = $param['mobileCode'];
         $inviteCode = $this->inPut('inviteCode');
         $ip         = ip($this->request->getServerParams());
@@ -68,6 +71,8 @@ class SmsLoginController extends AuthBaseController
                 new RegisterPhoneUser($this->user, $data)
             );
             $mobileCode->setRelation('user', $user);
+
+            $this->updateUserBindType($mobileCode->user,AuthUtils::PHONE);
         }
 
         //手机号登录需要填写扩展字段审核的场景
@@ -87,9 +92,36 @@ class SmsLoginController extends AuthBaseController
             new GenJwtToken($params)
         );
 
-        $result = $this->camelData(collect(json_decode($response->getBody())));
+        $accessToken = json_decode($response->getBody(), true);
+
+        $result = $this->camelData(collect($accessToken));
 
         $result = $this->addUserInfo($mobileCode->user, $result);
+
+        if($type == 'mobilebrowser_sms_login') {
+            $wechat     = (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount');
+            $miniWechat = (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram');
+            $sms        = (bool)$this->settings->get('qcloud_sms', 'qcloud');
+            //短信，微信，小程序均未开启
+            if(! $sms && !$wechat && !$miniWechat ) {
+                $this->outPut(ResponseCode::SUCCESS, '', $result);
+            }
+
+            //手机浏览器登录，需要做绑定前准备
+            $token = SessionToken::generate(SessionToken::WECHAT_MOBILE_BIND,
+                                            $accessToken ,
+                                            $mobileCode->user->id
+            );
+            $data = array_merge($this->camelData($accessToken),['sessionToken' => $token->token]);
+            $token->save();
+            if($wechat || $miniWechat) { //开了微信，
+                //未绑定微信
+                $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($mobileCode->user->bind_type);
+                if(!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
+                    return $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', $data);
+                }
+            }
+        }
 
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }

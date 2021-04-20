@@ -51,6 +51,9 @@ trait HasPaidContent
      */
     public function paidContent($model)
     {
+        if(empty($this->actor) && !empty($model->user)){
+            $this->actor =$model->user;
+        }
         Thread::setStateUser($this->actor);
 
         // 作者本人 或 管理员 或 回答者本人 不处理（新增类型时请保证 $model->user_id 存在）

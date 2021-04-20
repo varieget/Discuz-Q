@@ -21,19 +21,21 @@ use App\Common\ResponseCode;
 use App\Models\Thread;
 use Discuz\Base\DzqController;
 
-class UpdateThreadShareController extends DzqController
+class ThreadShareController extends DzqController
 {
-    public function main(){
+    public function main()
+    {
         $threadId = $this->inPut('threadId');
         $thread = Thread::getOneActiveThread($threadId);
         if (empty($thread)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        $result = $this->updateThreadShare($thread);
+        $this->updateThreadShare($thread);
         $this->outPut(ResponseCode::SUCCESS, '');
     }
 
-    private function updateThreadShare($thread){
+    private function updateThreadShare($thread)
+    {
         $thread->increment('share_count');
     }
 }
