@@ -148,11 +148,13 @@ class ListUserFollowController extends DzqController
                 $query->orderBy(Str::snake($field), $order);
             }
         }else{
-            $query->where('from_user_id', $user_id)
-                   ->orWhere('to_user_id', $user_id)
-                   ->with(['fromUser'=>function($query){
-                       $query->select('id','username');
-                   }]);
+            $query->where(function ($query) use ($user_id) {
+                $query->where('from_user_id', $user_id)
+                    ->orWhere('to_user_id', $user_id);
+            })->with(['fromUser'=>function($query){
+                $query->select('id','username');
+            }]);
+
             if ($username) {
                 $query->leftJoin('users', 'users.id', '=', 'user_follow.to_user_id')
                     ->leftJoin('users as b', 'b.id', '=', 'user_follow.from_user_id')
@@ -161,10 +163,12 @@ class ListUserFollowController extends DzqController
                     })
                     ->orWhere(function ($query) use ($username) {
                         $query->where('b.username', 'like', "%{$username}%");
-                    })
-                ;
+                    });
             }
-            //dump($query->toSql());exit;
+            $query->where(function ($query) use ($user_id) {
+                $query->where('from_user_id', $user_id)
+                    ->orWhere('to_user_id', $user_id);
+            });
             if(empty($sort)){
                 $sortNew = ['createdAt'=>'desc'];
             }else{
@@ -182,7 +186,6 @@ class ListUserFollowController extends DzqController
                 $query->orderBy(Str::snake($field), $order);
             }
         }
-
         $query = $this->pagination($currentPage, $perPage, $query);
         return $query;
     }
