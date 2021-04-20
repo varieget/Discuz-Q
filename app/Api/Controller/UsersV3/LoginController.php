@@ -104,17 +104,16 @@ class LoginController extends AuthBaseController
 
             //手机浏览器登录，需要做绑定前准备
             $token = SessionToken::generate(SessionToken::WECHAT_MOBILE_BIND, $accessToken , $user->id);
-            $data = array_merge($this->camelData($accessToken),['sessionToken' => $token->token]);
             $token->save();
             if($wechat || $miniWechat) { //开了微信，
                 //未绑定微信
                 $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
                 if(!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
-                    return $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', $data);
+                    return $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', ['sessionToken' => $token->token]);
                 }
             }
             if(! $wechat && ! $miniWechat && $sms && !$user->mobile) {//开了短信配置未绑定手机号
-                return $this->outPut(ResponseCode::NEED_BIND_PHONE, '', $data);
+                return $this->outPut(ResponseCode::NEED_BIND_PHONE, '', ['sessionToken' => $token->token]);
             }
             return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
         }
