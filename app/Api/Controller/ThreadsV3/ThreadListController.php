@@ -23,6 +23,7 @@ use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\Sequence;
 use App\Models\Thread;
+use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Carbon\Carbon;
@@ -62,6 +63,10 @@ class ThreadListController extends DzqController
         $postsByThreadId = array_column($posts, null, 'thread_id');
         $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
         $inPutToms = [];
+        $tags = [];
+        ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
+            $tags[$item['thread_id']][] = $item->toArray();
+        });
         foreach ($toms as $tom) {
             $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, json_decode($tom['value'], true));
         }
@@ -74,7 +79,9 @@ class ThreadListController extends DzqController
             $group = empty($groups[$userId]) ? false : $groups[$userId];
             $post = empty($postsByThreadId[$threadId]) ? false : $postsByThreadId[$threadId];
             $tomInput = empty($inPutToms[$threadId]) ? false : $inPutToms[$threadId];
-            $result[] = $this->packThreadDetail($user, $group, $thread, $post, $tomInput);
+            $threadTags = [];
+            isset($tags[$threadId]) && $threadTags = $tags[$threadId];
+            $result[] = $this->packThreadDetail($user, $group, $thread, $post, $tomInput, false, $threadTags);
             $linkString .= ($thread['title'] . $post['content']);
         }
         list($search, $replace) = Thread::instance()->getReplaceString($linkString);

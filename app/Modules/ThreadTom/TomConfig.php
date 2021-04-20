@@ -20,43 +20,52 @@ namespace App\Modules\ThreadTom;
 class TomConfig
 {
 
+    const TOM_IMAGE = 101;
+    const TOM_AUDIO = 102;
+    const TOM_VIDEO = 103;
+    const TOM_GOODS = 104;
+    const TOM_QA = 105;
+    const TOM_REDPACK = 106;
+    const TOM_REWARD = 107;
+    const TOM_DOC = 108;
+
     public static $map = [
-        101 => [
+        self::TOM_IMAGE => [
             'enName' => 'IMAGE',
             'desc' => '图片类',
             'service' => \App\Modules\ThreadTom\Busi\ImageBusi::class
         ],
-        102 => [
+        self::TOM_AUDIO => [
             'enName' => 'AUDIO',
             'desc' => '语音',
             'service' => \App\Modules\ThreadTom\Busi\AudioBusi::class
         ],
-        103 => [
+        self::TOM_VIDEO => [
             'enName' => 'VIDEO',
             'desc' => '视频',
             'service' => \App\Modules\ThreadTom\Busi\VideoBusi::class
         ],
-        104 => [
+        self::TOM_GOODS => [
             'enName' => 'GOODS',
             'desc' => '商品',
             'service' => \App\Modules\ThreadTom\Busi\GoodsBusi::class
         ],
-        105 => [
+        self::TOM_QA => [
             'enName' => 'QA',
             'desc' => '问答',
             'service' => \App\Modules\ThreadTom\Busi\QABusi::class
         ],
-        106 => [
+        self::TOM_REDPACK => [
             'enName' => 'REDPACK',
             'desc' => '红包',
             'service' => \App\Modules\ThreadTom\Busi\RedPackBusi::class
         ],
-        107 => [
+        self::TOM_REWARD => [
             'enName' => 'REWARD',
             'desc' => '悬赏',
             'service' => \App\Modules\ThreadTom\Busi\RewardBusi::class
         ],
-        108 => [
+        self::TOM_DOC => [
             'enName' => 'DOC',
             'desc' => '文件附件',
             'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
