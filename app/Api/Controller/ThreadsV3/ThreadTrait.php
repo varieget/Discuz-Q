@@ -47,6 +47,7 @@ trait ThreadTrait
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
+            'postCount' => $thread['post_count'] - 1,
             'isApproved' => $thread['is_approved'],
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
@@ -189,8 +190,7 @@ trait ThreadTrait
         return [
             'users' => $users,
             'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
-            'shareCount' => $thread['share_count'],
-            'postCount' => $thread['post_count']
+            'shareCount' => $thread['share_count']
         ];
     }
 
