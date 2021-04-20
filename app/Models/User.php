@@ -125,7 +125,7 @@ class User extends DzqModel
     const STATUS_NORMAL = 0;//正常
     const STATUS_BAN = 1;//禁用
     const STATUS_MOD = 2;//审核中
-    const STATUS_REFUSE = 3;//审核拒绝
+    const STATUS_REFUSE = 3;//审核不通过
     const STATUS_IGNORE = 4;//审核忽略
     const STATUS_NEED_FIELDS = 10;//待填写扩展审核字段
 
@@ -138,7 +138,7 @@ class User extends DzqModel
         self::STATUS_NORMAL => '正常',
         self::STATUS_BAN => '禁用',
         self::STATUS_MOD => '审核中',
-        self::STATUS_REFUSE => '审核拒绝',
+        self::STATUS_REFUSE => '审核不通过',
         self::STATUS_IGNORE => '审核忽略',
         self::STATUS_NEED_FIELDS => '待填写注册扩展信息'
     ];
