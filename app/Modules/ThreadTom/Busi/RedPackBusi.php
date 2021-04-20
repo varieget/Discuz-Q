@@ -64,22 +64,25 @@ class RedPackBusi extends TomBaseBusi
         $threadRedPacket->status = RedPacket::RED_PACKET_STATUS_VALID;
         $threadRedPacket->save();
 
+        $threadRedPacket->isSelect = false;
+        $threadRedPacket->content = $input['content'];
+
         return $this->jsonReturn($threadRedPacket);
     }
 
-    public function delete()
+    public function select()
     {
-        $redPackId = $this->getParams('redPackId');
-
-        $threadTom = ThreadTom::query()
-            ->where('id',$redPackId)
-            ->update(['status'=>-1]);
-
-        if ($threadTom) {
-            return true;
+        if (isset($this->body['isSelect'])) {
+            return $this->jsonReturn($this->body);
         }
 
-        return false;
+        $redPacket = ThreadRedPacket::query()->where('id',$this->body['id'])->first(['remain_money','remain_number','status']);
+        $this->body['remain_money'] = $redPacket['remain_money'];
+        $this->body['remain_number'] = $redPacket['remain_number'];
+        $this->body['status'] = $redPacket['remain_number'];
+
+        return $this->jsonReturn($this->body);
+
     }
 
     public function verification(){
@@ -90,6 +93,7 @@ class RedPackBusi extends TomBaseBusi
             'rule' => $this->getParams('rule'),
             'orderId' => $this->getParams('orderId'),
             'price' => $this->getParams('price'),
+            'content' => $this->getParams('type')
         ];
         $rules = [
             'condition' => 'required|integer|in:0,1',
@@ -98,6 +102,7 @@ class RedPackBusi extends TomBaseBusi
             'rule' => 'required|integer|in:0,1',
             'orderId' => 'required|numeric',
             'price' => 'required|numeric|min:0.01|max:200',
+            'content' => 'max:1000',
         ];
 
         $this->dzqValidate($input, $rules);

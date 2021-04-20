@@ -71,23 +71,29 @@ class QABusi extends TomBaseBusi
         $question->expired_at = date('Y-m-d H:i:s',strtotime("+{$this->qaExpiredTime} day"));
         $question->save();
 
+        $question->isSelect = false;
+
         return $this->jsonReturn($question);
     }
 
-
-    public function delete()
+    public function select()
     {
-        $qaId = $this->getParams('qaId');
-
-        $threadTom = ThreadTom::query()
-            ->where('id',$qaId)
-            ->update(['status'=>-1]);
-
-        if ($threadTom) {
-            return true;
+        if (isset($this->body['isSelect'])) {
+            return $this->jsonReturn($this->body);
         }
 
-        return false;
+        $question = Question::query()
+            ->where('id',$this->body['id'])
+            ->first(['content','ip','port','onlooker_price','onlooker_number','is_answer','is_approved']);
+        $this->body['content'] = $question['content'];
+        $this->body['ip'] = $question['ip'];
+        $this->body['port'] = $question['port'];
+        $this->body['onlooker_price'] = $question['onlooker_price'];
+        $this->body['onlooker_number'] = $question['onlooker_number'];
+        $this->body['is_answer'] = $question['is_answer'];
+        $this->body['is_approved'] = $question['is_approved'];
+
+        return $this->jsonReturn($this->body);
     }
 
     public function verification()

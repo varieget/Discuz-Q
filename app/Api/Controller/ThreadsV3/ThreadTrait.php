@@ -189,7 +189,8 @@ trait ThreadTrait
         return [
             'users' => $users,
             'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
-            'shareCount' => $thread['share_count']
+            'shareCount' => $thread['share_count'],
+            'postCount' => $thread['post_count']
         ];
     }
 
