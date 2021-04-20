@@ -158,14 +158,19 @@ abstract class AuthBaseController extends DzqController
                           ResponseCode::$codeMap[ResponseCode::BIND_TYPE_IS_NULL]
             );
         }
+        if (!empty($user->bind_type)) {
+            $existBindType = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
 
-        $existBindType = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
-
-        if (!in_array($bindType, $existBindType)) {
-            array_push($existBindType, $bindType);
-            $newBindType  = AuthUtils::getBindType($existBindType);
-            $user->bind_type = $newBindType;
-            $user->save();
+            if (!in_array($bindType, $existBindType)) {
+                array_push($existBindType, $bindType);
+                $newBindType  = AuthUtils::getBindType($existBindType);
+                $user->bind_type = $newBindType;
+                $user->save();
+            }
+        } else {
+            $this->outPut(ResponseCode::USER_BIND_TYPE_IS_NULL,
+                          ResponseCode::$codeMap[ResponseCode::USER_BIND_TYPE_IS_NULL]
+            );
         }
     }
 
