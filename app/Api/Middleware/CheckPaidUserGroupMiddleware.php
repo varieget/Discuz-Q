@@ -52,15 +52,15 @@ class CheckPaidUserGroupMiddleware implements MiddlewareInterface
         /** @var User $actor */
         $actor = $request->getAttribute('actor');
 
-        if (app()->config('middleware_cache')) {
-            // 通过加锁，避免每次请求都判断
-            $ttl = static::CHECK_INTERVAL;
-            if ($this->cache->add(CacheKey::CHECK_PAID_GROUP.$actor->id, 'lock', mt_rand($ttl, $ttl + 10))) {
-                $this->check($actor);
-            }
-        } else {
+        //if (app()->config('middleware_cache')) {
+        // 通过加锁，避免每次请求都判断
+        $ttl = static::CHECK_INTERVAL;
+        if ($this->cache->add(CacheKey::CHECK_PAID_GROUP.$actor->id, 'lock', mt_rand($ttl, $ttl + 10))) {
             $this->check($actor);
         }
+        /*} else {
+            $this->check($actor);
+        }*/
 
         return $handler->handle($request);
     }
