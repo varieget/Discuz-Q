@@ -122,7 +122,7 @@ class CreatePostV2Controller extends DzqController
     }
 
 
-    protected function getPost(Post $post)
+    protected function getPost(Post $post,bool $getRedPacketAmount)
     {
         $data = [
             'id' => $post['id'],
@@ -142,6 +142,7 @@ class CreatePostV2Controller extends DzqController
             'isApproved' => $post['is_approved'],
             'rewards' => floatval(sprintf('%.2f', $post->getPostReward())),
             'canApprove' => $this->gate->allows('approve', $post),
+            'canDelete' => $this->gate->allows('delete', $post),
             'canHide' => $this->gate->allows('hide', $post),
             'canEdit' => $this->gate->allows('edit', $post),
             'user' => $this->getUser($post->user),
@@ -159,6 +160,10 @@ class CreatePostV2Controller extends DzqController
             $data['deletedAt'] = $post->deleted_at->format('Y-m-d H:i:s');
         } else {
             $data['isDeleted'] = false;
+        }
+
+        if ($getRedPacketAmount) {
+            $data['redPacketAmount'] = $this->postSerializer->getPostRedPacketAmount($post['id'], $post['thread_id'], $post['user_id']);
         }
 
         if ($post->relationLoaded('replyUser')) {
