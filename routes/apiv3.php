@@ -99,3 +99,7 @@ $route->post('/order.create', 'order.create', ApiController\OrdersV3\CreateOrder
 $route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\TradeV3\Notify\WechatNotifyController::class);
 $route->post('/trade/pay/order', 'trade.pay.order', ApiController\TradeV3\PayOrderController::class);
 $route->get('/categories', 'categories', ApiController\CategoryV3\ListCategoriesController::class);
+$route->get('/posts', 'posts', ApiController\PostsV3\ListPostsController::class);
+$route->post('/posts.update', 'posts.update', ApiController\PostsV3\UpdatePostController::class);
+$route->post('/posts', 'posts', ApiController\PostsV3\CreatePostController::class);
+$route->get('/posts.detail', 'posts.resource', ApiController\PostsV3\ResourcePostController::class);
