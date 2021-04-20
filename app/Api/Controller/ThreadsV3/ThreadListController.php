@@ -41,9 +41,9 @@ class ThreadListController extends DzqController
         $perPage = $this->inPut('perPage');
         $sequence = $this->inPut('sequence');//默认首页
         if (empty($sequence)) {
-            $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
-        } else {
             $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
+        } else {
+            $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         }
         $threadList = $threads['pageData'] ?? [];
         !$threads && $threadList = [];

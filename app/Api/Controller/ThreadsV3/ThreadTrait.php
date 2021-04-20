@@ -46,7 +46,7 @@ trait ThreadTrait
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
-            'viewCount' => $thread['view_count'],
+            'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
             'isApproved' => $thread['is_approved'],
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
