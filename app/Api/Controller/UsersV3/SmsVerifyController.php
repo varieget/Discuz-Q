@@ -24,8 +24,7 @@ class SmsVerifyController extends AuthBaseController
 {
     public function main()
     {
-        $param      = $this->getSmsParam('verify');
-        $mobileCode = $param['mobileCode'];
+        $mobileCode = $this->getMobileCode('verify');
 
         if ($mobileCode->user->exists) {
             $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($mobileCode->user));

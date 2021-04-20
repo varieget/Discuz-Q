@@ -31,8 +31,7 @@ class SmsResetPwdController extends AuthBaseController
 
     public function main()
     {
-        $param              = $this->getSmsParam('reset_pwd');
-        $mobileCode         = $param['mobileCode'];
+        $mobileCode         = $this->getMobileCode('reset_pwd');
         $data['password']   = $this->inPut('password');
         $password           = $data['password'];
 

@@ -32,8 +32,7 @@ class SmsResetPayPwdController extends AuthBaseController
 
     public function main()
     {
-        $param                      = $this->getSmsParam('reset_pay_pwd');
-        $mobileCode                 = $param['mobileCode'];
+        $mobileCode                 = $this->getMobileCode('reset_pay_pwd');
         $payPassword                = $this->inPut('payPassword');
         $payPasswordConfirmation    = $this->inPut('payPasswordConfirmation');
 
