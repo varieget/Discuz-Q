@@ -95,7 +95,7 @@ abstract class AuthBaseController extends DzqController
         return $data;
     }
 
-    public function getSmsParam($type)
+    public function getMobileCode($type): MobileCode
     {
         $mobile = $this->inPut('mobile');
         $code   = $this->inPut('code');
@@ -109,13 +109,15 @@ abstract class AuthBaseController extends DzqController
         ]);
 
         $mobileCode = $this->changeMobileCodeState($mobile, $type, $code);
-        $data ['mobileCode'] = $mobileCode;
 
-        return $data;
+        return $mobileCode;
     }
 
     /**
      * 修改手机验证码的状态
+     * @param $mobile
+     * @param $type
+     * @param $code
      * @return MobileCode
      */
     public function changeMobileCodeState($mobile, $type, $code)
