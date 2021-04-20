@@ -103,7 +103,7 @@ class SmsSendController extends AuthBaseController
                 );
             }
 
-            $mobileRule = 'required|unique:users,mobile';
+            $mobileRule = 'required';
         } elseif ($type == 'rebind') {
             // 如果是重新绑定，需要在验证旧手机后 10 分钟内
             $unverified = MobileCode::where('mobile', $actor->getRawOriginal('mobile'))
@@ -123,8 +123,7 @@ class SmsSendController extends AuthBaseController
                         );
                     }
                 },
-                'required',
-                'unique:users,mobile',
+                'required'
             ];
         } elseif (in_array($type, ['reset_pwd', 'reset_pay_pwd'])) {
             // 如果已经绑定，不能再发送绑定短息
