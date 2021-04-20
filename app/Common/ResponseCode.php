@@ -38,6 +38,7 @@ class ResponseCode
     const CONTENT_BANNED = -4006;
     const VALIDATE_REJECT = -4007;
     const VALIDATE_IGNORE = -4008;
+    const USER_BAN  = -4009;
 
     const NET_ERROR = -5001;
     const INTERNAL_ERROR = -5002;
@@ -102,8 +103,8 @@ class ResponseCode
         self::RESOURCE_NOT_FOUND => '资源不存在',
         self::RESOURCE_IN_USE => '资源被占用',
         self::CONTENT_BANNED => '内容被禁用',
-        self::VALIDATE_REJECT => '拒绝验证',
-        self::VALIDATE_IGNORE => '忽略验证',
+        self::VALIDATE_REJECT => '审核不通过',
+        self::VALIDATE_IGNORE => '忽略审核',
         self::NET_ERROR => '网络错误',
         self::INTERNAL_ERROR => '内部系统错误',
         self::EXTERNAL_API_ERROR => '外部接口错误',
@@ -143,5 +144,6 @@ class ResponseCode
         self::BIND_TYPE_IS_NULL => '绑定类型不存在',
         self::AUTH_INFO_HAD_EXPIRED => '授权信息已过期，请重新授权',
         self::USER_BIND_TYPE_IS_NULL => '用户绑定类型不存在',
+        self::USER_BAN  => '用户已被封禁',
     ];
 }

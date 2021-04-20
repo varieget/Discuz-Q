@@ -22,7 +22,6 @@ use App\Common\ResponseCode;
 use Discuz\Common\Utils;
 use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
 use Discuz\Http\DiscuzResponseFactory;
 
 class BanLogin
@@ -32,7 +31,7 @@ class BanLogin
         $user = $event->user;
         switch ($user->status) {
             case 1:
-                Utils::outPut(ResponseCode::UNAUTHORIZED,ResponseCode::$codeMap[ResponseCode::UNAUTHORIZED]);
+                Utils::outPut(ResponseCode::USER_BAN);
                 throw new PermissionDeniedException('ban_user');
                 break;
             case 3:
