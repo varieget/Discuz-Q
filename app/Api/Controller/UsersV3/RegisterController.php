@@ -97,13 +97,6 @@ class RegisterController extends DzqController
         $user = $this->bus->dispatch(
             new RegisterUser($this->request->getAttribute('actor'), $data)
         );
-        //微信内用户微信绑定新注册用户
-        if($sessionToken) {
-            $data['sessionToken'] = $sessionToken;
-            $this->events->dispatch(
-                new TransitionBind($user, $data)
-            );
-        }
 
         // 注册后的登录检查
         if (!(bool)$this->settings->get('register_validate')) {

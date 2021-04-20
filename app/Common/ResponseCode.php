@@ -86,6 +86,7 @@ class ResponseCode
     const AUTH_INFO_HAD_EXPIRED = -7045;
     const USER_BIND_TYPE_IS_NULL = -7046;
     const PARAM_IS_NOT_OBJECT = -7047;
+    const TRANSITION_NOT_OPEN = -7048;
 
     const NEED_BIND_WECHAT = 8000;
     const NEED_BIND_PHONE = 8001;
@@ -147,5 +148,6 @@ class ResponseCode
         self::USER_BIND_TYPE_IS_NULL => '用户绑定类型不存在',
         self::USER_BAN  => '用户已被封禁',
         self::PARAM_IS_NOT_OBJECT => '参数不为对象',
+        self::TRANSITION_NOT_OPEN => '过渡开关未开启',
     ];
 }

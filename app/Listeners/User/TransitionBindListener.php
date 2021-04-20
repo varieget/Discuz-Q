@@ -92,11 +92,14 @@ class TransitionBindListener
             }
             //微信信息绑定用户信息
             $wechatUser->user_id = $user->id;
+            $wechatUser->setRelation('user', $user);
             $wechatUser->save();
             $this->db->commit();
         } catch (\Exception $e) {
             $this->db->commit();
         }
+
+        return $user;
     }
 
 }
