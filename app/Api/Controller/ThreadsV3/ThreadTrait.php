@@ -114,7 +114,7 @@ trait ThreadTrait
         if ((!$thread['is_anonymous'] && !empty($user)) || $loginUser->id == $thread['user_id']) {
             $userResult = [
                 'userId' => $user['id'],
-                'userName' => $user['username'],
+                'userName' => empty($user['nickname']) ? $user['username'] : $user['nickname'],
                 'avatar' => $user['avatar'],
                 'threadCount' => $user['thread_count'],
                 'followCount' => $user['follow_count'],

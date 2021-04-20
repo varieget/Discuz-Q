@@ -17,8 +17,6 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
-use App\Censor\Censor;
 use App\Common\ResponseCode;
 use App\Models\Group;
 use App\Models\Post;
