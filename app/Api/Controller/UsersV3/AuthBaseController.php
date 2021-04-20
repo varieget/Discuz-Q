@@ -164,8 +164,14 @@ abstract class AuthBaseController extends DzqController
         if (!in_array($bindType, $existBindType)) {
             array_push($existBindType, $bindType);
             $newBindType  = AuthUtils::getBindType($existBindType);
-            $user->bind_type = $newBindType;
-            $user->save();
+            if (is_object($user)) {
+                $user->bind_type = $newBindType;
+                $user->save();
+            } else {
+                $this->outPut(ResponseCode::PARAM_IS_NOT_OBJECT,
+                              ResponseCode::$codeMap[ResponseCode::PARAM_IS_NOT_OBJECT]
+                );
+            }
         }
     }
 

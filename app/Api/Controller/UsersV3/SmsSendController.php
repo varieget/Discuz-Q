@@ -62,8 +62,8 @@ class SmsSendController extends AuthBaseController
         $actor              = $this->user;
         $mobile             = $this->inPut('mobile');
         $type               = $this->inPut('type');
-        $captchaTicket     = $this->inPut('captchaTicket');
-        $captchaRandStr   = $this->inPut('captchaRandStr');
+        $captchaTicket      = $this->inPut('captchaTicket');
+        $captchaRandStr     = $this->inPut('captchaRandStr');
         $ip                 = ip($this->request->getServerParams());
 
         $data = array();

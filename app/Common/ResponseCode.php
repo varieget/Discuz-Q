@@ -84,6 +84,7 @@ class ResponseCode
     const BIND_TYPE_IS_NULL = -7044;
     const AUTH_INFO_HAD_EXPIRED = -7045;
     const USER_BIND_TYPE_IS_NULL = -7046;
+    const PARAM_IS_NOT_OBJECT = -7047;
 
     const NEED_BIND_WECHAT = 8000;
     const NEED_BIND_PHONE = 8001;
@@ -143,5 +144,6 @@ class ResponseCode
         self::BIND_TYPE_IS_NULL => '绑定类型不存在',
         self::AUTH_INFO_HAD_EXPIRED => '授权信息已过期，请重新授权',
         self::USER_BIND_TYPE_IS_NULL => '用户绑定类型不存在',
+        self::PARAM_IS_NOT_OBJECT => '参数不为对象',
     ];
 }
