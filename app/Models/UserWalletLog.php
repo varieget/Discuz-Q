@@ -144,6 +144,8 @@ class UserWalletLog extends Model
 
     const TYPE_REDPACKET_REFUND = 152; // 红包退款
 
+    const TYPE_REDPACKET_EXPEND = 153; // 红包支出
+
     const TYPE_QUESTION_REWARD_FREEZE = 160; // 悬赏问答冻结
 
     const TYPE_QUESTION_REWARD_INCOME = 161; // 悬赏问答收入

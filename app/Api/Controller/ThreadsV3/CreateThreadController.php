@@ -76,7 +76,7 @@ class CreateThreadController extends DzqController
         //插入post数据
         $post = $this->savePost($thread, $content);
         //插入tom数据
-        $tomJsons = $this->saveTom($thread, $content);
+        $tomJsons = $this->saveTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
     }
 
@@ -170,11 +170,11 @@ class CreateThreadController extends DzqController
         return $post;
     }
 
-    private function saveTom($thread, $content)
+    private function saveTom($thread, $content, $post)
     {
         $indexes = $content['indexes'];
         $attrs = [];
-        $tomJsons = $this->tomDispatcher($indexes, null, $thread['id']);
+        $tomJsons = $this->tomDispatcher($indexes, null, $thread['id'], $post['id']);
         $tags = [];
         if (!empty($content['text'])) {
             $tags[] = [

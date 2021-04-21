@@ -69,6 +69,7 @@ return [
     'cash_mch_invalid'      => '未开启微信企业付款到零钱功能',
 
     'redpacket_freeze' => '红包冻结',
+    'redpacket_expend' => '红包支出',
     'redpacket_income' => '红包收入',
     'redpacket_refund' => '红包过期退款',
     'question_reward_freeze' => '悬赏冻结',
