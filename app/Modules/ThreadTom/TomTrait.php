@@ -22,7 +22,6 @@ use App\Api\Controller\ThreadsV3\DeleteTomController;
 use App\Api\Controller\ThreadsV3\SelectTomController;
 use App\Api\Controller\ThreadsV3\UpdateTomController;
 use App\Common\ResponseCode;
-use App\Models\Order;
 use App\Models\Permission;
 use App\Models\Thread;
 use App\Models\ThreadTom;
