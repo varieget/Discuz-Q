@@ -27,16 +27,13 @@ class Utils
     {
         $diff = time() - strtotime($time);
         if ($diff < 60) {
-            return $diff . '秒';
+            return $diff . '秒前';
         }
         if ($diff >= 60 && $diff < 60 * 60) {
-            return intval($diff / 60.0) . '分钟';
+            return intval($diff / 60.0) . '分钟前';
         }
         if ($diff >= 60 * 60 && $diff < 24 * 60 * 60) {
-            return intval($diff / (60 * 60.0)) . '小时';
-        }
-        if ($diff >= 24 * 60 * 60 && $diff < 30 * 24 * 60 * 60) {
-            return intval($diff / (24.0 * 60 * 60)) . '天';
+            return intval($diff / (60 * 60.0)) . '小时前';
         }
         return date('Y-m-d H:i:s', strtotime($time));
     }
