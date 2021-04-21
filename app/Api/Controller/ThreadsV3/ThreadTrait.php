@@ -57,7 +57,7 @@ trait ThreadTrait
             'isLike' => $this->isLike($loginUser, $post),
             'isBrowse' => false,
             'isComment' => false,
-            'createdAt' => $thread['created_at'],
+            'createdAt' => date('Y-m-d H:i:s',strtotime($thread['created_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
