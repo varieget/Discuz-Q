@@ -18,31 +18,68 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Commands\Users\GenJwtToken;
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
+use App\Models\SessionToken;
+use Discuz\Contracts\Setting\SettingsRepository;
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Contracts\Events\Dispatcher as Events;
 
 class SmsBindController extends AuthBaseController
 {
+    protected $bus;
+
+    public function __construct(
+        Dispatcher          $bus
+    ){
+        $this->bus      = $bus;
+    }
+
     public function main()
     {
-        $mobileCode = $this->getMobileCode('bind');
+        $mobileCode     = $this->getMobileCode('bind');
+        $sessionToken   = $this->inPut('sessionToken');
+        $token          = SessionToken::get($sessionToken);
+        $actor          = !empty($token->user) ? $token->user : $this->user;
 
         // 判断手机号是否已经被绑定
-        if (!empty($mobileCode->user->mobile)) {
+        if (!empty($actor->mobile)) {
             $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND,
                           ResponseCode::$codeMap[ResponseCode::MOBILE_IS_ALREADY_BIND]
             );
         }
 
-        if ($this->user->exists) {
-            $this->user->changeMobile($mobileCode->mobile);
-            $this->user->save();
+        if ($actor->exists) {
+            $actor->changeMobile($mobileCode->mobile);
+            $actor->save();
 
-            $this->updateUserBindType($this->user, AuthUtils::PHONE);
+            $this->updateUserBindType($actor, AuthUtils::PHONE);
+
+            //用于用户名登录绑定手机号使用
+            if (!empty($token->user)) {
+                //token生成
+                $params = [
+                    'username' => $actor->username,
+                    'password' => ''
+                ];
+                GenJwtToken::setUid($actor->id);
+                $response = $this->bus->dispatch(
+                    new GenJwtToken($params)
+                );
+
+                $accessToken = json_decode($response->getBody(), true);
+                $result = $this->camelData(collect($accessToken));
+                $result = $this->addUserInfo($actor, $result);
+
+                $this->outPut(ResponseCode::SUCCESS, '', $result);
+            }
 
             $this->outPut(ResponseCode::SUCCESS, '', []);
         }
 
-        $this->outPut(ResponseCode::NET_ERROR,ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
+        $this->outPut(ResponseCode::NOT_FOUND_USER,
+                      ResponseCode::$codeMap[ResponseCode::NOT_FOUND_USER]
+        );
     }
 }
