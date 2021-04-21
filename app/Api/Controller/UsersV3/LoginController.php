@@ -78,7 +78,7 @@ class LoginController extends AuthBaseController
         $response = $this->bus->dispatch(
             new GenJwtToken($data)
         );
-        if($response->getStatusCode() !== 200) {
+        if($response->getStatusCode() != 200) {
             return $this->outPut(ResponseCode::LOGIN_FAILED, '登录失败');
         }
         $accessToken = json_decode($response->getBody(), true);
@@ -96,11 +96,8 @@ class LoginController extends AuthBaseController
         }
 
         //过渡时期微信绑定用户名密码登录的用户
-        if((bool)$this->setting->get('is_need_transition')) {
-            $sessionToken = $this->inPut('sessionToken');
-            if(!$sessionToken || strlen($sessionToken) == 0) {
-                return $this->outPut(ResponseCode::INVALID_PARAMETER, '登录失败');
-            }
+        $sessionToken = $this->inPut('sessionToken');
+        if($sessionToken && strlen($sessionToken) != 0 && (bool)$this->setting->get('is_need_transition')) {
             $this->events->dispatch(new TransitionBind($user, ['sessionToken' => $sessionToken]));
             return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
         }
