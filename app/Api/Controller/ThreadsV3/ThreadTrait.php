@@ -38,14 +38,10 @@ trait ThreadTrait
         $userField = $this->getUserInfoField($loginUser, $user, $thread);
         $groupField = $this->getGroupInfoField($group);
         $likeRewardField = $this->getLikeRewardField($thread, $post);
-        $textCoverField = $this->boolTextCoverField($post);
-        $contentField = $this->getContentField($textCoverField, $thread, $post, $tomInputIndexes);
-        $payType = Thread::PAY_NO;
-        $thread['price']>0 && $payType = Thread::PAY_THREAD;
-        $thread['attachment_price']>0 && $payType = Thread::PAY_ATTACH;
+        $payType = $this->threadPayStatus($thread, $paid);
+        $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid);
         $result = [
             'threadId' => $thread['id'],
-            'textCover' => $textCoverField,
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
@@ -55,6 +51,7 @@ trait ThreadTrait
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
             'payType' => $payType,
+            'paid'=>$paid,
 //            'isEssence' => $thread['is_essence'],
             'user' => $userField,
             'group' => $groupField,
@@ -75,6 +72,24 @@ trait ThreadTrait
             $result['content']['text'] = str_replace($search, $replace, $result['content']['text']);
         }
         return $result;
+    }
+
+    private function threadPayStatus($thread, &$paid)
+    {
+        $payType = Thread::PAY_FREE;
+        $thread['price'] > 0 && $payType = Thread::PAY_THREAD;
+        $thread['attachment_price'] > 0 && $payType = Thread::PAY_ATTACH;
+        if ($payType == Thread::PAY_FREE) {
+            $paid = null;
+        } else {
+            $paid = Order::query()
+                ->where([
+                    'thread_id' => $thread['id'],
+                    'user_id' => $this->user->id,
+                    'status' => Order::ORDER_STATUS_PAID
+                ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
+        }
+        return $payType;
     }
 
     /**
@@ -110,14 +125,20 @@ trait ThreadTrait
         return $obj;
     }
 
-    private function getContentField($textCover, $thread, $post, $tomInput)
+    private function getContentField($thread, $post, $tomInput, $payType, $paid)
     {
         $content = [
-            'text' => $textCover ? $post['content'] : Post::instance()->getContentSummary($post),
+            'text' => null,
             'indexes' => null
         ];
-        if (!empty($tomInput)) {
+        if ($payType == Thread::PAY_FREE) {
+            $content['text'] = $post['content'];
             $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id']);
+        } else {
+            if ($paid) {
+                $content['text'] = $post['content'];
+                $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id']);
+            }
         }
         return $content;
     }
@@ -134,15 +155,6 @@ trait ThreadTrait
             ];
         }
         return $groupResult;
-    }
-
-    private function boolTextCoverField($post)
-    {
-        $textCover = false;
-        if (mb_strlen($post['content']) >= 200) {
-            $textCover = true;
-        }
-        return $textCover;
     }
 
     private function getUserInfoField($loginUser, $user, $thread)

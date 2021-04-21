@@ -22,6 +22,7 @@ use App\Api\Controller\ThreadsV3\DeleteTomController;
 use App\Api\Controller\ThreadsV3\SelectTomController;
 use App\Api\Controller\ThreadsV3\UpdateTomController;
 use App\Common\ResponseCode;
+use App\Models\Order;
 use App\Models\Permission;
 use App\Models\Thread;
 use App\Models\ThreadTom;
@@ -149,17 +150,16 @@ trait TomTrait
     /**
      * @desc 阅读帖子详情权限
      * @param $user
-     * @param $categoryId
+     * @param $thread
      * @return bool
      */
-    private function canViewThreadDetail($user, $categoryId)
+    private function canViewThreadDetail($user, $thread)
     {
-        if ($user->isAdmin()) {
+        if ($user->isAdmin() || $user->id == $thread['user_id']) {
             return true;
         }
-        //添加付费用户可查看的权限
         $permissions = Permission::getUserPermissions($user);
-        $permission = 'category' . $categoryId . '.thread.viewPosts';
+        $permission = 'category' . $thread['category_id'] . '.thread.viewPosts';
         if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
             return true;
         }
@@ -228,7 +228,7 @@ trait TomTrait
                 $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
             }
             if ($class == SelectTomController::class) {
-                if (!$this->canViewThreadDetail($user, $thread->category_id, $thread->user_id)) {
+                if (!$this->canViewThreadDetail($user, $thread)) {
                     $this->outPut(ResponseCode::UNAUTHORIZED);
                 }
             } else {
