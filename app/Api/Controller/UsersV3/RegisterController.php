@@ -74,8 +74,12 @@ class RegisterController extends DzqController
             $this->outPut(ResponseCode::REGISTER_CLOSE,ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]);
 
         }
-        //过度页开关打开需要把微信信息绑定至新用户，只在微信内有效
-        $sessionToken = $this->inPut('sessionToken');
+        if((bool)$this->settings->get('qcloud_sms', 'qcloud')
+            || (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount')
+            || (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram')) {
+            $this->outPut(ResponseCode::REGISTER_CLOSE, '请使用微信或者手机号注册登录');
+        }
+
 
         $data = [
             'username' => $this->inPut('username'),
@@ -88,11 +92,6 @@ class RegisterController extends DzqController
             'captcha_ticket' => $this->inPut('captchaTicket'),
             'captcha_rand_str' => $this->inPut('captchaRandStr'),
         ];
-        //新增参数，注册类型
-        $registerType = $this->settings->get('register_type');
-        if($registerType != 0 && !$sessionToken) {
-            $this->outPut(ResponseCode::REGISTER_TYPE_ERROR,ResponseCode::$codeMap[ResponseCode::REGISTER_TYPE_ERROR]);
-        }
 
         $user = $this->bus->dispatch(
             new RegisterUser($this->request->getAttribute('actor'), $data)

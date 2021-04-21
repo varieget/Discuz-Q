@@ -75,33 +75,37 @@ class LoginController extends AuthBaseController
         ])->validate();
 
         $type = $this->inPut('type');
-        $sessionToken = $this->inPut('sessionToken');
-
         $response = $this->bus->dispatch(
             new GenJwtToken($data)
         );
+        if($response->getStatusCode() !== 200) {
+            return $this->outPut(ResponseCode::LOGIN_FAILED, '登录失败');
+        }
         $accessToken = json_decode($response->getBody(), true);
 
-        if ($response->getStatusCode() === 200) {
-            $user = $this->app->make(UserRepository::class)->getUser();
+        $user = $this->app->make(UserRepository::class)->getUser();
 
-            $this->events->dispatch(new Logind($user));
+        $this->events->dispatch(new Logind($user));
 
-            //过渡时期微信绑定用户名密码登录的用户
-            if($sessionToken && strlen($sessionToken) > 0 && (bool)$this->setting->get('is_need_transition')) {
-                $this->events->dispatch(new TransitionBind($user, ['sessionToken' => $sessionToken]));
+        $wechat = (bool)$this->setting->get('offiaccount_close', 'wx_offiaccount');
+        $miniWechat = (bool)$this->setting->get('miniprogram_close', 'wx_miniprogram');
+        $sms = (bool)$this->setting->get('qcloud_sms', 'qcloud');
+        //短信，微信，小程序均未开启
+        if(! $sms && !$wechat && !$miniWechat ) {
+            return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
+        }
+
+        //过渡时期微信绑定用户名密码登录的用户
+        if((bool)$this->setting->get('is_need_transition')) {
+            $sessionToken = $this->inPut('sessionToken');
+            if(!$sessionToken || strlen($sessionToken) == 0) {
+                return $this->outPut(ResponseCode::INVALID_PARAMETER, '登录失败');
             }
+            $this->events->dispatch(new TransitionBind($user, ['sessionToken' => $sessionToken]));
+            return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
         }
 
         if($type == 'mobilebrowser_username_login') {
-            $wechat = (bool)$this->setting->get('offiaccount_close', 'wx_offiaccount');
-            $miniWechat = (bool)$this->setting->get('miniprogram_close', 'wx_miniprogram');
-            $sms = (bool)$this->setting->get('qcloud_sms', 'qcloud');
-            //短信，微信，小程序均未开启
-            if(! $sms && !$wechat && !$miniWechat ) {
-                return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
-            }
-
             //手机浏览器登录，需要做绑定前准备
             $token = SessionToken::generate(SessionToken::WECHAT_MOBILE_BIND, $accessToken , $user->id);
             $token->save();
