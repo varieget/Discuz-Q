@@ -95,7 +95,9 @@ class TransitionBindListener
             $wechatUser->save();
 
             //user 中绑定字段维护
-//            $user->changeNickname($wechatUser->nickname);
+            if(empty($user->nickname) || strlen($user->nickname)) {
+                $user->changeNickname($wechatUser->nickname);
+            }
             $user->bind_type = $user->bind_type + AuthUtils::WECHAT;
             $user->save();
 
