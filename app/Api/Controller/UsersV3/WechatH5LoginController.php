@@ -160,7 +160,7 @@ class WechatH5LoginController extends AuthBaseController
             $this->db->commit();
         }
 
-        if ($wechatUser && $wechatUser->user) {
+//        if ($wechatUser && $wechatUser->user) {
             // 创建 token
             $params = [
                 'username' => $wechatUser->user->username,
@@ -198,9 +198,9 @@ class WechatH5LoginController extends AuthBaseController
             $result = $this->addUserInfo($wechatUser->user, $result);
 
             $this->outPut(ResponseCode::SUCCESS, '', $result);
-        }
+//        }
 
-        $this->error($wxuser, $actor, $wechatUser, null, $sessionToken);
+//        $this->error($wxuser, $actor, $wechatUser, null, $sessionToken);
     }
 
     /**
