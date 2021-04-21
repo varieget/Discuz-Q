@@ -113,7 +113,7 @@ class Censor
          * 小程序敏感词校验
          */
 
-        $siteManage =  json_decode($this->setting->get('site_manage', 'default'), true);
+        $siteManage = json_decode($this->setting->get('site_manage', 'default'), true);
         $isSiteMiniProgramOn = $siteManage[2]['value'] ?? false;
 
         if ($this->setting->get('qcloud_cms_text', 'qcloud', false)) {
@@ -266,7 +266,10 @@ class Censor
         $easyWeChat = $this->miniProgram();
 
         try {
-            $result = $easyWeChat->content_security->checkText($content);
+            $result = [];
+            if (!empty($easyWeChat)) {
+                $result = $easyWeChat->content_security->checkText($content);
+            }
         } finally {
             $result = $result ?? [];
         }
