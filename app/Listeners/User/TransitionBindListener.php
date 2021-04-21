@@ -18,6 +18,7 @@
 namespace App\Listeners\User;
 
 
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Common\Utils;
 use App\Events\Users\Logind;
@@ -94,9 +95,15 @@ class TransitionBindListener
             $wechatUser->user_id = $user->id;
             $wechatUser->setRelation('user', $user);
             $wechatUser->save();
+
+            //user 中绑定字段维护
+            $user->bind_type = $user->bind_type + AuthUtils::WECHAT;
+            $user->save();
+
             $this->db->commit();
         } catch (\Exception $e) {
             $this->db->commit();
+            \Discuz\Common\Utils::outPut(ResponseCode::INTERNAL_ERROR);
         }
 
         return $user;
