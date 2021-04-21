@@ -45,6 +45,7 @@ trait ThreadTrait
         $thread['attachment_price']>0 && $payType = Thread::PAY_ATTACH;
         $result = [
             'threadId' => $thread['id'],
+            'postId' => $post['id'],
             'textCover' => $textCoverField,
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
@@ -60,7 +61,7 @@ trait ThreadTrait
             'group' => $groupField,
             'likeReward' => $likeRewardField,
             'displayTag' => $this->getDisplayTagField($thread, $tags),
-            'isLike' => $this->isLike($user,$post),
+            'isLike' => $this->isLike($loginUser, $post),
             'isBrowse' => false,
             'isComment' => false,
             'position' => [
@@ -220,8 +221,11 @@ trait ThreadTrait
         return [$title, $content];
     }
 
-    private function isLike($user, $post)
+    private function isLike($loginUser, $post)
     {
+        if (!empty($loginUser)) {
+            return false;
+        }
         return PostUser::query()->where('post_id',$post->id)->where('user_id',$user->id)->exists();
     }
 
