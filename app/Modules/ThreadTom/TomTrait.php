@@ -111,6 +111,7 @@ trait TomTrait
         if (!empty($tom['operation']) && $tom['operation'] == $this->CREATE_FUNC) {
             $tomConfig = TomConfig::$map[$tom['tomId']];
             $permissions = Permission::getUserPermissions($this->user);
+            //todo 权限名称+分组id
             if (!in_array($tomConfig['authorize'], $permissions)) {
                 Utils::outPut(ResponseCode::UNAUTHORIZED, sprintf('没有插入【%s】权限', $tomConfig['desc']));
             }
