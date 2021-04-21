@@ -52,25 +52,6 @@ class WechatH5QrCodeController extends DzqController
     ];
 
     /**
-     * 二维码生成类型与跳转路由的映射
-     * @var string[]
-     */
-    //todo 对接前端时更换路由
-    /*static $qrcodeTypeAndRouteMap = [
-        'pc_login'              => '/apiv3/users/wechat/h5.oauth',
-        'pc_bind'               => '/pages/user/pc-relation',
-        'mobile_browser_login'  => '/apiv3/users/wechat/h5.oauth',
-        'mobile_browser_bind'   => '/pages/user/pc-relation'
-    ];*/
-
-    static $qrcodeTypeAndRouteMap = [
-        'pc_login'              => '/apiv3/users/wechat/h5.oauth',
-        'pc_bind'               => '/pages/user/pc-relation',
-        'mobile_browser_login'  => '/apiv3/users/wechat/h5.oauth',
-        'mobile_browser_bind'   => '/pages/user/pc-relation'
-    ];
-
-    /**
      * 二维码生成类型与token标识映射
      * @var array
      */
@@ -96,17 +77,22 @@ class WechatH5QrCodeController extends DzqController
             $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
         }
         $redirectUri = urldecode($this->inPut('redirectUri'));
+
+        //分离出参数
+        $conData = $this->parseUrlQuery($redirectUri);
+        //回调页面url
+        $redirectUri = $conData['url'];
+        //参数
+        $query = $conData['params'];
         //手机浏览器绑定则由前端传session_token
         $sessionToken = $this->inPut('sessionToken');
         if($type == 'mobile_browser_bind' && ! $sessionToken) {
             $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
         }
-
-        $token = http_build_query(['sessionToken' => $sessionToken]);
-        //浏览器点击微信登录直接生成二维码不进行sessionToken生成
-        if($type != 'mobile_browser_login') {
-            $redirectUri = $redirectUri.(strpos($redirectUri, '?') ? '&'.$token : '?'.$token);
+        if(!empty($sessionToken)) {
+            $query = array_merge($query, ['sessionToken' => $sessionToken]);
         }
+
 
         if($type != 'mobile_browser_bind') {
             //跳转路由选择
@@ -122,8 +108,10 @@ class WechatH5QrCodeController extends DzqController
             $sessionToken = $token->token;
         }
 
-        $locationUrl = $this->url->action('/apiv3/users/wechat/h5.oauth?redirect='.$redirectUri);
+        $locationUrl = $this->url->action('/apiv3/users/wechat/h5.oauth?redirect='.urlencode($redirectUri), $query);
 
+        //去掉无参数时最后一个是 ? 的字符
+        $locationUrl = rtrim($locationUrl, "?");
         $qrCode = new QrCode($locationUrl);
 
         $binary = $qrCode->writeString();
@@ -139,6 +127,29 @@ class WechatH5QrCodeController extends DzqController
         }
 
         $this->outPut(ResponseCode::SUCCESS, '', $data);
+    }
+
+    /**
+     *
+     * 从url 中分离出uri与参数
+     * @param $url
+     * @return mixed
+     */
+    protected function parseUrlQuery($url)
+    {
+        $urlParse = explode('?', $url);
+        $data['url'] = $urlParse[0];
+        $data['params'] = [];
+        if(isset($urlParse[1]) && !empty($urlParse[1])) {
+            $queryParts = explode('&', $urlParse[1]);
+            $params = array();
+            foreach ($queryParts as $param) {
+                $item = explode('=', $param);
+                $params[$item[0]] = $item[1];
+            }
+            $data['params'] = $params;
+        }
+        return $data;
     }
 
 }
