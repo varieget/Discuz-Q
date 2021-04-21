@@ -20,6 +20,7 @@ namespace App\Censor;
 
 use App\Models\Attachment;
 use App\Models\StopWord;
+use App\Common\Platform;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Foundation\Application;
 use Discuz\Qcloud\QcloudManage;
@@ -112,9 +113,10 @@ class Censor
          * 腾讯云敏感词校验
          * 小程序敏感词校验
          */
-
-        $siteManage =  json_decode($this->setting->get('site_manage', 'default'), true);
-        $isSiteMiniProgramOn = $siteManage[2]['value'] ?? false;
+        $siteManage = json_decode($this->setting->get('site_manage', 'default'), true);
+        $siteManage = array_column($siteManage, null, 'key');
+        $miniProgram = Platform::MinProgram;
+        $isSiteMiniProgramOn = $siteManage[$miniProgram]['value'] ?? false;
 
         if ($this->setting->get('qcloud_cms_text', 'qcloud', false)) {
             // 判断是否大于 5000 字
@@ -266,7 +268,10 @@ class Censor
         $easyWeChat = $this->miniProgram();
 
         try {
-            $result = $easyWeChat->content_security->checkText($content);
+            $result = [];
+            if (!empty($easyWeChat)) {
+                $result = $easyWeChat->content_security->checkText($content);
+            }
         } finally {
             $result = $result ?? [];
         }
