@@ -114,6 +114,10 @@ class Censor
          * 腾讯云敏感词校验
          * 小程序敏感词校验
          */
+
+        $siteManage = json_decode($this->setting->get('site_manage', 'default'), true);
+        $isSiteMiniProgramOn = $siteManage[2]['value'] ?? false;
+
         if ($this->setting->get('qcloud_cms_text', 'qcloud', false)) {
             // 判断是否大于 5000 字
             if (($length = Str::of($content)->length()) > 5000) {
@@ -121,7 +125,7 @@ class Censor
             } else {
                 $content = $this->tencentCloudCheck($content);
             }
-        } elseif ($this->setting->get('miniprogram_close', 'wx_miniprogram', false)) {
+        } elseif ($isSiteMiniProgramOn) {
             $content = $this->miniProgramCheck($content);
         }
 
@@ -264,7 +268,10 @@ class Censor
         $easyWeChat = $this->miniProgram();
 
         try {
-            $result = $easyWeChat->content_security->checkText($content);
+            $result = [];
+            if (!empty($easyWeChat)) {
+                $result = $easyWeChat->content_security->checkText($content);
+            }
         } finally {
             $result = $result ?? [];
         }

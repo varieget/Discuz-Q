@@ -24,22 +24,12 @@ use App\Models\Category;
 use App\Models\Topic;
 use App\Models\ThreadTopic;
 use App\Models\Thread;
-use App\Repositories\TopicRepository;
-use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
 
 class TopicListController extends DzqController
 {
     use ThreadTrait;
-
-    protected $topics;
-
-    public function __construct(TopicRepository $topics,  UserRepository $user)
-    {
-        $this->topics = $topics;
-        $this->users = $user;
-    }
 
     public function main()
     {
@@ -68,6 +58,7 @@ class TopicListController extends DzqController
             }
         }
 
+        $result = [];
         foreach ($topicsList as $topic) {
             $topicId = $topic['id'];
             $thread = [];
