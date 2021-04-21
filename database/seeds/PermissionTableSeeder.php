@@ -77,16 +77,16 @@ class PermissionTableSeeder extends Seeder
         'publishNeedRealName' => [],            // 发布内容需先实名认证
         'publishNeedBindPhone' => [],           // 发布内容需先绑定手机
 
-        'createThread' => [],               // 发布帖子
-        'createThread.0' => [],              // 插入图片
-        'createThread.1' => [],             // 插入视频
-        'createThread.2' => [],             // 插入语音
-        'createThread.3' => [],             // 插入附件
-        'createThread.4' => [],             // 插入商品
-        'createThread.5' => [],             // 插入付费
-        'createThread.6' => [],             // 插入悬赏
-        'createThread.7' => [],             // 插入红包
-        'createThread.8' => [],             // 插入位置
+        'switch.createThread' => [],               // 发布帖子
+        'switch.insertImage' => [],              // 插入图片
+        'switch.insertVideo' => [],             // 插入视频
+        'switch.insertAudio' => [],             // 插入语音
+        'switch.insertDoc' => [],             // 插入附件
+        'switch.insertGoods' => [],             // 插入商品
+        'switch.insertPay' => [],             // 插入付费
+        'switch.insertReward' => [],             // 插入悬赏
+        'switch.insertRedPacket' => [],             // 插入红包
+        'switch.insertPosition' => [],             // 插入位置
 
         // 回复
         'thread.likePosts' => [10],             // 点赞回复

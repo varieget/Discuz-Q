@@ -57,17 +57,8 @@ class Category extends DzqModel
      * @var array
      */
     public static $categoryPermissions = [
-        'createThread',               // 发布帖子
-        'createThread.0',              // 插入图片
-        'createThread.1',             // 插入视频
-        'createThread.2',             // 插入语音
-        'createThread.3',             // 插入附件
-        'createThread.4',             // 插入商品
-        'createThread.5',             // 插入付费
-        'createThread.6',             // 插入悬赏
-        'createThread.7',             // 插入红包
-        'createThread.8',             // 插入位置
-
+        'viewThreads',                 // 查看帖子列表
+        'createThread',                // 发布帖子
         'thread.reply',                // 回复帖子
         'thread.edit',                 // 编辑帖子
         'thread.hide',                 // 删除帖子
@@ -83,6 +74,17 @@ class Category extends DzqModel
         'thread.freeViewPosts.3',      // 免费查看付费图片
         'thread.freeViewPosts.4',      // 免费查看付费语音
         'thread.freeViewPosts.5',      // 免费查看付费问答
+
+        'createThread',               // 发布帖子
+        'insertImage',              // 插入图片
+        'insertVideo',             // 插入视频
+        'insertAudio',             // 插入语音
+        'insertDoc',             // 插入附件
+        'insertGoods',             // 插入商品
+        'insertPay',             // 插入付费
+        'insertReward',             // 插入悬赏
+        'insertRedPacket',             // 插入红包
+        'insertPosition',             // 插入位置
     ];
 
     /**
