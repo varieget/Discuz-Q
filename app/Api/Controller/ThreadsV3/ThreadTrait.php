@@ -19,6 +19,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Censor\Censor;
+use App\Common\Utils;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\PostUser;
@@ -42,6 +43,7 @@ trait ThreadTrait
         $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid);
         $result = [
             'threadId' => $thread['id'],
+            'postId' => $post['id'],
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
@@ -51,8 +53,12 @@ trait ThreadTrait
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
             'payType' => $payType,
-            'paid'=>$paid,
-//            'isEssence' => $thread['is_essence'],
+            'paid' => $paid,
+            'isLike' => $this->isLike($loginUser, $post),
+            'isBrowse' => false,
+            'isComment' => false,
+            'createdAt' => $thread['created_at'],
+            'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
             'likeReward' => $likeRewardField,
@@ -226,6 +232,14 @@ trait ThreadTrait
         list($title, $content) = explode($sep, $censor->checkText($contentForCheck));
         $isApproved = $censor->isMod;
         return [$title, $content];
+    }
+
+    private function isLike($loginUser, $post)
+    {
+        if (empty($loginUser)) {
+            return false;
+        }
+        return PostUser::query()->where('post_id', $post->id)->where('user_id', $loginUser->id)->exists();
     }
 
 }
