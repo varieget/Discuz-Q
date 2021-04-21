@@ -21,7 +21,6 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Censor\Censor;
 use App\Common\Utils;
 use App\Models\Order;
-use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
 use App\Models\User;
