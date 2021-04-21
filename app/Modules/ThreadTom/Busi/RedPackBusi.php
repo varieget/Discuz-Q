@@ -21,6 +21,7 @@ use App\Common\ResponseCode;
 use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\RedPacket;
 use App\Models\Order;
+use App\Models\OrderChildren;
 use App\Models\ThreadTom;
 use App\Models\ThreadRedPacket;
 
@@ -30,24 +31,40 @@ class RedPackBusi extends TomBaseBusi
     public function create()
     {
         $input = $this->verification();
-        if($input['price']*100 <  $input['number']){
+        if ($input['price']*100 <  $input['number']) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
         }
 
         $order = Order::query()
             ->where('order_sn',$input['orderId'])
-            ->first(['id','thread_id','user_id','status','amount','expired_at']);
+            ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
 
-        if (!empty($order['thread_id']) ||
-            $order['user_id'] != $this->user['id'] ||
-            $order['status'] != Order::ORDER_STATUS_PAID ||
-            strtotime($order['expired_at']) < time()||
-            $order['amount'] != $input['price']) {
+        if (empty($order) || 
+            ($order->type == Order::ORDER_TYPE_REDPACKET && !empty($order['thread_id'])) || 
+            $order['user_id'] != $this->user['id'] || 
+            $order['status'] != Order::ORDER_STATUS_PAID || 
+            (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())|| 
+            ($order->type == Order::ORDER_TYPE_REDPACKET && $order->amount != $input['price'])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
+        }
+
+        if ($order->type == Order::ORDER_TYPE_MERGE) {
+            $orderChildrenInfo = OrderChildren::query()
+                ->where('type', Order::ORDER_TYPE_REDPACKET)
+                ->where('status', Order::ORDER_STATUS_PAID)
+                ->where('order_sn', $input['orderId'])
+                ->first();
+            if (empty($orderChildrenInfo) || $orderChildrenInfo->amount != $input['price']) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
+            }
         }
 
         $order->thread_id = $this->threadId;
         $order->save();
+        if ($order->type == Order::ORDER_TYPE_MERGE) {
+            $orderChildrenInfo->thread_id = $this->threadId;
+            $orderChildrenInfo->save();
+        }
 
         if (empty($order['thread_id'])) {
             $this->outPut(ResponseCode::INTERNAL_ERROR, ResponseCode::$codeMap[ResponseCode::INTERNAL_ERROR]);
@@ -55,12 +72,14 @@ class RedPackBusi extends TomBaseBusi
 
         $threadRedPacket = new ThreadRedPacket;
         $threadRedPacket->thread_id = $this->threadId;
-        $threadRedPacket->post_id = 0;
+        $threadRedPacket->post_id = $this->postId;
         $threadRedPacket->rule = $input['rule'];
         $threadRedPacket->condition = $input['condition'];
         $threadRedPacket->likenum = $input['likenum'];
         $threadRedPacket->money = $input['price'];
+        $threadRedPacket->remain_money = $input['price'];
         $threadRedPacket->number = $input['number'];
+        $threadRedPacket->remain_number = $input['number'];
         $threadRedPacket->status = RedPacket::RED_PACKET_STATUS_VALID;
         $threadRedPacket->save();
 
@@ -88,7 +107,7 @@ class RedPackBusi extends TomBaseBusi
     public function verification(){
         $input = [
             'condition' => $this->getParams('condition'),
-            'likenum' => $this->getParams('condition')==1 ? $this->getParams('likenum') : 0,
+            'likenum' => $this->getParams('condition') == 1 ? $this->getParams('likenum') : 1,
             'number' => $this->getParams('number'),
             'rule' => $this->getParams('rule'),
             'orderId' => $this->getParams('orderId'),
@@ -97,7 +116,7 @@ class RedPackBusi extends TomBaseBusi
         ];
         $rules = [
             'condition' => 'required|integer|in:0,1',
-            'likenum' => $input['condition']==1 ? 'required|int|min:1|max:250' : '',
+            'likenum' => $input['condition'] == 1 ? 'required|int|min:1|max:250' : '',
             'number' => 'required|int|min:1|max:100',
             'rule' => 'required|integer|in:0,1',
             'orderId' => 'required|numeric',

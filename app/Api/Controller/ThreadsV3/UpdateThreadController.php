@@ -71,7 +71,7 @@ class UpdateThreadController extends DzqController
         //更新post数据
         $this->savePost($post, $content);
         //更新tom数据
-        $tomJsons = $this->saveThreadTom($thread,$content);
+        $tomJsons = $this->saveThreadTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
     }
 
@@ -126,11 +126,11 @@ class UpdateThreadController extends DzqController
         $post->save();
     }
 
-    private function saveThreadTom($thread, $content)
+    private function saveThreadTom($thread, $content, $post)
     {
         $threadId = $thread->id;
         $tags = [];
-        $tomJsons = $this->tomDispatcher($content, null, $thread->id);
+        $tomJsons = $this->tomDispatcher($content, null, $thread->id, $post->id);
         if (!empty($content['text'])) {
             $tags[] = [
                 'thread_id' => $thread['id'],

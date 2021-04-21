@@ -37,17 +37,19 @@ abstract class TomBaseBusi
     public $body = [];
     public $permissions = [];
     public $threadId = null;
+    public $postId = null;
     public $user = null;
     public $key = null;
     public $app = null;
 
-    public function __construct(User $user, $threadId, $tomId, $key, $operation, $body)
+    public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body)
     {
         $this->app = app();
         $this->operation = $operation;
         $this->body = $body;
         $this->tomId = $tomId;
         $this->threadId = $threadId;
+        $this->postId = $postId;
         $this->user = $user;
         $this->key = $key;
         $this->operationValid();
