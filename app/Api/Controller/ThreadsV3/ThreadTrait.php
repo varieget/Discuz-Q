@@ -21,6 +21,7 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Censor\Censor;
 use App\Common\Utils;
 use App\Models\Order;
+use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
 use App\Models\User;
@@ -56,7 +57,7 @@ trait ThreadTrait
             'isLike' => $this->isLike($loginUser, $post),
             'isBrowse' => false,
             'isComment' => false,
-            'createdAt' => date('Y-m-d H:i:s',strtotime($thread['created_at'])),
+            'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
@@ -143,6 +144,16 @@ trait ThreadTrait
             if ($paid) {
                 $content['text'] = $post['content'];
                 $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id']);
+            } else {
+                $freeWords = $thread['free_words'];
+                if (empty($freeWords)) {
+                    $text = $post['content'];
+                } else {
+                    $text = strip_tags($post['content']);
+                    $freeLength = mb_strlen($text) * $freeWords;
+                    $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+                }
+                $content['text'] = $text;
             }
         }
         return $content;
