@@ -207,7 +207,7 @@ class CreateThreadController extends DzqController
             ->orderByDesc('created_at')->first();
         //发帖间隔时间30s
         if (!empty($threadFirst) && (time() - strtotime($threadFirst['created_at'])) < 30) {
-            $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，稍后重试');
+            $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，请稍后重试');
         }
     }
 }
