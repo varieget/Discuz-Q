@@ -111,7 +111,13 @@ class SmsLoginController extends AuthBaseController
                                             $accessToken ,
                                             $mobileCode->user->id
             );
-            $data = array_merge($this->camelData($accessToken),['sessionToken' => $token->token]);
+            //返回昵称，用于前端绑定微信时展示
+            $nickname = !empty($mobileCode->user->nickname) ? $mobileCode->user->nickname : $mobileCode->user->mobile;
+
+            $data = array_merge($this->camelData($accessToken),[
+                'sessionToken'  => $token->token,
+                'nickname'      => $nickname
+            ]);
             $token->save();
             if($wechat || $miniWechat) { //开了微信，
                 //未绑定微信
