@@ -108,7 +108,7 @@ class WechatH5QrCodeController extends DzqController
             $sessionToken = $token->token;
         }
 
-        $locationUrl = $this->url->action('/apiv3/users/wechat/h5.oauth?redirect='.urlencode($redirectUri), $query);
+        $locationUrl = $this->url->action('/apiv3/users/wechat/h5.oauth?redirect='.$redirectUri, $query);
 
         //去掉无参数时最后一个是 ? 的字符
         $locationUrl = rtrim($locationUrl, "?");
