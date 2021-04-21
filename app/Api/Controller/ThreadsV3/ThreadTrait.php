@@ -60,13 +60,17 @@ trait ThreadTrait
             'group' => $groupField,
             'likeReward' => $likeRewardField,
             'displayTag' => $this->getDisplayTagField($thread, $tags),
+            'isLike' => $this->isLike($user,$post),
+            'isBrowse' => false,
+            'isComment' => false,
             'position' => [
                 'longitude' => $thread['longitude'],
                 'latitude' => $thread['latitude'],
                 'address' => $thread['address'],
                 'location' => $thread['location']
             ],
-            'content' => $contentField
+            'content' => $contentField,
+            'createdAt' => $thread['created_at'],
         ];
         if ($analysis) {
             $s = $thread['title'] . $post['content'];
@@ -214,6 +218,11 @@ trait ThreadTrait
         list($title, $content) = explode($sep, $censor->checkText($contentForCheck));
         $isApproved = $censor->isMod;
         return [$title, $content];
+    }
+
+    private function isLike($user, $post)
+    {
+        return PostUser::query()->where('post_id',$post->id)->where('user_id',$user->id)->exists();
     }
 
 }
