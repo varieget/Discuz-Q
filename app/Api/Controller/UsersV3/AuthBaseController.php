@@ -127,9 +127,8 @@ abstract class AuthBaseController extends DzqController
          * @var MobileCode $mobileCode
          **/
         $mobileCode = $mobileCodeRepository->getSmsCode($mobile, $type);
-
         if (!$mobileCode || $mobileCode->code !== $code || $mobileCode->expired_at < Carbon::now()) {
-            $this->outPut(ResponseCode::NET_ERROR, ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
+            $this->outPut(ResponseCode::SMS_CODE_ERROR);
         }
 
         $mobileCode->changeState(MobileCode::USED_STATE);

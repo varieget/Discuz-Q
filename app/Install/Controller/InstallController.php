@@ -252,6 +252,7 @@ class InstallController implements RequestHandlerInterface
         $userWallet->truncate();
         $this->app['db']->statement('SET FOREIGN_KEY_CHECKS=1;');
         $user->username = Arr::get($input, 'adminUsername');
+        $user->nickname = Arr::get($input, 'adminUsername');
         $user->password = Arr::get($input, 'adminPassword');
         $user->last_login_ip = Arr::get($input, 'ip');
         $user->last_login_port = Arr::get($input, 'port');
