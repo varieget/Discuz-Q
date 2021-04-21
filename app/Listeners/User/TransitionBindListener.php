@@ -70,18 +70,16 @@ class TransitionBindListener
     public function handle($event)
     {
         $user = $event->user;
-
         $sessionToken = SessionToken::get($event->data['sessionToken']);
-        if(empty($sessionToken)) {
+        if(empty($sessionToken) || ! $sessionToken) {
             // 长时间未操作，授权超时，重新授权
-            \Discuz\Common\Utils::outPut(ResponseCode::PC_QRCODE_TIME_OUT, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_TIME_OUT]);
+            \Discuz\Common\Utils::outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
         }
         if(! $sessionToken->payload || empty($sessionToken->payload)) {
             // 授权信息未查询到，需要重新授权
-            \Discuz\Common\Utils::outPut(ResponseCode::PC_QRCODE_TIME_OUT, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_TIME_OUT]);
+            \Discuz\Common\Utils::outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
         }
-
-        $userWechatId = isset($sessionToken->payload['id'])? $sessionToken->payload['id'] : 0;
+        $userWechatId = isset($sessionToken->payload['user_wechat_id'])? $sessionToken->payload['user_wechat_id'] : 0;
         //微信绑定用户操作
         $this->db->beginTransaction();
         try {
@@ -89,7 +87,7 @@ class TransitionBindListener
             if(! $wechatUser) {
                 $this->db->commit();
                 // 授权信息未查询到，需要重新授权
-                \Discuz\Common\Utils::outPut(ResponseCode::PC_QRCODE_TIME_OUT, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_TIME_OUT]);
+                \Discuz\Common\Utils::outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
             }
             //微信信息绑定用户信息
             $wechatUser->user_id = $user->id;
@@ -97,6 +95,7 @@ class TransitionBindListener
             $wechatUser->save();
 
             //user 中绑定字段维护
+//            $user->changeNickname($wechatUser->nickname);
             $user->bind_type = $user->bind_type + AuthUtils::WECHAT;
             $user->save();
 
