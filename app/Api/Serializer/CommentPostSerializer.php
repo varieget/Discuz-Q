@@ -39,7 +39,12 @@ class CommentPostSerializer extends BasicPostSerializer
 
         $attributes['isFirst'] = false;
         $attributes['isComment'] = (bool) $model->is_comment;
-
+        if ($likeState = $model->likeState) {
+            $attributes['isLiked'] = true;
+            $attributes['likedAt'] = $likeState->created_at->format('Y-m-d H:i:s');
+        } else {
+            $attributes['isLiked'] = false;
+        }
         return $attributes;
     }
 
