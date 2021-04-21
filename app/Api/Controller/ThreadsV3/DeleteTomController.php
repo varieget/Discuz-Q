@@ -22,9 +22,6 @@ use App\Common\ResponseCode;
 use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomTrait;
 use Discuz\Base\DzqController;
-/*
- * 删除tom对象
- */
 class DeleteTomController extends DzqController
 {
 
@@ -32,9 +29,6 @@ class DeleteTomController extends DzqController
 
     public function main()
     {
-        if (!$this->canDeleteTom()) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
-        }
         $threadId = $this->inPut('threadId');
         $tomType = $this->inPut('tomId');
         $key = $this->inPut('key');

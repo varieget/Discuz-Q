@@ -20,16 +20,22 @@ namespace App\Modules\ThreadTom;
 class TomConfig
 {
 
+    const TOM_TEXT = 100;//文字内容，目前不单独作为扩展插件存储
     const TOM_IMAGE = 101;
     const TOM_AUDIO = 102;
     const TOM_VIDEO = 103;
     const TOM_GOODS = 104;
-    const TOM_QA = 105;
     const TOM_REDPACK = 106;
     const TOM_REWARD = 107;
     const TOM_DOC = 108;
 
     public static $map = [
+        self::TOM_TEXT => [
+            'enName' => 'TEXT',
+            'desc' => '文字',
+            'authorize'=>'',
+            'service' => ''
+        ],
         self::TOM_IMAGE => [
             'enName' => 'IMAGE',
             'desc' => '图片',

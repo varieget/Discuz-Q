@@ -135,7 +135,7 @@ class CreateThreadController extends DzqController
     }
 
     /**
-     * @desc  todo 扩展属性权限判断,后面迁移到busi里
+     * @desc  todo 扩展属性权限判断,后面迁移到busi插件里
      * @param $permission
      * @param $msg
      */
@@ -144,7 +144,9 @@ class CreateThreadController extends DzqController
         $permissions = Permission::getUserPermissions($this->user);
         if (!in_array($permission, $permissions) && !$this->user->isAdmin()) {
             //todo 联调关闭权限检查
-//            $this->outPut(ResponseCode::UNAUTHORIZED, $msg);
+            if(!$this->CLOSE_BUSI_PERMISSION){
+                $this->outPut(ResponseCode::UNAUTHORIZED, $msg);
+            }
         }
     }
 
@@ -174,6 +176,12 @@ class CreateThreadController extends DzqController
         $attrs = [];
         $tomJsons = $this->tomDispatcher($indexes, null, $thread['id']);
         $tags = [];
+        if (!empty($content['text'])) {
+            $tags[] = [
+                'thread_id' => $thread['id'],
+                'tag' => TomConfig::TOM_TEXT,
+            ];
+        }
         foreach ($tomJsons as $key => $value) {
             $attrs[] = [
                 'thread_id' => $thread['id'],

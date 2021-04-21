@@ -24,6 +24,7 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
+use App\Modules\ThreadTom\TomConfig;
 use Discuz\Base\DzqController;
 
 class UpdateThreadController extends DzqController
@@ -65,13 +66,12 @@ class UpdateThreadController extends DzqController
     private function executeEloquent($thread, $post, $content)
     {
 
-        $tomJsons = $this->tomDispatcher($content, null, $thread->id);
         //更新thread数据
         $this->saveThread($thread, $content);
         //更新post数据
         $this->savePost($post, $content);
         //更新tom数据
-        $this->saveThreadTom($thread, $tomJsons);
+        $tomJsons = $this->saveThreadTom($thread,$content);
         return $this->getResult($thread, $post, $tomJsons);
     }
 
@@ -126,11 +126,18 @@ class UpdateThreadController extends DzqController
         $post->save();
     }
 
-    private function saveThreadTom($thread, $tomJson)
+    private function saveThreadTom($thread, $content)
     {
         $threadId = $thread->id;
         $tags = [];
-        foreach ($tomJson as $key => $value) {
+        $tomJsons = $this->tomDispatcher($content, null, $thread->id);
+        if (!empty($content['text'])) {
+            $tags[] = [
+                'thread_id' => $thread['id'],
+                'tag' => TomConfig::TOM_TEXT,
+            ];
+        }
+        foreach ($tomJsons as $key => $value) {
             $tomId = $value['tomId'];
             $operation = $value['operation'];
             $body = $value['body'];
@@ -163,6 +170,7 @@ class UpdateThreadController extends DzqController
             }
         }
         $this->saveThreadTag($threadId, $tags);
+        return $tomJsons;
     }
 
     private function saveThreadTag($threadId, $tags)

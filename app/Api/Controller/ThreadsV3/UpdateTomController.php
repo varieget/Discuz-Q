@@ -30,14 +30,9 @@ class UpdateTomController extends DzqController
 
     public function main()
     {
-        if (!$this->canUpdateTom()) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
-        }
         $threadId = $this->inPut('threadId');
         $content = $this->inPut('content');
-
         $tomJsons = $this->tomDispatcher($content,$this->UPDATE_FUNC);
-
         $db = $this->getDB();
         $db->beginTransaction();
         try {

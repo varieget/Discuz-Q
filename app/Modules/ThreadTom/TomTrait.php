@@ -18,8 +18,12 @@
 namespace App\Modules\ThreadTom;
 
 
+use App\Api\Controller\ThreadsV3\DeleteTomController;
+use App\Api\Controller\ThreadsV3\SelectTomController;
+use App\Api\Controller\ThreadsV3\UpdateTomController;
 use App\Common\ResponseCode;
 use App\Models\Permission;
+use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Common\Utils;
@@ -32,6 +36,8 @@ trait TomTrait
     private $UPDATE_FUNC = 'update';
     private $SELECT_FUNC = 'select';
 
+
+    private $CLOSE_BUSI_PERMISSION = true;
 
     /**
      * @desc 支持一次提交包含新建或者更新或者删除等各种类型混合
@@ -94,8 +100,9 @@ trait TomTrait
 
     private function busiPermission(User $user, $tom)
     {
-        //todo 联调关闭权限检查
-        return true;
+        if ($this->CLOSE_BUSI_PERMISSION) {
+            return true;
+        }
         if ($user->isAdmin()) {
             return true;
         }
@@ -120,6 +127,12 @@ trait TomTrait
         ];
     }
 
+    /**
+     * @desc 创建新贴权限
+     * @param User $user
+     * @param $categoryId
+     * @return bool
+     */
     private function canCreateThread(User $user, $categoryId)
     {
         if ($user->isAdmin()) {
@@ -133,11 +146,18 @@ trait TomTrait
         return false;
     }
 
+    /**
+     * @desc 阅读帖子详情权限
+     * @param $user
+     * @param $categoryId
+     * @return bool
+     */
     private function canViewThreadDetail($user, $categoryId)
     {
         if ($user->isAdmin()) {
             return true;
         }
+        //添加付费用户可查看的权限
         $permissions = Permission::getUserPermissions($user);
         $permission = 'category' . $categoryId . '.thread.viewPosts';
         if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
@@ -146,20 +166,13 @@ trait TomTrait
         return false;
     }
 
-    private function canViewThread($user, $categoryId)
-    {
-        return true;
-//        if ($user->isAdmin()) {
-//            return true;
-//        }
-//        $permissions = Permission::getUserPermissions($user);
-//        $permission = 'category' . $categoryId . '.thread.viewPosts';
-//        if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
-//            return true;
-//        }
-//        return false;
-    }
-
+    /**
+     * @desc 编辑更新帖子权限
+     * @param User $user
+     * @param $categoryId
+     * @param null $threadUserId
+     * @return bool
+     */
     private function canEditThread(User $user, $categoryId, $threadUserId = null)
     {
         if ($user->isAdmin()) {
@@ -178,6 +191,13 @@ trait TomTrait
         }
     }
 
+    /**
+     * @desc 删除帖子的权限
+     * @param User $user
+     * @param $categoryId
+     * @param null $threadUserId
+     * @return bool
+     */
     private function canDeleteThread(User $user, $categoryId, $threadUserId = null)
     {
         if ($user->isAdmin()) {
@@ -197,16 +217,25 @@ trait TomTrait
         return false;
     }
 
-    private function canUpdateTom()
+    public function beforeMain($name, $arguments)
     {
-        //todo 有创建权限
-        return true;
+        $class = get_called_class();
+        if (in_array($class, [UpdateTomController::class, DeleteTomController::class, SelectTomController::class])) {
+            $threadId = $this->inPut('threadId');
+            $thread = Thread::getOneActiveThread($threadId);
+            $user = $arguments[0];
+            if (empty($thread)) {
+                $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+            }
+            if ($class == SelectTomController::class) {
+                if (!$this->canViewThreadDetail($user, $thread->category_id, $thread->user_id)) {
+                    $this->outPut(ResponseCode::UNAUTHORIZED);
+                }
+            } else {
+                if (!$this->canEditThread($user, $thread->category_id, $thread->user_id)) {
+                    $this->outPut(ResponseCode::UNAUTHORIZED);
+                }
+            }
+        }
     }
-
-    private function canDeleteTom()
-    {
-        //todo 有创建权限
-        return true;
-    }
-
 }
