@@ -21,7 +21,9 @@ namespace App\Api\Controller\PostsV3;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\CommentPostSerializer;
 use App\Common\ResponseCode;
+use App\Models\GroupUser;
 use App\Models\Post;
+use App\Models\User;
 use Discuz\Base\DzqController;
 
 class ResourcePostController extends DzqController
@@ -40,6 +42,7 @@ class ResourcePostController extends DzqController
 
     public function main()
     {
+
         $coment_post_serialize = $this->app->make(CommentPostSerializer::class);
         $attachment_serialize = $this->app->make(AttachmentSerializer::class);
 
@@ -81,24 +84,71 @@ class ResourcePostController extends DzqController
                 unset($data['images'][$key]['type_id']);
             }
         }
+
+        $postUserId =array($data['userId']);
+        $data['user'] = $this->getUserWithGroup($postUserId);
+
         //获取回复评论列表
         if(intval($data['replyCount']) > 0){
             $replyId = Post::query()
                 ->where('reply_post_id',$post_id)
                 ->where('is_comment', true)
-                ->pluck("id");
+                ->get(['id','user_id','reply_user_id','comment_user_id']);
             $replyIdArr = $replyId->toArray();
-            foreach ($replyIdArr as $k=>$value){
-                $comment_post = Post::query()->where('id',$value)->first();
-                $data['commentPosts'][$k] = $coment_post_serialize->getDefaultAttributes($comment_post);
+
+            $user_id = array_unique(array_column($replyIdArr, 'user_id'));
+            $users = $this->getUser($user_id);
+            $reply_user_id = array_unique(array_column($replyIdArr, 'reply_user_id'));
+            $replyUsers = $this->getUser($reply_user_id);
+            $comment_user_id = array_unique(array_column($replyIdArr, 'comment_user_id'));
+            $commentUsers = $this->getUser($comment_user_id);
+
+            $comment_post_id = array_column($replyIdArr,'id');
+            $comment_post_collect = Post::query()->whereIn('id', $comment_post_id)->get();
+            foreach ($comment_post_collect as $k=>$value){
+                $data['commentPosts'][$k] = $coment_post_serialize->getDefaultAttributes($comment_post_collect[$k]);
+                $data['commentPosts'][$k]['user'] = $users[$value['user_id']];
+                $data['commentPosts'][$k]['replyUser'] = $replyUsers[$value['reply_user_id']];
+                $data['commentPosts'][$k]['commentUser'] = $commentUsers[$value['comment_user_id']];
             }
         }
 //        $cache->put($cacheKey, serialize($data), 5*60);
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
-
     }
 
+    protected function getUser($userIds)
+    {
+        if (!$userIds) {
+            return null;
+        }
+        $users = User::query()->whereIn('id', $userIds)->get(['id','username','avatar','realname'])->toArray();
+        $users = array_column($users, null, 'id');
+        return $users;
+    }
 
+    protected function getUserWithGroup($userId)
+    {
+        if (!$userId) {
+            return null;
+        }
+        $user = User::query()->where('id', $userId)->first(['id','username','avatar','realname'])->toArray();
+        $groups = GroupUser::instance()->getGroupInfo($userId);
+        $groups = array_column($groups, null, 'user_id');
+        $user['groups'] = [];
+        if($groups){
+            $user['groups'] = $this->getGroupInfo($groups[$userId[0]]);
+        }
+        return $user;
+    }
+
+    protected function getGroupInfo($group)
+    {
+        return [
+            'id' => $group['group_id'],
+            'name' => $group['groups']['name'],
+            'isDisplay' => $group['groups']['is_display']
+        ];
+    }
 
 
 }
