@@ -32,43 +32,56 @@ class TomConfig
     public static $map = [
         self::TOM_IMAGE => [
             'enName' => 'IMAGE',
-            'desc' => '图片类',
+            'desc' => '图片',
+            'authorize'=>'switch.insertImage',
             'service' => \App\Modules\ThreadTom\Busi\ImageBusi::class
         ],
         self::TOM_AUDIO => [
             'enName' => 'AUDIO',
             'desc' => '语音',
+            'authorize'=>'switch.insertAudio',
             'service' => \App\Modules\ThreadTom\Busi\AudioBusi::class
         ],
         self::TOM_VIDEO => [
             'enName' => 'VIDEO',
             'desc' => '视频',
+            'authorize'=>'switch.insertVideo',
             'service' => \App\Modules\ThreadTom\Busi\VideoBusi::class
         ],
         self::TOM_GOODS => [
             'enName' => 'GOODS',
             'desc' => '商品',
+            'authorize'=>'switch.insertGoods',
             'service' => \App\Modules\ThreadTom\Busi\GoodsBusi::class
         ],
-        self::TOM_QA => [
-            'enName' => 'QA',
-            'desc' => '问答',
-            'service' => \App\Modules\ThreadTom\Busi\QABusi::class
-        ],
+//        self::TOM_QA => [
+//            'enName' => 'QA',
+//            'desc' => '问答',
+//            'service' => \App\Modules\ThreadTom\Busi\QABusi::class
+//        ],
         self::TOM_REDPACK => [
             'enName' => 'REDPACK',
             'desc' => '红包',
+            'authorize'=>'switch.insertRedPacket',
             'service' => \App\Modules\ThreadTom\Busi\RedPackBusi::class
         ],
         self::TOM_REWARD => [
             'enName' => 'REWARD',
             'desc' => '悬赏',
+            'authorize'=>'switch.insertReward',
             'service' => \App\Modules\ThreadTom\Busi\RewardBusi::class
         ],
         self::TOM_DOC => [
             'enName' => 'DOC',
             'desc' => '文件附件',
+            'authorize'=>'switch.insertDoc',
             'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
         ]
     ];
+
+    //扩展属性
+    const AUTHORIZE_PAY = 'switch.insertPay';
+    const AUTHORIZE_POSITION = 'switch.insertPosition';
+
+
 }

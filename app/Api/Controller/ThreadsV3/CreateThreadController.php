@@ -19,10 +19,12 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
 use App\Models\Group;
+use App\Models\Permission;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
+use App\Modules\ThreadTom\TomConfig;
 use Discuz\Base\DzqController;
 
 class CreateThreadController extends DzqController
@@ -99,12 +101,18 @@ class CreateThreadController extends DzqController
             'title' => $title,
             'post_count' => 1
         ];
-        floatval($price) > 0 && $dataThread['price'] = floatval($price);
-        floatval($attachmentPrice) > 0 && $dataThread['attachment_price'] = floatval($attachmentPrice);
-        floatval($freeWords) > 0 && $dataThread['free_words'] = floatval($freeWords);
-
+        $price = floatval($price);
+        $attachmentPrice = floatval($attachmentPrice);
+        $freeWords = floatval($freeWords);
+        if ($price > 0 || $attachmentPrice > 0) {
+            $this->propertyExtendPermission(TomConfig::AUTHORIZE_PAY, '没有插入【付费】权限');
+            $price > 0 && $dataThread['price'] = $price;
+            $attachmentPrice > 0 && $dataThread['attachment_price'] = $attachmentPrice;
+            $freeWords > 0 && $dataThread['free_words'] = $freeWords;
+        }
         !empty($freeWords) && $dataThread['free_words'] = $freeWords;
         if (!empty($position)) {
+            $this->propertyExtendPermission(TomConfig::AUTHORIZE_POSITION, '没有插入【位置信息】权限');
             $dataThread['longitude'] = $position['longitude'];
             $dataThread['latitude'] = $position['latitude'];
             $dataThread['address'] = $position['address'];
@@ -124,6 +132,20 @@ class CreateThreadController extends DzqController
         $thread->setRawAttributes($dataThread);
         $thread->save();
         return $thread;
+    }
+
+    /**
+     * @desc  todo 扩展属性权限判断,后面迁移到busi里
+     * @param $permission
+     * @param $msg
+     */
+    private function propertyExtendPermission($permission, $msg)
+    {
+        $permissions = Permission::getUserPermissions($this->user);
+        if (!in_array($permission, $permissions) && !$this->user->isAdmin()) {
+            //todo 联调关闭权限检查
+//            $this->outPut(ResponseCode::UNAUTHORIZED, $msg);
+        }
     }
 
 

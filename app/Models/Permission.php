@@ -69,10 +69,17 @@ class Permission extends Model
         return $permissions;
     }
 
-    public static function getUserPermissions($user){
-        $groups = $user->groups->toArray();
-        $groupIds = array_column($groups, 'id');
-        return  Permission::categoryPermissions($groupIds);
+    public static function getUserPermissions($user)
+    {
+        if (app()->has('permissions')) {
+            return app()->get('permissions');
+        } else {
+            $groups = $user->groups->toArray();
+            $groupIds = array_column($groups, 'id');
+            $permissions = Permission::categoryPermissions($groupIds);
+            app()->instance('permissions', $permissions);
+            return $permissions;
+        }
     }
 
 

@@ -18,9 +18,11 @@
 namespace App\Modules\ThreadTom;
 
 
+use App\Common\ResponseCode;
 use App\Models\Permission;
 use App\Models\ThreadTom;
 use App\Models\User;
+use Discuz\Common\Utils;
 
 trait TomTrait
 {
@@ -65,6 +67,7 @@ trait TomTrait
                     }
                 }
             }
+            $this->busiPermission($this->user, $v);
             if (isset($v['tomId']) && isset($v['operation'])) {
                 if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
                     $tomId = $v['tomId'];
@@ -80,6 +83,7 @@ trait TomTrait
                             }
                             method_exists($service, $op) && $tomJsons[$k] = $service->$op();
                         } catch (\ReflectionException $e) {
+                            Utils::outPut(ResponseCode::INTERNAL_ERROR, $e->getMessage());
                         }
                     }
                 }
@@ -88,10 +92,28 @@ trait TomTrait
         return $tomJsons;
     }
 
-    private function buildTomJson($threadId,$tomId, $operation, $body)
+    private function busiPermission(User $user, $tom)
+    {
+        //todo 联调关闭权限检查
+        return true;
+        if ($user->isAdmin()) {
+            return true;
+        }
+        if (!empty($tom['operation']) && $tom['operation'] == $this->CREATE_FUNC) {
+            $tomConfig = TomConfig::$map[$tom['tomId']];
+            $permissions = Permission::getUserPermissions($this->user);
+            if (!in_array($tomConfig['authorize'], $permissions)) {
+                Utils::outPut(ResponseCode::UNAUTHORIZED, sprintf('没有插入【%s】权限', $tomConfig['desc']));
+            }
+        }
+        return true;
+    }
+
+
+    private function buildTomJson($threadId, $tomId, $operation, $body)
     {
         return [
-            'threadId'=>$threadId,
+            'threadId' => $threadId,
             'tomId' => $tomId,
             'operation' => $operation,
             'body' => $body
@@ -121,7 +143,6 @@ trait TomTrait
         if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
             return true;
         }
-        //todo 免费查看付费贴、付费图片、付费语音、付费问答
         return false;
     }
 
@@ -136,7 +157,6 @@ trait TomTrait
 //        if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
 //            return true;
 //        }
-//        //todo 免费查看付费贴、付费图片、付费语音、付费问答
 //        return false;
     }
 
@@ -179,11 +199,13 @@ trait TomTrait
 
     private function canUpdateTom()
     {
+        //todo 有创建权限
         return true;
     }
 
     private function canDeleteTom()
     {
+        //todo 有创建权限
         return true;
     }
 
