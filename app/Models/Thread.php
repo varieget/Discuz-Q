@@ -147,6 +147,9 @@ class Thread extends DzqModel
     const BOOL_YES = 1;
     const BOOL_NO = 0;
 
+    const PAY_NO = 0;
+    const PAY_THREAD = 1;
+    const PAY_ATTACH = 2;
     /**
      * {@inheritdoc}
      */

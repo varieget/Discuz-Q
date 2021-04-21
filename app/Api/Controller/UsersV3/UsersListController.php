@@ -53,7 +53,7 @@ class UsersListController extends DzqController
             unset($userDatas[$key]['group_id']);
         }
         $userDatas = $this->camelData($userDatas);
-        $users['pageData'] = $userDatas;
+        $users['pageData'] = $userDatas ?? [];
 
         return $this->outPut(ResponseCode::SUCCESS, '', $users);
     }

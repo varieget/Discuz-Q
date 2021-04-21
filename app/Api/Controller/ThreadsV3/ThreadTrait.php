@@ -40,6 +40,9 @@ trait ThreadTrait
         $likeRewardField = $this->getLikeRewardField($thread, $post);
         $textCoverField = $this->boolTextCoverField($post);
         $contentField = $this->getContentField($textCoverField, $thread, $post, $tomInputIndexes);
+        $payType = Thread::PAY_NO;
+        $thread['price']>0 && $payType = Thread::PAY_THREAD;
+        $thread['attachment_price']>0 && $payType = Thread::PAY_ATTACH;
         $result = [
             'threadId' => $thread['id'],
             'textCover' => $textCoverField,
@@ -47,9 +50,11 @@ trait ThreadTrait
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
+            'postCount' => $thread['post_count'] - 1,
             'isApproved' => $thread['is_approved'],
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
+            'payType' => $payType,
 //            'isEssence' => $thread['is_essence'],
             'user' => $userField,
             'group' => $groupField,

@@ -297,8 +297,8 @@ class CreateOrderController extends DzqController
         if ($orderType == Order::ORDER_TYPE_MERGE) {
             $redAmount = sprintf('%.2f', $data['red_amount']);
             $rewardAmount = sprintf('%.2f', $data['reward_amount']);
-            $redResult = $this->insertOrderChildren($order, $redAmount);
-            $rewardResult = $this->insertOrderChildren($order, $rewardAmount);
+            $redResult = $this->insertOrderChildren($order, $redAmount, Order::ORDER_TYPE_REDPACKET);
+            $rewardResult = $this->insertOrderChildren($order, $rewardAmount, Order::ORDER_TYPE_QUESTION_REWARD);
         }
 
         $db = $this->getDB();
@@ -340,11 +340,11 @@ class CreateOrderController extends DzqController
         return date('YmdHis', time()) . substr(implode(null, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, 8);
     }
 
-    public function insertOrderChildren($order, $childAmount)
+    public function insertOrderChildren($order, $childAmount, $type)
     {
         $orderChildren = new OrderChildren();
         $orderChildren->order_sn = $order->order_sn;
-        $orderChildren->type = $order->type;
+        $orderChildren->type = $type;
         $orderChildren->status = $order->status;
         $orderChildren->amount = $childAmount;
         $orderChildren->thread_id = $order->thread_id ?? 0;

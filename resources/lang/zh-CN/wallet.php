@@ -70,10 +70,10 @@ return [
 
     'redpacket_freeze' => '红包冻结',
     'redpacket_income' => '红包收入',
-    'redpacket_refund' => '红包退款',
+    'redpacket_refund' => '红包过期退款',
     'question_reward_freeze' => '悬赏冻结',
     'question_reward_income' => '悬赏收入',
-    'question_reward_refund' => '悬赏退款',
+    'question_reward_refund' => '悬赏过期退款',
     'merge_freeze' => '合并订单冻结',
     'merge_refund' => '合并订单退款'
 ];

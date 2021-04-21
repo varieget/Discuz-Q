@@ -38,7 +38,7 @@ class SmsBindController extends AuthBaseController
             $this->user->changeMobile($mobileCode->mobile);
             $this->user->save();
 
-            $this->updateUserBindType($mobileCode->user, AuthUtils::PHONE);
+            $this->updateUserBindType($this->user, AuthUtils::PHONE);
 
             $this->outPut(ResponseCode::SUCCESS, '', []);
         }

@@ -60,22 +60,21 @@ class RewardBusi extends TomBaseBusi
         $threadReward->expired_at = $input['expiredAt'];
         $threadReward->save();
 
+        $threadReward->isSelect = false;
+        $threadReward->content = $input['content'];
+
         return $this->jsonReturn($threadReward);
     }
 
-    public function delete()
+    public function select()
     {
-        $rewardId = $this->getParams('rewardId');
-
-        $threadTom = ThreadTom::query()
-            ->where('id',$rewardId)
-            ->update(['status'=>-1]);
-
-        if ($threadTom) {
-            return true;
+        if (isset($this->body['isSelect'])) {
+            return $this->jsonReturn($this->body);
         }
+        $redPacket = ThreadReward::query()->where('id',$this->body['id'])->first(['remain_money']);
+        $this->body['remain_money'] = $redPacket['remain_money'];
 
-        return false;
+        return $this->jsonReturn($this->body);
     }
 
     public function verification(){
@@ -84,12 +83,14 @@ class RewardBusi extends TomBaseBusi
             'price' => $this->getParams('price'),
             'type' => $this->getParams('type'),
             'expiredAt' => $this->getParams('expiredAt'),
+            'content' => $this->getParams('content'),
         ];
         $rules = [
             'orderId' => 'required|numeric',
             'price' => 'required|numeric|min:0.01',
             'type' => 'required|integer|in:0,1',
-            'expiredAt' => 'required|date'
+            'expiredAt' => 'required|date',
+            'content' => 'max:1000',
         ];
         $this->dzqValidate($input, $rules);
 
