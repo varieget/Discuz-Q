@@ -112,9 +112,13 @@ class Censor
          * 腾讯云敏感词校验
          * 小程序敏感词校验
          */
-
+        $isSiteMiniProgramOn = false;
         $siteManage = json_decode($this->setting->get('site_manage', 'default'), true);
-        $isSiteMiniProgramOn = $siteManage[2]['value'] ?? false;
+        foreach ($siteManage as $key => $value) {
+            if ($value['key'] == 3) {
+                $isSiteMiniProgramOn = $value['value'];
+            }
+        }
 
         if ($this->setting->get('qcloud_cms_text', 'qcloud', false)) {
             // 判断是否大于 5000 字
