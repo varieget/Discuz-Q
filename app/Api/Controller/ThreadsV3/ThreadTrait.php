@@ -43,7 +43,6 @@ trait ThreadTrait
         $payType = $this->threadPayStatus($thread, $paid);
         $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid);
         $authority = $this->authority($loginUser, $thread);
-        
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -73,6 +72,7 @@ trait ThreadTrait
                 'address' => $thread['address'],
                 'location' => $thread['location']
             ],
+            'ability'=>$this->getAbilityField(),
             'content' => $contentField
         ];
         if ($analysis) {
@@ -82,6 +82,20 @@ trait ThreadTrait
             $result['content']['text'] = str_replace($search, $replace, $result['content']['text']);
         }
         return $result;
+    }
+
+    /**
+     * @desc 获取操作权限
+     */
+    private function getAbilityField(){
+        return [
+            'canEdit'=>true,
+            'canDelete'=>true,
+            'canEssence'=>true,
+            'canStick'=>true,
+            'canReply'=>true,
+            'canViewPost'=>true
+        ];
     }
 
     private function threadPayStatus($thread, &$paid)
