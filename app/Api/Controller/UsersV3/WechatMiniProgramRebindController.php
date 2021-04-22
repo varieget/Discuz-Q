@@ -111,9 +111,7 @@ class WechatMiniProgramRebindController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $actor);
         } else {
-            $this->outPut(ResponseCode::NET_ERROR,
-                          ResponseCode::$codeMap[ResponseCode::NET_ERROR]
-            );
+            $this->outPut(ResponseCode::NET_ERROR);
         }
 
         $this->db->commit();

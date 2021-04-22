@@ -57,9 +57,7 @@ class SmsLoginController extends AuthBaseController
         //register new user
         if (is_null($mobileCode->user)) {
             if (!(bool)$this->settings->get('register_close')) {
-                $this->outPut(ResponseCode::REGISTER_CLOSE,
-                              ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
-                );
+                $this->outPut(ResponseCode::REGISTER_CLOSE);
             }
 
             $data['register_ip']    = $ip;

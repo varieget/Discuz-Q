@@ -30,7 +30,7 @@ class MiniProgramPcLoginPollController extends AuthBaseController
         if (isset($token->payload['code'])) {
             if (empty($token->payload['code'])) {
                 // 扫码中
-                $this->outPut(ResponseCode::PC_QRCODE_ERROR, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_ERROR]);
+                $this->outPut(ResponseCode::PC_QRCODE_ERROR);
             } else {
                 /*$noUserException = new NoUserException();
                 $noUserException->setToken((object) $token->payload['token']);
