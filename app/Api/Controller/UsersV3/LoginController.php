@@ -110,11 +110,11 @@ class LoginController extends AuthBaseController
                 //未绑定微信
                 $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
                 if(!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
-                    return $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', ['sessionToken' => $token->token]);
+                    return $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', ['sessionToken' => $token->token, 'nickname' => $user->nickname]);
                 }
             }
             if(! $wechat && ! $miniWechat && $sms && !$user->mobile) {//开了短信配置未绑定手机号
-                return $this->outPut(ResponseCode::NEED_BIND_PHONE, '', ['sessionToken' => $token->token]);
+                return $this->outPut(ResponseCode::NEED_BIND_PHONE, '', ['sessionToken' => $token->token, 'nickname' => $user->nickname]);
             }
             return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
         }

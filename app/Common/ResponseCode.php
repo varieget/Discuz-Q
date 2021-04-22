@@ -91,6 +91,7 @@ class ResponseCode
     const NEED_BIND_WECHAT = 8000;
     const NEED_BIND_PHONE = 8001;
     const SMS_NOT_OPEN= -9001;
+    const SMS_CODE_ERROR = -9002;
 
     public static $codeMap = [
         self::SITE_CLOSED => '站点已关闭',
@@ -150,5 +151,6 @@ class ResponseCode
         self::PARAM_IS_NOT_OBJECT => '参数不为对象',
         self::TRANSITION_NOT_OPEN => '过渡开关未开启',
         self::SMS_NOT_OPEN  => '短信未开启',
+        self::SMS_CODE_ERROR => '验证码错误',
     ];
 }
