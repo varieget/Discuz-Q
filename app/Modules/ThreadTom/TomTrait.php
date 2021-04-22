@@ -56,39 +56,29 @@ trait TomTrait
         } else {
             $indexes = $tomContent;
         }
-        foreach ($indexes as $k => $v) {
-            !empty($operation) && $v['operation'] = $operation;
-            if (!isset($v['operation'])) {
-                if (empty($v['body'])) {
-                    $v['operation'] = $this->DELETE_FUNC;
-                } else {//create/update
-                    if (empty($threadId)) {
-                        $v['operation'] = $this->CREATE_FUNC;
-                    } else {
-                        $exist = ThreadTom::query()->where(['thread_id' => $threadId, 'tom_type' => $v['tomId'], 'key' => $k, 'status' => ThreadTom::STATUS_ACTIVE])->exists();
-                        if ($exist) {
-                            $v['operation'] = $this->UPDATE_FUNC;
-                        } else {
-                            $v['operation'] = $this->CREATE_FUNC;
-                        }
-                    }
-                }
-            }
-            $this->busiPermission($this->user, $v);
-            if (isset($v['tomId']) && isset($v['operation'])) {
-                if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
-                    $tomId = $v['tomId'];
-                    $op = $v['operation'];
-                    $body = $v['body'];
+        $tomList = [];
+        if (!empty($threadId)) {
+            $tomList = ThreadTom::query()
+                ->select('tom_type', 'key')
+                ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
+        }
+        foreach ($indexes as $key => $tomJson) {
+            $this->setOperation($operation, $key, $tomJson, $tomList);
+            $this->busiPermission($this->user, $tomJson);
+            if (isset($tomJson['tomId']) && isset($tomJson['operation'])) {
+                if (in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
+                    $tomId = $tomJson['tomId'];
+                    $op = $tomJson['operation'];
+                    $body = $tomJson['body'];
                     if (isset($config[$tomId])) {
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
-                            if (empty($v['threadId'])) {
-                                $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $k, $op, $body]);
+                            if (empty($tomJson['threadId'])) {
+                                $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body]);
                             } else {
-                                $service = $service->newInstanceArgs([$this->user, $v['threadId'], $postId, $tomId, $k, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body]);
                             }
-                            method_exists($service, $op) && $tomJsons[$k] = $service->$op();
+                            method_exists($service, $op) && $tomJsons[$key] = $service->$op();
                         } catch (\ReflectionException $e) {
                             Utils::outPut(ResponseCode::INTERNAL_ERROR, $e->getMessage());
                         }
@@ -97,6 +87,35 @@ trait TomTrait
             }
         }
         return $tomJsons;
+    }
+
+    /**
+     * @desc 识别当前的操作类型
+     * @param $operation
+     * @param $key
+     * @param $tomJson
+     * @param $tomList
+     * @return mixed
+     */
+    private function setOperation($operation, $key, &$tomJson, $tomList)
+    {
+        !empty($operation) && $tomJson['operation'] = $operation;
+        if (!isset($tomJson['operation'])) {
+            if (empty($tomJson['body'])) {
+                $tomJson['operation'] = $this->DELETE_FUNC;
+            } else {//create/update
+                if (empty($threadId)) {
+                    $tomJson['operation'] = $this->CREATE_FUNC;
+                } else {
+                    if (in_array(['tom_type' => $tomJson['tomId'], 'key' => $key], $tomList)) {
+                        $tomJson['operation'] = $this->UPDATE_FUNC;
+                    } else {
+                        $tomJson['operation'] = $this->CREATE_FUNC;
+                    }
+                }
+            }
+        }
+        return $tomJson;
     }
 
     private function busiPermission(User $user, $tom)
