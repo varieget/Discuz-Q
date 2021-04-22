@@ -21,9 +21,14 @@ use App\Api\Controller\ThreadsV3\ThreadTrait;
 use App\Common\Utils;
 use App\Common\ResponseCode;
 use App\Models\Category;
+use App\Models\GroupUser;
+use App\Models\Post;
 use App\Models\Topic;
 use App\Models\ThreadTopic;
 use App\Models\Thread;
+use App\Models\ThreadTag;
+use App\Models\ThreadTom;
+use App\Models\User;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
 
@@ -65,6 +70,7 @@ class TopicListController extends DzqController
             if (Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 0) {
                 if (isset($topicThreadDatas[$topicId])) {
                     $thread = array_values($topicThreadDatas[$topicId]);
+                    $thread = $this->getFullThreadData($thread);
                 }
             }
 
@@ -128,5 +134,46 @@ class TopicListController extends DzqController
             ->where('th.is_approved', Thread::APPROVED)
             ->whereIn('tt.topic_id', $topicIds)
             ->orderByDesc('th.created_at');
+    }
+
+    private function getFullThreadData($threadList)
+    {
+        $userIds = array_unique(array_column($threadList, 'user_id'));
+        $groups = GroupUser::instance()->getGroupInfo($userIds);
+        $groups = array_column($groups, null, 'user_id');
+        $users = User::instance()->getUsers($userIds);
+        $users = array_column($users, null, 'id');
+        $threadIds = array_column($threadList, 'id');
+        $posts = Post::instance()->getPosts($threadIds);
+        $postsByThreadId = array_column($posts, null, 'thread_id');
+        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
+        $inPutToms = [];
+        $tags = [];
+        ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
+            $tags[$item['thread_id']][] = $item->toArray();
+        });
+        foreach ($toms as $tom) {
+            $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, json_decode($tom['value'], true));
+        }
+        $result = [];
+        $linkString = '';
+        foreach ($threadList as $thread) {
+            $threadId = $thread['id'];
+            $userId = $thread['user_id'];
+            $user = empty($users[$userId]) ? false : $users[$userId];
+            $group = empty($groups[$userId]) ? false : $groups[$userId];
+            $post = empty($postsByThreadId[$threadId]) ? false : $postsByThreadId[$threadId];
+            $tomInput = empty($inPutToms[$threadId]) ? false : $inPutToms[$threadId];
+            $threadTags = [];
+            isset($tags[$threadId]) && $threadTags = $tags[$threadId];
+            $result[] = $this->packThreadDetail($user, $group, $thread, $post, $tomInput, false, $threadTags);
+            $linkString .= ($thread['title'] . $post['content']);
+        }
+        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
+        foreach ($result as &$item) {
+            $item['title'] = str_replace($search, $replace, $item['title']);
+            $item['content']['text'] = str_replace($search, $replace, $item['content']['text']);
+        }
+        return $result;
     }
 }

@@ -289,10 +289,10 @@ trait ThreadTrait
 
     private function isLike($loginUser, $post)
     {
-        if (empty($loginUser)) {
+        if (empty($loginUser) || empty($post)) {
             return false;
         }
-        return PostUser::query()->where('post_id', $post->id)->where('user_id', $loginUser->id)->exists();
+        return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
     }
 
 }
