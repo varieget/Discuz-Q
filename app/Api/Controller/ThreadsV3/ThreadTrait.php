@@ -21,6 +21,7 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Censor\Censor;
 use App\Common\Utils;
 use App\Models\Order;
+use App\Models\Permission;
 use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
@@ -41,6 +42,8 @@ trait ThreadTrait
         $likeRewardField = $this->getLikeRewardField($thread, $post);
         $payType = $this->threadPayStatus($thread, $paid);
         $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid);
+        $authority = $this->authority($loginUser, $thread);
+        
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -56,9 +59,9 @@ trait ThreadTrait
             'payType' => $payType,
             'paid' => $paid,
             'isLike' => $this->isLike($loginUser, $post),
-            'isBrowse' => false,
-            'isComment' => false,
-            'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
+            'isBrowse' => $authority['isBrowse'],
+            'isComment' => $authority['isComment'],
+            'createdAt' => date('Y-m-d H:i:s',strtotime($thread['created_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
@@ -223,7 +226,8 @@ trait ThreadTrait
         return [
             'users' => $users,
             'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
-            'shareCount' => $thread['share_count']
+            'shareCount' => $thread['share_count'],
+            'postCount' => $thread['post_count']
         ];
     }
 
@@ -251,6 +255,34 @@ trait ThreadTrait
             return false;
         }
         return PostUser::query()->where('post_id', $post->id)->where('user_id', $loginUser->id)->exists();
+    }
+
+    private function authority($loginUser, $thread)
+    {
+        $data = [
+            'isBrowse' => false,
+            'isComment' => false
+        ];
+
+        $in = [
+            'thread.reply',
+            "category{$thread['category_id']}.thread.reply",
+            'thread.viewPosts',
+            "category{$thread['category_id']}.thread.viewPosts",
+        ];
+
+        $permission = array_flip(Permission::getUserPermissions($loginUser));
+
+        if (isset($permission[$in[0]]) || isset($permission[$in[1]])) {
+            $data['isBrowse'] = true;
+        }
+
+        if (isset($permission[$in[2]]) || isset($permission[$in[3]])) {
+            $data['isComment'] = true;
+        }
+
+        return $data;
+
     }
 
 }
