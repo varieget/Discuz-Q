@@ -50,6 +50,7 @@ trait ThreadTrait
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
             'postCount' => $thread['post_count'] - 1,
             'isApproved' => $thread['is_approved'],
+            'isStick' => $thread['is_sticky'],
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
             'payType' => $payType,
