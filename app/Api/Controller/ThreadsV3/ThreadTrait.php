@@ -42,7 +42,6 @@ trait ThreadTrait
         $likeRewardField = $this->getLikeRewardField($thread, $post);
         $payType = $this->threadPayStatus($thread, $paid);
         $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid);
-        $authority = $this->authority($loginUser, $thread);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -58,8 +57,6 @@ trait ThreadTrait
             'payType' => $payType,
             'paid' => $paid,
             'isLike' => $this->isLike($loginUser, $post),
-            'isBrowse' => $authority['isBrowse'],
-            'isComment' => $authority['isComment'],
             'createdAt' => date('Y-m-d H:i:s',strtotime($thread['created_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
@@ -72,7 +69,7 @@ trait ThreadTrait
                 'address' => $thread['address'],
                 'location' => $thread['location']
             ],
-            'ability'=>$this->getAbilityField(),
+            'ability'=>$this->getAbilityField($loginUser, $thread),
             'content' => $contentField
         ];
         if ($analysis) {
@@ -87,15 +84,43 @@ trait ThreadTrait
     /**
      * @desc 获取操作权限
      */
-    private function getAbilityField(){
-        return [
-            'canEdit'=>true,
-            'canDelete'=>true,
-            'canEssence'=>true,
-            'canStick'=>true,
-            'canReply'=>true,
-            'canViewPost'=>true
+    private function getAbilityField($loginUser, $thread){
+
+        $data = [
+            'canEdit' => true,
+            'canDelete' => true,
+            'canEssence' => true,
+            'canStick' => true,
+            'canReply' => true,
+            'canViewPost' => true
         ];
+
+        if ($loginUser->isAdmin()) {
+            return $data;
+        }
+
+        $permission = array_flip(Permission::getUserPermissions($loginUser));
+
+        if (!isset($permission['thread.editOwnThreadOrPost']) && !isset($permission["category{$thread['category_id']}.thread.editOwnThreadOrPost"])) {
+            $data['canEdit'] = false;
+        }
+        if (!isset($permission['thread.hideOwnThreadOrPost']) && !isset($permission["category{$thread['category_id']}.thread.hideOwnThreadOrPost"])) {
+            $data['canDelete'] = false;
+        }
+        if (!isset($permission['thread.essence']) && !isset($permission["category{$thread['category_id']}.thread.essence"])) {
+            $data['canEssence'] = false;
+        }
+        if (!isset($permission['thread.sticky'])) {
+            $data['canStick'] = false;
+        }
+        if (!isset($permission['thread.reply']) && !isset($permission["category{$thread['category_id']}.thread.reply"])) {
+            $data['canReply'] = false;
+        }
+        if (!isset($permission['thread.viewPosts']) && !isset($permission["category{$thread['category_id']}.thread.viewPosts"])) {
+            $data['canViewPost'] = false;
+        }
+
+        return $data;
     }
 
     private function threadPayStatus($thread, &$paid)
@@ -268,34 +293,6 @@ trait ThreadTrait
             return false;
         }
         return PostUser::query()->where('post_id', $post->id)->where('user_id', $loginUser->id)->exists();
-    }
-
-    private function authority($loginUser, $thread)
-    {
-        $data = [
-            'isBrowse' => false,
-            'isComment' => false
-        ];
-
-        $in = [
-            'thread.reply',
-            "category{$thread['category_id']}.thread.reply",
-            'thread.viewPosts',
-            "category{$thread['category_id']}.thread.viewPosts",
-        ];
-
-        $permission = array_flip(Permission::getUserPermissions($loginUser));
-
-        if (isset($permission[$in[0]]) || isset($permission[$in[1]])) {
-            $data['isBrowse'] = true;
-        }
-
-        if (isset($permission[$in[2]]) || isset($permission[$in[3]])) {
-            $data['isComment'] = true;
-        }
-
-        return $data;
-
     }
 
 }
