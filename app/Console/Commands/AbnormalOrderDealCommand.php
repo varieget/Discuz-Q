@@ -20,10 +20,12 @@ namespace App\Console\Commands;
 
 use App\Commands\Wallet\ChangeUserWallet;
 use App\Models\Order;
+use App\Models\OrderChildren;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
 use Discuz\Console\AbstractCommand;
 use Discuz\Foundation\Application;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Database\ConnectionInterface;
@@ -32,17 +34,10 @@ class AbnormalOrderDealCommand extends AbstractCommand
 {
     protected $signature = 'abnormalOrder:clear';
 
-    protected $description = '处理问答提问支付、文字帖、长文贴红包的异常订单，返还金额给用户';
+    protected $description = '处理问答提问支付、红包、悬赏的异常订单，返还金额给用户';
 
-    // 清除 10 分钟之前的异常订单，避免帖子创建时间过长误清除了订单
-    protected $expireTime = 10 * 60;
-
-    // 要处理的订单类型
-    protected $orderType = [
-        Order::ORDER_TYPE_QUESTION,
-        Order::ORDER_TYPE_TEXT,
-        Order::ORDER_TYPE_LONG
-    ];
+    // 清除 15 分钟之前的异常订单，避免帖子创建时间过长误清除了订单
+    protected $expireTime = 15 * 60;
 
     protected $app;
 
@@ -55,10 +50,6 @@ class AbnormalOrderDealCommand extends AbstractCommand
      * @var Dispatcher
      */
     protected $bus;
-
-    protected $debugInfo = true;
-
-    protected $info = '';
 
     /**
      * AvatarCleanCommand constructor.
@@ -78,18 +69,22 @@ class AbnormalOrderDealCommand extends AbstractCommand
 
     public function handle()
     {
-        $this->info('脚本执行 [开始]');
+        $this->info('异常订单脚本执行 [开始]');
         $this->info('');
+
+        $orderType = [Order::ORDER_TYPE_QUESTION, Order::ORDER_TYPE_REDPACKET, 
+                Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE, 
+                Order::ORDER_TYPE_TEXT, Order::ORDER_TYPE_LONG];
 
         $preTime = time() - $this->expireTime;
         $compareTime = date("Y-m-d H:i:s",$preTime);
         $query = Order::query();
         $query->where('created_at', '<', $compareTime);
-        $query->where('status', '=', 1); // 订单状态：0待付款；1已付款；2.取消订单；3支付失败；4订单过期；10已退款；11不处理订单
+        $query->where('status', '=', 1); 
         $query->where('amount', '>', 0);
-//        $query->where('payment_type', '=', Order::PAYMENT_TYPE_WALLET); // 20钱包支付
-        $query->where('thread_id', null);
-        $query->whereIn('type',$this->orderType); // 交易类型 5问答提问支付 20文字帖红包 21长文帖红包
+        $query->whereIn('type', $orderType);
+        $query->whereNull('thread_id');
+        $query->orWhere('thread_id', 0);
         $order = $query->get();
 
         $bar = $this->createProgressBar(count($order));
@@ -97,58 +92,49 @@ class AbnormalOrderDealCommand extends AbstractCommand
         $this->info('');
 
         $order->map(function ($item) use ($bar) {
-            $this->info = '异常订单ID：'.$item->id
-                .', 用户ID:' . $item->user_id
-                .', 退还金额:' . $item->amount
-                .', ';
-
             if ($item->type == Order::ORDER_TYPE_TEXT) {
-                $change_type = UserWalletLog::TYPE_TEXT_ABNORMAL_REFUND;// 104 文字帖订单异常返现
-                $change_desc = trans('wallet.abnormal_return_text');
+                $changeType = UserWalletLog::TYPE_TEXT_ABNORMAL_REFUND;// 104 文字帖订单异常返现
+                $changeDesc = trans('wallet.abnormal_return_text');
             } elseif ($item->type == Order::ORDER_TYPE_LONG) {
-                $change_type = UserWalletLog::TYPE_LONG_ABNORMAL_REFUND;// 114 长文帖订单异常返现
-                $change_desc = trans('wallet.abnormal_return_long');
+                $changeType = UserWalletLog::TYPE_LONG_ABNORMAL_REFUND;// 114 长文帖订单异常返现
+                $changeDesc = trans('wallet.abnormal_return_long');
             } elseif ($item->type == Order::ORDER_TYPE_QUESTION) {
-                $change_type = UserWalletLog::TYPE_QUESTION_ABNORMAL_REFUND;// 124 问答帖订单异常返现
-                $change_desc = trans('wallet.abnormal_return_question');
-            } else {
-                $this->changeOrderStatus($item->id, Order::ORDER_STATUS_UNTREATED);
-                $this->outDebugInfo('订单金额退还失败, 订单类型: ' . $item->type . ', 不在处理范围内');
-                $this->connection->commit();
-                return;
+                $changeType = UserWalletLog::TYPE_QUESTION_ABNORMAL_REFUND;// 124 问答帖订单异常返现
+                $changeDesc = trans('wallet.abnormal_return_question');
+            } elseif ($item->type == Order::ORDER_TYPE_REDPACKET) {
+                $changeType = UserWalletLog::TYPE_REDPACKET_ORDER_ABNORMAL_REFUND;// 154 红包订单异常退款
+                $changeDesc = trans('wallet.redpacket_order_abnormal_refund');
+            } elseif ($item->type == Order::ORDER_TYPE_QUESTION_REWARD) {
+                $changeType = UserWalletLog::TYPE_QUESTION_ORDER_ABNORMAL_REFUND;// 163 悬赏订单异常退款
+                $changeDesc = trans('wallet.question_order_abnormal_refund');
+            } elseif ($item->type == Order::ORDER_TYPE_MERGE) {
+                $changeType = UserWalletLog::TYPE_MERGE_ORDER_ABNORMAL_REFUND;// 172 合并订单异常退款
+                $changeDesc = trans('wallet.merge_order_abnormal_refund');
             }
 
             $userWallet = UserWallet::query()->where('user_id', $item->user_id)->first();
-            if (!empty($userWallet)) {
-                $userWallet = $userWallet->toArray();
-            } else {
-                // 改变订单状态 11:在异常订单处理中不进行处理的订单
-                $this->changeOrderStatus($item->id, Order::ORDER_STATUS_UNTREATED);
-                $this->outDebugInfo('订单金额退还失败, 用户钱包异常');
+            if (empty($userWallet)) {
+                app('log')->info('未获取到订单创建者的钱包信息，无法处理订单金额！;订单号为：' . $item->order_sn . '，订单创建者ID为：' . $item->user_id);
+                $item->status = Order::ORDER_STATUS_UNTREATED;
+                $item->save();
                 $this->connection->commit();
                 return;
             }
 
-            if ($item->payment_type == Order::PAYMENT_TYPE_WALLET) {
-                if ($userWallet['freeze_amount'] < $item->amount) {
-                    // 改变订单状态 11:在异常订单处理中不进行处理的订单
-                    $this->changeOrderStatus($item->id, Order::ORDER_STATUS_UNTREATED);
-                    $this->outDebugInfo('订单金额退还失败, ' . '用户冻结金额:' . $userWallet['freeze_amount'] . ' < '.'退还金额:' . $item->amount);
-                    $this->connection->commit();
-                    return;
-                }
+            if ($item->payment_type == Order::PAYMENT_TYPE_WALLET && $userWallet->freeze_amount < $item->amount) {
+                app('log')->info('用户冻结金额小于订单金额，无法退还订单金额！订单号为：' . $item->order_sn . ';订单创建者ID为：' . $item->user_id. ';用户冻结金额:' . $userWallet->freeze_amount . ';应退还金额:' . $item->amount);
+                $item->status = Order::ORDER_STATUS_UNTREATED;
+                $item->save();
+                $this->connection->commit();
+                return;
             }
-
-            $debugInfo =    '原可用金额：' . $userWallet['available_amount']
-                        . ', 原冻结金额：' . $userWallet['freeze_amount']
-            ;
 
             $data = [
                 'order_id'      => $item->id,
                 'thread_id'     => $item->thread_id ? $item->thread_id : 0,
                 'post_id'       => $item->post_id ? $item->post_id : 0,
-                'change_type'   => $change_type,
-                'change_desc'   => $change_desc
+                'change_type'   => $changeType,
+                'change_desc'   => $changeDesc
             ];
 
             // Start Transaction
@@ -167,38 +153,40 @@ class AbnormalOrderDealCommand extends AbstractCommand
                     || $item->payment_type  == Order::PAYMENT_TYPE_WECHAT_JS
                     || $item->payment_type  == Order::PAYMENT_TYPE_WECHAT_MINI
                 ) {
-                    // 其余支付类型 增加可用金额
                     $this->bus->dispatch(new ChangeUserWallet($item->user,
                                                               UserWallet::OPERATE_INCREASE,
                                                               $item->amount,
                                                               $data
                                          ));
                 } else {
-                    $this->changeOrderStatus($item->id, Order::ORDER_STATUS_UNTREATED);
-                    $this->outDebugInfo('订单金额退还失败, 订单支付类型: ' . $item->payment_type . ', 不在处理范围内');
+                    app('log')->info('订单金额退还失败, 订单号 ' . $item->order_sn . '的支付类型: ' . $item->payment_type . ', 不在处理范围内');
+                    $item->status = Order::ORDER_STATUS_UNTREATED;
+                    $item->save();
                     $this->connection->commit();
                     return;
                 }
 
-                $userWallet = UserWallet::query()->where('user_id', $item->user_id)->first();
-                if (!empty($userWallet)) {
-                    $userWallet = $userWallet->toArray();
-                } else {
-                    $this->changeOrderStatus($item->id, Order::ORDER_STATUS_UNTREATED);
-                    $this->outDebugInfo('订单金额退还失败, 用户钱包异常');
-                    $this->connection->commit();
-                    return;
+                if ($item->type == Order::ORDER_TYPE_MERGE) {
+                    $orderChildrenInfo = OrderChildren::query()
+                        ->where('status', Order::ORDER_STATUS_PAID)
+                        ->where('order_sn', $item->order_sn)
+                        ->whereNull('thread_id')
+                        ->orWhere('thread_id', 0)
+                        ->get();
+                    $orderChildrenInfo->map(function ($child) {
+                        $child->refund = $child->amount;
+                        $child->status = Order::ORDER_STATUS_RETURN;
+                        $child->return_at = Carbon::now();
+                        $child->save();
+                    });
                 }
-
-                $this->changeOrderStatus($item->id, Order::ORDER_STATUS_RETURN); // 改变订单状态 10:已退款订单
-                $this->outDebugInfo($debugInfo
-                                    . ', 现可用金额：' . $userWallet['available_amount']
-                                    . ', 现冻结金额：' . $userWallet['freeze_amount']
-                                    . ', 订单金额退还成功'
-                );
+                $item->status = Order::ORDER_STATUS_RETURN;
+                $item->refund = $item->amount;
+                $item->return_at = Carbon::now();
+                $item->save();
                 $this->connection->commit();
             } catch (Exception $e) {
-                $this->outDebugInfo('订单金额退还失败: ' . $e->getMessage());
+                app('log')->info('订单金额退还失败, 订单号 ' . $item->order_sn . '异常抛出: ' . $e->getMessage());
                 $this->connection->rollback();
             }
 
@@ -209,17 +197,6 @@ class AbnormalOrderDealCommand extends AbstractCommand
         $bar->finish();
 
         $this->info('');
-        $this->info('脚本执行 [完成]');
-    }
-
-    public function changeOrderStatus($id ,$status){
-        $order = Order::query()->lockForUpdate()->find($id);
-        $order->status = $status;
-        $order->save();
-    }
-
-    public function outDebugInfo($info){
-        $this->info($this->info . $info);
-        app('log')->info($this->info . $info);
+        $this->info('异常订单脚本执行 [完成]');
     }
 }
