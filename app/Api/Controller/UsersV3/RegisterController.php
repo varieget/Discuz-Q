@@ -77,7 +77,7 @@ class RegisterController extends AuthBaseController
         if((bool)$this->settings->get('qcloud_sms', 'qcloud')
             || (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount')
             || (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram')) {
-//            $this->outPut(ResponseCode::REGISTER_CLOSE, '请使用微信或者手机号注册登录');
+            $this->outPut(ResponseCode::REGISTER_CLOSE, '请使用微信或者手机号注册登录');
         }
 
 
