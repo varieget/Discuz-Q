@@ -62,6 +62,10 @@ trait TomTrait
                 ->select('tom_type', 'key')
                 ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
         }
+
+        if (!is_array($indexes)) {
+            return [];
+        }
         foreach ($indexes as $key => $tomJson) {
             $this->setOperation($operation, $key, $tomJson, $tomList);
             $this->busiPermission($this->user, $tomJson);
