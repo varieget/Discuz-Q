@@ -218,13 +218,12 @@ trait TomTrait
         return false;
     }
 
-    public function beforeMain($name, $arguments)
+    public function beforeMain($user)
     {
         $class = get_called_class();
         if (in_array($class, [UpdateTomController::class, DeleteTomController::class, SelectTomController::class])) {
             $threadId = $this->inPut('threadId');
             $thread = Thread::getOneActiveThread($threadId);
-            $user = $arguments[0];
             if (empty($thread)) {
                 $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
             }
