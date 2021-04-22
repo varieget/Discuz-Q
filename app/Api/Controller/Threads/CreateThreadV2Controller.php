@@ -144,10 +144,10 @@ class CreateThreadV2Controller extends DzqController
             $data['address'] = $this->inPut('address');
         }
 
-        if(!empty($this->inPut('captcha_ticket'))){
+        if(!empty($this->inPut('captchaTicket'))){
             $data['captcha_ticket'] = $this->inPut('captchaTicket');
         }
-        if(!empty($this->inPut('captcha_rand_str'))){
+        if(!empty($this->inPut('captchaRandStr'))){
             $data['captcha_rand_str'] = $this->inPut('captchaRandStr');
         }
 
