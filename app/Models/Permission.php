@@ -71,13 +71,13 @@ class Permission extends Model
 
     public static function getUserPermissions($user)
     {
-        if (app()->has('permissions')) {
-            return app()->get('permissions');
+        if (app()->has('ASpnWrv4SX')) {
+            return app()->get('ASpnWrv4SX');
         } else {
             $groups = $user->groups->toArray();
             $groupIds = array_column($groups, 'id');
             $permissions = Permission::categoryPermissions($groupIds);
-            app()->instance('permissions', $permissions);
+            app()->instance('ASpnWrv4SX', $permissions);
             return $permissions;
         }
     }
