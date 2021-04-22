@@ -42,7 +42,7 @@ use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Support\Arr;
 
-class RegisterController extends DzqController
+class RegisterController extends AuthBaseController
 {
     use EventsDispatchTrait;
     use AssertPermissionTrait;
@@ -77,7 +77,7 @@ class RegisterController extends DzqController
         if((bool)$this->settings->get('qcloud_sms', 'qcloud')
             || (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount')
             || (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram')) {
-            $this->outPut(ResponseCode::REGISTER_CLOSE, '请使用微信或者手机号注册登录');
+//            $this->outPut(ResponseCode::REGISTER_CLOSE, '请使用微信或者手机号注册登录');
         }
 
 
@@ -105,6 +105,6 @@ class RegisterController extends DzqController
         $response = $this->bus->dispatch(
             new GenJwtToken(Arr::only($data, 'username'))
         );
-        return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData(json_decode($response->getBody(),true)));
+        return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user, $this->camelData(json_decode($response->getBody(),true))));
     }
 }
