@@ -38,7 +38,12 @@ class VideoBusi extends TomBaseBusi
 
     public function select()
     {
-        $video =  ThreadVideo::instance()->getThreadVideo($this->threadId,ThreadVideo::TYPE_OF_VIDEO, true);
+        $videoId = $this->getParams('videoId');
+        if (!empty($videoId)) {
+            $video = ThreadVideo::instance()->getThreadVideoById($videoId);
+        } else {
+            $video = ThreadVideo::instance()->getThreadVideo($this->threadId, ThreadVideo::TYPE_OF_VIDEO, true);
+        }
         return $this->jsonReturn($video);
     }
 }

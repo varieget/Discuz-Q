@@ -37,7 +37,12 @@ class AudioBusi extends TomBaseBusi
 
     public function select()
     {
-        $audio = ThreadVideo::instance()->getThreadVideo($this->threadId, ThreadVideo::TYPE_OF_AUDIO, true);
+        $audioId = $this->getParams('audioId');
+        if (!empty($audioId)) {
+            $audio = ThreadVideo::instance()->getThreadVideoById($audioId);
+        } else {
+            $audio = ThreadVideo::instance()->getThreadVideo($this->threadId, ThreadVideo::TYPE_OF_AUDIO, true);
+        }
         return $this->jsonReturn($audio);
     }
 
