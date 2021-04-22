@@ -107,15 +107,11 @@ trait ThreadTrait
      */
     private function getDisplayTagField($thread, $tags)
     {
-        $tags = array_column($tags, 'tag');
-        if (empty($tags)) {
-            return null;
-        }
         $obj = [
             'isPrice' => false,
             'isEssence' => false,
-            'isRedPack' => false,
-            'isReward' => false
+            'isRedPack' => null,
+            'isReward' => null
         ];
         if ($thread['price'] > 0 || $thread['attachment_price'] > 0) {
             $obj['isPrice'] = true;
@@ -123,11 +119,14 @@ trait ThreadTrait
         if ($thread['is_essence']) {
             $obj['isEssence'] = true;
         }
-        if (in_array(TomConfig::TOM_REDPACK, $tags)) {
-            $obj['isRedPack'] = true;
-        }
-        if (in_array(TomConfig::TOM_DOC, $tags)) {
-            $obj['isReward'] = true;
+        $tags = array_column($tags, 'tag');
+        if (!empty($tags)) {
+            if (in_array(TomConfig::TOM_REDPACK, $tags)) {
+                $obj['isRedPack'] = true;
+            }
+            if (in_array(TomConfig::TOM_DOC, $tags)) {
+                $obj['isReward'] = true;
+            }
         }
         return $obj;
     }
