@@ -28,19 +28,19 @@ class ImageBusi extends TomBaseBusi
     public function create()
     {
         $imageIds = $this->getParams('imageIds');
-        if(count($imageIds)>9){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'图片数量不能超过9张');
+        if (count($imageIds) > 9) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '图片数量不能超过9张');
         }
-        return $this->jsonReturn(['imageIds'=>$imageIds]);
+        return $this->jsonReturn(['imageIds' => $imageIds]);
     }
 
     public function update()
     {
         $imageIds = $this->getParams('imageIds');
-        if(count($imageIds)>9){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'图片数量不能超过9张');
+        if (count($imageIds) > 9) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '图片数量不能超过9张');
         }
-        return $this->jsonReturn(['imageIds'=>$imageIds]);
+        return $this->jsonReturn(['imageIds' => $imageIds]);
     }
 
     public function select()
@@ -48,13 +48,17 @@ class ImageBusi extends TomBaseBusi
         $serializer = $this->app->make(AttachmentSerializer::class);
         $result = [];
         $imageIds = $this->getParams('imageIds');
-        $attachments = $this->searchArray(PreQuery::THREAD_LIST_ATTACHMENTS,$imageIds);
+        $attachments = $this->searchArray(PreQuery::THREAD_LIST_ATTACHMENTS, $imageIds);
         if (!$attachments) {
             $attachments = Attachment::query()->whereIn('id', $imageIds)->get();
         }
         foreach ($attachments as $attachment) {
-            $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
-            $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
+            $thread = $this->searchArray(PreQuery::THREAD_LIST, $this->threadId);
+            if ($thread) {
+                $result[] = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
+            } else {
+                $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
+            }
         }
         return $this->jsonReturn($result);
     }

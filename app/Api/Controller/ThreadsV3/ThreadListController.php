@@ -244,7 +244,7 @@ class ThreadListController extends DzqController
             ->where('th.is_approved', Thread::APPROVED);
     }
 
-    private function preQuery($toms, $threadList)
+    private function preQuery($toms, $threadCollection)
     {
         $inPutToms = [];
         $attachmentIds = [];
@@ -271,7 +271,7 @@ class ThreadListController extends DzqController
         $threadVideoIds = array_unique($threadVideoIds);
         $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->pluck(null, 'id');
         $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->where('status', ThreadVideo::VIDEO_STATUS_SUCCESS)->get()->pluck(null, 'id');
-        $threadList = array_column($threadList, null, 'id');
+        $threadList = $threadCollection->pluck(null, 'id');
         app()->instance(PreQuery::THREAD_LIST_ATTACHMENTS, $attachments);
         app()->instance(PreQuery::THREAD_LIST_VIDEO, $threadVideos);
         app()->instance(PreQuery::THREAD_LIST, $threadList);

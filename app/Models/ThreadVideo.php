@@ -120,6 +120,12 @@ class ThreadVideo extends DzqModel
         return $result;
     }
 
+    /**
+     * @desc v3接口调用
+     * @param $videoId
+     * @param null $video
+     * @return array|bool
+     */
     public function getThreadVideoById($videoId, $video = null)
     {
         if (empty($video)) {

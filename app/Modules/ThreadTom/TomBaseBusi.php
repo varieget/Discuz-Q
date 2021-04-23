@@ -42,8 +42,6 @@ abstract class TomBaseBusi
     public $user = null;
     public $key = null;
     public $app = null;
-    public $thread = null;
-    public $post = null;
 
     public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body)
     {
@@ -139,6 +137,7 @@ abstract class TomBaseBusi
 
     public function searchArray($preKey, $searchIds)
     {
+        !is_array($searchIds) && $searchIds = [$searchIds];
         if (app()->has($preKey)) {
             $preQueryArray = app()->get($preKey);
             $sResult = [];

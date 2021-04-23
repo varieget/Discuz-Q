@@ -53,7 +53,12 @@ class DocBusi extends TomBaseBusi
             $attachments = Attachment::query()->whereIn('id', $docIds)->get();
         }
         foreach ($attachments as $attachment) {
-            $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
+            $thread = $this->searchArray(PreQuery::THREAD_LIST, $this->threadId);
+            if ($thread) {
+                $result[] = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
+            } else {
+                $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
+            }
         }
         return $this->jsonReturn($result);
     }
