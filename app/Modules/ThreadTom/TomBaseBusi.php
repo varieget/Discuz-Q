@@ -137,7 +137,8 @@ abstract class TomBaseBusi
 
     public function searchArray($preKey, $searchIds)
     {
-        !is_array($searchIds) && $searchIds = [$searchIds];
+        $isArray = is_array($searchIds);
+        !$isArray && $searchIds = [$searchIds];
         if (app()->has($preKey)) {
             $preQueryArray = app()->get($preKey);
             $sResult = [];
@@ -148,6 +149,7 @@ abstract class TomBaseBusi
                     return false;
                 }
             }
+            !$isArray && $sResult = current($sResult);
             return $sResult;
         } else {
             return false;
