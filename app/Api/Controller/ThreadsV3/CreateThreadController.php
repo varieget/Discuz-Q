@@ -86,7 +86,7 @@ class CreateThreadController extends DzqController
     private function optimizeEmoji(&$content)
     {
         $text = $content['text'];
-        preg_match_all('/<img.*?>/i', $text, $m1);
+        preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
         $searches = $m1[0];
         $replaces = [];
         foreach ($searches as $search) {
