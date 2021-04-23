@@ -77,16 +77,39 @@ class ThreadLikedUsersController extends DzqController
             $likeSort[$k]['avatar'] = $userArr[$v['user_id']]['avatar'];
         }
 
-        $page = $data['page'] >= 1 ?  intval($data['page'])-1 : 0;
+        $currentPage = $data['page'] >= 1 ? intval($data['page']) : 1;
+        $perPageMax = 50;
         $perPage = $data['perPage'] >= 1 ? intval($data['perPage']) : 20;
-        $page = $page * $perPage;
+        $perPage > $perPageMax && $perPage = $perPageMax;
+        $count = count($likeSort);
+        $builder = $this->camelData(array_slice($likeSort, ($currentPage - 1) * $perPage, $perPage));
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $port = $port == null ? '' : ':' . $port;
+        parse_str($url->getQuery(), $query);
+        $queryFirst = $queryNext = $queryPre = $query;
+        $queryFirst['page'] = 1;
+        $queryNext['page'] = $currentPage + 1;
+        $queryPre['page'] = $currentPage <= 1 ? 1 : $currentPage - 1;
 
-        $retrue = [
-            'allCount' => count($postUser)+count($order),
-            'likeCount' => count($postUser),
-            'rewardCount' => $thread['price'] > 0 ? 0 : count($order),
-            'raidCount' => $thread['price'] > 0 ? count($order) : 0,
-            'list'=>array_values(array_slice($likeSort, $page, $perPage))
+        $path = $url->getScheme() . '://' . $url->getHost() . $port . $url->getPath() . '?';
+
+        $retrue =  [
+            'pageData' => [
+                'allCount' => count($postUser)+count($order),
+                'likeCount' => count($postUser),
+                'rewardCount' => $thread['price'] > 0 ? 0 : count($order),
+                'raidCount' => $thread['price'] > 0 ? count($order) : 0,
+                'list' => $builder
+            ],
+            'currentPage' => $currentPage,
+            'perPage' => $perPage,
+            'firstPageUrl' => urldecode($path . http_build_query($queryFirst)),
+            'nextPageUrl' => urldecode($path . http_build_query($queryNext)),
+            'prePageUrl' => urldecode($path . http_build_query($queryPre)),
+            'pageLength' => count($builder),
+            'totalCount' => $count,
+            'totalPage' => $count % $perPage == 0 ? $count / $perPage : intval($count / $perPage) + 1
         ];
 
         $this->outPut(ResponseCode::SUCCESS, '', $retrue);
