@@ -83,6 +83,11 @@ class CreateThreadController extends DzqController
         return $this->getResult($thread, $post, $tomJsons);
     }
 
+    /**
+     * @desc 前端新编辑器只能上传完整url的emoji
+     * 后端需要将其解析出代号进行存储
+     * @param $content
+     */
     private function optimizeEmoji(&$content)
     {
         $text = $content['text'];
