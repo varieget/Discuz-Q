@@ -55,14 +55,14 @@
         其它功能
       </CardRow>
     </Card>
-    <Card>
+    <!-- <Card>
       <CardRow
         class="card-points"
         description="开启后，用户角色将可以配置价格和有效期，用户可在前台进行用户角色购买"
       >
         <el-checkbox v-model="purchase">权限购买功能</el-checkbox>
       </CardRow>
-    </Card>
+    </Card> -->
     <Card>
       <CardRow
         class="card-points"
