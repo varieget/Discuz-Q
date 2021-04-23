@@ -19,6 +19,7 @@ namespace App\Modules\ThreadTom\Busi;
 
 
 use App\Models\ThreadVideo;
+use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomBaseBusi;
 
 class AudioBusi extends TomBaseBusi
@@ -38,10 +39,11 @@ class AudioBusi extends TomBaseBusi
     public function select()
     {
         $audioId = $this->getParams('audioId');
-        if (!empty($audioId)) {
+        $audio = $this->searchArray(PreQuery::THREAD_LIST_VIDEO, $audioId);
+        if (!$audio) {
             $audio = ThreadVideo::instance()->getThreadVideoById($audioId);
         } else {
-            $audio = ThreadVideo::instance()->getThreadVideo($this->threadId, ThreadVideo::TYPE_OF_AUDIO, true);
+            $audio = ThreadVideo::instance()->getThreadVideoById($audioId, $audio);
         }
         return $this->jsonReturn($audio);
     }

@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
+use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\GroupUser;
 use App\Models\Post;
@@ -25,7 +26,10 @@ use App\Models\Sequence;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
+use App\Models\ThreadVideo;
 use App\Models\User;
+use App\Modules\ThreadTom\PreQuery;
+use App\Modules\ThreadTom\TomConfig;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
 
@@ -45,14 +49,14 @@ class ThreadListController extends DzqController
         } else {
             $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         }
-        $threadList = $threads['pageData'] ?? [];
-        !$threads && $threadList = [];
-        $threads['pageData'] = $this->getFullThreadData($threadList);
+        $threadCollection = $threads['pageData'];
+        $threads['pageData'] = $this->getFullThreadData($threadCollection);
         $this->outPut(0, '', $threads);
     }
 
-    private function getFullThreadData($threadList)
+    private function getFullThreadData($threadCollection)
     {
+        $threadList = $threadCollection->toArray();
         $userIds = array_unique(array_column($threadList, 'user_id'));
         $groups = GroupUser::instance()->getGroupInfo($userIds);
         $groups = array_column($groups, null, 'user_id');
@@ -62,14 +66,11 @@ class ThreadListController extends DzqController
         $posts = Post::instance()->getPosts($threadIds);
         $postsByThreadId = array_column($posts, null, 'thread_id');
         $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
-        $inPutToms = [];
         $tags = [];
         ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
             $tags[$item['thread_id']][] = $item->toArray();
         });
-        foreach ($toms as $tom) {
-            $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, json_decode($tom['value'], true));
-        }
+        $inPutToms = $this->preQuery($toms, $threadCollection);
         $result = [];
         $linkString = '';
         foreach ($threadList as $thread) {
@@ -141,7 +142,7 @@ class ThreadListController extends DzqController
                 ->where('follow.from_user_id', $this->user->id);
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
-        $threads = $this->pagination($currentPage, $perPage, $threads);
+        $threads = $this->pagination($currentPage, $perPage, $threads, false);
         return $threads;
     }
 
@@ -150,7 +151,7 @@ class ThreadListController extends DzqController
         if (!empty($sort)) {
             switch ($sort) {
                 case Thread::SORT_BY_THREAD://按照发帖时间排序
-                    $threads->orderByDesc('th.created_at');
+                    $threads->orderByDesc('th.id');
                     break;
                 case Thread::SORT_BY_POST://按照评论时间排序
                     $threads->orderByDesc('th.posted_at');
@@ -160,7 +161,7 @@ class ThreadListController extends DzqController
                     $threads->orderByDesc('th.view_count');
                     break;
                 default:
-                    $threads->orderByDesc('th.created_at');
+                    $threads->orderByDesc('th.id');
                     break;
             }
         }
@@ -169,7 +170,9 @@ class ThreadListController extends DzqController
     function getDefaultHomeThreads($filter, $currentPage, $perPage)
     {
         $sequence = Sequence::query()->first();
-        if (empty($sequence)) return false;
+        if (empty($sequence)) {
+            return $this->getFilterThreads($filter, $currentPage, $perPage);
+        }
         $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
@@ -227,7 +230,7 @@ class ThreadListController extends DzqController
             });
         }
         $threads = $threads->orderByDesc('th.created_at');
-        return $this->pagination($currentPage, $perPage, $threads);
+        return $this->pagination($currentPage, $perPage, $threads, false);
     }
 
     private function getThreadsBuilder()
@@ -239,6 +242,41 @@ class ThreadListController extends DzqController
             ->where('th.is_sticky', Thread::BOOL_NO)
             ->where('th.is_draft', Thread::IS_NOT_DRAFT)
             ->where('th.is_approved', Thread::APPROVED);
-
     }
+
+    private function preQuery($toms, $threadList)
+    {
+        $inPutToms = [];
+        $attachmentIds = [];
+        $threadVideoIds = [];
+        foreach ($toms as $tom) {
+            $value = json_decode($tom['value'], true);
+            switch ($tom['tom_type']) {
+                case TomConfig::TOM_IMAGE:
+                    isset($value['imageIds']) && $attachmentIds = array_merge($attachmentIds, $value['imageIds']);
+                    break;
+                case TomConfig::TOM_DOC:
+                    isset($value['docIds']) && $attachmentIds = array_merge($attachmentIds, $value['docIds']);
+                    break;
+                case TomConfig::TOM_VIDEO:
+                    isset($value['videoId']) && $threadVideoIds[] = $value['videoId'];
+                    break;
+                case TomConfig::TOM_AUDIO:
+                    isset($value['audioId']) && $threadVideoIds[] = $value['audioId'];
+                    break;
+            }
+            $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
+        }
+        $attachmentIds = array_unique($attachmentIds);
+        $threadVideoIds = array_unique($threadVideoIds);
+        $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->pluck(null, 'id');
+        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->where('status', ThreadVideo::VIDEO_STATUS_SUCCESS)->get()->pluck(null, 'id');
+        $threadList = array_column($threadList, null, 'id');
+        app()->instance(PreQuery::THREAD_LIST_ATTACHMENTS, $attachments);
+        app()->instance(PreQuery::THREAD_LIST_VIDEO, $threadVideos);
+        app()->instance(PreQuery::THREAD_LIST, $threadList);
+        return $inPutToms;
+    }
+
+
 }

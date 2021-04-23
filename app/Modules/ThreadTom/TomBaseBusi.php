@@ -42,6 +42,8 @@ abstract class TomBaseBusi
     public $user = null;
     public $key = null;
     public $app = null;
+    public $thread = null;
+    public $post = null;
 
     public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body)
     {
@@ -54,13 +56,12 @@ abstract class TomBaseBusi
         $this->user = $user;
         $this->key = $key;
         $this->operationValid();
-        //todo 查询用户组的权限数组
     }
 
     private function operationValid()
     {
         if (!method_exists($this, $this->operation)) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR,sprintf('operation [%s] not exist in [%s]', $this->operation, static::class));
+            $this->outPut(ResponseCode::INTERNAL_ERROR, sprintf('operation [%s] not exist in [%s]', $this->operation, static::class));
         }
     }
 
@@ -134,6 +135,24 @@ abstract class TomBaseBusi
     {
         ThreadTom::deleteTom($this->threadId, $this->tomId, $this->key);
         return $this->jsonReturn(false);
+    }
+
+    public function searchArray($preKey, $searchIds)
+    {
+        if (app()->has($preKey)) {
+            $preQueryArray = app()->get($preKey);
+            $sResult = [];
+            foreach ($searchIds as $searchId) {
+                if (isset($preQueryArray[$searchId])) {
+                    $sResult[] = $preQueryArray[$searchId];
+                } else {
+                    return false;
+                }
+            }
+            return $sResult;
+        } else {
+            return false;
+        }
     }
 
 }
