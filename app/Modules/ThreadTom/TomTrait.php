@@ -18,8 +18,12 @@
 namespace App\Modules\ThreadTom;
 
 
+use App\Api\Controller\ThreadsV3\DeleteTomController;
+use App\Api\Controller\ThreadsV3\SelectTomController;
+use App\Api\Controller\ThreadsV3\UpdateTomController;
 use App\Common\ResponseCode;
 use App\Models\Permission;
+use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Common\Utils;
@@ -33,14 +37,17 @@ trait TomTrait
     private $SELECT_FUNC = 'select';
 
 
+    private $CLOSE_BUSI_PERMISSION = true;
+
     /**
      * @desc 支持一次提交包含新建或者更新或者删除等各种类型混合
      * @param $tomContent
      * @param null $operation
      * @param null $threadId
+     * @param null $postId
      * @return array
      */
-    private function tomDispatcher($tomContent, $operation = null, $threadId = null)
+    private function tomDispatcher($tomContent, $operation = null, $threadId = null, $postId = null)
     {
         $config = TomConfig::$map;
         $tomJsons = [];
@@ -49,39 +56,33 @@ trait TomTrait
         } else {
             $indexes = $tomContent;
         }
-        foreach ($indexes as $k => $v) {
-            !empty($operation) && $v['operation'] = $operation;
-            if (!isset($v['operation'])) {
-                if (empty($v['body'])) {
-                    $v['operation'] = $this->DELETE_FUNC;
-                } else {//create/update
-                    if (empty($threadId)) {
-                        $v['operation'] = $this->CREATE_FUNC;
-                    } else {
-                        $exist = ThreadTom::query()->where(['thread_id' => $threadId, 'tom_type' => $v['tomId'], 'key' => $k, 'status' => ThreadTom::STATUS_ACTIVE])->exists();
-                        if ($exist) {
-                            $v['operation'] = $this->UPDATE_FUNC;
-                        } else {
-                            $v['operation'] = $this->CREATE_FUNC;
-                        }
-                    }
-                }
-            }
-            $this->busiPermission($this->user, $v);
-            if (isset($v['tomId']) && isset($v['operation'])) {
-                if (in_array($v['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
-                    $tomId = $v['tomId'];
-                    $op = $v['operation'];
-                    $body = $v['body'];
+        $tomList = [];
+        if (!empty($threadId)) {
+            $tomList = ThreadTom::query()
+                ->select('tom_type', 'key')
+                ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
+        }
+
+        if (!is_array($indexes)) {
+            return [];
+        }
+        foreach ($indexes as $key => $tomJson) {
+            $this->setOperation($operation, $key, $tomJson, $tomList);
+            $this->busiPermission($this->user, $tomJson);
+            if (isset($tomJson['tomId']) && isset($tomJson['operation'])) {
+                if (in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
+                    $tomId = $tomJson['tomId'];
+                    $op = $tomJson['operation'];
+                    $body = $tomJson['body'];
                     if (isset($config[$tomId])) {
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
-                            if (empty($v['threadId'])) {
-                                $service = $service->newInstanceArgs([$this->user, $threadId, $tomId, $k, $op, $body]);
+                            if (empty($tomJson['threadId'])) {
+                                $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body]);
                             } else {
-                                $service = $service->newInstanceArgs([$this->user, $v['threadId'], $tomId, $k, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body]);
                             }
-                            method_exists($service, $op) && $tomJsons[$k] = $service->$op();
+                            method_exists($service, $op) && $tomJsons[$key] = $service->$op();
                         } catch (\ReflectionException $e) {
                             Utils::outPut(ResponseCode::INTERNAL_ERROR, $e->getMessage());
                         }
@@ -92,16 +93,47 @@ trait TomTrait
         return $tomJsons;
     }
 
+    /**
+     * @desc 识别当前的操作类型
+     * @param $operation
+     * @param $key
+     * @param $tomJson
+     * @param $tomList
+     * @return mixed
+     */
+    private function setOperation($operation, $key, &$tomJson, $tomList)
+    {
+        !empty($operation) && $tomJson['operation'] = $operation;
+        if (!isset($tomJson['operation'])) {
+            if (empty($tomJson['body'])) {
+                $tomJson['operation'] = $this->DELETE_FUNC;
+            } else {//create/update
+                if (empty($threadId)) {
+                    $tomJson['operation'] = $this->CREATE_FUNC;
+                } else {
+                    if (in_array(['tom_type' => $tomJson['tomId'], 'key' => $key], $tomList)) {
+                        $tomJson['operation'] = $this->UPDATE_FUNC;
+                    } else {
+                        $tomJson['operation'] = $this->CREATE_FUNC;
+                    }
+                }
+            }
+        }
+        return $tomJson;
+    }
+
     private function busiPermission(User $user, $tom)
     {
-        //todo 联调关闭权限检查
-        return true;
+        if ($this->CLOSE_BUSI_PERMISSION) {
+            return true;
+        }
         if ($user->isAdmin()) {
             return true;
         }
         if (!empty($tom['operation']) && $tom['operation'] == $this->CREATE_FUNC) {
             $tomConfig = TomConfig::$map[$tom['tomId']];
             $permissions = Permission::getUserPermissions($this->user);
+            //todo 权限名称+分组id
             if (!in_array($tomConfig['authorize'], $permissions)) {
                 Utils::outPut(ResponseCode::UNAUTHORIZED, sprintf('没有插入【%s】权限', $tomConfig['desc']));
             }
@@ -120,6 +152,12 @@ trait TomTrait
         ];
     }
 
+    /**
+     * @desc 创建新贴权限
+     * @param User $user
+     * @param $categoryId
+     * @return bool
+     */
     private function canCreateThread(User $user, $categoryId)
     {
         if ($user->isAdmin()) {
@@ -133,33 +171,32 @@ trait TomTrait
         return false;
     }
 
-    private function canViewThreadDetail($user, $categoryId)
+    /**
+     * @desc 阅读帖子详情权限
+     * @param $user
+     * @param $thread
+     * @return bool
+     */
+    private function canViewThreadDetail($user, $thread)
     {
-        if ($user->isAdmin()) {
+        if ($user->isAdmin() || $user->id == $thread['user_id']) {
             return true;
         }
         $permissions = Permission::getUserPermissions($user);
-        $permission = 'category' . $categoryId . '.thread.viewPosts';
+        $permission = 'category' . $thread['category_id'] . '.thread.viewPosts';
         if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
             return true;
         }
         return false;
     }
 
-    private function canViewThread($user, $categoryId)
-    {
-        return true;
-//        if ($user->isAdmin()) {
-//            return true;
-//        }
-//        $permissions = Permission::getUserPermissions($user);
-//        $permission = 'category' . $categoryId . '.thread.viewPosts';
-//        if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
-//            return true;
-//        }
-//        return false;
-    }
-
+    /**
+     * @desc 编辑更新帖子权限
+     * @param User $user
+     * @param $categoryId
+     * @param null $threadUserId
+     * @return bool
+     */
     private function canEditThread(User $user, $categoryId, $threadUserId = null)
     {
         if ($user->isAdmin()) {
@@ -178,6 +215,13 @@ trait TomTrait
         }
     }
 
+    /**
+     * @desc 删除帖子的权限
+     * @param User $user
+     * @param $categoryId
+     * @param null $threadUserId
+     * @return bool
+     */
     private function canDeleteThread(User $user, $categoryId, $threadUserId = null)
     {
         if ($user->isAdmin()) {
@@ -197,16 +241,24 @@ trait TomTrait
         return false;
     }
 
-    private function canUpdateTom()
+    public function beforeMain($user)
     {
-        //todo 有创建权限
-        return true;
+        $class = get_called_class();
+        if (in_array($class, [UpdateTomController::class, DeleteTomController::class, SelectTomController::class])) {
+            $threadId = $this->inPut('threadId');
+            $thread = Thread::getOneActiveThread($threadId);
+            if (empty($thread)) {
+                $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+            }
+            if ($class == SelectTomController::class) {
+                if (!$this->canViewThreadDetail($user, $thread)) {
+                    $this->outPut(ResponseCode::UNAUTHORIZED);
+                }
+            } else {
+                if (!$this->canEditThread($user, $thread->category_id, $thread->user_id)) {
+                    $this->outPut(ResponseCode::UNAUTHORIZED);
+                }
+            }
+        }
     }
-
-    private function canDeleteTom()
-    {
-        //todo 有创建权限
-        return true;
-    }
-
 }

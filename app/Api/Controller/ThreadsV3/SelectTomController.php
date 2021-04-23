@@ -41,8 +41,8 @@ class SelectTomController extends DzqController
         if (empty($tom)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        $content = $this->buildTomJson($threadId,$tomId, $this->SELECT_FUNC, json_decode($tom->value, true));
-        $result = $this->tomDispatcher([$key=>$content]);
+        $content = $this->buildTomJson($threadId, $tomId, $this->SELECT_FUNC, json_decode($tom->value, true));
+        $result = $this->tomDispatcher([$key => $content]);
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

@@ -69,6 +69,7 @@ class BasicPostSerializer extends AbstractSerializer
 
         $attributes = [
             'id'                => $model->id,
+            'userId'                => $model->user_id,
             'replyPostId'       => $model->reply_post_id,
             'replyUserId'       => $model->reply_user_id,
             'commentPostId'     => $model->comment_post_id,

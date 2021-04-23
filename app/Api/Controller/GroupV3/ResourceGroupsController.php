@@ -19,16 +19,14 @@
 namespace App\Api\Controller\GroupV3;
 
 use App\Common\ResponseCode;
-use App\Models\Permission;
 use App\Repositories\GroupRepository;
+use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
 
 class ResourceGroupsController extends DzqController
 {
+    use AssertPermissionTrait;
 
-    /**
-     * {@inheritdoc}
-     */
     public $optionalInclude = [
         'permission',
         'categoryPermissions',
@@ -37,6 +35,8 @@ class ResourceGroupsController extends DzqController
 
     public function main()
     {
+        $actor = $this->user;
+        $this->assertAdmin($actor);
         $id = $this->inPut('id');
 
         if(!$id){
@@ -50,16 +50,8 @@ class ResourceGroupsController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, 'ID为'.$id.'记录不存在');
         }
         $include = [$include];
-        if (Permission::query()) {
-            // 是否包含分类权限
-            if (in_array('categoryPermissions', $include)) {
-                $query->with(['permission']);
-            } else {
-                $query->with(['permission' => function ($query) {
-                    $query->where('permission', 'not like', 'category%')
-                        ->where('permission', 'not like', 'switch.%');
-                }]);
-            }
+        if (in_array('permission', $include)) {
+            $query->with(['permission']);
         }
 
         $result = $this->camelData($query->where('id', $id)->first());

@@ -109,9 +109,7 @@ class WechatH5LoginController extends AuthBaseController
                 // 站点关闭注册
                 if (!(bool)$this->settings->get('register_close')) {
                     $this->db->rollBack();
-                    $this->outPut(ResponseCode::REGISTER_CLOSE,
-                                  ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
-                    );
+                    $this->outPut(ResponseCode::REGISTER_CLOSE);
                 }
 
                 $data['code']               = $inviteCode;
@@ -149,15 +147,17 @@ class WechatH5LoginController extends AuthBaseController
             // 登陆用户和微信绑定不同时，微信已绑定用户，抛出异常
             if (!$actor->isGuest() && $actor->id != $wechatUser->user_id) {
                 $this->db->rollBack();
-                $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND,
-                              ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
-                );
+                $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
             }
 
             // 登陆用户和微信绑定相同，更新微信信息
             $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $wechatUser->user));
             $wechatUser->save();
             $this->db->commit();
+        }
+
+        if (empty($wechatUser) || empty($wechatUser->user)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
 //        if ($wechatUser && $wechatUser->user) {
@@ -249,7 +249,7 @@ class WechatH5LoginController extends AuthBaseController
             }
         }
 
-        $this->outPut(ResponseCode::NET_ERROR, ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
+        $this->outPut(ResponseCode::NET_ERROR);
     }
 
     /**

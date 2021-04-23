@@ -76,7 +76,7 @@ class CreateThreadController extends DzqController
         //插入post数据
         $post = $this->savePost($thread, $content);
         //插入tom数据
-        $tomJsons = $this->saveTom($thread, $content);
+        $tomJsons = $this->saveTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
     }
 
@@ -135,7 +135,7 @@ class CreateThreadController extends DzqController
     }
 
     /**
-     * @desc  todo 扩展属性权限判断,后面迁移到busi里
+     * @desc  todo 扩展属性权限判断,后面迁移到busi插件里
      * @param $permission
      * @param $msg
      */
@@ -144,7 +144,9 @@ class CreateThreadController extends DzqController
         $permissions = Permission::getUserPermissions($this->user);
         if (!in_array($permission, $permissions) && !$this->user->isAdmin()) {
             //todo 联调关闭权限检查
-//            $this->outPut(ResponseCode::UNAUTHORIZED, $msg);
+            if(!$this->CLOSE_BUSI_PERMISSION){
+                $this->outPut(ResponseCode::UNAUTHORIZED, $msg);
+            }
         }
     }
 
@@ -168,12 +170,18 @@ class CreateThreadController extends DzqController
         return $post;
     }
 
-    private function saveTom($thread, $content)
+    private function saveTom($thread, $content, $post)
     {
         $indexes = $content['indexes'];
         $attrs = [];
-        $tomJsons = $this->tomDispatcher($indexes, null, $thread['id']);
+        $tomJsons = $this->tomDispatcher($indexes, null, $thread['id'], $post['id']);
         $tags = [];
+        if (!empty($content['text'])) {
+            $tags[] = [
+                'thread_id' => $thread['id'],
+                'tag' => TomConfig::TOM_TEXT,
+            ];
+        }
         foreach ($tomJsons as $key => $value) {
             $attrs[] = [
                 'thread_id' => $thread['id'],
@@ -207,7 +215,7 @@ class CreateThreadController extends DzqController
             ->orderByDesc('created_at')->first();
         //发帖间隔时间30s
         if (!empty($threadFirst) && (time() - strtotime($threadFirst['created_at'])) < 30) {
-            $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，稍后重试');
+            $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，请稍后重试');
         }
     }
 }

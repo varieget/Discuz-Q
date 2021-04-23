@@ -44,11 +44,11 @@ class MiniProgramSchemeGenController extends AuthBaseController
         $globalAccessToken = $app->access_token->getToken(true);
         if(! isset($globalAccessToken['access_token'])) {
             //todo 记录错误日志
-            return $this->outPut(ResponseCode::MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR, ResponseCode::$codeMap[ResponseCode::MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR]);
+            return $this->outPut(ResponseCode::MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR);
         }
         $miniProgramScheme = $this->manage->getMiniProgramSchemeRefresh($globalAccessToken['access_token']);
         if($miniProgramScheme == 'gen_scheme_error') {
-            return $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR, ResponseCode::$codeMap[ResponseCode::MINI_PROGRAM_QR_CODE_ERROR]);
+            return $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR);
         }
 
         $data['openLink'] = $miniProgramScheme;

@@ -169,7 +169,10 @@ class ThreadListController extends DzqController
     function getDefaultHomeThreads($filter, $currentPage, $perPage)
     {
         $sequence = Sequence::query()->first();
-        if (empty($sequence)) return false;
+        if (empty($sequence)) {
+            $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
+            return $threads;
+        }
         $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);

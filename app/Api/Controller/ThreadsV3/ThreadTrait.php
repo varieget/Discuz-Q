@@ -19,7 +19,9 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Censor\Censor;
+use App\Common\Utils;
 use App\Models\Order;
+use App\Models\Permission;
 use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
@@ -38,24 +40,25 @@ trait ThreadTrait
         $userField = $this->getUserInfoField($loginUser, $user, $thread);
         $groupField = $this->getGroupInfoField($group);
         $likeRewardField = $this->getLikeRewardField($thread, $post);
-        $textCoverField = $this->boolTextCoverField($post);
-        $contentField = $this->getContentField($textCoverField, $thread, $post, $tomInputIndexes);
-        $payType = Thread::PAY_NO;
-        $thread['price']>0 && $payType = Thread::PAY_THREAD;
-        $thread['attachment_price']>0 && $payType = Thread::PAY_ATTACH;
+        $payType = $this->threadPayStatus($thread, $paid);
+        $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid);
         $result = [
             'threadId' => $thread['id'],
-            'textCover' => $textCoverField,
+            'postId' => $post['id'],
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
             'postCount' => $thread['post_count'] - 1,
             'isApproved' => $thread['is_approved'],
+            'isStick' => $thread['is_sticky'],
             'price' => $thread['price'],
             'attachmentPrice' => $thread['attachment_price'],
             'payType' => $payType,
-//            'isEssence' => $thread['is_essence'],
+            'paid' => $paid,
+            'isLike' => $this->isLike($loginUser, $post),
+            'createdAt' => date('Y-m-d H:i:s',strtotime($thread['created_at'])),
+            'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
             'likeReward' => $likeRewardField,
@@ -66,6 +69,7 @@ trait ThreadTrait
                 'address' => $thread['address'],
                 'location' => $thread['location']
             ],
+            'ability'=>$this->getAbilityField($loginUser, $thread),
             'content' => $contentField
         ];
         if ($analysis) {
@@ -78,6 +82,66 @@ trait ThreadTrait
     }
 
     /**
+     * @desc 获取操作权限
+     */
+    private function getAbilityField($loginUser, $thread){
+
+        $data = [
+            'canEdit' => true,
+            'canDelete' => true,
+            'canEssence' => true,
+            'canStick' => true,
+            'canReply' => true,
+            'canViewPost' => true
+        ];
+
+        if ($loginUser->isAdmin()) {
+            return $data;
+        }
+
+        $permission = array_flip(Permission::getUserPermissions($loginUser));
+
+        if (!isset($permission['thread.editOwnThreadOrPost']) && !isset($permission["category{$thread['category_id']}.thread.editOwnThreadOrPost"])) {
+            $data['canEdit'] = false;
+        }
+        if (!isset($permission['thread.hideOwnThreadOrPost']) && !isset($permission["category{$thread['category_id']}.thread.hideOwnThreadOrPost"])) {
+            $data['canDelete'] = false;
+        }
+        if (!isset($permission['thread.essence']) && !isset($permission["category{$thread['category_id']}.thread.essence"])) {
+            $data['canEssence'] = false;
+        }
+        if (!isset($permission['thread.sticky'])) {
+            $data['canStick'] = false;
+        }
+        if (!isset($permission['thread.reply']) && !isset($permission["category{$thread['category_id']}.thread.reply"])) {
+            $data['canReply'] = false;
+        }
+        if (!isset($permission['thread.viewPosts']) && !isset($permission["category{$thread['category_id']}.thread.viewPosts"])) {
+            $data['canViewPost'] = false;
+        }
+
+        return $data;
+    }
+
+    private function threadPayStatus($thread, &$paid)
+    {
+        $payType = Thread::PAY_FREE;
+        $thread['price'] > 0 && $payType = Thread::PAY_THREAD;
+        $thread['attachment_price'] > 0 && $payType = Thread::PAY_ATTACH;
+        if ($payType == Thread::PAY_FREE) {
+            $paid = null;
+        } else {
+            $paid = Order::query()
+                ->where([
+                    'thread_id' => $thread['id'],
+                    'user_id' => $this->user->id,
+                    'status' => Order::ORDER_STATUS_PAID
+                ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
+        }
+        return $payType;
+    }
+
+    /**
      * @desc 显示在帖子上的标签，目前支持 付费/精华/红包/悬赏 四种
      * @param $thread
      * @param $tags
@@ -85,15 +149,11 @@ trait ThreadTrait
      */
     private function getDisplayTagField($thread, $tags)
     {
-        $tags = array_column($tags, 'tag');
-        if (empty($tags)) {
-            return null;
-        }
         $obj = [
             'isPrice' => false,
             'isEssence' => false,
-            'isRedPack' => false,
-            'isReward' => false
+            'isRedPack' => null,
+            'isReward' => null
         ];
         if ($thread['price'] > 0 || $thread['attachment_price'] > 0) {
             $obj['isPrice'] = true;
@@ -101,23 +161,42 @@ trait ThreadTrait
         if ($thread['is_essence']) {
             $obj['isEssence'] = true;
         }
-        if (in_array(TomConfig::TOM_REDPACK, $tags)) {
-            $obj['isRedPack'] = true;
-        }
-        if (in_array(TomConfig::TOM_DOC, $tags)) {
-            $obj['isReward'] = true;
+        $tags = array_column($tags, 'tag');
+        if (!empty($tags)) {
+            if (in_array(TomConfig::TOM_REDPACK, $tags)) {
+                $obj['isRedPack'] = true;
+            }
+            if (in_array(TomConfig::TOM_DOC, $tags)) {
+                $obj['isReward'] = true;
+            }
         }
         return $obj;
     }
 
-    private function getContentField($textCover, $thread, $post, $tomInput)
+    private function getContentField($thread, $post, $tomInput, $payType, $paid)
     {
         $content = [
-            'text' => $textCover ? $post['content'] : Post::instance()->getContentSummary($post),
+            'text' => null,
             'indexes' => null
         ];
-        if (!empty($tomInput)) {
+        if ($payType == Thread::PAY_FREE) {
+            $content['text'] = $post['content'];
             $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id']);
+        } else {
+            if ($paid) {
+                $content['text'] = $post['content'];
+                $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id']);
+            } else {
+                $freeWords = $thread['free_words'];
+                if (empty($freeWords)) {
+                    $text = $post['content'];
+                } else {
+                    $text = strip_tags($post['content']);
+                    $freeLength = mb_strlen($text) * $freeWords;
+                    $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+                }
+                $content['text'] = $text;
+            }
         }
         return $content;
     }
@@ -134,15 +213,6 @@ trait ThreadTrait
             ];
         }
         return $groupResult;
-    }
-
-    private function boolTextCoverField($post)
-    {
-        $textCover = false;
-        if (mb_strlen($post['content']) >= 200) {
-            $textCover = true;
-        }
-        return $textCover;
     }
 
     private function getUserInfoField($loginUser, $user, $thread)
@@ -194,7 +264,8 @@ trait ThreadTrait
         return [
             'users' => $users,
             'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
-            'shareCount' => $thread['share_count']
+            'shareCount' => $thread['share_count'],
+            'postCount' => $thread['post_count']
         ];
     }
 
@@ -214,6 +285,14 @@ trait ThreadTrait
         list($title, $content) = explode($sep, $censor->checkText($contentForCheck));
         $isApproved = $censor->isMod;
         return [$title, $content];
+    }
+
+    private function isLike($loginUser, $post)
+    {
+        if (empty($loginUser) || empty($post)) {
+            return false;
+        }
+        return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
     }
 
 }

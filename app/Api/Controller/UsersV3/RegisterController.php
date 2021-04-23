@@ -71,7 +71,7 @@ class RegisterController extends AuthBaseController
     public function main()
     {
         if (!(bool)$this->settings->get('register_close')) {
-            $this->outPut(ResponseCode::REGISTER_CLOSE,ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]);
+            $this->outPut(ResponseCode::REGISTER_CLOSE);
 
         }
         if((bool)$this->settings->get('qcloud_sms', 'qcloud')

@@ -20,6 +20,7 @@ namespace App\Modules\ThreadTom;
 use App\Common\ResponseCode;
 use App\Models\ThreadTom;
 use App\Models\User;
+use Discuz\Common\Utils;
 use Discuz\Http\DiscuzResponseFactory;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -37,17 +38,19 @@ abstract class TomBaseBusi
     public $body = [];
     public $permissions = [];
     public $threadId = null;
+    public $postId = null;
     public $user = null;
     public $key = null;
     public $app = null;
 
-    public function __construct(User $user, $threadId, $tomId, $key, $operation, $body)
+    public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body)
     {
         $this->app = app();
         $this->operation = $operation;
         $this->body = $body;
         $this->tomId = $tomId;
         $this->threadId = $threadId;
+        $this->postId = $postId;
         $this->user = $user;
         $this->key = $key;
         $this->operationValid();
@@ -94,24 +97,7 @@ abstract class TomBaseBusi
      */
     public function outPut($code, $msg = '', $data = [])
     {
-        if (empty($msg)) {
-            if (ResponseCode::$codeMap[$code]) {
-                $msg = ResponseCode::$codeMap[$code];
-            }
-        }
-        $data = [
-            'Code' => $code,
-            'Message' => $msg,
-            'Data' => $data,
-            'RequestId' => Str::uuid(),
-            'RequestTime' => date('Y-m-d H:i:s')
-        ];
-        $crossHeaders = DiscuzResponseFactory::getCrossHeaders();
-        foreach ($crossHeaders as $k => $v) {
-            header($k . ':' . $v);
-        }
-        header('Content-Type:application/json; charset=utf-8', true, 200);
-        exit(json_encode($data, 256));
+        Utils::outPut($code, $msg, $data, Str::uuid(), date('Y-m-d H:i:s'));
     }
 
     /*

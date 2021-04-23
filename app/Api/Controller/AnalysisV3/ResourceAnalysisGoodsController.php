@@ -100,7 +100,7 @@ class ResourceAnalysisGoodsController extends DzqController
         $existsGoods = $postGoods->where('ready_content', $readyContent)->first();
         if (! empty($existsGoods)) {
             if ($this->checkGoodTitle($existsGoods)) {
-                return $this->outPut(ResponseCode::SUCCESS,'', $this->littleHump($existsGoods->toArray()));
+                return $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($existsGoods->toArray()));
             }
             // TODO 未抓取到，但是商品已存在
         }

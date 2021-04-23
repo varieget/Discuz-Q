@@ -42,8 +42,6 @@ class SmsRebindController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', []);
         }
 
-        $this->outPut(ResponseCode::NOT_FOUND_USER,
-                      ResponseCode::$codeMap[ResponseCode::NOT_FOUND_USER]
-        );
+        $this->outPut(ResponseCode::NOT_FOUND_USER);
     }
 }

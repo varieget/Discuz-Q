@@ -21,9 +21,10 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\Order;
 use App\Modules\ThreadTom\TomBaseBusi;
-use App\Models\ThreadTom;
 use App\Models\Question;
-
+/*
+ * obsolete busi class
+ * */
 class QABusi extends TomBaseBusi
 {
 

@@ -99,17 +99,13 @@ class WechatMiniProgramLoginController extends AuthBaseController
             //用户被删除
             if (!$user) {
                 $this->db->rollback();
-                $this->outPut(ResponseCode::BIND_ERROR,
-                              ResponseCode::$codeMap[ResponseCode::BIND_ERROR]
-                );
+                $this->outPut(ResponseCode::BIND_ERROR);
             }
         } else {
             //未绑定的用户自动注册
             if (!(bool)$this->settings->get('register_close')) {
                 $this->db->rollback();
-                $this->outPut(ResponseCode::REGISTER_CLOSE,
-                              ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
-                );
+                $this->outPut(ResponseCode::REGISTER_CLOSE);
             }
 
             //注册邀请码

@@ -21,7 +21,6 @@ use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\MobileCode;
 use App\Models\SessionToken;
-use App\Models\User;
 use App\Repositories\MobileCodeRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Carbon;
@@ -38,12 +37,12 @@ abstract class AuthBaseController extends DzqController
         $token = SessionToken::get($sessionToken);
         if (empty($token)) {
             // 二维码已失效，扫码超时
-            $this->outPut(ResponseCode::PC_QRCODE_TIME_OUT, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_TIME_OUT]);
+            $this->outPut(ResponseCode::PC_QRCODE_TIME_OUT);
         }
 
         if (is_null($token->payload)) {
             // 扫码中
-            $this->outPut(ResponseCode::PC_QRCODE_SCANNING_CODE, ResponseCode::$codeMap[ResponseCode::PC_QRCODE_SCANNING_CODE]);
+            $this->outPut(ResponseCode::PC_QRCODE_SCANNING_CODE);
         }
 
         return $token;
@@ -155,9 +154,7 @@ abstract class AuthBaseController extends DzqController
 
     public function updateUserBindType($user,$bindType){
         if (!in_array($bindType,AuthUtils::getLoginTypeArr())) {
-            $this->outPut(ResponseCode::BIND_TYPE_IS_NULL,
-                          ResponseCode::$codeMap[ResponseCode::BIND_TYPE_IS_NULL]
-            );
+            $this->outPut(ResponseCode::BIND_TYPE_IS_NULL);
         }
         $userBindType = empty($user->bind_type) ? 0 :$user->bind_type;
         $existBindType = AuthUtils::getBindTypeArrByCombinationBindType($userBindType);
@@ -169,9 +166,7 @@ abstract class AuthBaseController extends DzqController
                 $user->bind_type = $newBindType;
                 $user->save();
             } else {
-                $this->outPut(ResponseCode::PARAM_IS_NOT_OBJECT,
-                              ResponseCode::$codeMap[ResponseCode::PARAM_IS_NOT_OBJECT]
-                );
+                $this->outPut(ResponseCode::PARAM_IS_NOT_OBJECT);
             }
         }
     }

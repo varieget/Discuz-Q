@@ -30,8 +30,6 @@ class SmsVerifyController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($mobileCode->user));
         }
 
-        $this->outPut(ResponseCode::NOT_FOUND_USER,
-                      ResponseCode::$codeMap[ResponseCode::NOT_FOUND_USER]
-        );
+        $this->outPut(ResponseCode::NOT_FOUND_USER);
     }
 }

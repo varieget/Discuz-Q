@@ -94,16 +94,51 @@ class ThreadVideo extends DzqModel
         return $this->belongsTo(Post::class);
     }
 
-    public function getThreadVideo($threadId,$type = null, $isV3 = false)
+    public function getThreadVideo($threadId, $type = null, $isV3 = false)
     {
         $video = self::query()->where(['thread_id' => $threadId, 'status' => self::VIDEO_STATUS_SUCCESS]);
-        if($type != null){
-            $video = $video->where('type',$type);
+        if ($type != null) {
+            $video = $video->where('type', $type);
         }
         $video = $video->first();
         if (empty($video)) {
             return false;
         }
+        $result = [
+            'fileName' => $video['file_name'],
+            'height' => $video['height'],
+            'width' => $video['width'],
+            'duration' => $video['duration'],
+            'mediaUrl' => $this->getMediaUrl($video),
+            'coverUrl' => $video['cover_url']
+        ];
+        if (!$isV3) {
+            $result ['pid'] = $video['id'];
+        } else {
+            $result ['id'] = $video['id'];
+        }
+        return $result;
+    }
+
+    public function getThreadVideoById($videoId)
+    {
+        $video = self::query()->where(['id' => $videoId, 'status' => self::VIDEO_STATUS_SUCCESS])->first();
+        if (empty($video)) {
+            return false;
+        }
+        return [
+            'threadVideoId' => $video['id'],
+            'fileName' => $video['file_name'],
+            'height' => $video['height'],
+            'width' => $video['width'],
+            'duration' => $video['duration'],
+            'mediaUrl' => $this->getMediaUrl($video),
+            'coverUrl' => $video['cover_url']
+        ];
+    }
+
+    private function getMediaUrl($video)
+    {
         $settings = app(SettingsRepository::class);
         $mediaUrl = $video['media_url'];
         $urlKey = $settings->get('qcloud_vod_url_key', 'qcloud');
@@ -116,19 +151,6 @@ class ThreadVideo extends DzqModel
             $sign = md5($urlKey . $dir . $t . $us);
             $mediaUrl = $mediaUrl . '?t=' . $t . '&us=' . $us . '&sign=' . $sign;
         }
-        $result = [
-            'fileName' => $video['file_name'],
-            'height' => $video['height'],
-            'width' => $video['width'],
-            'duration' => $video['duration'],
-            'mediaUrl' => $mediaUrl,
-            'coverUrl' => $video['cover_url']
-        ];
-        if (!$isV3) {
-            $result ['pid'] = $video['id'];
-        } else {
-            $result ['id'] = $video['id'];
-        }
-        return $result;
+        return $mediaUrl;
     }
 }

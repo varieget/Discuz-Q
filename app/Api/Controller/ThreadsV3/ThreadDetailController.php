@@ -37,7 +37,7 @@ class ThreadDetailController extends DzqController
         if (!$thread || !$post) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        if (!$this->canViewThreadDetail($this->user, $thread['category_id'])) {
+        if (!$this->canViewThreadDetail($this->user, $thread)) {
             $this->outPut(ResponseCode::UNAUTHORIZED);
         }
         $user = User::query()->where('id', $thread['user_id'])->first();
