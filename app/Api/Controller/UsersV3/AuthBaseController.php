@@ -17,6 +17,7 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Commands\Users\GenJwtToken;
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\MobileCode;
