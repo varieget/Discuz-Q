@@ -33,6 +33,6 @@ class WechatPcBindPollController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', $token->payload);
         }
 
-        $this->outPut(ResponseCode::PC_BIND_ERROR, ResponseCode::$codeMap[ResponseCode::PC_BIND_ERROR]);
+        $this->outPut(ResponseCode::PC_BIND_ERROR);
     }
 }

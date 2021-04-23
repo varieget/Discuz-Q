@@ -277,6 +277,4 @@ class ThreadListController extends DzqController
         app()->instance(PreQuery::THREAD_LIST, $threadList);
         return $inPutToms;
     }
-
-
 }

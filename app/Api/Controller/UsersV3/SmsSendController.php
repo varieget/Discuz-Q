@@ -90,17 +90,13 @@ class SmsSendController extends AuthBaseController
             // 未开启短信服务不发送短信
             $mobileRule = [
                 function ($attribute, $value, $fail) {
-                    $this->outPut(ResponseCode::SMS_SERVICE_ENABLED,
-                                  ResponseCode::$codeMap[ResponseCode::SMS_SERVICE_ENABLED]
-                    );
+                    $this->outPut(ResponseCode::SMS_SERVICE_ENABLED);
                 },
             ];
         } elseif ($type == 'bind') {
             // 判断手机号是否已经被绑定
             if ($actor->mobile) {
-                $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND,
-                              ResponseCode::$codeMap[ResponseCode::MOBILE_IS_ALREADY_BIND]
-                );
+                $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
             }
 
             $mobileRule = 'required';
@@ -114,13 +110,9 @@ class SmsSendController extends AuthBaseController
             $mobileRule = [
                 function ($attribute, $value, $fail) use ($actor, $unverified) {
                     if ($unverified) {
-                        $this->outPut(ResponseCode::VERIFY_OLD_PHONE_NUMBER,
-                                      ResponseCode::$codeMap[ResponseCode::VERIFY_OLD_PHONE_NUMBER]
-                        );
+                        $this->outPut(ResponseCode::VERIFY_OLD_PHONE_NUMBER);
                     } elseif ($value == $actor->getRawOriginal('mobile')) {
-                        $this->outPut(ResponseCode::ENTER_NEW_PHONE_NUMBER,
-                                      ResponseCode::$codeMap[ResponseCode::ENTER_NEW_PHONE_NUMBER]
-                        );
+                        $this->outPut(ResponseCode::ENTER_NEW_PHONE_NUMBER);
                     }
                 },
                 'required'

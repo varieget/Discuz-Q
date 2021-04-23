@@ -42,7 +42,7 @@ use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Support\Arr;
 
-class RegisterController extends DzqController
+class RegisterController extends AuthBaseController
 {
     use EventsDispatchTrait;
     use AssertPermissionTrait;
@@ -71,7 +71,7 @@ class RegisterController extends DzqController
     public function main()
     {
         if (!(bool)$this->settings->get('register_close')) {
-            $this->outPut(ResponseCode::REGISTER_CLOSE,ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]);
+            $this->outPut(ResponseCode::REGISTER_CLOSE);
 
         }
         if((bool)$this->settings->get('qcloud_sms', 'qcloud')
@@ -105,6 +105,6 @@ class RegisterController extends DzqController
         $response = $this->bus->dispatch(
             new GenJwtToken(Arr::only($data, 'username'))
         );
-        return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData(json_decode($response->getBody(),true)));
+        return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user, $this->camelData(json_decode($response->getBody(),true))));
     }
 }

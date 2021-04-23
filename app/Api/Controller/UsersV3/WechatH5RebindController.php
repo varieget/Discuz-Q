@@ -100,15 +100,11 @@ class WechatH5RebindController extends AuthBaseController
                 $this->outPut(ResponseCode::SUCCESS, '', []);
             } else {
                 $this->db->rollBack();
-                $this->outPut(ResponseCode::ACCOUNT_WECHAT_IS_NULL,
-                              ResponseCode::$codeMap[ResponseCode::ACCOUNT_WECHAT_IS_NULL]
-                );
+                $this->outPut(ResponseCode::ACCOUNT_WECHAT_IS_NULL);
             }
         } else {
             $this->db->rollBack();
-            $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND,
-                          ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
-            );
+            $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
         }
     }
 }

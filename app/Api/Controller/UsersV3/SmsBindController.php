@@ -22,9 +22,7 @@ use App\Commands\Users\GenJwtToken;
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
-use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Events\Dispatcher as Events;
 
 class SmsBindController extends AuthBaseController
 {
@@ -45,9 +43,7 @@ class SmsBindController extends AuthBaseController
 
         // 判断手机号是否已经被绑定
         if (!empty($actor->mobile)) {
-            $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND,
-                          ResponseCode::$codeMap[ResponseCode::MOBILE_IS_ALREADY_BIND]
-            );
+            $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
         }
 
         if ($actor->exists) {
@@ -78,8 +74,6 @@ class SmsBindController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', []);
         }
 
-        $this->outPut(ResponseCode::NOT_FOUND_USER,
-                      ResponseCode::$codeMap[ResponseCode::NOT_FOUND_USER]
-        );
+        $this->outPut(ResponseCode::INVALID_PARAMETER);
     }
 }
