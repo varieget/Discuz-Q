@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\EmojiV3;
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Emoji;
 use Discuz\Base\DzqController;
@@ -27,14 +28,21 @@ class ListEmojiController extends DzqController
 
     public function main()
     {
+        $cache = app('cache');
+        $emoji = $cache->get(CacheKey::LIST_EMOJI);
+        if ($emoji) {
+            $this->outPut(ResponseCode::SUCCESS, '', unserialize($emoji));
+        }
         $emoji = Emoji::all()->toArray();
         $url = $this->request->getUri();
         $port = $url->getPort();
         $port = $port == null ? '' : ':' . $port;
         $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
-        foreach ( $emoji as $k=>$v) {
+        foreach ($emoji as $k => $v) {
             $emoji[$k]['url'] = $path . $v['url'];
         }
-        return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($emoji));
+        $result = $this->camelData($emoji);
+        $cache->put(CacheKey::LIST_EMOJI, serialize($result), 60 * 60);
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }
