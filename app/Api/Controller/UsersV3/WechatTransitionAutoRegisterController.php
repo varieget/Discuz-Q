@@ -86,9 +86,7 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
 
         // 站点关闭注册
         if (!(bool)$this->settings->get('register_close')) {
-            $this->outPut(ResponseCode::REGISTER_CLOSE,
-                ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
-            );
+            $this->outPut(ResponseCode::REGISTER_CLOSE);
         }
         $this->db->beginTransaction();
         /** @var UserWechat $wechatUser */
