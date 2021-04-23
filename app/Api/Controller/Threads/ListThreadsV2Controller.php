@@ -66,8 +66,8 @@ class ListThreadsV2Controller extends DzqController
         $attachments = Attachment::instance()->getAttachments($postIds, [Attachment::TYPE_OF_FILE, Attachment::TYPE_OF_IMAGE]);
         $attachmentsByPostId = Utils::pluckArray($attachments, 'type_id');
         $threadRewards = ThreadReward::instance()->getRewards($threadIds);
-        $paidThreadIds = $this->getPayArr($threadIds, Order::ORDER_TYPE_ATTACHMENT);
-        $pay = $this->getPayArr($threadIds, Order::ORDER_TYPE_THREAD);
+        $paidThreadIds = $this->getPayArr($threadIds)['payAttachment'];
+        $pay = $this->getPayArr($threadIds)['payThread'];
 
         $result = [];
         $linkString = '';
@@ -147,20 +147,24 @@ class ListThreadsV2Controller extends DzqController
         return $threads;
     }
 
-    private function getPayArr($threadIds, $type)
+    private function getPayArr($threadIds)
     {
-        $data = [];
         $getOrder = Order::query()->whereIn('thread_id', $threadIds)
             ->where('user_id', $this->user->id)
             ->where('status', Order::ORDER_STATUS_PAID)
             ->get()->toArray();
 
+        $payAttachment =  [];
+        $payThread =   [];
         foreach ($getOrder as $key => $val) {
-            if ($val['type'] == $type) {
-                $data[] = $val['thread_id'];
+            if ($val['type'] == Order::ORDER_TYPE_ATTACHMENT) {
+                $payAttachment[] = $val['thread_id'];
+            }
+            if ($val['type'] == Order::ORDER_TYPE_THREAD) {
+                $payThread[] = $val['thread_id'];
             }
         }
-        return $data;
+        return ['payAttachment'=>$payAttachment,'payThread'=>$payThread];
     }
 
     private function canViewThread($thread, $paidThreadIds)
