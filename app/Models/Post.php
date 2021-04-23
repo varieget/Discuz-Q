@@ -235,14 +235,14 @@ class Post extends DzqModel
 
     /**
      * Unparse the parsed content.
-     *
+     * obsolete
      * @param string $value
      * @return string
      */
-    public function getContentAttribute($value)
-    {
-        return html_entity_decode(strip_tags($value), ENT_QUOTES, 'UTF-8');
-    }
+//    public function getContentAttribute($value)
+//    {
+//        return html_entity_decode(strip_tags($value), ENT_QUOTES, 'UTF-8');
+//    }
 
     /**
      * Get the parsed/raw content.
@@ -256,24 +256,24 @@ class Post extends DzqModel
 
     /**
      * Parse the content before it is saved to the database.
-     *
+     * obsolete
      * @param string $value
      */
-    public function setContentAttribute($value)
-    {
-        if (blank($value) && $this->is_first) {
-            $defaultContent = [
-                Thread::TYPE_OF_VIDEO => trans('post.default_content.video'),
-                Thread::TYPE_OF_IMAGE => trans('post.default_content.image'),
-                Thread::TYPE_OF_AUDIO => trans('post.default_content.audio'),
-                Thread::TYPE_OF_GOODS => trans('post.default_content.goods'),
-            ];
-
-            $value = $defaultContent[$this->thread->type] ?? '';
-        }
-
-        $this->attributes['content'] = $value ? static::$formatter->parse($value, $this) : null;
-    }
+//    public function setContentAttribute($value)
+//    {
+//        if (blank($value) && $this->is_first) {
+//            $defaultContent = [
+//                Thread::TYPE_OF_VIDEO => trans('post.default_content.video'),
+//                Thread::TYPE_OF_IMAGE => trans('post.default_content.image'),
+//                Thread::TYPE_OF_AUDIO => trans('post.default_content.audio'),
+//                Thread::TYPE_OF_GOODS => trans('post.default_content.goods'),
+//            ];
+//
+//            $value = $defaultContent[$this->thread->type] ?? '';
+//        }
+//
+//        $this->attributes['content'] = $value ? static::$formatter->parse($value, $this) : null;
+//    }
 
     /**
      * Set the parsed/raw content.
