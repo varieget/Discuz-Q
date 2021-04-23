@@ -72,9 +72,7 @@ class WechatH5BindController extends AuthBaseController
 //                    ->first();
 
         if (empty($actor)) {
-            $this->outPut(ResponseCode::NOT_FOUND_USER,
-                          ResponseCode::$codeMap[ResponseCode::NOT_FOUND_USER]
-            );
+            $this->outPut(ResponseCode::NOT_FOUND_USER);
         }
 
         $this->db->beginTransaction();
@@ -132,9 +130,7 @@ class WechatH5BindController extends AuthBaseController
 
         } else {
             $this->db->rollBack();
-            $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND,
-                          ResponseCode::$codeMap[ResponseCode::ACCOUNT_HAS_BEEN_BOUND]
-            );
+            $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
         }
     }
 }

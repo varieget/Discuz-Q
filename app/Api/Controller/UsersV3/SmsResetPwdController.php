@@ -46,9 +46,7 @@ class SmsResetPwdController extends AuthBaseController
 
             // 验证新密码与原密码不能相同
             if ($mobileCode->user->checkPassword($password)) {
-                $this->outPut(ResponseCode::USER_UPDATE_ERROR,
-                              ResponseCode::$codeMap[ResponseCode::USER_UPDATE_ERROR]
-                );
+                $this->outPut(ResponseCode::USER_UPDATE_ERROR);
             }
 
             $mobileCode->user->changePassword($password);
@@ -57,6 +55,6 @@ class SmsResetPwdController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', []);
         }
 
-        $this->outPut(ResponseCode::NET_ERROR,ResponseCode::$codeMap[ResponseCode::NET_ERROR]);
+        $this->outPut(ResponseCode::NET_ERROR);
     }
 }
