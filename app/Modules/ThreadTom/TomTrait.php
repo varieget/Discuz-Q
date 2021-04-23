@@ -56,15 +56,12 @@ trait TomTrait
         } else {
             $indexes = $tomContent;
         }
+        if (empty($indexes)) return $tomJsons;
         $tomList = [];
         if (!empty($threadId)) {
             $tomList = ThreadTom::query()
                 ->select('tom_type', 'key')
                 ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
-        }
-
-        if (!is_array($indexes)) {
-            return [];
         }
         foreach ($indexes as $key => $tomJson) {
             $this->setOperation($operation, $key, $tomJson, $tomList);
