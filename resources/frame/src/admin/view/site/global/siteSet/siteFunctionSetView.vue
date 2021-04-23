@@ -6,7 +6,7 @@
         发布功能
       </CardRow>
     </Card>
-    
+
     <Card >
       <CardRow class="card-points" description="允许站点发布文字帖">
         <el-checkbox v-model="publishing.text">文字</el-checkbox>
@@ -38,7 +38,7 @@
     </Card>
 
     <Card >
-      <CardRow class="card-points" description="允许站点发布商品帖">
+      <CardRow class="card-points" description="允许站点发布商品帖（暂不支持小程序）">
         <el-checkbox v-model="publishing.goods">商品</el-checkbox>
       </CardRow>
     </Card>

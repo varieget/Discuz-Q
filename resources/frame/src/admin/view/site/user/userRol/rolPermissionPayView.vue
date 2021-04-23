@@ -263,7 +263,7 @@
           </el-select>
         </Card>
         <Card class="hasSelect">
-          <CardRow description="允许发布商品帖">
+          <CardRow description="允许发布商品帖（暂不支持小程序）">
             <el-checkbox
               v-model="checked"
               label="createThread.6"
@@ -460,7 +460,7 @@
               :disabled="
                 $router.history.current.query.id === '1' ||
                   $router.history.current.query.id === '7' ||
-                  wechatPayment || 
+                  wechatPayment ||
                   !isReward
               "
               >允许被打赏</el-checkbox
