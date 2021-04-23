@@ -71,6 +71,9 @@ class CreateThreadController extends DzqController
     private function executeEloquent()
     {
         $content = $this->inPut('content');
+
+        $this->optimizeEmoji($content);
+
         //插入thread数据
         $thread = $this->saveThread($content);
         //插入post数据
@@ -78,6 +81,21 @@ class CreateThreadController extends DzqController
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
+    }
+
+    private function optimizeEmoji(&$content)
+    {
+        $text = $content['text'];
+        preg_match_all('/<img.*?>/i', $text, $m1);
+        $searches = $m1[0];
+        $replaces = [];
+        foreach ($searches as $search) {
+            preg_match('/:[a-z]+?:/i', $search, $m2);
+            $emoji = $m2[0];
+            $replaces[] = $emoji;
+        }
+        $text = str_replace($searches, $replaces, $text);
+        $content['text'] = $text;
     }
 
     private function saveThread($content)
@@ -144,7 +162,7 @@ class CreateThreadController extends DzqController
         $permissions = Permission::getUserPermissions($this->user);
         if (!in_array($permission, $permissions) && !$this->user->isAdmin()) {
             //todo 联调关闭权限检查
-            if(!$this->CLOSE_BUSI_PERMISSION){
+            if (!$this->CLOSE_BUSI_PERMISSION) {
                 $this->outPut(ResponseCode::UNAUTHORIZED, $msg);
             }
         }
