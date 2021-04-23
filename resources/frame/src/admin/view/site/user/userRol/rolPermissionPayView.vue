@@ -1098,7 +1098,7 @@
       </Card>
     </div>
     <!-- 价格设置 -->
-    <div v-show="activeTab.name === 'pricesetting'">
+    <!-- <div v-show="activeTab.name === 'pricesetting'">
       <Card header="允许购买：">
         <CardRow description="允许购买" class="allow-box">
           <el-switch
@@ -1141,7 +1141,7 @@
           天后
         </CardRow>
       </Card>
-    </div>
+    </div> -->
     <Card class="footer-btn" :class="activeTab.name === 'userOperate' ? 'footer-btn__inner': ''">
       <el-button size="medium" type="primary" @click="submitClick"
         >提交</el-button
