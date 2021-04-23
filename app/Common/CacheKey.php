@@ -52,4 +52,8 @@ class CacheKey
     public const CHECK_PAID_GROUP = 'check_paid_group_';
 
     public const SETTINGS = 'settings';
+
+    public const CATEGORIES = 'categories_';
+
+    public const LIST_EMOJI = 'list_emoji_';
 }
