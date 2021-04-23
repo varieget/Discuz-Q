@@ -20,12 +20,15 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Censor\Censor;
 use App\Common\Utils;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Permission;
 use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
+use App\Models\ThreadUser;
 use App\Models\User;
+use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomConfig;
 use App\Modules\ThreadTom\TomTrait;
 use Illuminate\Support\Str;
@@ -47,17 +50,19 @@ trait ThreadTrait
             'postId' => $post['id'],
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
+            'categoryName' => $this->getCategoryNameField($thread['category_id']),
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
             'postCount' => $thread['post_count'] - 1,
             'isApproved' => $thread['is_approved'],
             'isStick' => $thread['is_sticky'],
+            'isFavorite' => $this->getFavoriteField($thread['id'], $loginUser),
             'price' => floatval($thread['price']),
             'attachmentPrice' => floatval($thread['attachment_price']),
             'payType' => $payType,
             'paid' => $paid,
             'isLike' => $this->isLike($loginUser, $post),
-            'createdAt' => date('Y-m-d H:i:s',strtotime($thread['created_at'])),
+            'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
@@ -69,7 +74,7 @@ trait ThreadTrait
                 'address' => $thread['address'],
                 'location' => $thread['location']
             ],
-            'ability'=>$this->getAbilityField($loginUser, $thread),
+            'ability' => $this->getAbilityField($loginUser, $thread),
             'content' => $contentField
         ];
         if ($analysis) {
@@ -81,10 +86,43 @@ trait ThreadTrait
         return $result;
     }
 
+    private function getFavoriteField($threadId, $loginUser)
+    {
+        if (app()->has(PreQuery::THREAD_LIST_FAVORITE)) {
+            $favorites = app()->get(PreQuery::THREAD_LIST_FAVORITE);
+            if (isset($favorites[$threadId])) {
+                return true;
+            }
+        } else {
+            return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $loginUser->id])->exists();
+        }
+        return false;
+    }
+
+    private function getCategoryNameField($categoryId)
+    {
+        if (app()->has(PreQuery::THREAD_LIST_CATEGORIES)) {
+            $categories = app()->get(PreQuery::THREAD_LIST_CATEGORIES);
+        } else {
+            $categories = Category::getCategories();
+        }
+        $categoryName = '';
+        foreach ($categories as $category) {
+            if ($category['id'] == $categoryId) {
+                $categoryName = $category['name'];
+            }
+        }
+        return $categoryName;
+    }
+
     /**
      * @desc 获取操作权限
+     * @param $loginUser
+     * @param $thread
+     * @return bool[]
      */
-    private function getAbilityField($loginUser, $thread){
+    private function getAbilityField($loginUser, $thread)
+    {
 
         $data = [
             'canEdit' => true,

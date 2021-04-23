@@ -26,6 +26,7 @@ use App\Models\Sequence;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
+use App\Models\ThreadUser;
 use App\Models\ThreadVideo;
 use App\Models\User;
 use App\Modules\ThreadTom\PreQuery;
@@ -70,7 +71,7 @@ class ThreadListController extends DzqController
         ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
             $tags[$item['thread_id']][] = $item->toArray();
         });
-        $inPutToms = $this->preQuery($toms, $threadCollection);
+        $inPutToms = $this->preQuery($toms, $threadCollection, $threadIds);
         $result = [];
         $linkString = '';
         foreach ($threadList as $thread) {
@@ -244,7 +245,14 @@ class ThreadListController extends DzqController
             ->where('th.is_approved', Thread::APPROVED);
     }
 
-    private function preQuery($toms, $threadCollection)
+    /**
+     * @desc 预加载列表页数据
+     * @param $toms
+     * @param $threadCollection
+     * @param $threadIds
+     * @return array
+     */
+    private function preQuery($toms, $threadCollection, $threadIds)
     {
         $inPutToms = [];
         $attachmentIds = [];
@@ -272,9 +280,13 @@ class ThreadListController extends DzqController
         $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->pluck(null, 'id');
         $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->where('status', ThreadVideo::VIDEO_STATUS_SUCCESS)->get()->pluck(null, 'id');
         $threadList = $threadCollection->pluck(null, 'id');
+        $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $this->user->id)->get()->pluck(null, 'thread_id');
+        $categories = Category::getCategories();
         app()->instance(PreQuery::THREAD_LIST_ATTACHMENTS, $attachments);
         app()->instance(PreQuery::THREAD_LIST_VIDEO, $threadVideos);
         app()->instance(PreQuery::THREAD_LIST, $threadList);
+        app()->instance(PreQuery::THREAD_LIST_CATEGORIES, $categories);
+        app()->instance(PreQuery::THREAD_LIST_FAVORITE, $favorite);
         return $inPutToms;
     }
 }

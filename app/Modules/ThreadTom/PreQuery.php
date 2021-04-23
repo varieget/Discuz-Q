@@ -23,6 +23,8 @@ class PreQuery
     const THREAD_LIST = 'thread_list';
     const THREAD_LIST_ATTACHMENTS = 'thread_list_attachments';
     const THREAD_LIST_VIDEO = 'thread_list_videos';
+    const THREAD_LIST_CATEGORIES = 'thread_list_categories';
+    const THREAD_LIST_FAVORITE = 'thread_list_favorite';
 
 
 }
