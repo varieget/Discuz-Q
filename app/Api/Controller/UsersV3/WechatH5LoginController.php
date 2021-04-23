@@ -275,9 +275,7 @@ class WechatH5LoginController extends AuthBaseController
             // 站点关闭注册
             if (!(bool)$this->settings->get('register_close')) {
                 $this->db->rollBack();
-                $this->outPut(ResponseCode::REGISTER_CLOSE,
-                    ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
-                );
+                $this->outPut(ResponseCode::REGISTER_CLOSE);
             }
             $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), new User()));
             $wechatUser->save();//微信信息写入user_wechats
@@ -307,6 +305,11 @@ class WechatH5LoginController extends AuthBaseController
             new GenJwtToken($params)
         );
         $accessToken = json_decode($response->getBody());
-        $this->outPut(ResponseCode::SUCCESS, '', $accessToken);
+
+        $result = $this->camelData(collect($accessToken));
+
+        $result = $this->addUserInfo($wechatUser->user, $result);
+
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }
