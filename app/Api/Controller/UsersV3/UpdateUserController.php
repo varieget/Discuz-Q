@@ -92,6 +92,9 @@ class UpdateUserController extends DzqController
         if(!empty($data['registerReason'])){
             $requestData['register_reason'] = $data['registerReason'];
         }
+        if(!empty($data['groupId'])){
+            $requestData['groupId'] = $data['groupId'];
+        }
 
         $result = $this->bus->dispatch(
             new UpdateUser(
