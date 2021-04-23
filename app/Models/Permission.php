@@ -37,6 +37,23 @@ class Permission extends Model
         'cash.create',                  // 提现
     ];
 
+
+    const THREAD_PERMISSION = [
+        'switch.createThread',           //开启/允许发布帖子
+        'switch.insertImage' ,          //开启/允许插入图片
+        'switch.insertVideo',             //开启/允许发布视频
+        'switch.insertAudio',            //开启/允许发布语音
+        'switch.insertDoc',             //开启/允许发布附件
+        'switch.insertGoods',           //开启/允许发布商品
+        'switch.insertPay',            //开启/允许发布付费
+        'switch.insertReward',          //开启/允许发布悬赏
+        'switch.insertRedPacket',         //开启/允许发布红包
+        'switch.insertPosition',         //开启/允许发布位置
+    ];
+
+
+
+
     /**
      * {@inheritdoc}
      */
