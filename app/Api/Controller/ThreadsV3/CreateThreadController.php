@@ -72,7 +72,9 @@ class CreateThreadController extends DzqController
     {
         $content = $this->inPut('content');
 
-        $this->optimizeEmoji($content);
+        if (!empty($content['text'])) {
+            $content['text'] = $this->optimizeEmoji($content['text']);
+        }
 
         //插入thread数据
         $thread = $this->saveThread($content);
@@ -81,26 +83,6 @@ class CreateThreadController extends DzqController
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
-    }
-
-    /**
-     * @desc 前端新编辑器只能上传完整url的emoji
-     * 后端需要将其解析出代号进行存储
-     * @param $content
-     */
-    private function optimizeEmoji(&$content)
-    {
-        $text = $content['text'];
-        preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
-        $searches = $m1[0];
-        $replaces = [];
-        foreach ($searches as $search) {
-            preg_match('/:[a-z]+?:/i', $search, $m2);
-            $emoji = $m2[0];
-            $replaces[] = $emoji;
-        }
-        $text = str_replace($searches, $replaces, $text);
-        $content['text'] = $text;
     }
 
     private function saveThread($content)

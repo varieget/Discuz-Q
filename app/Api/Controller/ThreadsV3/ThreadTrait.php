@@ -333,4 +333,23 @@ trait ThreadTrait
         return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
     }
 
+    /*
+     * @desc 前端新编辑器只能上传完整url的emoji
+     * 后端需要将其解析出代号进行存储
+     * @param $text
+     */
+    private function optimizeEmoji($text)
+    {
+        preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
+        $searches = $m1[0];
+        $replaces = [];
+        foreach ($searches as $search) {
+            preg_match('/:[a-z]+?:/i', $search, $m2);
+            $emoji = $m2[0];
+            $replaces[] = $emoji;
+        }
+        $text = str_replace($searches, $replaces, $text);
+        return $text;
+    }
+
 }

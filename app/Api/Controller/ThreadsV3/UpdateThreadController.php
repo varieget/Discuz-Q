@@ -49,11 +49,10 @@ class UpdateThreadController extends DzqController
 
     private function updateThread($thread, $post)
     {
-        $content = $this->inPut('content');//非必填项
         $db = $this->getDB();
         $db->beginTransaction();
         try {
-            $result = $this->executeEloquent($thread, $post, $content);
+            $result = $this->executeEloquent($thread, $post);
             $db->commit();
             return $result;
         } catch (\Exception $e) {
@@ -65,6 +64,11 @@ class UpdateThreadController extends DzqController
 
     private function executeEloquent($thread, $post, $content)
     {
+        $content = $this->inPut('content');//非必填项
+
+        if (!empty($content['text'])) {
+            $content['text'] = $this->optimizeEmoji($content['text']);
+        }
 
         //更新thread数据
         $this->saveThread($thread, $content);
