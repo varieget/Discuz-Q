@@ -62,7 +62,7 @@ class UpdateThreadController extends DzqController
         }
     }
 
-    private function executeEloquent($thread, $post, $content)
+    private function executeEloquent($thread, $post)
     {
         $content = $this->inPut('content');//非必填项
 
