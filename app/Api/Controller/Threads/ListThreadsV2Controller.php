@@ -47,9 +47,7 @@ class ListThreadsV2Controller extends DzqController
         $perPage = $this->inPut('perPage');
         $homeSequence = $this->inPut('homeSequence');//默认首页
         $serializer = $this->app->make(AttachmentSerializer::class);
-        $groups = $this->user->groups->toArray();
-        $groupIds = array_column($groups, 'id');
-        $permissions = Permission::categoryPermissions($groupIds);
+        $permissions = Permission::getUserPermissions($this->user);
         $threads = $this->getOriginThreads($page, $filter, $perPage, $homeSequence);
         $threadList = $threads['pageData'] ?? [];
         !$threads && $threadList = [];
@@ -154,8 +152,8 @@ class ListThreadsV2Controller extends DzqController
             ->where('status', Order::ORDER_STATUS_PAID)
             ->get()->toArray();
 
-        $payAttachment =  [];
-        $payThread =   [];
+        $payAttachment = [];
+        $payThread = [];
         foreach ($getOrder as $key => $val) {
             if ($val['type'] == Order::ORDER_TYPE_ATTACHMENT) {
                 $payAttachment[] = $val['thread_id'];
@@ -164,7 +162,7 @@ class ListThreadsV2Controller extends DzqController
                 $payThread[] = $val['thread_id'];
             }
         }
-        return ['payAttachment'=>$payAttachment,'payThread'=>$payThread];
+        return ['payAttachment' => $payAttachment, 'payThread' => $payThread];
     }
 
     private function canViewThread($thread, $paidThreadIds)
@@ -185,21 +183,21 @@ class ListThreadsV2Controller extends DzqController
     {
         $cannotViewPosts = !in_array('thread.viewPosts', $permissions);
         $cannotFreeViewPosts = !in_array('thread.freeViewPosts.' . $thread['type'], $permissions);
-        
+
         $attachment = [];
         if ($this->canViewThread($thread, $paidThreadIds) || $this->canViewThread($thread, $pay)) {
-            $cannotView =  (! $thread['is_site'] && $cannotViewPosts);
-            $attachment = $this->getAttachment($attachments, $thread,$cannotView, $serializer);
+            $cannotView = (!$thread['is_site'] && $cannotViewPosts);
+            $attachment = $this->getAttachment($attachments, $thread, $cannotView, $serializer);
         } else {
             if ($thread['price'] == 0) {
-                $cannotView =  (! $thread['is_site'] && $cannotViewPosts);
-                $attachment = $this->getAttachment($attachments, $thread,$cannotView, $serializer);
+                $cannotView = (!$thread['is_site'] && $cannotViewPosts);
+                $attachment = $this->getAttachment($attachments, $thread, $cannotView, $serializer);
             }
 
             //附件收费
             if ($thread['attachment_price'] > 0 || ($thread['type'] == Thread::TYPE_OF_IMAGE && $thread['price'] > 0)) {
-                $cannotView =  (! $thread['is_site'] && $cannotViewPosts) || ($cannotFreeViewPosts);
-                $attachment = $this->getAttachment($attachments, $thread,$cannotView, $serializer);
+                $cannotView = (!$thread['is_site'] && $cannotViewPosts) || ($cannotFreeViewPosts);
+                $attachment = $this->getAttachment($attachments, $thread, $cannotView, $serializer);
                 $attachment = array_filter($attachment, function ($item) {
                     $fileType = strtolower($item['fileType']);
                     return strstr($fileType, 'image');
@@ -308,14 +306,11 @@ class ListThreadsV2Controller extends DzqController
         foreach ($attachments as $attachment) {
 //            $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
 
-            if($thread['type'] === Thread::TYPE_OF_IMAGE && $attachment->type === Attachment::TYPE_OF_IMAGE && $cannotView)
-            {
-                $attachment->setAttribute('xblur', 1);             
+            if ($thread['type'] === Thread::TYPE_OF_IMAGE && $attachment->type === Attachment::TYPE_OF_IMAGE && $cannotView) {
+                $attachment->setAttribute('xblur', 1);
+            } else {
+                $attachment->setAttribute('xblur', 0);
             }
-            else
-            {
-                $attachment->setAttribute('xblur', 0);  
-            }     
 
             $result[] = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
         }

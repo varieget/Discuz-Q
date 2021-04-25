@@ -238,8 +238,7 @@ class Category extends DzqModel
         if (empty($groups)) {
             return false;
         }
-        $groupIds = array_column($groups, 'id');
-        $permissions = Permission::categoryPermissions($groupIds);
+        $permissions = Permission::getUserPermissions($user);
         $cids = self::query()->pluck('id')->toArray();
         $p = [];
         if ($user->isAdmin()) {
