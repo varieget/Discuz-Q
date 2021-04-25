@@ -118,11 +118,11 @@ trait ThreadListTrait
                 'user_id' => $userId,
                 'status' => Order::ORDER_STATUS_PAID
             ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
-            ->whereIn('thread_id', $threadIds)->get()->pluck('thread_id');
+            ->whereIn('thread_id', $threadIds)->get()->pluck(null,'thread_id');
 
         $postUsers = PostUser::query()->where('user_id', $userId)
             ->whereIn('post_id', $postIds)
-            ->get()->pluck('post_id');
+            ->get()->pluck(null,'post_id');
 
         app()->instance(PreQuery::THREAD_LIST_ATTACHMENTS, $attachments);
         app()->instance(PreQuery::THREAD_LIST_VIDEO, $threadVideos);
