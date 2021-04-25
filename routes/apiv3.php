@@ -80,7 +80,7 @@ $route->post('/thread.update','thread.update',ApiController\ThreadsV3\UpdateThre
 $route->post('/tom.delete','tom.delete',ApiController\ThreadsV3\DeleteTomController::class);
 $route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomController::class);
 //首页配置接口
-$route->get('/forum', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
+$route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);
 
 $route->post('/thread.share','thread.share',ApiController\ThreadsV3\ThreadShareController::class);
 $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
@@ -112,6 +112,7 @@ $route->post('/users/update', 'users.update', ApiController\UsersV3\UpdateUserCo
 
 $route->get('/signature', 'signature', ApiController\QcloudV3\CreateVodUploadSignatureController::class);
 $route->post('/threads/operate', 'threads.operate', ApiController\ThreadsV3\OperateThreadController::class);
+$route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
 
 
 
