@@ -148,7 +148,6 @@ class CreatePostController extends DzqController
             'commentPostId' => $post['comment_post_id'],
             'commentUserId' => $post['comment_user_id'],
             'content' => $post['content'],
-            'contentHtml' => $post->formatContent(),
             'replyCount' => $post['reply_count'],
             'likeCount' => $post['like_count'],
             'createdAt' => optional($post->created_at)->format('Y-m-d H:i:s'),
@@ -166,7 +165,6 @@ class CreatePostController extends DzqController
             }),
             'likeState' => $post->likeState,
             'canLike' => $this->user->can('like', $post),
-            'summary' => $post->summary,
             'summaryText' => $post->summary_text,
         ];
 
