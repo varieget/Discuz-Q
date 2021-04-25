@@ -236,6 +236,9 @@ trait ThreadTrait
                 $content['text'] = $text;
             }
         }
+        if (!empty($content['text'])) {
+            $content['text'] = str_replace(['<r>', '</r>'], ['', ''], $content['text']);
+        }
         return $content;
     }
 
