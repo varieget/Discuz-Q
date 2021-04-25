@@ -19,13 +19,10 @@ namespace App\Api\Controller\TopicV3;
 
 use App\Api\Controller\ThreadsV3\ThreadTrait;
 use App\Api\Controller\ThreadsV3\ThreadListTrait;
-use App\Common\Utils;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Topic;
-use App\Models\ThreadTopic;
 use App\Models\Thread;
-use App\Models\User;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
 

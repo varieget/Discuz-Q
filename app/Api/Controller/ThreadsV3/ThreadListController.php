@@ -18,19 +18,10 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
-use App\Models\Attachment;
 use App\Models\Category;
-use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\Sequence;
 use App\Models\Thread;
-use App\Models\ThreadTag;
-use App\Models\ThreadTom;
-use App\Models\ThreadUser;
-use App\Models\ThreadVideo;
-use App\Models\User;
-use App\Modules\ThreadTom\PreQuery;
-use App\Modules\ThreadTom\TomConfig;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
 

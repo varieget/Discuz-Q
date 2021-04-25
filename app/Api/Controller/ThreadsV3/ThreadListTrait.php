@@ -17,8 +17,6 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-use App\Censor\Censor;
-use App\Common\Utils;
 use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\GroupUser;
@@ -31,7 +29,6 @@ use App\Models\ThreadVideo;
 use App\Models\User;
 use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomConfig;
-use Illuminate\Support\Str;
 
 trait ThreadListTrait
 {
