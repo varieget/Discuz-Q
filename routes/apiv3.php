@@ -113,6 +113,6 @@ $route->post('/users/update', 'users.update', ApiController\UsersV3\UpdateUserCo
 $route->get('/signature', 'signature', ApiController\QcloudV3\CreateVodUploadSignatureController::class);
 $route->post('/threads/operate', 'threads.operate', ApiController\ThreadsV3\OperateThreadController::class);
 
-$route->get('/permission.resource', 'permission.resource', ApiController\GroupV3\ResourcePermissionsController::class);
+$route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);
 //待使用接口
 $route->post('/reports', 'reports.create', ApiController\Reportv3\CreateReportsController::class);
