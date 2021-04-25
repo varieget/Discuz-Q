@@ -56,4 +56,6 @@ class CacheKey
     public const CATEGORIES = 'categories_';
 
     public const LIST_EMOJI = 'list_emoji_';
+
+    public const GROUP_PERMISSIONS = 'group_permissions_';
 }

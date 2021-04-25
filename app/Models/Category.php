@@ -250,8 +250,7 @@ class Category extends DzqModel
         if (empty($groups)) {
             return false;
         }
-        $groupIds = array_column($groups, 'id');
-        $permissions = Permission::categoryPermissions($groupIds);
+        $permissions = Permission::getUserPermissions($user);
         $categories = self::getCategories();
         $cids = array_column($categories, 'id');
         $p = [];
