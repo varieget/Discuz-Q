@@ -135,11 +135,12 @@ abstract class TomBaseBusi
         return $this->jsonReturn(false);
     }
 
-    public function searchArray($preKey, $searchIds)
+    public function searchArray($preKey, $searchIds, &$hasKey = false)
     {
         $isArray = is_array($searchIds);
         !$isArray && $searchIds = [$searchIds];
         if (app()->has($preKey)) {
+            $hasKey = true;
             $preQueryArray = app()->get($preKey);
             $sResult = [];
             foreach ($searchIds as $searchId) {

@@ -39,8 +39,8 @@ class AudioBusi extends TomBaseBusi
     public function select()
     {
         $audioId = $this->getParams('audioId');
-        $audio = $this->searchArray(PreQuery::THREAD_LIST_VIDEO, $audioId);
-        if (!$audio) {
+        $audio = $this->searchArray(PreQuery::THREAD_LIST_VIDEO, $audioId, $hasKey);
+        if (!$hasKey) {
             $audio = ThreadVideo::instance()->getThreadVideoById($audioId);
         } else {
             $audio = ThreadVideo::instance()->getThreadVideoById($audioId, $audio);

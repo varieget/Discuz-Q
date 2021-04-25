@@ -128,7 +128,7 @@ class ThreadVideo extends DzqModel
      */
     public function getThreadVideoById($videoId, $video = null)
     {
-        if (empty($video)) {
+        if (is_null($video)) {
             $video = self::query()->where(['id' => $videoId, 'status' => self::VIDEO_STATUS_SUCCESS])->first();
         }
         if (empty($video)) {

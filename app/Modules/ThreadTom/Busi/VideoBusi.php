@@ -40,8 +40,8 @@ class VideoBusi extends TomBaseBusi
     public function select()
     {
         $videoId = $this->getParams('videoId');
-        $video = $this->searchArray(PreQuery::THREAD_LIST_VIDEO, $videoId);
-        if (!$video) {
+        $video = $this->searchArray(PreQuery::THREAD_LIST_VIDEO, $videoId, $hasKey);
+        if (!$hasKey) {
             $video = ThreadVideo::instance()->getThreadVideoById($videoId);
         } else {
             $video = ThreadVideo::instance()->getThreadVideoById($videoId, $video);
