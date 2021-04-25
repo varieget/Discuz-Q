@@ -28,40 +28,40 @@ class TomPermissionsController extends DzqController
 {
     use AssertPermissionTrait;
 
+
     public function main()
     {
         $actor = $this->user;
-        $this->assertRegistered($actor);
-        $id = $this->inPut('id');
-        if(!$id){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'');
-        }
-
+        $actorGroup = $actor->getRelation("groups")->toArray();
+        $actorId = $actorGroup[0]['id'];
         $query = GroupRepository::query();
-        $groupData = $query->where('id',$id)->with(['permission'])->first();
+        $groupData = $query->where('id',$actorId)->first();
 
         if(empty($groupData)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, 'ID为'.$id.'记录不存在');
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
-        $group_permission = $groupData->getRelation("permission")->toArray();
-        $data = [];
-        foreach ($group_permission as $val){
-            $data[] = $val['permission'];
-        }
-
+        $actorIds = array($actorId);
+        $permissions = Permission::query()->whereIn('group_id', $actorIds)->get()->toArray();
+        $group_permission = array_column($permissions, 'permission');
         $thread_permission = Permission::THREAD_PERMISSION;
-        $judge_permissions = array_intersect($data,$thread_permission);
+        $result =[];
 
-        $permission = $this->inPut('permission');
-        if (in_array($permission,$judge_permissions))
-        {
-            $this->outPut(ResponseCode::SUCCESS, '',true);
-        } else {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '',false);
+        if (!$actor->isAdmin()){
+            foreach ($thread_permission as $k=>$tp){
+                if (in_array($tp,$group_permission)){
+                    $result[$tp] = true;
+                }else{
+                    $result[$tp] = false;
+                }
+            }
+        }else{
+            foreach ($thread_permission as $k=>$tp){
+                $result[$tp] = true;
+            }
         }
 
-        return $this->outPut(ResponseCode::SUCCESS, '',$judge_permissions);
+        return $this->outPut(ResponseCode::SUCCESS, '',$result);
     }
 
 }
