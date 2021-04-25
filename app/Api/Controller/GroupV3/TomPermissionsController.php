@@ -47,21 +47,32 @@ class TomPermissionsController extends DzqController
         $thread_permission = Permission::THREAD_PERMISSION;
         $result =[];
 
+        $thread_permission_key = array_keys($thread_permission);
+
         if (!$actor->isAdmin()){
-            foreach ($thread_permission as $k=>$tp){
+            foreach ($thread_permission_key as $k=>$tp){
                 if (in_array($tp,$group_permission)){
-                    $result[$tp] = true;
+                    $result[$tp]['enable'] = true;
+                    $result[$tp]['desc'] = $thread_permission[$tp];
                 }else{
-                    $result[$tp] = false;
+                    $result[$tp]['enable'] = false;
+                    $result[$tp]['desc'] = $thread_permission[$tp];
                 }
             }
         }else{
-            foreach ($thread_permission as $k=>$tp){
-                $result[$tp] = true;
+            foreach ($thread_permission_key as $k=>$tp){
+                $result[$tp]['enable'] = true;
+                $result[$tp]['desc'] = $thread_permission[$tp];
             }
         }
 
-        return $this->outPut(ResponseCode::SUCCESS, '',$result);
+        $newresult = [];
+        foreach ($result as $k=>$value){
+              $newk = substr($k,7);
+              $newresult[$newk] = $value;
+         }
+     //   dump($newresult);exit;
+        return $this->outPut(ResponseCode::SUCCESS, '',$newresult);
     }
 
 }
