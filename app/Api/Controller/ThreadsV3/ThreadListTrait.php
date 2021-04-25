@@ -22,6 +22,7 @@ use App\Models\Category;
 use App\Models\GroupUser;
 use App\Models\Order;
 use App\Models\Post;
+use App\Models\PostUser;
 use App\Models\Thread;
 use App\Models\ThreadUser;
 use App\Models\ThreadTag;
@@ -43,13 +44,14 @@ trait ThreadListTrait
         $users = array_column($users, null, 'id');
         $threadIds = array_column($threadList, 'id');
         $posts = Post::instance()->getPosts($threadIds);
+        $postIds = array_column($posts, 'id');
         $postsByThreadId = array_column($posts, null, 'thread_id');
         $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
         $tags = [];
         ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
             $tags[$item['thread_id']][] = $item->toArray();
         });
-        $inPutToms = $this->preQuery($toms, $threadCollection, $threadIds);
+        $inPutToms = $this->preQuery($toms, $threadCollection, $threadIds, $postIds);
         $result = [];
         $linkString = '';
         foreach ($threadList as $thread) {
@@ -77,13 +79,15 @@ trait ThreadListTrait
      * @param $toms
      * @param $threadCollection
      * @param $threadIds
+     * @param $postIds
      * @return array
      */
-    private function preQuery($toms, $threadCollection, $threadIds)
+    private function preQuery($toms, $threadCollection, $threadIds, $postIds)
     {
         $inPutToms = [];
         $attachmentIds = [];
         $threadVideoIds = [];
+        $userId = $this->user->id;
         foreach ($toms as $tom) {
             $value = json_decode($tom['value'], true);
             switch ($tom['tom_type']) {
@@ -111,10 +115,14 @@ trait ThreadListTrait
         $categories = Category::getCategories();
         $orders = Order::query()
             ->where([
-                'user_id' => $this->user->id,
+                'user_id' => $userId,
                 'status' => Order::ORDER_STATUS_PAID
             ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
             ->whereIn('thread_id', $threadIds)->get()->pluck('thread_id');
+
+        $postUsers = PostUser::query()->where('user_id', $userId)
+            ->whereIn('post_id', $postIds)
+            ->get()->pluck('post_id');
 
         app()->instance(PreQuery::THREAD_LIST_ATTACHMENTS, $attachments);
         app()->instance(PreQuery::THREAD_LIST_VIDEO, $threadVideos);
@@ -122,6 +130,7 @@ trait ThreadListTrait
         app()->instance(PreQuery::THREAD_LIST_CATEGORIES, $categories);
         app()->instance(PreQuery::THREAD_LIST_FAVORITE, $favorite);
         app()->instance(PreQuery::THREAD_LIST_ORDERS, $orders);
+        app()->instance(PreQuery::THREAD_LIST_LIKED, $postUsers);
 
         return $inPutToms;
     }

@@ -339,7 +339,12 @@ trait ThreadTrait
         if (empty($loginUser) || empty($post)) {
             return false;
         }
-        return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
+        if (app()->has(PreQuery::THREAD_LIST_LIKED)) {
+            $postUser = app()->get(PreQuery::THREAD_LIST_LIKED);
+            return isset($postUser[$post['id']]);
+        } else {
+            return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
+        }
     }
 
     /*

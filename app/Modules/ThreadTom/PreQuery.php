@@ -26,7 +26,5 @@ class PreQuery
     const THREAD_LIST_CATEGORIES = 'thread_list_categories';
     const THREAD_LIST_FAVORITE = 'thread_list_favorite';
     const THREAD_LIST_ORDERS = 'thread_list_orders';
-//    const THREAD_LIST_
-
-
+    const THREAD_LIST_LIKED = 'thread_list_liked';
 }
