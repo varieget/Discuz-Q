@@ -42,7 +42,7 @@ class TopicListController extends DzqController
         $topicThreadDatas = [];
 
         if (Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 0) {
-            $threads = $this->getFilterThreads($filter, $currentPage, $perPage, $topicIds);
+            $threads = $this->getFilterThreads($topicIds);
             $threads = $this->getFullThreadData($threads);
             foreach ($threads as $key => $value) {
                 $topicThreadDatas[$value['topicId']][$value['threadId']] = $value;
@@ -105,9 +105,8 @@ class TopicListController extends DzqController
         return $topics;
     }
 
-    function getFilterThreads($filter, $currentPage, $perPage, $topicIds)
+    function getFilterThreads($topicIds)
     {
-        if (empty($filter)) $filter = [];
         $categoryids = [];
         $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
         if (!$categoryids) {
