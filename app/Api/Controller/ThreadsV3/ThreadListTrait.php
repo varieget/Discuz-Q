@@ -20,6 +20,7 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\GroupUser;
+use App\Models\Order;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadUser;
@@ -108,11 +109,20 @@ trait ThreadListTrait
         $threadList = $threadCollection->pluck(null, 'id');
         $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $this->user->id)->get()->pluck(null, 'thread_id');
         $categories = Category::getCategories();
+        $orders = Order::query()
+            ->where([
+                'user_id' => $this->user->id,
+                'status' => Order::ORDER_STATUS_PAID
+            ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
+            ->whereIn('thread_id', $threadIds)->get()->pluck('thread_id');
+
         app()->instance(PreQuery::THREAD_LIST_ATTACHMENTS, $attachments);
         app()->instance(PreQuery::THREAD_LIST_VIDEO, $threadVideos);
         app()->instance(PreQuery::THREAD_LIST, $threadList);
         app()->instance(PreQuery::THREAD_LIST_CATEGORIES, $categories);
         app()->instance(PreQuery::THREAD_LIST_FAVORITE, $favorite);
+        app()->instance(PreQuery::THREAD_LIST_ORDERS, $orders);
+
         return $inPutToms;
     }
 }

@@ -170,12 +170,17 @@ trait ThreadTrait
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
         } else {
-            $paid = Order::query()
-                ->where([
-                    'thread_id' => $thread['id'],
-                    'user_id' => $this->user->id,
-                    'status' => Order::ORDER_STATUS_PAID
-                ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
+            if (app()->has(PreQuery::THREAD_LIST_ORDERS)) {
+                $orders = app()->get(PreQuery::THREAD_LIST_ORDERS);
+                $paid = isset($orders[$thread['id']]);
+            } else {
+                $paid = Order::query()
+                    ->where([
+                        'thread_id' => $thread['id'],
+                        'user_id' => $this->user->id,
+                        'status' => Order::ORDER_STATUS_PAID
+                    ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
+            }
         }
         return $payType;
     }
