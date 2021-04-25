@@ -50,6 +50,7 @@ trait ThreadTrait
             'postId' => $post['id'],
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
+            'topicId' => $thread['topic_id'] ?? 0,
             'categoryName' => $this->getCategoryNameField($thread['category_id']),
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
