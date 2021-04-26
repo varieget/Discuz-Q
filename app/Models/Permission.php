@@ -106,7 +106,7 @@ class Permission extends DzqModel
                 $permissions = Permission::categoryPermissions($groupIds);
             }
             app()->instance('ASpnWrv4SX', $permissions);
-            $cache->put($key, serialize($permissions), 60 * 60);
+            $cache->put($key, serialize($permissions), 5 * 60);
             return $permissions;
         }
     }
