@@ -118,6 +118,7 @@ class ForumSettingSerializer extends AbstractSerializer
                 'password_length' => (int)$this->settings->get('password_length'),
                 'password_strength' => empty($this->settings->get('password_strength')) ? [] : explode(',', $this->settings->get('password_strength')),
                 'register_type' => (int)$this->settings->get('register_type', 'default', 0),
+                'is_need_transition' => (bool)$this->settings->get('is_need_transition'),
             ],
 
             // 第三方登录设置
@@ -252,7 +253,7 @@ class ForumSettingSerializer extends AbstractSerializer
         $headers = $this->request->getHeaders();
         $headersStr = strtolower(json_encode($headers, 256));
         if (! $this->settings->get('miniprogram_video', 'wx_miniprogram') &&
-            (strpos(Arr::get($this->request->getServerParams(), 'HTTP_X_APP_PLATFORM'), 'wx_miniprogram') !== false || strpos($headersStr, 'miniprogram') !== false || 
+            (strpos(Arr::get($this->request->getServerParams(), 'HTTP_X_APP_PLATFORM'), 'wx_miniprogram') !== false || strpos($headersStr, 'miniprogram') !== false ||
                 strpos($headersStr, 'compress') !== false)) {
             $attributes['other']['can_create_thread_video'] = false;
         }
