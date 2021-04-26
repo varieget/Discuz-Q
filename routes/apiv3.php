@@ -72,6 +72,7 @@ $route->get('/thread.list','thread.list',ApiController\ThreadsV3\ThreadListContr
 $route->get('/thread.stick','thread.stick',ApiController\ThreadsV3\ThreadStickController::class);
 $route->get('/thread.likedusers','thread.likedusers',ApiController\ThreadsV3\ThreadLikedUsersController::class);
 $route->get('/tom.detail','tom.detail',ApiController\ThreadsV3\SelectTomController::class);
+$route->get('/thread.recommends','thread.recommends',ApiController\ThreadsV3\ThreadCommendController::class);
 
 //帖子变更
 $route->post('/thread.create','thread.create',ApiController\ThreadsV3\CreateThreadController::class);
