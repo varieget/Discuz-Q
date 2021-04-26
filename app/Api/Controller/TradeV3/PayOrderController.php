@@ -47,12 +47,11 @@ class PayOrderController extends DzqController
             $orderSn = $this->inPut("orderSn");
             $paymentType = $this->inPut("paymentType");
             $payPassword = $this->inPut("payPassword");
-            if(empty($orderSn)){
+            if (empty($orderSn) || empty($paymentType) || 
+                ($paymentType == Order::PAYMENT_TYPE_WALLET && empty($payPassword))) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
-            if(empty($paymentType)){
-                $this->outPut(ResponseCode::INVALID_PARAMETER);
-            }
+
             $data = array(
                 'order_sn'=>$orderSn,
                 'payment_type'=>$paymentType
