@@ -82,16 +82,8 @@ class Permission extends DzqModel
         } else {
             $groups = $user->groups->toArray();
             $groupIds = array_column($groups, 'id');
-            $cache = app('cache');
-            $key = CacheKey::GROUP_PERMISSIONS;
-            $permissions = $cache->get($key);
-            if ($permissions) {
-                $permissions = unserialize($permissions);
-            } else {
-                $permissions = Permission::categoryPermissions($groupIds);
-            }
+            $permissions = Permission::categoryPermissions($groupIds);
             app()->instance('ASpnWrv4SX', $permissions);
-            $cache->put($key, serialize($permissions), 5 * 60);
             return $permissions;
         }
     }
