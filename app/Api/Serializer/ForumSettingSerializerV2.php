@@ -110,6 +110,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'site_create_thread4' => $this->settings->get('site_create_thread4') == "" ? 1 : (int)$this->settings->get('site_create_thread4'),
                 'site_create_thread5' => $this->settings->get('site_create_thread5') == "" ? 1 : (int)$this->settings->get('site_create_thread5'),
                 'site_create_thread6' => $this->settings->get('site_create_thread6') == "" ? 1 : (int)$this->settings->get('site_create_thread6'),
+                'site_can_reward'     => !empty($this->settings->get('site_can_reward')) ? (int)$this->settings->get('site_can_reward') : 0,
                 'site_skin' => $site_skin
             ],
 
@@ -200,6 +201,13 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'can_create_thread_goods_position'      => $actor->can('createThread.' . Thread::TYPE_OF_GOODS . '.position'),     // 发布商品位置
                 'can_create_thread_red_packet'          => $actor->can('createThread.' . Thread::TYPE_OF_TEXT . '.redPacket'),     // 发文字帖红包
                 'can_create_thread_long_red_packet'     => $actor->can('createThread.' . Thread::TYPE_OF_LONG . '.redPacket'),     // 发长文帖红包
+                'can_create_thread_anonymous'           => $actor->can('createThread.' . Thread::TYPE_OF_TEXT . '.anonymous'),      // 发布文字匿名发布
+                'can_create_thread_long_anonymous'      => $actor->can('createThread.' . Thread::TYPE_OF_LONG . '.anonymous'),      // 发布长文匿名发布
+                'can_create_thread_video_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_VIDEO . '.anonymous'),     // 发布视频匿名发布
+                'can_create_thread_image_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_IMAGE . '.anonymous'),     // 发布图片匿名发布
+                'can_create_thread_audio_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_AUDIO . '.anonymous'),     // 发布语音匿名发布
+                'can_create_thread_question_anonymous'  => $actor->can('createThread.' . Thread::TYPE_OF_QUESTION . '.anonymous'),  // 发布问答匿名发布
+                'can_create_thread_goods_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_GOODS . '.anonymous'),     // 发布商品匿名发布
 
                 // 至少在一个分类下有发布权限
                 'can_create_thread_in_category' => (bool) Category::getIdsWhereCan($actor, 'createThread'),
@@ -210,7 +218,6 @@ class ForumSettingSerializerV2 extends AbstractSerializer
 
                 // 其他
                 'initialized_pay_password' => (bool) $actor->pay_password,              // 是否初始化支付密码
-                'can_be_asked' => $actor->can('canBeAsked'),                            // 是否允许被提问
                 'can_be_onlooker' => $this->settings->get('site_onlooker_price') > 0 && $actor->can('canBeOnlooker'),           // 是否允许被围观
                 'create_thread_with_captcha' => ! $actor->isAdmin() && $actor->can('createThreadWithCaptcha'),                  // 发布内容需要验证码
                 'publish_need_real_name' => ! $actor->isAdmin() && $actor->can('publishNeedRealName') && ! $actor->realname,    // 发布内容需要实名认证
@@ -219,7 +226,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
 
             'lbs' => [
                 'lbs' => (bool) $this->settings->get('lbs', 'lbs'),         // 位置服务开关
-//                'qq_lbs_key' => $this->settings->get('qq_lbs_key', 'lbs'),  // 腾讯位置服务 key
+                'qq_lbs_key' => $this->settings->get('qq_lbs_key', 'lbs'),  // 腾讯位置服务 key
             ],
 
             'ucenter' => [
@@ -247,8 +254,11 @@ class ForumSettingSerializerV2 extends AbstractSerializer
         }
 
         // 微信小程序请求时判断视频开关
+        $headers = $this->request->getHeaders();
+        $headersStr = strtolower(json_encode($headers, 256));
         if (! $this->settings->get('miniprogram_video', 'wx_miniprogram') &&
-            strpos(Arr::get($this->request->getServerParams(), 'HTTP_X_APP_PLATFORM'), 'wx_miniprogram') !== false) {
+            (strpos(Arr::get($this->request->getServerParams(), 'HTTP_X_APP_PLATFORM'), 'wx_miniprogram') !== false || strpos($headersStr, 'miniprogram') !== false ||
+                strpos($headersStr, 'compress') !== false)) {
             $attributes['other']['can_create_thread_video'] = false;
         }
         //判断三种注册方式是否置灰禁用
@@ -295,8 +305,8 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 // UCenter设置
                 $attributes['ucenter'] += $this->forumField->getUCenterSettings();
 
-                //lbs 设置
-                $attributes['lbs'] += [ 'qq_lbs_key' => $this->settings->get('qq_lbs_key', 'lbs')];
+                // lbs 设置
+                // $attributes['lbs'] += [ 'qq_lbs_key' => $this->settings->get('qq_lbs_key', 'lbs')];
             } else {
                 $attributes['qcloud']['qcloud_vod_token'] = "";
             }
