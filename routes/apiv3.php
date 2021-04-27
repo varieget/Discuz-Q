@@ -115,6 +115,15 @@ $route->post('/users/update', 'users.update', ApiController\UsersV3\UpdateUserCo
 
 $route->get('/signature', 'signature', ApiController\QcloudV3\CreateVodUploadSignatureController::class);
 $route->post('/threads/operate', 'threads.operate', ApiController\ThreadsV3\OperateThreadController::class);
+
+
+//个人中心
+$route->get('/wallet/log', 'wallet.log.list', ApiController\WalletV3\ListUserWalletLogsController::class);
+$route->get('/wallet/cash', 'wallet.cash.list', ApiController\WalletV3\ListUserWalletCashController::class);
+$route->post('/users/sms.reset.pay.pwd', 'sms.reset.pay.pwd', ApiController\UsersV3\SmsResetPayPwdController::class);
+$route->post('/wallet/cash', 'wallet.cash.create', ApiController\WalletV3\CreateUserWalletCashController::class);
+$route->get('/favorites', 'favorites', ApiController\ThreadsV3\ListFavoritesController::class);
+
 $route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
 
 $route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);

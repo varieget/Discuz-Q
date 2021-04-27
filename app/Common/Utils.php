@@ -111,4 +111,17 @@ class Utils
     {
         return static::arrayKeysTransform($params, [\Illuminate\Support\Str::class, 'camel'], $exceptKeys);
     }
+
+    /**
+     * 把数组的键转换为下划线
+     *
+     * @param array $params
+     * @param array $exceptKeys
+     *
+     * @return array
+     */
+    public static function arrayKeysToSnake(array $params, array $exceptKeys = []): array
+    {
+        return static::arrayKeysTransform($params, [\Illuminate\Support\Str::class, 'snake'], $exceptKeys);
+    }
 }
