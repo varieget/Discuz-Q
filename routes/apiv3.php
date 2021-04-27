@@ -122,7 +122,7 @@ $route->get('/wallet/cash', 'wallet.cash.list', ApiController\WalletV3\ListUserW
 $route->post('/users/sms.reset.pay.pwd', 'sms.reset.pay.pwd', ApiController\UsersV3\SmsResetPayPwdController::class);
 $route->post('/wallet/cash', 'wallet.cash.create', ApiController\WalletV3\CreateUserWalletCashController::class);
 $route->get('/favorites', 'favorites', ApiController\ThreadsV3\ListFavoritesController::class);
-
+$route->post('/users/background', 'user.upload.background', ApiController\UsersV3\UploadBackgroundController::class);
 $route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
 
 $route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);
