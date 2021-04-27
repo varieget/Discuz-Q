@@ -319,7 +319,7 @@ class PayOrder
                 app('payLog')->info("支付参数payment_type枚举错误,传参payment_type:{$this->payment_type},订单号:{$this->order_sn},用户id:{$this->actor->id}");
                 throw new TradeErrorException('payment_method_invalid', 500);
         }
-
+        app('log')->info('支付的配置信息为：' . implode(',', $config) . ',支付网关：' . $pay_gateway);
         return PayTrade::pay($order_info, $pay_gateway, $config, $extra); //生成支付参数
     }
 }
