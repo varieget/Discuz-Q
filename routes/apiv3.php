@@ -44,7 +44,6 @@ $route->post('/users/sms.login', 'sms.login', ApiController\UsersV3\SmsLoginCont
 $route->post('/users/sms.bind', 'sms.bind', ApiController\UsersV3\SmsBindController::class);
 $route->post('/users/sms.rebind', 'sms.rebind', ApiController\UsersV3\SmsRebindController::class);
 $route->post('/users/sms.reset.pwd', 'sms.reset.pwd', ApiController\UsersV3\SmsResetPwdController::class);
-$route->post('/users/sms.reset.pay.pwd', 'sms.reset.pay.pwd', ApiController\UsersV3\SmsResetPayPwdController::class);
 //H5登录
 $route->get('/users/wechat/h5.oauth', 'wechat.h5.oauth', ApiController\UsersV3\WechatH5OauthController::class);
 $route->get('/users/wechat/h5.login', 'wechat.h5.login', ApiController\UsersV3\WechatH5LoginController::class);
