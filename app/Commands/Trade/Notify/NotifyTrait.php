@@ -50,7 +50,7 @@ trait NotifyTrait
     {
         // 查询订单
         $this->orderInfo = Order::query()->where('status', Order::ORDER_STATUS_PENDING)->where('payment_sn', $payment_sn)->first();
-
+        app('log')->info('NotifyTrait进来了');
         if (! empty($this->orderInfo)) {
             // 修改通知数据
             PayNotify::query()->where('payment_sn', $payment_sn)->update(['status' => PayNotify::NOTIFY_STATUS_RECEIVED, 'trade_no' => $trade_no]);
