@@ -17,12 +17,8 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
 use App\Common\ResponseCode;
-use App\Models\Category;
-use App\Models\Permission;
 use App\Models\Post;
-use App\Models\Setting;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use Discuz\Base\DzqController;
@@ -32,23 +28,7 @@ class ThreadCommendController extends DzqController
 
     public function main()
     {
-        $categoryIds = $this->inPut('categoryids');
         $threads = Thread::query()->select(['id', 'category_id', 'title']);
-        if (!empty($categoryIds)) {
-            if (!is_array($categoryIds)) {
-                $categoryIds = [$categoryIds];
-            }
-        }
-        $threads = $threads->select(['id', 'category_id', 'title']);
-        $groups = $this->user->groups->toArray();
-        $groupIds = array_column($groups, 'id');
-        $permissions = Permission::categoryPermissions($groupIds);
-        $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
-        if (!$categoryIds) {
-            $this->outPut(ResponseCode::SUCCESS, '', []);
-        }else{
-            $threads = $threads->whereIn('category_id', $categoryIds);
-        }
         $threads = $threads
             ->where('is_essence', 1)
             ->where('is_approved', 1)
@@ -99,7 +79,6 @@ class ThreadCommendController extends DzqController
                 'threadId' => $thread['id'],
                 'categoryId' => $thread['category_id'],
                 'title' => $title,
-                'canViewPosts' => $this->canViewPosts($thread, $permissions),
                 'tags'=>$tags
             ];
         }
@@ -108,18 +87,5 @@ class ThreadCommendController extends DzqController
             $item['title'] = str_replace($search, $replace, $item['title']);
         }
         $this->outPut(ResponseCode::SUCCESS, '', $data);
-    }
-
-
-    private function canViewPosts($thread, $permissions)
-    {
-        if ($this->user->isAdmin() || $this->user->id == $thread['user_id']) {
-            return true;
-        }
-        $viewPostStr = 'category' . $thread['category_id'] . '.thread.viewPosts';
-        if (in_array('thread.viewPosts', $permissions) || in_array($viewPostStr, $permissions)) {
-            return true;
-        }
-        return false;
     }
 }
