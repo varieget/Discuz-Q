@@ -21,14 +21,15 @@ use App\Common\ResponseCode;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
+use App\Modules\ThreadTom\TomConfig;
 use Discuz\Base\DzqController;
 
 class ThreadCommendController extends DzqController
 {
-
+    use ThreadTrait;
     public function main()
     {
-        $threads = Thread::query()->select(['id', 'category_id', 'title']);
+        $threads = Thread::query()->select(['id', 'category_id', 'title','view_count','price','attachment_price','is_essence']);
         $threads = $threads
             ->where('is_essence', 1)
             ->where('is_approved', 1)
@@ -43,43 +44,30 @@ class ThreadCommendController extends DzqController
             ->get()->pluck(null, 'thread_id');
 
         //获取主题标签
-        $threadTags = ThreadTag::query()
-                        ->whereIn('thread_id', $threadIds)
-                        ->get(["thread_id","tag"])
-                        ->toArray();
-        $newTags = [];
-        $newThreads = [];
-        if(!empty($threadTags)){
-            foreach ($threadTags as $k=>$val){
-                if(!in_array($val['thread_id'],$newThreads)){
-                    $newThreads[] = $val['thread_id'];
-                    $newTags[$val['thread_id']][] = $val['tag'];
-                }else{
-                    $newTags[$val['thread_id']][] = $val['tag'];
-                }
-            }
-        }
+        $tags = [];
+        ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
+            $tags[$item['thread_id']][] = $item->toArray();
+        });
 
         $data = [];
         $linkString = '';
         foreach ($threads as $thread) {
             $title = $thread['title'];
-            $id = $thread['id'];
+            $threadid = $thread['id'];
             if (empty($title)) {
-                if (isset($posts[$id])) {
-                    $title = Post::instance()->getContentSummary($posts[$id]);
+                if (isset($posts[$threadid])) {
+                    $title = Post::instance()->getContentSummary($posts[$threadid]);
                 }
             }
             $linkString .= $title;
-            $tags = null;
-            if(isset($newTags[$id])){
-                $tags = $newTags[$id];
-            }
+            $threadTags = [];
+            isset($tags[$threadid]) && $threadTags = $tags[$threadid];
             $data [] = [
                 'threadId' => $thread['id'],
                 'categoryId' => $thread['category_id'],
                 'title' => $title,
-                'tags'=>$tags
+                'displayTag'=>$this->getDisplayTagField($thread, $threadTags),
+                'viewCount'=>$thread['view_count']
             ];
         }
         list($search, $replace) = Thread::instance()->getReplaceString($linkString);
