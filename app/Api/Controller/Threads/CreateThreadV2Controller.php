@@ -29,7 +29,9 @@ class CreateThreadV2Controller extends DzqController
         if(empty($this->inPut('categoriesId'))){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'分类不能为空');
         }
-        if(empty($this->inPut('content'))){
+        $type = $this->inPut('type');
+        $denyContent = [0,1,5];
+        if(in_array($type,$denyContent) && empty($this->inPut('content'))){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'内容不能为空');
         }
 
