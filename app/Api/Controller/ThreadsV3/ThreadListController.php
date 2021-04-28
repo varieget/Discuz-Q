@@ -83,7 +83,7 @@ class ThreadListController extends DzqController
         }
         $groupId = $this->groupId();
         $cacheKey = CacheKey::LIST_THREADS_V3 . $groupId;
-        $cache = $this->getCache();
+        $cache = $this->cacheInstance();
         $threads = $this->getThreadsCache($cache, $cacheKey, $currentPage, $filter);
         if ($threads) return $threads;
         $threads = $this->getThreadsBuilder();
