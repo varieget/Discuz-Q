@@ -210,7 +210,7 @@ trait ThreadTrait
             if (in_array(TomConfig::TOM_REDPACK, $tags)) {
                 $obj['isRedPack'] = true;
             }
-            if (in_array(TomConfig::TOM_DOC, $tags)) {
+            if (in_array(TomConfig::TOM_REWARD, $tags)) {
                 $obj['isReward'] = true;
             }
         }

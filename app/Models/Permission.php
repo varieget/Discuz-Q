@@ -40,16 +40,16 @@ class Permission extends DzqModel
 
 
     const THREAD_PERMISSION = [
-        'switch.createThread' =>'发布帖子',           //开启/允许发布帖子
-        'switch.insertImage'=>'插入图片',          //开启/允许插入图片
-        'switch.insertVideo'=>'插入视频',             //开启/允许发布视频
-        'switch.insertAudio'=>'插入语音',            //开启/允许发布语音
-        'switch.insertDoc'=>'插入附件',             //开启/允许发布附件
-        'switch.insertGoods'=>'插入商品',           //开启/允许发布商品
-        'switch.insertPay'=>'插入付费',            //开启/允许发布付费
-        'switch.insertReward'=>'插入悬赏',          //开启/允许发布悬赏
-        'switch.insertRedPacket'=>'插入红包',         //开启/允许发布红包
-        'switch.insertPosition'=>'插入位置',         //开启/允许发布位置
+        'switch.createThread' => '发布帖子',           //开启/允许发布帖子
+        'switch.insertImage' => '插入图片',          //开启/允许插入图片
+        'switch.insertVideo' => '插入视频',             //开启/允许发布视频
+        'switch.insertAudio' => '插入语音',            //开启/允许发布语音
+        'switch.insertDoc' => '插入附件',             //开启/允许发布附件
+        'switch.insertGoods' => '插入商品',           //开启/允许发布商品
+        'switch.insertPay' => '插入付费',            //开启/允许发布付费
+        'switch.insertReward' => '插入悬赏',          //开启/允许发布悬赏
+        'switch.insertRedPacket' => '插入红包',         //开启/允许发布红包
+        'switch.insertPosition' => '插入位置',         //开启/允许发布位置
     ];
 
 
@@ -97,17 +97,25 @@ class Permission extends DzqModel
         } else {
             $groups = $user->groups->toArray();
             $groupIds = array_column($groups, 'id');
+            $groupKey = md5(serialize($groupIds));
             $cache = app('cache');
             $key = CacheKey::GROUP_PERMISSIONS;
             $permissions = $cache->get($key);
             if ($permissions) {
                 $permissions = unserialize($permissions);
+                if (isset($permissions[$groupKey])) {
+                    $permission = $permissions[$groupKey];
+                } else {
+                    $permission = Permission::categoryPermissions($groupIds);
+                    $permissions[$groupKey] = $permission;
+                }
             } else {
-                $permissions = Permission::categoryPermissions($groupIds);
+                $permission = Permission::categoryPermissions($groupIds);
+                $permissions = [$groupKey => $permission];
             }
-            app()->instance('ASpnWrv4SX', $permissions);
+            app()->instance('ASpnWrv4SX', $permission);
             $cache->put($key, serialize($permissions), 5 * 60);
-            return $permissions;
+            return $permission;
         }
     }
 

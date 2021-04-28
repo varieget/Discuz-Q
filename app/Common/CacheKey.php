@@ -58,4 +58,8 @@ class CacheKey
     public const LIST_EMOJI = 'list_emoji_';
 
     public const GROUP_PERMISSIONS = 'group_permissions_';
+
+
+    public const LIST_THREADS_V3 = 'list_threads_v3_';
+
 }

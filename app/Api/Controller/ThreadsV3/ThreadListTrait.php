@@ -124,6 +124,11 @@ trait ThreadListTrait
             ->whereIn('post_id', $postIds)
             ->get()->pluck(null,'post_id');
 
+        //查询点赞人数
+
+
+
+
         app()->instance(PreQuery::THREAD_LIST_ATTACHMENTS, $attachments);
         app()->instance(PreQuery::THREAD_LIST_VIDEO, $threadVideos);
         app()->instance(PreQuery::THREAD_LIST, $threadList);
