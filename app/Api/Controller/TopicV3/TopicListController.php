@@ -70,7 +70,7 @@ class TopicListController extends DzqController
             }
 
             $result[] = [
-                'pid' => $topic['id'],
+                'topicId' => $topic['id'],
                 'userId' => $topic['user_id'],
                 'content' => $topic['content'],
                 'viewCount' => $topic['view_count'],
