@@ -22,8 +22,11 @@ use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\MobileCode;
 use App\Models\SessionToken;
+use App\Models\UserWechat;
 use App\Repositories\MobileCodeRepository;
 use Discuz\Base\DzqController;
+use Discuz\Socialite\Exception\SocialiteException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 
 abstract class AuthBaseController extends DzqController
@@ -184,6 +187,59 @@ abstract class AuthBaseController extends DzqController
         $result['uid'] = $user->id ?: 0;
 
         return $result;
+    }
+
+    public function getMiniWechatUser($app, $jsCode, $iv, $encryptedData, $user){
+//        $wechatUser = UserWechat::query()->where('id', 42)->first();
+//        return $wechatUser;
+        //获取小程序登陆session key
+        $authSession = $app->auth->session($jsCode);
+        if (isset($authSession['errcode']) && $authSession['errcode'] != 0) {
+            throw new SocialiteException($authSession['errmsg'], $authSession['errcode']);
+        }
+//        $decryptedData = $app->encryptor->decryptData(
+//            Arr::get($authSession, 'session_key'),
+//            $iv,
+//            $encryptedData
+//        );
+
+//        $unionid        = Arr::get($decryptedData, 'unionId') ?: Arr::get($authSession, 'unionid', '');
+//        $openid         = Arr::get($decryptedData, 'openId') ?: Arr::get($authSession, 'openid');
+
+        $unionid = Arr::get($authSession, 'unionid', '');
+        $openid  = Arr::get($authSession, 'openid');
+
+        //获取小程序用户信息
+        /** @var UserWechat $wechatUser */
+        $wechatUser = UserWechat::query()
+            ->when($unionid, function ($query, $unionid) {
+                return $query->where('unionid', $unionid);
+            })
+            ->orWhere('min_openid', $openid)
+            ->lockForUpdate()
+            ->first();
+
+        if (!$wechatUser || !$wechatUser->exists) {
+            $wechatUser = UserWechat::build([]);
+        }
+
+        //解密获取数据，更新/插入wechatUser
+        if (!$wechatUser->user_id) {
+            //注册并绑定、登陆并绑定、手机号登陆注册并绑定时设置关联关系
+            $wechatUser->user_id = $user->id ?: null;
+        }
+        $wechatUser->unionid    = $unionid;
+        $wechatUser->min_openid = $openid;
+//        $wechatUser->nickname   = $decryptedData['nickName'];
+        $wechatUser->nickname   = 'VinceLee';
+//        $wechatUser->city       = $decryptedData['city'];
+//        $wechatUser->province   = $decryptedData['province'];
+//        $wechatUser->country    = $decryptedData['country'];
+//        $wechatUser->sex        = $decryptedData['gender'];
+//        $wechatUser->headimgurl = $decryptedData['avatarUrl'];
+        $wechatUser->save();
+
+        return $wechatUser;
     }
 
 }
