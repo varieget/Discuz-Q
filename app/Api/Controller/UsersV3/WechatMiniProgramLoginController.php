@@ -177,7 +177,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
 
         //创建 token
         $params = [
-            'username' => $user->username,
+            'username' => $wechatUser->user->username,
             'password' => ''
         ];
 
@@ -187,8 +187,8 @@ class WechatMiniProgramLoginController extends AuthBaseController
 
         //小程序无感登录，待审核状态
         if ($response->getStatusCode() === 200) {
-            if($user->status!=User::STATUS_MOD){
-                $this->events->dispatch(new Logind($user));
+            if($wechatUser->user->status!=User::STATUS_MOD){
+                $this->events->dispatch(new Logind($wechatUser->user));
             }
         }
 
@@ -202,7 +202,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
         }
 
         $result = $this->camelData(collect($accessToken));
-        $result = $this->addUserInfo($user, $result);
+        $result = $this->addUserInfo($wechatUser->user, $result);
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 
