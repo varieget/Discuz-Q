@@ -40,6 +40,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Topic extends Model
 {
     /**
+     * 列表排序
+     */
+    const SORT_BY_VIEWCOUNT = 1; // 按热度排序
+
+    const SORT_BY_THREADCOUNT = 2; // 按内容数排序
+
+    /**
      * {@inheritdoc}
      */
     protected $dates = [
