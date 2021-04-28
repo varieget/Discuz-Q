@@ -2,7 +2,7 @@
 
 return [
     'order_status_fail'             => '订单状态异常',
-    'order_not_found'                => '订单不存在',
+    'order_not_found'               => '订单不存在',
 
     'order_amount_error'            => '订单金额有误',
     'order_create_failure'          => '订单创建失败',
@@ -36,7 +36,9 @@ return [
 
     'order_pay_group_closed' => '权限购买未开启',
 
-    'abnormal_text_order_return_money'      =>'文字帖订单异常返现',
-    'abnormal_long_order_return_money'      =>'长文帖订单异常返现',
-    'abnormal_question_order_return_money'  =>'问答帖订单异常返现',
+    'abnormal_text_order_return_money'      => '文字帖订单异常返现',
+    'abnormal_long_order_return_money'      => '长文帖订单异常返现',
+    'abnormal_question_order_return_money'  => '问答帖订单异常返现',
+
+    'not_find_site_expire_site_price'       => '站点续费相关配置(站点过期时间、站点价格)不全',
 ];

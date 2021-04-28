@@ -95,7 +95,7 @@ class CreateOrderController extends DzqController
                         $be_scale = $thread->user->userDistribution->be_scale;
                     }
                 } else {
-                    throw new OrderException('order_post_not_found');
+                    throw new Exception(trans('order.order_post_not_found'));
                 }
                 break;
 
@@ -129,7 +129,7 @@ class CreateOrderController extends DzqController
                         $be_scale = $thread->user->userDistribution->be_scale;
                     }
                 } else {
-                    throw new OrderException('order_post_not_found');
+                    throw new Exception(trans('order.order_post_not_found'));
                 }
                 break;
             // 付费用户组
@@ -137,12 +137,12 @@ class CreateOrderController extends DzqController
                 $order_zero_amount_allowed = true;
                 $group_id = $data['group_id'];
                 if (in_array($group_id, Group::PRESET_GROUPS)) {
-                    throw new OrderException('order_group_forbidden');
+                    throw new Exception(trans('order.order_group_forbidden'));
                 }
 
                 if (!$this->settings->get('site_pay_group_close')) {
                     //权限购买开关未开启
-                    throw new OrderException('order_pay_group_closed');
+                    throw new Exception(trans('order.order_pay_group_closed'));
                 }
 
                 /** @var Group $group */
@@ -156,7 +156,7 @@ class CreateOrderController extends DzqController
                     $payeeId = Order::REGISTER_PAYEE_ID;
                     $amount = $group->fee;
                 } else {
-                    throw new OrderException('order_group_error');
+                    throw new Exception(trans('order.order_group_error'));
                 }
                 break;
             // 问答提问支付
@@ -198,7 +198,7 @@ class CreateOrderController extends DzqController
                     $payeeId = $thread->user_id; // 提问人
                     $thirdPartyId = $thread->question->be_user_id; // 第三者收益人（回答人）
                 } else {
-                    throw new OrderException('order_post_not_found');
+                    throw new Exception(trans('order.order_post_not_found'));
                 }
                 break;
             //付费附件
@@ -229,7 +229,7 @@ class CreateOrderController extends DzqController
                         $be_scale = $thread->user->userDistribution->be_scale;
                     }
                 } else {
-                    throw new OrderException('order_thread_attachment_error');
+                    throw new Exception(trans('order.order_thread_attachment_error'));
                 }
                 break;
             // 站点续费
@@ -263,13 +263,13 @@ class CreateOrderController extends DzqController
             
             default:
                 $this->info('参数type枚举错误,传参枚举type:({$orderType}),用户id:{$this->user->id}');
-                throw new OrderException('order_type_error');
+                throw new Exception(trans('order.order_type_error'));
         }
 
         // 订单金额需检查
         if (($amount == 0 && ! $order_zero_amount_allowed) || $amount < 0) {
             $this->info('参数金额错误,用户id:' . $this->user->id);
-            throw new OrderException('order_amount_error');
+            throw new Exception(trans('order.order_amount_error'));
         }
 
         // 支付编号
