@@ -269,7 +269,8 @@ class PayOrder
             case Order::PAYMENT_TYPE_WECHAT_JS: //微信网页、公众号
             case Order::PAYMENT_TYPE_WECHAT_MINI: //微信小程序支付
                 $config = $this->setting->tag('wxpay'); //配置信息
-                $config['notify_url'] = $this->url->to('/api/trade/notify/wechat');
+                // $config['notify_url'] = $this->url->to('/api/trade/notify/wechat');
+                $config['notify_url'] = $this->url->to('/apiv3/trade/notify/wechat');
                 switch ($this->payment_type) {
                     case Order::PAYMENT_TYPE_WECHAT_NATIVE: //微信扫码支付
                         $pay_gateway          = GatewayConfig::WECAHT_PAY_NATIVE;
@@ -319,7 +320,7 @@ class PayOrder
                 app('payLog')->info("支付参数payment_type枚举错误,传参payment_type:{$this->payment_type},订单号:{$this->order_sn},用户id:{$this->actor->id}");
                 throw new TradeErrorException('payment_method_invalid', 500);
         }
-
+        app('log')->info('支付的配置信息为：' . implode(',', $config) . ',支付网关：' . $pay_gateway);
         return PayTrade::pay($order_info, $pay_gateway, $config, $extra); //生成支付参数
     }
 }

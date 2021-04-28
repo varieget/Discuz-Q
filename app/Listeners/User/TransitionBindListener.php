@@ -70,6 +70,10 @@ class TransitionBindListener
     public function handle($event)
     {
         $user = $event->user;
+        //用户已绑定微信用户不允许再次绑定微信用户
+        if ($user->wechat) {
+            \Discuz\Common\Utils::outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
+        }
         $sessionToken = SessionToken::get($event->data['sessionToken']);
         if(empty($sessionToken) || ! $sessionToken) {
             // 长时间未操作，授权超时，重新授权

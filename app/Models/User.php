@@ -282,6 +282,17 @@ class User extends DzqModel
         return $this;
     }
 
+    /**
+     * @param string $path
+     * @param bool $isRemote
+     * @return $this
+     */
+    public function changeBackground($path, $isRemote = false)
+    {
+        $this->background = ($isRemote ? 'cos://' : '') . $path;
+        return $this;
+    }
+
     public function changeMobile($mobile)
     {
         $this->mobile = $mobile;

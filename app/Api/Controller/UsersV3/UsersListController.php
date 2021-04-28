@@ -19,6 +19,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\User;
+use App\Models\UserFollow;
 use App\Models\Group;
 use Illuminate\Support\Arr;
 use Discuz\Base\DzqController;
@@ -33,7 +34,7 @@ class UsersListController extends DzqController
         $filter = (array)$this->inPut('filter');
 
         $query = User::query();
-        $query->select('users.id AS pid', 'users.username', 'users.avatar', 'group_id');
+        $query->select('users.id AS userId', 'users.username', 'users.avatar', 'users.thread_count', 'users.question_count', 'users.liked_count', 'users.follow_count', 'group_id');
         $query->join('group_user', 'users.id', '=', 'group_user.user_id');
         $query->where('users.status', User::STATUS_NORMAL);
         if (Arr::has($filter, 'username') && Arr::get($filter, 'username') !== '') {
@@ -47,8 +48,18 @@ class UsersListController extends DzqController
         $groupIds = array_column($userDatas, 'group_id');
         $userGroupDatas = Group::query()->whereIn('id', $groupIds)->where('is_display', 1)->get()->toArray();
         $userGroupDatas = array_column($userGroupDatas, null, 'id');
+
+        $userFollowList = UserFollow::query()->where('from_user_id', $this->user->id)->get()->toArray();
+        $userFollowList = array_column($userFollowList, null, 'to_user_id');
+
         // 将来需考虑单用户-多权限组情况
         foreach ($userDatas as $key => $value) {
+            $userDatas[$key]['isFollow']       = false;
+            $userDatas[$key]['isMutualFollow'] = false;
+            if (isset($userFollowList[$value['userId']])) {
+                $userDatas[$key]['isFollow']       = true;
+                $userDatas[$key]['isMutualFollow'] = (bool) $userFollowList[$value['userId']]['is_mutual'];
+            }
             $userDatas[$key]['groupName'] = $userGroupDatas[$value['group_id']]['name'] ?? '';
             unset($userDatas[$key]['group_id']);
         }
