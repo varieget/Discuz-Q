@@ -116,6 +116,9 @@ class WechatH5BindController extends AuthBaseController
 
             //用于用户名登录绑定微信使用
             if (!empty($token->user) && $type == 'h5') {
+                if (empty($actor->username)) {
+                    $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+                }
                 //token生成
                 $params = [
                     'username' => $actor->username,

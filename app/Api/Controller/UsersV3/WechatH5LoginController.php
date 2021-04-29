@@ -161,6 +161,9 @@ class WechatH5LoginController extends AuthBaseController
         }
 
 //        if ($wechatUser && $wechatUser->user) {
+            if (empty($wechatUser->user->username)) {
+                $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+            }
             // 创建 token
             $params = [
                 'username' => $wechatUser->user->username,
