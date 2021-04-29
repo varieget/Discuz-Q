@@ -19,14 +19,13 @@
 namespace App\Api\Controller\SettingsV3;
 
 use App\Common\ResponseCode;
-use App\Models\Setting;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
-use App\Models\Permission;
 use App\Models\AdminActionLog;
 use App\Validators\SetSettingValidator;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Qcloud\QcloudTrait;
 use Discuz\Base\DzqController;
 use Exception;
@@ -50,14 +49,16 @@ class SetSettingsController extends DzqController
      */
     protected $validator;
 
+    protected $settings;
+
     /**
      * @param Events $events
      * @param SetSettingValidator $validator
      */
-    public function __construct(Events $events,  SetSettingValidator $validator)
+    public function __construct(Events $events,SettingsRepository $settings,  SetSettingValidator $validator)
     {
         $this->events = $events;
-
+        $this->settings = $settings;
         $this->validator = $validator;
 
     }
@@ -75,12 +76,7 @@ class SetSettingsController extends DzqController
         $user_id = $actor->id;
 
         // 转换为以 tag + key 为键的集合，即可去重又方便取用
-        $collect = $this->inPut('data');
-        foreach ($collect as $k=>$val){
-            $collect[$k]['attributes'] = $val;
-        }
-        $settings = collect($collect)
-            ->pluck('attributes')
+        $settings = collect($this->inPut('data'))
             ->map(function ($item) {
                 $item['tag'] = $item['tag'] ?? 'default';
                 return $item;
@@ -138,8 +134,7 @@ class SetSettingsController extends DzqController
                     $value = json_encode($value, 256);
                 }
             }
-
-            Setting::modifyValue($key, $value, $tag);
+            $this->settings->set($key, $value, $tag);
         });
         $action_desc = "";
         if(!empty($settings['cash_cash_interval_time']['key'])){
