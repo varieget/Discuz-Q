@@ -23,12 +23,12 @@ use function Complex\sec;
 class ResponseCode
 {
     const SUCCESS = 0;
-    const SITE_CLOSED = -1001;
 
     const JUMP_TO_LOGIN = -3001;
     const JUMP_TO_REGISTER = -3002;
     const JUMP_TO_AUDIT = -3003;
     const JUMP_TO_HOME_INDEX = -3004;
+    const SITE_CLOSED = -3005;
 
     const INVALID_PARAMETER = -4001;
     const UNAUTHORIZED = -4002;
