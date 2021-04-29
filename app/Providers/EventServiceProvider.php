@@ -83,7 +83,7 @@ class EventServiceProvider extends BaseEventServiceProvider
             BanLogin::class,
 //            ValidateLogin::class,
             #弃用
-//            CheckoutSite::class,
+            CheckoutSite::class,
             ChangeLastActived::class
         ],
         RefreshTokend::class => [
