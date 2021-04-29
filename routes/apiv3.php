@@ -91,6 +91,8 @@ $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\Cr
 $route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
 $route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
 $route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
+$route->post('/follow.delete', 'follow.delete', ApiController\UsersV3\DeleteUserFollowController::class);
+
 $route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
 $route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
