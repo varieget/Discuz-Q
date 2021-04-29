@@ -43,13 +43,6 @@ class Emoji extends DzqModel
             return $emojis;
         }
         $emojis = Emoji::all()->toArray();
-        $url = app('request')->getUri();
-        $port = $url->getPort();
-        $port = $port == null ? '' : ':' . $port;
-        $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
-        foreach ($emojis as $k => $v) {
-            $emoji[$k]['url'] = $path . $v['url'];
-        }
         $cache->put(CacheKey::LIST_EMOJI, $emojis, 60 * 60);
         return $emojis;
     }
