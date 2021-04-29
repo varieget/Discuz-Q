@@ -45,6 +45,10 @@ class MiniProgramPcLoginPollController extends AuthBaseController
         $data = $token->payload;
         $data['user_id'] = $token->user_id; // 用于序列化返回 user_id
 
-        $this->outPut(ResponseCode::SUCCESS, '', $data);
+        $result = $this->camelData($data);
+
+        $result = $this->addUserInfo( $token->user, $result);
+
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

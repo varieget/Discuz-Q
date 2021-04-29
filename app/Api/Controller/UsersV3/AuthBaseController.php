@@ -37,7 +37,7 @@ abstract class AuthBaseController extends DzqController
      */
     public function getScanCodeToken()
     {
-        $sessionToken = $this->inPut('session_token');
+        $sessionToken = $this->inPut('sessionToken');
         $token = SessionToken::get($sessionToken);
         if (empty($token)) {
             // 二维码已失效，扫码超时
