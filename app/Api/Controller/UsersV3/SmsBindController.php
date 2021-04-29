@@ -54,6 +54,9 @@ class SmsBindController extends AuthBaseController
 
             //用于用户名登录绑定手机号使用
             if (!empty($token->user)) {
+                if (empty($actor->username)) {
+                    $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+                }
                 //token生成
                 $params = [
                     'username' => $actor->username,

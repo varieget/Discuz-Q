@@ -200,11 +200,11 @@ abstract class AuthBaseController extends DzqController
                           ['errmsg' => $authSession['errmsg'], 'errcode' => $authSession['errcode']]);
 //            throw new SocialiteException($authSession['errmsg'], $authSession['errcode']);
         }
-//        $decryptedData = $app->encryptor->decryptData(
-//            Arr::get($authSession, 'session_key'),
-//            $iv,
-//            $encryptedData
-//        );
+        $decryptedData = $app->encryptor->decryptData(
+            Arr::get($authSession, 'session_key'),
+            $iv,
+            $encryptedData
+        );
 
 //        $unionid        = Arr::get($decryptedData, 'unionId') ?: Arr::get($authSession, 'unionid', '');
 //        $openid         = Arr::get($decryptedData, 'openId') ?: Arr::get($authSession, 'openid');
@@ -233,13 +233,13 @@ abstract class AuthBaseController extends DzqController
         }
         $wechatUser->unionid    = $unionid;
         $wechatUser->min_openid = $openid;
-//        $wechatUser->nickname   = $decryptedData['nickName'];
-        $wechatUser->nickname   = 'VinceLee';
-//        $wechatUser->city       = $decryptedData['city'];
-//        $wechatUser->province   = $decryptedData['province'];
-//        $wechatUser->country    = $decryptedData['country'];
-//        $wechatUser->sex        = $decryptedData['gender'];
-//        $wechatUser->headimgurl = $decryptedData['avatarUrl'];
+        $wechatUser->nickname   = $decryptedData['nickName'];
+//        $wechatUser->nickname   = 'VinceLee';
+        $wechatUser->city       = $decryptedData['city'];
+        $wechatUser->province   = $decryptedData['province'];
+        $wechatUser->country    = $decryptedData['country'];
+        $wechatUser->sex        = $decryptedData['gender'];
+        $wechatUser->headimgurl = $decryptedData['avatarUrl'];
         $wechatUser->save();
 
         return $wechatUser;
