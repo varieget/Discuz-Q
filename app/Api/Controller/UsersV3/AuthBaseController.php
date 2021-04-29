@@ -189,13 +189,16 @@ abstract class AuthBaseController extends DzqController
         return $result;
     }
 
-    public function getMiniWechatUser($app, $jsCode, $iv, $encryptedData, $user){
+    public function getMiniWechatUser($app, $jsCode, $iv, $encryptedData, $user = null){
 //        $wechatUser = UserWechat::query()->where('id', 42)->first();
 //        return $wechatUser;
         //获取小程序登陆session key
         $authSession = $app->auth->session($jsCode);
         if (isset($authSession['errcode']) && $authSession['errcode'] != 0) {
-            throw new SocialiteException($authSession['errmsg'], $authSession['errcode']);
+            $this->outPut(ResponseCode::NET_ERROR,
+                          ResponseCode::$codeMap[ResponseCode::NET_ERROR],
+                          ['errmsg' => $authSession['errmsg'], 'errcode' => $authSession['errcode']]);
+//            throw new SocialiteException($authSession['errmsg'], $authSession['errcode']);
         }
 //        $decryptedData = $app->encryptor->decryptData(
 //            Arr::get($authSession, 'session_key'),
@@ -226,7 +229,7 @@ abstract class AuthBaseController extends DzqController
         //解密获取数据，更新/插入wechatUser
         if (!$wechatUser->user_id) {
             //注册并绑定、登陆并绑定、手机号登陆注册并绑定时设置关联关系
-            $wechatUser->user_id = $user->id ?: null;
+            $wechatUser->user_id = !empty($user->id) ? $user->id : null;
         }
         $wechatUser->unionid    = $unionid;
         $wechatUser->min_openid = $openid;
