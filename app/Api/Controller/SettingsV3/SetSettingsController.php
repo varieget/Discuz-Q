@@ -75,8 +75,12 @@ class SetSettingsController extends DzqController
         $user_id = $actor->id;
 
         // 转换为以 tag + key 为键的集合，即可去重又方便取用
-        $settings = collect($this->inPut('data'))
-
+        $collect = $this->inPut('data');
+        foreach ($collect as $k=>$val){
+            $collect[$k]['attributes'] = $val;
+        }
+        $settings = collect($collect)
+            ->pluck('attributes')
             ->map(function ($item) {
                 $item['tag'] = $item['tag'] ?? 'default';
                 return $item;
@@ -137,20 +141,25 @@ class SetSettingsController extends DzqController
 
             Setting::modifyValue($key, $value, $tag);
         });
-
-        if($settings['cash_cash_interval_time']['key'] == 'cash_interval_time'){
-            $action_desc = '更改提现设置';
+        $action_desc = "";
+        if(!empty($settings['cash_cash_interval_time']['key'])){
+            if($settings['cash_cash_interval_time']['key'] == 'cash_interval_time'){
+                $action_desc = '更改提现设置';
+            }
         }
 
-        if($settings['wxpay_app_id']['key'] == 'app_id'){
-            $action_desc = '配置了微信支付';
+        if(!empty($settings['wxpay_app_id']['key'])){
+            if($settings['wxpay_app_id']['key'] == 'app_id'){
+                $action_desc = '配置了微信支付';
+            }
         }
-
-        if($settings['wxpay_wxpay_close']['key'] == 'wxpay_close'){
-            if($settings['wxpay_wxpay_close']['value'] == 0){
-                $action_desc = '关闭了微信支付';
-            }else{
-                $action_desc = '开启了微信支付';
+        if(!empty($settings['wxpay_wxpay_close']['key'])){
+            if($settings['wxpay_wxpay_close']['key'] == 'wxpay_close'){
+                if($settings['wxpay_wxpay_close']['value'] == 0){
+                    $action_desc = '关闭了微信支付';
+                }else{
+                    $action_desc = '开启了微信支付';
+                }
             }
         }
 

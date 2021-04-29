@@ -77,11 +77,11 @@ class UserV2Serializer extends AbstractSerializer
             'signature'         => $model->signature,
             'usernameBout'      => (int) $model->username_bout,
             'status'            => $model->status,
-            'loginAt'           => $this->formatDate($model->login_at),
-            'joinedAt'          => $this->formatDate($model->joined_at),
-            'expiredAt'         => $this->formatDate($model->expired_at),
-            'createdAt'         => $this->formatDate($model->created_at),
-            'updatedAt'         => $this->formatDate($model->updated_at),
+            'loginAt'           => optional($model->login_at)->format('Y-m-d H:i:s'),
+            'joinedAt'          => optional($model->joined_at)->format('Y-m-d H:i:s'),
+            'expiredAt'         => optional($model->expired_at)->format('Y-m-d H:i:s'),
+            'createdAt'         => optional($model->created_at)->format('Y-m-d H:i:s'),
+            'updatedAt'         => optional($model->updated_at)->format('Y-m-d H:i:s'),
             'canEdit'           => $canEdit,
             'canDelete'         => $gate->allows('delete', $model),
             'showGroups'        => $gate->allows('showGroups', $model),     // 是否显示用户组
@@ -90,18 +90,16 @@ class UserV2Serializer extends AbstractSerializer
             'denyStatus'        => (bool) $model->denyStatus,
             'canBeAsked'        => $model->id !== $this->actor->id && $model->can('canBeAsked'), // 是否允许被提问
         ];
-        if(!empty($this->getRequest())){
-            $whitelist = [
-                '/api/follow/',
-                '/api/users/'.Arr::get($this->getRequest()->getQueryParams(), 'id', '').'/',
-                '/api/threads/'.Arr::get($this->getRequest()->getQueryParams(), 'id', '').'/'
-            ];
-            if (Str::contains($this->getRequest()->getUri()->getPath().'/', $whitelist)) {
-                //需要时再查询关注状态 存在n+1
-                $attributes['follow'] = $this->userFollow->findFollowDetail($this->actor->id, $model->id);
-            }
+        $whitelist = [
+            '/api/follow/',
+            '/api/users/'.Arr::get($this->getRequest()->getQueryParams(), 'id', '').'/',
+            '/api/threads/'.Arr::get($this->getRequest()->getQueryParams(), 'id', '').'/'
+        ];
+        if (Str::contains($this->getRequest()->getUri()->getPath().'/', $whitelist)) {
+            //需要时再查询关注状态 存在n+1
+            $attributes['follow'] = $this->userFollow->findFollowDetail($this->actor->id, $model->id);
         }else{
-            //目前这里暂时 user.v2 用户详情用到，所以增加这个字段
+            // 用户详情用到，所以增加这个字段
             $attributes['follow'] = $this->userFollow->findFollowDetail($this->actor->id, $model->id);
         }
 
