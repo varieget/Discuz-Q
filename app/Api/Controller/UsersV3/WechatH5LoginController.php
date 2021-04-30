@@ -191,6 +191,9 @@ class WechatH5LoginController extends AuthBaseController
 
             // bound
             if ($sessionToken) {
+                if (empty($accessToken)) {
+                    return $this->outPut(ResponseCode::PC_QRCODE_TIME_FAIL);
+                }
                 $accessToken = $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
 
                 $this->updateUserBindType($wechatUser->user,AuthUtils::WECHAT);
