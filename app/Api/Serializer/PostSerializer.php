@@ -20,6 +20,7 @@ namespace App\Api\Serializer;
 
 use App\Models\Post;
 use App\Models\Thread;
+use App\Models\ThreadTom;
 use App\Models\UserWalletLog;
 use Exception;
 use Tobscure\JsonApi\Relationship;
@@ -71,10 +72,11 @@ class PostSerializer extends BasicPostSerializer
         if (empty($thread)) {
             throw new Exception(trans('post.thread_id_not_null'));
         }
-        if ($thread->type == Thread::TYPE_OF_TEXT) {
-            $change_type = UserWalletLog::TYPE_INCOME_TEXT;
-        } elseif ($thread->type == Thread::TYPE_OF_LONG) {
-            $change_type = UserWalletLog::TYPE_INCOME_LONG;
+        $redPacketTom = ThreadTom::query()->where('thread_id',$thread_id)
+                          ->where('tom_type',106)
+                            ->first();
+        if ($redPacketTom) {
+            $change_type = UserWalletLog::TYPE_REDPACKET_INCOME;
         } else {
             $change_type = 0;
         }
