@@ -88,6 +88,7 @@ class ResponseCode
     const PARAM_IS_NOT_OBJECT = -7047;
     const TRANSITION_NOT_OPEN = -7048;
     const USERNAME_NOT_NULL = -7049;
+    const USER_LOGIN_STATUS_NOT_NULL = -7050;
 
     const NEED_BIND_WECHAT = 8000;
     const NEED_BIND_PHONE = 8001;
@@ -154,5 +155,6 @@ class ResponseCode
         self::SMS_NOT_OPEN  => '短信未开启',
         self::SMS_CODE_ERROR => '验证码错误',
         self::USERNAME_NOT_NULL => '用户名不能为空',
+        self::USER_LOGIN_STATUS_NOT_NULL => '用户登录态不能为空',
     ];
 }
