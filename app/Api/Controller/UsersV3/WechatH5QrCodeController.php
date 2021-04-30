@@ -93,6 +93,9 @@ class WechatH5QrCodeController extends DzqController
         if($type != 'mobile_browser_bind') {
             //跳转路由选择
             $actor = $this->user;
+            if ($type != 'pc_bind' && empty($actor)) {
+                $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+            }
             if($actor && $actor->id) {
                 $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
             } else {
