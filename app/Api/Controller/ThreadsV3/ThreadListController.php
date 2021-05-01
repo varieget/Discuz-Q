@@ -48,6 +48,11 @@ class ThreadListController extends DzqController
         } else {
             $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         }
+        //todo 取第一页的时候自动加载100页缓存
+        if ($this->preload) {
+            $this->initDzqThreadsData($threads);
+            $this->outPut(ResponseCode::SUCCESS);
+        }
         $threadCollection = $threads['pageData'];
         $threads['pageData'] = $this->getFullThreadData($threadCollection);
         $this->outPut(0, '', $threads);
@@ -81,11 +86,12 @@ class ThreadListController extends DzqController
         if (!$categoryids) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
-        $groupId = $this->groupId();
-        $cacheKey = CacheKey::LIST_THREADS_V3 . $groupId;
-        $cache = $this->cacheInstance();
-        $threads = $this->getThreadsCache($cache, $cacheKey, $currentPage, $filter);
-        if ($threads) return $threads;
+        $groupKey = $this->groupKey();
+        $cacheKey = CacheKey::LIST_THREADS_V3 . $groupKey;
+        if (!$this->preload) {
+            $threads = $this->getThreadsCache($cacheKey, $currentPage);
+            if ($threads) return $threads;
+        }
         $threads = $this->getThreadsBuilder();
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
 
@@ -108,22 +114,20 @@ class ThreadListController extends DzqController
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
         if ($this->preload) {
-            $preLoad = $this->preloadPaginiation(100, 10, $threads, false);
-            $this->setThreadsCache($cache, $cacheKey, $currentPage, $filter, $preLoad);
+            $threads = $this->preloadPaginiation(100, 10, $threads, false);
         } else {
             $threads = $this->pagination($currentPage, $perPage, $threads, false);
         }
         return $threads;
     }
 
-    private function getThreadsCache($cache, $cacheKey, $currentPage, $filter)
+    private function getThreadsCache($cacheKey, $currentPage)
     {
-
+        $cache = app('cache');
         $ret = $cache->get($cacheKey);
         if ($ret) {
-            $ret = unserialize($ret);
             $page = $currentPage;
-            $filter = md5(serialize($filter));
+            $filter = md5(serialize($this->inPut('filter')));
             $threads = $ret[$filter][$page - 1] ?? false;
             if ($threads) {
                 return $threads;
@@ -132,29 +136,6 @@ class ThreadListController extends DzqController
         return false;
     }
 
-    /**
-     * @desc 缓存前100页数据
-     * @param $cache
-     * @param $cacheKey
-     * @param $currentPage
-     * @param $filter
-     * @param $threads
-     */
-    private function setThreadsCache($cache, $cacheKey, $currentPage, $filter, $threads)
-    {
-        $filter = md5(serialize($filter));
-        $data = [
-            $filter => $threads
-        ];
-        $cache->put($cacheKey, serialize($data));
-    }
-
-    private function groupId()
-    {
-        $groups = $this->user->groups->toArray();
-        $groupIds = array_column($groups, 'id');
-        return Arr::first($groupIds) ?? 0;
-    }
 
     private function setFilterSort($threads, $sort)
     {

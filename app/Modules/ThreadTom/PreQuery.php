@@ -27,4 +27,10 @@ class PreQuery
     const THREAD_LIST_FAVORITE = 'thread_list_favorite';
     const THREAD_LIST_ORDERS = 'thread_list_orders';
     const THREAD_LIST_LIKED = 'thread_list_liked';
+
+    const THREAD_LIST_LIKED_USERS = 'thread_list_liked_users';
+
+
+    const THREAD_LIST_THREADS = 'thread_list_threads';
+    const THREAD_LIST_POSTS = 'thread_list_posts';
 }

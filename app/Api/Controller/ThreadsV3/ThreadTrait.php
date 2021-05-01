@@ -287,6 +287,17 @@ trait ThreadTrait
 
     private function getLikeRewardField($thread, $post)
     {
+        $ret = [
+            'users' => null,
+            'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
+            'shareCount' => $thread['share_count'],
+            'postCount' => $thread['post_count']
+        ];
+        if (app()->has(PreQuery::THREAD_LIST_LIKED_USERS)) {
+            $likedUsers = app()->get(PreQuery::THREAD_LIST_LIKED_USERS);
+            $ret['users'] = $likedUsers[$thread['id']];
+            return $ret;
+        }
         $threadId = $thread['id'];
         $postId = $post['id'];
         $postUser = PostUser::query()->where('post_id', $postId)->orderByDesc('created_at');
@@ -308,12 +319,8 @@ trait ThreadTrait
                 'userName' => $item->username
             ];
         }
-        return [
-            'users' => $users,
-            'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
-            'shareCount' => $thread['share_count'],
-            'postCount' => $thread['post_count']
-        ];
+        $ret['users'] = $users;
+        return $ret;
     }
 
     /**

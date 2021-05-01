@@ -293,10 +293,10 @@ class Category extends DzqModel
         $cache = app('cache');
         $categories = $cache->get(CacheKey::CATEGORIES);
         if ($categories) {
-            return unserialize($categories);
+            return $categories;
         }
         $categories = self::query()->get()->toArray();
-        $cache->put(CacheKey::CATEGORIES, serialize($categories), 60 * 60);
+        $cache->put(CacheKey::CATEGORIES, $categories, 60 * 60);
         return $categories;
     }
 }
