@@ -116,6 +116,7 @@ $route->post('/users/update', 'users.update', ApiController\UsersV3\UpdateUserCo
 
 $route->get('/signature', 'signature', ApiController\QcloudV3\CreateVodUploadSignatureController::class);
 $route->post('/threads/operate', 'threads.operate', ApiController\ThreadsV3\OperateThreadController::class);
+$route->post('/posts.reward', 'posts.reward', ApiController\PostsV3\CreatePostRewardController::class);
 
 
 //个人中心
