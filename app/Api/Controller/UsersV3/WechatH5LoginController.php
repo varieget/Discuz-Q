@@ -190,10 +190,12 @@ class WechatH5LoginController extends AuthBaseController
             $accessToken = json_decode($response->getBody());
 
             // bound
+            app('log')->info('微信H5登录的sessionToken为：' . $sessionToken . ';accessToken:' . collect($accessToken));
             if ($sessionToken) {
                 if (empty($accessToken)) {
                     return $this->outPut(ResponseCode::PC_QRCODE_TIME_FAIL);
                 }
+                app('log')->info('预备写入的用户id为：' . $wechatUser->user->id);
                 $accessToken = $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
 
                 $this->updateUserBindType($wechatUser->user,AuthUtils::WECHAT);
