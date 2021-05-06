@@ -44,7 +44,7 @@ trait ThreadTrait
         $groupField = $this->getGroupInfoField($group);
         $likeRewardField = $this->getLikeRewardField($thread, $post);
         $payType = $this->threadPayStatus($thread, $paid);
-        $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid);
+        $contentField = $this->getContentField($loginUser, $thread, $post, $tomInputIndexes, $payType, $paid);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -217,13 +217,13 @@ trait ThreadTrait
         return $obj;
     }
 
-    private function getContentField($thread, $post, $tomInput, $payType, $paid)
+    private function getContentField($loginUser, $thread, $post, $tomInput, $payType, $paid)
     {
         $content = [
             'text' => null,
             'indexes' => null
         ];
-        if ($payType == Thread::PAY_FREE) {
+        if ($payType == Thread::PAY_FREE || $loginUser->id == $thread['user_id']) {
             $content['text'] = $post['content'];
             $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id']);
         } else {
