@@ -78,6 +78,7 @@ class RewardBusi extends TomBaseBusi
         $threadReward->answer_id = 0; // 目前没有指定人问答
         $threadReward->money = $input['price'];
         $threadReward->remain_money = $input['price'];
+        $threadReward->is_reward = $input['isReward'];
         $threadReward->expired_at = date("Y-m-d",strtotime($input['expiredAt']));
         $threadReward->save();
 
@@ -105,6 +106,7 @@ class RewardBusi extends TomBaseBusi
             'type' => $this->getParams('type'),
             'expiredAt' => $this->getParams('expiredAt'),
             'content' => $this->getParams('content'),
+            'isReward' => $this->getParams('isReward') ? $this->getParams('isReward') : 0,
         ];
         $rules = [
             'orderSn' => 'required|numeric',
@@ -112,6 +114,7 @@ class RewardBusi extends TomBaseBusi
             'type' => 'required|integer|in:0,1',
             'expiredAt' => 'required|date',
             'content' => 'max:1000',
+            'isReward' => 'boolean',
         ];
 
         $this->dzqValidate($input, $rules);
