@@ -24,6 +24,16 @@ class ThreadTag extends DzqModel
 {
     protected $table = 'thread_tag';
 
+    const TEXT = 100;
+    const IMAGE = 101;          // 图片
+    const VOICE = 102;          // 语音
+    const VIDEO = 103;          // 视频
+    const GOODS = 104;          // 商品
+    const QA = 105;             // 问答
+    const RED_PACKET = 106;     // 红包
+    const REWARD = 107;         // 悬赏问答
+    const DOC = 108;            // 文件附件
+
     /**
      * @desc 异步执行更新帖子类型标签
      * @param ThreadTom $tom
