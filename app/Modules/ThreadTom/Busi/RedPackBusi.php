@@ -114,7 +114,7 @@ class RedPackBusi extends TomBaseBusi
             'rule' => $this->getParams('rule'),
             'orderSn' => $this->getParams('orderSn'),
             'price' => $this->getParams('price'),
-            'content' => $this->getParams('type')
+            'content' => $this->getParams('content')
         ];
         $rules = [
             'condition' => 'required|integer|in:0,1',
