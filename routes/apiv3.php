@@ -130,4 +130,5 @@ $route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::c
 
 $route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);
 //待使用接口
-$route->post('/reports', 'reports.create', ApiController\Reportv3\CreateReportsController::class);
+$route->post('/reports', 'reports.create', ApiController\ReportV3\CreateReportsController::class);
+$route->get('/redpacket.resource', 'redpacket.resource', ApiController\RedPacketV3\ResourceRedPacketController::class);
