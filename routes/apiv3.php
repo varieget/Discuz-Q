@@ -132,3 +132,7 @@ $route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPerm
 //待使用接口
 $route->post('/reports', 'reports.create', ApiController\ReportV3\CreateReportsController::class);
 $route->get('/redpacket.resource', 'redpacket.resource', ApiController\RedPacketV3\ResourceRedPacketController::class);
+
+// 邀请invite
+$route->get('/invite.users.list','invite.users.list',ApiController\InviteV3\InviteUsersListController::class);
+$route->get('/invite.link.create','invite.link.create',ApiController\InviteV3\CreateInviteLinkController::class);
