@@ -75,15 +75,16 @@ class WechatH5LoginController extends AuthBaseController
 
     public function main()
     {
-        //过渡开关打开
-        if((bool)$this->settings->get('is_need_transition')) {
-            $this->transitionLoginLogicVoid();
-        }
         //获取授权后微信用户信息
         $wxuser         = $this->getWxuser();
         $inviteCode     = $this->inPut('inviteCode');//邀请码非必须存在
         $sessionToken   = $this->inPut('sessionToken');//PC扫码使用，非必须存在
         $actor          = $this->user;
+
+        //过渡开关打开
+        if((bool)$this->settings->get('is_need_transition') && empty($sessionToken)) {
+            $this->transitionLoginLogicVoid();
+        }
 
         $this->db->beginTransaction();
         try {
@@ -190,12 +191,11 @@ class WechatH5LoginController extends AuthBaseController
             $accessToken = json_decode($response->getBody());
 
             // bound
-            app('log')->info('微信H5登录的sessionToken为：' . $sessionToken . ';accessToken:' . collect($accessToken));
             if ($sessionToken) {
                 if (empty($accessToken)) {
                     return $this->outPut(ResponseCode::PC_QRCODE_TIME_FAIL);
                 }
-                app('log')->info('预备写入的用户id为：' . $wechatUser->user->id);
+
                 $accessToken = $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
 
                 $this->updateUserBindType($wechatUser->user,AuthUtils::WECHAT);

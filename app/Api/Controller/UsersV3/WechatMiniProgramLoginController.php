@@ -91,7 +91,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
         $inviteCode         = $this->inPut('inviteCode');
         $this->app          = $this->miniProgram();
         //过渡开关打开
-        if((bool)$this->settings->get('is_need_transition')) {
+        if((bool)$this->settings->get('is_need_transition') && empty($sessionToken)) {
             $this->transitionLoginLogicVoid();
         }
 
