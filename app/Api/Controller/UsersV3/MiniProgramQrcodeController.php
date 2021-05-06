@@ -76,7 +76,7 @@ class MiniProgramQrcodeController extends DzqController
         //跳转路由选择
         $path = self::$qrcodeTypeAndRouteMap[$type];
         $actor = $this->user;
-        if ($type != 'pc_bind_mini' && empty($actor->id)) {
+        if ($type == 'pc_bind_mini' && empty($actor->id)) {
             $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
         }
         if($actor && $actor->id) {
