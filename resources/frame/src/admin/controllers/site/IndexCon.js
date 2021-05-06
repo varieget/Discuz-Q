@@ -760,7 +760,9 @@ export default {
     },
 
     quitClick() {
+      const token = localStorage.getItem('access_token');
       localStorage.clear();
+      token && localStorage.setItem('access_token', token);
       this.$router.push({ path: "/admin/login" });
     },
 

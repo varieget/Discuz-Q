@@ -249,7 +249,9 @@ const appFetch = function(params, options) {
             Router.init().replace({path:'/supplier-all-back',query:{url:Router.init().history.current.path}});
           })
         }else {
+          const token = localStorage.getItem('access_token');
           localStorage.clear();
+          token && localStorage.setItem('access_token', token);
           Router.init().push({path:'/login-user'})
         }
 
@@ -300,9 +302,9 @@ const getNewToken = function (router) {
     // browserDb.setLItem('tokenId', tokenId);
     browserDb.setLItem('refreshToken',refreshToken);
   }).catch(err=>{
-    // browserDb.removeLItem('Authorization');
-    // browserDb.removeLItem('refreshToken');
-    // browserDb.removeLItem('tokenId');
+    browserDb.removeLItem('Authorization');
+    browserDb.removeLItem('refreshToken');
+    browserDb.removeLItem('tokenId');
   })
 }
 
