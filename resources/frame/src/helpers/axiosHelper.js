@@ -300,9 +300,9 @@ const getNewToken = function (router) {
     // browserDb.setLItem('tokenId', tokenId);
     browserDb.setLItem('refreshToken',refreshToken);
   }).catch(err=>{
-    browserDb.removeLItem('Authorization');
-    browserDb.removeLItem('refreshToken');
-    browserDb.removeLItem('tokenId');
+    // browserDb.removeLItem('Authorization');
+    // browserDb.removeLItem('refreshToken');
+    // browserDb.removeLItem('tokenId');
   })
 }
 
