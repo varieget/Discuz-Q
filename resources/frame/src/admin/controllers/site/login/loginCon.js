@@ -147,6 +147,8 @@ export default {
     }
   },
   created(){
+    const token = localStorage.getItem('access_token');
     localStorage.clear();
+    token && localStorage.setItem('access_token', token);
   }
 }
