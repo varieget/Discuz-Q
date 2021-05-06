@@ -690,7 +690,11 @@ class Post extends DzqModel
             ? $this->thread
             : Thread::query()->select(['id', 'type'])->where('id', $this->thread_id)->first();
         $this->rewards = 0;
-        if($thread->type == Thread::TYPE_OF_QUESTION){
+
+        $rewardTom = ThreadTom::query()->where('thread_id',$thread['id'])
+            ->where('tom_type',107)
+            ->first();
+        if($rewardTom){
             $this->rewards = UserWalletLog::query()
                 ->where(['post_id' => $this->id, 'thread_id' => $this->thread_id])
                 ->sum('change_available_amount');
