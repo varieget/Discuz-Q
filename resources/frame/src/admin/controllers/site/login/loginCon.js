@@ -151,6 +151,6 @@ export default {
     const userId = localStorage.getItem('user_id');
     localStorage.clear();
     token && localStorage.setItem('access_token', token);
-    userId && localStorage.setItem('access_token', userId);
+    userId && localStorage.setItem('user_id', userId);
   }
 }
