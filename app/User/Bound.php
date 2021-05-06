@@ -42,12 +42,13 @@ class Bound
     public function pcLogin($sessionToken, $accessToken, $data)
     {
         $token = SessionToken::query()->where('token', $sessionToken)->first();
-
+        app('log')->info('更新数据库前token为：' . $token);
         if (!empty($token)) {
             /** @var SessionToken $token */
             $token->payload = $accessToken;
             $token->user_id = $data['user_id'];
             $token->save();
+            app('log')->info('更新数据库后的token为：' . $token);
         }
 
         return $accessToken;
