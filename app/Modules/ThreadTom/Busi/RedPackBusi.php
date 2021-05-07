@@ -85,7 +85,6 @@ class RedPackBusi extends TomBaseBusi
         $threadRedPacket->status = RedPacket::RED_PACKET_STATUS_VALID;
         $threadRedPacket->save();
 
-        $threadRedPacket->isSelect = false;
         $threadRedPacket->content = $input['content'];
 
         return $this->jsonReturn($threadRedPacket);
@@ -93,17 +92,12 @@ class RedPackBusi extends TomBaseBusi
 
     public function select()
     {
-        if (isset($this->body['isSelect'])) {
-            return $this->jsonReturn($this->body);
-        }
-
         $redPacket = ThreadRedPacket::query()->where('id',$this->body['id'])->first(['remain_money','remain_number','status']);
         $this->body['remain_money'] = $redPacket['remain_money'];
         $this->body['remain_number'] = $redPacket['remain_number'];
         $this->body['status'] = $redPacket['remain_number'];
 
         return $this->jsonReturn($this->body);
-
     }
 
     public function verification(){
