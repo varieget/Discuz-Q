@@ -48,7 +48,7 @@ class InviteDetailController extends DzqController
         $inviteData['inviteId'] = $inviteData['id'];
         unset($inviteData['id']);
         $inviteData['user'] = User::query()
-            ->select('id AS userId', 'username', 'avatar')
+            ->select('id AS userId', 'nickname', 'avatar')
             ->where('id', $inviteData['user_id'])
             ->first()->toArray();
         $inviteData['group'] = Group::query()

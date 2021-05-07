@@ -32,21 +32,20 @@ class InviteUsersListController extends DzqController
 
     public function main()
     {
-        $username = $this->inPut('username');
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
 
         $query = Invite::query();
-        $query->select('invites.user_id', 'invites.to_user_id', 'users.username', 'users.avatar', 'users.joined_at');
+        $query->select('invites.user_id', 'invites.to_user_id', 'users.avatar', 'users.joined_at');
         $query->join('users', 'users.id', '=', 'invites.user_id');
         $query->where('invites.user_id', $this->user->id);
         $query->where('invites.status', Invite::STATUS_USED);
-        if ($username) {
-            $query->where('users.username', 'like', '%' . $username . '%');
-        }
+
         $inviteUsersList = $this->pagination($currentPage, $perPage, $query);
         $inviteData = $inviteUsersList['pageData'] ?? [];
         $userIds = array_column($inviteData, 'to_user_id');
+        $users = User::instance()->getUsers($userIds);
+        $users = array_column($users, null, 'id');
 
         $registOrderDatas = Order::query()
             ->whereIn('user_id', $userIds)
@@ -54,6 +53,7 @@ class InviteUsersListController extends DzqController
             ->get()->toArray();
         $registOrderDatas = array_column($registOrderDatas, null, 'user_id');
         foreach ($inviteData as $key => $value) {
+            $inviteData[$key]['nickname'] = $users[$value['to_user_id']]['nickname'] ?? '';
             $inviteData[$key]['bounty'] = 0;
             if (isset($registOrderDatas[$value['user_id']])) {
                 $inviteData[$key]['bounty'] = floatval($registOrderDatas[$value['user_id']]['third_party_amount']);
@@ -65,7 +65,7 @@ class InviteUsersListController extends DzqController
 
         $result = array(
             'userId' => $this->user->id,
-            'username' => $this->user->username,
+            'nickname' => $this->user->nickname,
             'avatar' => $this->user->avatar,
             'groupName' => $groups[$this->user->id]['groups']['name'],
             'totalInviteUsers' => count($inviteData),
