@@ -131,7 +131,8 @@ trait ThreadTrait
             'canEssence' => true,
             'canStick' => true,
             'canReply' => true,
-            'canViewPost' => true
+            'canViewPost' => true,
+            'canBeReward' => true,
         ];
 
         if ($loginUser->isAdmin()) {
@@ -157,6 +158,9 @@ trait ThreadTrait
         }
         if (!isset($permission['thread.viewPosts']) && !isset($permission["category{$thread['category_id']}.thread.viewPosts"])) {
             $data['canViewPost'] = false;
+        }
+        if (!isset($permission['thread.canBeReward']) && !isset($permission["category{$thread['category_id']}.thread.canBeReward"])) {
+            $data['canBeReward'] = false;
         }
 
         return $data;
