@@ -27,13 +27,10 @@ class CreateUserFollowController extends DzqController
 
     public function main(){
 
-        $data = $this->inPut('data');
-        $this->dzqValidate($data, [
-            'toUserId'  => 'integer',
-        ]);
         $actor = $this->user;
 
-        $to_user_id = $data['toUserId'];
+        $to_user_id = $this->inPut('toUserId');
+
         $this->assertRegistered($actor);
         $this->assertCan($actor, 'userFollow.create');
         if ($actor->id == $to_user_id) {
