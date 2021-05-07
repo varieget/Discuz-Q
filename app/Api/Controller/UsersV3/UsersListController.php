@@ -41,7 +41,13 @@ class UsersListController extends DzqController
             $username = $filter['username'];
             $query->where('users.username', 'like', '%' . $username . '%');
         }
-        $query->orderByDesc('users.login_at');
+
+        if (isset($filter['hot']) && $filter['hot'] == 1) {
+            $query->orderByDesc('users.login_at');
+        } else {
+            $query->orderBy('users.id');
+        }
+        
 
         $users = $this->pagination($currentPage, $perPage, $query);
         $userDatas = $users['pageData'];
