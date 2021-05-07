@@ -128,7 +128,16 @@ $route->get('/favorites', 'favorites', ApiController\ThreadsV3\ListFavoritesCont
 $route->post('/users/background', 'user.upload.background', ApiController\UsersV3\UploadBackgroundController::class);
 $route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
 
+$route->get('/users/deny', 'user.deny.list', ApiController\UsersV3\ListDenyUserController::class);
+$route->post('/users/deny', 'user.deny', ApiController\UsersV3\CreateDenyUserController::class);
+$route->post('/users/deny.delete', 'user.delete.deny', ApiController\UsersV3\DeleteDenyUserController::class);
+
 $route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);
+$route->get('/threads.paid', 'threads.paid', ApiController\UsersV3\ListPaidThreadsController::class);
+
+//消息
+//$route->get('/notification', 'notification.list', ApiController\NotificationV3\ListNotificationController::class);
+
 //待使用接口
 $route->post('/reports', 'reports.create', ApiController\ReportV3\CreateReportsController::class);
 $route->get('/redpacket.resource', 'redpacket.resource', ApiController\RedPacketV3\ResourceRedPacketController::class);
