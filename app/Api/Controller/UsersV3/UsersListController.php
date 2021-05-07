@@ -28,7 +28,6 @@ class UsersListController extends DzqController
 {
     public function main()
     {
-        $actor = $this->user;
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
         $filter = (array)$this->inPut('filter');
