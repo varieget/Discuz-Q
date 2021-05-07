@@ -145,3 +145,4 @@ $route->get('/redpacket.resource', 'redpacket.resource', ApiController\RedPacket
 // 邀请invite
 $route->get('/invite.users.list','invite.users.list',ApiController\InviteV3\InviteUsersListController::class);
 $route->get('/invite.link.create','invite.link.create',ApiController\InviteV3\CreateInviteLinkController::class);
+$route->get('/invite.detail', 'invite.detail', ApiController\InviteV3\InviteDetailController::class);

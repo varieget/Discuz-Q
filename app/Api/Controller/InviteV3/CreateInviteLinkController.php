@@ -57,32 +57,11 @@ class CreateInviteLinkController extends DzqController
             $this->outPut(ResponseCode::DB_ERROR, $e->getMessage());
         }
 
-        $result = $this->littleHump($invite->toArray());
-        $result['inviteId'] = $result['id'];
-        unset($result['id']);
+        $result = array(
+            'userId' => $invite->user_id,
+            'code'   => $invite->code
+        );
 
         return $this->outPut(ResponseCode::SUCCESS, '', $result);
-    }
-
-
-    protected function littleHump($data){
-        $res = [];
-        $keys = array_keys($data);
-        foreach($keys as $val){
-            if(strpos($val,'_')){
-                $str = '';
-                foreach (explode('_',$val) as $k=>$v){
-                    if($k > 0){
-                        $str .= ucfirst($v);
-                    }else{
-                        $str .= $v;
-                    }
-                }
-                $res[$str] = $data[$val];
-            }else{
-                $res[$val] = $data[$val];
-            }
-        }
-        return $res;
     }
 }
