@@ -170,17 +170,20 @@ class PayOrder
             ],
         ]);
 
+
         if ($validator_info->fails()) {
             app('payLog')->info("支付验证参数错误,订单号:{$this->order_sn},用户id:{$this->actor->id}");
             throw new ValidationException($validator_info);
         }
+
         // 正确后清除错误记录
         if ($failCount > 0) {
             UserWalletFailLogs::deleteAll($this->actor->id);
         }
 
         /** @var Order $order_info */
-        $order_info = Order::query()->where('user_id', $this->actor->id)
+        $order_info = Order::query()
+            ->where('user_id', $this->actor->id)
             ->where('order_sn', $this->order_sn)
             ->where('status', Order::ORDER_STATUS_PENDING)
             ->firstOrFail();

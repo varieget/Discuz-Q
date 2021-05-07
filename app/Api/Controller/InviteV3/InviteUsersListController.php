@@ -55,8 +55,8 @@ class InviteUsersListController extends DzqController
         foreach ($inviteData as $key => $value) {
             $inviteData[$key]['nickname'] = $users[$value['to_user_id']]['nickname'] ?? '';
             $inviteData[$key]['bounty'] = 0;
-            if (isset($registOrderDatas[$value['user_id']])) {
-                $inviteData[$key]['bounty'] = floatval($registOrderDatas[$value['user_id']]['third_party_amount']);
+            if (isset($registOrderDatas[$value['to_user_id']])) {
+                $inviteData[$key]['bounty'] = floatval($registOrderDatas[$value['to_user_id']]['third_party_amount']);
             }
         }
 

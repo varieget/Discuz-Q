@@ -5,7 +5,7 @@ namespace App\Api\Controller\OrdersV3;
 use App\Commands\Order\CreateOrder;
 use App\Common\ResponseCode;
 use App\Common\Utils;
-use App\Exceptions\OrderException;
+use Exception;
 use App\Models\Group;
 use App\Models\Order;
 use App\Models\OrderChildren;
@@ -60,6 +60,7 @@ class CreateOrderController extends DzqController
 
         $orderType = $data['type'];
         $order_zero_amount_allowed = false; //是否允许金额为0
+        $thirdPartyId = 0;
 
         switch ($orderType) {
             // 注册订单
@@ -67,9 +68,14 @@ class CreateOrderController extends DzqController
                 $payeeId = Order::REGISTER_PAYEE_ID;
                 $amount = sprintf('%.2f', (float) $this->settings->get('site_price'));
 
-                // 查询是否有上级邀请 -> 注册分成
-                if ($this->user->isAllowScale(Order::ORDER_TYPE_REGISTER)) {
-                    $be_scale = $this->user->userDistribution->be_scale;
+                // 查询是否有上级邀请 -> 邀请付费加入分成
+                $inviteData = $this->user->isInviteUser($this->user->id);
+                if ($inviteData) {
+                    $thirdPartyId = $inviteData['user_id'] ?? 0;
+                    $userGroup = $this->user->groups->toArray();
+                    if ($userGroup[0]['id']) {
+                        $be_scale = $this->user->getInviteScale($userGroup[0]['id']);
+                    }
                 }
                 break;
 

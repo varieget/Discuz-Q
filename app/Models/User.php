@@ -19,6 +19,8 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
+use App\Models\Invite;
+use App\Models\Group;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -972,5 +974,23 @@ class User extends DzqModel
             return null;
         }
         return $user->username;
+    }
+
+    public function isInviteUser($userId)
+    {
+        $result = Invite::query()
+            ->where(['to_user_id' => $userId, 'status' => Invite::STATUS_USED])
+            ->first();
+        if ($result) {
+            return $result;
+        }
+        return false;
+    }
+
+    public function getInviteScale($groupId)
+    {
+        $groupData = Group::query()->where('id', $groupId)->first();
+        // $be_scale
+        return $groupData['scale'] ?? 0;
     }
 }
