@@ -20,6 +20,7 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Post;
 use App\Models\Sequence;
 use App\Models\Thread;
@@ -63,7 +64,13 @@ class ThreadListController extends DzqController
             'categoryids' => 'array',
             'sort' => 'integer|in:1,2,3',
             'attention' => 'integer|in:0,1',
+            'complex' => 'integer|in:1,2,3,4,5'
         ]);
+
+        if (!empty($filter['complex'])) {
+            return $this->getComplex($filter, $currentPage, $perPage);
+        }
+
         $essence = null;
         $types = [];
         $categoryids = [];
@@ -115,6 +122,69 @@ class ThreadListController extends DzqController
         }
         return $threads;
     }
+
+
+    public function getComplex($filter, $currentPage, $perPage)
+    {
+        switch ($filter['complex'])
+        {
+            case Thread::MY_DRAFT_THREAD:
+                $threads = $this->getThreadsBuilder(Thread::IS_DRAFT);
+                break;
+            case Thread::MY_LIKE_THREAD:
+                $threads = $this->getMyLikesThread();
+                break;
+            case Thread::MY_COLLECT_THREAD:
+                $threads = $this->getMyCollectThread();
+                break;
+            case Thread::MY_BUY_THREAD:
+                $threads = $this->getMyBuyThread();
+                break;
+            default:
+                $threads = $this->getMyOrHisThread($filter);
+        }
+
+        return $this->pagination($currentPage, $perPage, $threads, false);
+    }
+
+    //我的点赞帖子
+    public function getMyLikesThread()
+    {
+        return $this->getThreadsBuilder()
+            ->leftJoin('posts as post', 'post.thread_id', '=', 'th.id')
+            ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
+            ->leftJoin('post_user as postu','postu.post_id','=','post.id')
+            ->where(['post.user_id' => $this->user->id]);
+    }
+
+    //我的收藏帖子
+    public function getMyCollectThread()
+    {
+        return $this->getThreadsBuilder()
+            ->leftJoin('thread_user as thu', 'thu.thread_id', '=', 'th.id')
+            ->where(['thu.user_id' => $this->user->id]);
+    }
+
+    //我购买帖子
+    public function getMyBuyThread()
+    {
+        return $this->getThreadsBuilder()
+            ->leftJoin('orders as order','order.thread_id','=','th.id')
+            ->where(['order.user_id' => $this->user->id, 'status' => Order::ORDER_STATUS_PAID]);
+    }
+
+    //我的帖子or他的帖子
+    public function getMyOrHisThread($complex)
+    {
+        $UserId = $this->user->id;
+        if (!empty($complex['toUserId'])) {
+            $UserId = (int)$complex['toUserId'];
+        }
+
+        return $this->getThreadsBuilder()
+            ->where('user_id', $UserId);
+    }
+
 
     private function getThreadsCache($cache, $cacheKey, $currentPage, $filter)
     {
@@ -243,14 +313,14 @@ class ThreadListController extends DzqController
         return $this->pagination($currentPage, $perPage, $threads, false);
     }
 
-    private function getThreadsBuilder()
+    private function getThreadsBuilder($isDraft = Thread::IS_NOT_DRAFT)
     {
         return Thread::query()
             ->select('th.*')
             ->from('threads as th')
             ->whereNull('th.deleted_at')
             ->where('th.is_sticky', Thread::BOOL_NO)
-            ->where('th.is_draft', Thread::IS_NOT_DRAFT)
+            ->where('th.is_draft', $isDraft)
             ->where('th.is_approved', Thread::APPROVED);
     }
 }
