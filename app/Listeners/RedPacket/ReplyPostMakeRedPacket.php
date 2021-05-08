@@ -24,6 +24,7 @@ use App\Models\Thread;
 use App\Models\Post;
 use App\Models\RedPacket;
 use App\Models\ThreadRedPacket;
+use App\Models\ThreadTom;
 use App\Models\UserWalletLog;
 use Discuz\Foundation\EventsDispatchTrait;
 use Exception;
@@ -115,11 +116,21 @@ class ReplyPostMakeRedPacket
             $this->outDebugInfo('回复领红包：thread_id为空');
             return;
         }
-        if ($thread['type'] == Thread::TYPE_OF_TEXT) {
-            $change_type = UserWalletLog::TYPE_INCOME_TEXT;
+//        if ($thread['type'] == Thread::TYPE_OF_TEXT) {
+//            $change_type = UserWalletLog::TYPE_INCOME_TEXT;
+//        } else {
+//            $change_type = UserWalletLog::TYPE_INCOME_LONG;
+//        }
+
+        $redPacketTom = ThreadTom::query()->where('thread_id',$thread['id'])
+            ->where('tom_type',106)
+            ->first();
+        if ($redPacketTom) {
+            $change_type = UserWalletLog::TYPE_REDPACKET_INCOME;
         } else {
-            $change_type = UserWalletLog::TYPE_INCOME_LONG;
+            $change_type = 0;
         }
+
         $isReceive = UserWalletLog::query()->where([
             'user_id' => $actor['id'],
             'change_type' => $change_type,
