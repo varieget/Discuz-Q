@@ -18,6 +18,7 @@
 
 namespace App\Api\Serializer;
 
+use App\Models\DenyUser;
 use App\Models\User;
 use App\Models\UserQq;
 use App\Models\UserSignInFields;
@@ -64,10 +65,19 @@ class UserV2Serializer extends AbstractSerializer
 
         $canEdit = $gate->allows('edit', $model);
 
+        $backGround = "";
+        if($model->background){
+            $url = $this->request->getUri();
+            $port = $url->getPort();
+            $port = $port == null ? '' : ':' . $port;
+            $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
+            $backGround = $path."storage/app/".$model->background;
+        }
         $attributes = [
             'id'                => (int) $model->id,
             'username'          => $model->username,
             'avatarUrl'         => $model->avatar,
+            'backgroundUrl'     => $backGround,
             'isReal'            => $this->getIsReal($model),
             'threadCount'       => (int) $model->thread_count,
             'followCount'       => (int) $model->follow_count,
@@ -149,6 +159,26 @@ class UserV2Serializer extends AbstractSerializer
             $attributes['avatarUrl'] = ! empty($attributes['avatarUrl']) ? $attributes['avatarUrl'] : $this->qqAvatar($model);
         }
 
+        $attributes += [
+            'paid' => $model->paid,
+            'payTime' => $this->formatDate($model->payTime),
+            'unreadNotifications' => $model->getUnreadNotificationCount(),
+            'typeUnreadNotifications' => $model->getUnreadTypesNotificationCount()
+        ];
+        //是否屏蔽
+        if($this->actor->id != $model->id){
+           $denyUser = DenyUser::query()
+                ->where('user_id',$this->actor->id)
+                ->where('deny_user_id',$model->id)
+                ->first();
+           $isDeny = false;
+           if($denyUser){
+               $isDeny = true;
+           }
+           $attributes += [
+              'isDeny' => $isDeny
+           ];
+        }
         return $attributes;
     }
 

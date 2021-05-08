@@ -14,3 +14,4 @@ $route->post('/groups.create', 'groups.create', ApiController\GroupV3\CreateGrou
 $route->get('/groups.list', 'groups.list', ApiController\GroupV3\ListGroupsController::class);
 $route->post('/groups.batchupdate', 'groups.batchupdate', ApiController\GroupV3\BatchUpdateGroupController::class);
 $route->post('/groups.batchdelete', 'groups.batchdelete', ApiController\GroupV3\BatchDeleteGroupsController::class);
+$route->post('/users/update.user', 'users.admin', ApiController\UsersV3\UpdateAdminController::class);
