@@ -43,7 +43,9 @@ abstract class TomBaseBusi
     public $key = null;
     public $app = null;
 
-    public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body)
+    public $canViewTom = true;
+
+    public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body,$canViewTom)
     {
         $this->app = app();
         $this->operation = $operation;
@@ -53,6 +55,7 @@ abstract class TomBaseBusi
         $this->postId = $postId;
         $this->user = $user;
         $this->key = $key;
+        $this->canViewTom = $canViewTom;
         $this->operationValid();
     }
 

@@ -92,31 +92,25 @@ class Permission extends DzqModel
      */
     public static function getUserPermissions($user)
     {
-        if (app()->has('ASpnWrv4SX')) {
-            return app()->get('ASpnWrv4SX');
-        } else {
-            $groups = $user->groups->toArray();
-            $groupIds = array_column($groups, 'id');
-            $groupKey = md5(serialize($groupIds));
-            $cache = app('cache');
-            $key = CacheKey::GROUP_PERMISSIONS;
-            $permissions = $cache->get($key);
-            if ($permissions) {
-                $permissions = unserialize($permissions);
-                if (isset($permissions[$groupKey])) {
-                    $permission = $permissions[$groupKey];
-                } else {
-                    $permission = Permission::categoryPermissions($groupIds);
-                    $permissions[$groupKey] = $permission;
-                }
+        $groups = $user->groups->toArray();
+        $groupIds = array_column($groups, 'id');
+        $groupKey = md5(serialize($groupIds));
+        $cache = app('cache');
+        $key = CacheKey::GROUP_PERMISSIONS;
+        $permissions = $cache->get($key);
+        if ($permissions) {
+            if (isset($permissions[$groupKey])) {
+                $permission = $permissions[$groupKey];
             } else {
                 $permission = Permission::categoryPermissions($groupIds);
-                $permissions = [$groupKey => $permission];
+                $permissions[$groupKey] = $permission;
             }
-            app()->instance('ASpnWrv4SX', $permission);
-            $cache->put($key, serialize($permissions), 5 * 60);
-            return $permission;
+        } else {
+            $permission = Permission::categoryPermissions($groupIds);
+            $permissions = [$groupKey => $permission];
         }
+        $cache->put($key, $permissions, 5 * 60);
+        return $permission;
     }
 
     public function save(array $options = [])

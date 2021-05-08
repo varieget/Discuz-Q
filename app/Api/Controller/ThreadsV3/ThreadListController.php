@@ -43,18 +43,19 @@ class ThreadListController extends DzqController
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
         $currentPage <= 0 && $currentPage = 1;
+//        $this->openQueryLog();
         if (empty($sequence)) {
             $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
         } else {
             $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         }
-        //todo 取第一页的时候自动加载100页缓存
         if ($this->preload) {
-            $this->initDzqThreadsData($threads);
-            $this->outPut(ResponseCode::SUCCESS);
+            $ret = $this->initDzqThreadsData($threads);
+            $this->outPut(ResponseCode::SUCCESS,'',$ret);
         }
         $threadCollection = $threads['pageData'];
         $threads['pageData'] = $this->getFullThreadData($threadCollection);
+//        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
     }
 

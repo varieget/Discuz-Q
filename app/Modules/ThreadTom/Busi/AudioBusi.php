@@ -18,6 +18,7 @@
 namespace App\Modules\ThreadTom\Busi;
 
 
+use App\Common\CacheKey;
 use App\Models\ThreadVideo;
 use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomBaseBusi;
@@ -39,11 +40,22 @@ class AudioBusi extends TomBaseBusi
     public function select()
     {
         $audioId = $this->getParams('audioId');
-        $audio = $this->searchArray(PreQuery::THREAD_LIST_VIDEO, $audioId, $hasKey);
-        if (!$hasKey) {
-            $audio = ThreadVideo::instance()->getThreadVideoById($audioId);
+        $audios = app('cache')->get(CacheKey::LIST_THREADS_V3_VIDEO);
+        if (array_key_exists($audioId,$audios)) {
+            if(empty($audios['audioId'])){
+                $audio = false;
+            }else{
+                $audio = ThreadVideo::instance()->getThreadVideoById($audioId, $audios[$audioId]);
+            }
         } else {
-            $audio = ThreadVideo::instance()->getThreadVideoById($audioId, $audio);
+            if(empty($audioId)){
+                $audio = false;
+            }else{
+                $audio = ThreadVideo::instance()->getThreadVideoById($audioId);
+            }
+        }
+        if (!$this->canViewTom) {
+            $audio['mediaUrl'] = '';
         }
         return $this->jsonReturn($audio);
     }

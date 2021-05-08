@@ -18,10 +18,12 @@
 namespace App\Modules\ThreadTom\Busi;
 
 use App\Api\Serializer\AttachmentSerializer;
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
-use App\Modules\ThreadTom\PreQuery;
+use App\Models\Thread;
 use App\Modules\ThreadTom\TomBaseBusi;
+use Illuminate\Support\Arr;
 
 class ImageBusi extends TomBaseBusi
 {
@@ -48,16 +50,32 @@ class ImageBusi extends TomBaseBusi
         $serializer = $this->app->make(AttachmentSerializer::class);
         $result = [];
         $imageIds = $this->getParams('imageIds');
-        $attachments = $this->searchArray(PreQuery::THREAD_LIST_ATTACHMENTS, $imageIds);
-        if (!$attachments) {
-            $attachments = Attachment::query()->whereIn('id', $imageIds)->get();
+        $attachmentsCache = app('cache')->get(CacheKey::LIST_THREADS_V3_ATTACHMENT);
+        $attachments = [];
+        foreach ($imageIds as $imageId) {
+            isset($attachmentsCache[$imageId]) && $attachments[$imageId] = $attachmentsCache[$imageId];
+        }
+        if (!Arr::has($attachments, $imageIds)) {
+            if (is_array($imageIds)) {
+                $attachments = Attachment::query()->whereIn('id', $imageIds)->get();
+            }
+        }
+        $threads = app('cache')->get(CacheKey::LIST_THREADS_V3_THREADS);
+        if ($threads && isset($threads[$this->threadId])) {
+            $thread = $threads[$this->threadId];
+        } else {
+            $thread = Thread::instance()->getOneActiveThread($this->threadId);
+            $threads[$this->threadId] = $thread;
+            app('cache')->put(CacheKey::LIST_THREADS_V3_THREADS, $threads);
         }
         foreach ($attachments as $attachment) {
-            $thread = $this->searchArray(PreQuery::THREAD_LIST, $this->threadId);
-            if ($thread) {
-                $result[] = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
-            } else {
-                $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
+            if (!empty($thread)) {
+                $item = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
+                if (!$this->canViewTom) {
+                    $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
+                }
+                unset($item['blurUrl']);
+                $result[] = $item;
             }
         }
         return $this->jsonReturn($result);

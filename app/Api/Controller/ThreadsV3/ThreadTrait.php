@@ -19,6 +19,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Censor\Censor;
+use App\Common\CacheKey;
 use App\Common\Utils;
 use App\Models\Category;
 use App\Models\Order;
@@ -28,7 +29,6 @@ use App\Models\PostUser;
 use App\Models\Thread;
 use App\Models\ThreadUser;
 use App\Models\User;
-use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomConfig;
 use App\Modules\ThreadTom\TomTrait;
 use Illuminate\Support\Str;
@@ -42,9 +42,10 @@ trait ThreadTrait
         $loginUser = $this->user;
         $userField = $this->getUserInfoField($loginUser, $user, $thread);
         $groupField = $this->getGroupInfoField($group);
-        $likeRewardField = $this->getLikeRewardField($thread, $post);
-        $payType = $this->threadPayStatus($thread, $paid);
-        $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid);
+        $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
+        $payType = $this->threadPayStatus($loginUser, $thread, $paid);
+        $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
+        $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid,$canViewTom);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -87,33 +88,42 @@ trait ThreadTrait
         return $result;
     }
 
-    private function getFavoriteField($threadId, $loginUser)
+    private function canViewTom($user, $thread, $payType, $paid)
     {
-        if (app()->has(PreQuery::THREAD_LIST_FAVORITE)) {
-            $favorites = app()->get(PreQuery::THREAD_LIST_FAVORITE);
-            if (isset($favorites[$threadId])) {
+        return true;
+        if ($payType != Thread::PAY_FREE) {//付费贴
+            $permissions = Permission::getUserPermissions($user);
+            if (in_array('freeViewPosts', $permissions) || $thread['user_id'] == $user->id || $user->isAdmin() || $paid == true) {
                 return true;
+            } else {
+                return false;
             }
         } else {
-            return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $loginUser->id])->exists();
+            return true;
         }
-        return false;
+    }
+
+    private function getFavoriteField($threadId, $loginUser)
+    {
+        $userId = $loginUser->id;
+        $favorites = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_FAVOR);
+        if ($favorites && isset($favorites[$userId])) {
+            if (array_key_exists($threadId, $favorites[$userId])) {
+                if (empty($favorites[$userId][$threadId])) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+        return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $loginUser->id])->exists();
     }
 
     private function getCategoryNameField($categoryId)
     {
-        if (app()->has(PreQuery::THREAD_LIST_CATEGORIES)) {
-            $categories = app()->get(PreQuery::THREAD_LIST_CATEGORIES);
-        } else {
-            $categories = Category::getCategories();
-        }
-        $categoryName = '';
-        foreach ($categories as $category) {
-            if ($category['id'] == $categoryId) {
-                $categoryName = $category['name'];
-            }
-        }
-        return $categoryName;
+        $categories = Category::getCategories();
+        $categories = array_column($categories, null, 'id');
+        return $categories[$categoryId]['name'] ?? null;
     }
 
     /**
@@ -162,25 +172,33 @@ trait ThreadTrait
         return $data;
     }
 
-    private function threadPayStatus($thread, &$paid)
+    private function threadPayStatus($loginUser, $thread, &$paid)
     {
         $payType = Thread::PAY_FREE;
+        $userId = $loginUser->id;
+        $threadId = $thread['id'];
         $thread['price'] > 0 && $payType = Thread::PAY_THREAD;
         $thread['attachment_price'] > 0 && $payType = Thread::PAY_ATTACH;
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
         } else {
-            if (app()->has(PreQuery::THREAD_LIST_ORDERS)) {
-                $orders = app()->get(PreQuery::THREAD_LIST_ORDERS);
-                $paid = isset($orders[$thread['id']]);
-            } else {
-                $paid = Order::query()
-                    ->where([
-                        'thread_id' => $thread['id'],
-                        'user_id' => $this->user->id,
-                        'status' => Order::ORDER_STATUS_PAID
-                    ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
+            $orders = app('cache')->get(CacheKey::LIST_THREADS_V3_USER_ORDERS);
+            if ($orders && isset($orders[$userId])) {
+                if (array_key_exists($threadId, $orders[$userId])) {
+                    if (empty($orders[$userId][$threadId])) {
+                        $paid = false;
+                    } else {
+                        $paid = true;
+                    }
+                    return $payType;
+                }
             }
+            $paid = Order::query()
+                ->where([
+                    'thread_id' => $threadId,
+                    'user_id' => $this->user->id,
+                    'status' => Order::ORDER_STATUS_PAID
+                ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
         }
         return $payType;
     }
@@ -217,7 +235,7 @@ trait ThreadTrait
         return $obj;
     }
 
-    private function getContentField($thread, $post, $tomInput, $payType, $paid)
+    private function getContentField($thread, $post, $tomInput, $payType, $paid,$canViewTom)
     {
         $content = [
             'text' => null,
@@ -225,11 +243,11 @@ trait ThreadTrait
         ];
         if ($payType == Thread::PAY_FREE) {
             $content['text'] = $post['content'];
-            $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id']);
+            $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'],null,$canViewTom);
         } else {
             if ($paid) {
                 $content['text'] = $post['content'];
-                $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id']);
+                $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'],null,$canViewTom);
             } else {
                 $freeWords = $thread['free_words'];
                 if (empty($freeWords)) {
@@ -245,6 +263,7 @@ trait ThreadTrait
         if (!empty($content['text'])) {
             $content['text'] = str_replace(['<r>', '</r>'], ['', ''], $content['text']);
         }
+
         return $content;
     }
 
@@ -293,10 +312,12 @@ trait ThreadTrait
             'shareCount' => $thread['share_count'],
             'postCount' => $thread['post_count']
         ];
-        if (app()->has(PreQuery::THREAD_LIST_LIKED_USERS)) {
-            $likedUsers = app()->get(PreQuery::THREAD_LIST_LIKED_USERS);
-            $ret['users'] = $likedUsers[$thread['id']];
-            return $ret;
+        $postUsers = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_USERS);
+        if ($postUsers) {
+            if (isset($postUsers[$thread['id']])) {
+                $ret['users'] = $postUsers[$thread['id']];
+                return $ret;
+            }
         }
         $threadId = $thread['id'];
         $postId = $post['id'];
@@ -346,12 +367,19 @@ trait ThreadTrait
         if (empty($loginUser) || empty($post)) {
             return false;
         }
-        if (app()->has(PreQuery::THREAD_LIST_LIKED)) {
-            $postUser = app()->get(PreQuery::THREAD_LIST_LIKED);
-            return isset($postUser[$post['id']]);
-        } else {
-            return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
+        $userId = $loginUser->id;
+        $postId = $post['id'];
+        $postUser = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_LIKED);
+        if ($postUser && isset($postUser[$userId])) {
+            if (array_key_exists($postId, $postUser[$userId])) {
+                if (empty($postUser[$userId][$postId])) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
         }
+        return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
     }
 
     /*

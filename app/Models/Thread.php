@@ -820,18 +820,14 @@ class Thread extends DzqModel
         $emojis = [];
         foreach ($emojisList as $emoji) {
             if (in_array($emoji['code'], $m1)) {
+                $url = Utils::getDzqDomain() . '/' . $emoji['url'];
                 $emojis[] = [
                     'code' => $emoji['code'],
-                    'url' => Utils::getDzqDomain() . '/' . $emoji['url'],
-                    'html' => sprintf('<img style="display:inline-block;vertical-align:top" src="%s" alt="ciya" class="qq-emotion">', $emoji['url'])
+                    'url' => $url,
+                    'html' => sprintf('<img style="display:inline-block;vertical-align:top" src="%s" alt="ciya" class="qq-emotion">', $url)
                 ];
             }
         }
-//        $emojis = Emoji::query()->select('code', 'url')->whereIn('code', $m1)->get()->map(function ($item) use ($search) {
-//            $item['url'] = Utils::getDzqDomain() . '/' . $item['url'];
-//            $item['html'] = sprintf('<img style="display:inline-block;vertical-align:top" src="%s" alt="ciya" class="qq-emotion">', $item['url']);
-//            return $item;
-//        })->toArray();
         $ats = User::query()->select('id', 'username')->whereIn('username', $m2)->get()->map(function ($item) {
             $item['username'] = '@' . $item['username'];
             $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
@@ -855,6 +851,28 @@ class Thread extends DzqModel
             $replace[] = $topic['html'];
         }
         return [$search, $replace];
+    }
+
+    public function getSearchString($linkString)
+    {
+        preg_match_all('/:[a-z]+:/i', $linkString, $m1);
+        preg_match_all('/@.+? /', $linkString, $m2);
+        preg_match_all('/#.+?#/', $linkString, $m3);
+        $m1 = array_unique($m1[0]);
+        $m2 = array_unique($m2[0]);
+        $m3 = array_unique($m3[0]);
+        $m2 = str_replace([' '], '', $m2);
+        return array_merge(array_values($m1), array_values($m2), array_values($m3));
+    }
+
+    public function getReplaceStringV3($linkString)
+    {
+        list($searches, $replaces) = $this->getReplaceString($linkString);
+        $sReplaces = [];
+        foreach ($searches as $k => $v) {
+            $sReplaces[$v] = $replaces[$k] ?? $sReplaces[$v];
+        }
+        return $sReplaces;
     }
 
     public static function getOneActiveThread($threadId)

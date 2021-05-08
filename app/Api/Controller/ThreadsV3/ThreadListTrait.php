@@ -19,7 +19,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
 use App\Models\Attachment;
-use App\Models\Category;
+use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\Order;
 use App\Models\Post;
@@ -30,52 +30,137 @@ use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\ThreadVideo;
 use App\Models\User;
-use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomConfig;
 
 trait ThreadListTrait
 {
-    private function getFullThreadData($threadCollection)
+    private function getFullThreadData($threads)
     {
-        $threads = $threadCollection->toArray();
         $userIds = array_unique(array_column($threads, 'user_id'));
-        $groups = GroupUser::instance()->getGroupInfo($userIds);
-        $groups = array_column($groups, null, 'user_id');
-        $users = User::instance()->getUsers($userIds);
-        $users = array_column($users, null, 'id');
+        $groupUsers = $this->getGroupUserInfo($userIds);
+        $users = $this->extractCacheData(CacheKey::LIST_THREADS_V3_USERS, $userIds);
+        if ($users === false) {
+            $users = User::instance()->getUsers($userIds);
+            $users = array_column($users, null, 'id');
+            $this->appendCacheData(CacheKey::LIST_THREADS_V3_USERS, $users);
+        }
         $threadIds = array_column($threads, 'id');
-        $posts = Post::instance()->getPosts($threadIds);
-        $postIds = array_column($posts, 'id');
-        $postsByThreadId = array_column($posts, null, 'thread_id');
-        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
-        $tags = [];
-        ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
-            $tags[$item['thread_id']][] = $item->toArray();
-        });
-        $inPutToms = $this->preQuery($toms, $threadIds, $postIds, $threads, $posts);
+        $posts = $this->extractCacheData(CacheKey::LIST_THREADS_V3_POSTS, $threadIds);
+        if ($posts === false) {
+            $posts = Post::instance()->getPosts($threadIds);
+            $posts = array_column($posts, null, 'thread_id');
+            $this->appendCacheData(CacheKey::LIST_THREADS_V3_POSTS, $posts);
+        }
+
+        $toms = $this->extractCacheData(CacheKey::LIST_THREADS_V3_TOMS, $threadIds);
+        if ($toms === false) {
+            $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
+            $toms = $this->arrayColumnMulti($toms, 'thread_id');
+            $this->appendCacheData(CacheKey::LIST_THREADS_V3_TOMS, $toms);
+        }
+        $tags = $this->extractCacheData(CacheKey::LIST_THREADS_V3_TAGS, $threadIds);
+        if ($tags === false) {
+            $tags = [];
+            ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
+                $tags[$item['thread_id']][] = $item->toArray();
+            });
+            $this->appendCacheData(CacheKey::LIST_THREADS_V3_TAGS, $tags);
+        }
+        $inPutToms = $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds);
+
         $result = [];
         $linkString = '';
-
         foreach ($threads as $thread) {
             $threadId = $thread['id'];
             $userId = $thread['user_id'];
             $user = empty($users[$userId]) ? false : $users[$userId];
-            $group = empty($groups[$userId]) ? false : $groups[$userId];
-            $post = empty($postsByThreadId[$threadId]) ? false : $postsByThreadId[$threadId];
+            $groupUser = empty($groupUsers[$userId]) ? false : $groupUsers[$userId];
+            $post = empty($posts[$threadId]) ? false : $posts[$threadId];
             $tomInput = empty($inPutToms[$threadId]) ? false : $inPutToms[$threadId];
             $threadTags = [];
             isset($tags[$threadId]) && $threadTags = $tags[$threadId];
             $linkString .= ($thread['title'] . $post['content']);
-            $result[] = $this->packThreadDetail($user, $group, $thread, $post, $tomInput, false, $threadTags);
+            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags);
         }
-        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
+        $searchKeys = Thread::instance()->getSearchString($linkString);
+        $sReplaces = $this->extractCacheData(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $searchKeys);
+        if ($sReplaces === false) {
+            $sReplaces = Thread::instance()->getReplaceStringV3($linkString);
+            $this->appendCacheData(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $sReplaces);
+        }
+        $sReplaces = [];
+        $searches = array_keys($sReplaces);
+        $replaces = array_values($sReplaces);
         foreach ($result as &$item) {
-            $item['title'] = str_replace($search, $replace, $item['title']);
-            $item['content']['text'] = str_replace($search, $replace, $item['content']['text']);
+            $item['title'] = str_replace($searches, $replaces, $item['title']);
+            $item['content']['text'] = str_replace($searches, $replaces, $item['content']['text']);
         }
         return $result;
     }
 
+    private function getGroupUserInfo($userIds)
+    {
+        $groups = array_column(Group::getGroups(), null, 'id');
+        $groupUsers = $this->extractCacheData(CacheKey::LIST_THREADS_V3_GROUP_USER, $userIds);
+        if ($groupUsers === false) {
+            $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
+            $groupUsers = array_column($groupUsers, null, 'user_id');
+            $this->appendCacheData(CacheKey::LIST_THREADS_V3_GROUP_USER, $groupUsers);
+        }
+        foreach ($groupUsers as &$groupUser) {
+            $groupUser['groups'] = $groups[$groupUser['group_id']];
+        }
+        return $groupUsers;
+    }
+
+    private function arrayColumnMulti($array, $field)
+    {
+        $p = [];
+        foreach ($array as $item) {
+            $p[$item[$field]][] = $item;
+        }
+        return $p;
+    }
+
+    private function extractCacheData($cacheKey, $extractIds)
+    {
+        $cacheData = app('cache')->get($cacheKey);
+        if (empty($extractIds)) return [];
+        $extractData = [];
+        if ($cacheData) {
+            foreach ($extractIds as $extractId) {
+                if (array_key_exists($extractId, $cacheData)) {
+                    if (!empty($cacheData[$extractId])) {
+                        $extractData[$extractId] = $cacheData[$extractId];
+                    }
+                } else {
+                    return false;
+                }
+            }
+        }
+        return $extractData;
+    }
+
+
+    private function appendCacheData($cacheKey, $appendData)
+    {
+        $cacheData = app('cache')->get($cacheKey);
+        if (!$cacheData) $cacheData = [];
+        foreach ($appendData as $key => $value) {
+            $cacheData[$key] = $value;
+        }
+        return app('cache')->put($cacheKey, $cacheData);
+    }
+
+    private function appendDefaultEmpty($ids, &$array, $value = null)
+    {
+        foreach ($ids as $id) {
+            if (!isset($array[$id])) {
+                $array[$id] = $value;
+            }
+        }
+        return $array;
+    }
 
     private function initDzqThreadsData($threads)
     {
@@ -92,7 +177,7 @@ trait ThreadListTrait
             $data = [$filterKey => $threads];
         }
         $cache->put($cacheKey, $data);
-        $this->initDzqUnitData($threads);
+        return $this->initDzqUnitData($threads);
     }
 
     private function initDzqUnitData($threadsList)
@@ -105,45 +190,49 @@ trait ThreadListTrait
             }
         }
         $userIds = array_unique(array_column($wholeThreads, 'user_id'));
-        $groups = GroupUser::instance()->getGroupInfo($wholeThreads);
-        $groups = array_column($groups, null, 'user_id');
+
+        $groups = array_column(Group::getGroups(), null, 'id');
+        $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
+        $groupUsers = array_column($groupUsers, null, 'user_id');
+        app('cache')->put(CacheKey::LIST_THREADS_V3_GROUP_USER, $groupUsers);
+        foreach ($groupUsers as &$groupUser) {
+            $groupUser['groups'] = $groups[$groupUser['group_id']];
+        }
         $users = User::instance()->getUsers($userIds);
         $users = array_column($users, null, 'id');
-
-        app('cache')->put(CacheKey::LIST_THREADS_V3_USERS, $users);
-
         $threadIds = array_column($wholeThreads, 'id');
         $wholePosts = Post::instance()->getPosts($threadIds);
-
-
         $postIds = array_column($wholePosts, 'id');
         $postsByThreadId = array_column($wholePosts, null, 'thread_id');
-        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
         $tags = [];
         ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
             $tags[$item['thread_id']][] = $item->toArray();
         });
+        $tags = $this->appendDefaultEmpty($threadIds, $tags, []);
+        app('cache')->put(CacheKey::LIST_THREADS_V3_USERS, $users);
         app('cache')->put(CacheKey::LIST_THREADS_V3_TAGS, $tags);
-        $inPutToms = $this->preQuery($toms, $threadIds, $postIds, $wholeThreads, $wholePosts);
+        $inPutToms = $this->preCache($threadIds, $postIds, $wholeThreads, $wholePosts);
         $result = [];
         $linkString = '';
         foreach ($wholeThreads as $thread) {
             $threadId = $thread['id'];
             $userId = $thread['user_id'];
             $user = empty($users[$userId]) ? false : $users[$userId];
-            $group = empty($groups[$userId]) ? false : $groups[$userId];
+            $groupUser = empty($groupUsers[$userId]) ? false : $groupUsers[$userId];
             $post = empty($postsByThreadId[$threadId]) ? false : $postsByThreadId[$threadId];
             $tomInput = empty($inPutToms[$threadId]) ? false : $inPutToms[$threadId];
             $threadTags = [];
             isset($tags[$threadId]) && $threadTags = $tags[$threadId];
-            $result[] = $this->packThreadDetail($user, $group, $thread, $post, $tomInput, false, $threadTags);
+            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags);
             $linkString .= ($thread['title'] . $post['content']);
         }
-        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
-        app('cache')->put(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, [$search, $replace]);
+        $sReplaces = Thread::instance()->getReplaceStringV3($linkString);
+        $searches = array_keys($sReplaces);
+        $replaces = array_values($sReplaces);
+        app('cache')->put(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $sReplaces);
         foreach ($result as &$item) {
-            $item['title'] = str_replace($search, $replace, $item['title']);
-            $item['content']['text'] = str_replace($search, $replace, $item['content']['text']);
+            $item['title'] = str_replace($searches, $replaces, $item['title']);
+            $item['content']['text'] = str_replace($searches, $replaces, $item['content']['text']);
         }
         return $result;
     }
@@ -158,112 +247,86 @@ trait ThreadListTrait
 
     /**
      * @desc 预加载列表页数据
-     * @param $toms
      * @param $threadIds
      * @param $postIds
      * @param $threads
      * @param $posts
      * @return array
      */
-//    private function preQuery($toms, $threadCollection, $threadIds, $postIds, $threads, $posts)
-    private function preQuery($toms, $threadIds, $postIds, $threads, $posts)
+    private function preCache($threadIds, $postIds, $threads, $posts)
     {
-        app('cache')->put(CacheKey::LIST_THREADS_V3_THREADS, array_column($threads, null, 'id'));
-        app('cache')->put(CacheKey::LIST_THREADS_V3_POSTS, array_column($posts, null, 'id'));
         $attachmentIds = [];
         $threadVideoIds = [];
         $userId = $this->user->id;
-//        $inPutToms = [];
-//        foreach ($toms as $tom) {
-//            $value = json_decode($tom['value'], true);
-//            switch ($tom['tom_type']) {
-//                case TomConfig::TOM_IMAGE:
-//                    isset($value['imageIds']) && $attachmentIds = array_merge($attachmentIds, $value['imageIds']);
-//                    break;
-//                case TomConfig::TOM_DOC:
-//                    isset($value['docIds']) && $attachmentIds = array_merge($attachmentIds, $value['docIds']);
-//                    break;
-//                case TomConfig::TOM_VIDEO:
-//                    isset($value['videoId']) && $threadVideoIds[] = $value['videoId'];
-//                    break;
-//                case TomConfig::TOM_AUDIO:
-//                    isset($value['audioId']) && $threadVideoIds[] = $value['audioId'];
-//                    break;
-//            }
-//            $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
-//        }
-        $inPutToms = $this->buildIPutToms($toms,$attachmentIds,$threadVideoIds);
+
+        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
+
+        $toms = $this->arrayColumnMulti($toms, 'thread_id');
+        $toms = $this->appendDefaultEmpty($threadIds, $toms, []);
+        $inPutToms = $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds);
 
         $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->pluck(null, 'id');
 
-        app('cache')->put(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachments);
-
-
-        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->where('status', ThreadVideo::VIDEO_STATUS_SUCCESS)->get()->pluck(null, 'id');
-
-        app('cache')->put(CacheKey::LIST_THREADS_V3_VIDEO, $threadVideos);
-
-        $this->likeAndFavor($userId, $postIds, $threadIds);
+        $attachments = $this->appendDefaultEmpty($attachmentIds, $attachments, null);
+        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->where('status', ThreadVideo::VIDEO_STATUS_SUCCESS)->get()->pluck(null, 'id')->toArray();
+        $threadVideos = $this->appendDefaultEmpty($threadVideoIds, $threadVideos, null);
         $orders = Order::query()
             ->where([
                 'user_id' => $userId,
                 'status' => Order::ORDER_STATUS_PAID
             ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
-            ->whereIn('thread_id', $threadIds)->get()->pluck(null, 'thread_id');
-
+            ->whereIn('thread_id', $threadIds)->get()->pluck(null, 'thread_id')->toArray();
+        $orders = $this->appendDefaultEmpty($threadIds, $orders, null);
         $userOrders = app('cache')->get(CacheKey::LIST_THREADS_V3_USER_ORDERS);
         if ($userOrders) {
             $userOrders[$userId] = $orders;
         } else {
             $userOrders = [$userId => $orders];
         }
-        app('cache')->put(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userOrders);
-
-
         $likedUsers = $this->getThreadLikedUsers($postIds, $threadIds, $posts);
+        $likedUsers = $this->appendDefaultEmpty($threadIds, $likedUsers, []);
+        list($postUsersLike, $postFavor) = $this->likeAndFavor($userId, $postIds, $threadIds);
 
+        $threads = array_column($threads, null, 'id');
+        $posts = array_column($posts, null, 'thread_id');
+
+        app('cache')->put(CacheKey::LIST_THREADS_V3_THREADS, $threads);
+        app('cache')->put(CacheKey::LIST_THREADS_V3_POSTS, $posts);
+        app('cache')->put(CacheKey::LIST_THREADS_V3_TOMS, $toms);
+        app('cache')->put(CacheKey::LIST_THREADS_V3_POST_LIKED, $postUsersLike);//点赞
+        app('cache')->put(CacheKey::LIST_THREADS_V3_POST_FAVOR, $postFavor);//收藏
         app('cache')->put(CacheKey::LIST_THREADS_V3_POST_USERS, $likedUsers);
-
-
-//
-//        $threads = array_column($threads, null, 'id');
-//        $posts = array_column($posts, null, 'id');
-//        app()->instance(PreQuery::THREAD_LIST_ATTACHMENTS, $attachments);
-//        app()->instance(PreQuery::THREAD_LIST_VIDEO, $threadVideos);
-//        app()->instance(PreQuery::THREAD_LIST, $threadList);
-//        app()->instance(PreQuery::THREAD_LIST_FAVORITE, $favorite);
-//        app()->instance(PreQuery::THREAD_LIST_ORDERS, $orders);
-//        app()->instance(PreQuery::THREAD_LIST_LIKED, $postUsers);
-//        app()->instance(PreQuery::THREAD_LIST_LIKED_USERS, $likedUsers);
-//        app()->instance(PreQuery::THREAD_LIST_THREADS, $threads);
-//        app()->instance(PreQuery::THREAD_LIST_POSTS, $posts);
-
+        app('cache')->put(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userOrders);
+        app('cache')->put(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachments);
+        app('cache')->put(CacheKey::LIST_THREADS_V3_VIDEO, $threadVideos);
         return $inPutToms;
     }
 
-    private function buildIPutToms($toms,&$attachmentIds,&$threadVideoIds)
+    private function buildIPutToms($tomData, &$attachmentIds, &$threadVideoIds)
     {
         $inPutToms = [];
-        foreach ($toms as $tom) {
-            $value = json_decode($tom['value'], true);
-            switch ($tom['tom_type']) {
-                case TomConfig::TOM_IMAGE:
-                    isset($value['imageIds']) && $attachmentIds = array_merge($attachmentIds, $value['imageIds']);
-                    break;
-                case TomConfig::TOM_DOC:
-                    isset($value['docIds']) && $attachmentIds = array_merge($attachmentIds, $value['docIds']);
-                    break;
-                case TomConfig::TOM_VIDEO:
-                    isset($value['videoId']) && $threadVideoIds[] = $value['videoId'];
-                    break;
-                case TomConfig::TOM_AUDIO:
-                    isset($value['audioId']) && $threadVideoIds[] = $value['audioId'];
-                    break;
+        foreach ($tomData as $threadId => $toms) {
+            foreach ($toms as $tom) {
+                $value = json_decode($tom['value'], true);
+                switch ($tom['tom_type']) {
+                    case TomConfig::TOM_IMAGE:
+                        isset($value['imageIds']) && $attachmentIds = array_merge($attachmentIds, $value['imageIds']);
+                        break;
+                    case TomConfig::TOM_DOC:
+                        isset($value['docIds']) && $attachmentIds = array_merge($attachmentIds, $value['docIds']);
+                        break;
+                    case TomConfig::TOM_VIDEO:
+                        isset($value['videoId']) && $threadVideoIds[] = $value['videoId'];
+                        break;
+                    case TomConfig::TOM_AUDIO:
+                        isset($value['audioId']) && $threadVideoIds[] = $value['audioId'];
+                        break;
+                }
+                $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
             }
-            $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
         }
-        $attachmentIds = array_unique($attachmentIds);
-        $threadVideoIds = array_unique($threadVideoIds);
+        $attachmentIds = array_values(array_unique($attachmentIds));
+        $threadVideoIds = array_values(array_unique($threadVideoIds));
         return $inPutToms;
     }
 
@@ -272,7 +335,11 @@ trait ThreadListTrait
     {
         $postUsers = PostUser::query()->where('user_id', $userId)
             ->whereIn('post_id', $postIds)
-            ->get()->pluck(null, 'post_id');
+            ->get()
+            ->pluck(null, 'post_id')->toArray();
+
+        $postUsers = $this->appendDefaultEmpty($postIds, $postUsers, null);
+
         //是否点赞
         $postUsersLike = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_LIKED);
         if ($postUsersLike) {
@@ -280,16 +347,17 @@ trait ThreadListTrait
         } else {
             $postUsersLike = [$userId => $postUsers];
         }
-        app('cache')->put(CacheKey::LIST_THREADS_V3_POST_LIKED, $postUsersLike);
 
-        $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $this->user->id)->get()->pluck(null, 'thread_id');
+        $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $this->user->id)->get()
+            ->pluck(null, 'thread_id')->toArray();
+        $favorite = $this->appendDefaultEmpty($threadIds, $favorite, null);
         $postFavor = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_FAVOR);
         if ($postFavor) {
             $postFavor[$userId] = $favorite;
         } else {
             $postFavor = [$userId => $favorite];
         }
-        app('cache')->put(CacheKey::LIST_THREADS_V3_POST_FAVOR, $postFavor);
+        return [$postUsersLike, $postFavor];
     }
 
     private function getThreadLikedUsers($postIds, $threadIds, $posts)

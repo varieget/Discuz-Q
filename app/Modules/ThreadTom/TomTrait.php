@@ -45,9 +45,10 @@ trait TomTrait
      * @param null $operation
      * @param null $threadId
      * @param null $postId
+     * @param bool $canViewTom
      * @return array
      */
-    private function tomDispatcher($tomContent, $operation = null, $threadId = null, $postId = null)
+    private function tomDispatcher($tomContent, $operation = null, $threadId = null, $postId = null,$canViewTom=true)
     {
         $config = TomConfig::$map;
         $tomJsons = [];
@@ -75,9 +76,9 @@ trait TomTrait
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
                             if (empty($tomJson['threadId'])) {
-                                $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body,$canViewTom]);
                             } else {
-                                $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body,$canViewTom]);
                             }
                             method_exists($service, $op) && $tomJsons[$key] = $service->$op();
                         } catch (\ReflectionException $e) {

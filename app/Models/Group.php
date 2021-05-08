@@ -18,6 +18,7 @@
 
 namespace App\Models;
 
+use App\Common\CacheKey;
 use App\Events\Group\Deleted;
 use Discuz\Base\DzqModel;
 use Discuz\Database\ScopeVisibilityTrait;
@@ -174,5 +175,17 @@ class Group extends DzqModel
         $groups = GroupUser::instance()->getGroupInfo([$userId]);
         $groups = array_column($groups, null, 'user_id');
         return empty($groups[$userId]) ? false : $groups[$userId];
+    }
+
+    public static function getGroups()
+    {
+        $cache = app('cache');
+        $groups = $cache->get(CacheKey::LIST_GROUPS);
+        if ($groups) {
+            return $groups;
+        }
+        $groups = Group::query()->get()->toArray();
+        $cache->put(CacheKey::LIST_GROUPS, $groups, 60 * 60);
+        return $groups;
     }
 }
