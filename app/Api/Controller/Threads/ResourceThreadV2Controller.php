@@ -293,6 +293,8 @@ class ResourceThreadV2Controller extends DzqController
 
         //为了兼容前端
         if(empty($data['thread']['questionTypeAndMoney']))  $data['thread']['questionTypeAndMoney'] = ['type' => 1];
+        $log = app('log');
+        $log->info('threads.detail.v2 return data:', [$data]);
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
 
     }
