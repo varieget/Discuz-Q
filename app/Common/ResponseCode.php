@@ -68,6 +68,7 @@ class ResponseCode
 
     const REGISTER_DECRYPT_CODE_FAILED = -7014;
     const NOT_AUTHENTICATED = -7015;
+    const PC_REBIND_ERROR = -7017;
 
     const MOBILE_IS_ALREADY_BIND = -7031;
     const REGISTER_CLOSE = -7032;
@@ -89,6 +90,7 @@ class ResponseCode
     const TRANSITION_NOT_OPEN = -7048;
     const USERNAME_NOT_NULL = -7049;
     const USER_LOGIN_STATUS_NOT_NULL = -7050;
+    const NONSUPPORT_WECHAT_REBIND = -7051;
 
     const NEED_BIND_WECHAT = 8000;
     const NEED_BIND_PHONE = 8001;
@@ -156,5 +158,7 @@ class ResponseCode
         self::SMS_CODE_ERROR => '验证码错误',
         self::USERNAME_NOT_NULL => '用户名不能为空',
         self::USER_LOGIN_STATUS_NOT_NULL => '用户登录态不能为空',
+        self::NONSUPPORT_WECHAT_REBIND => '该网站暂不支持微信换绑功能',
+        self::PC_REBIND_ERROR => '换绑失败',
     ];
 }

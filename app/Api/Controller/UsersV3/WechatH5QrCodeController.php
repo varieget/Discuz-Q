@@ -74,7 +74,7 @@ class WechatH5QrCodeController extends DzqController
     {
         $type = $this->inPut('type');
         if(! in_array($type, self::$qrcodeType)) {
-            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
+            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR);
         }
         $redirectUri = urldecode($this->inPut('redirectUri'));
 
@@ -87,7 +87,7 @@ class WechatH5QrCodeController extends DzqController
         //手机浏览器绑定则由前端传session_token
         $sessionToken = $this->inPut('sessionToken');
         if($type == 'mobile_browser_bind' && ! $sessionToken) {
-            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
+            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR);
         }
 
         if($type != 'mobile_browser_bind') {
