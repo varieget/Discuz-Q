@@ -114,6 +114,10 @@ $route->post('/users/real', 'users.real', ApiController\UsersV3\RealUserControll
 $route->get('/wallet/user', 'wallet.wallet', ApiController\WalletV3\ResourceUserWalletController::class);
 $route->post('/users/update', 'users.update', ApiController\UsersV3\UpdateUserController::class);
 
+$route->post('/users/pay-password/reset', '', ApiController\UsersV3\ResetPayPasswordController::class);
+$route->post('/users/update.user', 'users.update', ApiController\UsersV3\UpdateUsersController::class);
+
+
 $route->get('/signature', 'signature', ApiController\QcloudV3\CreateVodUploadSignatureController::class);
 $route->post('/threads/operate', 'threads.operate', ApiController\ThreadsV3\OperateThreadController::class);
 $route->post('/posts.reward', 'posts.reward', ApiController\PostsV3\CreatePostRewardController::class);
