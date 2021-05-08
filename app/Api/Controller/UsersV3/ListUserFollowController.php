@@ -84,6 +84,7 @@ class ListUserFollowController extends DzqController
                 $lists['id'] = $list['id'];
                 $lists['fromUserId'] = $list['from_user_id'];
                 $lists['toUserId'] = $list['to_user_id'];
+                $lists['isMutual'] = $list['is_mutual'];
                 $lists['createdAt'] = $list['created_at'];
                 $lists['updatedAt'] = $list['updated_at'];
                 $lists['fromUser'] = $list['from_user'];
