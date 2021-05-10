@@ -71,7 +71,7 @@ class AttachmentSerializer extends AbstractSerializer
      */
     public function getDefaultAttributes($model, $user = null)
     {
-        if($user)   $this->actor = $user;
+        if ($user) $this->actor = $user;
         $this->paidContent($model);
 
         if ($model->is_remote) {
@@ -83,19 +83,19 @@ class AttachmentSerializer extends AbstractSerializer
         }
 
         $attributes = [
-            'id'                => $model->id,
-            'order'             => $model->order,
-            'type'              => $model->type,
-            'type_id'           => $model->type_id,
-            'isRemote'          => $model->is_remote,
-            'isApproved'        => $model->is_approved,
-            'url'               => $url,
-            'attachment'        => $model->attachment,
-            'extension'         => Str::afterLast($model->attachment, '.'),
-            'fileName'          => $model->file_name,
-            'filePath'          => $model->file_path,
-            'fileSize'          => (int) $model->file_size,
-            'fileType'          => $model->file_type,
+            'id' => $model->id,
+            'order' => $model->order,
+            'type' => $model->type,
+            'type_id' => $model->type_id,
+            'isRemote' => $model->is_remote,
+            'isApproved' => $model->is_approved,
+            'url' => $url,
+            'attachment' => $model->attachment,
+            'extension' => Str::afterLast($model->attachment, '.'),
+            'fileName' => $model->file_name,
+            'filePath' => $model->file_path,
+            'fileSize' => (int)$model->file_size,
+            'fileType' => $model->file_type,
         ];
 
         // 图片缩略图地址
@@ -127,7 +127,7 @@ class AttachmentSerializer extends AbstractSerializer
                 ($this->settings->get('qcloud_cos_doc_preview', 'qcloud') && $this->settings->get('qcloud_cos', 'qcloud'))
             )
         ) {
-            $attributes['url'] = $this->url->to('/api/attachments/' . $model->id) . '?t=' .Attachment::getFileToken($this->actor);
+            $attributes['url'] = $this->url->to('/api/attachments/' . $model->id) . '?t=' . Attachment::getFileToken($this->actor);
         }
 
         return $attributes;

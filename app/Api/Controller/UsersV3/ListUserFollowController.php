@@ -40,61 +40,64 @@ class ListUserFollowController extends DzqController
         $UserFollows = $this->filterUserFollow($filter,$currentPage, $perPage,$actor,$sort);
         $userFollowList = $UserFollows['pageData'];
 
-        //1我的关注  2我的粉丝
-        $type = (int) Arr::get($filter, 'type', 0);
+        if(!empty($userFollowList)){
+            //1我的关注  2我的粉丝
+            $type = (int) Arr::get($filter, 'type', 0);
 
-        if($type==1){
-            $userIds = array_unique(array_column($userFollowList, 'to_user_id'));
-        }elseif ($type==2){
-            $userIds = array_unique(array_column($userFollowList, 'from_user_id'));
-        }else{
-            $to_user_id = array_unique(array_column($userFollowList, 'to_user_id'));
-            $from_user_id = array_unique(array_column($userFollowList, 'from_user_id'));
-            $userIds = array_merge($to_user_id,$from_user_id);
-        }
-
-        $groups = GroupUser::instance()->getGroupInfo($userIds);
-        $groups = array_column($groups, null, 'user_id');
-        $users = User::instance()->getUsers($userIds);
-
-        $users = array_column($users, null, 'id');
-        foreach ($userFollowList as $list) {
             if($type==1){
-                $userId = $list['to_user_id'];
+                $userIds = array_unique(array_column($userFollowList, 'to_user_id'));
             }elseif ($type==2){
-                $userId = $list['from_user_id'];
+                $userIds = array_unique(array_column($userFollowList, 'from_user_id'));
             }else{
-                if($actor->id==$list['from_user_id']){
+                $to_user_id = array_unique(array_column($userFollowList, 'to_user_id'));
+                $from_user_id = array_unique(array_column($userFollowList, 'from_user_id'));
+                $userIds = array_merge($to_user_id,$from_user_id);
+            }
+
+            $groups = GroupUser::instance()->getGroupInfo($userIds);
+            $groups = array_column($groups, null, 'user_id');
+            $users = User::instance()->getUsers($userIds);
+
+            $users = array_column($users, null, 'id');
+            foreach ($userFollowList as $list) {
+                if($type==1){
                     $userId = $list['to_user_id'];
-                }elseif ($actor->id==$list['to_user_id']){
+                }elseif ($type==2){
                     $userId = $list['from_user_id'];
+                }else{
+                    if($actor->id==$list['from_user_id']){
+                        $userId = $list['to_user_id'];
+                    }elseif ($actor->id==$list['to_user_id']){
+                        $userId = $list['from_user_id'];
+                    }
                 }
-            }
 
-            $user = [];
-            if (!empty($users[$userId])) {
-                $user = $this->getUserInfo($users[$userId]);
-            }
-            $group = [];
+                $user = [];
+                if (!empty($users[$userId])) {
+                    $user = $this->getUserInfo($users[$userId]);
+                }
+                $group = [];
 
-            if (!empty($groups[$userId])) {
-                $group = $this->getGroupInfo($groups[$userId]);
+                if (!empty($groups[$userId])) {
+                    $group = $this->getGroupInfo($groups[$userId]);
+                }
+                $lists['id'] = $list['id'];
+                $lists['fromUserId'] = $list['from_user_id'];
+                $lists['toUserId'] = $list['to_user_id'];
+                $lists['isMutual'] = $list['is_mutual'];
+                $lists['createdAt'] = $list['created_at'];
+                $lists['updatedAt'] = $list['updated_at'];
+                $lists['fromUser'] = $list['from_user'];
+                $result[] = [
+                    'user' => $user,
+                    'group' => $group,
+                    'userFollow' => $lists,
+                ];
             }
-            $lists['id'] = $list['id'];
-            $lists['fromUserId'] = $list['from_user_id'];
-            $lists['toUserId'] = $list['to_user_id'];
-            $lists['createdAt'] = $list['created_at'];
-            $lists['updatedAt'] = $list['updated_at'];
-            $lists['fromUser'] = $list['from_user'];
-            $result[] = [
-                'user' => $user,
-                'group' => $group,
-                'userFollow' => $lists,
-            ];
+            $UserFollows['pageData'] = $result;
+        }else{
+            $UserFollows = [];
         }
-
-
-        $UserFollows['pageData'] = $result;
         $this->outPut(ResponseCode::SUCCESS, '', $UserFollows);
     }
 
@@ -195,6 +198,7 @@ class ListUserFollowController extends DzqController
         return [
             'pid' => $user['id'],
             'userName' => $user['username'],
+            'avatar' => $user['avatar'],
         ];
     }
 

@@ -47,9 +47,7 @@ class ListThreadsV2Controller extends DzqController
         $perPage = $this->inPut('perPage');
         $homeSequence = $this->inPut('homeSequence');//默认首页
         $serializer = $this->app->make(AttachmentSerializer::class);
-        $groups = $this->user->groups->toArray();
-        $groupIds = array_column($groups, 'id');
-        $permissions = Permission::categoryPermissions($groupIds);
+        $permissions = Permission::getUserPermissions($this->user);
         $threads = $this->getOriginThreads($page, $filter, $perPage, $homeSequence);
         $threadList = $threads['pageData'];
         !$threads && $threadList = [];

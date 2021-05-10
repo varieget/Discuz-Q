@@ -349,4 +349,11 @@ class Order extends Model
     {
         return $this->belongsTo(Group::class);
     }
+
+    public function calculateInviteScale()
+    {
+        $this->third_party_amount = $this->be_scale / 10 * $this->amount; // 邀请人分成金额
+        $this->master_amount = $this->amount - $this->third_party_amount; // 站长分成金额
+        return $this->third_party_amount; // 邀请人分成金额
+    }
 }

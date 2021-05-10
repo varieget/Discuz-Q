@@ -50,7 +50,7 @@ trait NotifyTrait
     {
         // 查询订单
         $this->orderInfo = Order::query()->where('status', Order::ORDER_STATUS_PENDING)->where('payment_sn', $payment_sn)->first();
-
+        app('log')->info('NotifyTrait进来了');
         if (! empty($this->orderInfo)) {
             // 修改通知数据
             PayNotify::query()->where('payment_sn', $payment_sn)->update(['status' => PayNotify::NOTIFY_STATUS_RECEIVED, 'trade_no' => $trade_no]);
@@ -61,7 +61,7 @@ trait NotifyTrait
             switch ($this->orderInfo->type) {
                 case Order::ORDER_TYPE_REGISTER:
                     // 上级分成
-                    $bossAmount = $this->orderInfo->calculateAuthorAmount();
+                    $bossAmount = $this->orderInfo->calculateInviteScale();
                     $this->orderInfo->save();
                     // 是否创建上级金额分成
                     $this->isCreateBossAmount($bossAmount);
@@ -294,15 +294,17 @@ trait NotifyTrait
              */
             if ($this->orderInfo->type == Order::ORDER_TYPE_REGISTER) {
                 // 注册
-                $userDistribution = $this->orderInfo->user->userDistribution;
+                $userDistribution = $this->orderInfo->be_scale;
                 $sourceUserId = $this->orderInfo->user_id; // 注册的用户 = 金额来源用户
+                $inviteData = User::instance()->isInviteUser($this->orderInfo->user_id);
+                $parentUserId = $inviteData['user_id'] ?? 0; // 上级user_id
             } else {
                 $userDistribution = $this->orderInfo->payee->userDistribution;
                 $sourceUserId = $this->orderInfo->payee_id;
+                $parentUserId = $userDistribution->pid; // 上级user_id
             }
 
             if (! empty($userDistribution)) {
-                $parentUserId = $userDistribution->pid; // 上级user_id
                 $user_wallet = UserWallet::query()->lockForUpdate()->find($parentUserId);
                 $user_wallet->available_amount = $user_wallet->available_amount + $bossAmount;
                 $user_wallet->save();

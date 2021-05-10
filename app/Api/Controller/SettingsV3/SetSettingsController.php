@@ -19,14 +19,13 @@
 namespace App\Api\Controller\SettingsV3;
 
 use App\Common\ResponseCode;
-use App\Models\Setting;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
-use App\Models\Permission;
 use App\Models\AdminActionLog;
 use App\Validators\SetSettingValidator;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Qcloud\QcloudTrait;
 use Discuz\Base\DzqController;
 use Exception;
@@ -50,14 +49,16 @@ class SetSettingsController extends DzqController
      */
     protected $validator;
 
+    protected $settings;
+
     /**
      * @param Events $events
      * @param SetSettingValidator $validator
      */
-    public function __construct(Events $events,  SetSettingValidator $validator)
+    public function __construct(Events $events,SettingsRepository $settings,  SetSettingValidator $validator)
     {
         $this->events = $events;
-
+        $this->settings = $settings;
         $this->validator = $validator;
 
     }
@@ -76,7 +77,6 @@ class SetSettingsController extends DzqController
 
         // 转换为以 tag + key 为键的集合，即可去重又方便取用
         $settings = collect($this->inPut('data'))
-
             ->map(function ($item) {
                 $item['tag'] = $item['tag'] ?? 'default';
                 return $item;
@@ -134,23 +134,27 @@ class SetSettingsController extends DzqController
                     $value = json_encode($value, 256);
                 }
             }
-
-            Setting::modifyValue($key, $value, $tag);
+            $this->settings->set($key, $value, $tag);
         });
-
-        if($settings['cash_cash_interval_time']['key'] == 'cash_interval_time'){
-            $action_desc = '更改提现设置';
+        $action_desc = "";
+        if(!empty($settings['cash_cash_interval_time']['key'])){
+            if($settings['cash_cash_interval_time']['key'] == 'cash_interval_time'){
+                $action_desc = '更改提现设置';
+            }
         }
 
-        if($settings['wxpay_app_id']['key'] == 'app_id'){
-            $action_desc = '配置了微信支付';
+        if(!empty($settings['wxpay_app_id']['key'])){
+            if($settings['wxpay_app_id']['key'] == 'app_id'){
+                $action_desc = '配置了微信支付';
+            }
         }
-
-        if($settings['wxpay_wxpay_close']['key'] == 'wxpay_close'){
-            if($settings['wxpay_wxpay_close']['value'] == 0){
-                $action_desc = '关闭了微信支付';
-            }else{
-                $action_desc = '开启了微信支付';
+        if(!empty($settings['wxpay_wxpay_close']['key'])){
+            if($settings['wxpay_wxpay_close']['key'] == 'wxpay_close'){
+                if($settings['wxpay_wxpay_close']['value'] == 0){
+                    $action_desc = '关闭了微信支付';
+                }else{
+                    $action_desc = '开启了微信支付';
+                }
             }
         }
 

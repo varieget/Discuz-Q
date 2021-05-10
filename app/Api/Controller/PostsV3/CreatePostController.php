@@ -89,6 +89,8 @@ class CreatePostController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '主题id不能为空');
         }
 
+        $data['content'] = '<t><p>' .$data['content']. '</p></t>';
+        
         if(empty($data['content'])){
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
         }
@@ -147,8 +149,7 @@ class CreatePostController extends DzqController
             'replyUserId' => $post['reply_user_id'],
             'commentPostId' => $post['comment_post_id'],
             'commentUserId' => $post['comment_user_id'],
-            'content' => $post['content'],
-            'contentHtml' => $post->formatContent(),
+            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
             'replyCount' => $post['reply_count'],
             'likeCount' => $post['like_count'],
             'createdAt' => optional($post->created_at)->format('Y-m-d H:i:s'),
@@ -166,7 +167,6 @@ class CreatePostController extends DzqController
             }),
             'likeState' => $post->likeState,
             'canLike' => $this->user->can('like', $post),
-            'summary' => $post->summary,
             'summaryText' => $post->summary_text,
         ];
 

@@ -142,7 +142,11 @@ class UpdateUser
 
         $canEdit = $this->actor->can('edit', $user);
         $isSelf = $this->actor->id === $user->id;
-        $attributes = $this->data;
+        if(!empty(Arr::get($this->data, 'data.attributes'))){
+            $attributes = Arr::get($this->data, 'data.attributes');
+        }else{
+            $attributes = $this->data;
+        }
         // 下列部分方法使用地址引用的方式修改了该值，以便验证用户参数
         $validate = [];
 

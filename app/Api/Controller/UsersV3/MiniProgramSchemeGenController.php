@@ -37,7 +37,7 @@ class MiniProgramSchemeGenController extends AuthBaseController
     public function main()
     {
         $scheme = $this->manage->getMiniProgramScheme();
-        if(!empty($shcheme)) {
+        if(!empty($scheme)) {
             $this->outPut(ResponseCode::SUCCESS, '', ['openLink' => $scheme]);
         }
         $app = $this->miniProgram();

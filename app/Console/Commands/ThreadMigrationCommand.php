@@ -19,12 +19,14 @@
 namespace App\Console\Commands;
 
 use App\Models\Attachment;
+use App\Models\Order;
 use App\Models\Post;
 use App\Models\PostGoods;
 use App\Models\Question;
 use App\Models\Thread;
 use App\Models\ThreadRedPacket;
 use App\Models\ThreadReward;
+use App\Models\ThreadTag;
 use App\Models\ThreadText;
 use App\Models\ThreadVideo;
 use App\Repositories\ThreadVideoRepository;
@@ -38,8 +40,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Facade;
 
+/**
+ * thread 迁移脚本，迁移数据库  thread_tag、thread_tom，其中帖子中图文混排中的图片情况先不管，只考虑单独添加的图片/附件
+ */
 class ThreadMigrationCommand extends AbstractCommand
 {
+
 
     protected $signature = 'thread:migration';
 
@@ -77,15 +83,16 @@ class ThreadMigrationCommand extends AbstractCommand
             Thread::TYPE_OF_GOODS
         ];
 
+
         $this->attachment_type = [
-            Attachment::TYPE_OF_FILE    =>  110,
-            Attachment::TYPE_OF_IMAGE   =>  101,
-            Attachment::TYPE_OF_ANSWER  =>  111
+            Attachment::TYPE_OF_FILE    =>  ThreadTag::DOC,
+            Attachment::TYPE_OF_IMAGE   =>  ThreadTag::IMAGE,
+            Attachment::TYPE_OF_ANSWER  =>  ThreadTag::REWARD       // 问答的类型迁移数据时全定义为 悬赏问答 的类型
         ];
 
         $this->video_type = [
-            ThreadVideo::TYPE_OF_VIDEO  =>  103,
-            ThreadVideo::TYPE_OF_AUDIO  =>  102
+            ThreadVideo::TYPE_OF_VIDEO  =>  ThreadTag::VIDEO,
+            ThreadVideo::TYPE_OF_AUDIO  =>  ThreadTag::VOICE
         ];
 
 
@@ -139,22 +146,15 @@ class ThreadMigrationCommand extends AbstractCommand
             ->get(['t.*','p.content']);
         foreach ($list as $val){
             //如果数据已经存在则跳过
-            $isset_thread = ThreadText::find($val->id);
+            $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::TEXT])->first();
             if(!empty($isset_thread))       continue;
             $this->db->beginTransaction();
             $status = self::getThreadStatus($val);
-            //先插 thread_text
-            $res = self::insertThreadText($val, $status);
+            //先插 thread_tag  text 类型
+            $res = self::insertThreadTag($val, ThreadTag::TEXT);
             if(!$res){
                 $this->db->rollBack();
-                $this->error('text insert: thread_text error. thread data is : '.json_encode($val->toArray()));
-                break;
-            }
-            //再插 thread_hot
-            $res = self::insertThreadHot($val);
-            if(!$res){
-                $this->db->rollBack();
-                $this->error('text insert: thread_hot error. thread data is : '.json_encode($val->toArray()));
+                $this->error('text insert: thread_tag text error. thread data is : '.json_encode($val->toArray()));
                 break;
             }
             //文字帖不插 thread_tom 数据
@@ -174,77 +174,69 @@ class ThreadMigrationCommand extends AbstractCommand
             ->get(['t.*','p.content','p.id as post_id']);
         foreach ($list as $val){
             //如果数据已经存在则跳过
-            $isset_thread = ThreadText::find($val->id);
+            $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::TEXT])->first();
             if(!empty($isset_thread))       continue;
             $this->db->beginTransaction();
             //找出帖子中对应的 帖子附件 + 帖子图片 attachment
-            $attachments = Attachment::query()->where('type_id',$val->post_id)->whereIn('type',[Attachment::TYPE_OF_FILE, Attachment::TYPE_OF_IMAGE])->orderBy('order')->get();
+            $attachments = Attachment::query()->where('type_id',$val->post_id)->whereIn('type',[Attachment::TYPE_OF_FILE])->orderBy('order')->get();
             $thread_red_packets = ThreadRedPacket::where(['thread_id' => $val->id, 'post_id' => $val->post_id])->first();
-            $status = self::getThreadStatus($val);
-            //先插 thread_text
-            //针对长文帖可以做图文混排，所以要将原来的 content 中 IMG 替换成对应的 $0 $1 $2
-            if(!empty($attachments) || !empty($thread_red_packets)){
-                $val->content = self::replaceContent($val->content, $attachments);
-                $content_last_count = -1;
-                if(!empty($attachments)){
-                    $content_last_count += $attachments->count();
-                }
-                if(!empty($thread_red_packets)){
-                    $content_last_count += 1;
-                    $val->content .= '{$'.$content_last_count.'}';
-                }
-            }
-            $res = self::insertThreadText($val, $status);
+            //先插 thread_tag  text
+            $res = self::insertThreadTag($val, ThreadTag::TEXT);
             if(!$res){
                 $this->db->rollBack();
-                $this->error('long insert: thread_text error. thread data is : '.json_encode($val->toArray()));
+                $this->error('long insert: thread_tag text error. thread data is : '.json_encode($val->toArray()));
                 break;
             }
-            //再插 thread_hot
-            $res = self::insertThreadHot($val);
+
+            //doc
+            $res = self::insertThreadTag($val, ThreadTag::DOC);
             if(!$res){
                 $this->db->rollBack();
-                $this->error('long insert: thread_hot error. thread data is : '.json_encode($val->toArray()));
+                $this->error('long insert: thread_tag doc error. thread data is : '.json_encode($val->toArray()));
+                break;
+            }
+            //red_packet
+            $res = self::insertThreadTag($val, ThreadTag::RED_PACKET);
+            if(!$res){
+                $this->db->rollBack();
+                $this->error('long insert: thread_tag red_packet error. thread data is : '.json_encode($val->toArray()));
                 break;
             }
             $count = 0;
             //最后插 thread_tom  插入附件、红包
-            if(!empty($attachments)){
-                //先计算这篇帖子有多少标识了 key 的，然后将没有标识 key 的，递增数字
-                foreach ($attachments as $vi){
-                    if(!empty($vi->key))     $count ++;
-                }
-                foreach ($attachments as $vo){
-                    if(empty($vo->key)){
-                        $vo->key = '$'.$count;
-                        $count ++;
-                    }
-                }
-                //最后开始插 thread_tom
-                foreach ($attachments as $vo){
-                    $res = self::insertThreadTom($vo, $val);
-                    if(!$res){
-                        $this->db->rollBack();
-                        $this->error('long attachment insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
-                        break;
-                    }
-                }
-            }
-            if(!empty($thread_red_packets)){
-                $res = $this->db->table('thread_tom')->insert([
-                    'thread_id' =>  $val->id,
-                    'tom_type'  =>  106,
-                    'key'       =>  '$'.$count,
-                    'value'     =>  json_encode($thread_red_packets->toArray()),
-                    'created_at'    =>  $thread_red_packets->created_at,
-                    'updated_at'    =>  $thread_red_packets->updated_at
-                ]);
+            if($attachments && !empty($attachments->toArray())){
+                $key = '$'.$count;
+                $docIds = $attachments->pluck('id')->toArray();
+                $count ++;
+                $value = json_encode(['docIds' => $docIds]);
+                $res = self::insertThreadTom($val, ThreadTag::DOC, $key, $value);
                 if(!$res){
                     $this->db->rollBack();
-                    $this->error('long red_packets insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
+                    $this->error('long attachment insert: thread_tom doc error. thread data is : '.json_encode($val->toArray()));
                     break;
                 }
             }
+            if($thread_red_packets && !empty($thread_red_packets->toArray())){
+                $order = Order::where(['thread_id' => $val->id])->first();
+                $key = '$'.$count;
+                $value = [
+                    'condition' =>  $thread_red_packets->condition,
+                    'likenum'   =>  $thread_red_packets->likenum,
+                    'number'    =>  $thread_red_packets->number,
+                    'rule'  =>  $thread_red_packets->rule,
+                    'orderSn'   =>  $order->order_sn,
+                    'price' =>  $thread_red_packets->money,
+                    'content'   =>  '红包帖'
+                ];
+                $value = json_encode($value);
+                $res = self::insertThreadTom($val, ThreadTag::RED_PACKET, $key, $value);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('long attachment insert: thread_tom red_packet error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
+            }
+
             $this->db->commit();
         }
         $this->info('迁移长文帖end');
@@ -259,7 +251,7 @@ class ThreadMigrationCommand extends AbstractCommand
             ->get(['t.*','p.content']);
         foreach ($list as $val){
             //如果数据已经存在则跳过
-            $isset_thread = ThreadText::find($val->id);
+            $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::VIDEO])->first();
             if(!empty($isset_thread))       continue;
             //如果是已发布，则选出已转码视频，否则取最后一个草稿视频内容
             if(empty($val->is_draft)){
@@ -268,32 +260,22 @@ class ThreadMigrationCommand extends AbstractCommand
                 $thread_video = ThreadVideo::query()->where(['thread_id' => $val->id, 'type' => 0, 'status' => 0])->orderBy('id','DESC')->first();
             }
             $this->db->beginTransaction();
-            $status = self::getThreadStatus($val);
-            //先插 thread_text
-            //由于视频帖最后要放一个视频占位符，在 content 最后加个 $0
-            if(!empty($thread_video)){
-                $val->content = $val->content.'{$0}';
-            }
-            $res = self::insertThreadText($val, $status);
+            // 先插入 thread_tag
+            $res = self::insertThreadTag($val, ThreadTag::VIDEO);
             if(!$res){
                 $this->db->rollBack();
-                $this->error('video insert: thread_text error. thread data is : '.json_encode($val->toArray()));
-                break;
-            }
-            //再插 thread_hot
-            $res = self::insertThreadHot($val);
-            if(!$res){
-                $this->db->rollBack();
-                $this->error('video insert: thread_hot error. thread data is : '.json_encode($val->toArray()));
+                $this->error('video insert: thread_tag text error. thread data is : '.json_encode($val->toArray()));
                 break;
             }
             //插 thread_tom 数据
-            if(!empty($thread_video)){
-                $thread_video->key = '$0';
-                $res = self::insertThreadTom($thread_video, $val);
+            if($thread_video && !empty($thread_video->toArray())){
+                $key = '$0';
+                $videoId = $thread_video->id;
+                $value = json_encode(['videoId' => $videoId]);
+                $res = self::insertThreadTom($val, ThreadTag::VIDEO, $key, $value);
                 if(!$res){
                     $this->db->rollBack();
-                    $this->error('video insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
+                    $this->error('video attachment insert: thread_tom video error. thread data is : '.json_encode($val->toArray()));
                     break;
                 }
             }
@@ -311,37 +293,25 @@ class ThreadMigrationCommand extends AbstractCommand
             ->get(['t.*','p.content','p.id as post_id']);
         foreach ($list as $val){
             //如果数据已经存在则跳过
-            $isset_thread = ThreadText::find($val->id);
+            $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::IMAGE])->first();
             if(!empty($isset_thread))       continue;
             $this->db->beginTransaction();
+            // 先插入 thread_tag
+            $res = self::insertThreadTag($val, ThreadTag::IMAGE);
+            if(!$res){
+                $this->db->rollBack();
+                $this->error('image insert: thread_tag  error. thread data is : '.json_encode($val->toArray()));
+                break;
+            }
             //找出帖子中对应的 帖子附件 + 帖子图片 attachment
             $attachments = Attachment::query()->where('type_id',$val->post_id)->where('type',Attachment::TYPE_OF_IMAGE)->orderBy('order')->get();
-            $val->content .= '{$0}';
-            $status = self::getThreadStatus($val);
-            //先插 thread_text
-            $res = self::insertThreadText($val, $status);
-            if(!$res){
-                $this->db->rollBack();
-                $this->error('image insert: thread_text error. thread data is : '.json_encode($val->toArray()));
-                break;
-            }
-            //再插 thread_hot
-            $res = self::insertThreadHot($val);
-            if(!$res){
-                $this->db->rollBack();
-                $this->error('image insert: thread_hot error. thread data is : '.json_encode($val->toArray()));
-                break;
-            }
             //最后判断插入 thread_tom
-            if(!empty($attachments)){
-                $res = $this->db->table('thread_tom')->insert([
-                    'thread_id' =>  $val->id,
-                    'tom_type'  =>  101,
-                    'key'       =>  '$0',
-                    'value'     =>  json_encode($attachments->toArray()),
-                    'created_at'    =>  $val->created_at->timestamp,
-                    'updated_at'    =>  $val->updated_at->timestamp
-                ]);
+            //插 thread_tom 数据
+            if($attachments && !empty($attachments->toArray())){
+                $key = '$0';
+                $imageIds = $attachments->pluck('id')->toArray();
+                $value = json_encode(['imageIds' => $imageIds]);
+                $res = self::insertThreadTom($val, ThreadTag::IMAGE, $key, $value);
                 if(!$res){
                     $this->db->rollBack();
                     $this->error('image insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
@@ -363,7 +333,7 @@ class ThreadMigrationCommand extends AbstractCommand
             ->get(['t.*','p.content']);
         foreach ($list as $val){
             //如果数据已经存在则跳过
-            $isset_thread = ThreadText::find($val->id);
+            $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::VOICE])->first();
             if(!empty($isset_thread))       continue;
             //如果是已发布，则选出已转码视频，否则取最后一个草稿视频内容
             if(empty($val->is_draft)){
@@ -372,32 +342,22 @@ class ThreadMigrationCommand extends AbstractCommand
                 $thread_video = ThreadVideo::query()->where(['thread_id' => $val->id, 'type' => 1, 'status' => 0])->orderBy('id','DESC')->first();
             }
             $this->db->beginTransaction();
-            $status = self::getThreadStatus($val);
-            //先插 thread_text
-            //由于视频帖最后要放一个视频占位符，在 content 最后加个 $0
-            if(!empty($thread_video)){
-                $val->content = $val->content.'{$0}';
-            }
-            $res = self::insertThreadText($val, $status);
+            // 先插入 thread_tag
+            $res = self::insertThreadTag($val, ThreadTag::VOICE);
             if(!$res){
                 $this->db->rollBack();
-                $this->error('audio insert: thread_text error. thread data is : '.json_encode($val->toArray()));
-                break;
-            }
-            //再插 thread_hot
-            $res = self::insertThreadHot($val);
-            if(!$res){
-                $this->db->rollBack();
-                $this->error('audio insert: thread_hot error. thread data is : '.json_encode($val->toArray()));
+                $this->error('audio insert: thread_tag  error. thread data is : '.json_encode($val->toArray()));
                 break;
             }
             //插 thread_tom 数据
-            if(!empty($thread_video)){
-                $thread_video->key = '$0';
-                $res = self::insertThreadTom($thread_video, $val);
+            if($thread_video && !empty($thread_video->toArray())){
+                $key = '$0';
+                $videoId = $thread_video->id;
+                $value = json_encode(['audioId' => $videoId]);
+                $res = self::insertThreadTom($val, ThreadTag::VOICE, $key, $value);
                 if(!$res){
                     $this->db->rollBack();
-                    $this->error('audio insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
+                    $this->error('audio attachment insert: thread_tom audio error. thread data is : '.json_encode($val->toArray()));
                     break;
                 }
             }
@@ -416,88 +376,63 @@ class ThreadMigrationCommand extends AbstractCommand
             ->get(['t.*','p.content','p.id as post_id']);
         foreach ($list as $val){
             //如果数据已经存在则跳过
-            $isset_thread = ThreadText::find($val->id);
+            $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::REWARD])->first();
             if(!empty($isset_thread))       continue;
             $this->db->beginTransaction();
             //找出帖子对应的 attachment图片 + question + thread_rewards
             $attachments = Attachment::query()->where('type_id',$val->post_id)->where('type', Attachment::TYPE_OF_IMAGE)->orderBy('order')->get();
             $question = Question::where('thread_id', $val->id)->first();
             $thread_reward = ThreadReward::where(['thread_id' => $val->id, 'post_id' => $val->post_id])->first();
-            $status = self::getThreadStatus($val);
-            //先插 thread_text
-            //针对问答贴 中图片放在最后 + question + thread_reward
-            $content_count = $attachments_key = $question_key = $thread_reward_key = 0;
-            if(!empty($attachments)){
-                $val->content .= '{$'.$content_count.'}';
-                $attachments_key = $content_count;
-                $content_count ++;
-            }
-            if(!empty($question)){
-                $val->content .= '{$'.$content_count.'}';
-                $question_key = $content_count;
-                $content_count ++;
-            }
-            if(!empty($thread_reward)){
-                $val->content .= '{$'.$content_count.'}';
-                $thread_reward_key = $content_count;
-            }
-            //插入 thread_text
-            $res = self::insertThreadText($val, $status);
+            //先插入 thread_tag
+            $res = self::insertThreadTag($val, ThreadTag::REWARD);
             if(!$res){
                 $this->db->rollBack();
-                $this->error('question insert: thread_text error. thread data is : '.json_encode($val->toArray()));
+                $this->error('QA insert: thread_tag  error. thread data is : '.json_encode($val->toArray()));
                 break;
             }
-            //再插 thread_hot
-            $res = self::insertThreadHot($val);
-            if(!$res){
-                $this->db->rollBack();
-                $this->error('question insert: thread_hot error. thread data is : '.json_encode($val->toArray()));
-                break;
-            }
-            //最后判断插入 thread_tom  attachment + question + thread_reward
-            if(!empty($attachments)){
-                $res = $this->db->table('thread_tom')->insert([
-                    'thread_id' =>  $val->id,
-                    'tom_type'  =>  111,
-                    'key'       =>  '$'.$attachments_key,
-                    'value'     =>  json_encode($attachments->toArray()),
-                    'created_at'    =>  $val->created_at->timestamp,
-                    'updated_at'    =>  $val->updated_at->timestamp
-                ]);
+            if($attachments && !empty($attachments->toArray())){
+                $res = self::insertThreadTag($val, ThreadTag::IMAGE);
                 if(!$res){
                     $this->db->rollBack();
-                    $this->error('question attachment insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
+                    $this->error('QA insert: thread_tag attachment error. thread data is : '.json_encode($val->toArray()));
                     break;
                 }
             }
-            if(!empty($question)){
-                $res = $this->db->table('thread_tom')->insert([
-                    'thread_id' =>  $val->id,
-                    'tom_type'  =>  105,
-                    'key'       =>  '$'.$question_key,
-                    'value'     =>  json_encode($question->toArray()),
-                    'created_at'    =>  $question->created_at->timestamp,
-                    'updated_at'    =>  $question->updated_at->timestamp
-                ]);
-                if(!$res){
-                    $this->db->rollBack();
-                    $this->error('question question insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
-                    break;
-                }
-            }
+            $q_type = !empty($question->be_user_id) ? 1 : 0;
+            $q_orderSn = "";
+            $q_price = $question->price;
+            $q_expired_at = $question->expired_at;
             if(!empty($thread_reward)){
-                $res = $this->db->table('thread_tom')->insert([
-                    'thread_id' =>  $val->id,
-                    'tom_type'  =>  107,
-                    'key'       =>  '$'.$thread_reward,
-                    'value'     =>  json_encode($question->toArray()),
-                    'created_at'    =>  $thread_reward->created_at,
-                    'updated_at'    =>  $thread_reward->updated_at
-                ]);
+                $q_type = $thread_reward->type;
+                $q_price = $thread_reward->money;
+                $q_expired_at = $thread_reward->expired_at;
+                $q_orderSn = Order::query()->where('thread_id', $val->id)->value('order_sn');
+            }
+            $count = 0;
+            //统一成悬赏贴格式插入 thread_tom
+            $key = '$'.$count;
+            $count++;
+            $body = [
+                'type'  =>  $q_type,
+                'orderSn'   =>  $q_orderSn,
+                'price' =>  $q_price,
+                'expiredAt' =>  $q_expired_at
+            ];
+            $value = json_encode(['body' => $body]);
+            $res = self::insertThreadTom($val, ThreadTag::REWARD, $key, $value);
+            if(!$res){
+                $this->db->rollBack();
+                $this->error('question insert: thread_tom goods error. thread data is : '.json_encode($val->toArray()));
+                break;
+            }
+            if($attachments && !empty($attachments->toArray())){
+                $key = '$'.$count;
+                $imageIds = $attachments->pluck('id')->toArray();
+                $value = json_encode(['imageIds' => $imageIds]);
+                $res = self::insertThreadTom($val, ThreadTag::IMAGE, $key, $value);
                 if(!$res){
                     $this->db->rollBack();
-                    $this->error('question thread_reward insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
+                    $this->error('question insert: thread_tom attachment error. thread data is : '.json_encode($val->toArray()));
                     break;
                 }
             }
@@ -516,67 +451,61 @@ class ThreadMigrationCommand extends AbstractCommand
             ->get(['t.*','p.content','p.id as post_id']);
         foreach ($list as $val){
             //如果数据已经存在则跳过
-            $isset_thread = ThreadText::find($val->id);
+            $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::GOODS])->first();
             if(!empty($isset_thread))       continue;
             $this->db->beginTransaction();
-            //找出帖子中对应的 帖子附件 + 帖子图片 attachment
+            //找出帖子中对应的 帖子图片 attachment + 商品信息
             $attachments = Attachment::query()->where('type_id',$val->post_id)->where('type', Attachment::TYPE_OF_IMAGE)->orderBy('order')->get();
             $post_goods = PostGoods::where('post_id', $val->post_id)->first();
-            $status = self::getThreadStatus($val);
-            //先插 thread_text
-            //针对长文帖可以做图文混排，所以要将原来的 content 中 IMG 替换成对应的 $0 $1 $2
-            if(!empty($attachments) || !empty($post_goods)){
-                $val->content = self::replaceContent($val->content, $attachments);
-                $content_last_count = -1;
-                if(!empty($attachments))    $content_last_count += $attachments->count();
-                if(!empty($post_goods)){
-                    $content_last_count += 1;
-                    $val->content .= '{$'.$content_last_count.'}';
-                }
-            }
-            $res = self::insertThreadText($val, $status);
+            // 先插入 thread_tag
+            $res = self::insertThreadTag($val, ThreadTag::GOODS);
             if(!$res){
                 $this->db->rollBack();
-                $this->error('goods insert: thread_text error. thread data is : '.json_encode($val->toArray()));
+                $this->error('goods insert: thread_tag goods error. thread data is : '.json_encode($val->toArray()));
                 break;
             }
-            //再插 thread_hot
-            $res = self::insertThreadHot($val);
-            if(!$res){
-                $this->db->rollBack();
-                $this->error('goods insert: thread_hot error. thread data is : '.json_encode($val->toArray()));
-                break;
-            }
-            //最后插 thread_tom   attachment -- 图文混排，图片附件
-            $count = 0;
-            if(!empty($attachments)){
-                //先计算这篇帖子有多少标识了 key 的，然后将没有标识 key 的，递增数字
-                foreach ($attachments as $vi){
-                    if(!empty($vi->key))     $count ++;
-                }
-                foreach ($attachments as $vo){
-                    if(empty($vo->key)){
-                        $vo->key = '$'.$count;
-                        $count ++;
-                    }
-                }
-                //最后开始插 thread_tom
-                foreach ($attachments as $vo){
-                    $res = self::insertThreadTom($vo, $val);
-                    if(!$res){
-                        $this->db->rollBack();
-                        $this->error('goods attachment insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
-                        break;
-                    }
-                }
-            }
-            if(!empty($post_goods)){
-                $post_goods->key = '$'.$count;
-                $post_goods->type = 104;
-                $res = self::insertThreadTom($post_goods, $val);
+            //判断是否有图片，如果有图片，还需要插 image 的tag
+            if($attachments && !empty($attachments->toArray())){
+                $res = self::insertThreadTag($val, ThreadTag::IMAGE);
                 if(!$res){
                     $this->db->rollBack();
-                    $this->error('goods insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
+                    $this->error('goods insert: thread_tag image error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
+            }
+
+            // 插入 thread_tom ，先插goods，再判断是否插入image类型
+            $count = 0;
+            if($post_goods && !empty($post_goods->toArray())){
+                $key = '$'.$count;
+                $count++;
+                $body = [
+                    'userId'    =>  $post_goods->user_id,
+                    'platformId'    =>  $post_goods->platform_id,
+                    'title'     =>  $post_goods->title,
+                    'imagePath' =>  $post_goods->image_path,
+                    'price'     =>  $post_goods->price,
+                    'type'      =>  $post_goods->type,
+                    'typeName'  =>  PostGoods::enumTypeName($post_goods->type),
+                    'readyContent'  =>  $post_goods->ready_content,
+                    'detailCcontent'    =>  $post_goods->detail_content
+                ];
+                $value = json_encode(['body' => $body]);
+                $res = self::insertThreadTom($val, ThreadTag::GOODS, $key, $value);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('goods insert: thread_tom goods error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
+            }
+            if($attachments && !empty($attachments->toArray())){
+                $key = '$'.$count;
+                $imageIds = $attachments->pluck('id')->toArray();
+                $value = json_encode(['imageIds' => $imageIds]);
+                $res = self::insertThreadTom($val, ThreadTag::IMAGE, $key, $value);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('goods insert: thread_tom attachment error. thread data is : '.json_encode($val->toArray()));
                     break;
                 }
             }
@@ -585,7 +514,7 @@ class ThreadMigrationCommand extends AbstractCommand
         $this->info('迁移商品帖end');
     }
 
-
+/*
     public function getThreadStatus($thread){
         if(!empty($thread->deleted_at)){
             $status = -1;
@@ -601,6 +530,13 @@ class ThreadMigrationCommand extends AbstractCommand
             $status = 1;
         }
         return $status;
+    }
+*/
+    public function getThreadStatus($thread){
+        if(!empty($thread->deleted_at)){
+            return -1;
+        }
+        return 0;
     }
 
     public function insertThreadText($value, $status){
@@ -625,6 +561,16 @@ class ThreadMigrationCommand extends AbstractCommand
                 'updated_at' =>  $value->updated_at->timestamp,
             ]
         );
+    }
+
+    public function insertThreadTag($thread, $tag){
+        return $this->db->table('thread_tag')->insert([
+            'thread_id' =>  $thread->id,
+            'tag'   =>  $tag,
+            'created_at'    =>  $thread->created_at,
+            'updated_at'    =>  $thread->updated_at
+        ]);
+
     }
 
     public function insertThreadHot($value){
@@ -660,7 +606,21 @@ class ThreadMigrationCommand extends AbstractCommand
         );
     }
 
+    public function insertThreadTom($thread, $tom_type, $key, $value){
+        return $this->db->table('thread_tom')->insert([
+            'thread_id' =>  $thread->id,
+            'tom_type'  =>  $tom_type,
+            'key'   =>  $key,
+            'value' =>  $value,
+            'status'    => !empty($thread->deleted_at) ? -1 : 0,
+            'created_at'    =>  $thread->created_at,
+            'updated_at'    =>  $thread->updated_at
+        ]);
 
+    }
+
+
+/*
     public function insertThreadTom($tom, $thread){
         if(in_array($thread->type,[Thread::TYPE_OF_VIDEO, Thread::TYPE_OF_AUDIO])){
             $tom_type = $this->video_type[$tom->type];
@@ -685,5 +645,6 @@ class ThreadMigrationCommand extends AbstractCommand
         ]);
 
     }
+*/
 
 }

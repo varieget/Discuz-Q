@@ -31,31 +31,31 @@ class RewardBusi extends TomBaseBusi
         $input = $this->verification();
 
         if(strtotime($input['expiredAt']) < time()+24*60*60){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
         $order = Order::query()
-            ->where('order_sn',$input['orderId'])
+            ->where('order_sn',$input['orderSn'])
             ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
-
-        if (empty($order) || 
-            ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id'])) || 
+        if (empty($order) ||
+            !empty($order['thread_id']) ||
+            ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id'])) ||
             $order['user_id'] != $this->user['id'] || 
             $order['status'] != Order::ORDER_STATUS_PAID || 
             (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())|| 
             ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
         if ($order->type == Order::ORDER_TYPE_MERGE) {
             $orderChildrenInfo = OrderChildren::query()
+                ->where('order_sn', $input['orderSn'])
                 ->where('type', Order::ORDER_TYPE_QUESTION_REWARD)
-                ->where('status', Order::ORDER_STATUS_PAID)
-                ->where('order_sn', $input['orderId'])
                 ->first();
-            if (empty($orderChildrenInfo) || $orderChildrenInfo->amount != $input['price']) {
-                echo '5555';exit;
-                $this->outPut(ResponseCode::INVALID_PARAMETER, ResponseCode::$codeMap[ResponseCode::INVALID_PARAMETER]);
+            if (empty($orderChildrenInfo) ||
+                $orderChildrenInfo->amount != $input['price'] ||
+                $orderChildrenInfo->status != Order::ORDER_STATUS_PAID) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
         }
 
@@ -67,7 +67,7 @@ class RewardBusi extends TomBaseBusi
         }
 
         if (empty($order['thread_id'])) {
-            $this->outPut(ResponseCode::NOT_FOUND_USER, ResponseCode::$codeMap[ResponseCode::NOT_FOUND_USER]);
+            $this->outPut(ResponseCode::NOT_FOUND_USER);
         }
 
         $threadReward = new ThreadReward;
@@ -81,7 +81,6 @@ class RewardBusi extends TomBaseBusi
         $threadReward->expired_at = date("Y-m-d",strtotime($input['expiredAt']));
         $threadReward->save();
 
-        $threadReward->isSelect = false;
         $threadReward->content = $input['content'];
 
         return $this->jsonReturn($threadReward);
@@ -89,9 +88,6 @@ class RewardBusi extends TomBaseBusi
 
     public function select()
     {
-        if (isset($this->body['isSelect'])) {
-            return $this->jsonReturn($this->body);
-        }
         $redPacket = ThreadReward::query()->where('id',$this->body['id'])->first(['remain_money']);
         $this->body['remain_money'] = $redPacket['remain_money'];
 
@@ -100,14 +96,14 @@ class RewardBusi extends TomBaseBusi
 
     public function verification(){
         $input = [
-            'orderId' => $this->getParams('orderId'),
+            'orderSn' => $this->getParams('orderSn'),
             'price' => $this->getParams('price'),
             'type' => $this->getParams('type'),
             'expiredAt' => $this->getParams('expiredAt'),
             'content' => $this->getParams('content'),
         ];
         $rules = [
-            'orderId' => 'required|numeric',
+            'orderSn' => 'required|numeric',
             'price' => 'required|numeric|min:0.01',
             'type' => 'required|integer|in:0,1',
             'expiredAt' => 'required|date',

@@ -75,15 +75,16 @@ class WechatH5LoginController extends AuthBaseController
 
     public function main()
     {
-        //过渡开关打开
-        if((bool)$this->settings->get('is_need_transition')) {
-            $this->transitionLoginLogicVoid();
-        }
         //获取授权后微信用户信息
         $wxuser         = $this->getWxuser();
         $inviteCode     = $this->inPut('inviteCode');//邀请码非必须存在
         $sessionToken   = $this->inPut('sessionToken');//PC扫码使用，非必须存在
         $actor          = $this->user;
+
+        //过渡开关打开
+        if((bool)$this->settings->get('is_need_transition') && empty($sessionToken)) {
+            $this->transitionLoginLogicVoid();
+        }
 
         $this->db->beginTransaction();
         try {
@@ -161,6 +162,9 @@ class WechatH5LoginController extends AuthBaseController
         }
 
 //        if ($wechatUser && $wechatUser->user) {
+            if (empty($wechatUser->user->username)) {
+                $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+            }
             // 创建 token
             $params = [
                 'username' => $wechatUser->user->username,
@@ -188,6 +192,10 @@ class WechatH5LoginController extends AuthBaseController
 
             // bound
             if ($sessionToken) {
+                if (empty($accessToken)) {
+                    return $this->outPut(ResponseCode::PC_QRCODE_TIME_FAIL);
+                }
+
                 $accessToken = $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
 
                 $this->updateUserBindType($wechatUser->user,AuthUtils::WECHAT);
@@ -275,9 +283,7 @@ class WechatH5LoginController extends AuthBaseController
             // 站点关闭注册
             if (!(bool)$this->settings->get('register_close')) {
                 $this->db->rollBack();
-                $this->outPut(ResponseCode::REGISTER_CLOSE,
-                    ResponseCode::$codeMap[ResponseCode::REGISTER_CLOSE]
-                );
+                $this->outPut(ResponseCode::REGISTER_CLOSE);
             }
             $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), new User()));
             $wechatUser->save();//微信信息写入user_wechats
@@ -307,6 +313,11 @@ class WechatH5LoginController extends AuthBaseController
             new GenJwtToken($params)
         );
         $accessToken = json_decode($response->getBody());
-        $this->outPut(ResponseCode::SUCCESS, '', $accessToken);
+
+        $result = $this->camelData(collect($accessToken));
+
+        $result = $this->addUserInfo($wechatUser->user, $result);
+
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

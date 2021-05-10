@@ -19,6 +19,8 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
+use App\Models\Invite;
+use App\Models\Group;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -279,6 +281,17 @@ class User extends DzqModel
         $this->avatar = ($isRemote ? 'cos://' : '') . $path;
         $this->avatar_at = $path ? Carbon::now() : null;
 
+        return $this;
+    }
+
+    /**
+     * @param string $path
+     * @param bool $isRemote
+     * @return $this
+     */
+    public function changeBackground($path, $isRemote = false)
+    {
+        $this->background = ($isRemote ? 'cos://' : '') . $path;
         return $this;
     }
 
@@ -961,5 +974,23 @@ class User extends DzqModel
             return null;
         }
         return $user->username;
+    }
+
+    public function isInviteUser($userId)
+    {
+        $result = Invite::query()
+            ->where(['to_user_id' => $userId, 'status' => Invite::STATUS_USED])
+            ->first();
+        if ($result) {
+            return $result;
+        }
+        return false;
+    }
+
+    public function getInviteScale($groupId)
+    {
+        $groupData = Group::query()->where('id', $groupId)->first();
+        // $be_scale
+        return $groupData['scale'] ?? 0;
     }
 }

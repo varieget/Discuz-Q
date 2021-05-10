@@ -49,17 +49,12 @@ class UpdateUserController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER,'');
         }
 
-        $isAdmin = $this->user->isAdmin();
-        if (! $isAdmin &&  $this->user->username_bout >= $this->settings->get('username_bout', 'default', 1)) {
-            $this->outPut(ResponseCode::SUCCESS,'用户名修改次数限制');
-        }
-
         $requestData = [];
-        if(!empty($data['userName'])){
-            $requestData['username'] = $data['userName'];
+        if(!empty($data['username'])){
+            $requestData['username'] = $data['username'];
         }
-        if(!empty($data['passWord'])){
-            $requestData['passWord'] = $data['passWord'];
+        if(!empty($data['password'])){
+            $requestData['passWord'] = $data['password'];
         }
         if(!empty($data['newPassword'])){
             $requestData['newPassword'] = $data['newPassword'];
@@ -80,9 +75,7 @@ class UpdateUserController extends DzqController
         if(!empty($data['mobile'])){
             $requestData['mobile'] = $data['mobile'];
         }
-        if(!empty($data['status']) || $data['status']===0){
-            $requestData['status'] = $data['status'];
-        }
+
         if(!empty($data['refuseMessage'])){
             $requestData['refuse_message'] = $data['refuseMessage'];
         }
@@ -91,6 +84,9 @@ class UpdateUserController extends DzqController
         }
         if(!empty($data['registerReason'])){
             $requestData['register_reason'] = $data['registerReason'];
+        }
+        if(!empty($data['groupId'])){
+            $requestData['groupId'] = $data['groupId'];
         }
 
         $result = $this->bus->dispatch(

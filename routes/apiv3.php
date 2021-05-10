@@ -44,16 +44,19 @@ $route->post('/users/sms.login', 'sms.login', ApiController\UsersV3\SmsLoginCont
 $route->post('/users/sms.bind', 'sms.bind', ApiController\UsersV3\SmsBindController::class);
 $route->post('/users/sms.rebind', 'sms.rebind', ApiController\UsersV3\SmsRebindController::class);
 $route->post('/users/sms.reset.pwd', 'sms.reset.pwd', ApiController\UsersV3\SmsResetPwdController::class);
-$route->post('/users/sms.reset.pay.pwd', 'sms.reset.pay.pwd', ApiController\UsersV3\SmsResetPayPwdController::class);
 //H5登录
 $route->get('/users/wechat/h5.oauth', 'wechat.h5.oauth', ApiController\UsersV3\WechatH5OauthController::class);
 $route->get('/users/wechat/h5.login', 'wechat.h5.login', ApiController\UsersV3\WechatH5LoginController::class);
 $route->get('/users/wechat/h5.bind', 'wechat.h5.bind', ApiController\UsersV3\WechatH5BindController::class);
 $route->get('/users/wechat/h5.rebind', 'wechat.h5.rebind', ApiController\UsersV3\WechatH5RebindController::class);
 //小程序
-$route->get('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiController\UsersV3\WechatMiniProgramLoginController::class);
-$route->get('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\UsersV3\WechatMiniprogramBindController::class);
-$route->get('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\UsersV3\WechatMiniprogramRebindController::class);
+$route->post('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiController\UsersV3\WechatMiniProgramLoginController::class);
+$route->post('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\UsersV3\WechatMiniProgramBindController::class);
+$route->post('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\UsersV3\WechatMiniProgramRebindController::class);
+//手机浏览器（微信外）登录并绑定微信
+//$route->get('/users/mobilebrowser/wechat/h5.bind', 'mobilebrowser.wechat.h5.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
+//$route->post('/users/mobilebrowser/username.login', 'mobilebrowser.username.login', ApiController\UsersV3\MobileBrowserLoginController::class);
+//$route->get('/users/mobilebrowser/wechat/miniprogram.bind', 'mobilebrowser.wechat.miniprogram.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
 //过渡开关打开微信绑定自动创建账号
 $route->get('/users/wechat/transition/username.autobind', 'wechat.transition.username.autobind', ApiController\UsersV3\WechatTransitionAutoRegisterController::class);
 $route->post('/users/wechat/transition/sms.bind', 'wechat.transition.sms.bind', ApiController\UsersV3\WechatTransitionBindSmsController::class);
@@ -67,6 +70,7 @@ $route->get('/thread.list','thread.list',ApiController\ThreadsV3\ThreadListContr
 $route->get('/thread.stick','thread.stick',ApiController\ThreadsV3\ThreadStickController::class);
 $route->get('/thread.likedusers','thread.likedusers',ApiController\ThreadsV3\ThreadLikedUsersController::class);
 $route->get('/tom.detail','tom.detail',ApiController\ThreadsV3\SelectTomController::class);
+$route->get('/thread.recommends','thread.recommends',ApiController\ThreadsV3\ThreadCommendController::class);
 
 //帖子变更
 $route->post('/thread.create','thread.create',ApiController\ThreadsV3\CreateThreadController::class);
@@ -75,14 +79,19 @@ $route->post('/thread.update','thread.update',ApiController\ThreadsV3\UpdateThre
 $route->post('/tom.delete','tom.delete',ApiController\ThreadsV3\DeleteTomController::class);
 $route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomController::class);
 //首页配置接口
-$route->get('/forum', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
+$route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);
+
 $route->post('/thread.share','thread.share',ApiController\ThreadsV3\ThreadShareController::class);
 $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
+$route->post('/good/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodController::class);
+
 $route->get('/attachments', 'attachments.resource', ApiController\AttachmentV3\ResourceAttachmentController::class);
 $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
 $route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
 $route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
 $route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
+$route->post('/follow.delete', 'follow.delete', ApiController\UsersV3\DeleteUserFollowController::class);
+
 $route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
 $route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
@@ -118,3 +127,38 @@ $route->post('/dialog.delete', 'dialog.delete', ApiController\DialogV3\DeleteDia
 
 
 
+
+$route->post('/users/pay-password/reset', '', ApiController\UsersV3\ResetPayPasswordController::class);
+$route->post('/users/update.user', 'users.update', ApiController\UsersV3\UpdateUsersController::class);
+
+
+$route->get('/signature', 'signature', ApiController\QcloudV3\CreateVodUploadSignatureController::class);
+$route->post('/threads/operate', 'threads.operate', ApiController\ThreadsV3\OperateThreadController::class);
+$route->post('/posts.reward', 'posts.reward', ApiController\PostsV3\CreatePostRewardController::class);
+
+
+//个人中心
+$route->get('/wallet/log', 'wallet.log.list', ApiController\WalletV3\ListUserWalletLogsController::class);
+$route->get('/wallet/cash', 'wallet.cash.list', ApiController\WalletV3\ListUserWalletCashController::class);
+$route->post('/users/sms.reset.pay.pwd', 'sms.reset.pay.pwd', ApiController\UsersV3\SmsResetPayPwdController::class);
+$route->post('/wallet/cash', 'wallet.cash.create', ApiController\WalletV3\CreateUserWalletCashController::class);
+$route->get('/favorites', 'favorites', ApiController\ThreadsV3\ListFavoritesController::class);
+$route->post('/users/background', 'user.upload.background', ApiController\UsersV3\UploadBackgroundController::class);
+$route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
+
+$route->get('/users/deny', 'user.deny.list', ApiController\UsersV3\ListDenyUserController::class);
+$route->post('/users/deny', 'user.deny', ApiController\UsersV3\CreateDenyUserController::class);
+$route->post('/users/deny.delete', 'user.delete.deny', ApiController\UsersV3\DeleteDenyUserController::class);
+
+$route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);
+$route->get('/threads.paid', 'threads.paid', ApiController\UsersV3\ListPaidThreadsController::class);
+
+
+//待使用接口
+$route->post('/reports', 'reports.create', ApiController\ReportV3\CreateReportsController::class);
+$route->get('/redpacket.resource', 'redpacket.resource', ApiController\RedPacketV3\ResourceRedPacketController::class);
+
+// 邀请invite
+$route->get('/invite.users.list','invite.users.list',ApiController\InviteV3\InviteUsersListController::class);
+$route->get('/invite.link.create','invite.link.create',ApiController\InviteV3\CreateInviteLinkController::class);
+$route->get('/invite.detail', 'invite.detail', ApiController\InviteV3\InviteDetailController::class);

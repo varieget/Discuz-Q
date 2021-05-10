@@ -89,7 +89,7 @@ class ResourceAnalysisGoodsController extends DzqController
             'address'  => 'required_without:address|max:1500',
         ]);
 
-        $this->assertCan($actor, 'createThread.' . Thread::TYPE_OF_GOODS);
+        //$this->assertCan($actor, 'createThread.' . Thread::TYPE_OF_GOODS);
 
         /**
          * 查询数据库中是否存在

@@ -19,7 +19,6 @@ namespace App\Api\Controller\ThreadsV3;
 
 #帖子点赞打赏用户列表
 use App\Common\ResponseCode;
-use App\User\AvatarUploader;
 use App\Models\Thread;
 use App\Models\PostUser;
 use App\Models\User;
@@ -28,14 +27,6 @@ use Discuz\Base\DzqController;
 
 class ThreadLikedUsersController extends DzqController
 {
-
-    public $uploader;
-
-    public function __construct(AvatarUploader $uploader)
-    {
-        $this->uploader = $uploader;
-        // TODO: Implement __call() method.
-    }
 
     public function main()
     {
@@ -86,12 +77,39 @@ class ThreadLikedUsersController extends DzqController
             $likeSort[$k]['avatar'] = $userArr[$v['user_id']]['avatar'];
         }
 
-        $retrue = [
-            'allCount' => count($postUser)+count($order),
-            'likeCount' => count($postUser),
-            'rewardCount' => $thread['price'] > 0 ? 0 : count($order),
-            'raidCount' => $thread['price'] > 0 ? count($order) : 0,
-            'list'=>array_values(array_slice($likeSort, $data['page'], $data['perPage']))
+        $currentPage = $data['page'] >= 1 ? intval($data['page']) : 1;
+        $perPageMax = 50;
+        $perPage = $data['perPage'] >= 1 ? intval($data['perPage']) : 20;
+        $perPage > $perPageMax && $perPage = $perPageMax;
+        $count = count($likeSort);
+        $builder = $this->camelData(array_slice($likeSort, ($currentPage - 1) * $perPage, $perPage));
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $port = $port == null ? '' : ':' . $port;
+        parse_str($url->getQuery(), $query);
+        $queryFirst = $queryNext = $queryPre = $query;
+        $queryFirst['page'] = 1;
+        $queryNext['page'] = $currentPage + 1;
+        $queryPre['page'] = $currentPage <= 1 ? 1 : $currentPage - 1;
+
+        $path = $url->getScheme() . '://' . $url->getHost() . $port . $url->getPath() . '?';
+
+        $retrue =  [
+            'pageData' => [
+                'allCount' => count($postUser)+count($order),
+                'likeCount' => count($postUser),
+                'rewardCount' => $thread['price'] > 0 ? 0 : count($order),
+                'raidCount' => $thread['price'] > 0 ? count($order) : 0,
+                'list' => $builder
+            ],
+            'currentPage' => $currentPage,
+            'perPage' => $perPage,
+            'firstPageUrl' => urldecode($path . http_build_query($queryFirst)),
+            'nextPageUrl' => urldecode($path . http_build_query($queryNext)),
+            'prePageUrl' => urldecode($path . http_build_query($queryPre)),
+            'pageLength' => count($builder),
+            'totalCount' => $count,
+            'totalPage' => $count % $perPage == 0 ? $count / $perPage : intval($count / $perPage) + 1
         ];
 
         $this->outPut(ResponseCode::SUCCESS, '', $retrue);

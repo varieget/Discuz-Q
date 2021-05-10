@@ -20,12 +20,15 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Censor\Censor;
 use App\Common\Utils;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Permission;
 use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
+use App\Models\ThreadUser;
 use App\Models\User;
+use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomConfig;
 use App\Modules\ThreadTom\TomTrait;
 use Illuminate\Support\Str;
@@ -41,23 +44,26 @@ trait ThreadTrait
         $groupField = $this->getGroupInfoField($group);
         $likeRewardField = $this->getLikeRewardField($thread, $post);
         $payType = $this->threadPayStatus($thread, $paid);
-        $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid);
+        $contentField = $this->getContentField($loginUser, $thread, $post, $tomInputIndexes, $payType, $paid);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
+            'topicId' => $thread['topic_id'] ?? 0,
+            'categoryName' => $this->getCategoryNameField($thread['category_id']),
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
             'postCount' => $thread['post_count'] - 1,
             'isApproved' => $thread['is_approved'],
             'isStick' => $thread['is_sticky'],
-            'price' => $thread['price'],
-            'attachmentPrice' => $thread['attachment_price'],
+            'isFavorite' => $this->getFavoriteField($thread['id'], $loginUser),
+            'price' => floatval($thread['price']),
+            'attachmentPrice' => floatval($thread['attachment_price']),
             'payType' => $payType,
             'paid' => $paid,
             'isLike' => $this->isLike($loginUser, $post),
-            'createdAt' => date('Y-m-d H:i:s',strtotime($thread['created_at'])),
+            'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
@@ -69,7 +75,7 @@ trait ThreadTrait
                 'address' => $thread['address'],
                 'location' => $thread['location']
             ],
-            'ability'=>$this->getAbilityField($loginUser, $thread),
+            'ability' => $this->getAbilityField($loginUser, $thread),
             'content' => $contentField
         ];
         if ($analysis) {
@@ -81,10 +87,43 @@ trait ThreadTrait
         return $result;
     }
 
+    private function getFavoriteField($threadId, $loginUser)
+    {
+        if (app()->has(PreQuery::THREAD_LIST_FAVORITE)) {
+            $favorites = app()->get(PreQuery::THREAD_LIST_FAVORITE);
+            if (isset($favorites[$threadId])) {
+                return true;
+            }
+        } else {
+            return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $loginUser->id])->exists();
+        }
+        return false;
+    }
+
+    private function getCategoryNameField($categoryId)
+    {
+        if (app()->has(PreQuery::THREAD_LIST_CATEGORIES)) {
+            $categories = app()->get(PreQuery::THREAD_LIST_CATEGORIES);
+        } else {
+            $categories = Category::getCategories();
+        }
+        $categoryName = '';
+        foreach ($categories as $category) {
+            if ($category['id'] == $categoryId) {
+                $categoryName = $category['name'];
+            }
+        }
+        return $categoryName;
+    }
+
     /**
      * @desc 获取操作权限
+     * @param $loginUser
+     * @param $thread
+     * @return bool[]
      */
-    private function getAbilityField($loginUser, $thread){
+    private function getAbilityField($loginUser, $thread)
+    {
 
         $data = [
             'canEdit' => true,
@@ -92,7 +131,8 @@ trait ThreadTrait
             'canEssence' => true,
             'canStick' => true,
             'canReply' => true,
-            'canViewPost' => true
+            'canViewPost' => true,
+            'canBeReward' => true,
         ];
 
         if ($loginUser->isAdmin()) {
@@ -119,6 +159,9 @@ trait ThreadTrait
         if (!isset($permission['thread.viewPosts']) && !isset($permission["category{$thread['category_id']}.thread.viewPosts"])) {
             $data['canViewPost'] = false;
         }
+        if (!isset($permission['thread.canBeReward']) && !isset($permission["category{$thread['category_id']}.thread.canBeReward"])) {
+            $data['canBeReward'] = false;
+        }
 
         return $data;
     }
@@ -131,12 +174,17 @@ trait ThreadTrait
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
         } else {
-            $paid = Order::query()
-                ->where([
-                    'thread_id' => $thread['id'],
-                    'user_id' => $this->user->id,
-                    'status' => Order::ORDER_STATUS_PAID
-                ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
+            if (app()->has(PreQuery::THREAD_LIST_ORDERS)) {
+                $orders = app()->get(PreQuery::THREAD_LIST_ORDERS);
+                $paid = isset($orders[$thread['id']]);
+            } else {
+                $paid = Order::query()
+                    ->where([
+                        'thread_id' => $thread['id'],
+                        'user_id' => $this->user->id,
+                        'status' => Order::ORDER_STATUS_PAID
+                    ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
+            }
         }
         return $payType;
     }
@@ -166,20 +214,20 @@ trait ThreadTrait
             if (in_array(TomConfig::TOM_REDPACK, $tags)) {
                 $obj['isRedPack'] = true;
             }
-            if (in_array(TomConfig::TOM_DOC, $tags)) {
+            if (in_array(TomConfig::TOM_REWARD, $tags)) {
                 $obj['isReward'] = true;
             }
         }
         return $obj;
     }
 
-    private function getContentField($thread, $post, $tomInput, $payType, $paid)
+    private function getContentField($loginUser, $thread, $post, $tomInput, $payType, $paid)
     {
         $content = [
             'text' => null,
             'indexes' => null
         ];
-        if ($payType == Thread::PAY_FREE) {
+        if ($payType == Thread::PAY_FREE || $loginUser->id == $thread['user_id']) {
             $content['text'] = $post['content'];
             $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id']);
         } else {
@@ -197,6 +245,9 @@ trait ThreadTrait
                 }
                 $content['text'] = $text;
             }
+        }
+        if (!empty($content['text'])) {
+            $content['text'] = str_replace(['<r>', '</r>'], ['', ''], $content['text']);
         }
         return $content;
     }
@@ -292,7 +343,34 @@ trait ThreadTrait
         if (empty($loginUser) || empty($post)) {
             return false;
         }
-        return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
+        if (app()->has(PreQuery::THREAD_LIST_LIKED)) {
+            $postUser = app()->get(PreQuery::THREAD_LIST_LIKED);
+            return isset($postUser[$post['id']]);
+        } else {
+            return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
+        }
+    }
+
+    /*
+     * @desc 前端新编辑器只能上传完整url的emoji
+     * 后端需要将其解析出代号进行存储
+     * @param $text
+     */
+    private function optimizeEmoji($text)
+    {
+        if ($text != strip_tags($text)) {
+            $text = '<r>' . $text . '</r>';
+        }
+        preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
+        $searches = $m1[0];
+        $replaces = [];
+        foreach ($searches as $search) {
+            preg_match('/:[a-z]+?:/i', $search, $m2);
+            $emoji = $m2[0];
+            $replaces[] = $emoji;
+        }
+        $text = str_replace($searches, $replaces, $text);
+        return $text;
     }
 
 }

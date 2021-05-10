@@ -43,11 +43,7 @@ class ThreadStickController extends DzqController
         if(!$isMiniProgramVideoOn){
             $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
         }
-
-        $groups = $this->user->groups->toArray();
-        $groupIds = array_column($groups, 'id');
-        $permissions = Permission::categoryPermissions($groupIds);
-
+        $permissions = Permission::getUserPermissions($this->user);
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         if (!$categoryIds) {
             $this->outPut(ResponseCode::SUCCESS, '', []);

@@ -18,16 +18,11 @@
 namespace App\Api\Controller\TopicV3;
 
 use App\Api\Controller\ThreadsV3\ThreadTrait;
-use App\Common\Utils;
+use App\Api\Controller\ThreadsV3\ThreadListTrait;
 use App\Common\ResponseCode;
 use App\Models\Category;
-use App\Models\GroupUser;
-use App\Models\Post;
 use App\Models\Topic;
-use App\Models\ThreadTopic;
 use App\Models\Thread;
-use App\Models\ThreadTag;
-use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
@@ -35,6 +30,7 @@ use Illuminate\Support\Arr;
 class TopicListController extends DzqController
 {
     use ThreadTrait;
+    use ThreadListTrait;
 
     public function main()
     {
@@ -44,18 +40,22 @@ class TopicListController extends DzqController
         $topics = $this->filterTopics($filter, $currentPage, $perPage);
         $topicsList = $topics['pageData'];
         $topicIds = array_column($topicsList, 'id');
+        $userIds = array_column($topicsList, 'user_id');
+        $userDatas = User::instance()->getUsers($userIds);
+        $userDatas = array_column($userDatas, null, 'id');
         $topicThreadDatas = [];
 
         if (Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 0) {
-            $threads = $this->getFilterThreads($filter, $currentPage, $perPage, $topicIds);
+            $threads = $this->getFilterThreads($topicIds);
+            $threads = $this->getFullThreadData($threads);
             foreach ($threads as $key => $value) {
-                $topicThreadDatas[$value['topic_id']][$value['id']] = $value;
+                $topicThreadDatas[$value['topicId']][$value['threadId']] = $value;
             }
 
             if (!Arr::has($filter, 'content') && (!Arr::has($filter, 'topicId') || (Arr::has($filter, 'topicId') && Arr::get($filter, 'topicId') == 0))) {
                 $topicLastThreadDatas = [];
                 foreach ($topicThreadDatas as $key => $value) {
-                    $topicThreadIds = array_column($value, 'id');
+                    $topicThreadIds = array_column($value, 'threadId');
                     $lastThreadId = max($topicThreadIds);
                     $topicLastThreadDatas[$key][$lastThreadId] = $value[$lastThreadId];
                 }
@@ -70,16 +70,18 @@ class TopicListController extends DzqController
             if (Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 0) {
                 if (isset($topicThreadDatas[$topicId])) {
                     $thread = array_values($topicThreadDatas[$topicId]);
-                    $thread = $this->getFullThreadData($thread);
                 }
             }
 
             $result[] = [
-                'pid' => $topic['id'],
+                'topicId' => $topic['id'],
                 'userId' => $topic['user_id'],
+                'username' => $userDatas[$topic['user_id']]['username'] ?? '',
                 'content' => $topic['content'],
                 'viewCount' => $topic['view_count'],
                 'threadCount' => $topic['thread_count'],
+                'recommended' => (bool) $topic['recommended'],
+                'recommendedAt' => $topic['recommended_at'] ?? '',
                 'threads' => $thread
             ];
         }
@@ -92,27 +94,62 @@ class TopicListController extends DzqController
     {
         $query = Topic::query();
 
+        if ($username = trim(Arr::get($filter, 'username'))) {
+            $query->join('users', 'users.id', '=', 'topics.user_id')
+                ->where('users.username', 'like', '%' . $username . '%');
+        }
+
         if ($content = trim(Arr::get($filter, 'content'))) {
             $query->where('topics.content', 'like', '%' . $content . '%');
+        }
+
+        if ($createdAtBegin = Arr::get($filter, 'createdAtBegin')) {
+            $query->where('topics.created_at', '>=', $createdAtBegin);
+        }
+
+        if ($createdAtEnd = Arr::get($filter, 'createdAtEnd')) {
+            $query->where('topics.created_at', '<=', $createdAtEnd);
+        }
+
+        if ($threadCountBegin = Arr::get($filter, 'threadCountBegin')) {
+            $query->where('topics.thread_count', '>=', $threadCountBegin);
+        }
+
+        if ($threadCountEnd = Arr::get($filter, 'threadCountEnd')) {
+            $query->where('topics.thread_count', '<=', $threadCountEnd);
+        }
+
+        if ($viewCountBegin = Arr::get($filter, 'viewCountBegin')) {
+            $query->where('topics.view_count', '>=', $viewCountBegin);
+        }
+
+        if ($viewCountEnd = Arr::get($filter, 'viewCountEnd')) {
+            $query->where('topics.view_count', '<=', $viewCountEnd);
+        }
+
+        if (Arr::has($filter, 'recommended') && Arr::get($filter, 'recommended') != '') {
+            $query->where('topics.recommended', (int)Arr::get($filter, 'recommended'));
         }
 
         if ($topicId = trim(Arr::get($filter, 'topicId'))) {
             $query->where('topics.id', '=', $topicId);
         }
 
-        if (Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 1) {
-            $query->orderByDesc('view_count');
-        } else {
-            $query->orderByDesc('created_at');
+        if ((Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 1) || 
+            (Arr::has($filter, 'sortBy') && Arr::get($filter, 'sortBy') == Topic::SORT_BY_VIEWCOUNT)) {
+            $query->orderByDesc('topics.view_count');
+        } elseif (Arr::has($filter, 'sortBy') && Arr::get($filter, 'sortBy') == Topic::SORT_BY_THREADCOUNT) {
+            $query->orderByDesc('topics.thread_count');
+        } else{
+            $query->orderByDesc('topics.created_at');
         }
 
         $topics = $this->pagination($currentPage, $perPage, $query);
         return $topics;
     }
 
-    function getFilterThreads($filter, $currentPage, $perPage, $topicIds)
+    function getFilterThreads($topicIds)
     {
-        if (empty($filter)) $filter = [];
         $categoryids = [];
         $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
         if (!$categoryids) {
@@ -120,7 +157,7 @@ class TopicListController extends DzqController
         }
         $threads = $this->getThreadsBuilder($topicIds);
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
-        return $threads->get()->toArray();
+        return $threads->get();
     }
 
     private function getThreadsBuilder($topicIds)
@@ -134,46 +171,5 @@ class TopicListController extends DzqController
             ->where('th.is_approved', Thread::APPROVED)
             ->whereIn('tt.topic_id', $topicIds)
             ->orderByDesc('th.created_at');
-    }
-
-    private function getFullThreadData($threadList)
-    {
-        $userIds = array_unique(array_column($threadList, 'user_id'));
-        $groups = GroupUser::instance()->getGroupInfo($userIds);
-        $groups = array_column($groups, null, 'user_id');
-        $users = User::instance()->getUsers($userIds);
-        $users = array_column($users, null, 'id');
-        $threadIds = array_column($threadList, 'id');
-        $posts = Post::instance()->getPosts($threadIds);
-        $postsByThreadId = array_column($posts, null, 'thread_id');
-        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get();
-        $inPutToms = [];
-        $tags = [];
-        ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
-            $tags[$item['thread_id']][] = $item->toArray();
-        });
-        foreach ($toms as $tom) {
-            $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, json_decode($tom['value'], true));
-        }
-        $result = [];
-        $linkString = '';
-        foreach ($threadList as $thread) {
-            $threadId = $thread['id'];
-            $userId = $thread['user_id'];
-            $user = empty($users[$userId]) ? false : $users[$userId];
-            $group = empty($groups[$userId]) ? false : $groups[$userId];
-            $post = empty($postsByThreadId[$threadId]) ? false : $postsByThreadId[$threadId];
-            $tomInput = empty($inPutToms[$threadId]) ? false : $inPutToms[$threadId];
-            $threadTags = [];
-            isset($tags[$threadId]) && $threadTags = $tags[$threadId];
-            $result[] = $this->packThreadDetail($user, $group, $thread, $post, $tomInput, false, $threadTags);
-            $linkString .= ($thread['title'] . $post['content']);
-        }
-        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
-        foreach ($result as &$item) {
-            $item['title'] = str_replace($search, $replace, $item['title']);
-            $item['content']['text'] = str_replace($search, $replace, $item['content']['text']);
-        }
-        return $result;
     }
 }

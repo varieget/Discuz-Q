@@ -20,6 +20,7 @@ namespace App\Modules\ThreadTom\Busi;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
+use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomBaseBusi;
 
 class DocBusi extends TomBaseBusi
@@ -47,9 +48,17 @@ class DocBusi extends TomBaseBusi
         $serializer = $this->app->make(AttachmentSerializer::class);
         $result = [];
         $docIds = $this->getParams('docIds');
-        $attachments = Attachment::query()->whereIn('id', $docIds)->get();
+        $attachments = $this->searchArray(PreQuery::THREAD_LIST_ATTACHMENTS, $docIds);
+        if (!$attachments) {
+            $attachments = Attachment::query()->whereIn('id', $docIds)->get();
+        }
         foreach ($attachments as $attachment) {
-            $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
+            $thread = $this->searchArray(PreQuery::THREAD_LIST, $this->threadId);
+            if ($thread) {
+                $result[] = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
+            } else {
+                $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
+            }
         }
         return $this->jsonReturn($result);
     }

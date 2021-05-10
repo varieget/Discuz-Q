@@ -136,6 +136,12 @@ class Thread extends DzqModel
     const  SORT_BY_POST = 2;//评论创建时间排序
     const SORT_BY_HOT = 3;//热度排序
 
+    const MY_DRAFT_THREAD = 1;//我的草稿
+    const MY_LIKE_THREAD = 2;//我的点赞
+    const MY_COLLECT_THREAD = 3;//我的收藏
+    const MY_BUY_THREAD = 4;//我的购买
+    const MY_OR_HIS_THREAD = 5;//我的和他的主题
+
     /**
      * 草稿
      */

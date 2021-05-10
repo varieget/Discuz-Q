@@ -42,7 +42,6 @@ class Bound
     public function pcLogin($sessionToken, $accessToken, $data)
     {
         $token = SessionToken::query()->where('token', $sessionToken)->first();
-
         if (!empty($token)) {
             /** @var SessionToken $token */
             $token->payload = $accessToken;

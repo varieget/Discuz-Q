@@ -73,7 +73,7 @@ class MiniprogramSchemeManage
 
     public function getMiniProgramScheme(): string
     {
-        $record = Scheme::getLastRecord()->toArray();
+        $record = !empty(Scheme::getLastRecord()) ? Scheme::getLastRecord()->toArray() : '';
         if(empty($record) || $record['expired_at'] < Carbon::now()->getTimestamp()) {
             return '';
         }
