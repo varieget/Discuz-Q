@@ -97,7 +97,7 @@ class ThreadListController extends DzqController
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
 
         if (!empty($types)) {
-            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.user_id')
+            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
                 ->whereIn('tag', $types);
         }
         if (!empty($search)) {
