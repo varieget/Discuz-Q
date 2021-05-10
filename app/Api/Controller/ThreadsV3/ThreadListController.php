@@ -50,8 +50,8 @@ class ThreadListController extends DzqController
             $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         }
         if ($this->preload) {
-            $ret = $this->initDzqThreadsData($threads);
-            $this->outPut(ResponseCode::SUCCESS,'',$ret);
+            $this->initDzqThreadsData($threads);
+            $this->outPut(ResponseCode::SUCCESS,'',null);
         }
         $threadCollection = $threads['pageData'];
         $threads['pageData'] = $this->getFullThreadData($threadCollection);
