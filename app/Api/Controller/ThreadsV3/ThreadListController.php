@@ -87,7 +87,7 @@ class ThreadListController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
         if (!$this->preload) {
-            $cacheKey = CacheKey::LIST_THREADS_V3 . $this->filterKey();
+            $cacheKey = CacheKey::LIST_THREADS_V3 . $this->filterId();
             $threads = $this->getThreadsCache($cacheKey, $currentPage);
             if ($threads) return $threads;
         }

@@ -221,7 +221,7 @@ trait ThreadListTrait
         return $threads;
     }
 
-    private function filterKey()
+    private function filterId()
     {
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
