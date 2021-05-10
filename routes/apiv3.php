@@ -112,7 +112,6 @@ $route->get('/posts.detail', 'posts.resource', ApiController\PostsV3\ResourcePos
 $route->post('/users/real', 'users.real', ApiController\UsersV3\RealUserController::class);
 $route->get('/wallet/user', 'wallet.wallet', ApiController\WalletV3\ResourceUserWalletController::class);
 $route->post('/users/update', 'users.update', ApiController\UsersV3\UpdateUserController::class);
-$route->get('/signature', 'signature', ApiController\QcloudV3\CreateVodUploadSignatureController::class);
 
 /*
 |--------------------------------------------------------------------------
