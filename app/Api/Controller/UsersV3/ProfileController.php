@@ -24,6 +24,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Dialog;
 use App\Models\Group;
+use App\Models\GroupUser;
 use App\Models\Setting;
 use App\Models\User;
 use Carbon\Carbon;
@@ -120,6 +121,10 @@ class ProfileController extends DzqController
             $data['nickname'] = !empty($user->wechat) ? $user->wechat->nickname : '';
             $data['unionid'] = !empty($user->wechat) ? $user->wechat->unionid : '';
         }
+        $grounUser = [$user_id];
+        $groups = GroupUser::instance()->getGroupInfo($grounUser);
+        $groups = array_column($groups, null, 'user_id');
+        $data['group'] = $this->getGroupInfo($groups[$user_id]);
 
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
 
@@ -146,6 +151,13 @@ class ProfileController extends DzqController
         return $query->take($limit)->get();
     }
 
+    private function getGroupInfo($group)
+    {
+        return [
+            'pid' => $group['group_id'],
+            'groupName' => $group['groups']['name']
+        ];
+    }
 
 
 
