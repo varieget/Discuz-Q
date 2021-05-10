@@ -25,7 +25,6 @@ use App\Models\Sequence;
 use App\Models\Thread;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
 
 class ThreadListController extends DzqController
 {
@@ -51,7 +50,7 @@ class ThreadListController extends DzqController
         }
         if ($this->preload) {
             $this->initDzqThreadsData($threads);
-            $this->outPut(ResponseCode::SUCCESS,'',null);
+            $this->outPut(ResponseCode::SUCCESS, '', null);
         }
         $threadCollection = $threads['pageData'];
         $threads['pageData'] = $this->getFullThreadData($threadCollection);
@@ -87,9 +86,8 @@ class ThreadListController extends DzqController
         if (!$categoryids) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
-        $groupKey = $this->groupKey();
-        $cacheKey = CacheKey::LIST_THREADS_V3 . $groupKey;
         if (!$this->preload) {
+            $cacheKey = CacheKey::LIST_THREADS_V3 . $this->filterKey();
             $threads = $this->getThreadsCache($cacheKey, $currentPage);
             if ($threads) return $threads;
         }
