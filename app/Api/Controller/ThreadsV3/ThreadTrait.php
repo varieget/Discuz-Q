@@ -20,6 +20,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Censor\Censor;
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\Utils;
 use App\Models\Category;
 use App\Models\Order;
@@ -45,7 +46,7 @@ trait ThreadTrait
         $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
         $payType = $this->threadPayStatus($loginUser, $thread, $paid);
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
-        $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid,$canViewTom);
+        $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -80,16 +81,17 @@ trait ThreadTrait
             'content' => $contentField
         ];
         if ($analysis) {
-            $s = $thread['title'] . $post['content'];
-            list($search, $replace) = Thread::instance()->getReplaceString($s);
-            $result['title'] = str_replace($search, $replace, $result['title']);
-            $result['content']['text'] = str_replace($search, $replace, $result['content']['text']);
+            $concatString = $thread['title'] . $post['content'];
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($concatString);
+            $result['title'] = str_replace($searches, $replaces, $result['title']);
+            $result['content']['text'] = str_replace($searches, $replaces, $result['content']['text']);
         }
         return $result;
     }
 
     private function canViewTom($user, $thread, $payType, $paid)
     {
+        //todo
         return true;
         if ($payType != Thread::PAY_FREE) {//付费贴
             $permissions = Permission::getUserPermissions($user);
@@ -106,7 +108,8 @@ trait ThreadTrait
     private function getFavoriteField($threadId, $loginUser)
     {
         $userId = $loginUser->id;
-        $favorites = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_FAVOR);
+        $favorites = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_POST_FAVOR, $userId);
+        $favorites = $favorites[$userId] ?? [];
         if ($favorites && isset($favorites[$userId])) {
             if (array_key_exists($threadId, $favorites[$userId])) {
                 if (empty($favorites[$userId][$threadId])) {
@@ -182,7 +185,8 @@ trait ThreadTrait
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
         } else {
-            $orders = app('cache')->get(CacheKey::LIST_THREADS_V3_USER_ORDERS);
+            $orders = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userId);
+            $orders = $orders[$userId] ?? [];
             if ($orders && isset($orders[$userId])) {
                 if (array_key_exists($threadId, $orders[$userId])) {
                     if (empty($orders[$userId][$threadId])) {
@@ -235,7 +239,7 @@ trait ThreadTrait
         return $obj;
     }
 
-    private function getContentField($thread, $post, $tomInput, $payType, $paid,$canViewTom)
+    private function getContentField($thread, $post, $tomInput, $payType, $paid, $canViewTom)
     {
         $content = [
             'text' => null,
@@ -243,11 +247,11 @@ trait ThreadTrait
         ];
         if ($payType == Thread::PAY_FREE) {
             $content['text'] = $post['content'];
-            $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'],null,$canViewTom);
+            $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
         } else {
             if ($paid) {
                 $content['text'] = $post['content'];
-                $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'],null,$canViewTom);
+                $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
             } else {
                 $freeWords = $thread['free_words'];
                 if (empty($freeWords)) {
@@ -307,40 +311,17 @@ trait ThreadTrait
     private function getLikeRewardField($thread, $post)
     {
         $ret = [
-            'users' => null,
+            'users' => [],
             'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
             'shareCount' => $thread['share_count'],
             'postCount' => $thread['post_count']
         ];
-        $postUsers = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_USERS);
-        if ($postUsers) {
-            if (isset($postUsers[$thread['id']])) {
-                $ret['users'] = $postUsers[$thread['id']];
-                return $ret;
-            }
-        }
         $threadId = $thread['id'];
         $postId = $post['id'];
-        $postUser = PostUser::query()->where('post_id', $postId)->orderByDesc('created_at');
-        $orderUser = Order::query()->where(['thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])->orderByDesc('created_at');
-        $postUser = $postUser->select('user_id', 'created_at')->limit(2)->get()->toArray();
-        $orderUser = $orderUser->select('user_id', 'created_at')->limit(2)->get()->toArray();
-        $mUser = array_merge($postUser, $orderUser);
-        usort($mUser, function ($a, $b) {
-            return strtotime($a['created_at']) < strtotime($b['created_at']);
+        $postUsers = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_POST_USERS, $threadId, function ($threadId) use ($postId, $post) {
+            return ThreadHelper::getThreadLikedDetail($threadId, $postId, $post, false);
         });
-        $mUser = array_slice($mUser, 0, 2);
-        $userIds = array_column($mUser, 'user_id');
-        $users = [];
-        $usersObj = User::query()->whereIn('id', $userIds)->get();
-        foreach ($usersObj as $item) {
-            $users[] = [
-                'userId' => $item->id,
-                'avatar' => $item->avatar,
-                'userName' => $item->username
-            ];
-        }
-        $ret['users'] = $users;
+        !empty($postUsers[$threadId]) && $ret['users'] = $postUsers[$threadId];
         return $ret;
     }
 
@@ -369,7 +350,8 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $postId = $post['id'];
-        $postUser = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_LIKED);
+        $postUser = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId);
+        $postUser = $postUser[$userId] ?? [];
         if ($postUser && isset($postUser[$userId])) {
             if (array_key_exists($postId, $postUser[$userId])) {
                 if (empty($postUser[$userId][$postId])) {

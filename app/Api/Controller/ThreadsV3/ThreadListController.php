@@ -50,7 +50,7 @@ class ThreadListController extends DzqController
         }
         if ($this->preload) {
             $this->initDzqThreadsData($threads);
-            $this->outPut(ResponseCode::SUCCESS, '', null);
+            $this->outPut(ResponseCode::SUCCESS);
         }
         $threadCollection = $threads['pageData'];
         $threads['pageData'] = $this->getFullThreadData($threadCollection);
@@ -115,7 +115,7 @@ class ThreadListController extends DzqController
         if ($this->preload) {
             $threads = $this->preloadPaginiation(100, 10, $threads, false);
         } else {
-            $threads = $this->pagination($currentPage, $perPage, $threads, false);
+            $threads = $this->pagination($currentPage, $perPage, $threads,true);
         }
         return $threads;
     }
