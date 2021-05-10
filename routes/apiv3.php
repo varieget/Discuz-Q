@@ -51,17 +51,12 @@ $route->get('/users/wechat/h5.login', 'wechat.h5.login', ApiController\UsersV3\W
 $route->get('/users/wechat/h5.bind', 'wechat.h5.bind', ApiController\UsersV3\WechatH5BindController::class);
 $route->get('/users/wechat/h5.rebind', 'wechat.h5.rebind', ApiController\UsersV3\WechatH5RebindController::class);
 //小程序
-$route->get('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiController\UsersV3\WechatMiniprogramLoginController::class);
+$route->get('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiController\UsersV3\WechatMiniProgramLoginController::class);
 $route->get('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\UsersV3\WechatMiniprogramBindController::class);
 $route->get('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\UsersV3\WechatMiniprogramRebindController::class);
-//手机浏览器（微信外）登录并绑定微信
-//$route->get('/users/mobilebrowser/wechat/h5.bind', 'mobilebrowser.wechat.h5.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
-//$route->post('/users/mobilebrowser/username.login', 'mobilebrowser.username.login', ApiController\UsersV3\MobileBrowserLoginController::class);
-//$route->get('/users/mobilebrowser/wechat/miniprogram.bind', 'mobilebrowser.wechat.miniprogram.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
 //过渡开关打开微信绑定自动创建账号
 $route->get('/users/wechat/transition/username.autobind', 'wechat.transition.username.autobind', ApiController\UsersV3\WechatTransitionAutoRegisterController::class);
 $route->post('/users/wechat/transition/sms.bind', 'wechat.transition.sms.bind', ApiController\UsersV3\WechatTransitionBindSmsController::class);
-
 //登录页设置昵称
 $route->post('/users/nickname.set', 'users.nickname.set', ApiController\UsersV3\NicknameSettingController::class);
 
@@ -81,7 +76,6 @@ $route->post('/tom.delete','tom.delete',ApiController\ThreadsV3\DeleteTomControl
 $route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomController::class);
 //首页配置接口
 $route->get('/forum', 'forum.settings.v2', ApiController\Settings\ForumSettingsV2Controller::class);
-
 $route->post('/thread.share','thread.share',ApiController\ThreadsV3\ThreadShareController::class);
 $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
 $route->get('/attachments', 'attachments.resource', ApiController\AttachmentV3\ResourceAttachmentController::class);
@@ -92,10 +86,8 @@ $route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowC
 $route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
 $route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
-
 $route->get('/topics.list', 'topics.list', ApiController\TopicV3\TopicListController::class);
 $route->get('/users.list', 'users.list', ApiController\UsersV3\UsersListController::class);
-
 $route->post('/order.create', 'order.create', ApiController\OrdersV3\CreateOrderController::class);
 $route->get('/order/detail', 'orders.resource.v2', ApiController\OrdersV3\ResourceOrderController::class);
 $route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\TradeV3\Notify\WechatNotifyController::class);
@@ -109,5 +101,20 @@ $route->get('/posts.detail', 'posts.resource', ApiController\PostsV3\ResourcePos
 $route->post('/users/real', 'users.real', ApiController\UsersV3\RealUserController::class);
 $route->get('/wallet/user', 'wallet.wallet', ApiController\WalletV3\ResourceUserWalletController::class);
 $route->post('/users/update', 'users.update', ApiController\UsersV3\UpdateUserController::class);
-
 $route->get('/signature', 'signature', ApiController\QcloudV3\CreateVodUploadSignatureController::class);
+
+/*
+|--------------------------------------------------------------------------
+| Notification
+|--------------------------------------------------------------------------
+*/
+$route->get('/notification', 'notification.list', ApiController\NotificationV3\ListNotificationV2Controller::class);
+$route->post('/notification.delete', 'notification.delete', ApiController\NotificationV3\DeleteNotificationV2Controller::class);
+$route->get('/dialog', 'dialog.list', ApiController\DialogV3\ListDialogV2Controller::class);
+$route->get('/dialog/message', 'dialog.message.list', ApiController\DialogV3\ListDialogMessageV2Controller::class);
+$route->post('/dialog.create', 'dialog.create', ApiController\DialogV3\CreateDialogV2Controller::class);
+$route->post('/dialog/message.create', 'dialog.message.create', ApiController\DialogV3\CreateDialogMessageV2Controller::class);
+$route->post('/dialog.delete', 'dialog.delete', ApiController\DialogV3\DeleteDialogV2Controller::class);
+
+
+
