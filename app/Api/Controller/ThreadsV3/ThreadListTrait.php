@@ -76,13 +76,10 @@ trait ThreadListTrait
             $linkString .= ($thread['title'] . $post['content']);
             $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags);
         }
-        $searchKeys = Thread::instance()->getSearchString($linkString);
-        $sReplaces = $this->extractCacheData(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $searchKeys);
-        if ($sReplaces === false) {
-            $sReplaces = Thread::instance()->getReplaceStringV3($linkString);
-            $this->appendCacheData(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $sReplaces);
-        }
-        $sReplaces = [];
+        $searchIds = Thread::instance()->getSearchString($linkString);
+        $sReplaces = $this->extractCacheData(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $searchIds, function ($searchIds) use ($linkString) {
+            return Thread::instance()->getReplaceStringV3($linkString);
+        });
         $searches = array_keys($sReplaces);
         $replaces = array_values($sReplaces);
         foreach ($result as &$item) {
@@ -115,9 +112,17 @@ trait ThreadListTrait
         return $p;
     }
 
+    /**
+     * @desc 从缓存中提取指定id集合的数据，没有则从数据库查询
+     * @param string $cacheKey 缓存key
+     * @param array $extractIds 需要提取的数据
+     * @param callable|null $callback 提取的数据不全则需要自行查询，查询结果会重新放进缓存
+     * @return array|bool 返回从缓存中查询出的数据
+     */
     private function extractCacheData($cacheKey, $extractIds, callable $callback = null)
     {
-        $cacheData = app('cache')->get($cacheKey);
+        $cache = app('cache');
+        $cacheData = $cache->get($cacheKey);
         $ret = [];
         if (!empty($extractIds)) {
             $ret = [];
@@ -135,24 +140,17 @@ trait ThreadListTrait
         }
         if ($ret === false && !empty($callback)) {
             $ret = $callback($extractIds);
-            $this->appendCacheData($cacheKey, $ret);
+            if (!$cacheData) $cacheData = [];
+            foreach ($ret as $key => $value) {
+                $cacheData[$key] = $value;
+            }
+            $cache->put($cacheKey, $cacheData);
         }
         return $ret;
     }
 
-
-    private function appendCacheData($cacheKey, $appendData)
-    {
-        $cacheData = app('cache')->get($cacheKey);
-        if (!$cacheData) $cacheData = [];
-        foreach ($appendData as $key => $value) {
-            $cacheData[$key] = $value;
-        }
-        return app('cache')->put($cacheKey, $cacheData);
-    }
-
     /**
-     * @desc 未查询的数据添加默认空值
+     * @desc 未查询到的数据添加默认空值
      * @param $ids
      * @param $array
      * @param null $value
@@ -447,6 +445,4 @@ trait ThreadListTrait
         app('cache')->put(CacheKey::LIST_THREADS_V3_POST_FAVOR, $postFavor);//收藏
         return [$postUsersLike, $postFavor];
     }
-
-
 }
