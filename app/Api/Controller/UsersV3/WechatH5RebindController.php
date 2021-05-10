@@ -19,6 +19,7 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
+use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
 use App\User\Bound;
@@ -52,11 +53,18 @@ class WechatH5RebindController extends AuthBaseController
     public function main()
     {
         $wxuser         = $this->getWxuser();
-        $sessionToken   = $this->inPut('sessionToken');//PC扫码使用
-        $actor          = $this->user;
-//        $actor = User::query()
-//                    ->where('id', 2)
-//                    ->first();
+        $sessionToken   = $this->inPut('sessionToken');
+//        $sessionToken   = 'qX7i8WnKwqc7XVsOZuoKc2SpQZxc6mhk';
+        $token          = SessionToken::get($sessionToken);
+        $actor          = !empty($token->user) ? $token->user : $this->user;
+
+        if (empty($actor) || $actor->isGuest() || is_null($actor->wechat)) {
+            $this->outPut(ResponseCode::NOT_FOUND_USER);
+        }
+
+        if (is_null($actor->wechat)) {
+            $this->outPut(ResponseCode::BIND_ERROR);
+        }
 
         $this->db->beginTransaction();
         try {
@@ -67,41 +75,40 @@ class WechatH5RebindController extends AuthBaseController
                 ->lockForUpdate()
                 ->first();
 
-            //调试用
-//            $wechatUser = UserWechat::query()
-//            ->where('id', '=', 29)
-//            ->first();
         } catch (Exception $e) {
             $this->db->rollBack();
+            $this->outPut(ResponseCode::NET_ERROR,
+                          ResponseCode::$codeMap[ResponseCode::NET_ERROR],
+                          $e->getMessage()
+            );
         }
 
-        $this->recordWechatLog($wechatUser);
+//        $this->recordWechatLog($wechatUser);
 
-        if ($wechatUser) {
+        if (!$wechatUser || !$wechatUser->user) {
             // 更新微信用户信息
-            $wechatUser = new UserWechat();
-            if (!$actor->isGuest() && !is_null($actor->wechat)) {
-                //删除用户原先绑定的微信信息
-                UserWechat::query()->where('user_id', $actor->id)->delete();
-
-                $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
-
-                //添加新的换绑的微信信息
-                $wechatUser->user_id = $actor->id;
-                $wechatUser->setRelation('user', $actor);
-                $wechatUser->save();
-                $this->db->commit();
-
-                // PC扫码使用
-                if ($sessionToken) {
-                    $this->bound->rebindVoid($sessionToken, $wechatUser);
-                }
-
-                $this->outPut(ResponseCode::SUCCESS, '', []);
-            } else {
-                $this->db->rollBack();
-                $this->outPut(ResponseCode::ACCOUNT_WECHAT_IS_NULL);
+            if (!$wechatUser) {
+                $wechatUser = new UserWechat();
             }
+
+            //删除用户原先绑定的微信信息
+            UserWechat::query()->where('user_id', $actor->id)->delete();
+
+            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
+
+            //添加新的换绑的微信信息
+            $wechatUser->user_id = $actor->id;
+            $wechatUser->setRelation('user', $actor);
+            $wechatUser->save();
+            $this->db->commit();
+
+            // PC扫码使用
+            if ($sessionToken) {
+                $this->bound->rebindVoid($sessionToken, $wechatUser);
+            }
+
+            $this->outPut(ResponseCode::SUCCESS, '', []);
+
         } else {
             $this->db->rollBack();
             $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);

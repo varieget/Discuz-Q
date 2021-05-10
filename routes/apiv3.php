@@ -24,10 +24,12 @@ use App\Api\Controller as ApiController;
 //二维码生成
 $route->get('/users/pc/wechat/h5.genqrcode', 'pc.wechat.h5.qrcode', ApiController\UsersV3\WechatH5QrCodeController::class);
 $route->get('/users/pc/wechat/miniprogram.genqrcode', 'pc.wechat.miniprogram.genqrcode', ApiController\UsersV3\MiniProgramQrcodeController::class);
+$route->get('/users/pc/wechat.rebind.genqrcode', 'pc.wechat.rebind.genqrcode', ApiController\UsersV3\WechatPcRebindQrCodeController::class);
 $route->get('/users/pc/wechat/h5.login', 'pc.wechat.h5.login.poll', ApiController\UsersV3\WechatPcLoginPollController::class);
 $route->get('/users/pc/wechat/h5.bind', 'pc.wechat.h5.bind.poll', ApiController\UsersV3\WechatPcBindPollController::class);
 $route->get('/users/pc/wechat/miniprogram.bind', 'pc.wechat.miniprogram.bind.poll', ApiController\UsersV3\MiniProgramPcBindPollController::class);
 $route->get('/users/pc/wechat/miniprogram.login', 'pc.wechat.miniprogram.login.poll', ApiController\UsersV3\MiniProgramPcLoginPollController::class);
+$route->get('/users/pc/wechat.rebind.poll', 'pc.wechat.rebind.poll', ApiController\UsersV3\WechatPcRebindPollController::class);
 $route->get('/users/mobilebrowser/wechat/miniprogram.genscheme', 'pc.wechat.miniprogram.login.poll', ApiController\UsersV3\MiniProgramSchemeGenController::class);
 //登录
 $route->post('/users/username.login', 'username.login', ApiController\UsersV3\LoginController::class);

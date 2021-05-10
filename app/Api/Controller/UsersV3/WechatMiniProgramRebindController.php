@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\User;
+use App\Models\UserWechat;
 use App\User\Bind;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
@@ -59,33 +60,28 @@ class WechatMiniProgramRebindController extends AuthBaseController
     public function main()
     {
         $param          = $this->getWechatMiniProgramParam();
-        $jsCode         = $param['jsCode'];
-        $iv             = $param['iv'];
-        $encryptedData  = $param['encryptedData'];
-        $sessionId      = $this->inPut('sessionId');
-        $user           = !$this->user->isGuest() ? $this->user : new Guest();
         $sessionToken   = $this->inPut('sessionToken');// PC扫码使用
-        $actor          = $this->user;
+//        $sessionToken   = 'GJt8B1AxRjhLHR1VGJ2ZpsW5mLa6aRP2';
+        $token          = SessionToken::get($sessionToken);
+        $actor          = !empty($token->user) ? $token->user : $this->user;
 
-        $request = $this->request
-                        ->withAttribute('session', new SessionToken())
-                        ->withAttribute('sessionId', $sessionId);
+        if (empty($actor) || $actor->isGuest() || is_null($actor->wechat)) {
+            $this->outPut(ResponseCode::NOT_FOUND_USER);
+        }
 
-        $this->socialite->setRequest($request);
-
-        $driver = $this->socialite->driver('wechat');
-        $wxuser = $driver->user();
+        if (is_null($actor->wechat)) {
+            $this->outPut(ResponseCode::PC_REBIND_ERROR);
+        }
 
         // 绑定小程序
         $this->db->beginTransaction();
         try {
-            $wechatUser = $this->bind->bindMiniprogram(
-                $jsCode,
-                $iv,
-                $encryptedData,
-                0,
-                $user,
-                true
+            $app = $this->miniProgram();
+            $wechatUser = $this->getMiniWechatUser(
+                $app,
+                $param['jsCode'],
+                $param['iv'],
+                $param['encryptedData']
             );
         } catch (Exception $e) {
             $this->db->rollback();
@@ -95,11 +91,17 @@ class WechatMiniProgramRebindController extends AuthBaseController
             );
         }
 
-        if ($wechatUser->user_id && $wechatUser->user_id != $actor->id) {
-            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
+        if (!$wechatUser || !$wechatUser->user) {
+            if (!$wechatUser) {
+                $wechatUser = new UserWechat();
+            }
+
+            //删除用户原先绑定的微信信息
+            UserWechat::query()->where('user_id', $actor->id)->delete();
+
             $wechatUser->user_id = $actor->id;
             // 先设置关系再save，为了同步微信头像
-            $wechatUser->setRelation('user', $user);
+            $wechatUser->setRelation('user', $actor);
             $wechatUser->save();
 
             $this->db->commit();
@@ -109,12 +111,10 @@ class WechatMiniProgramRebindController extends AuthBaseController
                 $this->bound->rebindVoid($sessionToken, $wechatUser);
             }
 
-            $this->outPut(ResponseCode::SUCCESS, '', $actor);
+            $this->outPut(ResponseCode::SUCCESS, '', []);
         } else {
-            $this->outPut(ResponseCode::NET_ERROR);
+            $this->db->rollBack();
+            $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
         }
-
-        $this->db->commit();
-        $this->outPut(ResponseCode::SUCCESS, '', []);
     }
 }
