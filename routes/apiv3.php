@@ -150,6 +150,8 @@ $route->post('/wallet/cash', 'wallet.cash.create', ApiController\WalletV3\Create
 $route->get('/favorites', 'favorites', ApiController\ThreadsV3\ListFavoritesController::class);
 $route->post('/users/background', 'user.upload.background', ApiController\UsersV3\UploadBackgroundController::class);
 $route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
+$route->post('/users/update.mobile', 'update.mobile', ApiController\UsersV3\UpdateMobileController::class);
+
 
 $route->get('/users/deny', 'user.deny.list', ApiController\UsersV3\ListDenyUserController::class);
 $route->post('/users/deny', 'user.deny', ApiController\UsersV3\CreateDenyUserController::class);

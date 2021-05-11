@@ -45,6 +45,7 @@ class SmsSendController extends AuthBaseController
         'reset_pwd',
         'reset_pay_pwd',
         'verify',
+        'update'
     ];
 
     public function __construct(

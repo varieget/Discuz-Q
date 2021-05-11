@@ -51,7 +51,7 @@ class UpdateUsersController extends DzqController
         $payPassword = $this->inPut('payPassword');
         $payPasswordConfirmation = $this->inPut('payPasswordConfirmation');
         $payPasswordToken = $this->inPut('payPasswordToken');
-        $mobile = $this->inPut('mobile');
+        //$mobile = $this->inPut('mobile');
         $signature = $this->inPut('signature');
         $registerReason = $this->inPut('registerReason');
 
@@ -81,9 +81,9 @@ class UpdateUsersController extends DzqController
             $requestData['pay_password_token'] = $payPasswordToken;
         }
 
-        if(!empty($mobile)){
-            $requestData['mobile'] = $mobile;
-        }
+//        if(!empty($mobile)){
+//            $requestData['mobile'] = $mobile;
+//        }
         if(!empty($signature)){
             $requestData['signature'] = $signature;
         }
