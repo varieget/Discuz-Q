@@ -15,3 +15,8 @@ $route->get('/groups.list', 'groups.list', ApiController\GroupV3\ListGroupsContr
 $route->post('/groups.batchupdate', 'groups.batchupdate', ApiController\GroupV3\BatchUpdateGroupController::class);
 $route->post('/groups.batchdelete', 'groups.batchdelete', ApiController\GroupV3\BatchDeleteGroupsController::class);
 $route->post('/users/update.user', 'users.admin', ApiController\UsersV3\UpdateAdminController::class);
+
+// 财务
+$route->get('/users.wallet.logs', 'users.wallet.logs', ApiController\WalletV3\UsersWalletLogsListController::class);
+$route->get('/users.order.logs', 'users.order.logs', ApiController\OrderV3\UsersOrderLogsListController::class);
+$route->get('/users.cash.logs', 'users.cash.logs', ApiController\WalletV3\UsersCashLogsListController::class);

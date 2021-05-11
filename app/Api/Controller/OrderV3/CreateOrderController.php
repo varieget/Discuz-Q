@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Api\Controller\OrdersV3;
+namespace App\Api\Controller\OrderV3;
 
 use App\Commands\Order\CreateOrder;
 use App\Common\ResponseCode;
