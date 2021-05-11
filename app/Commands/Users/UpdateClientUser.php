@@ -162,7 +162,7 @@ class UpdateClientUser
         $this->changePayPassword($user, $isSelf, $attributes, $validate);
 
         // 修改手机号
-        $this->changeMobile($user, $attributes);
+        //$this->changeMobile($user, $attributes);
 
         $this->validator->valid($validate);
 
