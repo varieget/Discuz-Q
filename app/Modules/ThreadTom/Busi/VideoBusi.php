@@ -19,8 +19,8 @@ namespace App\Modules\ThreadTom\Busi;
 
 
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Models\ThreadVideo;
-use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomBaseBusi;
 
 class VideoBusi extends TomBaseBusi
@@ -41,22 +41,23 @@ class VideoBusi extends TomBaseBusi
     public function select()
     {
         $videoId = $this->getParams('videoId');
-        $videos = app('cache')->get(CacheKey::LIST_THREADS_V3_VIDEO);
-        if(array_key_exists($videoId,$videos)){
-            if(empty($videos[$videoId])){
-                $video = false;
-            }else{
-                $video = ThreadVideo::instance()->getThreadVideoById($videoId, $videos[$videoId]);
+        $videos = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_VIDEO, $videoId, function ($videoId) {
+            $videos = ThreadVideo::query()->where(['id' => $videoId, 'status' => ThreadVideo::VIDEO_STATUS_SUCCESS])->get()->toArray();
+            if (empty($videos)) {
+                $videos = [$videoId => null];
+            } else {
+                $videos = [$videoId => current($videos)];
             }
-        }else{
-            if(empty($videoId)){
-                $video = false;
-            }else{
-                $video = ThreadVideo::instance()->getThreadVideoById($videoId);
+            return $videos;
+        });
+        $video = $videos[$videoId] ?? null;
+        if ($video) {
+            $video = ThreadVideo::instance()->threadVideoResult($video);
+            if (!$this->canViewTom) {
+                $video['mediaUrl'] = '';
             }
-        }
-        if(!$this->canViewTom){
-            $video['mediaUrl'] = '';
+        } else {
+            $video = false;
         }
         return $this->jsonReturn($video);
     }

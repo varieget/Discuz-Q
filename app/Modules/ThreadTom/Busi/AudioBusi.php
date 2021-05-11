@@ -19,8 +19,8 @@ namespace App\Modules\ThreadTom\Busi;
 
 
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Models\ThreadVideo;
-use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomBaseBusi;
 
 class AudioBusi extends TomBaseBusi
@@ -40,22 +40,23 @@ class AudioBusi extends TomBaseBusi
     public function select()
     {
         $audioId = $this->getParams('audioId');
-        $audios = app('cache')->get(CacheKey::LIST_THREADS_V3_VIDEO);
-        if (array_key_exists($audioId,$audios)) {
-            if(empty($audios['audioId'])){
-                $audio = false;
-            }else{
-                $audio = ThreadVideo::instance()->getThreadVideoById($audioId, $audios[$audioId]);
+        $audios = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_VIDEO, $audioId, function ($audioId) {
+            $audios = ThreadVideo::query()->where(['id' => $audioId, 'status' => ThreadVideo::VIDEO_STATUS_SUCCESS])->get()->toArray();
+            if (empty($audios)) {
+                $audios = [$audioId => null];
+            } else {
+                $audios = [$audioId => current($audios)];
+            }
+            return $audios;
+        });
+        $audio = $audios[$audioId] ?? null;
+        if ($audio) {
+            $audio = ThreadVideo::instance()->threadVideoResult($audio);
+            if (!$this->canViewTom) {
+                $audio['mediaUrl'] = '';
             }
         } else {
-            if(empty($audioId)){
-                $audio = false;
-            }else{
-                $audio = ThreadVideo::instance()->getThreadVideoById($audioId);
-            }
-        }
-        if (!$this->canViewTom) {
-            $audio['mediaUrl'] = '';
+            $audio = false;
         }
         return $this->jsonReturn($audio);
     }

@@ -19,12 +19,11 @@ namespace App\Modules\ThreadTom\Busi;
 
 use App\Api\Serializer\AttachmentSerializer;
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Models\Thread;
-use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomBaseBusi;
-use Illuminate\Support\Arr;
 
 class DocBusi extends TomBaseBusi
 {
@@ -51,24 +50,16 @@ class DocBusi extends TomBaseBusi
         $serializer = $this->app->make(AttachmentSerializer::class);
         $result = [];
         $docIds = $this->getParams('docIds');
-        $attachmentsCache = app('cache')->get(CacheKey::LIST_THREADS_V3_ATTACHMENT);
-        $attachments = [];
-        foreach ($docIds as $docId) {
-            isset($attachmentsCache[$docId]) && $attachments[$docId] = $attachmentsCache[$docId];
-        }
-        if (!Arr::has($attachments, $docIds)) {
-            if (is_array($docIds)) {
-                $attachments = Attachment::query()->whereIn('id', $docIds)->get();
-            }
-        }
-        $threads = app('cache')->get(CacheKey::LIST_THREADS_V3_THREADS);
-        if ($threads && isset($threads[$this->threadId])) {
-            $thread = $threads[$this->threadId];
-        } else {
-            $thread = Thread::instance()->getOneActiveThread($this->threadId);
-            $threads[$this->threadId] = $thread;
-            app('cache')->put(CacheKey::LIST_THREADS_V3_THREADS, $threads);
-        }
+        $attachments = DzqCache::extractCacheCollectionData(CacheKey::LIST_THREADS_V3_ATTACHMENT, $docIds, function ($docIds) {
+            return Attachment::query()->whereIn('id', $docIds)->get()->keyBy('id');
+        });
+        $threadId = $this->threadId;
+        $threads = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {
+            $threads = Thread::instance()->getOneActiveThread($threadId, true);
+            $threads = [$threadId => $threads];
+            return $threads;
+        });
+        $thread = $threads[$threadId] ?? null;
         foreach ($attachments as $attachment) {
             if (!empty($thread)) {
                 $item = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));

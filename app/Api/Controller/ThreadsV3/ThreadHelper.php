@@ -122,7 +122,7 @@ class ThreadHelper
     public static function getThreadSearchReplace($concatString)
     {
         $searchIds = Thread::instance()->getSearchString($concatString);
-        $sReplaces = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $searchIds, function ($searchIds) use ($concatString) {
+        $sReplaces = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $searchIds, function ($searchIds) use ($concatString) {
             return Thread::instance()->getReplaceStringV3($concatString);
         });
         $searches = array_keys($sReplaces);

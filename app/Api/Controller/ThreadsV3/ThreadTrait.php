@@ -108,11 +108,11 @@ trait ThreadTrait
     private function getFavoriteField($threadId, $loginUser)
     {
         $userId = $loginUser->id;
-        $favorites = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_POST_FAVOR, $userId);
+        $favorites = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_POST_FAVOR, $userId);
         $favorites = $favorites[$userId] ?? [];
-        if ($favorites && isset($favorites[$userId])) {
-            if (array_key_exists($threadId, $favorites[$userId])) {
-                if (empty($favorites[$userId][$threadId])) {
+        if ($favorites) {
+            if (array_key_exists($threadId, $favorites)) {
+                if (empty($favorites[$threadId])) {
                     return false;
                 } else {
                     return true;
@@ -185,11 +185,11 @@ trait ThreadTrait
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
         } else {
-            $orders = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userId);
+            $orders = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userId);
             $orders = $orders[$userId] ?? [];
-            if ($orders && isset($orders[$userId])) {
-                if (array_key_exists($threadId, $orders[$userId])) {
-                    if (empty($orders[$userId][$threadId])) {
+            if ($orders) {
+                if (array_key_exists($threadId, $orders)) {
+                    if (empty($orders[$threadId])) {
                         $paid = false;
                     } else {
                         $paid = true;
@@ -200,7 +200,7 @@ trait ThreadTrait
             $paid = Order::query()
                 ->where([
                     'thread_id' => $threadId,
-                    'user_id' => $this->user->id,
+                    'user_id' => $userId,
                     'status' => Order::ORDER_STATUS_PAID
                 ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
         }
@@ -318,7 +318,7 @@ trait ThreadTrait
         ];
         $threadId = $thread['id'];
         $postId = $post['id'];
-        $postUsers = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_POST_USERS, $threadId, function ($threadId) use ($postId, $post) {
+        $postUsers = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_POST_USERS, $threadId, function ($threadId) use ($postId, $post) {
             return ThreadHelper::getThreadLikedDetail($threadId, $postId, $post, false);
         });
         !empty($postUsers[$threadId]) && $ret['users'] = $postUsers[$threadId];
@@ -350,18 +350,18 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $postId = $post['id'];
-        $postUser = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId);
+        $postUser = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId);
         $postUser = $postUser[$userId] ?? [];
-        if ($postUser && isset($postUser[$userId])) {
-            if (array_key_exists($postId, $postUser[$userId])) {
-                if (empty($postUser[$userId][$postId])) {
+        if ($postUser) {
+            if (array_key_exists($postId, $postUser)) {
+                if (empty($postUser[$postId])) {
                     return false;
                 } else {
                     return true;
                 }
             }
         }
-        return PostUser::query()->where('post_id', $post['id'])->where('user_id', $loginUser->id)->exists();
+        return PostUser::query()->where('post_id', $post['id'])->where('user_id', $userId)->exists();
     }
 
     /*

@@ -62,7 +62,7 @@ trait TomTrait
         if (empty($indexes)) return $tomJsons;
         $tomList = [];
         if (!empty($threadId) && empty($operation)) {
-            $tomList = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
+            $tomList = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
                 $tomList = ThreadTom::query()
                     ->select('tom_type', 'key')
                     ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();

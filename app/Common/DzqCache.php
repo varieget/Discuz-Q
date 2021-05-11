@@ -17,6 +17,7 @@
 
 namespace App\Common;
 
+use Illuminate\Database\Eloquent\Collection;
 
 class DzqCache
 {
@@ -27,12 +28,12 @@ class DzqCache
      * @param callable|null $callback 提取的数据不全则需要自行查询，查询结果会重新放进缓存
      * @return array|bool 返回从缓存中查询出的数据
      */
-    public static function extractCacheData($cacheKey, $extractIds, callable $callback = null)
+    public static function extractCacheArrayData($cacheKey, $extractIds, callable $callback = null)
     {
         $cache = app('cache');
         $cacheData = $cache->get($cacheKey);
         $ret = [];
-//        $cacheData = false;
+        $ids = $extractIds;
         !is_array($extractIds) && $extractIds = [$extractIds];
         if (!empty($extractIds)) {
             if ($cacheData) {
@@ -46,10 +47,38 @@ class DzqCache
             }
         }
         if (($ret === false || !$cacheData) && !empty($callback)) {
-            $ret = $callback($extractIds);
+            $ret = $callback($ids);
             !$cacheData && $cacheData = [];
             foreach ($ret as $key => $value) {
                 $cacheData[$key] = $value;
+            }
+            $cache->put($cacheKey, $cacheData);
+        }
+        return $ret;
+    }
+
+    public static function extractCacheCollectionData($cacheKey, $extractIds, callable $callback = null)
+    {
+        $cache = app('cache');
+        $cacheData = $cache->get($cacheKey);
+        $ret = new  Collection();
+        !is_array($extractIds) && $extractIds = [$extractIds];
+        if (!empty($extractIds)) {
+            if ($cacheData) {
+                foreach ($extractIds as $extractId) {
+                    if ($cacheData->has($extractId)) {
+                        !empty($cacheData[$extractId]) && $ret->put($extractId, $cacheData[$extractId]);
+                    } else {
+                        $ret = false;
+                    }
+                }
+            }
+        }
+        if (($ret === false || !$cacheData) && !empty($callback)) {
+            $ret = $callback($extractIds);
+            !$cacheData && $cacheData = new  Collection();
+            foreach ($ret as $key => $value) {
+                $cacheData->put($key, $value);
             }
             $cache->put($cacheKey, $cacheData);
         }

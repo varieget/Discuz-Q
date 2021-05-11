@@ -39,30 +39,30 @@ trait ThreadListTrait
     {
         $userIds = array_unique(array_column($threads, 'user_id'));
         $groupUsers = $this->getGroupUserInfo($userIds);
-        $users = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
+        $users = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
             $users = User::instance()->getUsers($userIds);
             $users = array_column($users, null, 'id');
             return $users;
         });
         $threadIds = array_column($threads, 'id');
-        $posts = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_POSTS, $threadIds, function ($threadIds) {
+        $posts = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_POSTS, $threadIds, function ($threadIds) {
             $posts = Post::instance()->getPosts($threadIds);
             $posts = array_column($posts, null, 'thread_id');
             return $posts;
         });
-        $toms = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_TOMS, $threadIds, function ($threadIds) {
+        $toms = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_TOMS, $threadIds, function ($threadIds) {
             $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
             $toms = $this->arrayColumnMulti($toms, 'thread_id');
             return $toms;
         });
-        $tags = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
+        $tags = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
             $tags = [];
             ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
                 $tags[$item['thread_id']][] = $item->toArray();
             });
             return $tags;
         });
-        $inPutToms = $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds);
+        $inPutToms = $this->buildIPutToms($toms);
         $result = [];
         $concatString = '';
         foreach ($threads as $thread) {
@@ -88,7 +88,7 @@ trait ThreadListTrait
     private function getGroupUserInfo($userIds)
     {
         $groups = array_column(Group::getGroups(), null, 'id');
-        $groupUsers = DzqCache::extractCacheData(CacheKey::LIST_THREADS_V3_GROUP_USER, $userIds, function ($userIds) {
+        $groupUsers = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_GROUP_USER, $userIds, function ($userIds) {
             $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
             $groupUsers = array_column($groupUsers, null, 'user_id');
             return $groupUsers;
@@ -158,7 +158,7 @@ trait ThreadListTrait
         $attachmentIds = [];
         $threadVideoIds = [];
         $toms = $this->cacheToms($threadIds);
-        $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds);
+        $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds,true);
         $this->cacheAttachment($attachmentIds);
         $this->cacheVideo($threadVideoIds);
         $this->cacheUserOrders($loginUserId, $threadIds);
@@ -187,31 +187,35 @@ trait ThreadListTrait
         return md5(serialize($groupIds));
     }
 
-    private function buildIPutToms($tomData, &$attachmentIds, &$threadVideoIds)
+    private function buildIPutToms($tomData, &$attachmentIds = [], &$threadVideoIds = [], $withIds = false)
     {
         $inPutToms = [];
         foreach ($tomData as $threadId => $toms) {
             foreach ($toms as $tom) {
                 $value = json_decode($tom['value'], true);
-                switch ($tom['tom_type']) {
-                    case TomConfig::TOM_IMAGE:
-                        isset($value['imageIds']) && $attachmentIds = array_merge($attachmentIds, $value['imageIds']);
-                        break;
-                    case TomConfig::TOM_DOC:
-                        isset($value['docIds']) && $attachmentIds = array_merge($attachmentIds, $value['docIds']);
-                        break;
-                    case TomConfig::TOM_VIDEO:
-                        isset($value['videoId']) && $threadVideoIds[] = $value['videoId'];
-                        break;
-                    case TomConfig::TOM_AUDIO:
-                        isset($value['audioId']) && $threadVideoIds[] = $value['audioId'];
-                        break;
+                if ($withIds) {
+                    switch ($tom['tom_type']) {
+                        case TomConfig::TOM_IMAGE:
+                            isset($value['imageIds']) && $attachmentIds = array_merge($attachmentIds, $value['imageIds']);
+                            break;
+                        case TomConfig::TOM_DOC:
+                            isset($value['docIds']) && $attachmentIds = array_merge($attachmentIds, $value['docIds']);
+                            break;
+                        case TomConfig::TOM_VIDEO:
+                            isset($value['videoId']) && $threadVideoIds[] = $value['videoId'];
+                            break;
+                        case TomConfig::TOM_AUDIO:
+                            isset($value['audioId']) && $threadVideoIds[] = $value['audioId'];
+                            break;
+                    }
                 }
                 $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
             }
         }
-        $attachmentIds = array_values(array_unique($attachmentIds));
-        $threadVideoIds = array_values(array_unique($threadVideoIds));
+        if ($withIds) {
+            $attachmentIds = array_values(array_unique($attachmentIds));
+            $threadVideoIds = array_values(array_unique($threadVideoIds));
+        }
         return $inPutToms;
     }
 

@@ -875,9 +875,9 @@ class Thread extends DzqModel
         return $sReplaces;
     }
 
-    public static function getOneActiveThread($threadId)
+    public static function getOneActiveThread($threadId, $toArray = false)
     {
-        return self::query()
+        $ret = self::query()
             ->where([
                 'id' => $threadId,
                 'is_approved' => Thread::BOOL_YES,
@@ -885,5 +885,7 @@ class Thread extends DzqModel
             ])
             ->whereNull('deleted_at')
             ->first();
+        $toArray && $ret = $ret->toArray();
+        return $ret;
     }
 }
