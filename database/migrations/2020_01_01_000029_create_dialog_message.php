@@ -35,7 +35,6 @@ class CreateDialogMessage extends Migration
             $table->text('message_text')->nullable()->comment('内容');
             $table->dateTime('created_at')->comment('创建时间');
             $table->dateTime('updated_at')->comment('更新时间');
-
         });
     }
 
