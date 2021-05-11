@@ -76,11 +76,13 @@ class AbnormalOrderDealCommand extends AbstractCommand
                 Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE, 
                 Order::ORDER_TYPE_TEXT, Order::ORDER_TYPE_LONG];
 
+        $date = Carbon::parse('-1 day')->toDateString();
+        $dateTimeBegin = $date . ' 00:00:00';
         $preTime = time() - $this->expireTime;
-        $compareTime = date("Y-m-d H:i:s",$preTime);
+        $dateTimeEnd = date("Y-m-d H:i:s", $preTime); // 筛选昨天至当前15分钟前的异常订单
         $query = Order::query();
-        $query->where('created_at', '<', $compareTime);
-        $query->where('status', '=', 1); 
+        $query->whereBetween('created_at', [$dateTimeBegin, $dateTimeEnd]);
+        $query->where('status', Order::ORDER_STATUS_PAID); 
         $query->where('amount', '>', 0);
         $query->whereIn('type', $orderType);
         $query->whereNull('thread_id');
