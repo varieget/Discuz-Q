@@ -28,7 +28,7 @@ class CreateDialogMessage extends Migration
      */
     public function up()
     {
-        $this->schema()->create('dialog_message', function (Blueprint $table) {
+        $this->schema()->table('dialog_message', function (Blueprint $table) {
             $table->unsignedTinyInteger('read_status')->default(1)->comment('阅读状态0.未读 1.已读');
         });
     }
@@ -40,6 +40,8 @@ class CreateDialogMessage extends Migration
      */
     public function down()
     {
-        $this->schema()->dropIfExists('dialog_message');
+        $this->schema()->table('dialog_message', function (Blueprint $table) {
+            $table->unsignedTinyInteger('read_status');
+        });
     }
 }
