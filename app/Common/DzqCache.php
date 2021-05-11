@@ -24,11 +24,12 @@ class DzqCache
     /**
      * @desc 从缓存中提取指定id集合的数据，没有则从数据库查询
      * @param string $cacheKey 缓存key
-     * @param array $extractIds 需要提取的数据
+     * @param array|string|integer $extractIds 需要提取的数据
      * @param callable|null $callback 提取的数据不全则需要自行查询，查询结果会重新放进缓存
+     * @param bool $autoCache
      * @return array|bool 返回从缓存中查询出的数据
      */
-    public static function extractCacheArrayData($cacheKey, $extractIds, callable $callback = null)
+    public static function extractCacheArrayData($cacheKey, $extractIds, callable $callback = null, $autoCache = true)
     {
         $cache = app('cache');
         $cacheData = $cache->get($cacheKey);
@@ -48,15 +49,24 @@ class DzqCache
         }
         if (($ret === false || !$cacheData) && !empty($callback)) {
             $ret = $callback($ids);
-            !$cacheData && $cacheData = [];
-            foreach ($ret as $key => $value) {
-                $cacheData[$key] = $value;
+            if ($autoCache) {
+                !$cacheData && $cacheData = [];
+                foreach ($ret as $key => $value) {
+                    $cacheData[$key] = $value;
+                }
+                $cache->put($cacheKey, $cacheData);
             }
-            $cache->put($cacheKey, $cacheData);
         }
         return $ret;
     }
 
+    /**
+     * @desc 从缓存中提取指定id集合的数据，没有则从数据库查询
+     * @param string $cacheKey 缓存key
+     * @param array|string|integer $extractIds 需要提取的数据
+     * @param callable|null $callback 提取的数据不全则需要自行查询，查询结果会重新放进缓存
+     * @return array|bool 返回从缓存中查询出的数据
+     */
     public static function extractCacheCollectionData($cacheKey, $extractIds, callable $callback = null)
     {
         $cache = app('cache');
@@ -83,5 +93,35 @@ class DzqCache
             $cache->put($cacheKey, $cacheData);
         }
         return $ret;
+    }
+
+    public static function extractThreadListData($cacheKey, $filterId, $page, callable $callback = null, $preload = false)
+    {
+        $cache = app('cache');
+        $cacheData = $cache->get($cacheKey);
+        $ret = false;
+        if ($cacheData) {
+            if (array_key_exists($filterId, $cacheData) && array_key_exists($page, $cacheData[$filterId])) {
+                $ret = $cacheData[$filterId][$page];
+            }
+        }
+        if (($ret === false || !$cacheData) && !empty($callback)) {
+            $ret = $callback($filterId, $page);
+            !$cacheData && $cacheData = [];
+            if ($preload) {
+                $cacheData[$filterId] = $ret;
+                $ret = $cacheData[$filterId][$page];
+            } else {
+                $cacheData[$filterId][$page] = $ret;
+            }
+            $cache->put($cacheKey, $cacheData);
+        }
+        return $ret;
+    }
+
+
+    public static function removeCacheByIds()
+    {
+
     }
 }

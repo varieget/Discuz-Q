@@ -128,7 +128,6 @@ trait ThreadListTrait
 
     private function initDzqThreadsData($threads)
     {
-        $threads = $threads->toArray();
         $cache = app('cache');
         $cacheKey = CacheKey::LIST_THREADS_V3 . $this->md5GroupId();
         $filter = $this->inPut('filter');
@@ -140,13 +139,12 @@ trait ThreadListTrait
             $data = [$filterKey => $threads];
         }
         $cache->put($cacheKey, $data);
-        $this->initDzqUnitData($threads);
+        $this->initDzqUnitData($this->user->id, $threads);
     }
 
-    private function initDzqUnitData($threadsList)
+    private function initDzqUnitData($loginUserId, $threadsList)
     {
-        $loginUserId = $this->user->id;
-        $threads = $this->resetThreads($threadsList);
+        $threads = $this->getAllThreadsList($threadsList);
         $threadIds = array_column($threads, 'id');
         $posts = $this->cachePosts($threadIds);
         $postIds = array_column($posts, 'id');
@@ -158,7 +156,7 @@ trait ThreadListTrait
         $attachmentIds = [];
         $threadVideoIds = [];
         $toms = $this->cacheToms($threadIds);
-        $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds,true);
+        $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds, true);
         $this->cacheAttachment($attachmentIds);
         $this->cacheVideo($threadVideoIds);
         $this->cacheUserOrders($loginUserId, $threadIds);
@@ -168,10 +166,10 @@ trait ThreadListTrait
         $this->cacheSearchReplace($threads, $posts);
     }
 
-    private function resetThreads($threadsList)
+    private function getAllThreadsList($threadsByPage)
     {
         $threads = [];
-        foreach ($threadsList as $listItems) {
+        foreach ($threadsByPage as $listItems) {
             $pageData = $listItems['pageData'];
             foreach ($pageData as $thread) {
                 $threads[] = $thread;
@@ -229,8 +227,7 @@ trait ThreadListTrait
 
     private function cacheGroupUser($userIds)
     {
-        $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
-        $groupUsers = array_column($groupUsers, null, 'user_id');
+        $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->keyBy('user_id')->toArray();
         app('cache')->put(CacheKey::LIST_THREADS_V3_GROUP_USER, $groupUsers);
         return $groupUsers;
     }
@@ -285,7 +282,7 @@ trait ThreadListTrait
 
     private function cacheAttachment($attachmentIds)
     {
-        $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->pluck(null, 'id');
+        $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->keyBy('id');
         $attachments = $this->appendDefaultEmpty($attachmentIds, $attachments, null);
         app('cache')->put(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachments);
         return $attachments;
@@ -293,7 +290,7 @@ trait ThreadListTrait
 
     private function cacheVideo($threadVideoIds)
     {
-        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->where('status', ThreadVideo::VIDEO_STATUS_SUCCESS)->get()->pluck(null, 'id')->toArray();
+        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->where('status', ThreadVideo::VIDEO_STATUS_SUCCESS)->get()->keyBy('id')->toArray();
         $threadVideos = $this->appendDefaultEmpty($threadVideoIds, $threadVideos, null);
         app('cache')->put(CacheKey::LIST_THREADS_V3_VIDEO, $threadVideos);
         return $threadVideos;
