@@ -26,10 +26,11 @@ class ListNotificationV2Controller extends DzqController
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
 
-        $type = $this->inPut('type');
+        $filters = $this->inPut('filter') ?: [];
         $page = $this->inPut('page') ?: 1;
         $perPage = $this->inPut('perPage') ?: 10;
-        $pageData = $this->search($user, $type, $perPage, $page);
+
+        $pageData = $this->search($user, $filters, $perPage, $page);
 
         $pageData['pageData'] = $pageData['pageData']->map(function (DatabaseNotification $i) {
             return $this->formatData($i);
@@ -38,18 +39,15 @@ class ListNotificationV2Controller extends DzqController
         $this->outPut(ResponseCode::SUCCESS, '', $pageData);
     }
 
-    public function search(User $user, $type, $perPage, $page)
+    public function search(User $user, $filters, $perPage, $page)
     {
-
-        $existType = ['related','replied','liked','rewarded','questioned','system','receiveredpacke'];
-        if(!in_array($type,$existType)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'');
-        }
+        $type = Arr::get($filters, 'type');
 
         $query = $user->notifications()
             ->when($type, function ($query, $type) {
                 return $query->whereIn('type', explode(',', $type));
             });
+
         $query->orderBy('created_at', 'desc');
 
         $pageData = $this->pagination($page, $perPage, $query->getQuery(), false);
@@ -63,6 +61,7 @@ class ListNotificationV2Controller extends DzqController
          * 获取主题&用户
          */
         [$users, $threads] = $this->getUsersAndThreads($data, $type);
+
         /**
          * 系统通知结构不一
          */

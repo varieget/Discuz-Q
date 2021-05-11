@@ -120,12 +120,16 @@ $route->post('/users/update', 'users.update', ApiController\UsersV3\UpdateUserCo
 */
 $route->get('/notification', 'notification.list', ApiController\NotificationV3\ListNotificationV2Controller::class);
 $route->post('/notification.delete', 'notification.delete', ApiController\NotificationV3\DeleteNotificationV2Controller::class);
+$route->get('/unreadnotification', 'unreadnotification.', ApiController\NotificationV3\UnreadNotificationController::class);
+
+
+
 $route->get('/dialog', 'dialog.list', ApiController\DialogV3\ListDialogV2Controller::class);
 $route->get('/dialog/message', 'dialog.message.list', ApiController\DialogV3\ListDialogMessageV2Controller::class);
 $route->post('/dialog.create', 'dialog.create', ApiController\DialogV3\CreateDialogV2Controller::class);
 $route->post('/dialog/message.create', 'dialog.message.create', ApiController\DialogV3\CreateDialogMessageV2Controller::class);
 $route->post('/dialog.delete', 'dialog.delete', ApiController\DialogV3\DeleteDialogV2Controller::class);
-
+$route->post('/dialog.update', 'dialog.update', ApiController\DialogV3\UpdateUnreadStatusController::class);
 
 
 

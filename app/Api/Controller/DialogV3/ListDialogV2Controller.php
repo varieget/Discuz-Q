@@ -64,7 +64,24 @@ class ListDialogV2Controller extends DzqController
             ->orderBy('dialog_message_id', 'desc');
 
         $pageData = $this->pagination($page, $perPage, $query, false);
+
         $pageData['pageData'] = $pageData['pageData']->map(function (Dialog $i) {
+
+            $actor = $this->user;
+
+            $dialog = Dialog::query()->distinct('sender_user_id')
+                ->where('sender_user_id',$actor->id)
+                ->orWhere('recipient_user_id',$actor->id)
+                ->get()->pluck('id');
+
+
+            $dialogList = Dialog::query()
+                ->leftJoin('dialog_message as dm', 'dm.dialog_id', '=', 'dialog.id')
+                ->where('dm.user_id','!=',$actor->id)
+                ->whereIn('dm.dialog_id' ,$dialog)
+                ->where('read_status','=',0)
+                ->count();
+
             $msg = $i->dialogMessage;
             $msg = $msg
                 ? [
@@ -84,6 +101,7 @@ class ListDialogV2Controller extends DzqController
                 'id' => $i->id,
                 'dialogMessageId' => $i->dialog_message_id ?: 0,
                 'senderUserId' => $i->sender_user_id,
+                'unreadCount' =>  $dialogList,
                 'recipientUserId' => $i->recipient_user_id,
                 'senderReadAt' => optional($i->sender_read_at)->format('Y-m-d H:i:s'),
                 'recipientReadAt' => optional($i->recipient_read_at)->format('Y-m-d H:i:s'),
