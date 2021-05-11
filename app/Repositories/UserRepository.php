@@ -18,6 +18,8 @@
 
 namespace App\Repositories;
 
+use App\Common\PermissionKey;
+use App\Models\Group;
 use App\Models\User;
 use Discuz\Foundation\AbstractRepository;
 use Illuminate\Database\Eloquent\Builder;
@@ -61,5 +63,100 @@ class UserRepository extends AbstractRepository
     public function findByIdentification($param)
     {
         return User::where($param)->first();
+    }
+
+    private function checkCategoryPermission(User $user, string $ability, $categoryId = null)
+    {
+        $abilities = [$ability];
+
+        if ($categoryId) {
+            $abilities[] = 'category'.$categoryId.'.'.$ability;
+        }
+
+        return $user->hasPermission('switch.'.$ability) && $user->hasPermission($abilities, false);
+    }
+
+    public function canCreateThread(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::CREATE_THREAD, $categoryId);
+    }
+
+    public function canInsertImage(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_IMAGE, $categoryId);
+    }
+
+    public function canInsertVideo(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_VIDEO, $categoryId);
+    }
+
+    public function canInsertAudio(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_AUDIO, $categoryId);
+    }
+
+    public function canInsertAttachment(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_ATTACHMENT, $categoryId);
+    }
+
+    public function canInsertGoods(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_GOODS, $categoryId);
+    }
+
+    public function canInsertPay(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_PAY, $categoryId);
+    }
+
+    public function canInsertReward(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_REWARD, $categoryId);
+    }
+
+    public function canInsertRedPacket(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_RED_PACKET, $categoryId);
+    }
+
+    public function canInsertPosition(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_POSITION, $categoryId);
+    }
+
+    public function canAllowAnonymous(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_ALLOW_ANONYMOUS, $categoryId);
+    }
+
+    public function canViewThreads(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::VIEW_THREADS, $categoryId);
+    }
+
+    public function canCreateOrder(User $user)
+    {
+        return $user->hasPermission(PermissionKey::ORDER_CREATE);
+    }
+
+    public function canHideThread(User $user, $thread, $categoryId = null)
+    {
+        return ($user->id === $thread->user_id && $this->checkCategoryPermission($user, PermissionKey::OWN_THREAD_DELETE, $categoryId))
+            || $this->checkCategoryPermission($user, PermissionKey::THREAD_DELETE, $categoryId);
+    }
+
+    public function canDeleteGroup(User $user, Group $group)
+    {
+        $groups = [
+            Group::ADMINISTRATOR_ID,
+            Group::BAN_ID,
+            Group::UNPAID,
+            Group::GUEST_ID,
+            Group::MEMBER_ID,
+        ];
+
+        return !in_array($group->id, $groups) && $user->isAdmin();
     }
 }

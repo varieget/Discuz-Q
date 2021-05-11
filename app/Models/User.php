@@ -818,7 +818,7 @@ class User extends DzqModel
         }
 
         if (is_null($this->permissions)) {
-            $this->permissions = $this->getPermissions();
+            $this->permissions = Permission::getUserPermissions($this);
         }
 
         if (is_array($permission)) {
