@@ -19,11 +19,10 @@ namespace App\Api\Controller\NotificationV3;
 
 
 use App\Common\ResponseCode;
-use App\Models\User;
-use App\Repositories\UserFollowRepository;
+use Discuz\Base\DzqController;
 use App\Repositories\UserRepository;
 
-class UnreadNotificationController extends \Discuz\Base\DzqController
+class UnreadNotificationController extends DzqController
 {
 
     protected $users;
@@ -40,13 +39,11 @@ class UnreadNotificationController extends \Discuz\Base\DzqController
     public function main()
     {
         $actor = $this->user;
-        if(! $actor || $actor->id) {
-            return $this->outPut(ResponseCode::LOGIN_FAILED);
-        }
-
         $user = $this->users->findOrFail($actor->id, $actor);
         $data['unreadNotifications'] = $user->getUnreadNotificationCount();
         $data['typeUnreadNotifications'] = $user->getUnreadTypesNotificationCount();
+
+        return $this->outPut(ResponseCode::SUCCESS,'',$data);
 
     }
 }
