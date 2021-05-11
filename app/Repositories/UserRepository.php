@@ -147,6 +147,18 @@ class UserRepository extends AbstractRepository
             || $this->checkCategoryPermission($user, PermissionKey::THREAD_DELETE, $categoryId);
     }
 
+    public function canViewListWallet(User $user){
+        return $user->hasPermission(PermissionKey::WALLET_VIEW_LIST);
+    }
+
+    public function canViewListLogs(User $user){
+        return $user->hasPermission(PermissionKey::WALLET_LOGS_VIEW_LIST);
+    }
+
+    public function canViewListCash(User $user){
+        return $user->hasPermission(PermissionKey::CASH_VIEW_LIST);
+    }
+
     public function canDeleteGroup(User $user, Group $group)
     {
         $groups = [

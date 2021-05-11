@@ -36,4 +36,7 @@ class PermissionKey
     const CASH_CREATE = 'cash.create';
     const ORDER_CREATE = 'order.create';
 
+    const WALLET_VIEW_LIST = 'wallet.viewList';
+    const WALLET_LOGS_VIEW_LIST = 'wallet.logs.viewList';
+    const CASH_VIEW_LIST = 'cash.viewList';
 }
