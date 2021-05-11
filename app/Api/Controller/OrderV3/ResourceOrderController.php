@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Api\Controller\OrdersV3;
+namespace App\Api\Controller\OrderV3;
 
 use App\Common\ResponseCode;
 use App\Models\Order;
@@ -21,11 +21,11 @@ class ResourceOrderController extends DzqController
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         $order = Order::query()
-                        ->where([
-                            'user_id' => $user->id,
-                            'order_sn' => $this->inPut('orderSn'),
-                        ])
-                        ->first();
+            ->where([
+                        'user_id' => $user->id,
+                        'order_sn' => $this->inPut('orderSn'),
+                    ])
+            ->first();
         if(empty($order)){
             $this->outPut(ResponseCode::INVALID_PARAMETER, '');
         }
