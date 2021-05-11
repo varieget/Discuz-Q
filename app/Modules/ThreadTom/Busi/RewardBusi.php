@@ -104,7 +104,7 @@ class RewardBusi extends TomBaseBusi
         ];
         $rules = [
             'orderSn' => 'required|numeric',
-            'price' => 'required|numeric|min:0.01',
+            'price' => 'required|numeric|min:0.1|max:1000000',
             'type' => 'required|integer|in:0,1',
             'expiredAt' => 'required|date',
             'content' => 'max:1000',

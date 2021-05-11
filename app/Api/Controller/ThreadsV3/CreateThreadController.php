@@ -25,20 +25,21 @@ use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomConfig;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class CreateThreadController extends DzqController
 {
     use ThreadTrait;
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $userRepo->canCreateThread($this->user, $this->inPut('categoryId'));
+    }
+
     public function main()
     {
         $this->limitCreateThread();
-        //发帖权限
-        $categoryId = $this->inPut('categoryId');
-        if (!$this->canCreateThread($this->user, $categoryId)) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
-        }
         !empty($position) && $this->dzqValidate($position, [
             'longitude' => 'required',
             'latitude' => 'required',

@@ -137,6 +137,8 @@ class UserWalletLog extends Model
 
     const TYPE_QUESTION_ABNORMAL_REFUND = 124; // 问答帖订单异常返现
 
+    const TYPE_ABNORMAL_ORDER_REFUND = 130; // 异常订单退款
+
     /* -------分割线(以下为V3新增枚举值150-170) ----- */
     const TYPE_REDPACKET_FREEZE = 150; // 红包冻结
 
