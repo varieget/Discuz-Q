@@ -151,6 +151,7 @@ $route->get('/favorites', 'favorites', ApiController\ThreadsV3\ListFavoritesCont
 $route->post('/users/background', 'user.upload.background', ApiController\UsersV3\UploadBackgroundController::class);
 $route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
 $route->post('/users/update.mobile', 'update.mobile', ApiController\UsersV3\UpdateMobileController::class);
+$route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarController::class);
 
 
 $route->get('/users/deny', 'user.deny.list', ApiController\UsersV3\ListDenyUserController::class);
