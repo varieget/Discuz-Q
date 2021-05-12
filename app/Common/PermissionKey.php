@@ -35,7 +35,7 @@ class PermissionKey
     const THREAD_EDIT_POSTS = 'thread.editPosts';
 
     const DIALOG_CREATE = 'dialog.create';
-    const CREATE_INVITE = 'createInvite';
+    const CREATE_INVITE_USER_SCALE = 'other.canInviteUserScale';
 
     const CASH_CREATE = 'cash.create';
     const ORDER_CREATE = 'order.create';
@@ -48,4 +48,7 @@ class PermissionKey
     const USER_EDIT_STATUS = 'user.edit.status';
     const USER_VIEW = 'user.view';
     const USER_FOLLOW_CREATE = 'userFollow.create';
+
+    const CREATE_THREAD_WITH_CAPTCHA = 'createThreadWithCaptcha';
+    const PUBLISH_NEED_BIND_PHONE = 'publishNeedBindPhone';
 }

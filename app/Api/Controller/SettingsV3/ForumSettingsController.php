@@ -20,11 +20,16 @@ namespace App\Api\Controller\SettingsV3;
 use App\Api\Serializer\ForumSettingSerializerV2;
 use App\Common\ResponseCode;
 use App\Settings\SettingsRepository;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Str;
 
 class ForumSettingsController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
 
     public $settings;
 
@@ -50,9 +55,6 @@ class ForumSettingsController extends DzqController
         }
 
         $data = $this->camelData($data);
-
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
-
     }
-
 }

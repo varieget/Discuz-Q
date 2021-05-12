@@ -21,11 +21,19 @@ namespace App\Api\Controller\GroupV3;
 use App\Models\Category;
 use App\Models\Permission;
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 
 class GroupPermissionListController extends DzqController
 {
-    // 权限检查，是否为注册用户
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException;
+        }
+        return true;
+    }
 
     public function main()
     {
@@ -57,18 +65,18 @@ class GroupPermissionListController extends DzqController
     {
         $allPermissons = array(
             'general' => array(
-                'thread.sticky'     => isset($groupPermissons['thread.sticky']) ? true : false, // 置顶
-                'thread.favorite'   => isset($groupPermissons['thread.favorite']) ? true : false, // 收藏
-                'thread.likePosts'  => isset($groupPermissons['thread.likePosts']) ? true : false, // 点赞
-                'user.view'         => isset($groupPermissons['user.view']) ? true : false, // 查看用户
-                'userFollow.create' => isset($groupPermissons['userFollow.create']) ? true : false, // 关注用户
-                'dialog.create'     => isset($groupPermissons['dialog.create']) ? true : false, // 发布私信
-                'other.canInviteUserScale' => isset($groupPermissons['other.canInviteUserScale']) ? true : false, // 裂变推广(邀请加入)
-                'createThreadWithCaptcha'  => isset($groupPermissons['createThreadWithCaptcha']) ? true : false, // 发布时需要验证码
-                'publishNeedBindPhone'     => isset($groupPermissons['publishNeedBindPhone']) ? true : false, // 发布时需要绑定手机
-                'cash.create'     => isset($groupPermissons['cash.create']) ? true : false, // 申请提现
-                'order.create'    => isset($groupPermissons['order.create']) ? true : false, // 创建订单
-                'trade.pay.order' => isset($groupPermissons['trade.pay.order']) ? true : false // 支付订单
+                'thread.sticky'     => isset($groupPermissons['thread.sticky']),     // 置顶
+                'thread.favorite'   => isset($groupPermissons['thread.favorite']),   // 收藏
+                'thread.likePosts'  => isset($groupPermissons['thread.likePosts']),  // 点赞
+                'user.view'         => isset($groupPermissons['user.view']),         // 查看用户
+                'userFollow.create' => isset($groupPermissons['userFollow.create']), // 关注用户
+                'dialog.create'     => isset($groupPermissons['dialog.create']),     // 发布私信
+                'other.canInviteUserScale' => isset($groupPermissons['other.canInviteUserScale']), // 裂变推广(邀请加入)
+                'createThreadWithCaptcha'  => isset($groupPermissons['createThreadWithCaptcha']),  // 发布时需要验证码
+                'publishNeedBindPhone'     => isset($groupPermissons['publishNeedBindPhone']),     // 发布时需要绑定手机
+                'cash.create'     => isset($groupPermissons['cash.create']),    // 申请提现
+                'order.create'    => isset($groupPermissons['order.create']),   // 创建订单
+                'trade.pay.order' => isset($groupPermissons['trade.pay.order']) // 支付订单
             )
         );
         foreach ($categoryIds as $key => $value) {

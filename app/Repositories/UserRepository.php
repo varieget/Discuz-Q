@@ -257,7 +257,11 @@ class UserRepository extends AbstractRepository
      */
     public function canFreeViewPosts(User $user)
     {
-        return $user->hasPermission(PermissionKey::THREAD_FREE_VIEW_POSTS);
+        if ($user->isAdmin()) {
+            return true;
+        } else {
+            return $user->hasPermission(PermissionKey::THREAD_FREE_VIEW_POSTS);
+        }
     }
 
     /**
@@ -473,9 +477,9 @@ class UserRepository extends AbstractRepository
         return $user->isAdmin();
     }
 
-    public function canCreateInvite(User $user)
+    public function canCreateInviteUserScale(User $user)
     {
-        return $user->hasPermission(PermissionKey::CREATE_INVITE);
+        return $user->hasPermission(PermissionKey::CREATE_INVITE_USER_SCALE);
     }
 
     public function canDeleteInvite(User $user, $invite)
@@ -557,5 +561,29 @@ class UserRepository extends AbstractRepository
     public function canFollowUser(User $user)
     {
         return $user->hasPermission(PermissionKey::USER_FOLLOW_CREATE);
+    }
+
+    /**
+     * 发布内容是否需要验证码
+     */
+    public function canCreateThreadWithCaptcha(User $user)
+    {
+        if ($user->isAdmin()) {
+            return false;
+        } else {
+            return $user->hasPermission(PermissionKey::CREATE_THREAD_WITH_CAPTCHA);
+        }
+    }
+
+    /**
+     * 发布内容是否需要绑定手机
+     */
+    public function canCreateThreadNeedBindPhone(User $user)
+    {
+        if ($user->isAdmin() || !empty($user->mobile)) {
+            return false;
+        } else {
+            return $user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_PHONE);
+        }
     }
 }

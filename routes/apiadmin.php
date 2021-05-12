@@ -9,6 +9,7 @@ $route->get('/settings', 'settings.list', ApiController\SettingsV3\ListSettingsC
 $route->post('/settings/logo', 'settings.upload.logo', ApiController\SettingsV3\UploadLogoController::class);
 $route->post('/settings/delete.logo', 'settings.delete.logo', ApiController\SettingsV3\DeleteLogoController::class);
 $route->get('/siteinfo', 'site.info', ApiController\SiteInfoV3Controller::class);
+$route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
 
 $route->post('/groups.create', 'groups.create', ApiController\GroupV3\CreateGroupController::class);
 $route->get('/groups.list', 'groups.list', ApiController\GroupV3\ListGroupsController::class);
@@ -26,3 +27,5 @@ $route->get('/categories', 'categories', ApiController\CategoryV3\AdminListCateg
 $route->post('/categories.create', 'categories.create', ApiController\CategoryV3\CreateCategoriesController::class);
 $route->post('/categories.update', 'categories.update', ApiController\CategoryV3\BatchUpdateCategoriesController::class);
 $route->post('/categories.delete', 'categories.delete', ApiController\CategoryV3\BatchDeleteCategoriesController::class);
+
+$route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);

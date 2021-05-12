@@ -23,16 +23,20 @@ use App\Events\Group\PermissionUpdated;
 use App\Models\Group;
 use App\Models\Permission;
 use App\Models\AdminActionLog;
-use App\Models\Setting;
-use App\Settings\SettingsRepository;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Events\Dispatcher;
 
 class UpdateGroupPermissionController extends DzqController
 {
-    use AssertPermissionTrait;
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$userRepo->canEditGroup($this->user)) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
 
     protected $events;
 
@@ -44,34 +48,11 @@ class UpdateGroupPermissionController extends DzqController
     public function main()
     {
         $actor = $this->user;
-
-        $this->assertCan($actor, 'group.edit');
-
-        $groupId = $this->inPut('groupId');
+        $groupId = (int) $this->inPut('groupId');
         $permissions = $this->inPut('permissions');
 
         /** @var Group $group */
-        $group = Group::query()->findOrFail((int) $groupId);
-
-        // 查看请求的权限中是否有与全局权限相交的，如果有需要判断
-        $request_permissions = $permissions ?? [];
-        $global_permissions = [];
-        $setting_global_permission = Setting::$global_permission;
-        foreach ($setting_global_permission as $val){
-            $global_permissions = array_merge($global_permissions, $val);
-        }
-
-        $judge_permissions = array_intersect($request_permissions, $global_permissions);
-        $settings = app(SettingsRepository::class);
-        if(!empty($judge_permissions)){
-            foreach ($setting_global_permission as $key => $val){
-                if(!empty(array_intersect($val, $judge_permissions))){          //如果在对应的全局中，则判断这个全局功能权限是否开启
-                    if($settings->get($key, 'default') == 0){
-                        throw new PermissionDeniedException($key. 'permission_denied');
-                    }
-                }
-            }
-        }
+        $group = Group::query()->findOrFail($groupId);
 
         $oldPermissions = Permission::query()->where('group_id', $group->id)->pluck('permission');
 

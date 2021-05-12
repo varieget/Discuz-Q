@@ -94,8 +94,6 @@ $route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowContro
 $route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
 $route->post('/follow.delete', 'follow.delete', ApiController\UsersV3\DeleteUserFollowController::class);
 
-$route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
-$route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
 $route->get('/topics.list', 'topics.list', ApiController\TopicV3\TopicListController::class);
 $route->get('/users.list', 'users.list', ApiController\UsersV3\UsersListController::class);
