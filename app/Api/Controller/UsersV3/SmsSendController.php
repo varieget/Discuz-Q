@@ -76,7 +76,7 @@ class SmsSendController extends AuthBaseController
         ];
 
         $this->dzqValidate($data, [
-//            'captcha'   => [new Captcha],//暂时注释方便联调走主流程
+            'captcha'   => [new Captcha],//暂时注释方便联调走主流程
             'type'      => 'required|in:' . implode(',', $this->type)
         ]);
 
