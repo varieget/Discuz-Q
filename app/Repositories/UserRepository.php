@@ -257,11 +257,7 @@ class UserRepository extends AbstractRepository
      */
     public function canFreeViewPosts(User $user)
     {
-        if ($user->isAdmin()) {
-            return true;
-        } else {
-            return $user->hasPermission(PermissionKey::THREAD_FREE_VIEW_POSTS);
-        }
+        return $user->hasPermission(PermissionKey::THREAD_FREE_VIEW_POSTS);
     }
 
     /**
