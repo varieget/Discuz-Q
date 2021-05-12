@@ -26,6 +26,7 @@ use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class CreateThreadController extends DzqController
@@ -34,7 +35,31 @@ class CreateThreadController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $userRepo->canCreateThread($this->user, $this->inPut('categoryId'));
+        $categoryId = $this->inPut('categoryId');
+        $user = $this->user;
+
+        if (!$userRepo->canCreateThread($user, $categoryId)) {
+            throw new PermissionDeniedException('没有发帖权限');
+        }
+
+        $price = floatval($this->inPut('price'));
+        $attachmentPrice = floatval($this->inPut('attachmentPrice'));
+        if (
+            ($price > 0 || $attachmentPrice > 0)
+            && !$userRepo->canInsertPayToThread($user, $categoryId)
+        ) {
+            throw new PermissionDeniedException('没有插入【付费】权限');
+        }
+
+
+        if (
+            !empty($this->inPut('position'))
+            && !$userRepo->canInsertPositionToThread($user, $categoryId)
+        ) {
+            throw new PermissionDeniedException('没有插入【位置信息】权限');
+        }
+
+        return true;
     }
 
     public function main()
@@ -111,14 +136,12 @@ class CreateThreadController extends DzqController
         $attachmentPrice = floatval($attachmentPrice);
         $freeWords = floatval($freeWords);
         if ($price > 0 || $attachmentPrice > 0) {
-            $this->propertyExtendPermission(TomConfig::AUTHORIZE_PAY, '没有插入【付费】权限');
             $price > 0 && $dataThread['price'] = $price;
             $attachmentPrice > 0 && $dataThread['attachment_price'] = $attachmentPrice;
             $freeWords > 0 && $dataThread['free_words'] = $freeWords;
         }
         !empty($freeWords) && $dataThread['free_words'] = $freeWords;
         if (!empty($position)) {
-            $this->propertyExtendPermission(TomConfig::AUTHORIZE_POSITION, '没有插入【位置信息】权限');
             $dataThread['longitude'] = $position['longitude'];
             $dataThread['latitude'] = $position['latitude'];
             $dataThread['address'] = $position['address'];
@@ -161,7 +184,7 @@ class CreateThreadController extends DzqController
     {
         $text = $content['text'];
         $post = new Post();
-        list($ip, $port) = $this->getIpPort();
+        [$ip, $port] = $this->getIpPort();
         $dataPost = [
             'user_id' => $this->user->id,
             'thread_id' => $thread['id'],
