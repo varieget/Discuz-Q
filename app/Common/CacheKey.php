@@ -61,7 +61,10 @@ class CacheKey
 
     public const GROUP_PERMISSIONS = 'group_permissions';
 
-    public const LIST_THREADS_V3 = 'list_threads_v3_';
+    public const SEQUENCE = 'sequence';
+
+    public const LIST_THREADS_V3_1 = 'list_threads_v3_1';
+    public const LIST_THREADS_V3_0 = 'list_threads_v3_0';
 
 
     public const LIST_THREADS_V3_USERS = 'list_threads_v3_users';//发帖用户存储 id

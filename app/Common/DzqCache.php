@@ -60,37 +60,6 @@ class DzqCache
         return $ret;
     }
 
-    public static function extractCacheArrayData1($cacheKey, $extractIds, callable $callback = null, $autoCache = true)
-    {
-        $cache = app('cache');
-        $data = $cache->get($cacheKey);
-        $ret = [];
-        $ids = $extractIds;
-        !is_array($extractIds) && $extractIds = [$extractIds];
-        if (!empty($extractIds)) {
-            if ($data) {
-                foreach ($extractIds as $extractId) {
-                    if (array_key_exists($extractId, $data)) {
-                        !empty($data[$extractId]) && $ret[$extractId] = $data[$extractId];
-                    } else {
-                        $ret = false;
-                    }
-                }
-            }
-        }
-        if (($ret === false || !$data) && !empty($callback)) {
-            $ret = $callback($ids);
-            if ($autoCache) {
-                !$data && $data = [];
-                foreach ($ret as $key => $value) {
-                    $data[$key] = $value;
-                }
-                $cache->put($cacheKey, $data);
-            }
-        }
-        return $ret;
-    }
-
     /**
      * @desc 从缓存中提取指定id集合的数据，没有则从数据库查询
      * @param string $cacheKey 缓存key

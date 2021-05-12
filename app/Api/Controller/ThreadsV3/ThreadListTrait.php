@@ -124,10 +124,9 @@ trait ThreadListTrait
         return $array;
     }
 
-    private function initDzqThreadsData($threads)
+    private function initDzqThreadsData($cacheKey,$threads)
     {
         $cache = app('cache');
-        $cacheKey = CacheKey::LIST_THREADS_V3 . $this->groupId();
         $filter = $this->inPut('filter');
         $filterKey = md5(serialize($filter));
         $data = $cache->get($cacheKey);
@@ -176,12 +175,12 @@ trait ThreadListTrait
         return $threads;
     }
 
-    private function groupId()
-    {
-        $groups = $this->user->groups->toArray();
-        $groupIds = array_column($groups, 'id');
-        return $groupIds[0] ?? 0;
-    }
+//    private function groupId()
+//    {
+//        $groups = $this->user->groups->toArray();
+//        $groupIds = array_column($groups, 'id');
+//        return $groupIds[0] ?? 0;
+//    }
 
     private function buildIPutToms($tomData, &$attachmentIds = [], &$threadVideoIds = [], $withIds = false)
     {

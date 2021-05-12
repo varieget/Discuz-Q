@@ -897,9 +897,7 @@ class Thread extends DzqModel
         DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
         DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_TAGS, $threadId);
         DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
-        $groups = Group::getGroups();
-        foreach ($groups as $group) {
-            app('cache')->forget(CacheKey::LIST_THREADS_V3 . $group['id']);
-        }
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_1);
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_0);
     }
 }

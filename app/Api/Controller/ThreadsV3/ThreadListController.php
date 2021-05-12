@@ -47,7 +47,7 @@ class ThreadListController extends DzqController
         if (empty($sequence)) {
             $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
         } else {
-            $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
+            $threads = $this->getSequenceThreads($filter, $currentPage, $perPage);
         }
         $pageData = $threads['pageData'];
         //缓存中获取最新的threads
@@ -59,6 +59,7 @@ class ThreadListController extends DzqController
 
     /**
      * @desc 按照首页帖子id顺序从缓存中依次取出最新帖子数据
+     * 首页数据缓存只存帖子id
      * @param $threadIds
      * @return array
      */
@@ -74,7 +75,57 @@ class ThreadListController extends DzqController
         return $threads;
     }
 
-    function buildFilterThreads($filter)
+
+    private function getFilterThreads($filter, $page, $perPage)
+    {
+        $cacheKey = CacheKey::LIST_THREADS_V3_1;
+        $filterId = md5(serialize($this->inPut('filter')));
+//        if ($page == 1) {//第一页检查是否需要初始化缓存
+        if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
+            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
+                $threads = $this->buildFilterThreads($filter);
+                $threads = $this->preloadPaginiation(100, 10, $threads, true);
+                $this->initDzqThreadsData($cacheKey, $threads);
+                return $threads;
+            }, true);
+        } else {//其他页从缓存取，取不到就重数据库取并写入缓存
+            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function ($page) use ($filter, $perPage) {
+                $threads = $this->buildFilterThreads($filter);
+                $threads = $this->pagination($page, $perPage, $threads, true);
+                return $threads;
+            });
+        }
+        return $threads;
+    }
+
+
+    function getSequenceThreads($filter, $page, $perPage)
+    {
+        $cacheKey = CacheKey::LIST_THREADS_V3_0;
+        $filterId = md5(serialize($this->inPut('filter')));
+        if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
+            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
+                $threads = $this->buildSequenceThreads($filter);
+                $threads = $this->preloadPaginiation(100, 10, $threads, true);
+                $this->initDzqThreadsData($cacheKey, $threads);
+                return $threads;
+            }, true);
+        } else {
+            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function ($page) use ($filter, $perPage) {
+                $threads = $this->buildSequenceThreads($filter);
+                $threads = $this->pagination($page, $perPage, $threads, true);
+                return $threads;
+            });
+        }
+        return $threads;
+    }
+
+    /**
+     * @desc 普通筛选SQL
+     * @param $filter
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function buildFilterThreads($filter)
     {
         if (empty($filter)) $filter = [];
         $this->dzqValidate($filter, [
@@ -102,7 +153,7 @@ class ThreadListController extends DzqController
         if (!$categoryids) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
-        $threads = $this->getThreadsBuilder();
+        $threads = $this->getBaseThreadsBuilder();
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
 
         if (!empty($types)) {
@@ -116,41 +167,6 @@ class ThreadListController extends DzqController
                 ->whereNull('post.deleted_at')
                 ->where('post.content', 'like', '%' . $search . '%');
         }
-        $this->setFilterSort($threads, $sort);
-        //关注
-        if ($attention == 1 && !empty($this->user)) {
-            $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'th.user_id')
-                ->where('follow.from_user_id', $this->user->id);
-        }
-        !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
-        return $threads;
-    }
-
-    private function getFilterThreads($filter, $page, $perPage)
-    {
-        $cacheKey = CacheKey::LIST_THREADS_V3 . $this->groupId();
-        $filterId = md5(serialize($this->inPut('filter')));
-//        if ($page == 1) {//第一页检查是否需要初始化缓存
-        if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
-            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function () use ($filter, $page, $perPage) {
-                $threads = $this->buildFilterThreads($filter);
-                $threads = $this->preloadPaginiation(100, 10, $threads, true);
-                $this->initDzqThreadsData($threads);
-                return $threads;
-            }, true);
-        } else {//其他页从缓存取，取不到就重数据库取并写入缓存
-            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function ($page) use ($filter, $perPage) {
-                $threads = $this->buildFilterThreads($filter);
-                $threads = $this->pagination($page, $perPage, $threads, true);
-                return $threads;
-            });
-        }
-        return $threads;
-    }
-
-
-    private function setFilterSort($threads, $sort)
-    {
         if (!empty($sort)) {
             switch ($sort) {
                 case Thread::SORT_BY_THREAD://按照发帖时间排序
@@ -168,16 +184,25 @@ class ThreadListController extends DzqController
                     break;
             }
         }
+        //关注
+        if ($attention == 1 && !empty($this->user)) {
+            $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'th.user_id')
+                ->where('follow.from_user_id', $this->user->id);
+        }
+        !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
+        return $threads;
     }
 
-    function getDefaultHomeThreads($filter, $currentPage, $perPage)
+    /**
+     * @desc 智能排序SQL
+     * @param $filter
+     * @return bool|\Illuminate\Database\Eloquent\Builder
+     */
+    private function buildSequenceThreads($filter)
     {
-        $cacheKey = CacheKey::LIST_THREADS_V3 . '0';//默认列表分类设定为0
-        $filterId = md5(serialize($this->inPut('filter')));
-        //todo 缓存获取数据
-        $sequence = Sequence::query()->first();
+        $sequence = Sequence::getSequence();
         if (empty($sequence)) {
-            return $this->getFilterThreads($filter, $currentPage, $perPage);
+            return false;
         }
         $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
@@ -196,7 +221,7 @@ class ThreadListController extends DzqController
         !empty($sequence['block_user_ids']) && $blockUserIds = explode(',', $sequence['block_user_ids']);
         !empty($sequence['block_topic_ids']) && $blockTopicIds = explode(',', $sequence['block_topic_ids']);
         !empty($sequence['block_thread_ids']) && $blockThreadIds = explode(',', $sequence['block_thread_ids']);
-        $threads = $this->getThreadsBuilder();
+        $threads = $this->getBaseThreadsBuilder();
         if (!empty($categoryIds)) {
             $threads = $threads->whereIn('th.category_id', $categoryIds);
         }
@@ -236,10 +261,10 @@ class ThreadListController extends DzqController
             });
         }
         $threads = $threads->orderByDesc('th.created_at');
-        return $this->pagination($currentPage, $perPage, $threads, false);
+        return $threads;
     }
 
-    private function getThreadsBuilder()
+    private function getBaseThreadsBuilder()
     {
         return Thread::query()
             ->select('th.*')
@@ -249,4 +274,5 @@ class ThreadListController extends DzqController
             ->where('th.is_draft', Thread::IS_NOT_DRAFT)
             ->where('th.is_approved', Thread::APPROVED);
     }
+
 }
