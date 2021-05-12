@@ -49,10 +49,29 @@ class ThreadListController extends DzqController
         } else {
             $threads = $this->getDefaultHomeThreads($filter, $currentPage, $perPage);
         }
-        $threadCollection = $threads['pageData'];
-        $threads['pageData'] = $this->getFullThreadData($threadCollection);
+        $pageData = $threads['pageData'];
+        //缓存中获取最新的threads
+        $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
+        $threads['pageData'] = $this->getFullThreadData($pageData);
 //        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
+    }
+
+    /**
+     * @desc 按照首页帖子id顺序从缓存中依次取出最新帖子数据
+     * @param $threadIds
+     * @return array
+     */
+    private function getThreadsFromCache($threadIds)
+    {
+        $pageData = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ($threadIds) {
+            return Thread::query()->whereIn('id', $threadIds)->get()->keyBy('id')->toArray();
+        });
+        $threads = [];
+        foreach ($threadIds as $threadId) {
+            $threads[] = $pageData[$threadId] ?? null;
+        }
+        return $threads;
     }
 
     function buildFilterThreads($filter)
@@ -112,7 +131,7 @@ class ThreadListController extends DzqController
         $cacheKey = CacheKey::LIST_THREADS_V3 . $this->md5GroupId();
         $filterId = md5(serialize($this->inPut('filter')));
 //        if ($page == 1) {//第一页检查是否需要初始化缓存
-        if ($this->preload && $page == 1) {//第一页检查是否需要初始化缓存
+        if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function () use ($filter, $page, $perPage) {
                 $threads = $this->buildFilterThreads($filter);
                 $threads = $this->preloadPaginiation(100, 10, $threads, true);

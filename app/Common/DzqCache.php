@@ -32,29 +32,59 @@ class DzqCache
     public static function extractCacheArrayData($cacheKey, $extractIds, callable $callback = null, $autoCache = true)
     {
         $cache = app('cache');
-        $cacheData = $cache->get($cacheKey);
+        $data = $cache->get($cacheKey);
         $ret = [];
         $ids = $extractIds;
         !is_array($extractIds) && $extractIds = [$extractIds];
         if (!empty($extractIds)) {
-            if ($cacheData) {
+            if ($data) {
                 foreach ($extractIds as $extractId) {
-                    if (array_key_exists($extractId, $cacheData)) {
-                        !empty($cacheData[$extractId]) && $ret[$extractId] = $cacheData[$extractId];
+                    if (array_key_exists($extractId, $data)) {
+                        !empty($data[$extractId]) && $ret[$extractId] = $data[$extractId];
                     } else {
                         $ret = false;
                     }
                 }
             }
         }
-        if (($ret === false || !$cacheData) && !empty($callback)) {
+        if (($ret === false || !$data) && !empty($callback)) {
             $ret = $callback($ids);
             if ($autoCache) {
-                !$cacheData && $cacheData = [];
+                !$data && $data = [];
                 foreach ($ret as $key => $value) {
-                    $cacheData[$key] = $value;
+                    $data[$key] = $value;
                 }
-                $cache->put($cacheKey, $cacheData);
+                $cache->put($cacheKey, $data);
+            }
+        }
+        return $ret;
+    }
+    public static function extractCacheArrayData1($cacheKey, $extractIds, callable $callback = null, $autoCache = true)
+    {
+        $cache = app('cache');
+        $data = $cache->get($cacheKey);
+        $ret = [];
+        $ids = $extractIds;
+        !is_array($extractIds) && $extractIds = [$extractIds];
+        if (!empty($extractIds)) {
+            if ($data) {
+                foreach ($extractIds as $extractId) {
+                    if (array_key_exists($extractId, $data)) {
+                        !empty($data[$extractId]) && $ret[$extractId] = $data[$extractId];
+                    } else {
+                        $ret = false;
+                    }
+                }
+            }
+        }
+        if (($ret === false || !$data) && !empty($callback)) {
+            $ret = $callback($ids);
+            if ($autoCache) {
+                !$data && $data = [];
+                foreach ($ret as $key => $value) {
+                    $data[$key] = $value;
+                }
+                $cache->put($cacheKey, $data);
             }
         }
         return $ret;
@@ -70,27 +100,27 @@ class DzqCache
     public static function extractCacheCollectionData($cacheKey, $extractIds, callable $callback = null)
     {
         $cache = app('cache');
-        $cacheData = $cache->get($cacheKey);
+        $data = $cache->get($cacheKey);
         $ret = new  Collection();
         !is_array($extractIds) && $extractIds = [$extractIds];
         if (!empty($extractIds)) {
-            if ($cacheData) {
+            if ($data) {
                 foreach ($extractIds as $extractId) {
-                    if ($cacheData->has($extractId)) {
-                        !empty($cacheData[$extractId]) && $ret->put($extractId, $cacheData[$extractId]);
+                    if ($data->has($extractId)) {
+                        !empty($data[$extractId]) && $ret->put($extractId, $data[$extractId]);
                     } else {
                         $ret = false;
                     }
                 }
             }
         }
-        if (($ret === false || !$cacheData) && !empty($callback)) {
+        if (($ret === false || !$data) && !empty($callback)) {
             $ret = $callback($extractIds);
-            !$cacheData && $cacheData = new  Collection();
+            !$data && $data = new  Collection();
             foreach ($ret as $key => $value) {
-                $cacheData->put($key, $value);
+                $data->put($key, $value);
             }
-            $cache->put($cacheKey, $cacheData);
+            $cache->put($cacheKey, $data);
         }
         return $ret;
     }
@@ -98,30 +128,36 @@ class DzqCache
     public static function extractThreadListData($cacheKey, $filterId, $page, callable $callback = null, $preload = false)
     {
         $cache = app('cache');
-        $cacheData = $cache->get($cacheKey);
+        $data = $cache->get($cacheKey);
         $ret = false;
-        if ($cacheData) {
-            if (array_key_exists($filterId, $cacheData) && array_key_exists($page, $cacheData[$filterId])) {
-                $ret = $cacheData[$filterId][$page];
+        if ($data) {
+            if (array_key_exists($filterId, $data) && array_key_exists($page, $data[$filterId])) {
+                $ret = $data[$filterId][$page];
             }
         }
-        if (($ret === false || !$cacheData) && !empty($callback)) {
+        if (($ret === false || !$data) && !empty($callback)) {
             $ret = $callback($filterId, $page);
-            !$cacheData && $cacheData = [];
+            !$data && $data = [];
             if ($preload) {
-                $cacheData[$filterId] = $ret;
-                $ret = $cacheData[$filterId][$page];
+                $data[$filterId] = $ret;
+                $ret = $data[$filterId][$page];
             } else {
-                $cacheData[$filterId][$page] = $ret;
+                $data[$filterId][$page] = $ret;
             }
-            $cache->put($cacheKey, $cacheData);
+            $cache->put($cacheKey, $data);
         }
         return $ret;
     }
 
 
-    public static function removeCacheByIds()
+    public static function removeCacheByPrimaryId($cacheKey, $primaryKey)
     {
-
+        $cache = app('cache');
+        $data = $cache->get($cacheKey);
+        if ($data && array_key_exists($primaryKey, $data)) {
+            unset($data[$primaryKey]);
+            return app('cache')->put($cacheKey, $data);
+        }
+        return true;
     }
 }

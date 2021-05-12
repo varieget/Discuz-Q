@@ -24,9 +24,7 @@ use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\Order;
 use App\Models\Post;
-use App\Models\PostUser;
 use App\Models\Thread;
-use App\Models\ThreadUser;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\ThreadVideo;
@@ -182,7 +180,7 @@ trait ThreadListTrait
     {
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');
-        return md5(serialize($groupIds));
+        return $groupIds[0] ?? 0;
     }
 
     private function buildIPutToms($tomData, &$attachmentIds = [], &$threadVideoIds = [], $withIds = false)

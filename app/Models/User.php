@@ -19,6 +19,7 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -795,18 +796,18 @@ class User extends DzqModel
     public function hasPermission($permission, bool $condition = true)
     {
         if ($this->isAdmin()) {
-            if(!is_array($permission))  $permission = [$permission];
+            if (!is_array($permission)) $permission = [$permission];
             $global_permissions = [];
             $setting_global_permission = Setting::$global_permission;
-            foreach ($setting_global_permission as $val){
+            foreach ($setting_global_permission as $val) {
                 $global_permissions = array_merge($global_permissions, $val);
             }
             $judge_permissions = array_intersect($permission, $global_permissions);
             $settings = app(SettingsRepository::class);
-            if(!empty($judge_permissions)){
-                foreach ($setting_global_permission as $key => $val){
-                    if(!empty(array_intersect($val, $judge_permissions))){          //如果在对应的全局中，则判断这个全局功能权限是否开启
-                        if($settings->get($key, 'default') == 0){
+            if (!empty($judge_permissions)) {
+                foreach ($setting_global_permission as $key => $val) {
+                    if (!empty(array_intersect($val, $judge_permissions))) {          //如果在对应的全局中，则判断这个全局功能权限是否开启
+                        if ($settings->get($key, 'default') == 0) {
                             return false;
                         }
                     }
@@ -972,5 +973,10 @@ class User extends DzqModel
             return null;
         }
         return $user->username;
+    }
+
+    protected function clearCache()
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USERS, $this->id);
     }
 }

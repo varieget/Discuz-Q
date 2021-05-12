@@ -64,23 +64,24 @@ class CacheKey
     public const LIST_THREADS_V3 = 'list_threads_v3_';
 
 
-    public const LIST_THREADS_V3_USERS = 'list_threads_v3_USERS';//发帖用户存储
-    public const LIST_THREADS_V3_THREADS = 'list_threads_v3_threads';//帖子数据存储
-    public const LIST_THREADS_V3_POSTS = 'list_threads_v3_posts';//帖子正文数据存储
-    public const LIST_THREADS_V3_ATTACHMENT = 'list_threads_v3_attachment';//帖子附件数据存储
-    public const LIST_THREADS_V3_VIDEO = 'list_threads_v3_video';//帖子视频文件存储
-    public const LIST_THREADS_V3_TAGS = 'list_threads_v3_tags';//帖子标签存储
-    public const LIST_THREADS_V3_TOMS = 'list_threads_v3_toms';//帖子插件存储
+    public const LIST_THREADS_V3_USERS = 'list_threads_v3_users';//发帖用户存储 id
+    public const LIST_THREADS_V3_THREADS = 'list_threads_v3_threads';//帖子数据存储 id
+    public const LIST_THREADS_V3_POSTS = 'list_threads_v3_posts';//帖子正文数据存储 thread_id
+    public const LIST_THREADS_V3_ATTACHMENT = 'list_threads_v3_attachment';//帖子附件数据存储 id
+    public const LIST_THREADS_V3_VIDEO = 'list_threads_v3_video';//帖子视频文件存储 id
+    public const LIST_THREADS_V3_TAGS = 'list_threads_v3_tags';//帖子标签存储 thread_id
+    public const LIST_THREADS_V3_TOMS = 'list_threads_v3_toms';//帖子插件存储 thread_id
 
 
     public const LIST_THREADS_V3_SEARCH_REPLACE = 'list_threads_v3_search_replace';//替换标签、话题和艾特
-    public const LIST_THREADS_V3_USER_ORDERS= 'list_threads_v3_orders';//用户订单信息
-    public const LIST_THREADS_V3_POST_LIKED= 'list_threads_v3_post_liked';//是否点赞
+    public const LIST_THREADS_V3_USER_ORDERS= 'list_threads_v3_orders';//用户订单信息 user_id
+    public const LIST_THREADS_V3_POST_LIKED= 'list_threads_v3_post_liked';//是否点赞 user_id
 
-    public const LIST_THREADS_V3_POST_USERS= 'list_threads_v3_post_users';//帖子卡面底部的点赞支付摘要
+    //todo ???
+    public const LIST_THREADS_V3_POST_USERS= 'list_threads_v3_post_users';//帖子卡面底部的点赞支付摘要 thread_id
 
-    public const LIST_THREADS_V3_POST_FAVOR = 'list_threads_v3_post_favor';//收藏
-    public const LIST_THREADS_V3_GROUP_USER = 'list_threads_v3_group_user';//用户组
+    public const LIST_THREADS_V3_POST_FAVOR = 'list_threads_v3_post_favor';//收藏 user_id
+    public const LIST_THREADS_V3_GROUP_USER = 'list_threads_v3_group_user';//用户组 user_id
 
 
 }

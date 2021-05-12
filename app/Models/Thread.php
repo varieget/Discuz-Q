@@ -19,6 +19,7 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\Utils;
 use App\Events\Thread\Hidden;
 use App\Events\Thread\Restored;
@@ -887,5 +888,18 @@ class Thread extends DzqModel
             ->first();
         $toArray && $ret = $ret->toArray();
         return $ret;
+    }
+
+    protected function clearCache()
+    {
+        $threadId = $this->id;
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_TAGS, $threadId);
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
+        $groups = Group::getGroups();
+        foreach ($groups as $group) {
+            app('cache')->forget(CacheKey::LIST_THREADS_V3 . $group['id']);
+        }
     }
 }
