@@ -99,8 +99,8 @@ $route->post('/permission.update', 'permission.update', ApiController\Permission
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
 $route->get('/topics.list', 'topics.list', ApiController\TopicV3\TopicListController::class);
 $route->get('/users.list', 'users.list', ApiController\UsersV3\UsersListController::class);
-$route->post('/order.create', 'order.create', ApiController\OrdersV3\CreateOrderController::class);
-$route->get('/order/detail', 'orders.resource.v2', ApiController\OrdersV3\ResourceOrderController::class);
+$route->post('/order.create', 'order.create', ApiController\OrderV3\CreateOrderController::class);
+$route->get('/order.detail', 'orders.resource.v2', ApiController\OrderV3\ResourceOrderController::class);
 $route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\TradeV3\Notify\WechatNotifyController::class);
 $route->post('/trade/pay/order', 'trade.pay.order', ApiController\TradeV3\PayOrderController::class);
 $route->get('/categories', 'categories', ApiController\CategoryV3\ListCategoriesController::class);
@@ -150,6 +150,9 @@ $route->post('/wallet/cash', 'wallet.cash.create', ApiController\WalletV3\Create
 $route->get('/favorites', 'favorites', ApiController\ThreadsV3\ListFavoritesController::class);
 $route->post('/users/background', 'user.upload.background', ApiController\UsersV3\UploadBackgroundController::class);
 $route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
+$route->post('/users/update.mobile', 'update.mobile', ApiController\UsersV3\UpdateMobileController::class);
+$route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarController::class);
+
 
 $route->get('/users/deny', 'user.deny.list', ApiController\UsersV3\ListDenyUserController::class);
 $route->post('/users/deny', 'user.deny', ApiController\UsersV3\CreateDenyUserController::class);

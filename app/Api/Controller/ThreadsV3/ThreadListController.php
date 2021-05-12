@@ -132,7 +132,7 @@ class ThreadListController extends DzqController
                 $threads = $this->getThreadsBuilder(Thread::IS_DRAFT);
                 break;
             case Thread::MY_LIKE_THREAD:
-                $threads = $this->getMyLikesThread();
+                $threads = $this->getMyOrHisLikesThread($filter);
                 break;
             case Thread::MY_COLLECT_THREAD:
                 $threads = $this->getMyCollectThread();
@@ -147,14 +147,19 @@ class ThreadListController extends DzqController
         return $this->pagination($currentPage, $perPage, $threads, false);
     }
 
-    //我的点赞帖子
-    public function getMyLikesThread()
+    //我的点赞帖子or他的点赞帖子
+    public function getMyOrHisLikesThread($filter)
     {
+        $UserId = $this->user->id;
+        if (!empty($filter['toUserId'])) {
+            $UserId = (int)$filter['toUserId'];
+        }
+
         return $this->getThreadsBuilder()
             ->leftJoin('posts as post', 'post.thread_id', '=', 'th.id')
             ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
             ->leftJoin('post_user as postu','postu.post_id','=','post.id')
-            ->where(['post.user_id' => $this->user->id]);
+            ->where(['post.user_id' => $UserId]);
     }
 
     //我的收藏帖子
@@ -174,11 +179,11 @@ class ThreadListController extends DzqController
     }
 
     //我的帖子or他的帖子
-    public function getMyOrHisThread($complex)
+    public function getMyOrHisThread($filter)
     {
         $UserId = $this->user->id;
-        if (!empty($complex['toUserId'])) {
-            $UserId = (int)$complex['toUserId'];
+        if (!empty($filter['toUserId'])) {
+            $UserId = (int)$filter['toUserId'];
         }
 
         return $this->getThreadsBuilder()
