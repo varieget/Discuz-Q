@@ -123,12 +123,9 @@ class UploadBackground
                 $this->avatar->getError(),
                 true
             );
-
             $this->validator->valid(['background' => $file]);
-
             $image = (new ImageManager())->make($tmpFileWithExt);
             $this->uploader->upload($user, $image);
-
             $user->save();
         } finally {
             @unlink($tmpFile);
