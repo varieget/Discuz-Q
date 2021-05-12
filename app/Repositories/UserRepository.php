@@ -286,11 +286,12 @@ class UserRepository extends AbstractRepository
      * 帖子加精权限
      *
      * @param User $user
+     * @param null $categoryId
      * @return bool
      */
-    public function canEssenceThread(User $user)
+    public function canEssenceThread(User $user, $categoryId = null)
     {
-        return $user->hasPermission(PermissionKey::THREAD_ESSENCE);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_ESSENCE, $categoryId);
     }
 
     /**
@@ -309,21 +310,16 @@ class UserRepository extends AbstractRepository
      *
      * @param User $user
      * @param $thread
-     * @param array $requestData
      * @return bool
      */
-    public function canEditThread(User $user, $thread, array $requestData)
+    public function canEditThread(User $user, $thread)
     {
-        // 是作者本人
-        if ($thread->user_id == $user->id) {
-            // 有编辑自己帖子权限，或者是草稿
-            if ($this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_OWN, $thread->category_id) || $thread->is_draft) {
-                return true;
-            }
-
-            if (isset($requestData['is_draft']) && isset($requestData['is_old_draft']) && $requestData['is_old_draft'] == 1) {
-                return true;
-            }
+        // 是作者本人，且有编辑自己帖子权限或者是草稿
+        if (
+            ($thread->user_id == $user->id)
+            && ($this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_OWN, $thread->category_id) || $thread->is_draft)
+        ) {
+            return true;
         }
 
         return $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT, $thread->category_id);
@@ -334,13 +330,12 @@ class UserRepository extends AbstractRepository
      *
      * @param User $user
      * @param $thread
-     * @param null $categoryId
      * @return bool
      */
-    public function canHideThread(User $user, $thread, $categoryId = null)
+    public function canHideThread(User $user, $thread)
     {
-        return ($user->id === $thread->user_id && $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE_OWN, $categoryId))
-            || $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE, $categoryId);
+        return ($user->id === $thread->user_id && $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE_OWN, $thread->category_id))
+            || $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE, $thread->category_id);
     }
 
     /**
@@ -379,6 +374,14 @@ class UserRepository extends AbstractRepository
             return $this->canEditThread($user, $thread, $requestData);
         }
 
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS);
+    }
+
+    public function canViewThreadDetail(User $user, $thread)
+    {
+        if ($user->id == $thread->user_id) {
+            return true;
+        }
         return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS);
     }
 
