@@ -20,3 +20,9 @@ $route->post('/users/update.user', 'users.admin', ApiController\UsersV3\UpdateAd
 $route->get('/users.wallet.logs', 'users.wallet.logs', ApiController\WalletV3\UsersWalletLogsListController::class);
 $route->get('/users.order.logs', 'users.order.logs', ApiController\OrderV3\UsersOrderLogsListController::class);
 $route->get('/users.cash.logs', 'users.cash.logs', ApiController\WalletV3\UsersCashLogsListController::class);
+
+//内容分类
+$route->get('/categories', 'categories', ApiController\CategoryV3\AdminListCategoriesController::class);
+$route->post('/categories.create', 'categories.create', ApiController\CategoryV3\CreateCategoriesController::class);
+$route->post('/categories.update', 'categories.update', ApiController\CategoryV3\BatchUpdateCategoriesController::class);
+$route->post('/categories.delete', 'categories.delete', ApiController\CategoryV3\BatchDeleteCategoriesController::class);
