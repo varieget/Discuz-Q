@@ -23,6 +23,7 @@ use App\Models\Category;
 use App\Models\Thread;
 use App\Models\User;
 use App\Settings\ForumSettingField;
+use App\Repositories\UserRepository;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Common\PubEnum;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -38,12 +39,13 @@ class ForumSettingSerializerV2 extends AbstractSerializer
 
     protected $forumField;
 
-    public function __construct(SettingsRepository $settings, ForumSettingField $forumField, SettingCache $settingcache, Request $request)
+    public function __construct(SettingsRepository $settings, ForumSettingField $forumField, SettingCache $settingcache, Request $request, UserRepository $userRepo)
     {
         $this->settings = $settings;
         $this->forumField = $forumField;
         $this->settingcache = $settingcache;
         $this->request = $request;
+        $this->userRepo = $userRepo;
     }
 
     /**
@@ -67,12 +69,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
         $port = $this->request->getUri()->getPort();
         $siteUrl = $this->request->getUri()->getScheme() . '://' . $this->request->getUri()->getHost().(in_array($port, [80, 443, null]) ? '' : ':'.$port);
 
-        $site_skin = (int)$this->settingcache->getSiteSkin();
-        if($site_skin == 1){
-            $site_favicon = $favicon ?: app(UrlGenerator::class)->to('/favicon.ico');
-        }else{
-            $site_favicon = $favicon ?: app(UrlGenerator::class)->to('/favicon.png');
-        }
+        $editGroupPermission = $this->userRepo->canEditGroup($actor);
 
         $attributes = [
             // 站点设置
@@ -84,10 +81,10 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'site_mode' => $this->settings->get('site_mode'), // pay public
                 'open_ext_fields'=>$this->settings->get('open_ext_fields'),
                 'site_close' => (bool)$this->settings->get('site_close'),
-//                'site_manage' => json_decode($this->settings->get('site_manage'), true),
+                'site_manage' => json_decode($this->settings->get('site_manage'), true),
                 'api_freq'    => $actor->isAdmin()?json_decode($this->settings->get('api_freq'), true):null,
                 'site_close_msg'=>$this->settings->get('site_close_msg'),
-                'site_favicon' => $site_favicon,
+                'site_favicon' => $favicon,
                 'site_logo' => $logo ?: '',
                 'site_header_logo' => $headerLogo ?: '',
                 'site_background_image' => $backgroundImage ?: '',
@@ -98,20 +95,11 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'site_record' => $this->settings->get('site_record'),
                 'site_cover' => $this->settings->get('site_cover') ?: '',
                 'site_record_code' => $this->settings->get('site_record_code') ?: '',
-                'site_onlooker_price' => $this->settings->get('site_onlooker_price') ?: 0, // 默认围观值前端根据权限判断
                 'site_master_scale' => $this->settings->get('site_master_scale'), // 站长比例
                 'site_pay_group_close' => $this->settings->get('site_pay_group_close'), // 用户组购买开关
                 'site_minimum_amount' => $this->settings->get('site_minimum_amount'),
                 'site_open_sort' => $this->settings->get('site_open_sort') == "" ? 0 : (int)$this->settings->get('site_open_sort'),
-                'site_create_thread0' => $this->settings->get('site_create_thread0') == "" ? 1 : (int)$this->settings->get('site_create_thread0'),
-                'site_create_thread1' => $this->settings->get('site_create_thread1') == "" ? 1 : (int)$this->settings->get('site_create_thread1'),
-                'site_create_thread2' => $this->settings->get('site_create_thread2') == "" ? 1 : (int)$this->settings->get('site_create_thread2'),
-                'site_create_thread3' => $this->settings->get('site_create_thread3') == "" ? 1 : (int)$this->settings->get('site_create_thread3'),
-                'site_create_thread4' => $this->settings->get('site_create_thread4') == "" ? 1 : (int)$this->settings->get('site_create_thread4'),
-                'site_create_thread5' => $this->settings->get('site_create_thread5') == "" ? 1 : (int)$this->settings->get('site_create_thread5'),
-                'site_create_thread6' => $this->settings->get('site_create_thread6') == "" ? 1 : (int)$this->settings->get('site_create_thread6'),
-                'site_can_reward'     => !empty($this->settings->get('site_can_reward')) ? (int)$this->settings->get('site_can_reward') : 0,
-                'site_skin' => $site_skin
+                'site_can_reward'     => (bool) $this->settings->get('site_can_reward')
             ],
 
             // 注册设置
@@ -173,55 +161,36 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'count_users' => (int) $this->settings->get('user_count'),              // 站点用户数
 
                 // 管理权限
-                'can_edit_user_group' => $actor->can('user.edit.group'),                // 修改用户用户组
-                'can_edit_user_status' => $actor->can('user.edit.status'),              // 修改用户状态
-
-                // 至少在一个分类下有查看权限 或 有全局查看权限
-                'can_view_threads' => Category::getIdsWhereCan($actor, 'viewThreads')
-                                            || $actor->can('viewThreads'),              // 查看主题列表
-
-                // 发布权限
-                'can_create_dialog' => $actor->can('dialog.create'),                                        // 发短消息
-                'can_create_invite' => $actor->can('createInvite'),                                         // 发邀请
-                'can_invite_user_scale' => $actor->can('other.canInviteUserScale'),                         // 发分成邀请
-                'can_create_thread_paid' => $actor->can('createThreadPaid'),                                // 发付费内容
-                'can_create_thread' => $actor->can('createThread.' . Thread::TYPE_OF_TEXT),                 // 发布文字
-                'can_create_thread_long' => $actor->can('createThread.' . Thread::TYPE_OF_LONG),            // 发布长文
-                'can_create_thread_video' => $actor->can('createThread.' . Thread::TYPE_OF_VIDEO),          // 发布视频
-                'can_create_thread_image' => $actor->can('createThread.' . Thread::TYPE_OF_IMAGE),          // 发布图片
-                'can_create_thread_audio' => $actor->can('createThread.' . Thread::TYPE_OF_AUDIO),          // 发布语音
-                'can_create_thread_question' => $actor->can('createThread.' . Thread::TYPE_OF_QUESTION),    // 发布问答
-                'can_create_thread_goods' => $actor->can('createThread.' . Thread::TYPE_OF_GOODS),          // 发布商品
-                'can_create_thread_position'            => $actor->can('createThread.' . Thread::TYPE_OF_TEXT . '.position'),      // 发布文字位置
-                'can_create_thread_long_position'       => $actor->can('createThread.' . Thread::TYPE_OF_LONG . '.position'),      // 发布长文位置
-                'can_create_thread_video_position'      => $actor->can('createThread.' . Thread::TYPE_OF_VIDEO . '.position'),     // 发布视频位置
-                'can_create_thread_image_position'      => $actor->can('createThread.' . Thread::TYPE_OF_IMAGE . '.position'),     // 发布图片位置
-                'can_create_thread_audio_position'      => $actor->can('createThread.' . Thread::TYPE_OF_AUDIO . '.position'),     // 发布语音位置
-                'can_create_thread_question_position'   => $actor->can('createThread.' . Thread::TYPE_OF_QUESTION . '.position'),  // 发布问答位置
-                'can_create_thread_goods_position'      => $actor->can('createThread.' . Thread::TYPE_OF_GOODS . '.position'),     // 发布商品位置
-                'can_create_thread_red_packet'          => $actor->can('createThread.' . Thread::TYPE_OF_TEXT . '.redPacket'),     // 发文字帖红包
-                'can_create_thread_long_red_packet'     => $actor->can('createThread.' . Thread::TYPE_OF_LONG . '.redPacket'),     // 发长文帖红包
-                'can_create_thread_anonymous'           => $actor->can('createThread.' . Thread::TYPE_OF_TEXT . '.anonymous'),      // 发布文字匿名发布
-                'can_create_thread_long_anonymous'      => $actor->can('createThread.' . Thread::TYPE_OF_LONG . '.anonymous'),      // 发布长文匿名发布
-                'can_create_thread_video_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_VIDEO . '.anonymous'),     // 发布视频匿名发布
-                'can_create_thread_image_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_IMAGE . '.anonymous'),     // 发布图片匿名发布
-                'can_create_thread_audio_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_AUDIO . '.anonymous'),     // 发布语音匿名发布
-                'can_create_thread_question_anonymous'  => $actor->can('createThread.' . Thread::TYPE_OF_QUESTION . '.anonymous'),  // 发布问答匿名发布
-                'can_create_thread_goods_anonymous'     => $actor->can('createThread.' . Thread::TYPE_OF_GOODS . '.anonymous'),     // 发布商品匿名发布
+                'can_edit_user_group'  => $editGroupPermission,                // 修改用户用户组
+                'can_edit_user_status' => $editGroupPermission,                // 修改用户状态
 
                 // 至少在一个分类下有发布权限
-                'can_create_thread_in_category' => (bool) Category::getIdsWhereCan($actor, 'createThread'),
+                'can_create_thread_in_category' => $this->userRepo->canCreateThread($actor),
 
-                // 上传权限
-                'can_upload_attachments' => $actor->can('attachment.create.0'),         // 上传附件
-                'can_upload_images' => $actor->can('attachment.create.1'),              // 上传图片
+                // 至少在一个分类下有查看权限 或 有全局查看权限
+                'can_view_threads' => $this->userRepo->canViewThreads($actor),              // 查看主题列表
+
+                // 至少在一个分类下有免费查看权限 或 有全局免费查看权限
+                'can_free_view_paid_threads' => $this->userRepo->canFreeViewPosts($actor),            // 免费查看付费帖子权限
+
+                // 发布权限
+                'can_create_dialog'            => $this->userRepo->canCreateDialog($actor),               // 发短消息
+                'can_invite_user_scale'        => $this->userRepo->canCreateInviteUserScale($actor),      // 发分成邀请
+                'can_insert_thread_attachment' => $this->userRepo->canInsertAttachmentToThread($actor),   // 插入附件
+                'can_insert_thread_paid'  => $this->userRepo->canInsertPayToThread($actor),               // 插入付费内容
+                'can_insert_thread_video' => $this->userRepo->canInsertVideoToThread($actor),             // 插入视频
+                'can_insert_thread_image' => $this->userRepo->canInsertImageToThread($actor),             // 插入图片
+                'can_insert_thread_audio' => $this->userRepo->canInsertAudioToThread($actor),             // 插入语音
+                'can_insert_thread_goods'      => $this->userRepo->canInsertGoodsToThread($actor),        // 插入商品
+                'can_insert_thread_position'   => $this->userRepo->canInsertPositionToThread($actor),     // 插入位置
+                'can_insert_thread_red_packet' => $this->userRepo->canInsertRedPacketToThread($actor),    // 插入红包
+                'can_insert_thread_reward'     => $this->userRepo->canInsertRewardToThread($actor),       // 插入悬赏
+                'can_insert_thread_anonymous'  => $this->userRepo->canCreateThreadAnonymous($actor),      // 允许匿名发布
 
                 // 其他
-                'initialized_pay_password' => (bool) $actor->pay_password,              // 是否初始化支付密码
-                'can_be_onlooker' => $this->settings->get('site_onlooker_price') > 0 && $actor->can('canBeOnlooker'),           // 是否允许被围观
-                'create_thread_with_captcha' => ! $actor->isAdmin() && $actor->can('createThreadWithCaptcha'),                  // 发布内容需要验证码
-                'publish_need_real_name' => ! $actor->isAdmin() && $actor->can('publishNeedRealName') && ! $actor->realname,    // 发布内容需要实名认证
-                'publish_need_bind_phone' => ! $actor->isAdmin() && $actor->can('publishNeedBindPhone') && ! $actor->mobile,    // 发布内容需要绑定手机
+                'initialized_pay_password'   => (bool) $actor->pay_password,                              // 是否初始化支付密码
+                'create_thread_with_captcha' => $this->userRepo->canCreateThreadWithCaptcha($actor),      // 发布内容需要验证码
+                'publish_need_bind_phone'    => $this->userRepo->canCreateThreadNeedBindPhone($actor),    // 发布内容需要绑定手机
             ],
 
             'lbs' => [
@@ -249,8 +218,8 @@ class ForumSettingSerializerV2 extends AbstractSerializer
             $attributes['qcloud'] += $this->forumField->getQCloudVod();
         } else {
             //未开启vod服务 不可发布视频主题
-            $attributes['other']['can_create_thread_video'] = false;
-            $attributes['other']['can_create_thread_audio'] = false;
+            $attributes['other']['can_insert_thread_video'] = false;
+            $attributes['other']['can_insert_thread_audio'] = false;
         }
 
         // 微信小程序请求时判断视频开关
@@ -259,7 +228,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
         if (! $this->settings->get('miniprogram_video', 'wx_miniprogram') &&
             (strpos(Arr::get($this->request->getServerParams(), 'HTTP_X_APP_PLATFORM'), 'wx_miniprogram') !== false || strpos($headersStr, 'miniprogram') !== false ||
                 strpos($headersStr, 'compress') !== false)) {
-            $attributes['other']['can_create_thread_video'] = false;
+            $attributes['other']['can_insert_thread_video'] = false;
         }
         //判断三种注册方式是否置灰禁用
         $attributes['sign_enable']=$this->getSignInEnable($attributes);
