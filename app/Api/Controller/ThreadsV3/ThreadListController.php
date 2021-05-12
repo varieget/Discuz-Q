@@ -128,7 +128,7 @@ class ThreadListController extends DzqController
 
     private function getFilterThreads($filter, $page, $perPage)
     {
-        $cacheKey = CacheKey::LIST_THREADS_V3 . $this->md5GroupId();
+        $cacheKey = CacheKey::LIST_THREADS_V3 . $this->groupId();
         $filterId = md5(serialize($this->inPut('filter')));
 //        if ($page == 1) {//第一页检查是否需要初始化缓存
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
@@ -172,6 +172,9 @@ class ThreadListController extends DzqController
 
     function getDefaultHomeThreads($filter, $currentPage, $perPage)
     {
+        $cacheKey = CacheKey::LIST_THREADS_V3 . '0';//默认列表分类设定为0
+        $filterId = md5(serialize($this->inPut('filter')));
+        //todo 缓存获取数据
         $sequence = Sequence::query()->first();
         if (empty($sequence)) {
             return $this->getFilterThreads($filter, $currentPage, $perPage);

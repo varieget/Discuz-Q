@@ -53,13 +53,13 @@ class CacheKey
 
     public const SETTINGS = 'settings';
 
-    public const CATEGORIES = 'categories_';
+    public const CATEGORIES = 'categories';
 
-    public const LIST_EMOJI = 'list_emoji_';
+    public const LIST_EMOJI = 'list_emoji';
 
     public const LIST_GROUPS = 'list_groups';
 
-    public const GROUP_PERMISSIONS = 'group_permissions_';
+    public const GROUP_PERMISSIONS = 'group_permissions';
 
     public const LIST_THREADS_V3 = 'list_threads_v3_';
 
@@ -74,14 +74,11 @@ class CacheKey
 
 
     public const LIST_THREADS_V3_SEARCH_REPLACE = 'list_threads_v3_search_replace';//替换标签、话题和艾特
-    public const LIST_THREADS_V3_USER_ORDERS= 'list_threads_v3_orders';//用户订单信息 user_id
-    public const LIST_THREADS_V3_POST_LIKED= 'list_threads_v3_post_liked';//是否点赞 user_id
+    public const LIST_THREADS_V3_USER_ORDERS = 'list_threads_v3_orders';//用户订单信息 user_id
+    public const LIST_THREADS_V3_POST_LIKED = 'list_threads_v3_post_liked';//是否点赞 user_id
 
-    //todo ???
-    public const LIST_THREADS_V3_POST_USERS= 'list_threads_v3_post_users';//帖子卡面底部的点赞支付摘要 thread_id
+    public const LIST_THREADS_V3_POST_USERS = 'list_threads_v3_post_users';//帖子卡面底部的点赞支付摘要 thread_id
 
     public const LIST_THREADS_V3_POST_FAVOR = 'list_threads_v3_post_favor';//收藏 user_id
     public const LIST_THREADS_V3_GROUP_USER = 'list_threads_v3_group_user';//用户组 user_id
-
-
 }

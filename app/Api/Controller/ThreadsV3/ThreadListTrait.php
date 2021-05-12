@@ -127,7 +127,7 @@ trait ThreadListTrait
     private function initDzqThreadsData($threads)
     {
         $cache = app('cache');
-        $cacheKey = CacheKey::LIST_THREADS_V3 . $this->md5GroupId();
+        $cacheKey = CacheKey::LIST_THREADS_V3 . $this->groupId();
         $filter = $this->inPut('filter');
         $filterKey = md5(serialize($filter));
         $data = $cache->get($cacheKey);
@@ -176,7 +176,7 @@ trait ThreadListTrait
         return $threads;
     }
 
-    private function md5GroupId()
+    private function groupId()
     {
         $groups = $this->user->groups->toArray();
         $groupIds = array_column($groups, 'id');

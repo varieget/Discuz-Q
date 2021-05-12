@@ -59,6 +59,7 @@ class DzqCache
         }
         return $ret;
     }
+
     public static function extractCacheArrayData1($cacheKey, $extractIds, callable $callback = null, $autoCache = true)
     {
         $cache = app('cache');
@@ -150,9 +151,12 @@ class DzqCache
     }
 
 
-    public static function removeCacheByPrimaryId($cacheKey, $primaryKey)
+    public static function removeCacheByPrimaryId($cacheKey, $primaryKey = null)
     {
         $cache = app('cache');
+        if (is_null($primaryKey)) {
+            return $cache->forget($cacheKey);
+        }
         $data = $cache->get($cacheKey);
         if ($data && array_key_exists($primaryKey, $data)) {
             unset($data[$primaryKey]);

@@ -19,6 +19,7 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Events\Group\Deleted;
 use Discuz\Base\DzqModel;
 use Discuz\Database\ScopeVisibilityTrait;
@@ -187,5 +188,9 @@ class Group extends DzqModel
         $groups = Group::query()->get()->toArray();
         $cache->put(CacheKey::LIST_GROUPS, $groups, 60 * 60);
         return $groups;
+    }
+    protected function clearCache()
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_GROUPS);
     }
 }
