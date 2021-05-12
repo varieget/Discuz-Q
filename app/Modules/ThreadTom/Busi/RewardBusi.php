@@ -37,9 +37,9 @@ class RewardBusi extends TomBaseBusi
         $order = Order::query()
             ->where('order_sn',$input['orderSn'])
             ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
-        if (empty($order) ||
-            !empty($order['thread_id']) ||
-            ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id'])) ||
+
+        if (empty($order) || 
+            ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id'])) || 
             $order['user_id'] != $this->user['id'] || 
             $order['status'] != Order::ORDER_STATUS_PAID || 
             (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())|| 
