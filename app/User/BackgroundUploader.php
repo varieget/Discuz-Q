@@ -67,7 +67,7 @@ class BackgroundUploader
             $image->orientate();
         }
 
-        $encodedImage = $image->fit(535, 241)->encode('png')->save();
+        $encodedImage = $image->fit(200, 200)->encode('png')->save();
 
         // 检测敏感图
         $this->censor->checkImage($image->dirname .'/'. $image->basename);
