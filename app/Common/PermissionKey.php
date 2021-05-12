@@ -20,20 +20,29 @@ class PermissionKey
 
     const VIEW_THREADS = 'viewThreads';
     const THREAD_REPLY = 'thread.reply';
-    const THREAD_VIEW_DETAIL = 'thread.viewPosts';
-    const THREAD_FREE_VIEW = 'thread.freeViewPosts';
-    const THREAD_DELETE = 'thread.hide';
+    const THREAD_FREE_VIEW_POSTS = 'thread.freeViewPosts';
+    const THREAD_FAVORITE = 'thread.favorite';
+    const THREAD_LIKE_POSTS = 'thread.likePosts';
+    const THREAD_HIDE = 'thread.hide';
     const THREAD_EDIT = 'thread.edit';
-    const REPLY_DELETE = 'thread.hidePosts';
-    const OWN_THREAD_EDIT = 'thread.editOwnThreadOrPost';
-    const OWN_THREAD_DELETE = 'thread.hideOwnThreadOrPost';
+    const THREAD_EDIT_OWN = 'thread.editOwnThreadOrPost';
+    const THREAD_HIDE_OWN = 'thread.hideOwnThreadOrPost';
     const THREAD_ESSENCE = 'thread.essence';
+    const THREAD_STICKY = 'thread.sticky';
+
+    const THREAD_VIEW_POSTS = 'thread.viewPosts';
+    const THREAD_HIDE_POSTS = 'thread.hidePosts';
+    const THREAD_EDIT_POSTS = 'thread.editPosts';
 
     const DIALOG_CREATE = 'dialog.create';
-    const THREAD_STICKY = 'thread.sticky';
     const CREATE_INVITE = 'createInvite';
 
     const CASH_CREATE = 'cash.create';
     const ORDER_CREATE = 'order.create';
+    const TRADE_PAY_ORDER = 'trade.pay.order';
 
+    const USER_EDIT_GROUP = 'user.edit.group';
+    const USER_EDIT_STATUS = 'user.edit.status';
+    const USER_VIEW = 'user.view';
+    const USER_FOLLOW_CREATE = 'userFollow.create';
 }
