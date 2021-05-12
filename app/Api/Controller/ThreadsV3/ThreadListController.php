@@ -24,7 +24,9 @@ use App\Models\Order;
 use App\Models\Post;
 use App\Models\Sequence;
 use App\Models\Thread;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
 
@@ -35,6 +37,18 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
+    private $categoryIds = [];
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $filter = $this->inPut('filter') ?: [];
+        $categoryIds = $filter['categoryids'] ?? [];
+        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
+        if (!$this->categoryIds) {
+            throw new PermissionDeniedException('没有浏览权限');
+        }
+        return true;
+    }
 
     public function main()
     {
@@ -73,21 +87,16 @@ class ThreadListController extends DzqController
 
         $essence = null;
         $types = [];
-        $categoryids = [];
         $sort = Thread::SORT_BY_THREAD;
         $attention = 0;
         $search = '';
         isset($filter['sticky']) && $stick = $filter['sticky'];
         isset($filter['essence']) && $essence = $filter['essence'];
         isset($filter['types']) && $types = $filter['types'];
-        isset($filter['categoryids']) && $categoryids = $filter['categoryids'];
         isset($filter['sort']) && $sort = $filter['sort'];
         isset($filter['attention']) && $attention = $filter['attention'];
         isset($filter['search']) && $search = $filter['search'];
-        $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
-        if (!$categoryids) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
-        }
+        $categoryids = $this->categoryIds;
         $groupId = $this->groupId();
         $cacheKey = CacheKey::LIST_THREADS_V3 . $groupId;
         $cache = $this->cacheInstance();
