@@ -19,11 +19,19 @@ namespace App\Api\Controller\WalletV3;
 
 use App\Common\ResponseCode;
 use App\Models\UserWalletCash;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class UsersCashLogsListController extends DzqController
 {
-    // 权限检查，用户是否为管理员
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
 
     public function main()
     {

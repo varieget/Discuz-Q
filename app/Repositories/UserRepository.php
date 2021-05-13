@@ -255,9 +255,9 @@ class UserRepository extends AbstractRepository
      * @param User $user
      * @return bool
      */
-    public function canFreeViewPosts(User $user)
+    public function canFreeViewPosts(User $user, $categoryId = null)
     {
-        return $user->hasPermission(PermissionKey::THREAD_FREE_VIEW_POSTS);
+        return $user->hasPermission($user, PermissionKey::THREAD_FREE_VIEW_POSTS, $categoryId);
     }
 
     /**

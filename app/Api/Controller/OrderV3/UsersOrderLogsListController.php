@@ -6,11 +6,19 @@ use App\Common\ResponseCode;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Thread;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class UsersOrderLogsListController extends DzqController
 {
-    // 权限检查，用户是否为管理员
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
 
     public function main()
     {
