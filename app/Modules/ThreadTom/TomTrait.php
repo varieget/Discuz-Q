@@ -21,6 +21,8 @@ namespace App\Modules\ThreadTom;
 use App\Api\Controller\ThreadsV3\DeleteTomController;
 use App\Api\Controller\ThreadsV3\SelectTomController;
 use App\Api\Controller\ThreadsV3\UpdateTomController;
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Permission;
 use App\Models\Thread;
@@ -45,9 +47,10 @@ trait TomTrait
      * @param null $operation
      * @param null $threadId
      * @param null $postId
+     * @param bool $canViewTom
      * @return array
      */
-    private function tomDispatcher($tomContent, $operation = null, $threadId = null, $postId = null)
+    private function tomDispatcher($tomContent, $operation = null, $threadId = null, $postId = null, $canViewTom = true)
     {
         $config = TomConfig::$map;
         $tomJsons = [];
@@ -59,9 +62,14 @@ trait TomTrait
         if (empty($indexes)) return $tomJsons;
         $tomList = [];
         if (!empty($threadId) && empty($operation)) {
-            $tomList = ThreadTom::query()
-                ->select('tom_type', 'key')
-                ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
+            $tomList = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
+                $tomList = ThreadTom::query()
+                    ->select('tom_type', 'key')
+                    ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
+                $tomList = [$threadId => $tomList];
+                return $tomList;
+            });
+            $tomList = $tomList[$threadId] ?? [];
         }
         foreach ($indexes as $key => $tomJson) {
             $this->setOperation($operation, $key, $tomJson, $tomList);
@@ -75,9 +83,9 @@ trait TomTrait
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
                             if (empty($tomJson['threadId'])) {
-                                $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body, $canViewTom]);
                             } else {
-                                $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body]);
+                                $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body, $canViewTom]);
                             }
                             method_exists($service, $op) && $tomJsons[$key] = $service->$op();
                         } catch (\ReflectionException $e) {

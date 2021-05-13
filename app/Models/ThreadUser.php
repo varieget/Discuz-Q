@@ -18,6 +18,8 @@
 
 namespace App\Models;
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use Carbon\Carbon;
 use Discuz\Base\DzqModel;
 
@@ -34,4 +36,8 @@ class ThreadUser extends DzqModel
 {
     protected $table = 'thread_user';
 
+    protected function clearCache()
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_FAVOR,$this->user_id);
+    }
 }

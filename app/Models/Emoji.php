@@ -18,6 +18,10 @@
 
 namespace App\Models;
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
+use App\Common\ResponseCode;
+use Discuz\Base\DzqModel;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -29,6 +33,23 @@ use Illuminate\Database\Eloquent\Model;
  * @method create(array $array)
  * @package App\Models
  */
-class Emoji extends Model
+class Emoji extends DzqModel
 {
+
+    public static function getEmojis()
+    {
+        $cache = app('cache');
+        $emojis = $cache->get(CacheKey::LIST_EMOJI);
+        if ($emojis) {
+            return $emojis;
+        }
+        $emojis = Emoji::all()->toArray();
+        $cache->put(CacheKey::LIST_EMOJI, $emojis, 60 * 60);
+        return $emojis;
+    }
+
+    protected function clearCache()
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_EMOJI);
+    }
 }

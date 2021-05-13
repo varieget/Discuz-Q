@@ -48,17 +48,16 @@ class SettingsRepository implements ContractsSettingRepository
             return $this->settings;
         }
 
-        if (app()->config('middleware_cache')) {
-            $ttl = static::CACHE_TTL;
-            $settings = $this->cache->remember(
-                CacheKey::SETTINGS,
-                mt_rand($ttl, $ttl + 10),
-                function () {
-                    return $this->getAllFromDatabase();
-                });
-        } else {
+        //if (app()->config('middleware_cache')) {
+        $settings = $this->cache->sear(
+            CacheKey::SETTINGS,
+            function () {
+                return $this->getAllFromDatabase();
+            }
+        );
+        /*} else {
             $settings = $this->getAllFromDatabase();
-        }
+        }*/
 
         $this->settings = collect($settings);
 

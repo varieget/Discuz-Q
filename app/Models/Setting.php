@@ -18,14 +18,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Common\CacheKey;
+use App\Common\DzqCache;
+use Discuz\Base\DzqModel;
 
 /**
  * @property string $key
  * @property string $value
  * @property string $tag
  */
-class Setting extends Model
+class Setting extends DzqModel
 {
     /**
      * {@inheritdoc}
@@ -93,7 +95,7 @@ class Setting extends Model
         'site_create_thread4' => ['createThread.4'],
         'site_create_thread5' => ['createThread.5'],
         'site_create_thread6' => ['createThread.6'],
-        'site_can_reward'  =>  ['switch.thread.canBeReward', 'thread.canBeReward']
+        'site_can_reward' => ['switch.thread.canBeReward', 'thread.canBeReward']
     ];
 
     /**
@@ -153,10 +155,10 @@ class Setting extends Model
         $headersStr = strtolower(json_encode($headers, 256));
         $serverStr = strtolower(json_encode($server, 256));
 
-        if (strstr($serverStr, 'miniprogram') || strstr($headersStr, 'miniprogram') || 
+        if (strstr($serverStr, 'miniprogram') || strstr($headersStr, 'miniprogram') ||
             strstr($headersStr, 'compress')) {
             $settings = Setting::query()->where(['key' => 'miniprogram_video', 'tag' => 'wx_miniprogram'])->first();
-            if(!$settings->value){
+            if (!$settings->value) {
                 return false;
             }
         }
@@ -168,24 +170,31 @@ class Setting extends Model
     /*
  * 更新value值
  */
-    public static function modifyValue($key, $value, $tag = 'default'){
-        return Setting::query()->where('key',$key)->where('tag',$tag)->update(['value'=>$value]);
+    public static function modifyValue($key, $value, $tag = 'default')
+    {
+        return Setting::query()->where('key', $key)->where('tag', $tag)->update(['value' => $value]);
     }
 
 
     /*
   * 获取value参数值
   */
-    public static function getValue($key, $tag = '', $value = ''){
-        if($key){
-            $settings = Setting::query()->where('key',$key);
+    public static function getValue($key, $tag = '', $value = '')
+    {
+        if ($key) {
+            $settings = Setting::query()->where('key', $key);
         }
-        if($tag){
-            $settings = $settings->where('tag',$tag);
+        if ($tag) {
+            $settings = $settings->where('tag', $tag);
         }
-        if($value){
-            $settings = $settings->where('value',$value);
+        if ($value) {
+            $settings = $settings->where('value', $value);
         }
         return $settings->value('value');
+    }
+
+    protected function clearCache()
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
     }
 }

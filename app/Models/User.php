@@ -19,6 +19,7 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Models\Invite;
 use App\Models\Group;
 use App\Traits\Notifiable;
@@ -975,5 +976,10 @@ class User extends DzqModel
         $groupData = Group::query()->where('id', $groupId)->first();
         // $be_scale
         return $groupData['scale'] ?? 0;
+    }
+
+    protected function clearCache()
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USERS, $this->id);
     }
 }

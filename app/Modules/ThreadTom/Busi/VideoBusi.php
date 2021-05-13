@@ -18,8 +18,9 @@
 namespace App\Modules\ThreadTom\Busi;
 
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Models\ThreadVideo;
-use App\Modules\ThreadTom\PreQuery;
 use App\Modules\ThreadTom\TomBaseBusi;
 
 class VideoBusi extends TomBaseBusi
@@ -40,11 +41,23 @@ class VideoBusi extends TomBaseBusi
     public function select()
     {
         $videoId = $this->getParams('videoId');
-        $video = $this->searchArray(PreQuery::THREAD_LIST_VIDEO, $videoId, $hasKey);
-        if (!$hasKey) {
-            $video = ThreadVideo::instance()->getThreadVideoById($videoId);
+        $videos = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_VIDEO, $videoId, function ($videoId) {
+            $videos = ThreadVideo::query()->where(['id' => $videoId, 'status' => ThreadVideo::VIDEO_STATUS_SUCCESS])->get()->toArray();
+            if (empty($videos)) {
+                $videos = [$videoId => null];
+            } else {
+                $videos = [$videoId => current($videos)];
+            }
+            return $videos;
+        });
+        $video = $videos[$videoId] ?? null;
+        if ($video) {
+            $video = ThreadVideo::instance()->threadVideoResult($video);
+            if (!$this->canViewTom) {
+                $video['mediaUrl'] = '';
+            }
         } else {
-            $video = ThreadVideo::instance()->getThreadVideoById($videoId, $video);
+            $video = false;
         }
         return $this->jsonReturn($video);
     }

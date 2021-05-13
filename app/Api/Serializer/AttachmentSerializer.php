@@ -137,14 +137,16 @@ class AttachmentSerializer extends AbstractSerializer
     public function getBeautyAttachment($model, $thread, $user = null)
     {
         if ($user) $this->actor = $user;
-        $this->paidContent($model);
         if ($model->is_remote) {
-            $url = $this->settings->get('qcloud_cos_sign_url', 'qcloud', true)
-                ? $this->filesystem->disk('attachment_cos')->temporaryUrl($model->full_path, Carbon::now()->addDay())
-                : $this->filesystem->disk('attachment_cos')->url($model->full_path);
+            $url = $this->remoteUrl($model->full_path);
+            $blurUrl = $this->remoteUrl($model->blur_path);
+            $thumbUrl = $url . (strpos($url, '?') === false ? '?' : '&') . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
         } else {
-            $url = $this->filesystem->disk('attachment')->url($model->full_path);
+            $url = $this->localUrl($model->full_path);
+            $blurUrl = $this->localUrl($model->blur_path);
+            $thumbUrl = $this->filesystem->disk('attachment')->exists($model->thumb_path) ? Str::replaceLast('.', '_thumb.', $url) : $url;
         }
+
         $attributes = [
             'id' => $model->id,
             'order' => $model->order,
@@ -153,6 +155,8 @@ class AttachmentSerializer extends AbstractSerializer
             'isRemote' => $model->is_remote,
             'isApproved' => $model->is_approved,
             'url' => $url,
+            'blurUrl'=>$blurUrl,
+            'thumbUrl'=>$thumbUrl,
             'attachment' => $model->attachment,
             'extension' => Str::afterLast($model->attachment, '.'),
             'fileName' => $model->file_name,
@@ -162,23 +166,23 @@ class AttachmentSerializer extends AbstractSerializer
         ];
 
         // 图片缩略图地址
-        if (in_array($model->type, [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
-            if ($model->getAttribute('blur')) {
-                $attributes['thumbUrl'] = $url;
-            } else {
-                if ($model->is_remote) {
-                    $attributes['thumbUrl'] = $url . (strpos($url, '?') === false ? '?' : '&')
-                        . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
-                } else {
-                    // 缩略图不存在时使用原图
-                    $attributes['thumbUrl'] = $this->filesystem->disk('attachment')->exists($model->thumb_path)
-                        ? Str::replaceLast('.', '_thumb.', $url)
-                        : $url;
-                }
-            }
-        } elseif ($model->type == Attachment::TYPE_OF_ANSWER) {
-            $attributes['thumbUrl'] = $url;
-        }
+//        if (in_array($model->type, [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
+//            if ($model->getAttribute('blur')) {
+//                $attributes['thumbUrl'] = $url;
+//            } else {
+//                if ($model->is_remote) {
+//                    $attributes['thumbUrl'] = $url . (strpos($url, '?') === false ? '?' : '&')
+//                        . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
+//                } else {
+//                    // 缩略图不存在时使用原图
+//                    $attributes['thumbUrl'] = $this->filesystem->disk('attachment')->exists($model->thumb_path)
+//                        ? Str::replaceLast('.', '_thumb.', $url)
+//                        : $url;
+//                }
+//            }
+//        } elseif ($model->type == Attachment::TYPE_OF_ANSWER) {
+//            $attributes['thumbUrl'] = $url;
+//        }
 
         // 绑定首帖的附件，如果是付费或开启了预览，返回后端地址
         if (
@@ -190,11 +194,22 @@ class AttachmentSerializer extends AbstractSerializer
         ) {
             $attributes['url'] = $this->url->to('/api/attachments/' . $model->id) . '?t=' . Attachment::getFileToken($this->actor);
         }
-
         return $attributes;
     }
 
 
+    private function remoteUrl($attachUrl)
+    {
+        return $this->settings->get('qcloud_cos_sign_url', 'qcloud', true)
+            ? $this->filesystem->disk('attachment_cos')->temporaryUrl($attachUrl, Carbon::now()->addDay())
+            : $this->filesystem->disk('attachment_cos')->url($attachUrl);
+    }
+
+    private function localUrl($attachUrl)
+    {
+        return $this->filesystem->disk('attachment')->url($attachUrl);
+
+    }
 
     /**
      * @param $attachment

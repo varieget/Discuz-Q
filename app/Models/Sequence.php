@@ -18,11 +18,31 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Common\CacheKey;
+use App\Common\DzqCache;
+use Discuz\Base\DzqModel;
 
 /**
  * @package App\Models
  */
-class Sequence extends Model
+class Sequence extends DzqModel
 {
+    protected function clearCache()
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_0);
+        DzqCache::removeCacheByPrimaryId(CacheKey::SEQUENCE);
+    }
+
+    public static function getSequence()
+    {
+        $cache = app('cache');
+        $sequence = $cache->get(CacheKey::SEQUENCE);
+        if ($sequence) {
+            return $sequence;
+        }
+        $sequence = self::query()->get()->toArray();
+        $sequence = current($sequence);
+        $cache->put(CacheKey::SEQUENCE, $sequence, 60 * 60);
+        return $sequence;
+    }
 }

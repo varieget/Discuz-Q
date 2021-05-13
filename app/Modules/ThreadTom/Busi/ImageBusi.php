@@ -18,9 +18,11 @@
 namespace App\Modules\ThreadTom\Busi;
 
 use App\Api\Serializer\AttachmentSerializer;
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
-use App\Modules\ThreadTom\PreQuery;
+use App\Models\Thread;
 use App\Modules\ThreadTom\TomBaseBusi;
 
 class ImageBusi extends TomBaseBusi
@@ -48,16 +50,24 @@ class ImageBusi extends TomBaseBusi
         $serializer = $this->app->make(AttachmentSerializer::class);
         $result = [];
         $imageIds = $this->getParams('imageIds');
-        $attachments = $this->searchArray(PreQuery::THREAD_LIST_ATTACHMENTS, $imageIds);
-        if (!$attachments) {
-            $attachments = Attachment::query()->whereIn('id', $imageIds)->get();
-        }
+        $attachments = DzqCache::extractCacheCollectionData(CacheKey::LIST_THREADS_V3_ATTACHMENT, $imageIds, function ($imageIds) {
+            return Attachment::query()->whereIn('id', $imageIds)->get()->keyBy('id');
+        });
+        $threadId = $this->threadId;
+        $threads = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {
+            $threads = Thread::instance()->getOneActiveThread($threadId, true);
+            $threads = [$threadId => $threads];
+            return $threads;
+        });
+        $thread = $threads[$threadId] ?? null;
         foreach ($attachments as $attachment) {
-            $thread = $this->searchArray(PreQuery::THREAD_LIST, $this->threadId);
-            if ($thread) {
-                $result[] = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
-            } else {
-                $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
+            if (!empty($thread)) {
+                $item = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
+                if (!$this->canViewTom) {
+                    $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
+                }
+                unset($item['blurUrl']);
+                $result[] = $item;
             }
         }
         return $this->jsonReturn($result);

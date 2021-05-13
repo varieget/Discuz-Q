@@ -43,7 +43,9 @@ abstract class TomBaseBusi
     public $key = null;
     public $app = null;
 
-    public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body)
+    public $canViewTom = true;
+
+    public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body, $canViewTom)
     {
         $this->app = app();
         $this->operation = $operation;
@@ -53,6 +55,7 @@ abstract class TomBaseBusi
         $this->postId = $postId;
         $this->user = $user;
         $this->key = $key;
+        $this->canViewTom = $canViewTom;
         $this->operationValid();
     }
 
@@ -134,27 +137,4 @@ abstract class TomBaseBusi
         ThreadTom::deleteTom($this->threadId, $this->tomId, $this->key);
         return $this->jsonReturn(false);
     }
-
-    public function searchArray($preKey, $searchIds, &$hasKey = false)
-    {
-        $isArray = is_array($searchIds);
-        !$isArray && $searchIds = [$searchIds];
-        if (app()->has($preKey)) {
-            $hasKey = true;
-            $preQueryArray = app()->get($preKey);
-            $sResult = [];
-            foreach ($searchIds as $searchId) {
-                if (isset($preQueryArray[$searchId])) {
-                    $sResult[] = $preQueryArray[$searchId];
-                } else {
-                    return false;
-                }
-            }
-            !$isArray && $sResult = current($sResult);
-            return $sResult;
-        } else {
-            return false;
-        }
-    }
-
 }

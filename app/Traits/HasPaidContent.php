@@ -24,6 +24,7 @@ use App\Models\Question;
 use App\Models\Thread;
 use App\Models\ThreadVideo;
 use App\Models\User;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Str;
 
 /**

@@ -18,8 +18,11 @@
 
 namespace App\Models;
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use Carbon\Carbon;
 use Closure;
+use Discuz\Base\DzqModel;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Database\ScopeVisibilityTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -56,7 +59,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property User $thirdParty
  * @package App\Models
  */
-class Order extends Model
+class Order extends DzqModel
 {
     use ScopeVisibilityTrait;
 
@@ -65,11 +68,11 @@ class Order extends Model
      */
     const ORDER_TYPE_REGISTER = 1; //注册
 
-    const ORDER_TYPE_REWARD   = 2; //打赏
+    const ORDER_TYPE_REWARD = 2; //打赏
 
-    const ORDER_TYPE_THREAD   = 3; //付费主题
+    const ORDER_TYPE_THREAD = 3; //付费主题
 
-    const ORDER_TYPE_GROUP    = 4; //付费用户组
+    const ORDER_TYPE_GROUP = 4; //付费用户组
 
     const ORDER_TYPE_QUESTION = 5; // 问答提问支付
 
@@ -94,11 +97,11 @@ class Order extends Model
      */
     const ORDER_STATUS_PENDING = 0; //待付款
 
-    const ORDER_STATUS_PAID    = 1; //已付款
+    const ORDER_STATUS_PAID = 1; //已付款
 
-    const ORDER_STATUS_CANCEL  = 2; //取消订单
+    const ORDER_STATUS_CANCEL = 2; //取消订单
 
-    const ORDER_STATUS_FAILED  = 3; //支付失败
+    const ORDER_STATUS_FAILED = 3; //支付失败
 
     const ORDER_STATUS_EXPIRED = 4; //订单已过期
 
@@ -118,18 +121,18 @@ class Order extends Model
      */
     const PAYMENT_TYPE_WECHAT_NATIVE = 10; //微信扫码支付
 
-    const PAYMENT_TYPE_WECHAT_WAP    = 11; //微信h5支付
+    const PAYMENT_TYPE_WECHAT_WAP = 11; //微信h5支付
 
-    const PAYMENT_TYPE_WECHAT_JS     = 12; //微信网页、公众号
+    const PAYMENT_TYPE_WECHAT_JS = 12; //微信网页、公众号
 
-    const PAYMENT_TYPE_WECHAT_MINI   = 13; //微信小程序支付
+    const PAYMENT_TYPE_WECHAT_MINI = 13; //微信小程序支付
 
-    const PAYMENT_TYPE_WALLET        = 20;//钱包支付
+    const PAYMENT_TYPE_WALLET = 20;//钱包支付
 
     /**
      * 订单过期时间，单位分钟，订单过期后无法支付
      */
-    const ORDER_EXPIRE_TIME          = 10;
+    const ORDER_EXPIRE_TIME = 10;
 
     /**
      * {@inheritdoc}
@@ -241,7 +244,7 @@ class Order extends Model
 
         $this->author_amount = $actualAmount;
 
-        return $getAuthorAmount ?  $this->author_amount : $bossAmount ;
+        return $getAuthorAmount ? $this->author_amount : $bossAmount;
     }
 
     /**
@@ -355,5 +358,11 @@ class Order extends Model
         $this->third_party_amount = $this->be_scale / 10 * $this->amount; // 邀请人分成金额
         $this->master_amount = $this->amount - $this->third_party_amount; // 站长分成金额
         return $this->third_party_amount; // 邀请人分成金额
+    }
+
+    protected function clearCache()
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_USERS, $this->thread_id);
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USER_ORDERS, $this->user_id);
     }
 }

@@ -145,6 +145,22 @@ class ThreadVideo extends DzqModel
         ];
     }
 
+    public function threadVideoResult($threadVideo)
+    {
+        if (empty($threadVideo)) {
+            return false;
+        }
+        return [
+            'threadVideoId' => $threadVideo['id'],
+            'fileName' => $threadVideo['file_name'],
+            'height' => $threadVideo['height'],
+            'width' => $threadVideo['width'],
+            'duration' => $threadVideo['duration'],
+            'mediaUrl' => $this->getMediaUrl($threadVideo),
+            'coverUrl' => $threadVideo['cover_url']
+        ];
+    }
+
     private function getMediaUrl($video)
     {
         $settings = app(SettingsRepository::class);
