@@ -22,11 +22,18 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Modules\ThreadTom\TomConfig;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ThreadCommendController extends DzqController
 {
     use ThreadTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
         $threads = Thread::query()->select(['id', 'category_id', 'title','view_count','price','attachment_price','is_essence']);
@@ -70,7 +77,7 @@ class ThreadCommendController extends DzqController
                 'viewCount'=>$thread['view_count']
             ];
         }
-        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
+        [$search, $replace] = Thread::instance()->getReplaceString($linkString);
         foreach ($data as &$item) {
             $item['title'] = str_replace($search, $replace, $item['title']);
         }

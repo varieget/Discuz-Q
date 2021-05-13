@@ -374,7 +374,7 @@ class UserRepository extends AbstractRepository
             return $this->canEditThread($user, $thread, $requestData);
         }
 
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS, $thread->category_id);
     }
 
     public function canViewThreadDetail(User $user, $thread)
@@ -382,7 +382,7 @@ class UserRepository extends AbstractRepository
         if ($user->id == $thread->user_id) {
             return true;
         }
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS, $thread->category_id);
     }
 
     /**
