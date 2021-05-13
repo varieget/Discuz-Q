@@ -37,6 +37,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
+    const PRELOAD_PAGES = 50;//预加载的页数
 //    private $categoryIds = [];
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -99,7 +100,7 @@ class ThreadListController extends DzqController
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
                 $threads = $this->buildFilterThreads($filter);
-                $threads = $this->preloadPaginiation(100, 10, $threads, true);
+                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, 10, $threads, true);
                 $this->initDzqThreadsData($cacheKey, $threads);
                 return $threads;
             }, true);
@@ -121,7 +122,7 @@ class ThreadListController extends DzqController
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
                 $threads = $this->buildSequenceThreads($filter);
-                $threads = $this->preloadPaginiation(100, 10, $threads, true);
+                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, 10, $threads, true);
                 $this->initDzqThreadsData($cacheKey, $threads);
                 return $threads;
             }, true);
