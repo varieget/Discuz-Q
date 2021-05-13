@@ -19,14 +19,12 @@
 namespace App\Api\Serializer;
 
 use App\Common\SettingCache;
-use App\Models\Category;
-use App\Models\Thread;
 use App\Models\User;
 use App\Settings\ForumSettingField;
 use App\Repositories\UserRepository;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Common\PubEnum;
-use Discuz\Contracts\Setting\SettingsRepository;
+use App\Settings\SettingsRepository;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -38,6 +36,8 @@ class ForumSettingSerializerV2 extends AbstractSerializer
     protected $settings;
 
     protected $forumField;
+
+    protected $userRepo;
 
     public function __construct(SettingsRepository $settings, ForumSettingField $forumField, SettingCache $settingcache, Request $request, UserRepository $userRepo)
     {
@@ -117,7 +117,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
             'passport' => [
                 'offiaccount_close' => (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount'), // 微信H5 开关
                 'miniprogram_close' => (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram'), // 微信小程序 开关
-                'oplatform_close' => (bool)$this->settings->get('oplatform_close', 'wx_oplatform'),       // 微信PC 开关
+//                'oplatform_close' => (bool)$this->settings->get('oplatform_close', 'wx_oplatform'),       // 微信PC 开关
             ],
 
             // 支付设置
@@ -204,9 +204,9 @@ class ForumSettingSerializerV2 extends AbstractSerializer
         ];
 
         // 站点开关 - 满足条件返回
-//        if ($attributes['set_site']['site_close'] == 1) {
-//            $attributes['set_site'] += $this->forumField->getSiteClose();
-//        }
+        if ($attributes['set_site']['site_close'] == 1) {
+            $attributes['set_site'] += $this->forumField->getSiteClose();
+        }
 
         // 付费模式 - 满足条件返回
         if ($attributes['set_site']['site_mode'] == 'pay') {
@@ -230,8 +230,8 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 strpos($headersStr, 'compress') !== false)) {
             $attributes['other']['can_insert_thread_video'] = false;
         }
-        //判断三种注册方式是否置灰禁用
-        $attributes['sign_enable']=$this->getSignInEnable($attributes);
+        //判断三种注册方式是否置灰禁用, 3.0 无注册模式选择
+//        $attributes['sign_enable']=$this->getSignInEnable($attributes);
 
         // 判断用户是否存在
         if ($actor->exists) {
