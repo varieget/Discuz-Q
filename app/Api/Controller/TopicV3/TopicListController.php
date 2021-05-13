@@ -157,7 +157,7 @@ class TopicListController extends DzqController
         }
         $threads = $this->getThreadsBuilder($topicIds);
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
-        return $threads->get();
+        return $threads->get()->toArray();
     }
 
     private function getThreadsBuilder($topicIds)
