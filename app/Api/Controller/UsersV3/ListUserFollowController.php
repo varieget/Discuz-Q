@@ -64,11 +64,8 @@ class ListUserFollowController extends DzqController
 
             foreach ($userFollowList as $key => $value) {
                 $userFollowList[$key]['isFollow']       = false;
-                $userFollowList[$key]['isMutualFollow'] = false;
                 if (isset($userFollow[$value['to_user_id']])) {
                     $userFollowList[$key]['isFollow']  = true;
-                    $userFollowList[$key]['isMutualFollow'] = (bool) $userFollowList[$value['userId']]['is_mutual'];
-
                 }
             }
 
