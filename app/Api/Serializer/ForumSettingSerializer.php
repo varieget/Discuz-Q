@@ -25,8 +25,7 @@ use App\Models\User;
 use App\Settings\ForumSettingField;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Common\PubEnum;
-use Discuz\Common\Utils;
-use Discuz\Contracts\Setting\SettingsRepository;
+use App\Settings\SettingsRepository;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Support\Arr;
 
@@ -37,6 +36,8 @@ class ForumSettingSerializer extends AbstractSerializer
     protected $settings;
 
     protected $forumField;
+
+    protected $settingcache;
 
     public function __construct(SettingsRepository $settings, ForumSettingField $forumField, SettingCache $settingcache)
     {
@@ -125,7 +126,7 @@ class ForumSettingSerializer extends AbstractSerializer
             'passport' => [
                 'offiaccount_close' => (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount'), // 微信H5 开关
                 'miniprogram_close' => (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram'), // 微信小程序 开关
-                'oplatform_close' => (bool)$this->settings->get('oplatform_close', 'wx_oplatform'),       // 微信PC 开关
+//                'oplatform_close' => (bool)$this->settings->get('oplatform_close', 'wx_oplatform'),       // 微信PC 开关
             ],
 
             // 支付设置
@@ -231,9 +232,9 @@ class ForumSettingSerializer extends AbstractSerializer
         ];
 
         // 站点开关 - 满足条件返回
-//        if ($attributes['set_site']['site_close'] == 1) {
-//            $attributes['set_site'] += $this->forumField->getSiteClose();
-//        }
+        if ($attributes['set_site']['site_close'] == 1) {
+            $attributes['set_site'] += $this->forumField->getSiteClose();
+        }
 
         // 付费模式 - 满足条件返回
         if ($attributes['set_site']['site_mode'] == 'pay') {
@@ -257,8 +258,8 @@ class ForumSettingSerializer extends AbstractSerializer
                 strpos($headersStr, 'compress') !== false)) {
             $attributes['other']['can_create_thread_video'] = false;
         }
-        //判断三种注册方式是否置灰禁用
-        $attributes['sign_enable']=$this->getSignInEnable($attributes);
+        //判断三种注册方式是否置灰禁用,   3.0无注册方式选项
+//        $attributes['sign_enable']=$this->getSignInEnable($attributes);
 
         // 判断用户是否存在
         if ($actor->exists) {
