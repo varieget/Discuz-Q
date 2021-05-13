@@ -32,6 +32,8 @@ use App\Models\ThreadUser;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Modules\ThreadTom\TomTrait;
+use App\Repositories\UserRepository;
+use App\Settings\SettingsRepository;
 use Illuminate\Support\Str;
 
 trait ThreadTrait
@@ -131,52 +133,26 @@ trait ThreadTrait
 
     /**
      * @desc 获取操作权限
-     * @param $loginUser
+     * @param User $loginUser
      * @param $thread
      * @return bool[]
      */
-    private function getAbilityField($loginUser, $thread)
+    private function getAbilityField(User $loginUser, $thread)
     {
+        /** @var UserRepository $userRepo */
+        $userRepo = app(UserRepository::class);
+        /** @var SettingsRepository $settingRepo */
+        $settingRepo = app(SettingsRepository::class);
 
-        $data = [
-            'canEdit' => true,
-            'canDelete' => true,
-            'canEssence' => true,
-            'canStick' => true,
-            'canReply' => true,
-            'canViewPost' => true,
-            'canBeReward' => true,
+        return [
+            'canEdit' => $userRepo->canEditThread($loginUser, $thread),
+            'canDelete' => $userRepo->canHideThread($loginUser, $thread),
+            'canEssence' => $userRepo->canEssenceThread($loginUser, $thread->category_id),
+            'canStick' => $userRepo->canStickThread($loginUser),
+            'canReply' => $userRepo->canReplyThread($loginUser, $thread->category_id),
+            'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
+            'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
         ];
-
-        if ($loginUser->isAdmin()) {
-            return $data;
-        }
-
-        $permission = array_flip(Permission::getUserPermissions($loginUser));
-
-        if (!isset($permission['thread.editOwnThreadOrPost']) && !isset($permission["category{$thread['category_id']}.thread.editOwnThreadOrPost"])) {
-            $data['canEdit'] = false;
-        }
-        if (!isset($permission['thread.hideOwnThreadOrPost']) && !isset($permission["category{$thread['category_id']}.thread.hideOwnThreadOrPost"])) {
-            $data['canDelete'] = false;
-        }
-        if (!isset($permission['thread.essence']) && !isset($permission["category{$thread['category_id']}.thread.essence"])) {
-            $data['canEssence'] = false;
-        }
-        if (!isset($permission['thread.sticky'])) {
-            $data['canStick'] = false;
-        }
-        if (!isset($permission['thread.reply']) && !isset($permission["category{$thread['category_id']}.thread.reply"])) {
-            $data['canReply'] = false;
-        }
-        if (!isset($permission['thread.viewPosts']) && !isset($permission["category{$thread['category_id']}.thread.viewPosts"])) {
-            $data['canViewPost'] = false;
-        }
-        if (!isset($permission['thread.canBeReward']) && !isset($permission["category{$thread['category_id']}.thread.canBeReward"])) {
-            $data['canBeReward'] = false;
-        }
-
-        return $data;
     }
 
     private function threadPayStatus($loginUser, $thread, &$paid)
@@ -342,7 +318,7 @@ trait ThreadTrait
         $sep = '__' . Str::random(6) . '__';
         $contentForCheck = $title . $sep . $text;
         $censor->checkText($contentForCheck);
-        list($title, $content) = explode($sep, $censor->checkText($contentForCheck));
+        [$title, $content] = explode($sep, $censor->checkText($contentForCheck));
         $isApproved = $censor->isMod;
         return [$title, $content];
     }

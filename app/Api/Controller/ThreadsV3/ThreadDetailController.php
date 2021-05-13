@@ -23,22 +23,28 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
 class ThreadDetailController extends DzqController
 {
     use ThreadTrait;
+    protected $thread;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
+        return $userRepo->canViewThreadDetail($this->user, $this->thread);
+    }
 
     public function main()
     {
         $threadId = $this->inPut('threadId');
-        $thread = Thread::getOneActiveThread($threadId);
+        $thread = $this->thread;
         $post = Post::getOneActivePost($threadId);
         if (!$thread || !$post) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-        }
-        if (!$this->canViewThreadDetail($this->user, $thread)) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
         }
         $user = User::query()->where('id', $thread['user_id'])->first();
         $group = Group::getGroup($user['id']);

@@ -25,9 +25,10 @@ use App\Models\Order;
 use App\Models\Post;
 use App\Models\Sequence;
 use App\Models\Thread;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
 
 class ThreadListController extends DzqController
 {
@@ -36,6 +37,18 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
+//    private $categoryIds = [];
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+//        $filter = $this->inPut('filter') ?: [];
+//        $categoryIds = $filter['categoryids'] ?? [];
+//        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
+//        if (!$this->categoryIds) {
+//            throw new PermissionDeniedException('没有浏览权限');
+//        }
+        return true;
+    }
 
     public function main()
     {

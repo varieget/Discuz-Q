@@ -24,10 +24,15 @@ use App\Models\Permission;
 use App\Models\Post;
 use App\Models\Setting;
 use App\Models\Thread;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ThreadStickController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
 
     public function main()
     {
@@ -79,7 +84,7 @@ class ThreadStickController extends DzqController
                 'canViewPosts' => $this->canViewPosts($thread, $permissions)
             ];
         }
-        list($search, $replace) = Thread::instance()->getReplaceString($linkString);
+        [$search, $replace] = Thread::instance()->getReplaceString($linkString);
         foreach ($data as &$item) {
             $item['title'] = str_replace($search, $replace, $item['title']);
         }
