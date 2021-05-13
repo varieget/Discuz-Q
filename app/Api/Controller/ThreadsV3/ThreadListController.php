@@ -38,6 +38,7 @@ class ThreadListController extends DzqController
 
     private $preload = false;
     const PRELOAD_PAGES = 50;//预加载的页数
+
 //    private $categoryIds = [];
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -247,7 +248,7 @@ class ThreadListController extends DzqController
     {
         $sequence = Sequence::getSequence();
         if (empty($sequence)) {
-            return false;
+            return $this->buildFilterThreads($filter);
         }
         $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
