@@ -248,40 +248,42 @@ trait ThreadTrait
             }
         }
         if (!empty($content['text'])) {
-//            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
-            $attachmentSerializer = app(AttachmentSerializer::class);
-            // 所有图片及附件 URL
-            $attachments = $post->images
-                ->merge($post->attachments)
-                ->keyBy('id')
-                ->map(function (Attachment $attachment) use ($attachmentSerializer) {
-                    if ($attachment->type === Attachment::TYPE_OF_IMAGE) {
-                        return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
-                    } elseif ($attachment->type === Attachment::TYPE_OF_FILE) {
-                        return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
-                    }
-                });
+            //            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+
+            $post = Post::find($post['id']);
             // 数据原始内容，即 s9e 解析后的 XML
             $xml = $post->getRawOriginal('content');
+            if(!empty($post->attachments)){
+                $attachmentSerializer = app(AttachmentSerializer::class);
+                // 所有图片及附件 URL
+                $attachments = $post->images
+                    ->merge($post->attachments)
+                    ->keyBy('id')
+                    ->map(function (Attachment $attachment) use ($attachmentSerializer) {
+                        if ($attachment->type === Attachment::TYPE_OF_IMAGE) {
+                            return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
+                        } elseif ($attachment->type === Attachment::TYPE_OF_FILE) {
+                            return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
+                        }
+                    });
+                // 替换插入内容中的图片 URL
+                $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'IMG', function ($attributes) use ($attachments) {
+                    if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
+                        $attributes['src'] = $attachments[$attributes['title']];
+                    }
+                    return $attributes;
+                });
 
-            // 替换插入内容中的图片 URL
-            $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'IMG', function ($attributes) use ($attachments) {
-                if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
-                    $attributes['src'] = $attachments[$attributes['title']];
-                }
-                return $attributes;
-            });
-
-            // 替换插入内容中的附件 URL
-            $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'URL', function ($attributes) use ($attachments) {
-                if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
-                    $attributes['url'] = $attachments[$attributes['title']];
-                }
-                return $attributes;
-            });
+                // 替换插入内容中的附件 URL
+                $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'URL', function ($attributes) use ($attachments) {
+                    if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
+                        $attributes['url'] = $attachments[$attributes['title']];
+                    }
+                    return $attributes;
+                });
+            }
             $post->parsedContent = $xml;
             $content['text'] = $post->formatContent();
-
         }
 
         return $content;
