@@ -5,6 +5,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Models\GroupUser;
 use App\Models\User;
+use App\Models\UserFollow;
 use App\Repositories\UserFollowRepository;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -58,6 +59,19 @@ class ListUserFollowController extends DzqController
             $groups = array_column($groups, null, 'user_id');
             $users = User::instance()->getUsers($userIds);
 
+            $userFollow = UserFollow::query()->where('from_user_id', $this->user->id)->get()->toArray();
+            $userFollow = array_column($userFollow, null, 'to_user_id');
+
+            foreach ($userFollowList as $key => $value) {
+                $userFollowList[$key]['isFollow']       = false;
+                $userFollowList[$key]['isMutualFollow'] = false;
+                if (isset($userFollow[$value['to_user_id']])) {
+                    $userFollowList[$key]['isFollow']  = true;
+                    $userFollowList[$key]['isMutualFollow'] = (bool) $userFollowList[$value['userId']]['is_mutual'];
+
+                }
+            }
+
             $users = array_column($users, null, 'id');
             foreach ($userFollowList as $list) {
                 if($type==1){
@@ -87,6 +101,7 @@ class ListUserFollowController extends DzqController
                 $lists['isMutual'] = $list['is_mutual'];
                 $lists['createdAt'] = $list['created_at'];
                 $lists['updatedAt'] = $list['updated_at'];
+                $lists['isFollow'] = $list['isFollow'];
                 $lists['fromUser'] = $list['from_user'];
                 $result[] = [
                     'user' => $user,
