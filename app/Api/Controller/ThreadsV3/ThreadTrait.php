@@ -48,7 +48,7 @@ trait ThreadTrait
         $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
         $payType = $this->threadPayStatus($loginUser, $thread, $paid);
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
-        $contentField = $this->getContentField($loginUser,$thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom);
+        $contentField = $this->getContentField($loginUser, $thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -219,7 +219,7 @@ trait ThreadTrait
         return $obj;
     }
 
-    private function getContentField($loginUser,$thread, $post, $tomInput, $payType, $paid, $canViewTom)
+    private function getContentField($loginUser, $thread, $post, $tomInput, $payType, $paid, $canViewTom)
     {
         $content = [
             'text' => null,
@@ -245,7 +245,7 @@ trait ThreadTrait
             }
         }
         if (!empty($content['text'])) {
-            $content['text'] = str_replace(['<r>', '</r>'], ['', ''], $content['text']);
+            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
         }
 
         return $content;
