@@ -86,12 +86,19 @@ class WechatH5BindController extends AuthBaseController
 //            $wechatUser = '';
         } catch (Exception $e) {
             $this->db->rollBack();
+            $this->outPut(ResponseCode::NET_ERROR,
+                          ResponseCode::$codeMap[ResponseCode::NET_ERROR],
+                          $e->getMessage()
+            );
         }
 
 //        $this->recordWechatLog($wechatUser);
 
-        if (!$wechatUser) {
-            $wechatUser = new UserWechat();
+        if (!$wechatUser || !$wechatUser->user) {
+            if (!$wechatUser) {
+                $wechatUser = new UserWechat();
+            }
+
             $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
             // 登陆用户且没有绑定||换绑微信 添加微信绑定关系
             $wechatUser->user_id = $actor->id;
@@ -109,6 +116,9 @@ class WechatH5BindController extends AuthBaseController
 
             //用于用户名登录绑定微信使用
             if (!empty($token->user) && $type == 'h5') {
+                if (empty($actor->username)) {
+                    $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+                }
                 //token生成
                 $params = [
                     'username' => $actor->username,

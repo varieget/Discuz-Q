@@ -74,7 +74,7 @@ class WechatH5QrCodeController extends DzqController
     {
         $type = $this->inPut('type');
         if(! in_array($type, self::$qrcodeType)) {
-            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
+            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR);
         }
         $redirectUri = urldecode($this->inPut('redirectUri'));
 
@@ -87,12 +87,15 @@ class WechatH5QrCodeController extends DzqController
         //手机浏览器绑定则由前端传session_token
         $sessionToken = $this->inPut('sessionToken');
         if($type == 'mobile_browser_bind' && ! $sessionToken) {
-            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
+            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR);
         }
 
         if($type != 'mobile_browser_bind') {
             //跳转路由选择
             $actor = $this->user;
+            if ($type == 'pc_bind' && empty($actor)) {
+                $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+            }
             if($actor && $actor->id) {
                 $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
             } else {
@@ -105,7 +108,7 @@ class WechatH5QrCodeController extends DzqController
         }
         $query = array_merge($query, ['sessionToken' => $sessionToken]);
         $locationUrl = $this->url->action('/apiv3/users/wechat/h5.oauth?redirect='.$redirectUri, $query);
-        $locationUrlArr = explode('redirect=?', $locationUrl);
+        $locationUrlArr = explode('redirect=', $locationUrl);
         $locationUrl = $locationUrlArr[0].'redirect='.urlencode($locationUrlArr[1]);
         //去掉无参数时最后一个是 ? 的字符
         $locationUrl = rtrim($locationUrl, "?");

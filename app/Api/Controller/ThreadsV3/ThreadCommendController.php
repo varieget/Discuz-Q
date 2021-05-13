@@ -29,13 +29,16 @@ class ThreadCommendController extends DzqController
     use ThreadTrait;
     public function main()
     {
+        $random = ["is_sticky","is_essence","is_site"];
+        $randomKey = array_rand($random,1);
         $threads = Thread::query()->select(['id', 'category_id', 'title','view_count','price','attachment_price','is_essence']);
         $threads = $threads
-            ->where('is_essence', 1)
+            ->where($random[$randomKey], 1)
             ->where('is_approved', 1)
             ->where('is_draft', 0)
             ->whereNull('deleted_at')
             ->get();
+
         $threadIds = $threads->pluck('id')->toArray();
         $posts = Post::query()
             ->whereIn('thread_id', $threadIds)

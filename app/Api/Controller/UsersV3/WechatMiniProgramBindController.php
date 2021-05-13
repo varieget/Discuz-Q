@@ -18,14 +18,19 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Commands\Users\GenJwtToken;
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
+use App\Models\SessionToken;
+use App\Models\User;
+use App\Models\UserWechat;
 use App\User\Bind;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Guest;
 use Discuz\Wechat\EasyWechatTrait;
 use Exception;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
 
@@ -38,67 +43,103 @@ class WechatMiniProgramBindController extends AuthBaseController
     protected $bind;
     protected $db;
     protected $bound;
+    protected $bus;
 
     public function __construct(
         ValidationFactory   $validation,
         Bind                $bind,
         ConnectionInterface $db,
-        Bound               $bound
+        Bound               $bound,
+        Dispatcher          $bus
     ){
         $this->validation   = $validation;
         $this->bind         = $bind;
         $this->db           = $db;
         $this->bound        = $bound;
+        $this->bus          = $bus;
     }
 
     public function main()
     {
         $param          = $this->getWechatMiniProgramParam();
-        $jsCode         = $param['jsCode'];
-        $iv             = $param['iv'];
-        $encryptedData  = $param['encryptedData'];
-        $user           = !$this->user->isGuest() ? $this->user : new Guest();
         $sessionToken   = $this->inPut('sessionToken');// PC扫码使用;
+        $token          = SessionToken::get($sessionToken);
+        $type           = $this->inPut('type');//用于区分sessionToken来源于pc还是h5
+        $actor          = !empty($token->user) ? $token->user : $this->user;
+
+//        $actor = User::query()
+//            ->where('id', 2)
+//            ->first();
+
+        if (empty($actor)) {
+            $this->outPut(ResponseCode::NOT_FOUND_USER);
+        }
 
         // 绑定小程序
         $this->db->beginTransaction();
         try {
-            $wechatUser = $this->bind->bindMiniprogram(
-                $jsCode,
-                $iv,
-                $encryptedData,
-                0,
-                $user,
-                true
+            $app = $this->miniProgram();
+            $wechatUser = $this->getMiniWechatUser(
+                $app,
+                $param['jsCode'],
+                $param['iv'],
+                $param['encryptedData']
             );
         } catch (Exception $e) {
             $this->db->rollback();
             $this->outPut(ResponseCode::NET_ERROR,
-                          ResponseCode::$codeMap[ResponseCode::NET_ERROR] ,
+                          ResponseCode::$codeMap[ResponseCode::NET_ERROR],
                           $e->getMessage()
             );
         }
 
-        if ($wechatUser->user_id) {
-            $this->db->rollback();
-            $this->outPut(ResponseCode::BIND_ERROR,
-                          ResponseCode::$codeMap[ResponseCode::BIND_ERROR]
-            );
-        } else {
-            $wechatUser->user_id = $user->id;
-            // 先设置关系再save，为了同步微信头像
-            $wechatUser->setRelation('user', $user);
+        if (!$wechatUser || !$wechatUser->user) {
+            if (!$wechatUser) {
+                $wechatUser = new UserWechat();
+            }
+
+//            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
+            // 登陆用户且没有绑定||换绑微信 添加微信绑定关系
+            $wechatUser->user_id = $actor->id;
+            $wechatUser->setRelation('user', $actor);
             $wechatUser->save();
 
-            $this->updateUserBindType($user, AuthUtils::WECHAT);
+            $this->updateUserBindType($actor,AuthUtils::WECHAT);
 
             $this->db->commit();
 
             // PC扫码使用
-            if ($sessionToken) {
+            if (!empty($sessionToken) && $type == 'pc') {
                 $this->bound->bindVoid($sessionToken, $wechatUser);
             }
+
+            //用于用户名登录绑定微信使用
+            if (!empty($token->user) && $type == 'h5') {
+                if (empty($actor->username)) {
+                    $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+                }
+                //token生成
+                $params = [
+                    'username' => $actor->username,
+                    'password' => ''
+                ];
+                GenJwtToken::setUid($actor->id);
+                $response = $this->bus->dispatch(
+                    new GenJwtToken($params)
+                );
+
+                $accessToken = json_decode($response->getBody(), true);
+                $result = $this->camelData(collect($accessToken));
+                $result = $this->addUserInfo($actor, $result);
+
+                $this->outPut(ResponseCode::SUCCESS, '', $result);
+            }
+
+            $this->outPut(ResponseCode::SUCCESS, '', []);
+
+        } else {
+            $this->db->rollBack();
+            $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
         }
-        $this->outPut(ResponseCode::SUCCESS, '', []);
     }
 }

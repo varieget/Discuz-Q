@@ -43,7 +43,8 @@ class ThreadDetailController extends DzqController
         $user = User::query()->where('id', $thread['user_id'])->first();
         $group = Group::getGroup($user['id']);
         $thread->increment('view_count');
-        $result = $this->packThreadDetail($user, $group, $thread, $post, $this->getTomContent($thread), true);
+        $tomInputIndexes = $this->getTomContent($thread);
+        $result = $this->packThreadDetail($user, $group, $thread, $post, $tomInputIndexes['tomContent'], true, $tomInputIndexes['tags']);
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 
@@ -55,10 +56,11 @@ class ThreadDetailController extends DzqController
                 'thread_id' => $threadId,
                 'status' => ThreadTom::STATUS_ACTIVE
             ])->orderBy('key')->get()->toArray();
-        $tomContent = [];
+        $tomContent = $tags = [];
         foreach ($threadTom as $item) {
             $tomContent[$item['key']] = $this->buildTomJson($threadId, $item['tom_type'], $this->SELECT_FUNC, json_decode($item['value'], true));
+            $tags[$item['key']]['tag'] = $item['tom_type'];
         }
-        return $tomContent;
+        return ['tomContent' => $tomContent, 'tags' => $tags];
     }
 }

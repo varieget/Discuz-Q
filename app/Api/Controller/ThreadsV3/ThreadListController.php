@@ -21,11 +21,13 @@ use App\Common\CacheKey;
 use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Post;
 use App\Models\Sequence;
 use App\Models\Thread;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
 class ThreadListController extends DzqController
 {
@@ -135,13 +137,16 @@ class ThreadListController extends DzqController
             'categoryids' => 'array',
             'sort' => 'integer|in:1,2,3',
             'attention' => 'integer|in:0,1',
+            'complex' => 'integer|in:1,2,3,4'
         ]);
+        $loginUserId = $this->user->id;
         $essence = null;
         $types = [];
         $categoryids = [];
         $sort = Thread::SORT_BY_THREAD;
         $attention = 0;
         $search = '';
+        $complex = '';
         isset($filter['sticky']) && $stick = $filter['sticky'];
         isset($filter['essence']) && $essence = $filter['essence'];
         isset($filter['types']) && $types = $filter['types'];
@@ -149,13 +154,39 @@ class ThreadListController extends DzqController
         isset($filter['sort']) && $sort = $filter['sort'];
         isset($filter['attention']) && $attention = $filter['attention'];
         isset($filter['search']) && $search = $filter['search'];
+        isset($filter['complex']) && $complex = $filter['complex'];
+
         $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
-        if (!$categoryids) {
+        if (!$categoryids && empty($complex)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
         $threads = $this->getBaseThreadsBuilder();
+        if (!empty($complex)) {
+            switch ($complex) {
+                case Thread::MY_DRAFT_THREAD:
+                    $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT);
+                    break;
+                case Thread::MY_LIKE_THREAD:
+                    empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
+                    $threads = $threads->leftJoin('posts as post', 'post.thread_id', '=', 'th.id')
+                        ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
+                        ->leftJoin('post_user as postu', 'postu.post_id', '=', 'post.id')
+                        ->where(['post.user_id' => $userId]);
+                    break;
+                case Thread::MY_COLLECT_THREAD:
+                    $threads = $threads->leftJoin('thread_user as thu', 'thu.thread_id', '=', 'th.id')
+                        ->where(['thu.user_id' => $loginUserId]);
+                    break;
+                case Thread::MY_BUY_THREAD:
+                    $threads = $threads->leftJoin('orders as order', 'order.thread_id', '=', 'th.id')
+                        ->where(['order.user_id' => $loginUserId, 'status' => Order::ORDER_STATUS_PAID]);
+                    break;
+                default:
+                    empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
+                    $threads = $threads->where('user_id', $userId);
+            }
+        }
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
-
         if (!empty($types)) {
             $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.user_id')
                 ->whereIn('tag', $types);
@@ -264,15 +295,14 @@ class ThreadListController extends DzqController
         return $threads;
     }
 
-    private function getBaseThreadsBuilder()
+    private function getBaseThreadsBuilder($isDraft = Thread::BOOL_NO)
     {
         return Thread::query()
             ->select('th.*')
             ->from('threads as th')
             ->whereNull('th.deleted_at')
             ->where('th.is_sticky', Thread::BOOL_NO)
-            ->where('th.is_draft', Thread::IS_NOT_DRAFT)
-            ->where('th.is_approved', Thread::APPROVED);
+            ->where('th.is_draft', $isDraft)
+            ->where('th.is_approved', Thread::BOOL_YES);
     }
-
 }

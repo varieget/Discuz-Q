@@ -23,6 +23,7 @@ use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Topic;
 use App\Models\Thread;
+use App\Models\User;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
 
@@ -39,6 +40,9 @@ class TopicListController extends DzqController
         $topics = $this->filterTopics($filter, $currentPage, $perPage);
         $topicsList = $topics['pageData'];
         $topicIds = array_column($topicsList, 'id');
+        $userIds = array_column($topicsList, 'user_id');
+        $userDatas = User::instance()->getUsers($userIds);
+        $userDatas = array_column($userDatas, null, 'id');
         $topicThreadDatas = [];
 
         if (Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 0) {
@@ -72,9 +76,12 @@ class TopicListController extends DzqController
             $result[] = [
                 'topicId' => $topic['id'],
                 'userId' => $topic['user_id'],
+                'username' => $userDatas[$topic['user_id']]['username'] ?? '',
                 'content' => $topic['content'],
                 'viewCount' => $topic['view_count'],
                 'threadCount' => $topic['thread_count'],
+                'recommended' => (bool) $topic['recommended'],
+                'recommendedAt' => $topic['recommended_at'] ?? '',
                 'threads' => $thread
             ];
         }
@@ -87,18 +94,54 @@ class TopicListController extends DzqController
     {
         $query = Topic::query();
 
+        if ($username = trim(Arr::get($filter, 'username'))) {
+            $query->join('users', 'users.id', '=', 'topics.user_id')
+                ->where('users.username', 'like', '%' . $username . '%');
+        }
+
         if ($content = trim(Arr::get($filter, 'content'))) {
             $query->where('topics.content', 'like', '%' . $content . '%');
+        }
+
+        if ($createdAtBegin = Arr::get($filter, 'createdAtBegin')) {
+            $query->where('topics.created_at', '>=', $createdAtBegin);
+        }
+
+        if ($createdAtEnd = Arr::get($filter, 'createdAtEnd')) {
+            $query->where('topics.created_at', '<=', $createdAtEnd);
+        }
+
+        if ($threadCountBegin = Arr::get($filter, 'threadCountBegin')) {
+            $query->where('topics.thread_count', '>=', $threadCountBegin);
+        }
+
+        if ($threadCountEnd = Arr::get($filter, 'threadCountEnd')) {
+            $query->where('topics.thread_count', '<=', $threadCountEnd);
+        }
+
+        if ($viewCountBegin = Arr::get($filter, 'viewCountBegin')) {
+            $query->where('topics.view_count', '>=', $viewCountBegin);
+        }
+
+        if ($viewCountEnd = Arr::get($filter, 'viewCountEnd')) {
+            $query->where('topics.view_count', '<=', $viewCountEnd);
+        }
+
+        if (Arr::has($filter, 'recommended') && Arr::get($filter, 'recommended') != '') {
+            $query->where('topics.recommended', (int)Arr::get($filter, 'recommended'));
         }
 
         if ($topicId = trim(Arr::get($filter, 'topicId'))) {
             $query->where('topics.id', '=', $topicId);
         }
 
-        if (Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 1) {
-            $query->orderByDesc('view_count');
-        } else {
-            $query->orderByDesc('created_at');
+        if ((Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 1) || 
+            (Arr::has($filter, 'sortBy') && Arr::get($filter, 'sortBy') == Topic::SORT_BY_VIEWCOUNT)) {
+            $query->orderByDesc('topics.view_count');
+        } elseif (Arr::has($filter, 'sortBy') && Arr::get($filter, 'sortBy') == Topic::SORT_BY_THREADCOUNT) {
+            $query->orderByDesc('topics.thread_count');
+        } else{
+            $query->orderByDesc('topics.created_at');
         }
 
         $topics = $this->pagination($currentPage, $perPage, $query);

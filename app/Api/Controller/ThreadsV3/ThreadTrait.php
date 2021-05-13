@@ -46,7 +46,7 @@ trait ThreadTrait
         $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
         $payType = $this->threadPayStatus($loginUser, $thread, $paid);
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
-        $contentField = $this->getContentField($thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom);
+        $contentField = $this->getContentField($loginUser,$thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -144,7 +144,8 @@ trait ThreadTrait
             'canEssence' => true,
             'canStick' => true,
             'canReply' => true,
-            'canViewPost' => true
+            'canViewPost' => true,
+            'canBeReward' => true,
         ];
 
         if ($loginUser->isAdmin()) {
@@ -170,6 +171,9 @@ trait ThreadTrait
         }
         if (!isset($permission['thread.viewPosts']) && !isset($permission["category{$thread['category_id']}.thread.viewPosts"])) {
             $data['canViewPost'] = false;
+        }
+        if (!isset($permission['thread.canBeReward']) && !isset($permission["category{$thread['category_id']}.thread.canBeReward"])) {
+            $data['canBeReward'] = false;
         }
 
         return $data;
@@ -239,13 +243,13 @@ trait ThreadTrait
         return $obj;
     }
 
-    private function getContentField($thread, $post, $tomInput, $payType, $paid, $canViewTom)
+    private function getContentField($loginUser,$thread, $post, $tomInput, $payType, $paid, $canViewTom)
     {
         $content = [
             'text' => null,
             'indexes' => null
         ];
-        if ($payType == Thread::PAY_FREE) {
+        if ($payType == Thread::PAY_FREE || $loginUser->id == $thread['user_id']) {
             $content['text'] = $post['content'];
             $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
         } else {

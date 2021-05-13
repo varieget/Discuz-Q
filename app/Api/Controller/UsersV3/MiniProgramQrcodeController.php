@@ -70,12 +70,15 @@ class MiniProgramQrcodeController extends DzqController
     {
         $type = $this->inPut('type');
         if(! in_array($type, self::$qrcodeType)) {
-            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR, ResponseCode::$codeMap[ResponseCode::GEN_QRCODE_TYPE_ERROR]);
+            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR);
         }
 
         //跳转路由选择
         $path = self::$qrcodeTypeAndRouteMap[$type];
         $actor = $this->user;
+        if ($type == 'pc_bind_mini' && empty($actor->id)) {
+            $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+        }
         if($actor && $actor->id) {
             $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
         } else {
@@ -91,7 +94,7 @@ class MiniProgramQrcodeController extends DzqController
         $wxqrcodeResponse = $app->app_code->getUnlimit($sessionToken, $optional);
         if(is_array($wxqrcodeResponse) && isset($wxqrcodeResponse['errcode']) && isset($wxqrcodeResponse['errmsg'])) {
             //todo 日志记录
-            $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR, ResponseCode::$codeMap[ResponseCode::MINI_PROGRAM_QR_CODE_ERROR]);
+            $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR);
         }
         //图片二进制转base64
         $data = [

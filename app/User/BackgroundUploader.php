@@ -83,7 +83,6 @@ class BackgroundUploader
             $user->changeBackground($backgroundPath, true);
             $backgroundPath = 'public/background/' . $backgroundPath;
         } else {
-            $backgroundPath = 'public/background/' . $backgroundPath;
             $user->changeBackground($backgroundPath);
         }
         $this->filesystem->put($backgroundPath, $encodedImage);

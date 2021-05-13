@@ -38,6 +38,8 @@ class SessionToken extends Model
 
     const WECHAT_PC_BIND = 'wechat_pc_bind'; // 微信 PC 绑定
 
+    const WECHAT_PC_REBIND = 'wechat_pc_rebind'; // 微信 PC 换绑
+
     const WECHAT_NOTICE_ERROR = 'wechat_notice_error'; // 微信通知错误
 
     const WECHAT_MOBILE_LOGIN = 'wechat_mobile_login'; // 手机浏览器微信登录

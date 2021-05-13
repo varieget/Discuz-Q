@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Commands\Users\UploadBackground;
 use App\Common\ResponseCode;
 use Discuz\Base\DzqController;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 
 class UploadBackgroundController extends DzqController
@@ -30,12 +31,17 @@ class UploadBackgroundController extends DzqController
      */
     protected $bus;
 
+    protected $filesystem;
+
+    protected $settings;
+
     /**
      * @param Dispatcher $bus
      */
-    public function __construct(Dispatcher $bus)
+    public function __construct(Dispatcher $bus,SettingsRepository $settings)
     {
         $this->bus = $bus;
+        $this->settings = $settings;
     }
 
     public function main()
@@ -53,15 +59,24 @@ class UploadBackgroundController extends DzqController
         $url = $this->request->getUri();
         $port = $url->getPort();
         $port = $port == null ? '' : ':' . $port;
-        $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
+        $path = $url->getScheme() . '://' . $url->getHost() . $port;
+        $backUrl = $path."/storage/background/".$result->background;
+        if (strpos($result->background,"cos://") !== false) {
+           $background = str_replace("cos://","",$result->background);
+           $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
+           $right =  substr($remoteServer, -1);
+           if("/"==$right){
+               $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
+           }
+           $backUrl = $remoteServer."/public/background/".$background;
+        }
         $result = [
             'id' => $result->id,
             'username' => $result->username,
-            'backgroundUrl' => $path."storage/app/".$result->background,
+            'backgroundUrl' => $backUrl,
             'updatedAt' => optional($result->updated_at)->format('Y-m-d H:i:s'),
             'createdAt' => optional($result->created_at)->format('Y-m-d H:i:s'),
         ];
-
         return $this->outPut(ResponseCode::SUCCESS,'', $result);
     }
 

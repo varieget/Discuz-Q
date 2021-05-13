@@ -20,6 +20,8 @@ namespace App\Models;
 
 use App\Common\CacheKey;
 use App\Common\DzqCache;
+use App\Models\Invite;
+use App\Models\Group;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -796,18 +798,18 @@ class User extends DzqModel
     public function hasPermission($permission, bool $condition = true)
     {
         if ($this->isAdmin()) {
-            if (!is_array($permission)) $permission = [$permission];
+            if(!is_array($permission))  $permission = [$permission];
             $global_permissions = [];
             $setting_global_permission = Setting::$global_permission;
-            foreach ($setting_global_permission as $val) {
+            foreach ($setting_global_permission as $val){
                 $global_permissions = array_merge($global_permissions, $val);
             }
             $judge_permissions = array_intersect($permission, $global_permissions);
             $settings = app(SettingsRepository::class);
-            if (!empty($judge_permissions)) {
-                foreach ($setting_global_permission as $key => $val) {
-                    if (!empty(array_intersect($val, $judge_permissions))) {          //如果在对应的全局中，则判断这个全局功能权限是否开启
-                        if ($settings->get($key, 'default') == 0) {
+            if(!empty($judge_permissions)){
+                foreach ($setting_global_permission as $key => $val){
+                    if(!empty(array_intersect($val, $judge_permissions))){          //如果在对应的全局中，则判断这个全局功能权限是否开启
+                        if($settings->get($key, 'default') == 0){
                             return false;
                         }
                     }
@@ -817,7 +819,7 @@ class User extends DzqModel
         }
 
         if (is_null($this->permissions)) {
-            $this->permissions = $this->getPermissions();
+            $this->permissions = Permission::getUserPermissions($this);
         }
 
         if (is_array($permission)) {
@@ -973,6 +975,24 @@ class User extends DzqModel
             return null;
         }
         return $user->username;
+    }
+
+    public function isInviteUser($userId)
+    {
+        $result = Invite::query()
+            ->where(['to_user_id' => $userId, 'status' => Invite::STATUS_USED])
+            ->first();
+        if ($result) {
+            return $result;
+        }
+        return false;
+    }
+
+    public function getInviteScale($groupId)
+    {
+        $groupData = Group::query()->where('id', $groupId)->first();
+        // $be_scale
+        return $groupData['scale'] ?? 0;
     }
 
     protected function clearCache()

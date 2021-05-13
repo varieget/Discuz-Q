@@ -45,6 +45,7 @@ class SmsSendController extends AuthBaseController
         'reset_pwd',
         'reset_pay_pwd',
         'verify',
+        'update'
     ];
 
     public function __construct(
@@ -76,7 +77,7 @@ class SmsSendController extends AuthBaseController
         ];
 
         $this->dzqValidate($data, [
-//            'captcha'   => [new Captcha],//暂时注释方便联调走主流程
+            'captcha'   => [new Captcha],//暂时注释方便联调走主流程
             'type'      => 'required|in:' . implode(',', $this->type)
         ]);
 

@@ -161,7 +161,7 @@ class ListPostsController extends DzqController
             'replyUserId' => $post['reply_user_id'],
             'commentPostId' => $post['comment_post_id'],
             'commentUserId' => $post['comment_user_id'],
-            'content' => $post['content'],
+            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
             'replyCount' => $post['reply_count'],
             'likeCount' => $post['like_count'],
             'createdAt' => optional($post->created_at)->format('Y-m-d H:i:s'),
@@ -180,7 +180,7 @@ class ListPostsController extends DzqController
             }),
             'likeState' => $post->likeState,
             'canLike' => $this->user->can('like', $post),
-            'summaryText' => $post->summary_text,
+            'summaryText' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post->summary_text),
         ];
 
         if ($post->deleted_at) {
