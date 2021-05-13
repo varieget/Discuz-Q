@@ -23,10 +23,20 @@ use App\Models\Thread;
 use App\Models\PostUser;
 use App\Models\User;
 use App\Models\Order;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ThreadLikedUsersController extends DzqController
 {
+    private $thread;
+
+    public function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $this->thread = Thread::query()
+            ->where('id', $this->inPut('threadId'))
+            ->first(['user_id', 'price', 'category_id']);
+        return $userRepo->canViewThreadDetail($this->user, $this->thread);
+    }
 
     public function main()
     {

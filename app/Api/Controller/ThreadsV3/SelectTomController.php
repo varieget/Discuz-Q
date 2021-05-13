@@ -19,13 +19,23 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
+use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomTrait;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class SelectTomController extends DzqController
 {
     use TomTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $thread = Thread::query()
+            ->where('id', $this->inPut('threadId'))
+            ->first(['user_id', 'category_id']);
+        return $userRepo->canViewThreadDetail($this->user, $thread);
+    }
 
     public function main()
     {
