@@ -44,14 +44,17 @@ class UserV2Serializer extends AbstractSerializer
 
     protected $userFollow;
 
+    protected $settings;
+
     /**
      * @param Gate $gate
      * @param UserFollowRepository $userFollow
      */
-    public function __construct(Gate $gate, UserFollowRepository $userFollow)
+    public function __construct(Gate $gate, UserFollowRepository $userFollow,SettingsRepository $settings)
     {
         $this->gate = $gate;
         $this->userFollow = $userFollow;
+        $this->settings = $settings;
     }
 
     /**
@@ -65,19 +68,30 @@ class UserV2Serializer extends AbstractSerializer
 
         $canEdit = $gate->allows('edit', $model);
 
-        $backGround = "";
+        $backUrl = "";
         if($model->background){
             $url = $this->request->getUri();
             $port = $url->getPort();
             $port = $port == null ? '' : ':' . $port;
             $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
-            $backGround = $path."storage/app/".$model->background;
+
+            $backUrl = $path."/storage/background/".$model->background;
+            if (strpos($model->background,"cos://") !== false) {
+                $background = str_replace("cos://","",$model->background);
+                $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
+                $right =  substr($remoteServer, -1);
+                if("/"==$right){
+                    $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
+                }
+                $backUrl = $remoteServer."/public/background/".$background;
+            }
+
         }
         $attributes = [
             'id'                => (int) $model->id,
             'username'          => $model->username,
             'avatarUrl'         => $model->avatar,
-            'backgroundUrl'     => $backGround,
+            'backgroundUrl'     => $backUrl,
             'isReal'            => $this->getIsReal($model),
             'threadCount'       => (int) $model->thread_count,
             'followCount'       => (int) $model->follow_count,
