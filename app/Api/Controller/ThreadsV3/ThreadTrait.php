@@ -253,7 +253,7 @@ trait ThreadTrait
             $post = Post::find($post['id']);
             // 数据原始内容，即 s9e 解析后的 XML
             $xml = $post->getRawOriginal('content');
-            if(!empty($post->attachments)){
+            if (!empty($post->attachments)) {
                 $attachmentSerializer = app(AttachmentSerializer::class);
                 // 所有图片及附件 URL
                 $attachments = $post->images
@@ -291,8 +291,8 @@ trait ThreadTrait
 
     private function getGroupInfoField($group)
     {
-        $groupResult = [];
-        if (!empty($group)) {
+        $groupResult = null;
+        if (!empty($group) && $group['groups']['is_display']) {
             $groupResult = [
                 'groupId' => $group['group_id'],
                 'groupName' => $group['groups']['name'],
