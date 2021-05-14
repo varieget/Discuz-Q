@@ -895,6 +895,19 @@ class Thread extends DzqModel
         return $ret;
     }
 
+    public static function getOneThread($threadId, $toArray = false)
+    {
+        $ret = self::query()
+            ->where([
+                'id' => $threadId,
+            ])
+            ->whereNull('deleted_at')
+            ->first();
+        $toArray && $ret = $ret->toArray();
+        return $ret;
+    }
+
+
     protected function clearCache()
     {
         $threadId = $this->id;
