@@ -24,6 +24,7 @@ use App\Common\ResponseCode;
 use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ResourcePostController extends DzqController
@@ -39,6 +40,15 @@ class ResourcePostController extends DzqController
         'likedUsers:id,username,avatar',
     ];
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $post = Post::find($this->inPut('pid'));
+        if (!$post) {
+            return false;
+        }
+
+        return $userRepo->canViewThreadDetail($this->user, $post->thread);
+    }
 
     public function main()
     {
@@ -69,7 +79,7 @@ class ResourcePostController extends DzqController
         Post::setStateUser($this->user);
 
         $data = $coment_post_serialize->getDefaultAttributes($comment_post, $this->user);
-        $data['canLike'] = $this->user->can('like', $comment_post);
+        $data['canLike'] = true;
 
         $data['images'] = [];
         $data['likeUsers'] = $comment_post->likedUsers;

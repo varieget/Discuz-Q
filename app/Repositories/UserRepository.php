@@ -314,6 +314,9 @@ class UserRepository extends AbstractRepository
      */
     public function canEditThread(User $user, $thread)
     {
+        if (!$thread) {
+            return false;
+        }
         // 是作者本人，且有编辑自己帖子权限
         if (
             ($thread['user_id'] == $user->id)
@@ -334,6 +337,9 @@ class UserRepository extends AbstractRepository
      */
     public function canHideThread(User $user, $thread)
     {
+        if (!$thread) {
+            return false;
+        }
         return ($user->id === $thread['user_id'] && $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE_OWN, $thread['category_id']))
             || $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE, $thread['category_id']);
     }
@@ -353,6 +359,9 @@ class UserRepository extends AbstractRepository
 
     public function canViewThreadDetail(User $user, $thread)
     {
+        if (!$thread) {
+            return false;
+        }
         if ($user->id == $thread['user_id']) {
             return true;
         }
@@ -383,6 +392,9 @@ class UserRepository extends AbstractRepository
      */
     public function canHidePost(User $user, $post)
     {
+        if (!$post) {
+            return false;
+        }
         // 首帖按主题权限走
         if ($post->is_first) {
             return $this->canEditThread($user, $post->thread);
@@ -413,7 +425,7 @@ class UserRepository extends AbstractRepository
             Group::MEMBER_ID,
         ];
 
-        return !in_array($group->id, $groups) && $user->isAdmin();
+        return !in_array($group['id'], $groups) && $user->isAdmin();
     }
 
     public function canCreateGroup(User $user)

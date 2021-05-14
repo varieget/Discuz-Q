@@ -25,11 +25,10 @@ use App\Models\ThreadReward;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
 use App\Repositories\ThreadRewardRepository;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
-use Discuz\Http\DiscuzResponseFactory;
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Support\Arr;
 
 class CreatePostRewardController extends DzqController
 {
@@ -37,6 +36,16 @@ class CreatePostRewardController extends DzqController
 
     public function __construct(ConnectionInterface $connection) {
         $this->connection = $connection;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $thread = Thread::query()->where(['id' => $this->inPut("threadId"), 'is_approved' => 1])->whereNull('deleted_at')->first();
+        if (!$thread) {
+            return false;
+        }
+
+        return $userRepo->canViewThreadDetail($this->user, $thread);
     }
 
     public function main()
@@ -92,11 +101,6 @@ class CreatePostRewardController extends DzqController
 
         if(!isset($attributes['post_id']) || empty($attributes['post_id'])){
             return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_reward_does_not_have_post_id'));
-        }
-
-        $threads = Thread::query()->where(['id' => $thread_id, 'is_approved' => 1])->whereNull('deleted_at')->first();
-        if(empty($threads)){
-            return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_reward_thread_detail_not_found'));
         }
 
         $posts = Post::query()->where(['id' => $attributes['post_id'], 'thread_id' => $thread_id, 'is_comment' => 0])->whereNull('deleted_at')->first();
