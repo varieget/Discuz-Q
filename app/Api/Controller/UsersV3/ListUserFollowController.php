@@ -40,7 +40,6 @@ class ListUserFollowController extends DzqController
 
         $UserFollows = $this->filterUserFollow($filter,$currentPage, $perPage,$actor,$sort);
         $userFollowList = $UserFollows['pageData'];
-
         if(!empty($userFollowList)){
             //1我的关注  2我的粉丝
             $type = (int) Arr::get($filter, 'type', 0);
@@ -110,20 +109,24 @@ class ListUserFollowController extends DzqController
         }else{
             $UserFollows = [];
         }
+       // dump($UserFollows);die;
         $this->outPut(ResponseCode::SUCCESS, '', $UserFollows);
     }
 
-    private function filterUserFollow($filter, $currentPage, $perPage,User $actor,$sort)
+
+    public function filterUserFollow($filter, $currentPage, $perPage,User $actor,$sort)
     {
+        $join_field = '';
+        $user = '';
         $query = $this->userFollow->query()->select('user_follow.*')->distinct();
 
         $type = (int) Arr::get($filter, 'type', 0);
         $username = Arr::get($filter, 'userName');
-        $user = null;
-        if ($user_id = (int) Arr::get($filter, 'userId')) {
+        if ($user_id = (int)Arr::get($filter, 'user_id')) {
             $user = $this->user->findOrFail($user_id);
         }
         $user_id = $user ? $user->id : $actor->id;
+
         if($type>0){
             if ($type == 1) {
                 //我的关注
