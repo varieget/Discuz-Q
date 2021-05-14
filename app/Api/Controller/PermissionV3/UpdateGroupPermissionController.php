@@ -32,7 +32,7 @@ class UpdateGroupPermissionController extends DzqController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if (!$userRepo->canEditGroup($this->user)) {
+        if (!$this->user->isAdmin()) {
             throw new PermissionDeniedException('没有权限');
         }
         return true;
