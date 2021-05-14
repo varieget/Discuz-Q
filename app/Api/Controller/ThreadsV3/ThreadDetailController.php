@@ -29,14 +29,15 @@ use Discuz\Base\DzqController;
 class ThreadDetailController extends DzqController
 {
     use ThreadTrait;
+
     protected $thread;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
-        if (!$this->thread) {
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-        }
+        $this->thread = Thread::query()
+            ->where(['id' => $this->inPut('threadId')])
+            ->whereNull('deleted_at')
+            ->first();
         return $userRepo->canViewThreadDetail($this->user, $this->thread);
     }
 
@@ -44,11 +45,17 @@ class ThreadDetailController extends DzqController
     {
         $threadId = $this->inPut('threadId');
         $thread = $this->thread;
-        $post = Post::getOneActivePost($threadId);
-        if (!$post) {
+        $post = Post::query()
+            ->where(['thread_id' => $threadId, 'is_first' => Post::FIRST_YES])
+            ->whereNull('deleted_at')
+            ->first();
+        if (!$thread || !$post) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
         $user = User::query()->where('id', $thread['user_id'])->first();
+        if (empty($user)) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '用户不存在');
+        }
         $group = Group::getGroup($user['id']);
         $thread->increment('view_count');
         $tomInputIndexes = $this->getTomContent($thread);
