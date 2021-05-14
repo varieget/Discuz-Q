@@ -20,6 +20,8 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\UpdateAdminUser;
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -34,6 +36,16 @@ class UpdateAdminController extends DzqController
     {
         $this->bus = $bus;
         $this->settings = $settings;
+    }
+
+    // 权限检查
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest() || !$actor->isAdmin()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
     }
 
     public function main()

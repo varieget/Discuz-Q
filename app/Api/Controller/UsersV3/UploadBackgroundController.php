@@ -20,6 +20,8 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\UploadBackground;
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -44,6 +46,15 @@ class UploadBackgroundController extends DzqController
         $this->settings = $settings;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
     public function main()
     {
         $uploadFile = $this->request->getUploadedFiles();
@@ -56,20 +67,7 @@ class UploadBackgroundController extends DzqController
         $result = $this->bus->dispatch(
             new UploadBackground($id, $file, $actor)
         );
-        $url = $this->request->getUri();
-        $port = $url->getPort();
-        $port = $port == null ? '' : ':' . $port;
-        $path = $url->getScheme() . '://' . $url->getHost() . $port;
-        $backUrl = $path."/storage/background/".$result->background;
-        if (strpos($result->background,"cos://") !== false) {
-           $background = str_replace("cos://","",$result->background);
-           $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
-           $right =  substr($remoteServer, -1);
-           if("/"==$right){
-               $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
-           }
-           $backUrl = $remoteServer."/public/background/".$background;
-        }
+        $backUrl = $this->getBackground($result->background);
         $result = [
             'id' => $result->id,
             'username' => $result->username,
@@ -78,6 +76,24 @@ class UploadBackgroundController extends DzqController
             'createdAt' => optional($result->created_at)->format('Y-m-d H:i:s'),
         ];
         return $this->outPut(ResponseCode::SUCCESS,'', $result);
+    }
+
+    protected function getBackground($background){
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $port = $port == null ? '' : ':' . $port;
+        $path = $url->getScheme() . '://' . $url->getHost() . $port;
+        $backUrl = $path."/storage/background/".$background;
+        if (strpos($background,"cos://") !== false) {
+            $backgroundUrl = str_replace("cos://","",$background);
+            $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
+            $right =  substr($remoteServer, -1);
+            if("/"==$right){
+                $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
+            }
+            $backUrl = $remoteServer."/public/background/".$backgroundUrl;
+        }
+        return $backUrl;
     }
 
 }

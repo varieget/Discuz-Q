@@ -24,6 +24,8 @@ use App\Settings\SettingsRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 
 class ResourceUserWalletController extends DzqController
 {
@@ -41,18 +43,21 @@ class ResourceUserWalletController extends DzqController
         $this->setting = $setting;
     }
 
+    // 权限检查，是否为注册用户
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
 
     public function main()
     {
-
         $actor = $this->user;
-        $this->assertRegistered($actor);
-        $user_id = $this->inPut('uid');
-
-        if (!$actor->isAdmin() && $actor->id != $user_id) {
-             $this->outPut(ResponseCode::INTERNAL_ERROR, '权限错误', '');
-        }
-
+        $user_id = $actor->id;
         if(!$user_id){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'');
         }
@@ -62,13 +67,9 @@ class ResourceUserWalletController extends DzqController
         if(empty($groupData)){
             $this->outPut(ResponseCode::INVALID_PARAMETER, 'ID为'.$user_id.'用户不存在');
         }
-
         $data = $this->wallet->findOrFail($user_id, $this->user);
-
         $data->cash_tax_ratio = $this->setting->get('cash_rate', 'cash', 0);
-
         $data = $this->camelData($data);
-
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
     }
 

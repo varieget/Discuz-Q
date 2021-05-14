@@ -20,6 +20,8 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\User;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
 
 class UpdateMobileController extends AuthBaseController
@@ -30,6 +32,15 @@ class UpdateMobileController extends AuthBaseController
         Dispatcher          $bus
     ){
         $this->bus      = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
     }
 
     public function main()
