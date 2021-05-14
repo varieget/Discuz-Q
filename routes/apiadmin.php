@@ -30,5 +30,6 @@ $route->post('/categories.delete', 'categories.delete', ApiController\CategoryV3
 
 $route->post('/permission.update', 'permission.update', ApiController\PermissionV3\UpdateGroupPermissionController::class);
 
+$route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
 //注册扩展
 $route->get('/admin/signinfields', 'admin.signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);

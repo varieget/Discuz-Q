@@ -63,12 +63,23 @@ class ListUserFollowController extends DzqController
                 ->get()->toArray();
             $userFollow = array_column($userFollow, null, 'to_user_id');
 
-            foreach ($userFollowList as $key => $value) {
-                $userFollowList[$key]['isFollow']       = false;
-                $userFollowList[$key]['isMutual'] = false;
-                if (isset($userFollow[$value['to_user_id']])) {
-                    $userFollowList[$key]['isFollow']       = true;
-                    $userFollowList[$key]['isMutual'] = (bool) $userFollow[$value['to_user_id']]['is_mutual'];
+            if ($type==1){
+                foreach ($userFollowList as $key => $value) {
+                    $userFollowList[$key]['isFollow']       = false;
+                    $userFollowList[$key]['isMutual'] = false;
+                    if (isset($userFollow[$value['to_user_id']])) {
+                        $userFollowList[$key]['isFollow']       = true;
+                        $userFollowList[$key]['isMutual'] = (bool) $userFollow[$value['to_user_id']]['is_mutual'];
+                    }
+                }
+            }elseif ($type==2){
+                foreach ($userFollowList as $key => $value) {
+                    $userFollowList[$key]['isFollow']       = false;
+                    $userFollowList[$key]['isMutual'] = false;
+                    if (isset($userFollow[$value['from_user_id']])) {
+                        $userFollowList[$key]['isFollow']       = true;
+                        $userFollowList[$key]['isMutual'] = (bool) $userFollow[$value['from_user_id']]['is_mutual'];
+                    }
                 }
             }
 
