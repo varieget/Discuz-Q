@@ -179,6 +179,7 @@ class ThreadMigrationCommand extends AbstractCommand
             $this->db->beginTransaction();
             //找出帖子中对应的 帖子附件 + 帖子图片 attachment
             $attachments = Attachment::query()->where('type_id',$val->post_id)->whereIn('type',[Attachment::TYPE_OF_FILE])->orderBy('order')->get();
+            $attachments_image = Attachment::query()->where('type_id',$val->post_id)->whereIn('type',[Attachment::TYPE_OF_IMAGE])->orderBy('order')->get();
             $thread_red_packets = ThreadRedPacket::where(['thread_id' => $val->id, 'post_id' => $val->post_id])->first();
             //先插 thread_tag  text
             $res = self::insertThreadTag($val, ThreadTag::TEXT);
@@ -213,6 +214,19 @@ class ThreadMigrationCommand extends AbstractCommand
                 if(!$res){
                     $this->db->rollBack();
                     $this->error('long attachment insert: thread_tom doc error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
+            }
+            //最后插 thread_tom  插入图片
+            if($attachments_image && !empty($attachments_image->toArray())){
+                $key = '$'.$count;
+                $docIds = $attachments_image->pluck('id')->toArray();
+                $count ++;
+                $value = json_encode(['imageIds' => $docIds]);
+                $res = self::insertThreadTom($val, ThreadTag::IMAGE, $key, $value);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('long attachment insert: thread_tom images error. thread data is : '.json_encode($val->toArray()));
                     break;
                 }
             }
