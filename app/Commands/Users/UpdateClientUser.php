@@ -155,6 +155,9 @@ class UpdateClientUser
         // 修改用户名
         $this->rename($user, $canEdit, $isSelf, $attributes, $validate);
 
+        // 修改昵称
+        $this->changeNickname($user, $canEdit, $isSelf, $attributes, $validate);
+
         // 修改登录密码
         $this->changePassword($user, $canEdit, $isSelf, $attributes, $validate);
 
@@ -200,20 +203,44 @@ class UpdateClientUser
         $this->censor->checkText($username, 'username');
 
         if ($this->censor->isMod) {
-            throw new TranslatorException('user_username_censor_error');
+            throw new TranslatorException(trans('user.user_username_censor_error'));
         }
 
         // 过滤内容
         $username = $this->specialChar->purify($username);
 
         if ($user->username_bout >= $this->settings->get('username_bout', 'default', 1)) {
-            throw new TranslatorException('user_username_bout_limit_error');
+            throw new TranslatorException(trans('user.user_username_bout_limit_error'));
         }
         $user->changeUsername($username);
         $validate['username'] = $username;
 
         return $validate;
     }
+
+    protected function changeNickname(User $user, bool $canEdit, bool $isSelf, array $attributes, array &$validate)
+    {
+        $nickname = Arr::get($attributes, 'nickname');
+
+        if (! $nickname || $nickname == $user->nickname) {
+            return $validate;
+        }
+        // 敏感词校验
+        $this->censor->checkText($nickname);
+
+        if ($this->censor->isMod) {
+            throw new TranslatorException(trans('user.user_nickname_censor_error'));
+        }
+
+        // 过滤内容
+        $nickname = $this->specialChar->purify($nickname);
+        $user->changeNickname($nickname);
+        $validate['nickname'] = $nickname;
+
+        return $validate;
+    }
+
+
 
     /**
      * @param User $user
