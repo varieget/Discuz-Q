@@ -34,7 +34,8 @@ class ResourceAnalysisGoodsController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if ($this->user->isGuest() || !$userRepo->canInsertGoodsToThread($this->user)) {
+        $categoryId = $this->inPut('categoryId');
+        if ($this->user->isGuest() || !$userRepo->canInsertGoodsToThread($this->user, $categoryId)) {
             throw new NotAuthenticatedException;
         }
         return true;
