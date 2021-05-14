@@ -83,7 +83,7 @@ class WechatH5LoginController extends AuthBaseController
 
         //过渡开关打开
         if((bool)$this->settings->get('is_need_transition') && empty($sessionToken)) {
-            $this->transitionLoginLogicVoid();
+            $this->transitionLoginLogicVoid($wxuser);
         }
 
         $this->db->beginTransaction();
@@ -260,13 +260,13 @@ class WechatH5LoginController extends AuthBaseController
         $this->outPut(ResponseCode::NET_ERROR);
     }
 
+
     /**
      * 过渡阶段微信登录，过渡开关打开走此流程
+     * @param $wxuser  //授权后微信信息
      */
-    private function transitionLoginLogicVoid()
+    private function transitionLoginLogicVoid($wxuser)
     {
-        /** 获取授权后微信用户基础信息*/
-        $wxuser = $this->getWxUser();
         $this->db->beginTransaction();
         /** @var UserWechat $wechatUser */
         $wechatUser = UserWechat::query()
