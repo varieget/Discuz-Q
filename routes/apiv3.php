@@ -80,6 +80,8 @@ $route->post('/thread.delete','thread.delete',ApiController\ThreadsV3\DeleteThre
 $route->post('/thread.update','thread.update',ApiController\ThreadsV3\UpdateThreadController::class);
 $route->post('/tom.delete','tom.delete',ApiController\ThreadsV3\DeleteTomController::class);
 $route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomController::class);
+$route->post('/thread/video', 'threads.video', ApiController\ThreadsV3\CreateThreadVideoController::class);
+
 //首页配置接口
 $route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);
 
