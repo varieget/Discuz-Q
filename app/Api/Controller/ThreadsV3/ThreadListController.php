@@ -39,16 +39,18 @@ class ThreadListController extends DzqController
     private $preload = false;
     const PRELOAD_PAGES = 50;//预加载的页数
 
-//    private $categoryIds = [];
+    private $categoryIds = [];
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-//        $filter = $this->inPut('filter') ?: [];
-//        $categoryIds = $filter['categoryids'] ?? [];
-//        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
-//        if (!$this->categoryIds) {
-//            throw new PermissionDeniedException('没有浏览权限');
-//        }
+        $filter = $this->inPut('filter') ?: [];
+        $categoryIds = $filter['categoryids'] ?? [];
+        $complex = $filter['complex'] ?? null;
+
+        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
+        if (!$this->categoryIds && empty($complex)) {
+            throw new PermissionDeniedException('没有浏览权限');
+        }
         return true;
     }
 
@@ -171,10 +173,7 @@ class ThreadListController extends DzqController
         isset($filter['search']) && $search = $filter['search'];
         isset($filter['complex']) && $complex = $filter['complex'];
 
-        $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
-        if (!$categoryids && empty($complex)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
-        }
+        $categoryids = $this->categoryIds;
         $threads = $this->getBaseThreadsBuilder();
         if (!empty($complex)) {
             switch ($complex) {
