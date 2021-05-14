@@ -237,25 +237,4 @@ trait TomTrait
         }
         return false;
     }
-
-    public function beforeMain($user)
-    {
-        $class = get_called_class();
-        if (in_array($class, [UpdateTomController::class, DeleteTomController::class, SelectTomController::class])) {
-            $threadId = $this->inPut('threadId');
-            $thread = Thread::getOneActiveThread($threadId);
-            if (empty($thread)) {
-                $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-            }
-            if ($class == SelectTomController::class) {
-                if (!$this->canViewThreadDetail($user, $thread)) {
-                    $this->outPut(ResponseCode::UNAUTHORIZED);
-                }
-            } else {
-                if (!$this->canEditThread($user, $thread->category_id, $thread->user_id)) {
-                    $this->outPut(ResponseCode::UNAUTHORIZED);
-                }
-            }
-        }
-    }
 }

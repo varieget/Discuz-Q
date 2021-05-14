@@ -32,7 +32,6 @@ class PermissionKey
 
     const THREAD_VIEW_POSTS = 'thread.viewPosts';
     const THREAD_HIDE_POSTS = 'thread.hidePosts';
-    const THREAD_EDIT_POSTS = 'thread.editPosts';
 
     const DIALOG_CREATE = 'dialog.create';
     const CREATE_INVITE = 'createInvite';
@@ -44,8 +43,6 @@ class PermissionKey
     const WALLET_VIEW_LIST = 'wallet.viewList';
     const WALLET_LOGS_VIEW_LIST = 'wallet.logs.viewList';
     const CASH_VIEW_LIST = 'cash.viewList';
-    const USER_EDIT_GROUP = 'user.edit.group';
-    const USER_EDIT_STATUS = 'user.edit.status';
     const USER_VIEW = 'user.view';
     const USER_FOLLOW_CREATE = 'userFollow.create';
 }

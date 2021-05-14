@@ -25,7 +25,6 @@ use App\Models\ThreadTom;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
 
 class ThreadDetailController extends DzqController
 {
@@ -35,6 +34,9 @@ class ThreadDetailController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
+        if (!$this->thread) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
         return $userRepo->canViewThreadDetail($this->user, $this->thread);
     }
 
@@ -43,7 +45,7 @@ class ThreadDetailController extends DzqController
         $threadId = $this->inPut('threadId');
         $thread = $this->thread;
         $post = Post::getOneActivePost($threadId);
-        if (!$thread || !$post) {
+        if (!$post) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
         $user = User::query()->where('id', $thread['user_id'])->first();

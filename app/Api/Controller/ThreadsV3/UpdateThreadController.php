@@ -25,23 +25,32 @@ use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomConfig;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class UpdateThreadController extends DzqController
 {
-
     use ThreadTrait;
+
+    private $thread;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
+        if (!$this->thread) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
+
+        return $userRepo->canEditThread($this->user, $this->thread);
+    }
 
     public function main()
     {
         $threadId = $this->inPut('threadId');
-        $thread = Thread::getOneActiveThread($threadId);
+        $thread = $this->thread;
         $post = Post::getOneActivePost($threadId);
-        if (empty($thread) || empty($post)) {
+        if (empty($post)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-        }
-        if (!$this->canEditThread($this->user, $thread->category_id, $thread->user_id)) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
         }
         $result = $this->updateThread($thread, $post);
         $this->outPut(ResponseCode::SUCCESS, '', $result);
@@ -121,7 +130,7 @@ class UpdateThreadController extends DzqController
 
     private function savePost($post, $content)
     {
-        list($ip, $port) = $this->getIpPort();
+        [$ip, $port] = $this->getIpPort();
         $post->content = $content['text'];;
         $post->ip = $ip;
         $post->port = $port;
