@@ -22,8 +22,10 @@ use App\Api\Serializer\UserWalletCashSerializer;
 
 use App\Common\ResponseCode;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use App\Repositories\UserWalletCashRepository;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -60,6 +62,15 @@ class ListUserWalletCashController extends DzqController
         $this->bus = $bus;
         $this->url = $url;
         $this->cash = $cash;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
     }
 
     public function main()

@@ -142,7 +142,7 @@ class UpdateClientUser
         $canEdit = true;
         $isSelf = $this->actor->id === $user->id;
         if(!$isSelf){
-            throw new TranslatorException('only_update_self');
+            throw new PermissionDeniedException('没有权限');
         }
         if(!empty(Arr::get($this->data, 'data.attributes'))){
             $attributes = Arr::get($this->data, 'data.attributes');
@@ -161,8 +161,8 @@ class UpdateClientUser
         // 修改支付密码
         $this->changePayPassword($user, $isSelf, $attributes, $validate);
 
-        // 修改手机号
-        //$this->changeMobile($user, $attributes);
+        // 修改用户签名
+        $this->changeSignature($user, $canEdit, $isSelf, $attributes);
 
         $this->validator->valid($validate);
 
@@ -209,16 +209,7 @@ class UpdateClientUser
         if ($user->username_bout >= $this->settings->get('username_bout', 'default', 1)) {
             throw new TranslatorException('user_username_bout_limit_error');
         }
-
         $user->changeUsername($username);
-
-        if (! $isSelf) {
-            AdminActionLog::createAdminActionLog(
-                $this->actor->id,
-                '更改了用户【'. $old_username .'】为【'. $username .'】'
-            );
-        }
-
         $validate['username'] = $username;
 
         return $validate;
@@ -305,174 +296,6 @@ class UpdateClientUser
 
     /**
      * @param User $user
-     * @param array $attributes
-     * @throws PermissionDeniedException
-     * @throws Exception
-     */
-    protected function changeMobile(User $user, array $attributes)
-    {
-        if (! Arr::has($attributes, 'mobile')) {
-            return;
-        }
-
-        //$this->assertCan($this->actor, 'editMobile', $user);
-
-        $mobile = Arr::get($attributes, 'mobile');
-
-        // 手机号是否已绑定
-        if (! empty($mobile)) {
-            if (User::query()->where('mobile', $mobile)->where('id', '<>', $user->id)->exists()) {
-                throw new Exception('mobile_is_already_bind');
-            }
-        }
-
-        $user->changeMobile($mobile);
-    }
-
-    /**
-     * @param User $user
-     * @param bool $isSelf
-     * @param array $attributes
-     * @throws PermissionDeniedException
-     */
-    protected function changeStatus(User $user, bool $isSelf, array $attributes)
-    {
-        if ($isSelf || ! Arr::has($attributes, 'status')) {
-            return;
-        }
-
-        $this->assertCan($this->actor, 'edit.status', $user);
-
-        $status = (int) Arr::get($attributes, 'status');
-
-        $user->changeStatus($status);
-
-        // 审核备注
-        $logMsg = Arr::get($attributes, 'refuse_message', '');
-
-        // 审核后系统通知事件
-        $this->events->dispatch(new ChangeUserStatus($user, $logMsg));
-        $this->setRefuseMessage($user,$logMsg);
-
-        // 记录用户状态操作日志
-        UserActionLogs::writeLog($this->actor, $user, User::enumStatus($status), $logMsg);
-
-        $status_desc = array(
-            '0' => '正常',
-            '1' => '禁用',
-            '2' => '审核中',
-            '3' => '审核拒绝',
-            '4' => '审核忽略'
-        );
-        AdminActionLog::createAdminActionLog(
-            $this->actor->id,
-            '更改了用户【'. $user->username .'】的用户状态为【'. $status_desc[$status] .'】'
-        );
-    }
-
-    //记录拒绝原因
-    private function setRefuseMessage(User &$user,$refuseMessage){
-        if ($user->status == User::STATUS_REFUSE) {
-            $user->reject_reason = $refuseMessage;
-            $user->save();
-        }
-    }
-
-    /**
-     * @param User $user
-     * @param array $attributes
-     * @throws PermissionDeniedException
-     */
-    protected function changeGroups(User $user, array $attributes)
-    {
-        $groups = Arr::get($attributes, 'groupId');
-
-        // 用户 id 1 默认是站点管理员，不能修改用户组
-        if ($user->id == 1 || ! $groups) {
-            return;
-        }
-
-        $groupName = Group::query()->where('id', $groups)->first();
-
-        $this->assertCan($this->actor, 'edit.group', $user);
-
-        // 获取新用户组 id
-        $newGroups = collect($groups)->filter(function ($groupId) {
-            return (int) $groupId;
-        })->unique()->sort();
-
-        // 只有管理员用户组可以编辑为管理员或游客
-        if (
-            ! $this->actor->isAdmin() &&
-            ($newGroups->search(Group::ADMINISTRATOR_ID) !== false || $newGroups->search(Group::GUEST_ID) !== false)
-        ) {
-            throw new PermissionDeniedException();
-        }
-
-        // 获取旧用户组
-        $oldGroups = $user->groups->keyBy('id')->sortKeys();
-
-        // 当新旧用户组不一致时，更新用户组并发送通知
-        if ($newGroups && $newGroups->toArray() != $oldGroups->keys()->toArray()) {
-            // 更新用户组
-            $user->groups()->sync($newGroups);
-
-            AdminActionLog::createAdminActionLog(
-                $this->actor->id,
-                '更改了用户【'. $user->username .'】的用户角色为【'. $groupName['name'] .'】'
-            );
-
-            $deleteGroups = array_diff($oldGroups->keys()->toArray(), $newGroups->toArray());
-            if ($deleteGroups) {
-                //删除付费用户组
-                $groupsPaid = Group::query()->whereIn('id', $deleteGroups)->where('is_paid', Group::IS_PAID)->pluck('id')->toArray();
-                if (!empty($groupsPaid)) {
-                    GroupPaidUser::query()->whereIn('group_id', $groupsPaid)
-                        ->where('user_id', $user->id)
-                        ->update(['operator_id' => $this->actor->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
-                }
-            }
-            $newPaidGroups = $user->groups()->where('is_paid', Group::IS_PAID)->get();
-            if ($newPaidGroups->count()) {
-                //新增付费用户组处理
-                foreach ($newPaidGroups as $paidGroupVal) {
-                    $this->events->dispatch(
-                        new PaidGroup($paidGroupVal->id, $user, null, $this->actor)
-                    );
-                }
-            }
-
-            // 发送系统通知
-            $notifyData = [
-                'new' => Group::query()->find($newGroups),
-                'old' => $oldGroups,
-            ];
-
-            // Tag 发送通知
-            $user->notify(new System(GroupMessage::class, $user, $notifyData));
-        }
-    }
-
-    /**
-     * @param User $user
-     * @param array $attributes
-     * @throws PermissionDeniedException
-     */
-    protected function changeExpiredAt(User $user, array $attributes)
-    {
-        $expiredAt = Arr::get($attributes, 'expired_at');
-
-        if (! $expiredAt) {
-            return;
-        }
-
-        $this->assertAdmin($this->actor);
-
-        $user->expired_at = Carbon::parse($expiredAt);
-    }
-
-    /**
-     * @param User $user
      * @param bool $canEdit
      * @param bool $isSelf
      * @param array $attributes
@@ -488,10 +311,6 @@ class UpdateClientUser
             return;
         }
 
-        if (! $isSelf) {
-            $this->assertPermission($canEdit);
-        }
-
         if ($signature = Arr::get($attributes, 'signature', '')) {
             // 敏感词校验
             $this->censor->checkText($signature, 'signature');
@@ -505,24 +324,5 @@ class UpdateClientUser
         }
 
         $user->changeSignature($signature);
-    }
-
-    /**
-     * @param User $user
-     * @param array $attributes
-     * @param array $validate
-     * @return array
-     */
-    protected function changeRegisterReason(User $user, array $attributes, array &$validate)
-    {
-        if (Arr::has($attributes, 'register_reason') && $user->status == 2) {
-            $registerReason = $this->specialChar->purify(Arr::get($attributes, 'register_reason'));
-
-            $user->register_reason = $registerReason;
-
-            $validate['register_reason'] = $registerReason;
-        }
-
-        return $validate;
     }
 }

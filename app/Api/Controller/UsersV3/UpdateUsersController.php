@@ -21,6 +21,8 @@ namespace App\Api\Controller\UsersV3;
 use App\Commands\Users\UpdateClientUser;
 use App\Common\ResponseCode;
 use App\Common\Utils;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -37,13 +39,22 @@ class UpdateUsersController extends DzqController
         $this->settings = $settings;
     }
 
+    // 权限检查
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
     public function main()
     {
         $id = $this->user->id;
         if(empty($id)){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'');
         }
-
         $username = $this->inPut('username');
         $password = $this->inPut('password');
         $newPassword = $this->inPut('newPassword');
@@ -51,12 +62,8 @@ class UpdateUsersController extends DzqController
         $payPassword = $this->inPut('payPassword');
         $payPasswordConfirmation = $this->inPut('payPasswordConfirmation');
         $payPasswordToken = $this->inPut('payPasswordToken');
-        //$mobile = $this->inPut('mobile');
         $signature = $this->inPut('signature');
         $registerReason = $this->inPut('registerReason');
-
-        $status = $this->inPut('status');
-        $refuseMessage = $this->inPut('refuseMessage');
 
         $requestData = [];
         if(!empty($username)){
@@ -80,10 +87,6 @@ class UpdateUsersController extends DzqController
         if(!empty($payPasswordToken)){
             $requestData['pay_password_token'] = $payPasswordToken;
         }
-
-//        if(!empty($mobile)){
-//            $requestData['mobile'] = $mobile;
-//        }
         if(!empty($signature)){
             $requestData['signature'] = $signature;
         }
@@ -111,20 +114,29 @@ class UpdateUsersController extends DzqController
         $returnData['likedCount'] = $data['likedCount'];
         $returnData['questionCount'] = $data['questionCount'];
         $returnData['avatar'] = $data['avatar'];
-
-        if($data['background']){
-            $url = $this->request->getUri();
-            $port = $url->getPort();
-            $port = $port == null ? '' : ':' . $port;
-            $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
-            $returnData['background'] = $path."storage/app/".$data['background'];
-        }else{
-            $returnData['background'] = "";
+        $returnData['background'] = "";
+        if(!empty($data['background'])){
+            $returnData['background'] = $this->getBackground($data['background']);
         }
 
-        //$returnData['groupInfo']['id'] = $data['groups'][0]['id'];
-        //$returnData['groupInfo']['name'] = $data['groups'][0]['name'];
-
         return $this->outPut(ResponseCode::SUCCESS,'', $returnData);
+    }
+
+    protected function getBackground($background){
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $port = $port == null ? '' : ':' . $port;
+        $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
+        $returnData['background'] = $path."/storage/background/".$background;
+        if (strpos($background,"cos://") !== false) {
+            $background = str_replace("cos://","",$background);
+            $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
+            $right =  substr($remoteServer, -1);
+            if("/"==$right){
+                $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
+            }
+            $returnData['background'] = $remoteServer."/public/background/".$background;
+        }
+        return $returnData['background'];
     }
 }
