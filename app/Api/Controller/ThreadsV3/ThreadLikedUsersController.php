@@ -35,6 +35,9 @@ class ThreadLikedUsersController extends DzqController
         $this->thread = Thread::query()
             ->where('id', $this->inPut('threadId'))
             ->first(['user_id', 'price', 'category_id']);
+        if (!$this->thread) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
         return $userRepo->canViewThreadDetail($this->user, $this->thread);
     }
 

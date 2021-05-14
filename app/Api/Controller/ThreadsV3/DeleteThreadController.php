@@ -21,6 +21,7 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomTrait;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
 
@@ -28,16 +29,20 @@ class DeleteThreadController extends DzqController
 {
     use TomTrait;
 
-    public function main()
+    private $thread;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $threadId = $this->inPut('threadId');
-        $thread = Thread::getOneActiveThread($threadId);
+        $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
         if (empty($thread)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        if (!$this->canDeleteThread($this->user, $thread->category_id, $thread->user_id)) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
-        }
+        $userRepo->canHideThread($this->user, $this->thread);
+    }
+
+    public function main()
+    {
+        $thread = $this->thread;
         $thread->deleted_at = Carbon::now();
         $thread->deleted_user_id = $this->user->id;
         if ($thread->save()) {

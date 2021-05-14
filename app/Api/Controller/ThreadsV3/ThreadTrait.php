@@ -18,10 +18,11 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\DzqCache;
-use App\Common\Utils;
+use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Permission;
@@ -35,6 +36,8 @@ use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Illuminate\Support\Str;
+use App\Common\Utils;
+
 
 trait ThreadTrait
 {
@@ -147,9 +150,9 @@ trait ThreadTrait
         return [
             'canEdit' => $userRepo->canEditThread($loginUser, $thread),
             'canDelete' => $userRepo->canHideThread($loginUser, $thread),
-            'canEssence' => $userRepo->canEssenceThread($loginUser, $thread->category_id),
+            'canEssence' => $userRepo->canEssenceThread($loginUser, $thread['category_id']),
             'canStick' => $userRepo->canStickThread($loginUser),
-            'canReply' => $userRepo->canReplyThread($loginUser, $thread->category_id),
+            'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
             'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
         ];
@@ -245,7 +248,42 @@ trait ThreadTrait
             }
         }
         if (!empty($content['text'])) {
-            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+            //            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+
+            $post = Post::find($post['id']);
+            // 数据原始内容，即 s9e 解析后的 XML
+            $xml = $post->getRawOriginal('content');
+            if(!empty($post->attachments)){
+                $attachmentSerializer = app(AttachmentSerializer::class);
+                // 所有图片及附件 URL
+                $attachments = $post->images
+                    ->merge($post->attachments)
+                    ->keyBy('id')
+                    ->map(function (Attachment $attachment) use ($attachmentSerializer) {
+                        if ($attachment->type === Attachment::TYPE_OF_IMAGE) {
+                            return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
+                        } elseif ($attachment->type === Attachment::TYPE_OF_FILE) {
+                            return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
+                        }
+                    });
+                // 替换插入内容中的图片 URL
+                $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'IMG', function ($attributes) use ($attachments) {
+                    if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
+                        $attributes['src'] = $attachments[$attributes['title']];
+                    }
+                    return $attributes;
+                });
+
+                // 替换插入内容中的附件 URL
+                $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'URL', function ($attributes) use ($attachments) {
+                    if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
+                        $attributes['url'] = $attachments[$attributes['title']];
+                    }
+                    return $attributes;
+                });
+            }
+            $post->parsedContent = $xml;
+            $content['text'] = $post->formatContent();
         }
 
         return $content;

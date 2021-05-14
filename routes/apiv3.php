@@ -85,7 +85,6 @@ $route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsCo
 
 $route->post('/thread.share','thread.share',ApiController\ThreadsV3\ThreadShareController::class);
 $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
-$route->post('/good/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodController::class);
 
 $route->get('/attachments', 'attachments.resource', ApiController\AttachmentV3\ResourceAttachmentController::class);
 $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
