@@ -22,8 +22,8 @@ use App\Common\ResponseCode;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
 use App\Models\AdminActionLog;
+use App\Repositories\UserRepository;
 use App\Validators\SetSettingValidator;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Qcloud\QcloudTrait;
@@ -37,8 +37,15 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class SetSettingsController extends DzqController
 {
-    use AssertPermissionTrait;
     use QcloudTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
 
     /**
      * @var Events
@@ -71,7 +78,6 @@ class SetSettingsController extends DzqController
      */
     public function main()
     {
-        $this->assertAdmin($this->user);
         $actor = $this->user;
         $user_id = $actor->id;
 
@@ -158,7 +164,7 @@ class SetSettingsController extends DzqController
             }
         }
 
-        if($action_desc !== '' && !empty($action_desc)) {
+        if(!empty($action_desc)) {
             AdminActionLog::createAdminActionLog(
                 $user_id,
                 $action_desc

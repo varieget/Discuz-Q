@@ -68,7 +68,7 @@ class ThreadListController extends DzqController
         }
         $pageData = $threads['pageData'];
         //缓存中获取最新的threads
-        $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
+//        $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
         $threads['pageData'] = $this->getFullThreadData($pageData);
 //        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
@@ -152,7 +152,7 @@ class ThreadListController extends DzqController
             'categoryids' => 'array',
             'sort' => 'integer|in:1,2,3',
             'attention' => 'integer|in:0,1',
-            'complex' => 'integer|in:1,2,3,4'
+            'complex' => 'integer|in:1,2,3,4,5'
         ]);
         $loginUserId = $this->user->id;
         $essence = null;
@@ -196,14 +196,15 @@ class ThreadListController extends DzqController
                     $threads = $threads->leftJoin('orders as order', 'order.thread_id', '=', 'th.id')
                         ->where(['order.user_id' => $loginUserId, 'status' => Order::ORDER_STATUS_PAID]);
                     break;
-                default:
+                case Thread::MY_OR_HIS_THREAD:
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
                     $threads = $threads->where('user_id', $userId);
+                    break;
             }
         }
         !empty($essence) && $threads = $threads->where('is_essence', $essence);
         if (!empty($types)) {
-            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.user_id')
+            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
                 ->whereIn('tag', $types);
         }
         if (!empty($search)) {

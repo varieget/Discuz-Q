@@ -20,7 +20,9 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\UserWalletFailLogs;
+use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
+use Discuz\Auth\Exception\PermissionDeniedException;
 
 class SmsResetPayPwdController extends AuthBaseController
 {
@@ -28,6 +30,15 @@ class SmsResetPayPwdController extends AuthBaseController
 
     public function __construct(UserValidator $validator) {
         $this->validator = $validator;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
     }
 
     public function main()

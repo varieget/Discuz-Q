@@ -40,7 +40,6 @@ class ListUserFollowController extends DzqController
 
         $UserFollows = $this->filterUserFollow($filter,$currentPage, $perPage,$actor,$sort);
         $userFollowList = $UserFollows['pageData'];
-
         if(!empty($userFollowList)){
             //1我的关注  2我的粉丝
             $type = (int) Arr::get($filter, 'type', 0);
@@ -59,13 +58,17 @@ class ListUserFollowController extends DzqController
             $groups = array_column($groups, null, 'user_id');
             $users = User::instance()->getUsers($userIds);
 
-            $userFollow = UserFollow::query()->where('from_user_id', $this->user->id)->get()->toArray();
+            $userFollow = UserFollow::query()
+                ->where('from_user_id', $actor->id)
+                ->get()->toArray();
             $userFollow = array_column($userFollow, null, 'to_user_id');
 
             foreach ($userFollowList as $key => $value) {
                 $userFollowList[$key]['isFollow']       = false;
+                $userFollowList[$key]['isMutual'] = false;
                 if (isset($userFollow[$value['to_user_id']])) {
-                    $userFollowList[$key]['isFollow']  = true;
+                    $userFollowList[$key]['isFollow']       = true;
+                    $userFollowList[$key]['isMutual'] = (bool) $userFollow[$value['to_user_id']]['is_mutual'];
                 }
             }
 
@@ -95,7 +98,7 @@ class ListUserFollowController extends DzqController
                 $lists['id'] = $list['id'];
                 $lists['fromUserId'] = $list['from_user_id'];
                 $lists['toUserId'] = $list['to_user_id'];
-                $lists['isMutual'] = $list['is_mutual'];
+                $lists['isMutual'] = $list['isMutual'];
                 $lists['createdAt'] = $list['created_at'];
                 $lists['updatedAt'] = $list['updated_at'];
                 $lists['isFollow'] = $list['isFollow'];
@@ -110,20 +113,24 @@ class ListUserFollowController extends DzqController
         }else{
             $UserFollows = [];
         }
+       // dump($UserFollows);die;
         $this->outPut(ResponseCode::SUCCESS, '', $UserFollows);
     }
 
-    private function filterUserFollow($filter, $currentPage, $perPage,User $actor,$sort)
+
+    public function filterUserFollow($filter, $currentPage, $perPage,User $actor,$sort)
     {
+        $join_field = '';
+        $user = '';
         $query = $this->userFollow->query()->select('user_follow.*')->distinct();
 
-        $type = (int) Arr::get($filter, 'type', 0);
+        $type = (int) Arr::get($filter, 'type', 1);
         $username = Arr::get($filter, 'userName');
-        $user = null;
-        if ($user_id = (int) Arr::get($filter, 'userId')) {
+        if ($user_id = (int)Arr::get($filter, 'userId')) {
             $user = $this->user->findOrFail($user_id);
         }
         $user_id = $user ? $user->id : $actor->id;
+
         if($type>0){
             if ($type == 1) {
                 //我的关注

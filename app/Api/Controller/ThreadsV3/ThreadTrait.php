@@ -18,10 +18,12 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\DzqCache;
-use App\Common\Utils;
+use App\Formatter\Formatter;
+use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Permission;
@@ -35,6 +37,8 @@ use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Illuminate\Support\Str;
+use App\Common\Utils;
+
 
 trait ThreadTrait
 {
@@ -48,7 +52,7 @@ trait ThreadTrait
         $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
         $payType = $this->threadPayStatus($loginUser, $thread, $paid);
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
-        $contentField = $this->getContentField($loginUser,$thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom);
+        $contentField = $this->getContentField($loginUser, $thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -94,7 +98,6 @@ trait ThreadTrait
     private function canViewTom($user, $thread, $payType, $paid)
     {
         //todo
-        return true;
         if ($payType != Thread::PAY_FREE) {//付费贴
             $permissions = Permission::getUserPermissions($user);
             if (in_array('freeViewPosts', $permissions) || $thread['user_id'] == $user->id || $user->isAdmin() || $paid == true) {
@@ -147,9 +150,9 @@ trait ThreadTrait
         return [
             'canEdit' => $userRepo->canEditThread($loginUser, $thread),
             'canDelete' => $userRepo->canHideThread($loginUser, $thread),
-            'canEssence' => $userRepo->canEssenceThread($loginUser, $thread->category_id),
+            'canEssence' => $userRepo->canEssenceThread($loginUser, $thread['category_id']),
             'canStick' => $userRepo->canStickThread($loginUser),
-            'canReply' => $userRepo->canReplyThread($loginUser, $thread->category_id),
+            'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
             'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
         ];
@@ -219,7 +222,7 @@ trait ThreadTrait
         return $obj;
     }
 
-    private function getContentField($loginUser,$thread, $post, $tomInput, $payType, $paid, $canViewTom)
+    private function getContentField($loginUser, $thread, $post, $tomInput, $payType, $paid, $canViewTom)
     {
         $content = [
             'text' => null,
@@ -245,7 +248,54 @@ trait ThreadTrait
             }
         }
         if (!empty($content['text'])) {
-            $content['text'] = str_replace(['<r>', '</r>'], ['', ''], $content['text']);
+            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+
+            //针对老数据，需要做特殊处理
+            $old_thread_type = [
+                Thread::TYPE_OF_LONG,
+                Thread::TYPE_OF_VIDEO,
+                Thread::TYPE_OF_IMAGE,
+                Thread::TYPE_OF_AUDIO,
+                Thread::TYPE_OF_QUESTION,
+                Thread::TYPE_OF_GOODS
+            ];
+            if(in_array($thread['type'], $old_thread_type)){
+                $xml = $post['content'];
+                // 针对 type为1的老数据，存在图文混排的混排的情况，需要特殊处理
+                $tom_image_key = $body = '';
+                foreach ($content['indexes'] as $key => $val){
+                    if($val['tomId']== TomConfig::TOM_IMAGE){
+                        $body = $val['body'];
+                        $tom_image_key = $key;
+                    }
+                }
+                if( $thread['type'] == Thread::TYPE_OF_LONG && !empty($body)){
+                    //url
+                    $attachments_body = $body;
+                    $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
+                    // 替换插入内容中的图片 URL
+                    $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'IMG', function ($attributes) use ($attachments) {
+                        if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
+                            $attributes['src'] = $attachments[$attributes['title']];
+                        }
+                        return $attributes;
+                    });
+
+                    // 替换插入内容中的附件 URL
+                    $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'URL', function ($attributes) use ($attachments) {
+                        if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
+                            $attributes['url'] = $attachments[$attributes['title']];
+                        }
+                        return $attributes;
+                    });
+                    //针对图文混排的情况，这里要去掉外部图片展示
+                    if(!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
+                }
+                $content['text'] = app()->make(Formatter::class)->render($xml);
+            }
+
+
+
         }
 
         return $content;
@@ -253,8 +303,8 @@ trait ThreadTrait
 
     private function getGroupInfoField($group)
     {
-        $groupResult = [];
-        if (!empty($group)) {
+        $groupResult = null;
+        if (!empty($group) && $group['groups']['is_display']) {
             $groupResult = [
                 'groupId' => $group['group_id'],
                 'groupName' => $group['groups']['name'],

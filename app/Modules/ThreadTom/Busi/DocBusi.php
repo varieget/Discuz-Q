@@ -55,7 +55,7 @@ class DocBusi extends TomBaseBusi
         });
         $threadId = $this->threadId;
         $threads = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {
-            $threads = Thread::instance()->getOneActiveThread($threadId, true);
+            $threads = Thread::instance()->getOneThread($threadId, true);
             $threads = [$threadId => $threads];
             return $threads;
         });

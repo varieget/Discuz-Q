@@ -142,6 +142,7 @@ class Thread extends DzqModel
     const MY_LIKE_THREAD = 2;//我的点赞
     const MY_COLLECT_THREAD = 3;//我的收藏
     const MY_BUY_THREAD = 4;//我的购买
+    const MY_OR_HIS_THREAD = 5;//我or他的主题页
     /**
      * 草稿
      */
@@ -893,6 +894,19 @@ class Thread extends DzqModel
         $toArray && $ret = $ret->toArray();
         return $ret;
     }
+
+    public static function getOneThread($threadId, $toArray = false)
+    {
+        $ret = self::query()
+            ->where([
+                'id' => $threadId,
+            ])
+            ->whereNull('deleted_at')
+            ->first();
+        $toArray && $ret = $ret->toArray();
+        return $ret;
+    }
+
 
     protected function clearCache()
     {
