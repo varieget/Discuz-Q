@@ -199,6 +199,11 @@ class ResourceAnalysisGoodsController extends DzqController
         }
         $this->{$this->goodsType['value']}();
 
+        //过滤商品
+        if (empty($this->goodsInfo['title']) && empty($this->goodsInfo['price'])) {
+            return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_fail_url'));
+        }
+
         /**
          * check GoodsInfo
          */

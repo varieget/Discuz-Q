@@ -172,3 +172,7 @@ $route->get('/invite.detail', 'invite.detail', ApiController\InviteV3\InviteDeta
 
 // 个人中心-站点信息-我的权限
 $route->get('/group.permission.list', 'group.permission.list', ApiController\GroupV3\GroupPermissionListController::class);
+
+//附件分享
+$route->get('/attachment.share', 'attachment.share', ApiController\AttachmentV3\ShareAttachmentController::class);
+$route->get('/attachment.download', '/attachment.download', ApiController\AttachmentV3\DownloadAttachmentController::class);
