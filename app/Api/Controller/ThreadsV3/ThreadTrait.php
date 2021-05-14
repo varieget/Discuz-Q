@@ -262,11 +262,17 @@ trait ThreadTrait
             if(in_array($thread['type'], $old_thread_type)){
                 $xml = $post['content'];
                 // 针对 type为1的老数据，存在图文混排的混排的情况，需要特殊处理
-                if( $thread['type'] == Thread::TYPE_OF_LONG && !empty($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
+                $tom_image_key = $body = '';
+                foreach ($content['indexes'] as $key => $val){
+                    if($val['tomId']== TomConfig::TOM_IMAGE){
+                        $body = $val['body'];
+                        $tom_image_key = $key;
+                    }
+                }
+                if( $thread['type'] == Thread::TYPE_OF_LONG && !empty($body)){
                     //url
-                    $attachments_body = $content['indexes'][TomConfig::TOM_IMAGE]['body'];
-                    $attachments = array_combine(array_keys($attachments_body, 'id'), array_keys($attachments_body, 'url'));
-
+                    $attachments_body = $body;
+                    $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
                     // 替换插入内容中的图片 URL
                     $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'IMG', function ($attributes) use ($attachments) {
                         if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
@@ -282,6 +288,8 @@ trait ThreadTrait
                         }
                         return $attributes;
                     });
+                    //针对图文混排的情况，这里要去掉外部图片展示
+                    if(!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
                 }
                 $content['text'] = app()->make(Formatter::class)->render($xml);
             }
