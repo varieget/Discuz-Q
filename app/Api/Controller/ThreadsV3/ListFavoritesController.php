@@ -5,17 +5,25 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Models\User;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class ListFavoritesController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
     public function main()
     {
         /** @var User $user */
         $user = $this->user;
-        if ($user->isGuest()) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
-        }
 
         $page = $this->inPut('page') ?: 1;
         $perPage = $this->inPut('perPage') ?: 10;

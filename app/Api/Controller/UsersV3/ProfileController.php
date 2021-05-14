@@ -27,7 +27,9 @@ use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\Setting;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -44,6 +46,14 @@ class ProfileController extends DzqController
 
     public $optionalInclude = ['groups', 'dialog'];
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
 
     public function main()
     {

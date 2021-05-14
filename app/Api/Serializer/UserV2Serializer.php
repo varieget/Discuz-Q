@@ -70,22 +70,7 @@ class UserV2Serializer extends AbstractSerializer
 
         $backUrl = "";
         if($model->background){
-            $url = $this->request->getUri();
-            $port = $url->getPort();
-            $port = $port == null ? '' : ':' . $port;
-            $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
-
-            $backUrl = $path."/storage/background/".$model->background;
-            if (strpos($model->background,"cos://") !== false) {
-                $background = str_replace("cos://","",$model->background);
-                $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
-                $right =  substr($remoteServer, -1);
-                if("/"==$right){
-                    $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
-                }
-                $backUrl = $remoteServer."/public/background/".$background;
-            }
-
+            $backUrl = $this->getBackground($model->background);
         }
         $attributes = [
             'id'                => (int) $model->id,
@@ -113,6 +98,7 @@ class UserV2Serializer extends AbstractSerializer
             'banReason'         => '',                                      // 禁用原因
             'denyStatus'        => (bool) $model->denyStatus,
             'canBeAsked'        => $model->id !== $this->actor->id && $model->can('canBeAsked'), // 是否允许被提问
+            'hasPassword'       => !empty($model->password) ? true : false
         ];
         $whitelist = [
             '/api/follow/',
@@ -131,6 +117,7 @@ class UserV2Serializer extends AbstractSerializer
         if ($model->status == 1) {
             $attributes['banReason'] = !empty($model->latelyLog) ? $model->latelyLog->message : '' ;
         }
+
 
         // 限制字段 本人/权限 显示
         if ($canEdit || $this->actor->id === $model->id) {
@@ -193,7 +180,28 @@ class UserV2Serializer extends AbstractSerializer
               'isDeny' => $isDeny
            ];
         }
+
+
         return $attributes;
+    }
+
+    protected function getBackground($backgroundUrl){
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $port = $port == null ? '' : ':' . $port;
+        $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
+
+        $backUrl = $path."/storage/background/".$backgroundUrl;
+        if (strpos($backgroundUrl,"cos://") !== false) {
+            $background = str_replace("cos://","",$backgroundUrl);
+            $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
+            $right =  substr($remoteServer, -1);
+            if("/"==$right){
+                $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
+            }
+            $backUrl = $remoteServer."/public/background/".$background;
+        }
+        return $backUrl;
     }
 
     /**

@@ -140,7 +140,7 @@ class UpdateAdminUser
     {
         $user = $this->users->findOrFail($this->id, $this->actor);
 
-        $canEdit = $this->actor->can('edit', $user);
+        $canEdit = true;
         $isSelf = $this->actor->id === $user->id;
         if(!empty(Arr::get($this->data, 'data.attributes'))){
             $attributes = Arr::get($this->data, 'data.attributes');
@@ -203,10 +203,6 @@ class UpdateAdminUser
 
         $old_username = $user->username;
 
-        if (! $isSelf) {
-            $this->assertPermission($canEdit);
-        }
-
         // 敏感词校验
         $this->censor->checkText($username, 'username');
 
@@ -217,11 +213,7 @@ class UpdateAdminUser
         // 过滤内容
         $username = $this->specialChar->purify($username);
 
-        $isAdmin = $this->actor->isAdmin();
-
-        if (! $isAdmin && $user->username_bout >= $this->settings->get('username_bout', 'default', 1)) {
-            throw new TranslatorException('user_username_bout_limit_error');
-        }
+        $isAdmin = true;
 
         $user->changeUsername($username, $isAdmin);
 
@@ -254,28 +246,6 @@ class UpdateAdminUser
         if (! $newPassword) {
             return $validate;
         }
-
-        if ($isSelf) {
-            // 小程序注册的账号密码为空，不验证原密码
-            if ($user->password) {
-                // 验证原密码
-                if (! $user->checkPassword(Arr::get($attributes, 'password'))) {
-                    throw new TranslatorException('user_update_error', ['not_match_used_password']);
-                }
-
-                // 验证新密码与原密码不能相同
-                if ($user->checkPassword($newPassword)) {
-                    throw new TranslatorException('user_update_error', ['cannot_use_the_same_password']);
-                }
-            }
-
-            $this->validator->setUser($user);
-
-            $validate['password_confirmation'] = Arr::get($attributes, 'password_confirmation');
-        } else {
-            $this->assertPermission($canEdit);
-        }
-
         $user->changePassword($newPassword);
 
         if (! $isSelf) {
@@ -351,8 +321,6 @@ class UpdateAdminUser
             return;
         }
 
-        $this->assertCan($this->actor, 'editMobile', $user);
-
         $mobile = Arr::get($attributes, 'mobile');
 
         // 手机号是否已绑定
@@ -376,8 +344,6 @@ class UpdateAdminUser
         if ($isSelf || ! Arr::has($attributes, 'status')) {
             return;
         }
-
-        $this->assertCan($this->actor, 'edit.status', $user);
 
         $status = (int) Arr::get($attributes, 'status');
 
@@ -429,20 +395,10 @@ class UpdateAdminUser
 
         $groupName = Group::query()->where('id', $groups)->first();
 
-        $this->assertCan($this->actor, 'edit.group', $user);
-
         // 获取新用户组 id
         $newGroups = collect($groups)->filter(function ($groupId) {
             return (int) $groupId;
         })->unique()->sort();
-
-        // 只有管理员用户组可以编辑为管理员或游客
-        if (
-            ! $this->actor->isAdmin() &&
-            ($newGroups->search(Group::ADMINISTRATOR_ID) !== false || $newGroups->search(Group::GUEST_ID) !== false)
-        ) {
-            throw new PermissionDeniedException();
-        }
 
         // 获取旧用户组
         $oldGroups = $user->groups->keyBy('id')->sortKeys();
@@ -499,8 +455,6 @@ class UpdateAdminUser
         if (! $expiredAt) {
             return;
         }
-
-        $this->assertAdmin($this->actor);
 
         $user->expired_at = Carbon::parse($expiredAt);
     }

@@ -20,7 +20,9 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Commands\Thread\EditThread;
 use App\Common\ResponseCode;
 use App\Models\Thread;
+use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
@@ -39,6 +41,39 @@ class OperateThreadController extends DzqController
         $this->bus = $bus;
     }
 
+    // 权限检查
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        $isSticky = $this->inPut('isSticky');
+        $isEssence = $this->inPut('isEssence');
+        $isFavorite = $this->inPut('isFavorite');
+
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        if (
+            isset($isSticky)
+            && !$userRepo->canStickThread($actor)
+        ) {
+            throw new PermissionDeniedException('没有置顶权限');
+        }
+        if (
+            isset($isEssence)
+            && !$userRepo->canEssenceThread($actor)
+        ) {
+            throw new PermissionDeniedException('没有加精权限');
+        }
+        if (
+            isset($isFavorite)
+            && !$userRepo->canFavoriteThread($actor)
+        ) {
+            throw new PermissionDeniedException('没有收藏权限');
+        }
+
+        return true;
+    }
+
     public function main()
     {
         //参数校验
@@ -54,27 +89,9 @@ class OperateThreadController extends DzqController
         $type = $this->inPut('type');
 
         //当传分类时有默认
-        $isAnonymous = $this->inPut('isAnonymous');
-        $price = $this->inPut('price');
-        $freeWords = $this->inPut('freeWords');
-        $attachment_price = $this->inPut('attachmentPrice');
-        $location = $this->inPut('location');
-        $latitude = $this->inPut('latitude');
-        $longitude = $this->inPut('longitude');
-        $isApproved = $this->inPut('isApproved');
-        $isOldDraft = $this->inPut('isOldDraft');
-        //没有默认
-        $address = $this->inPut('address');
-        $isDraft = $this->inPut('isDraft');
         $isEssence = $this->inPut('isEssence');
-        $isDeleted = $this->inPut('isDeleted');
         $isSticky = $this->inPut('isSticky');
         $isFavorite = $this->inPut('isFavorite');
-        $isSite = $this->inPut('isSite');
-        $message = $this->inPut('message');
-        $title = $this->inPut('title');
-        $fileName = $this->inPut('fileName');
-        $fileId = $this->inPut('fileId');
 
         $attributes = [];
         $requestData = [];
@@ -91,15 +108,6 @@ class OperateThreadController extends DzqController
                 ]
             ];
             $attributes['type'] = (string)$type;
-            $attributes['is_anonymous'] = $isAnonymous  ? $isAnonymous : false;
-            $attributes['price'] = $price  ? $price: 0;
-            $attributes['free_words'] = $freeWords  ? $freeWords : 0;
-            $attributes['attachment_price'] = $attachment_price  ? $attachment_price: 0;
-            $attributes['location'] = $location  ? $location : "";
-            $attributes['latitude'] = $latitude  ? $latitude: "";
-            $attributes['longitude'] = $longitude  ? $longitude : "";
-            $attributes['is_anonymous'] = $isApproved  ? $isApproved : 0;
-            $attributes['is_old_draft'] = $isOldDraft  ? $isOldDraft : 0;
         }
 
         if($isEssence || $isEssence===false){
@@ -108,34 +116,8 @@ class OperateThreadController extends DzqController
         if($isSticky || $isSticky===false){
             $attributes['isSticky'] = $isSticky;
         }
-        if($isDeleted || $isDeleted===false){
-            $attributes['isDeleted'] = $isDeleted;
-        }
         if($isFavorite || $isFavorite===false){
             $attributes['isFavorite'] = $isFavorite;
-        }
-        if($isSite || $isSite===false){
-            $attributes['isSite'] = $isSite;
-        }
-
-        if(!empty($address)){
-            $attributes['address'] = $address;
-        }
-        if($isDraft || $isDraft===0){
-            $attributes['is_draft'] = $isDraft;
-        }
-
-        if(!empty($message)){
-            $attributes['message'] = $message;
-        }
-        if(!empty($title)){
-            $attributes['title'] = $title;
-        }
-        if(!empty($fileName)){
-            $attributes['fileName'] = $fileName;
-        }
-        if(!empty($fileId)){
-            $attributes['fileId'] = $fileId;
         }
 
         $requestData['id'] = $thread_id;
