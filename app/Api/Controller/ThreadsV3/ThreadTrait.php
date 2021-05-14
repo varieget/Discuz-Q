@@ -22,6 +22,7 @@ use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\DzqCache;
+use App\Formatter\Formatter;
 use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Order;
@@ -97,7 +98,6 @@ trait ThreadTrait
     private function canViewTom($user, $thread, $payType, $paid)
     {
         //todo
-        return true;
         if ($payType != Thread::PAY_FREE) {//付费贴
             $permissions = Permission::getUserPermissions($user);
             if (in_array('freeViewPosts', $permissions) || $thread['user_id'] == $user->id || $user->isAdmin() || $paid == true) {
@@ -248,42 +248,46 @@ trait ThreadTrait
             }
         }
         if (!empty($content['text'])) {
-            //            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
 
-            $post = Post::find($post['id']);
-            // 数据原始内容，即 s9e 解析后的 XML
-            $xml = $post->getRawOriginal('content');
-            if (!empty($post->attachments)) {
-                $attachmentSerializer = app(AttachmentSerializer::class);
-                // 所有图片及附件 URL
-                $attachments = $post->images
-                    ->merge($post->attachments)
-                    ->keyBy('id')
-                    ->map(function (Attachment $attachment) use ($attachmentSerializer) {
-                        if ($attachment->type === Attachment::TYPE_OF_IMAGE) {
-                            return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
-                        } elseif ($attachment->type === Attachment::TYPE_OF_FILE) {
-                            return $attachmentSerializer->getDefaultAttributes($attachment)['url'];
+            //针对老数据，需要做特殊处理
+            $old_thread_type = [
+                Thread::TYPE_OF_LONG,
+                Thread::TYPE_OF_VIDEO,
+                Thread::TYPE_OF_IMAGE,
+                Thread::TYPE_OF_AUDIO,
+                Thread::TYPE_OF_QUESTION,
+                Thread::TYPE_OF_GOODS
+            ];
+            if(in_array($thread['type'], $old_thread_type)){
+                $xml = $post['content'];
+                // 针对 type为1的老数据，存在图文混排的混排的情况，需要特殊处理
+                if( $thread['type'] == Thread::TYPE_OF_LONG && !empty($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
+                    //url
+                    $attachments_body = $content['indexes'][TomConfig::TOM_IMAGE]['body'];
+                    $attachments = array_combine(array_keys($attachments_body, 'id'), array_keys($attachments_body, 'url'));
+
+                    // 替换插入内容中的图片 URL
+                    $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'IMG', function ($attributes) use ($attachments) {
+                        if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
+                            $attributes['src'] = $attachments[$attributes['title']];
                         }
+                        return $attributes;
                     });
-                // 替换插入内容中的图片 URL
-                $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'IMG', function ($attributes) use ($attachments) {
-                    if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
-                        $attributes['src'] = $attachments[$attributes['title']];
-                    }
-                    return $attributes;
-                });
 
-                // 替换插入内容中的附件 URL
-                $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'URL', function ($attributes) use ($attachments) {
-                    if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
-                        $attributes['url'] = $attachments[$attributes['title']];
-                    }
-                    return $attributes;
-                });
+                    // 替换插入内容中的附件 URL
+                    $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'URL', function ($attributes) use ($attachments) {
+                        if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
+                            $attributes['url'] = $attachments[$attributes['title']];
+                        }
+                        return $attributes;
+                    });
+                }
+                $content['text'] = app()->make(Formatter::class)->render($xml);
             }
-            $post->parsedContent = $xml;
-            $content['text'] = $post->formatContent();
+
+
+
         }
 
         return $content;
