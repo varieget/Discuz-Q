@@ -19,14 +19,25 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
+use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomTrait;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class UpdateTomController extends DzqController
 {
-
     use TomTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $thread = Thread::getOneActiveThread($this->inPut('threadId'));
+        if (!$thread) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
+
+        return $userRepo->canEditThread($this->user, $thread);
+    }
 
     public function main()
     {

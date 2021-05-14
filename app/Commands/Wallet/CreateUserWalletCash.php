@@ -74,8 +74,6 @@ class CreateUserWalletCash
      */
     public function handle(Validator $validator, ConnectionInterface $db, SettingsRepository $setting)
     {
-        // 判断有没有权限执行此操作
-        $this->assertCan($this->actor, 'cash.create');
 
         $this->data = collect(Arr::get($this->data, 'data.attributes'));
 

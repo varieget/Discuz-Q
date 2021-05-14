@@ -18,19 +18,28 @@ namespace App\Api\Controller\AnalysisV3;
 use App\Common\ResponseCode;
 use App\Exceptions\TranslatorException;
 use App\Models\PostGoods;
+use App\Models\Thread;
 use App\Traits\PostGoodsTrait;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 use GuzzleHttp\Client;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
-use App\Models\Thread;
 
 class ResourceAnalysisGoodsController extends DzqController
 {
     use PostGoodsTrait;
-    use AssertPermissionTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $categoryId = $this->inPut('categoryId');
+        if ($this->user->isGuest() || !$userRepo->canInsertGoodsToThread($this->user, $categoryId)) {
+            throw new NotAuthenticatedException;
+        }
+        return true;
+    }
 
     protected $httpClient;
 
@@ -78,7 +87,6 @@ class ResourceAnalysisGoodsController extends DzqController
     public function main()
     {
         $actor = $this->user;
-        $this->assertRegistered($actor);
 
         $readyContent = $this->inPut('address');
 
@@ -88,8 +96,6 @@ class ResourceAnalysisGoodsController extends DzqController
         $this->dzqValidate($data, [
             'address'  => 'required_without:address|max:1500',
         ]);
-
-        //$this->assertCan($actor, 'createThread.' . Thread::TYPE_OF_GOODS);
 
         /**
          * 查询数据库中是否存在

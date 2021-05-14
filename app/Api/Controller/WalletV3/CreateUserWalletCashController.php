@@ -21,7 +21,9 @@ namespace App\Api\Controller\WalletV3;
 use App\Commands\Wallet\CreateUserWalletCash;
 use App\Common\ResponseCode;
 use App\Common\Utils;
+use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
@@ -37,6 +39,17 @@ class CreateUserWalletCashController extends DzqController
         $this->bus = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        if (!$userRepo->canCreateCash($actor)) {
+            throw new PermissionDeniedException('没有提现权限');
+        }
+        return true;
+    }
 
     public function main()
     {

@@ -22,8 +22,10 @@ use App\Api\Serializer\UserWalletLogSerializer;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\UserWalletLog;
+use App\Repositories\UserRepository;
 use App\Repositories\UserWalletLogsRepository;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -135,10 +137,19 @@ class ListUserWalletLogsController extends DzqController
         $this->walletLogs = $walletLogs;
     }
 
+    // 权限检查
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
 
     public function main()
     {
-        $this->assertRegistered($this->user);
         $user_wallet_log_serializer = $this->app->make(UserWalletLogSerializer::class);
         $user_wallet_log_serializer->setRequest($this->request);
 
@@ -147,7 +158,8 @@ class ListUserWalletLogsController extends DzqController
         $page           = $this->inPut('page') ?: 1;
         $perPage        = $this->inPut('perPage') ?: 5;
         $requestInclude = explode(',', $this->inPut('include'));
-        if(array_diff($requestInclude, $this->optionalInclude)){       //如果include 超出optionalinclude 就报错
+
+        if(!empty($this->inPut('include')) && is_array($requestInclude) && array_diff($requestInclude, $this->optionalInclude)){       //如果include 超出optionalinclude 就报错
             return $this->outPut(ResponseCode::NET_ERROR);
         }
         $sort           = (new Parameters($this->request->getQueryParams()))->getSort($this->sortFields) ?: $this->sort;

@@ -125,7 +125,7 @@ class CreateThreadController extends DzqController
         $isDraft = $this->inPut('draft');
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
-        empty($title) && $title = Post::autoGenerateTitle($content['text']);
+//        empty($title) && $title = Post::autoGenerateTitle($content['text']);//不自动生成title
         $dataThread = [
             'user_id' => $userId,
             'category_id' => $categoryId,

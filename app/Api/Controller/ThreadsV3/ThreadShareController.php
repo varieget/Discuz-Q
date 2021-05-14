@@ -19,10 +19,16 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
 use App\Models\Thread;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ThreadShareController extends DzqController
 {
+    public function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
         $threadId = $this->inPut('threadId');

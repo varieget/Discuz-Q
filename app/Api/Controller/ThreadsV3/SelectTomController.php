@@ -34,6 +34,9 @@ class SelectTomController extends DzqController
         $thread = Thread::query()
             ->where('id', $this->inPut('threadId'))
             ->first(['user_id', 'category_id']);
+        if (!$thread) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
         return $userRepo->canViewThreadDetail($this->user, $thread);
     }
 

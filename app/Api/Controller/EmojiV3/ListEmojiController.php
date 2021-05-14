@@ -21,10 +21,15 @@ namespace App\Api\Controller\EmojiV3;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Emoji;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ListEmojiController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
 
     public function main()
     {

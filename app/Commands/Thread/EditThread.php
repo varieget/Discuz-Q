@@ -154,6 +154,7 @@ class EditThread
         }
 
         if (isset($attributes['longitude']) && isset($attributes['latitude'])) {
+
             $this->assertCan($this->actor, 'edit', $thread);
 
             $thread->longitude = (float) Arr::get($this->data, 'attributes.longitude', 0);
@@ -185,17 +186,14 @@ class EditThread
         }
 
         if (isset($attributes['isSticky'])) {
-            // $this->assertCan($this->actor, 'isSticky', $thread);
+            if ($thread->is_sticky != $attributes['isSticky']) {
+                $thread->is_sticky = $attributes['isSticky'];
 
-            if($this->actor->can('sticky', $thread)){
-                if ($thread->is_sticky != $attributes['isSticky']) {
-                    $thread->is_sticky = $attributes['isSticky'];
-
-                    if ($thread->is_sticky) {
-                        $this->threadNotices($thread, $this->actor, 'isSticky', $attributes['message'] ?? '');
-                    }
+                if ($thread->is_sticky) {
+                    $this->threadNotices($thread, $this->actor, 'isSticky', $attributes['message'] ?? '');
                 }
             }
+
         }
 
         if (isset($attributes['isSite'])) {
@@ -207,8 +205,6 @@ class EditThread
         }
 
         if (isset($attributes['isEssence'])) {
-            $this->assertCan($this->actor, 'essence', $thread);
-
             if ($thread->is_essence != $attributes['isEssence']) {
                 $thread->is_essence = $attributes['isEssence'];
 
