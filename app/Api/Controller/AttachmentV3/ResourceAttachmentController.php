@@ -20,10 +20,10 @@ namespace App\Api\Controller\AttachmentV3;
 
 use App\Common\ResponseCode;
 use App\Models\Attachment;
-use App\Models\Post;
 use App\Models\SessionToken;
 use App\Models\Thread;
 use App\Repositories\AttachmentRepository;
+use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
@@ -40,6 +40,24 @@ class ResourceAttachmentController extends DzqController
 {
     use AssertPermissionTrait;
 
+    private $attachment;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $token = SessionToken::get($this->inPut('t'));
+
+        if (!$token) {
+            $this->outPut(ResponseCode::UNAUTHORIZED,'');
+        }
+
+        $this->user = $token ? $token->user : new Guest();
+
+        $this->attachment = $this->attachments->findOrFail($this->inPut('id'), $this->user);
+        $thread = $this->attachment->post->thread;
+
+        return $userRepo->canViewThreadDetail($this->user, $thread);
+    }
+
     public function __construct(AttachmentRepository $attachments, SettingsRepository $settings, Filesystem $filesystem)
     {
         $this->attachments = $attachments;
@@ -49,18 +67,12 @@ class ResourceAttachmentController extends DzqController
 
     public function main()
     {
-        $attachmentId = $this->inPut('id');
         $page = $this->inPut('page');
-        $token = SessionToken::get($this->inPut('t'));
         $isAttachment = $this->inPut('isAttachment') ? $this->inPut('isAttachment') : 0;
 
-        if ($token) {
-            $user = $token->user ?? new Guest();
-        } else {
-            return $this->outPut(ResponseCode::UNAUTHORIZED,'');
-        }
+        $user = $this->user;
 
-        $attachment = $this->getAttachment($attachmentId, $user);
+        $attachment = $this->getAttachment($user);
 
         if ($attachment->is_remote) {
             $httpClient = new HttpClient();
@@ -129,14 +141,11 @@ class ResourceAttachmentController extends DzqController
         }
     }
 
-    protected function getAttachment($attachmentId, $actor)
+    protected function getAttachment($actor)
     {
-        $attachment = $this->attachments->findOrFail($attachmentId, $actor);
+        $attachment = $this->attachment;
 
         $post = $attachment->post;
-
-        // 是否有权查看帖子
-        $this->assertCan($actor, 'view', $attachment->post ?? new Post());
 
         Thread::setStateUser($actor);
 

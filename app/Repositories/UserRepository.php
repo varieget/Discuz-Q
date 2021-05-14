@@ -68,7 +68,7 @@ class UserRepository extends AbstractRepository
     }
 
     /**
-     * 检查 switch.XXX && (XXX || categoryX.XXX) 的权限
+     * 检查 XXX || categoryX.XXX 的权限
      *
      * @param User $user
      * @param string $ability
@@ -83,7 +83,7 @@ class UserRepository extends AbstractRepository
             $abilities[] = 'category'.$categoryId.'.'.$ability;
         }
 
-        return $user->hasPermission('switch.'.$ability) && $user->hasPermission($abilities, false);
+        return $user->hasPermission($abilities, false);
     }
 
     /**
@@ -146,7 +146,7 @@ class UserRepository extends AbstractRepository
         return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_ATTACHMENT, $categoryId);
     }
 
-    public function canDeleteAttachment(User $user, $attachment, array $requestData)
+    public function canDeleteAttachment(User $user, $attachment)
     {
         if ($attachment->user_id == $user->id || $user->isAdmin()) {
             return true;
@@ -160,9 +160,9 @@ class UserRepository extends AbstractRepository
             Attachment::TYPE_OF_VIDEO,
         ];
 
-        if (in_array($attachment->type, $postAttachmentTypes) && $this->canEditPost($user, $attachment->post, $requestData)) {
-            return true;
-        }
+        // if (in_array($attachment->type, $postAttachmentTypes) && $this->canEditPost($user, $attachment->post)) {
+        //     return true;
+        // }
     }
 
     /**
@@ -314,15 +314,15 @@ class UserRepository extends AbstractRepository
      */
     public function canEditThread(User $user, $thread)
     {
-        // 是作者本人，且有编辑自己帖子权限或者是草稿
+        // 是作者本人，且有编辑自己帖子权限
         if (
-            ($thread->user_id == $user->id)
-            && ($this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_OWN, $thread->category_id) || $thread->is_draft)
+            ($thread['user_id'] == $user->id)
+            && $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_OWN, $thread['category_id'])
         ) {
             return true;
         }
 
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT, $thread->category_id);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT, $thread['category_id']);
     }
 
     /**
@@ -334,8 +334,8 @@ class UserRepository extends AbstractRepository
      */
     public function canHideThread(User $user, $thread)
     {
-        return ($user->id === $thread->user_id && $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE_OWN, $thread->category_id))
-            || $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE, $thread->category_id);
+        return ($user->id === $thread['user_id'] && $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE_OWN, $thread['category_id']))
+            || $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE, $thread['category_id']);
     }
 
     /**
@@ -351,61 +351,12 @@ class UserRepository extends AbstractRepository
             && $this->checkCategoryPermission($user, PermissionKey::THREAD_REPLY, $categoryId);
     }
 
-    /**
-     * 查看帖子权限
-     *
-     * @param User $user
-     * @param $thread
-     * @param $httpReferer
-     * @param array $requestData
-     * @return bool
-     */
-    public function canViewPosts(User $user, $thread, $httpReferer, array $requestData)
-    {
-        if (
-            $thread->user_id == $user->id
-            && $thread->is_approved == Thread::APPROVED
-            && (!$thread->deleted_at || $thread->deleted_user_id == $user->id)
-        ) {
-            return true;
-        }
-
-        if (strstr($httpReferer, 'postpay') || (strstr($httpReferer, 'post') && strstr($httpReferer, 'operating=edit'))) {
-            return $this->canEditThread($user, $thread, $requestData);
-        }
-
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS, $thread->category_id);
-    }
-
     public function canViewThreadDetail(User $user, $thread)
     {
-        if ($user->id == $thread->user_id) {
+        if ($user->id == $thread['user_id']) {
             return true;
         }
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS, $thread->category_id);
-    }
-
-    /**
-     * 编辑回复权限
-     *
-     * @param User $user
-     * @param $post
-     * @param array $requestData
-     * @return bool
-     */
-    public function canEditPost(User $user, $post, array $requestData)
-    {
-        // 首帖按主题权限走
-        if ($post->is_first) {
-            return $this->canEditThread($user, $post->thread, $requestData);
-        }
-
-        // 是作者本人且拥有编辑自己主题或回复的权限
-        if ($post->user_id == $user->id && $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_OWN, $post->thread->category_id)) {
-            return true;
-        }
-
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_POSTS, $post->thread->category_id);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS, $thread['category_id']);
     }
 
     public function canViewListWallet(User $user)
@@ -428,14 +379,13 @@ class UserRepository extends AbstractRepository
      *
      * @param User $user
      * @param $post
-     * @param array $requestData
      * @return bool
      */
-    public function canHidePost(User $user, $post, array $requestData)
+    public function canHidePost(User $user, $post)
     {
         // 首帖按主题权限走
         if ($post->is_first) {
-            return $this->canEditThread($user, $post->thread, $requestData);
+            return $this->canEditThread($user, $post->thread);
         }
 
         // 是作者本人且拥有编辑自己主题或回复的权限
@@ -540,16 +490,6 @@ class UserRepository extends AbstractRepository
     public function canCreateCash(User $user)
     {
         return $user->hasPermission(PermissionKey::CASH_CREATE);
-    }
-
-    public function canEditUserGroup(User $user)
-    {
-        return $user->hasPermission(PermissionKey::USER_EDIT_GROUP);
-    }
-
-    public function canEditUserStatus(User $user)
-    {
-        return $user->hasPermission(PermissionKey::USER_EDIT_STATUS);
     }
 
     public function canViewUser(User $user)
