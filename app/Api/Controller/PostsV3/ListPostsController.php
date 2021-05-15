@@ -5,6 +5,7 @@ namespace App\Api\Controller\PostsV3;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\PostSerializer;
 use App\Common\ResponseCode;
+use App\Formatter\Formatter;
 use App\Models\Attachment;
 use App\Models\Group;
 use App\Models\Post;
@@ -161,7 +162,8 @@ class ListPostsController extends DzqController
             'replyUserId' => $post['reply_user_id'],
             'commentPostId' => $post['comment_post_id'],
             'commentUserId' => $post['comment_user_id'],
-            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
+//            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
+            'content'  =>   app()->make(Formatter::class)->render($post['content']),
             'replyCount' => $post['reply_count'],
             'likeCount' => $post['like_count'],
             'createdAt' => optional($post->created_at)->format('Y-m-d H:i:s'),
