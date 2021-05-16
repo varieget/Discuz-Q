@@ -27,7 +27,6 @@ use Illuminate\Support\Collection;
 
 class SettingsRepository implements ContractsSettingRepository
 {
-    const CACHE_TTL = 30;
 
     /**
      * @var Collection
@@ -52,8 +51,8 @@ class SettingsRepository implements ContractsSettingRepository
         $settings = $this->cache->sear(
             CacheKey::SETTINGS,
             function () {
-                return $this->getAllFromDatabase();
-            }
+                    return $this->getAllFromDatabase();
+                }
         );
         /*} else {
             $settings = $this->getAllFromDatabase();
@@ -89,7 +88,7 @@ class SettingsRepository implements ContractsSettingRepository
         if (is_array($value)) {
             return false;
         }
-
+        $this->cache->delete(CacheKey::SETTINGS);
         $this->all();
         $this->settings->put($tag, array_merge((array) $this->tag($tag), [$key => $value]));
 
@@ -107,6 +106,7 @@ class SettingsRepository implements ContractsSettingRepository
 
     public function delete($key, $tag = 'default')
     {
+        $this->cache->delete(CacheKey::SETTINGS);
         Setting::where([['key', $key], ['tag', $tag]])->delete();
         $settings = $this->all()->toArray();
         return Arr::pull($settings, $tag.'.'.$key);
