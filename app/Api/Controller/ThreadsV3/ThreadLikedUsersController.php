@@ -68,6 +68,7 @@ class ThreadLikedUsersController extends DzqController
         $isPaid = $thread['price'] > 0 ? Order::ORDER_TYPE_THREAD : Order::ORDER_TYPE_REWARD ;
         $order = Order::query()->where('thread_id',$data['threadId'])
             ->where('type',$isPaid)
+            ->where('status', Order::ORDER_STATUS_PAID)
             ->orderBy('created_at','desc')
             ->get(['user_id','created_at'])
             ->toArray();

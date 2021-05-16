@@ -186,7 +186,7 @@ class ThreadListController extends DzqController
                     $threads = $threads->leftJoin('posts as post', 'post.thread_id', '=', 'th.id')
                         ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
                         ->leftJoin('post_user as postu', 'postu.post_id', '=', 'post.id')
-                        ->where(['post.user_id' => $userId]);
+                        ->where(['postu.user_id' => $userId]);
                     break;
                 case Thread::MY_COLLECT_THREAD:
                     $threads = $threads->leftJoin('thread_user as thu', 'thu.thread_id', '=', 'th.id')
