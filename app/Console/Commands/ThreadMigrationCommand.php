@@ -190,19 +190,35 @@ class ThreadMigrationCommand extends AbstractCommand
             }
 
             //doc
-            $res = self::insertThreadTag($val, ThreadTag::DOC);
-            if(!$res){
-                $this->db->rollBack();
-                $this->error('long insert: thread_tag doc error. thread data is : '.json_encode($val->toArray()));
-                break;
+            if($attachments && !empty($attachments->toArray())){
+                $res = self::insertThreadTag($val, ThreadTag::DOC);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('long insert: thread_tag doc error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
             }
+
+            //image
+            if($attachments_image && !empty($attachments_image->toArray())){
+                $res = self::insertThreadTag($val, ThreadTag::IMAGE);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('long insert: thread_tag image error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
+            }
+
             //red_packet
-            $res = self::insertThreadTag($val, ThreadTag::RED_PACKET);
-            if(!$res){
-                $this->db->rollBack();
-                $this->error('long insert: thread_tag red_packet error. thread data is : '.json_encode($val->toArray()));
-                break;
+            if($thread_red_packets && !empty($thread_red_packets->toArray())){
+                $res = self::insertThreadTag($val, ThreadTag::RED_PACKET);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('long insert: thread_tag red_packet error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
             }
+
             $count = 0;
             //最后插 thread_tom  插入附件、红包
             if($attachments && !empty($attachments->toArray())){
