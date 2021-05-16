@@ -43,6 +43,7 @@ class DzqCache
                         !empty($data[$extractId]) && $ret[$extractId] = $data[$extractId];
                     } else {
                         $ret = false;
+                        break;
                     }
                 }
             }
@@ -80,6 +81,7 @@ class DzqCache
                         !empty($data[$extractId]) && $ret->put($extractId, $data[$extractId]);
                     } else {
                         $ret = false;
+                        break;
                     }
                 }
             }
