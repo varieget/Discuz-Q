@@ -199,6 +199,16 @@ class ThreadMigrationCommand extends AbstractCommand
                 }
             }
 
+            //image
+            if($attachments_image && !empty($attachments_image->toArray())){
+                $res = self::insertThreadTag($val, ThreadTag::IMAGE);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('long insert: thread_tag image error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
+            }
+
             //red_packet
             if($thread_red_packets && !empty($thread_red_packets->toArray())){
                 $res = self::insertThreadTag($val, ThreadTag::RED_PACKET);
