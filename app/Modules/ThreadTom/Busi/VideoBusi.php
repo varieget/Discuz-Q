@@ -29,6 +29,11 @@ class VideoBusi extends TomBaseBusi
     public function create()
     {
         $videoId = $this->getParams('videoId');
+        $video = ThreadVideo::query()->where('id', $videoId)->first();
+        if (!empty($video) && !empty($this->threadId)) {
+            $video->thread_id = $this->threadId;
+            $video->save();
+        }
         return $this->jsonReturn(['videoId' => $videoId]);
     }
 

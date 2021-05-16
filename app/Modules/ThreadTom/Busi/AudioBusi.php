@@ -28,6 +28,11 @@ class AudioBusi extends TomBaseBusi
     public function create()
     {
         $audioId = $this->getParams('audioId');
+        $video = ThreadVideo::query()->where('id', $audioId)->first();
+        if (!empty($video) && !empty($this->threadId)) {
+            $video->thread_id = $this->threadId;
+            $video->save();
+        }
         return $this->jsonReturn(['audioId' => $audioId]);
     }
 
