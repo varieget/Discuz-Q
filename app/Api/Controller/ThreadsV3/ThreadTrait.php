@@ -97,6 +97,7 @@ trait ThreadTrait
 
     private function canViewTom($user, $thread, $payType, $paid)
     {
+        return true;
         //todo
         if ($payType != Thread::PAY_FREE) {//付费贴
             $permissions = Permission::getUserPermissions($user);
