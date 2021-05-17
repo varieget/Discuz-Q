@@ -85,7 +85,7 @@ class ThreadHelper
             return strtotime($a['created_at']) < strtotime($b['created_at']);
         });
         $likedUsersInfo = [];
-        $maxDisplay = 2;
+        $maxDisplay = 3;
         foreach ($mLikedUsers as $item) {
             $threadId = $item['thread_id'];
             if (empty($likedUsersInfo[$threadId]) || count($likedUsersInfo[$threadId]) < $maxDisplay) {
