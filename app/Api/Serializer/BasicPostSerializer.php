@@ -18,6 +18,7 @@
 
 namespace App\Api\Serializer;
 
+use App\Formatter\Formatter;
 use App\Models\Post;
 use App\Traits\HasPaidContent;
 use Discuz\Api\Serializer\AbstractSerializer;
@@ -74,8 +75,10 @@ class BasicPostSerializer extends AbstractSerializer
             'replyUserId'       => $model->reply_user_id,
             'commentPostId'     => $model->comment_post_id,
             'commentUserId'     => $model->comment_user_id,
-            'summaryText'       => str_replace(['<t><p>', '</p></t>'], ['', ''],$model->summary_text),
-            'content'           => str_replace(['<t><p>', '</p></t>'], ['', ''],$model->content),
+//            'summaryText'       => str_replace(['<t><p>', '</p></t>'], ['', ''],$model->summary_text),
+//            'content'           => str_replace(['<t><p>', '</p></t>'], ['', ''],$model->content),
+            'summaryText'       =>  app()->make(Formatter::class)->render($model->summary_text),
+            'content'           =>  app()->make(Formatter::class)->render($model->content),
             'replyCount'        => (int) $model->reply_count,
             'likeCount'         => (int) $model->like_count,
             'createdAt'         => optional($model->created_at)->format('Y-m-d H:i:s'),

@@ -34,8 +34,7 @@ class ResourceAnalysisGoodsController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $categoryId = $this->inPut('categoryId');
-        if ($this->user->isGuest() || !$userRepo->canInsertGoodsToThread($this->user, $categoryId)) {
+        if ($this->user->isGuest() || !$userRepo->canInsertGoodsToThread($this->user)) {
             throw new NotAuthenticatedException;
         }
         return true;
@@ -199,6 +198,11 @@ class ResourceAnalysisGoodsController extends DzqController
             return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_fail_url'));
         }
         $this->{$this->goodsType['value']}();
+
+        //过滤商品
+        if (empty($this->goodsInfo['title']) && empty($this->goodsInfo['price'])) {
+            return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_fail_url'));
+        }
 
         /**
          * check GoodsInfo

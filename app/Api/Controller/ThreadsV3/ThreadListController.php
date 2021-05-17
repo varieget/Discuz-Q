@@ -39,16 +39,18 @@ class ThreadListController extends DzqController
     private $preload = false;
     const PRELOAD_PAGES = 50;//预加载的页数
 
-//    private $categoryIds = [];
+    private $categoryIds = [];
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-//        $filter = $this->inPut('filter') ?: [];
-//        $categoryIds = $filter['categoryids'] ?? [];
-//        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
-//        if (!$this->categoryIds) {
-//            throw new PermissionDeniedException('没有浏览权限');
-//        }
+        $filter = $this->inPut('filter') ?: [];
+        $categoryIds = $filter['categoryids'] ?? [];
+        $complex = $filter['complex'] ?? null;
+
+        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
+        if (!$this->categoryIds && empty($complex)) {
+            throw new PermissionDeniedException('没有浏览权限');
+        }
         return true;
     }
 
@@ -68,7 +70,7 @@ class ThreadListController extends DzqController
         }
         $pageData = $threads['pageData'];
         //缓存中获取最新的threads
-//        $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
+        $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
         $threads['pageData'] = $this->getFullThreadData($pageData);
 //        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
@@ -171,10 +173,7 @@ class ThreadListController extends DzqController
         isset($filter['search']) && $search = $filter['search'];
         isset($filter['complex']) && $complex = $filter['complex'];
 
-        $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
-        if (!$categoryids && empty($complex)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
-        }
+        $categoryids = $this->categoryIds;
         $threads = $this->getBaseThreadsBuilder();
         if (!empty($complex)) {
             switch ($complex) {
@@ -186,7 +185,7 @@ class ThreadListController extends DzqController
                     $threads = $threads->leftJoin('posts as post', 'post.thread_id', '=', 'th.id')
                         ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
                         ->leftJoin('post_user as postu', 'postu.post_id', '=', 'post.id')
-                        ->where(['post.user_id' => $userId]);
+                        ->where(['postu.user_id' => $userId]);
                     break;
                 case Thread::MY_COLLECT_THREAD:
                     $threads = $threads->leftJoin('thread_user as thu', 'thu.thread_id', '=', 'th.id')

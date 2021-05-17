@@ -19,8 +19,9 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\UpdateClientUser;
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
-use App\Common\Utils;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
@@ -30,10 +31,15 @@ use Illuminate\Contracts\Bus\Dispatcher;
 class UpdateUsersController extends DzqController
 {
 
+    public function clearCache($user)
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USERS, $user->id);
+    }
+
     protected $bus;
     protected $settings;
 
-    public function __construct(Dispatcher $bus,SettingsRepository $settings)
+    public function __construct(Dispatcher $bus, SettingsRepository $settings)
     {
         $this->bus = $bus;
         $this->settings = $settings;
@@ -52,8 +58,8 @@ class UpdateUsersController extends DzqController
     public function main()
     {
         $id = $this->user->id;
-        if(empty($id)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'');
+        if (empty($id)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '');
         }
         $username = $this->inPut('username');
         $password = $this->inPut('password');
@@ -66,31 +72,31 @@ class UpdateUsersController extends DzqController
         $registerReason = $this->inPut('registerReason');
 
         $requestData = [];
-        if(!empty($username)){
+        if (!empty($username)) {
             $requestData['username'] = $username;
         }
-        if(!empty($password)){
+        if (!empty($password)) {
             $requestData['password'] = $password;
         }
-        if(!empty($newPassword)){
+        if (!empty($newPassword)) {
             $requestData['newPassword'] = $newPassword;
         }
-        if(!empty($passwordConfirmation)){
+        if (!empty($passwordConfirmation)) {
             $requestData['password_confirmation'] = $passwordConfirmation;
         }
-        if(!empty($payPassword)){
+        if (!empty($payPassword)) {
             $requestData['payPassword'] = $payPassword;
         }
-        if(!empty($payPasswordConfirmation)){
+        if (!empty($payPasswordConfirmation)) {
             $requestData['pay_password_confirmation'] = $payPasswordConfirmation;
         }
-        if(!empty($payPasswordToken)){
+        if (!empty($payPasswordToken)) {
             $requestData['pay_password_token'] = $payPasswordToken;
         }
-        if(!empty($signature)){
+        if (!empty($signature)) {
             $requestData['signature'] = $signature;
         }
-        if(!empty($registerReason)){
+        if (!empty($registerReason)) {
             $requestData['register_reason'] = $registerReason;
         }
 
@@ -115,27 +121,28 @@ class UpdateUsersController extends DzqController
         $returnData['questionCount'] = $data['questionCount'];
         $returnData['avatar'] = $data['avatar'];
         $returnData['background'] = "";
-        if(!empty($data['background'])){
+        if (!empty($data['background'])) {
             $returnData['background'] = $this->getBackground($data['background']);
         }
 
-        return $this->outPut(ResponseCode::SUCCESS,'', $returnData);
+        return $this->outPut(ResponseCode::SUCCESS, '', $returnData);
     }
 
-    protected function getBackground($background){
+    protected function getBackground($background)
+    {
         $url = $this->request->getUri();
         $port = $url->getPort();
         $port = $port == null ? '' : ':' . $port;
         $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
-        $returnData['background'] = $path."/storage/background/".$background;
-        if (strpos($background,"cos://") !== false) {
-            $background = str_replace("cos://","",$background);
+        $returnData['background'] = $path . "/storage/background/" . $background;
+        if (strpos($background, "cos://") !== false) {
+            $background = str_replace("cos://", "", $background);
             $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
-            $right =  substr($remoteServer, -1);
-            if("/"==$right){
-                $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
+            $right = substr($remoteServer, -1);
+            if ("/" == $right) {
+                $remoteServer = substr($remoteServer, 0, strlen($remoteServer) - 1);
             }
-            $returnData['background'] = $remoteServer."/public/background/".$background;
+            $returnData['background'] = $remoteServer . "/public/background/" . $background;
         }
         return $returnData['background'];
     }

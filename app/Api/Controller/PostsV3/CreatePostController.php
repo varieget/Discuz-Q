@@ -22,11 +22,12 @@ use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\CreatePost;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
-use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\Post;
+use App\Models\Thread;
 use App\Models\User;
 use App\Providers\PostServiceProvider;
+use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Auth\Access\Gate;
@@ -69,6 +70,22 @@ class CreatePostController extends DzqController
         $this->bus = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $thread = Thread::query()
+            ->where([
+                'id' => $this->inPut('id'),
+                'is_approved' => Thread::BOOL_YES,
+                'is_draft' => Thread::BOOL_NO,
+            ])
+            ->whereNull('deleted_at')
+            ->first();
+        if (!$thread) {
+            return false;
+        }
+        return $userRepo->canReplyThread($this->user, $thread->category_id);
+    }
+
     public function main()
     {
         $this->attachmentSerializer->setRequest($this->request);
@@ -90,7 +107,7 @@ class CreatePostController extends DzqController
         }
 
         $data['content'] = '<t><p>' .$data['content']. '</p></t>';
-        
+
         if(empty($data['content'])){
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
         }

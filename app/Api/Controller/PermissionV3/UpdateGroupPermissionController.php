@@ -18,6 +18,8 @@
 
 namespace App\Api\Controller\PermissionV3;
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Events\Group\PermissionUpdated;
 use App\Models\Group;
@@ -30,9 +32,17 @@ use Illuminate\Contracts\Events\Dispatcher;
 
 class UpdateGroupPermissionController extends DzqController
 {
+    public function clearCache($user)
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::GROUP_PERMISSIONS);
+    }
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if (!$userRepo->canEditGroup($this->user)) {
+        $actor = $this->request->getAttribute('actor');
+        $this->info("actor用户ID为：" . $actor->id . "，用户名为：" . $actor->username . "分割线-----");
+        $this->info("user用户ID为：" . $this->user->id . "，用户名为：" . $this->user->username . "分割线-----");
+        if (!$this->user->isAdmin()) {
             throw new PermissionDeniedException('没有权限');
         }
         return true;
@@ -48,7 +58,7 @@ class UpdateGroupPermissionController extends DzqController
     public function main()
     {
         $actor = $this->user;
-        $groupId = (int) $this->inPut('groupId');
+        $groupId = (int)$this->inPut('groupId');
         $permissions = $this->inPut('permissions');
 
         /** @var Group $group */
@@ -74,7 +84,7 @@ class UpdateGroupPermissionController extends DzqController
 
         AdminActionLog::createAdminActionLog(
             $actor->id,
-            '更改用户角色【'. $group->name .'】操作权限'
+            '更改用户角色【' . $group->name . '】操作权限'
         );
 
         return $this->outPut(ResponseCode::SUCCESS);

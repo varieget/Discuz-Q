@@ -80,6 +80,8 @@ $route->post('/thread.delete','thread.delete',ApiController\ThreadsV3\DeleteThre
 $route->post('/thread.update','thread.update',ApiController\ThreadsV3\UpdateThreadController::class);
 $route->post('/tom.delete','tom.delete',ApiController\ThreadsV3\DeleteTomController::class);
 $route->post('/tom.update','tom.update',ApiController\ThreadsV3\UpdateTomController::class);
+$route->post('/thread/video', 'threads.video', ApiController\ThreadsV3\CreateThreadVideoController::class);
+
 //首页配置接口
 $route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);
 
@@ -170,3 +172,7 @@ $route->get('/invite.detail', 'invite.detail', ApiController\InviteV3\InviteDeta
 
 // 个人中心-站点信息-我的权限
 $route->get('/group.permission.list', 'group.permission.list', ApiController\GroupV3\GroupPermissionListController::class);
+
+//附件分享
+$route->get('/attachment.share', 'attachment.share', ApiController\AttachmentV3\ShareAttachmentController::class);
+$route->get('/attachment.download', '/attachment.download', ApiController\AttachmentV3\DownloadAttachmentController::class);

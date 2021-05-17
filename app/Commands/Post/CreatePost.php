@@ -155,7 +155,14 @@ class CreatePost
         $cache = app('cache');
         $this->events = $events;
 
-        $thread = $threads->findOrFail($this->threadId);
+        $thread = Thread::query()
+            ->where([
+                'id' => $this->threadId,
+                'is_approved' => Thread::BOOL_YES,
+                'is_draft' => Thread::BOOL_NO,
+            ])
+            ->whereNull('deleted_at')
+            ->first();
 
         if($thread->is_red_packet != Thread::NOT_HAVE_RED_PACKET && (Carbon::now()->timestamp - $thread->created_at->timestamp > 30)){
             $cacheKey = 'thread_red_packet_'.md5($this->actor->id);
@@ -173,9 +180,6 @@ class CreatePost
         }
 
         if (!$isFirst) {
-            // 非首帖，检查是否有权回复
-            $this->assertCan($this->actor, 'reply', $thread);
-
             // 回复中回复，确保回复在同一主题下
             if (! empty($this->commentPostId)) {
                 /** @var Post $comment */
