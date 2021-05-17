@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserFollow;
 use App\Repositories\UserFollowRepository;
 use App\Repositories\UserRepository;
+use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Support\Arr;
@@ -42,7 +43,7 @@ class ListUserFollowController extends DzqController
 
         $actor = $this->user;
         if (!Arr::get($filter, 'userId')) {
-            $this->assertRegistered($actor);
+            $actor->isGuest();
         }
 
         $UserFollows = $this->filterUserFollow($filter,$currentPage, $perPage,$actor,$sort);
