@@ -248,8 +248,12 @@ class ListPostsController extends DzqController
         if (!$user) {
             return null;
         }
-        $data = array_merge($user->toArray(), [
-            'isReal' => !empty($user->realname),
+
+        $userData = $user->toArray();
+        $userData['username'] = $userData['nickname'] ? $userData['nickname'] : $userData['username'];
+
+        $data = array_merge($userData, [
+            'isReal'   => !empty($user->realname),
             'userName' => !empty($user->nickname) ? $user->nickname: $user->username,
         ]);
         if ($user->relationLoaded('groups')) {
