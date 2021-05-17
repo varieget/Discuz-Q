@@ -77,13 +77,15 @@ class ListUserWalletCashController extends DzqController
     {
         $user_wallet_serializer = $this->app->make(UserWalletCashSerializer::class);
         $user_wallet_serializer->setRequest($this->request);
-        $filter = $this->inPut('filter') ?: [];
-        $page = $this->inPut('page') ?: 1;
-        $perPage = $this->inPut('perPage') ?: 5;
+        $filter     = $this->inPut('filter') ?: [];
+        $page       = $this->inPut('page') ?: 1;
+        $perPage    = $this->inPut('perPage') ?: 5;
         $sort = (new Parameters($this->request->getQueryParams()))->getSort($this->sortFields) ?: $this->sort;
 
         $cash_records = $this->getCashRecords($this->user, $filter, $perPage, $page, $sort);
         $data = $this->camelData($cash_records);
+
+        $data = $this->filterData($data);
 
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
     }
@@ -132,6 +134,22 @@ class ListUserWalletCashController extends DzqController
         }
         return $this->pagination($page, $perPage, $query);
 
+    }
+
+    public function filterData($data){
+        foreach ($data['pageData'] as $key => $val) {
+            $pageData = [
+                'tradeNo'           =>  !empty($val['tradeNo']) ? $val['tradeNo'] : 0,
+                'remark'            =>  !empty($val['remark']) ? $val['remark'] : '',
+                'cashApplyAmount'   =>  !empty($val['cashApplyAmount']) ? $val['cashApplyAmount'] : 0,
+                'tradeTime'         =>  !empty($val['tradeTime']) ? $val['tradeTime'] : 0,
+                'cashStatus'        =>  !empty($val['cashStatus']) ? $val['cashStatus'] : 0,
+
+            ];
+            $data['pageData'][$key] =  $pageData;
+        }
+
+        return $data;
     }
 
 
