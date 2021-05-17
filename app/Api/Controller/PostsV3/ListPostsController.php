@@ -9,8 +9,10 @@ use App\Formatter\Formatter;
 use App\Models\Attachment;
 use App\Models\Group;
 use App\Models\Post;
+use App\Models\Thread;
 use App\Models\User;
 use App\Providers\PostServiceProvider;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Builder;
@@ -37,6 +39,29 @@ class ListPostsController extends DzqController
         $this->postSerializer = $postSerializer;
         $this->attachmentSerializer = $attachmentSerializer;
         $this->gate = $gate;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $filters = $this->inPut('filter') ?: [];
+        $threadId = Arr::get($filters, 'thread');
+        // 只有管理员能查看所有回复，暂时兼容管理后台
+        if (!$threadId && !$this->user->isAdmin()) {
+            return false;
+        }
+        $thread = Thread::query()
+            ->where([
+                'id' => $threadId,
+                'is_approved' => Thread::BOOL_YES,
+                'is_draft' => Thread::BOOL_NO,
+            ])
+            ->whereNull('deleted_at')
+            ->first();
+        if (!$thread) {
+            return false;
+        }
+
+        return $userRepo->canViewThreadDetail($this->user, $thread);
     }
 
     public function main()

@@ -20,9 +20,12 @@ namespace App\Api\Controller\PostsV3;
 use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\EditPost;
 use App\Common\ResponseCode;
+use App\Models\Post;
 use App\Models\ThreadUser;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Support\Arr;
 
 class UpdatePostController extends DzqController
 {
@@ -36,6 +39,27 @@ class UpdatePostController extends DzqController
     ) {
         $this->postSerializer = $postSerializer;
         $this->bus = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $post = Post::query()->where(['id' => $this->inPut('pid')])->first();
+        if (!$post) {
+            return false;
+        }
+
+        $data = $this->inPut('data',[]);
+        $data = Arr::get($data, 'attributes', []);
+
+        // TODO 暂时改为只有管理员可审核和编辑
+        if (isset($data['content']) || (isset($data['isApproved']) && $data['isApproved'] < 3)) {
+            return $this->user->isAdmin();
+        }
+        if (isset($attributes['isDeleted'])) {
+            return $userRepo->canHidePost($this->user, $post);
+        }
+
+        return true;
     }
 
     public function main()
