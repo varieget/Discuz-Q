@@ -59,7 +59,6 @@ trait ThreadTrait
             'categoryName' => $this->getCategoryNameField($thread['category_id']),
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
-            'postCount' => $thread['post_count'] - 1,
             'isApproved' => $thread['is_approved'],
             'isStick' => $thread['is_sticky'],
             'isFavorite' => $this->getFavoriteField($thread['id'], $loginUser),
@@ -342,7 +341,7 @@ trait ThreadTrait
             'users' => [],
             'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
             'shareCount' => $thread['share_count'],
-            'postCount' => $thread['post_count']
+            'postCount' => $thread['post_count'] - 1
         ];
         $threadId = $thread['id'];
         $postId = $post['id'];

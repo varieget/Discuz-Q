@@ -121,7 +121,8 @@ class DzqCache
         return $ret;
     }
 
-    public static function extractCacheExist(){
+    public static function extractCacheExist()
+    {
 
     }
 
@@ -139,8 +140,22 @@ class DzqCache
         }
         return true;
     }
-    public static function addCacheByPrimaryId($cacheKey,$primaryKey = null){
 
-
+    /**
+     * @desc 添加缓存
+     * @param $cacheKey
+     * @param $primaryKey
+     * @param $value
+     * @return
+     */
+    public static function putCacheByPrimaryId($cacheKey,$value, $primaryKey = null)
+    {
+        $data = app('cache')->get($cacheKey);
+        if ($data) {
+            $data[$primaryKey] = $value;
+        } else {
+            $data = [$primaryKey => $value];
+        }
+        return app('cache')->put($cacheKey, $data);
     }
 }
