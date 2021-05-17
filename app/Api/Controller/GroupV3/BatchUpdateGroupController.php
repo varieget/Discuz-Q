@@ -51,11 +51,6 @@ class BatchUpdateGroupController extends DzqController
         $this->bus = $bus;
     }
 
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
-
     public function main()
     {
         $data = $this->inPut('data');
