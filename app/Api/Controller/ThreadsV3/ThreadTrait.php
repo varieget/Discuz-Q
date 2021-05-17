@@ -97,10 +97,10 @@ trait ThreadTrait
 
     private function canViewTom($user, $thread, $payType, $paid)
     {
-        //todo
         if ($payType != Thread::PAY_FREE) {//付费贴
-            $permissions = Permission::getUserPermissions($user);
-            if (in_array('freeViewPosts', $permissions) || $thread['user_id'] == $user->id || $user->isAdmin() || $paid == true) {
+            $repo = new UserRepository();
+            $canViewThreadDetail = $repo->canViewThreadDetail($user, $thread);
+            if ($canViewThreadDetail || $paid) {
                 return true;
             } else {
                 return false;
@@ -259,17 +259,17 @@ trait ThreadTrait
                 Thread::TYPE_OF_QUESTION,
                 Thread::TYPE_OF_GOODS
             ];
-            if(in_array($thread['type'], $old_thread_type)){
+            if (in_array($thread['type'], $old_thread_type)) {
                 $xml = $post['content'];
                 // 针对 type为1的老数据，存在图文混排的混排的情况，需要特殊处理
                 $tom_image_key = $body = '';
-                foreach ($content['indexes'] as $key => $val){
-                    if($val['tomId']== TomConfig::TOM_IMAGE){
+                foreach ($content['indexes'] as $key => $val) {
+                    if ($val['tomId'] == TomConfig::TOM_IMAGE) {
                         $body = $val['body'];
                         $tom_image_key = $key;
                     }
                 }
-                if( $thread['type'] == Thread::TYPE_OF_LONG && !empty($body)){
+                if ($thread['type'] == Thread::TYPE_OF_LONG && !empty($body)) {
                     //url
                     $attachments_body = $body;
                     $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
@@ -289,11 +289,10 @@ trait ThreadTrait
                         return $attributes;
                     });
                     //针对图文混排的情况，这里要去掉外部图片展示
-                    if(!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
+                    if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
                 }
                 $content['text'] = app()->make(Formatter::class)->render($xml);
             }
-
 
 
         }
