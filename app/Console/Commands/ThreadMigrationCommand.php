@@ -27,7 +27,7 @@ use App\Models\Thread;
 use App\Models\ThreadRedPacket;
 use App\Models\ThreadReward;
 use App\Models\ThreadTag;
-use App\Models\ThreadText;
+use App\Models\ThreadTom;
 use App\Models\ThreadVideo;
 use App\Repositories\ThreadVideoRepository;
 use Carbon\Carbon;
@@ -143,10 +143,11 @@ class ThreadMigrationCommand extends AbstractCommand
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_TEXT)
             ->where('p.is_first', 1)
-            ->get(['t.*','p.content']);
+            ->get(['t.*','p.content','p.id as post_id']);
         foreach ($list as $val){
             //如果数据已经存在则跳过
             $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::TEXT])->first();
+            $thread_red_packets = ThreadRedPacket::where(['thread_id' => $val->id, 'post_id' => $val->post_id])->first();
             if(!empty($isset_thread))       continue;
             $this->db->beginTransaction();
             $status = self::getThreadStatus($val);
@@ -157,7 +158,33 @@ class ThreadMigrationCommand extends AbstractCommand
                 $this->error('text insert: thread_tag text error. thread data is : '.json_encode($val->toArray()));
                 break;
             }
-            //文字帖不插 thread_tom 数据
+            //文字贴也可以发红包
+            if($thread_red_packets && !empty($thread_red_packets->toArray())){
+                $res = self::insertThreadTag($val, ThreadTag::RED_PACKET);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('text insert: thread_tag red error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
+                //还需要插入对应的  thread_tom
+                $order = Order::where(['thread_id' => $val->id, 'type' => Order::ORDER_TYPE_TEXT])->first();
+                $value = [
+                    'condition' =>  $thread_red_packets->condition,
+                    'likenum'   =>  $thread_red_packets->likenum,
+                    'number'    =>  $thread_red_packets->number,
+                    'rule'  =>  $thread_red_packets->rule,
+                    'orderSn'   =>  $order->order_sn,
+                    'price' =>  $thread_red_packets->money,
+                    'content'   =>  '红包帖'
+                ];
+                $value = json_encode($value);
+                $res = self::insertThreadTom($val, ThreadTag::RED_PACKET, '$0', $value);
+                if(!$res){
+                    $this->db->rollBack();
+                    $this->error('long attachment insert: thread_tom red_packet error. thread data is : '.json_encode($val->toArray()));
+                    break;
+                }
+            }
             $this->db->commit();
         }
         $this->info('迁移文字帖end');
@@ -247,7 +274,7 @@ class ThreadMigrationCommand extends AbstractCommand
                 }
             }
             if($thread_red_packets && !empty($thread_red_packets->toArray())){
-                $order = Order::where(['thread_id' => $val->id])->first();
+                $order = Order::where(['thread_id' => $val->id, 'type' => Order::ORDER_TYPE_LONG])->first();
                 $key = '$'.$count;
                 $value = [
                     'condition' =>  $thread_red_packets->condition,
