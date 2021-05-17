@@ -118,19 +118,6 @@ class ProfileController extends DzqController
             }]);
         }
         $data = $user_serialize->getDefaultAttributes($user);
-
-        $data['mpOpenid'] = '';
-        $data['devOpenid'] = '';
-        $data['minOpenid'] = '';
-        $data['nickname'] = '';
-        $data['unionid'] = '';
-        if(in_array('wechat', $this->optionalInclude)){     //要拿微信数据
-            $data['mpOpenid'] = !empty($user->wechat) ? $user->wechat->mp_openid : '';
-            $data['devOpenid'] = !empty($user->wechat) ? $user->wechat->dev_openid : '';
-            $data['minOpenid'] = !empty($user->wechat) ? $user->wechat->min_openid : '';
-            $data['nickname'] = !empty($user->wechat) ? $user->wechat->nickname : '';
-            $data['unionid'] = !empty($user->wechat) ? $user->wechat->unionid : '';
-        }
         $grounUser = [$user_id];
         $groups = GroupUser::instance()->getGroupInfo($grounUser);
         $groups = array_column($groups, null, 'user_id');
