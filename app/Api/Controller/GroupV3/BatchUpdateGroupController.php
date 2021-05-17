@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\GroupV3;
 
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use App\Common\ResponseCode;
 use Discuz\Auth\AssertPermissionTrait;
@@ -37,6 +38,11 @@ class BatchUpdateGroupController extends DzqController
     {
         $this->validation = $validation;
         $this->bus = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
     }
 
     public function main()
