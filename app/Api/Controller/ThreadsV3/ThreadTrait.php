@@ -240,14 +240,14 @@ trait ThreadTrait
                     $text = strip_tags($post['content']);
                     $freeLength = mb_strlen($text) * $freeWords;
                     $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+                    $text = "<t><p>".$text."</p></t>";
                 }
                 $content['text'] = $text;
             }
         }
         if (!empty($content['text'])) {
-            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
-//            $content['text'] = app()->make(Formatter::class)->render($content['text']);
-
+//            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+            $content['text'] = app()->make(Formatter::class)->render($content['text']);
             //针对老数据，需要做特殊处理
             $old_thread_type = [
                 Thread::TYPE_OF_LONG,
