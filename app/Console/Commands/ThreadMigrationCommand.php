@@ -101,7 +101,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function handle()
     {
-
+        app('log')->info('开始数据迁移start');
         $this->info('开始帖子内容数据迁移start');
         foreach ($this->old_type as $type){
             try {
@@ -134,6 +134,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
         }
         $this->info('帖子内容数据迁移end');
+        app('log')->info('数据迁移end');
     }
 
 
