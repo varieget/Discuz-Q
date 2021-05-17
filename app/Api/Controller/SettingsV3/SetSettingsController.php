@@ -18,6 +18,8 @@
 
 namespace App\Api\Controller\SettingsV3;
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
@@ -37,6 +39,11 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class SetSettingsController extends DzqController
 {
+    public function clearCache($user)
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
+    }
+
     use QcloudTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -62,7 +69,7 @@ class SetSettingsController extends DzqController
      * @param Events $events
      * @param SetSettingValidator $validator
      */
-    public function __construct(Events $events,SettingsRepository $settings,  SetSettingValidator $validator)
+    public function __construct(Events $events, SettingsRepository $settings, SetSettingValidator $validator)
     {
         $this->events = $events;
         $this->settings = $settings;
@@ -112,13 +119,13 @@ class SetSettingsController extends DzqController
             if ($sum === 10) {
                 $this->setSiteScale($siteAuthorScale, $siteMasterScale, $settings);
             } else {
-                return $this->outPut(ResponseCode::INVALID_PARAMETER,'scale_sum_not_10');
+                return $this->outPut(ResponseCode::INVALID_PARAMETER, 'scale_sum_not_10');
             }
         }
 
         // 扩展名统一改为小写
         $settings->transform(function ($item, $key) {
-            $extArr = ['default_support_img_ext','default_support_file_ext','qcloud_qcloud_vod_ext'];
+            $extArr = ['default_support_img_ext', 'default_support_file_ext', 'qcloud_qcloud_vod_ext'];
             if (in_array($key, $extArr)) {
                 $item['value'] = strtolower($item['value']);
             }
@@ -143,28 +150,28 @@ class SetSettingsController extends DzqController
             $this->settings->set($key, $value, $tag);
         });
         $action_desc = "";
-        if(!empty($settings['cash_cash_interval_time']['key'])){
-            if($settings['cash_cash_interval_time']['key'] == 'cash_interval_time'){
+        if (!empty($settings['cash_cash_interval_time']['key'])) {
+            if ($settings['cash_cash_interval_time']['key'] == 'cash_interval_time') {
                 $action_desc = '更改提现设置';
             }
         }
 
-        if(!empty($settings['wxpay_app_id']['key'])){
-            if($settings['wxpay_app_id']['key'] == 'app_id'){
+        if (!empty($settings['wxpay_app_id']['key'])) {
+            if ($settings['wxpay_app_id']['key'] == 'app_id') {
                 $action_desc = '配置了微信支付';
             }
         }
-        if(!empty($settings['wxpay_wxpay_close']['key'])){
-            if($settings['wxpay_wxpay_close']['key'] == 'wxpay_close'){
-                if($settings['wxpay_wxpay_close']['value'] == 0){
+        if (!empty($settings['wxpay_wxpay_close']['key'])) {
+            if ($settings['wxpay_wxpay_close']['key'] == 'wxpay_close') {
+                if ($settings['wxpay_wxpay_close']['value'] == 0) {
                     $action_desc = '关闭了微信支付';
-                }else{
+                } else {
                     $action_desc = '开启了微信支付';
                 }
             }
         }
 
-        if(!empty($action_desc)) {
+        if (!empty($action_desc)) {
             AdminActionLog::createAdminActionLog(
                 $user_id,
                 $action_desc
@@ -172,7 +179,7 @@ class SetSettingsController extends DzqController
         }
 
         $this->events->dispatch(new Saved($settings));
-        return $this->outPut(ResponseCode::SUCCESS,'' ,$settings);
+        return $this->outPut(ResponseCode::SUCCESS, '', $settings);
     }
 
     /**
