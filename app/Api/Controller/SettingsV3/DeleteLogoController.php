@@ -18,6 +18,8 @@
 
 namespace App\Api\Controller\SettingsV3;
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Models\Setting;
 use App\Common\ResponseCode;
 use Discuz\Auth\AssertPermissionTrait;
@@ -29,6 +31,11 @@ use Tobscure\JsonApi\Document;
 
 class DeleteLogoController extends DzqController
 {
+    public function clearCache($user)
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
+    }
+
     use AssertPermissionTrait;
 
     /**

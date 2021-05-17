@@ -18,6 +18,8 @@
 
 namespace App\Api\Controller\SettingsV3;
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Setting;
 use Carbon\Carbon;
@@ -37,6 +39,11 @@ use Tobscure\JsonApi\Document;
 
 class UploadLogoController extends DzqController
 {
+    public function clearCache($user)
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
+    }
+
     use AssertPermissionTrait;
 
     /**
