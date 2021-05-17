@@ -245,8 +245,8 @@ trait ThreadTrait
             }
         }
         if (!empty($content['text'])) {
-            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
-//            $content['text'] = app()->make(Formatter::class)->render($content['text']);
+//            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+            $content['text'] = app()->make(Formatter::class)->render($content['text']);
 
             //针对老数据，需要做特殊处理
             $old_thread_type = [
@@ -261,10 +261,12 @@ trait ThreadTrait
                 $xml = $post['content'];
                 // 针对 type为1的老数据，存在图文混排的混排的情况，需要特殊处理
                 $tom_image_key = $body = '';
-                foreach ($content['indexes'] as $key => $val) {
-                    if ($val['tomId'] == TomConfig::TOM_IMAGE) {
-                        $body = $val['body'];
-                        $tom_image_key = $key;
+                if(!empty($content['indexes'])){
+                    foreach ($content['indexes'] as $key => $val) {
+                        if ($val['tomId'] == TomConfig::TOM_IMAGE) {
+                            $body = $val['body'];
+                            $tom_image_key = $key;
+                        }
                     }
                 }
                 if ($thread['type'] == Thread::TYPE_OF_LONG && !empty($body)) {
@@ -279,13 +281,6 @@ trait ThreadTrait
                         return $attributes;
                     });
 
-                    // 替换插入内容中的附件 URL
-                    $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'URL', function ($attributes) use ($attachments) {
-                        if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
-                            $attributes['url'] = $attachments[$attributes['title']];
-                        }
-                        return $attributes;
-                    });
                     //针对图文混排的情况，这里要去掉外部图片展示
                     if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
                 }
