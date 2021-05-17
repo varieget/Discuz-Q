@@ -19,13 +19,13 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use App\Models\User;
-use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class ListDenyUserController extends DzqController
 {
-    use AssertPermissionTrait;
 
     private $databaseField = [
         'id',
@@ -33,11 +33,19 @@ class ListDenyUserController extends DzqController
         'created_at'
     ];
 
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
     public function main()
     {
         $actor = $this->user;
-
-        $this->assertRegistered($actor);
 
         $sort = $this->inPut('sort') ? $this->inPut('sort') : 'id';
         $currentPage = $this->inPut('page');

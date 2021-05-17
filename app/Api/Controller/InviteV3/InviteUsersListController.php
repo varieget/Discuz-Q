@@ -23,12 +23,20 @@ use App\Models\Invite;
 use App\Models\GroupUser;
 use App\Models\User;
 use App\Models\Order;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class InviteUsersListController extends DzqController
 {
-    use AssertPermissionTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$userRepo->canCreateInviteUserScale($this->user)) {
+            throw new PermissionDeniedException('您没有权限邀请他人');
+        }
+        return true;
+    }
 
     public function main()
     {
