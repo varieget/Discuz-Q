@@ -21,6 +21,8 @@ namespace App\Api\Controller\TradeV3;
 use App\Commands\Trade\PayOrder;
 use App\Common\ResponseCode;
 use App\Models\Order;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
@@ -31,6 +33,14 @@ class PayOrderController extends DzqController
      * @var Dispatcher
      */
     protected $bus;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$userRepo->canPayOrder($this->user)) {
+            throw new PermissionDeniedException('您没有权限支付订单');
+        }
+        return true;
+    }
 
     /**
      * @param Dispatcher $bus
