@@ -19,6 +19,7 @@
 namespace App\Settings;
 
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Models\Setting;
 use Discuz\Cache\CacheManager;
 use Discuz\Contracts\Setting\SettingsRepository as ContractsSettingRepository;
@@ -86,6 +87,9 @@ class SettingsRepository implements ContractsSettingRepository
 
     public function set($key, $value = '', $tag = 'default')
     {
+
+        //设置之前清理缓存
+        DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
         if (is_array($value)) {
             return false;
         }
@@ -107,6 +111,8 @@ class SettingsRepository implements ContractsSettingRepository
 
     public function delete($key, $tag = 'default')
     {
+        //设置之前清理缓存
+        DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
         Setting::where([['key', $key], ['tag', $tag]])->delete();
         $settings = $this->all()->toArray();
         return Arr::pull($settings, $tag.'.'.$key);
