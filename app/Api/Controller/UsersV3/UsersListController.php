@@ -33,7 +33,7 @@ class UsersListController extends DzqController
         $filter = (array)$this->inPut('filter');
 
         $query = User::query();
-        $query->select('users.id AS userId', 'users.nickname', 'users.avatar', 'users.thread_count', 'users.question_count', 'users.liked_count', 'users.follow_count', 'group_id');
+        $query->select('users.id AS userId', 'users.nickname', 'users.username', 'users.avatar', 'users.thread_count', 'users.question_count', 'users.liked_count', 'users.follow_count', 'group_id');
         $query->join('group_user', 'users.id', '=', 'group_user.user_id');
         $query->where('users.status', User::STATUS_NORMAL);
         if (Arr::has($filter, 'nickname') && Arr::get($filter, 'nickname') !== '') {
@@ -59,6 +59,7 @@ class UsersListController extends DzqController
 
         // 将来需考虑单用户-多权限组情况
         foreach ($userDatas as $key => $value) {
+            $userDatas[$key]['nickname']       = $value['nickname'] ? $value['nickname'] : $value['username'];
             $userDatas[$key]['isFollow']       = false;
             $userDatas[$key]['isMutualFollow'] = false;
             if (isset($userFollowList[$value['userId']])) {
@@ -67,6 +68,7 @@ class UsersListController extends DzqController
             }
             $userDatas[$key]['groupName'] = $userGroupDatas[$value['group_id']]['name'] ?? '';
             unset($userDatas[$key]['group_id']);
+            unset($userDatas[$key]['username']);
         }
         $userDatas = $this->camelData($userDatas);
         $users['pageData'] = $userDatas ?? [];
