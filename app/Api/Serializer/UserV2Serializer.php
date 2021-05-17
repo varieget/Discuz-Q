@@ -87,9 +87,9 @@ class UserV2Serializer extends AbstractSerializer
             'usernameBout'      => (int) $model->username_bout,
             'status'            => $model->status,
             'loginAt'           => optional($model->login_at)->format('Y-m-d H:i:s'),
-            'joinedAt'          => optional($model->joined_at)->format('Y-m-d H:i:s'),
+            //'joinedAt'          => optional($model->joined_at)->format('Y-m-d H:i:s'),
             'expiredAt'         => optional($model->expired_at)->format('Y-m-d H:i:s'),
-            'createdAt'         => optional($model->created_at)->format('Y-m-d H:i:s'),
+            //'createdAt'         => optional($model->created_at)->format('Y-m-d H:i:s'),
             'updatedAt'         => optional($model->updated_at)->format('Y-m-d H:i:s'),
             'canEdit'           => $canEdit,
             'canDelete'         => $gate->allows('delete', $model),
@@ -98,7 +98,8 @@ class UserV2Serializer extends AbstractSerializer
             'banReason'         => '',                                      // 禁用原因
             'denyStatus'        => (bool) $model->denyStatus,
             'canBeAsked'        => $model->id !== $this->actor->id && $model->can('canBeAsked'), // 是否允许被提问
-            'hasPassword'       => !empty($model->password) ? true : false
+            'hasPassword'       => !empty($model->password) ? true : false,
+            'nickname'         => $model->nickname,
         ];
         $whitelist = [
             '/api/follow/',
@@ -125,8 +126,8 @@ class UserV2Serializer extends AbstractSerializer
                 'originalMobile'    => $model->getRawOriginal('mobile'),
                 'registerIp'        => $model->register_ip,
                 'registerPort'      => $model->register_port,
-                'lastLoginIp'       => $model->last_login_ip,
-                'lastLoginPort'     => $model->last_login_port,
+                //'lastLoginIp'       => $model->last_login_ip,
+                //'lastLoginPort'     => $model->last_login_port,
                 'identity'          => $model->identity,
                 'realname'          => $model->realname,
                 'mobile'            => $model->mobile,
