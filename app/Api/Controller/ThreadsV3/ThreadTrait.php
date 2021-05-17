@@ -68,6 +68,7 @@ trait ThreadTrait
             'payType' => $payType,
             'paid' => $paid,
             'isLike' => $this->isLike($loginUser, $post),
+            'isReward' => $this->isReward($loginUser, $thread),
             'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
@@ -368,6 +369,27 @@ trait ThreadTrait
         [$title, $content] = explode($sep, $censor->checkText($contentForCheck));
         $isApproved = $censor->isMod;
         return [$title, $content];
+    }
+
+    private function isReward($loginUser, $thread)
+    {
+        if (empty($loginUser) || empty($thread)) {
+            return false;
+        }
+        $userId = $loginUser->id;
+        $threadId = $thread['id'];
+        $rewardOrder = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $userId);
+        $rewardOrder = $rewardOrder[$userId] ?? [];
+        if ($rewardOrder) {
+            if (array_key_exists($threadId, $rewardOrder)) {
+                if (empty($rewardOrder[$threadId])) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+        return Order::query()->where(['user_id' => $userId, 'type' => Order::ORDER_TYPE_REWARD, 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])->exists();
     }
 
     private function isLike($loginUser, $post)

@@ -124,7 +124,7 @@ trait ThreadListTrait
         return $array;
     }
 
-    private function initDzqThreadsData($cacheKey,$threads)
+    private function initDzqThreadsData($cacheKey, $threads)
     {
         $cache = app('cache');
         $filter = $this->inPut('filter');
@@ -299,17 +299,39 @@ trait ThreadListTrait
             ->where([
                 'user_id' => $userId,
                 'status' => Order::ORDER_STATUS_PAID
-            ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
-            ->whereIn('thread_id', $threadIds)->get()->pluck(null, 'thread_id')->toArray();
-        $orders = $this->appendDefaultEmpty($threadIds, $orders, null);
-        $userOrders = app('cache')->get(CacheKey::LIST_THREADS_V3_USER_ORDERS);
-        if ($userOrders) {
-            $userOrders[$userId] = $orders;
-        } else {
-            $userOrders = [$userId => $orders];
+            ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT, Order::ORDER_TYPE_REWARD])
+            ->whereIn('thread_id', $threadIds)->get()->toArray();
+
+        $orderPay = [];
+        $orderReward = [];
+
+        foreach ($orders as $order) {
+            if ($order['type'] == Order::ORDER_TYPE_THREAD || $order['type'] == Order::ORDER_TYPE_ATTACHMENT) {
+                $orderPay[$order['thread_id']] = $order;
+            } else if ($order['type'] == Order::ORDER_TYPE_REWARD) {
+                $orderReward[$order['thread_id']] = $order;
+            }
         }
-        app('cache')->put(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userOrders);
-        return $userOrders;
+
+        $orderPay = $this->appendDefaultEmpty($threadIds, $orderPay, null);
+        $orderReward = $this->appendDefaultEmpty($threadIds, $orderReward, null);
+
+        $userPayOrders = app('cache')->get(CacheKey::LIST_THREADS_V3_USER_ORDERS);
+        if ($userPayOrders) {
+            $userPayOrders[$userId] = $orderPay;
+        } else {
+            $userPayOrders = [$userId => $orderPay];
+        }
+        app('cache')->put(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userPayOrders);
+
+        $userRewardOrders = app('cache')->get(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS);
+        if ($userRewardOrders) {
+            $userRewardOrders[$userId] = $orderReward;
+        } else {
+            $userRewardOrders = [$userId => $orderReward];
+        }
+        app('cache')->put(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $userRewardOrders);
+        return [$userPayOrders, $userRewardOrders];
     }
 
     private function cachePostUsers($threadIds, $postIds, $posts)
