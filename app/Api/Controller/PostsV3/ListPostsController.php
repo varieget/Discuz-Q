@@ -92,7 +92,7 @@ class ListPostsController extends DzqController
         $query = Post::query()
             ->with([
                 'thread:id,type',
-                'user:id,nickname,avatar,realname',
+                'user:id,username,nickname,avatar,realname',
                 'user.groups:id,name,is_display',
                 'images',
                 'likeState',
@@ -250,6 +250,7 @@ class ListPostsController extends DzqController
         }
         $data = array_merge($user->toArray(), [
             'isReal' => !empty($user->realname),
+            'userName' => !empty($user->nickname) ? $user->nickname: $user->username,
         ]);
         if ($user->relationLoaded('groups')) {
             $data['groups'] = $user->groups->map(function (Group $i) {
