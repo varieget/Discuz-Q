@@ -21,15 +21,34 @@ namespace App\Api\Controller\AttachmentV3;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Commands\Attachment\AttachmentUploader;
+use App\Repositories\UserRepository;
 use App\Validators\AttachmentValidator;
-use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Http\UploadedFile;
 
 
 class CreateAttachmentController extends DzqController
 {
-    use AssertPermissionTrait;
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $type = $this->inPut('type') ?: 0;
+
+        $typeMethodMap = [
+            Attachment::TYPE_OF_FILE => [$userRepo, 'canInsertAttachmentToThread'],
+            Attachment::TYPE_OF_IMAGE => [$userRepo, 'canInsertImageToThread'],
+            Attachment::TYPE_OF_AUDIO => [$userRepo, 'canInsertAudioToThread'],
+            Attachment::TYPE_OF_VIDEO => [$userRepo, 'canInsertVideoToThread'],
+            Attachment::TYPE_OF_ANSWER => [$userRepo, 'canInsertRewardToThread'],
+            Attachment::TYPE_OF_DIALOG_MESSAGE => [$userRepo, 'canCreateDialog'],
+        ];
+        // 不在这里面，则通过，后续会有 type 表单验证
+        if (!isset($typeMethodMap[$type])) {
+            return true;
+        }
+
+        return call_user_func_array($typeMethodMap[$type], [$this->user]);
+    }
 
     public function main()
     {
@@ -40,12 +59,6 @@ class CreateAttachmentController extends DzqController
         $order = $this->inPut('order') ? $this->inPut('order') : 0;
         $ipAddress = ip($this->request->getServerParams());
         ini_set('memory_limit',-1);
-
-        $this->assertCan($actor, 'attachment.create.' . (int) in_array($type, [
-                Attachment::TYPE_OF_IMAGE,
-                Attachment::TYPE_OF_DIALOG_MESSAGE,
-                Attachment::TYPE_OF_ANSWER,
-            ]));
 
         $ext = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
 

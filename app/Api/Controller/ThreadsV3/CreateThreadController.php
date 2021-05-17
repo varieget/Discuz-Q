@@ -46,7 +46,7 @@ class CreateThreadController extends DzqController
         $attachmentPrice = floatval($this->inPut('attachmentPrice'));
         if (
             ($price > 0 || $attachmentPrice > 0)
-            && !$userRepo->canInsertPayToThread($user, $categoryId)
+            && !$userRepo->canInsertPayToThread($user)
         ) {
             throw new PermissionDeniedException('没有插入【付费】权限');
         }
@@ -54,7 +54,7 @@ class CreateThreadController extends DzqController
 
         if (
             !empty($this->inPut('position'))
-            && !$userRepo->canInsertPositionToThread($user, $categoryId)
+            && !$userRepo->canInsertPositionToThread($user)
         ) {
             throw new PermissionDeniedException('没有插入【位置信息】权限');
         }
