@@ -248,8 +248,8 @@ trait ThreadTrait
             }
         }
         if (!empty($content['text'])) {
-            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
-//            $content['text'] = app()->make(Formatter::class)->render($content['text']);
+//            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+            $content['text'] = app()->make(Formatter::class)->render($content['text']);
 
             //针对老数据，需要做特殊处理
             $old_thread_type = [
@@ -284,13 +284,6 @@ trait ThreadTrait
                         return $attributes;
                     });
 
-                    // 替换插入内容中的附件 URL
-                    $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'URL', function ($attributes) use ($attachments) {
-                        if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
-                            $attributes['url'] = $attachments[$attributes['title']];
-                        }
-                        return $attributes;
-                    });
                     //针对图文混排的情况，这里要去掉外部图片展示
                     if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
                 }
