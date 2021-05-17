@@ -20,7 +20,6 @@ namespace App\Api\Controller\AttachmentV3;
 
 use App\Common\ResponseCode;
 use App\Models\Attachment;
-use App\Models\SessionToken;
 use App\Models\Thread;
 use App\Repositories\AttachmentRepository;
 use App\Repositories\UserRepository;
@@ -28,7 +27,6 @@ use App\Settings\SettingsRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
 use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Guest;
 use Exception;
 use GuzzleHttp\Client as HttpClient;
 use Illuminate\Contracts\Filesystem\Factory as Filesystem;
@@ -44,18 +42,7 @@ class ResourceAttachmentController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $token = SessionToken::get($this->inPut('t'));
-
-        if (!$token) {
-            $this->outPut(ResponseCode::UNAUTHORIZED,'');
-        }
-
-        $this->user = $token ? $token->user : new Guest();
-
-        $this->attachment = $this->attachments->findOrFail($this->inPut('id'), $this->user);
-        $thread = $this->attachment->post->thread;
-
-        return $userRepo->canViewThreadDetail($this->user, $thread);
+        return true;
     }
 
     public function __construct(AttachmentRepository $attachments, SettingsRepository $settings, Filesystem $filesystem)
