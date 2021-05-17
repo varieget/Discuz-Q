@@ -102,24 +102,22 @@ class UserRepository extends AbstractRepository
      * 发帖插入图片权限
      *
      * @param User $user
-     * @param null $categoryId
      * @return bool
      */
-    public function canInsertImageToThread(User $user, $categoryId = null)
+    public function canInsertImageToThread(User $user)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_IMAGE, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_IMAGE);
     }
 
     /**
      * 发帖插入视频权限
      *
      * @param User $user
-     * @param null $categoryId
      * @return bool
      */
-    public function canInsertVideoToThread(User $user, $categoryId = null)
+    public function canInsertVideoToThread(User $user)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_VIDEO, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_VIDEO);
     }
 
     /**
@@ -129,9 +127,9 @@ class UserRepository extends AbstractRepository
      * @param null $categoryId
      * @return bool
      */
-    public function canInsertAudioToThread(User $user, $categoryId = null)
+    public function canInsertAudioToThread(User $user)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_AUDIO, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_AUDIO);
     }
 
     /**
@@ -141,9 +139,9 @@ class UserRepository extends AbstractRepository
      * @param null $categoryId
      * @return bool
      */
-    public function canInsertAttachmentToThread(User $user, $categoryId = null)
+    public function canInsertAttachmentToThread(User $user)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_ATTACHMENT, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_ATTACHMENT);
     }
 
     public function canDeleteAttachment(User $user, $attachment)
@@ -159,6 +157,7 @@ class UserRepository extends AbstractRepository
             Attachment::TYPE_OF_AUDIO,
             Attachment::TYPE_OF_VIDEO,
         ];
+        return true;
 
         // if (in_array($attachment->type, $postAttachmentTypes) && $this->canEditPost($user, $attachment->post)) {
         //     return true;
@@ -172,9 +171,9 @@ class UserRepository extends AbstractRepository
      * @param null $categoryId
      * @return bool
      */
-    public function canInsertGoodsToThread(User $user, $categoryId = null)
+    public function canInsertGoodsToThread(User $user)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_GOODS, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_GOODS);
     }
 
     /**
@@ -184,9 +183,9 @@ class UserRepository extends AbstractRepository
      * @param null $categoryId
      * @return bool
      */
-    public function canInsertPayToThread(User $user, $categoryId = null)
+    public function canInsertPayToThread(User $user)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_PAY, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_PAY);
     }
 
     /**
@@ -196,9 +195,9 @@ class UserRepository extends AbstractRepository
      * @param null $categoryId
      * @return bool
      */
-    public function canInsertRewardToThread(User $user, $categoryId = null)
+    public function canInsertRewardToThread(User $user)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_REWARD, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_REWARD);
     }
 
     /**
@@ -208,9 +207,9 @@ class UserRepository extends AbstractRepository
      * @param null $categoryId
      * @return bool
      */
-    public function canInsertRedPacketToThread(User $user, $categoryId = null)
+    public function canInsertRedPacketToThread(User $user)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_RED_PACKET, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_RED_PACKET);
     }
 
     /**
@@ -220,9 +219,9 @@ class UserRepository extends AbstractRepository
      * @param null $categoryId
      * @return bool
      */
-    public function canInsertPositionToThread(User $user, $categoryId = null)
+    public function canInsertPositionToThread(User $user)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_POSITION, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_POSITION);
     }
 
     /**

@@ -59,7 +59,7 @@ class CreateThreadVideoController extends DzqController
             throw new PermissionDeniedException('没有发帖权限');
         }
         $type = $this->inPut('type');
-        $type = (int)$type ? (int)$type: ThreadVideo::TYPE_OF_VIDEO;
+        $type = ((int)$type) ?: ThreadVideo::TYPE_OF_VIDEO;
         if($type == 1){
             if (!$userRepo->canInsertAudioToThread($user)) {
                 throw new PermissionDeniedException('没有发帖插入音频权限');
