@@ -27,7 +27,6 @@ use App\Settings\SettingsRepository;
 use App\Trade\Config\GatewayConfig;
 use App\Trade\PayTrade;
 use Carbon\Carbon;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Exception;
 use Illuminate\Contracts\Container\BindingResolutionException;
@@ -39,8 +38,6 @@ use Illuminate\Validation\ValidationException;
 
 class PayOrder
 {
-    use AssertPermissionTrait;
-
     /**
      * 订单编号
      *
@@ -116,8 +113,6 @@ class PayOrder
      */
     public function handle(Validator $validator, SettingsRepository $setting, UrlGenerator $url, UserWalletFailLogsRepository $userWalletFailLogs)
     {
-        $this->assertCan($this->actor, 'trade.pay.order');
-
         $this->setting = $setting;
         $this->url     = $url;
         $this->userWalletFailLogs = $userWalletFailLogs;

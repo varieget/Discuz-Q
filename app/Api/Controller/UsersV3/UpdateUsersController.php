@@ -61,6 +61,7 @@ class UpdateUsersController extends DzqController
         if (empty($id)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '');
         }
+        $nickname = $this->inPut('nickname');
         $username = $this->inPut('username');
         $password = $this->inPut('password');
         $newPassword = $this->inPut('newPassword');
@@ -99,6 +100,10 @@ class UpdateUsersController extends DzqController
         if (!empty($registerReason)) {
             $requestData['register_reason'] = $registerReason;
         }
+        if (!empty($nickname)) {
+            $requestData['nickname'] = $nickname;
+        }
+
 
         $result = $this->bus->dispatch(
             new UpdateClientUser(
