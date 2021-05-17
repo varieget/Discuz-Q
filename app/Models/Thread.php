@@ -280,6 +280,16 @@ class Thread extends DzqModel
         } else {
             // 不是长文没有标题则使用首帖内容
             $this->firstPost->content = $substr ? Str::of($this->firstPost->content)->substr(0, $substr) : $this->firstPost->content;
+
+            $postSummary = Str::of($this->firstPost->content);
+            if (substr($postSummary, 0, 3) === '<t>' && substr($postSummary, -4) != '</t>') {
+                $this->firstPost->content = $postSummary."</t>";
+            }
+
+            if (substr($postSummary, 0, 3) === '<r>' && substr($postSummary, -4) != '</r>') {
+                $this->firstPost->content = $postSummary."</r>";
+            }
+
             if ($parse) {
                 // 原文
                 $firstPost = $this->firstPost->content;
