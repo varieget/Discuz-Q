@@ -20,10 +20,15 @@ namespace App\Api\Controller\CategoryV3;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Permission;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ListCategoriesController extends DzqController
 {
+    public function __construct(UserRepository $userRepo)
+    {
+        $this->userRepo = $userRepo;
+    }
 
     public function main()
     {
@@ -44,14 +49,7 @@ class ListCategoriesController extends DzqController
         $categoriesChild = [];
 
         foreach ($categories as $category) {
-            $createThreadPermission = 'category' . $category['pid'] . '.createThread';
-            // 全局或单个分类创建权限
-            if (in_array('createThread', $permissions) || in_array($createThreadPermission, $permissions) || $this->user->isAdmin()) {
-                $category['canCreateThread'] = true;
-            } else {
-                $category['canCreateThread'] = false;
-            }
-
+            $category['canCreateThread'] = $this->userRepo->canCreateThread($this->user, $category['pid']);
             $category['searchIds'] = (int)$category['pid'];
 
             // 二级子类集合
@@ -59,9 +57,7 @@ class ListCategoriesController extends DzqController
                 $categoriesChild[$category['parentid']][] = $category;
             }
 
-            // 一级分类 --- 全局或单个分类查看权限
-            $viewPermission = 'category' . $category['pid'] . '.viewThreads';
-            if ($category['parentid'] == 0 && (in_array('viewThreads', $permissions) || in_array($viewPermission, $permissions) || $this->user->isAdmin())) {
+            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($this->user, $category['pid'])) {
                 $categoriesFather[] = $category;
             }
         }
