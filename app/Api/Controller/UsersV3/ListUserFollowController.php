@@ -11,13 +11,10 @@ use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Support\Arr;
-use Discuz\Auth\AssertPermissionTrait;
 use Illuminate\Support\Str;
 
 class ListUserFollowController extends DzqController
 {
-    use AssertPermissionTrait;
-
     protected $userFollow;
 
     public function __construct(UserFollowRepository $userFollow, UrlGenerator $url, UserRepository $user)
@@ -25,6 +22,16 @@ class ListUserFollowController extends DzqController
         $this->userFollow = $userFollow;
         $this->user = $user;
         $this->url = $url;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!Arr::get($this->inPut('filter'), 'userId')) {
+            $user = $this->request->getAttribute('actor');
+            return !$user->isGuest();
+        }
+
+        return true;
     }
 
     public function main(){
