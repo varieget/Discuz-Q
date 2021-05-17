@@ -159,7 +159,7 @@ class ThreadListController extends DzqController
         $loginUserId = $this->user->id;
         $essence = null;
         $types = [];
-        $categoryids = [];
+//        $categoryids = [];
         $sort = Thread::SORT_BY_THREAD;
         $attention = 0;
         $search = '';
@@ -167,7 +167,7 @@ class ThreadListController extends DzqController
         isset($filter['sticky']) && $stick = $filter['sticky'];
         isset($filter['essence']) && $essence = $filter['essence'];
         isset($filter['types']) && $types = $filter['types'];
-        isset($filter['categoryids']) && $categoryids = $filter['categoryids'];
+//        isset($filter['categoryids']) && $categoryids = $filter['categoryids'];
         isset($filter['sort']) && $sort = $filter['sort'];
         isset($filter['attention']) && $attention = $filter['attention'];
         isset($filter['search']) && $search = $filter['search'];

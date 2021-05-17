@@ -18,15 +18,12 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
-use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\DzqCache;
 use App\Formatter\Formatter;
-use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Order;
-use App\Models\Permission;
 use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
@@ -400,9 +397,7 @@ trait ThreadTrait
      */
     private function optimizeEmoji($text)
     {
-        if ($text != strip_tags($text)) {
-            $text = '<r>' . $text . '</r>';
-        }
+        $text = '<r>' . $text . '</r>';
         preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
         $searches = $m1[0];
         $replaces = [];
