@@ -21,7 +21,6 @@ namespace App\Repositories;
 use App\Common\PermissionKey;
 use App\Models\Attachment;
 use App\Models\Group;
-use App\Models\Thread;
 use App\Models\User;
 use Discuz\Foundation\AbstractRepository;
 use Illuminate\Database\Eloquent\Builder;
@@ -252,11 +251,12 @@ class UserRepository extends AbstractRepository
      * 免费查看付费帖子权限
      *
      * @param User $user
+     * @param null $categoryId
      * @return bool
      */
     public function canFreeViewPosts(User $user, $categoryId = null)
     {
-        return $user->hasPermission($user, PermissionKey::THREAD_FREE_VIEW_POSTS, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_FREE_VIEW_POSTS, $categoryId);
     }
 
     /**
@@ -411,10 +411,10 @@ class UserRepository extends AbstractRepository
      * 删除用户组权限
      *
      * @param User $user
-     * @param Group $group
+     * @param array $ids
      * @return bool
      */
-    public function canDeleteGroup(User $user, Group $group)
+    public function canDeleteGroup(User $user, $ids)
     {
         $groups = [
             Group::ADMINISTRATOR_ID,
@@ -424,7 +424,12 @@ class UserRepository extends AbstractRepository
             Group::MEMBER_ID,
         ];
 
-        return !in_array($group['id'], $groups) && $user->isAdmin();
+        $disabled = array_intersect($groups, $ids);
+        if ($disabled) {
+            return false;
+        }
+
+        return empty($disabled) && $user->isAdmin();
     }
 
     public function canCreateGroup(User $user)
@@ -437,14 +442,14 @@ class UserRepository extends AbstractRepository
         return $user->isAdmin();
     }
 
+    public function canListGroup(User $user)
+    {
+        return $user->isAdmin();
+    }
+
     public function canCreateInviteUserScale(User $user)
     {
         return $user->hasPermission(PermissionKey::CREATE_INVITE_USER_SCALE);
-    }
-
-    public function canDeleteInvite(User $user, $invite)
-    {
-        return $this->canCreateInvite($user) && ($invite->user_id == $user->id || $user->isAdmin());
     }
 
     /**

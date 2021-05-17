@@ -24,7 +24,6 @@ use App\Common\ResponseCode;
 use Discuz\Auth\AssertPermissionTrait;
 use App\Models\Group;
 use App\Models\Invite;
-use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
@@ -39,7 +38,7 @@ class BatchUpdateGroupController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if (!$this->user->isAdmin()) {
+        if (!$userRepo->canEditGroup($this->user)) {
             throw new PermissionDeniedException('您没有修改用户组的权限');
         }
         return true;
