@@ -8,13 +8,11 @@ use App\Events\Users\UserFollowCreated;
 use App\Models\UserFollow;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Foundation\EventsDispatchTrait;
 use Illuminate\Contracts\Events\Dispatcher;
 
 class CreateUserFollowController extends DzqController
 {
-    use AssertPermissionTrait;
     use EventsDispatchTrait;
 
     public function __construct(Dispatcher $bus,UserRepository $user,UserFollow $userFollow)
@@ -24,6 +22,10 @@ class CreateUserFollowController extends DzqController
         $this->userFollow = $userFollow;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return !$this->user->isGuest() && $userRepo->canFollowUser($this->user);
+    }
 
     public function main(){
 
@@ -31,8 +33,6 @@ class CreateUserFollowController extends DzqController
 
         $to_user_id = $this->inPut('toUserId');
 
-        $this->assertRegistered($actor);
-        $this->assertCan($actor, 'userFollow.create');
         if ($actor->id == $to_user_id) {
             $this->outPut(ResponseCode::INVALID_PARAMETER,'');
         }

@@ -20,12 +20,17 @@ namespace App\Api\Controller\GroupV3;
 
 use App\Models\Group;
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 
 class ListGroupsController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
+    }
 
     public function main()
     {

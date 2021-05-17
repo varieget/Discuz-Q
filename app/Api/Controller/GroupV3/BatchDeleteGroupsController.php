@@ -20,18 +20,22 @@ namespace App\Api\Controller\GroupV3;
 
 use App\Common\ResponseCode;
 use App\Models\Group;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
-use Discuz\Auth\AssertPermissionTrait;
 use Illuminate\Contracts\Bus\Dispatcher;
 
 class BatchDeleteGroupsController extends DzqController
 {
-    use AssertPermissionTrait;
     protected $bus;
 
     public function __construct(Dispatcher $bus)
     {
         $this->bus = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
     }
 
     public function main()

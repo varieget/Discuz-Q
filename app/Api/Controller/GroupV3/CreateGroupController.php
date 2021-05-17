@@ -21,14 +21,12 @@ namespace App\Api\Controller\GroupV3;
 use App\Common\ResponseCode;
 use App\Commands\Group\CreateGroup;
 use App\Models\Group;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
 class CreateGroupController extends DzqController
 {
-    use AssertPermissionTrait;
-
     protected $bus;
 
     public function __construct(Dispatcher $bus)
@@ -36,10 +34,14 @@ class CreateGroupController extends DzqController
         $this->bus = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
+    }
+
     public function main()
     {
         $actor = $this->user;
-        $this->assertAdmin($actor);
 
         $group = [
             'id' => $this->inPut('id'),

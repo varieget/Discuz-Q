@@ -3,19 +3,18 @@ namespace App\Api\Controller\ReportV3;
 
 use App\Models\Report;
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
-use Discuz\Auth\AssertPermissionTrait;
 
 class BatchDeleteReportsController extends DzqController
 {
-    use AssertPermissionTrait;
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
+    }
 
     public function main()
     {
-        if (!$this->user->isAdmin()) {
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, '权限错误', '');
-        }
-
         $idString = $this->inPut('ids');
         if (empty($idString)) {
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '缺少必要参数', '');
