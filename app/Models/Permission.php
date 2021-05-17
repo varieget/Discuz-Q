@@ -42,15 +42,15 @@ class Permission extends DzqModel
 
     const THREAD_PERMISSION = [
         'switch.createThread' => '发布帖子',           //开启/允许发布帖子
-        'switch.insertImage' => '插入图片',          //开启/允许插入图片
-        'switch.insertVideo' => '插入视频',             //开启/允许发布视频
-        'switch.insertAudio' => '插入语音',            //开启/允许发布语音
-        'switch.insertDoc' => '插入附件',             //开启/允许发布附件
-        'switch.insertGoods' => '插入商品',           //开启/允许发布商品
-        'switch.insertPay' => '插入付费',            //开启/允许发布付费
-        'switch.insertReward' => '插入悬赏',          //开启/允许发布悬赏
-        'switch.insertRedPacket' => '插入红包',         //开启/允许发布红包
-        'switch.insertPosition' => '插入位置',         //开启/允许发布位置
+        'thread.insertImage' => '插入图片',          //开启/允许插入图片
+        'thread.insertVideo' => '插入视频',             //开启/允许发布视频
+        'thread.insertAudio' => '插入语音',            //开启/允许发布语音
+        'thread.insertDoc' => '插入附件',             //开启/允许发布附件
+        'thread.insertGoods' => '插入商品',           //开启/允许发布商品
+        'thread.insertPay' => '插入付费',            //开启/允许发布付费
+        'thread.insertReward' => '插入悬赏',          //开启/允许发布悬赏
+        'thread.insertRedPacket' => '插入红包',         //开启/允许发布红包
+        'thread.insertPosition' => '插入位置',         //开启/允许发布位置
     ];
 
 
