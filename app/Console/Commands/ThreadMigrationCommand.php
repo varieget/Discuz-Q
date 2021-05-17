@@ -460,7 +460,7 @@ class ThreadMigrationCommand extends AbstractCommand
             $q_orderSn = "";
             $q_price = $question->price;
             $q_expired_at = $question->expired_at;
-            if(!empty($thread_reward)){
+            if($thread_reward && !empty($thread_reward->toArray())){
                 $q_type = $thread_reward->type;
                 $q_price = $thread_reward->money;
                 $q_expired_at = $thread_reward->expired_at;

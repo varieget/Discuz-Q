@@ -245,7 +245,8 @@ trait ThreadTrait
             }
         }
         if (!empty($content['text'])) {
-            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+//            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+            $content['text'] = app()->make(Formatter::class)->render($content['text']);
 
             //针对老数据，需要做特殊处理
             $old_thread_type = [
