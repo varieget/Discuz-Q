@@ -20,18 +20,24 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\DenyUser;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class DeleteDenyUserController extends DzqController
 {
-    use AssertPermissionTrait;
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
 
     public function main()
     {
         $actor = $this->user;
-
-        $this->assertRegistered($actor);
 
         $id = $this->inPut('id');
 

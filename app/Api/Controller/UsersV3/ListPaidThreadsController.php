@@ -24,7 +24,9 @@ use App\Api\Serializer\ThreadSerializer;
 use App\Models\Post;
 use App\Models\User;
 use App\Repositories\ThreadRepository;
+use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Common\Utils;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -33,7 +35,7 @@ class ListPaidThreadsController extends DzqController
 {
     use AssertPermissionTrait;
 
-    //返回的数据一定包含的数据
+    //杩斿洖鐨勬暟鎹竴瀹氬寘鍚殑鏁版嵁
     public $include = [
         'firstPost',
         'lastPostedUser',
@@ -59,6 +61,15 @@ class ListPaidThreadsController extends DzqController
     {
         $this->threads = $threads;
         $this->url = $url;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('娌℃湁鏉冮檺');
+        }
+        return true;
     }
 
     public function main()

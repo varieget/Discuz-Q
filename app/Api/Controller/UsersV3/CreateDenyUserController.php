@@ -21,7 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Events\DenyUsers\Saved;
 use App\Models\DenyUser;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -29,7 +29,6 @@ use Illuminate\Contracts\Validation\Factory;
 
 class CreateDenyUserController extends DzqController
 {
-    use AssertPermissionTrait;
 
     public $include = ['deny'];
 
@@ -43,13 +42,20 @@ class CreateDenyUserController extends DzqController
         $this->events = $events;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
     public function main()
     {
         $actor = $this->user;
 
         $id = $this->inPut('id');
-
-        $this->assertPermission($actor->id);
 
         if ($actor->id == $id) {
             return $this->outPut(ResponseCode::NET_ERROR, 'deny_self');
@@ -73,9 +79,12 @@ class CreateDenyUserController extends DzqController
         $validation->failed();
         $denyUser->save();
 
-        $this->events->dispatch(new Saved($denyUser, $actor));
-      //  $actor = $this->camelData($actor);
-        return $this->outPut(ResponseCode::SUCCESS, '', []);
+         $this->events->dispatch(
+            new Saved($denyUser, $actor)
+        );
+
+        $data = $this->camelData($denyUser);
+        return $this->outPut(ResponseCode::SUCCESS, '',$data);
 
     }
 }
