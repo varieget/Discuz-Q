@@ -3,19 +3,18 @@ namespace App\Api\Controller\ReportV3;
 
 use App\Models\Report;
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
-use Discuz\Auth\AssertPermissionTrait;
 
 class BatchUpdateReportsController extends DzqController
 {
-    use AssertPermissionTrait;
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
+    }
 
     public function main()
     {
-        if (!$this->user->isAdmin()) {
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, '权限错误', '');
-        }
-
         $data = $this->inPut('data');
         if (empty($data)) {
             return $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少必要参数', '');

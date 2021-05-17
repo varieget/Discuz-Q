@@ -6,6 +6,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Commands\Users\DeleteUserFollow;
 use App\Common\ResponseCode;
 use App\Models\UserFollow;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Discuz\Auth\AssertPermissionTrait;
@@ -18,6 +19,11 @@ class DeleteUserFollowController extends DzqController
     public function __construct(Dispatcher $bus)
     {
         $this->bus = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return !$this->user->isGuest();
     }
 
     public function main(){

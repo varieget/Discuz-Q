@@ -41,11 +41,7 @@ class UpdateAdminController extends DzqController
     // 权限检查
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $this->user;
-        if ($actor->isGuest() || !$actor->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
+        return $this->user->isAdmin();
     }
 
     public function main()

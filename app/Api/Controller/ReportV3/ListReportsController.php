@@ -6,10 +6,16 @@ use App\Common\ResponseCode;
 use App\Models\GroupUser;
 use App\Models\Report;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ListReportsController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
+    }
+
     public function main(){
         $filter = $this->inPut('filter');
         $currentPage = $this->inPut('page');
