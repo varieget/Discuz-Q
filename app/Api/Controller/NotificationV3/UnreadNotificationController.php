@@ -19,6 +19,7 @@ namespace App\Api\Controller\NotificationV3;
 
 
 use App\Common\ResponseCode;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use App\Repositories\UserRepository;
 
@@ -34,6 +35,15 @@ class UnreadNotificationController extends DzqController
     public function __construct(UserRepository $users)
     {
         $this->users = $users;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
     }
 
     public function main()

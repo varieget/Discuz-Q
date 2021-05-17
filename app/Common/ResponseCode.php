@@ -91,11 +91,13 @@ class ResponseCode
     const USERNAME_NOT_NULL = -7049;
     const USER_LOGIN_STATUS_NOT_NULL = -7050;
     const NONSUPPORT_WECHAT_REBIND = -7051;
+    const USERID_NOT_ALLOW_NULL = -7052;
 
     const NEED_BIND_WECHAT = 8000;
     const NEED_BIND_PHONE = 8001;
     const SMS_NOT_OPEN= -9001;
     const SMS_CODE_ERROR = -9002;
+    const SMS_CODE_EXPIRE = -9003;
 
     public static $codeMap = [
         self::SITE_CLOSED => '站点已关闭',
@@ -156,9 +158,11 @@ class ResponseCode
         self::TRANSITION_NOT_OPEN => '过渡开关未开启',
         self::SMS_NOT_OPEN  => '短信未开启',
         self::SMS_CODE_ERROR => '验证码错误',
+        self::SMS_CODE_EXPIRE => '验证码已过期',
         self::USERNAME_NOT_NULL => '用户名不能为空',
         self::USER_LOGIN_STATUS_NOT_NULL => '用户登录态不能为空',
         self::NONSUPPORT_WECHAT_REBIND => '该网站暂不支持微信换绑功能',
         self::PC_REBIND_ERROR => '换绑失败',
+        self::USERID_NOT_ALLOW_NULL => '用户id不允许为空',
     ];
 }

@@ -23,10 +23,21 @@ use App\Models\Group;
 use App\Models\Invite;
 use App\Models\Permission;
 use App\Models\User;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class InviteDetailController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
 
     public function main()
     {

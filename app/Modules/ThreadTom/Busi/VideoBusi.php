@@ -46,8 +46,9 @@ class VideoBusi extends TomBaseBusi
     public function select()
     {
         $videoId = $this->getParams('videoId');
+
         $videos = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_VIDEO, $videoId, function ($videoId) {
-            $videos = ThreadVideo::query()->where(['id' => $videoId, 'status' => ThreadVideo::VIDEO_STATUS_SUCCESS])->get()->toArray();
+            $videos = ThreadVideo::query()->where(['file_id' => $videoId, 'status' => ThreadVideo::VIDEO_STATUS_SUCCESS])->get()->toArray();
             if (empty($videos)) {
                 $videos = [$videoId => null];
             } else {
@@ -55,6 +56,15 @@ class VideoBusi extends TomBaseBusi
             }
             return $videos;
         });
+        if(empty($videos)){
+            $videos = ThreadVideo::query()->where(['file_id' => $videoId, 'status' => ThreadVideo::VIDEO_STATUS_SUCCESS])->get()->toArray();
+            if (empty($videos)) {
+                $videos = [$videoId => null];
+            } else {
+                $videos = [$videoId => current($videos)];
+            }
+        }
+
         $video = $videos[$videoId] ?? null;
         if ($video) {
             $video = ThreadVideo::instance()->threadVideoResult($video);

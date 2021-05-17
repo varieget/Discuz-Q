@@ -6,8 +6,8 @@ use App\Common\ResponseCode;
 use App\Common\Utils;
 use App\Models\Thread;
 use App\Models\User;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\NotAuthenticatedException;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Arr;
@@ -15,17 +15,19 @@ use Illuminate\Support\Str;
 
 class ListNotificationV2Controller extends DzqController
 {
-    use AssertPermissionTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
 
     public function main()
     {
         $user = $this->user;
-        try {
-            $this->assertRegistered($user);
-        } catch (NotAuthenticatedException $e) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
-        }
-
         $filters = $this->inPut('filter') ?: [];
         $page = $this->inPut('page') ?: 1;
         $perPage = $this->inPut('perPage') ?: 10;

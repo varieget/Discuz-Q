@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -16,36 +15,28 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\UsersV3;
+namespace App\Api\Controller\SignInFieldsV3;
 
+use App\Api\Serializer\UserSignInSerializer;
 use App\Common\ResponseCode;
-use App\Models\DenyUser;
-use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
+use App\Models\UserSignInFields;
+use Discuz\Api\Controller\AbstractListController;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
+use Psr\Http\Message\ServerRequestInterface;
+use Tobscure\JsonApi\Document;
 
-class DeleteDenyUserController extends DzqController
+class ListUserSignInController extends DzqController
 {
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
-
     public function main()
     {
-        $actor = $this->user;
-
-        $id = $this->inPut('id');
-
-        if ($actor->deny) {
-           DenyUser::query()->where([
-             'user_id' => $actor->id, 'deny_user_id' => $id])->delete();
+        $userId = $this->inPut('userId');
+        if(empty($userId)){
+            $this->outPut(ResponseCode::USERID_NOT_ALLOW_NULL);
         }
 
-        return $this->outPut(ResponseCode::SUCCESS);
+        $result = UserSignInFields::instance()->getUserSignInFields($userId);
+
+        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
     }
 }

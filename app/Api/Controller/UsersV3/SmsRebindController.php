@@ -30,11 +30,14 @@ class SmsRebindController extends AuthBaseController
 
         if ($this->user->exists) {
             // 删除验证身份的验证码
-            MobileCode::query() ->where('mobile', $this->user->getRawOriginal('mobile'))
-                                ->where('type', 'verify')
-                                ->where('state', 1)
-                                ->where('updated_at', '<', Carbon::now()->addMinutes(10))
-                                ->delete();
+            $result = MobileCode::query()   ->where('mobile', '15659120428')
+                                            ->where('type', 'verify')
+                                            ->where('state', 1)
+                                            ->where('updated_at', '<', Carbon::now()->addMinutes(10))
+                                            ->delete();
+            if ($result != 1) {
+                $this->outPut(ResponseCode::SMS_CODE_EXPIRE, '', []);
+            }
 
             $this->user->changeMobile($mobileCode->mobile);
             $this->user->save();

@@ -92,7 +92,7 @@ class ListPostsController extends DzqController
         $query = Post::query()
             ->with([
                 'thread:id,type',
-                'user:id,username,avatar,realname',
+                'user:id,nickname,avatar,realname',
                 'user.groups:id,name,is_display',
                 'images',
                 'likeState',
@@ -248,9 +248,8 @@ class ListPostsController extends DzqController
         if (!$user) {
             return null;
         }
-
         $data = array_merge($user->toArray(), [
-            'isReal' => !empty($post->user->realname),
+            'isReal' => !empty($user->realname),
         ]);
         if ($user->relationLoaded('groups')) {
             $data['groups'] = $user->groups->map(function (Group $i) {
@@ -261,6 +260,7 @@ class ListPostsController extends DzqController
                 ];
             });
         }
+
         return $data;
     }
 }

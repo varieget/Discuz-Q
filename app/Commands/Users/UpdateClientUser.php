@@ -20,18 +20,9 @@ namespace App\Commands\Users;
 
 use App\Censor\Censor;
 use App\Censor\CensorNotPassedException;
-use App\Events\Group\PaidGroup;
-use App\Events\Users\ChangeUserStatus;
 use App\Events\Users\PayPasswordChanged;
 use App\Exceptions\TranslatorException;
-use App\Models\Group;
-use App\Models\GroupPaidUser;
 use App\Models\User;
-use App\Models\UserActionLogs;
-use App\Models\AdminActionLog;
-use App\Models\UserSignInFields;
-use App\Notifications\Messages\Database\GroupMessage;
-use App\Notifications\System;
 use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
 use Discuz\Auth\AssertPermissionTrait;
@@ -40,14 +31,13 @@ use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Foundation\EventsDispatchTrait;
 use Discuz\SpecialChar\SpecialCharServer;
 use EasyWeChat\Kernel\Exceptions\InvalidConfigException;
-use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Models\UsernameChange;
 
 class UpdateClientUser
 {
@@ -209,9 +199,23 @@ class UpdateClientUser
         // 过滤内容
         $username = $this->specialChar->purify($username);
 
-        if ($user->username_bout >= $this->settings->get('username_bout', 'default', 1)) {
-            throw new TranslatorException(trans('user.user_username_bout_limit_error'));
+        $usernamechange = UsernameChange::query()->orderBy('id', 'desc')
+            ->first();
+        if($usernamechange){
+            $currentTime=date("y-m-d h:i:s");
+            $oldTime=$usernamechange->updated_at;
+            if(strtotime($currentTime)<strtotime("+1years",strtotime($oldTime))){
+                throw new TranslatorException(trans('user.user_username_change_limit_error'));
+            }
         }
+        $user->changeUsername($username);
+        //更改用户名记录
+        $usernameChange = new UsernameChange();
+        $usernameChange->user_id = $user->id;
+        $usernameChange->number = 1;
+        $usernameChange->save();
+
+
         $user->changeUsername($username);
         $validate['username'] = $username;
 
