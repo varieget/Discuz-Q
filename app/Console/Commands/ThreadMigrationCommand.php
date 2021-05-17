@@ -185,7 +185,6 @@ class ThreadMigrationCommand extends AbstractCommand
                     break;
                 }
             }
-            //文字帖不插 thread_tom 数据
             $this->db->commit();
         }
         $this->info('迁移文字帖end');
