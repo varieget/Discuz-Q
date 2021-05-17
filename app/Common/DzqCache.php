@@ -121,6 +121,10 @@ class DzqCache
         return $ret;
     }
 
+    public static function extractCacheExist(){
+
+    }
+
 
     public static function removeCacheByPrimaryId($cacheKey, $primaryKey = null)
     {
@@ -134,5 +138,9 @@ class DzqCache
             return app('cache')->put($cacheKey, $data);
         }
         return true;
+    }
+    public static function addCacheByPrimaryId($cacheKey,$primaryKey = null){
+
+
     }
 }
