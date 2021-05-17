@@ -264,10 +264,12 @@ trait ThreadTrait
                 $xml = $post['content'];
                 // 针对 type为1的老数据，存在图文混排的混排的情况，需要特殊处理
                 $tom_image_key = $body = '';
-                foreach ($content['indexes'] as $key => $val) {
-                    if ($val['tomId'] == TomConfig::TOM_IMAGE) {
-                        $body = $val['body'];
-                        $tom_image_key = $key;
+                if(!empty($content['indexes'])){
+                    foreach ($content['indexes'] as $key => $val) {
+                        if ($val['tomId'] == TomConfig::TOM_IMAGE) {
+                            $body = $val['body'];
+                            $tom_image_key = $key;
+                        }
                     }
                 }
                 if ($thread['type'] == Thread::TYPE_OF_LONG && !empty($body)) {
