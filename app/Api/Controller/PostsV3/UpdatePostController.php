@@ -19,6 +19,8 @@ namespace App\Api\Controller\PostsV3;
 
 use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\EditPost;
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Post;
 use App\Models\ThreadUser;
@@ -95,6 +97,9 @@ class UpdatePostController extends DzqController
             'rewards' => floatval(sprintf('%.2f', $post->getPostReward())),
             'redPacketAmount' => $this->postSerializer->getPostRedPacketAmount($post['id'], $post['thread_id'], $post['user_id']),
         ];
+
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_LIKED, $post['user_id']);
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_USERS, $post['thread_id']);
 
         if ($post->id == $postId) {
             return $this->outPut(ResponseCode::SUCCESS, '',$build);
