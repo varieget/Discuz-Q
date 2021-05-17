@@ -23,18 +23,23 @@ use App\Models\Group;
 use App\Models\User;
 use App\Models\Invite;
 use Carbon\Carbon;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Str;
 
 class CreateInviteLinkController extends DzqController
 {
-    use AssertPermissionTrait;
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$userRepo->canCreateInviteUserScale($this->user)) {
+            throw new PermissionDeniedException('您没有权限邀请他人');
+        }
+        return true;
+    }
 
     public function main()
     {
-        $this->assertCan($this->user, 'createInvite');
-
         $group = Group::query()->where('default', 1)->first();
         $groupId = $group->id;
 

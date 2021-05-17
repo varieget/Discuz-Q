@@ -23,6 +23,9 @@ use Discuz\Base\DzqController;
 use App\Common\ResponseCode;
 use Discuz\Auth\AssertPermissionTrait;
 use App\Models\Group;
+use App\Models\Invite;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
 
@@ -34,7 +37,15 @@ class BatchUpdateGroupController extends DzqController
 
     protected $bus;
 
-    public function __construct(Dispatcher $bus,Factory  $validation)
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有修改用户组的权限');
+        }
+        return true;
+    }
+
+    public function __construct(Dispatcher $bus, Factory $validation)
     {
         $this->validation = $validation;
         $this->bus = $bus;
@@ -58,7 +69,7 @@ class BatchUpdateGroupController extends DzqController
             $this->dzqValidate($val, [
                 'name'=> 'required_without|max:200',
             ]);
-            $groupData = Group::query()->where('id',$val['id'])->first();
+            $groupData = Group::query()->where('id', $val['id'])->first();
             if(!$groupData){
                 return $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
@@ -85,19 +96,48 @@ class BatchUpdateGroupController extends DzqController
                 }
 
                 if(isset($value['isCommission'])){
-                    $group->is_commission = (bool)$value['isCommission'];
+                    $group->is_commission = (bool) $value['isCommission'];
                 }
 
+                if(isset($value['isDisplay'])){
+                    $group->is_display = (bool) $value['isDisplay'];
+                }
+
+                if(isset($value['default'])){
+                   $group->default = (bool) $value['default'];
+                    if ($value['default']) {
+                        $changeInviteGroupResult = $this->changeInviteGroup($value['id']);
+                    }
+                }
 
                 $group->save();
                 $resultData[] = $group;
             } catch (\Exception $e) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER, $e->getMessage());
+                $this->outPut(ResponseCode::DB_ERROR, '用户组修改失败', '');
+                $this->info('用户组修改失败：' . $e->getMessage());
             }
         }
 
         $data = $this->camelData($resultData);
-        return $this->outPut(ResponseCode::SUCCESS, '',$data);
+        return $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 
+    public function changeInviteGroup($groupId)
+    {
+        $unusedInviteLinkList = Invite::query()
+            ->where('group_id', '!=', $groupId)
+            ->where('status', Invite::STATUS_UNUSED)
+            ->where('endtime', '>', time())
+            ->get();
+
+        $unusedInviteLinkList->map(function ($item) use ($groupId) {
+            try{
+                $item->group_id = $groupId;
+                $item->save();
+            } catch (\Exception $e) {
+                $this->outPut(ResponseCode::DB_ERROR, '相关邀请链接修改失败', '');
+                $this->info('相关邀请链接修改失败：' . $e->getMessage());
+            }
+        });
+    }
 }
