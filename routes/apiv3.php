@@ -64,7 +64,11 @@ $route->get('/users/wechat/transition/username.autobind', 'wechat.transition.use
 $route->post('/users/wechat/transition/sms.bind', 'wechat.transition.sms.bind', ApiController\UsersV3\WechatTransitionBindSmsController::class);
 //登录页设置昵称
 $route->post('/users/nickname.set', 'users.nickname.set', ApiController\UsersV3\NicknameSettingController::class);
-
+//前台扩展字段
+// 查询扩展字段列表（用户注册后显示）
+$route->get('/user/signinfields', 'user.signinfields.list', ApiController\SignInFieldsV3\ListUserSignInController::class);
+// 用户首次提交扩展字段信息或者被驳回之后再次提交
+$route->post('/user/signinfields', 'user.signinfields.create', ApiController\SignInFieldsV3\CreateUserSignInController::class);
 
 //帖子查询
 $route->get('/thread.detail','thread.detail',ApiController\ThreadsV3\ThreadDetailController::class);

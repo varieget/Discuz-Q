@@ -82,15 +82,15 @@ class RegisterController extends AuthBaseController
 
 
         $data = [
-            'username' => $this->inPut('username'),
-            'password' => $this->inPut('password'),
+            'username'              => $this->inPut('username'),
+            'password'              => $this->inPut('password'),
             'password_confirmation' => $this->inPut('passwordConfirmation'),
-            'nickname' => $this->inPut('nickname'),
-            'code' => $this->inPut('code'),
-            'register_ip' => ip($this->request->getServerParams()),
-            'register_port' => $this->request->getServerParams()['REMOTE_PORT'] ? $this->request->getServerParams()['REMOTE_PORT'] : 0,
-            'captcha_ticket' => $this->inPut('captchaTicket'),
-            'captcha_rand_str' => $this->inPut('captchaRandStr'),
+            'nickname'              => $this->inPut('nickname'),
+            'code'                  => $this->inPut('code'),
+            'register_ip'           => ip($this->request->getServerParams()),
+            'register_port'         => $this->request->getServerParams()['REMOTE_PORT'] ? $this->request->getServerParams()['REMOTE_PORT'] : 0,
+            'captcha_ticket'        => $this->inPut('captchaTicket'),
+            'captcha_rand_str'      => $this->inPut('captchaRandStr'),
         ];
 
         $user = $this->bus->dispatch(
@@ -105,6 +105,9 @@ class RegisterController extends AuthBaseController
         $response = $this->bus->dispatch(
             new GenJwtToken(Arr::only($data, 'username'))
         );
-        return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user, $this->camelData(json_decode($response->getBody(),true))));
+        return $this->outPut(ResponseCode::SUCCESS,
+                             '',
+                             $this->addUserInfo($user, $this->camelData(json_decode($response->getBody(),true)))
+        );
     }
 }
