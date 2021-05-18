@@ -20,6 +20,7 @@ namespace App\Api\Controller;
 
 use App\Models\Setting;
 use Discuz\Http\DiscuzResponseFactory;
+use Discuz\Qcloud\QcloudStatisticsTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -31,6 +32,8 @@ use TencentCloud\Ms\V20180408\MsClient;
 
 class CheckQcloudController implements RequestHandlerInterface
 {
+    use QcloudStatisticsTrait;
+
     /**
      * @param ServerRequestInterface $request
      * @return ResponseInterface
@@ -38,7 +41,7 @@ class CheckQcloudController implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $setting = Setting::query()->get()->toArray();
+        $setting = Setting::query()->whereIn('key', ['qcloud_secret_id', 'qcloud_secret_key'])->get()->toArray();
         $setting = array_column($setting, null, 'key');
         $qcloudSecretId = !empty($setting['qcloud_secret_id']) ? $setting['qcloud_secret_id']['value'] : '';
         $qcloudSecretKey = !empty($setting['qcloud_secret_key']) ? $setting['qcloud_secret_key']['value'] : '';
@@ -60,6 +63,14 @@ class CheckQcloudController implements RequestHandlerInterface
             return DiscuzResponseFactory::JsonResponse($ret);
         }
         $ret['data']['attributes']['isBuildQcloud'] = true;
+
+        $cache = app('cache');
+        $is_uin_statis = $cache->get('uin_statis_check_qcloud');
+        if(empty($is_uin_statis)){
+            $this->uinStatis();
+            $cache->put('uin_statis_check_qcloud', 1, 24 * 60 * 60);
+        }
+
         return  DiscuzResponseFactory::JsonResponse($ret);
     }
 }
