@@ -33,6 +33,7 @@ use App\Repositories\ThreadRepository;
 use App\Repositories\ThreadVideoRepository;
 use App\Traits\ThreadNoticesTrait;
 use App\Validators\ThreadValidator;
+use Carbon\Carbon;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
@@ -188,7 +189,7 @@ class EditThread
         if (isset($attributes['isSticky'])) {
             if ($thread->is_sticky != $attributes['isSticky']) {
                 $thread->is_sticky = $attributes['isSticky'];
-
+                $thread->updated_at = Carbon::now();
                 if ($thread->is_sticky) {
                     $this->threadNotices($thread, $this->actor, 'isSticky', $attributes['message'] ?? '');
                 }

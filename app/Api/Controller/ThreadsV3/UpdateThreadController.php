@@ -83,6 +83,8 @@ class UpdateThreadController extends DzqController
         $this->saveThread($thread, $content);
         //更新post数据
         $this->savePost($post, $content);
+        //插入话题
+        $this->saveTopic($thread, $content);
         //更新tom数据
         $tomJsons = $this->saveThreadTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
