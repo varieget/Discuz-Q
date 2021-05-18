@@ -100,6 +100,8 @@ class ResponseCode
     const SMS_CODE_ERROR = -9002;
     const SMS_CODE_EXPIRE = -9003;
 
+    const PAY_ORDER_FAIL = -10000;
+
     public static $codeMap = [
         self::SITE_CLOSED => '站点已关闭',
         self::JUMP_TO_LOGIN => '跳转到登录页',
@@ -166,5 +168,6 @@ class ResponseCode
         self::PC_REBIND_ERROR => '换绑失败',
         self::USERID_NOT_ALLOW_NULL => '用户id不允许为空',
         self::USER_MOBILE_NOT_ALLOW_NULL => '用户手机号不允许为空',
+        self::PAY_ORDER_FAIL => '支付失败',
     ];
 }
