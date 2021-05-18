@@ -280,7 +280,7 @@ trait ThreadListTrait
 
     private function cacheVideo($threadVideoIds)
     {
-        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->where('status', ThreadVideo::VIDEO_STATUS_SUCCESS)->get()->keyBy('id')->toArray();
+        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->get()->keyBy('id')->toArray();
         $threadVideos = $this->appendDefaultEmpty($threadVideoIds, $threadVideos, null);
         app('cache')->put(CacheKey::LIST_THREADS_V3_VIDEO, $threadVideos);
         return $threadVideos;
