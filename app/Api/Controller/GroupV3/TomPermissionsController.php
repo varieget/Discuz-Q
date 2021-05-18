@@ -32,7 +32,7 @@ class TomPermissionsController extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            throw new PermissionDeniedException('娌℃湁鏉冮檺');
         }
         return true;
     }
