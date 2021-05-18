@@ -22,14 +22,23 @@ use App\Models\AdminActionLog;
 use App\Models\Category;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 
 class CreateCategoriesController extends DzqController
 {
     use AssertPermissionTrait;
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有创建分类的权限');
+        }
+        return true;
+    }
+
     public function main()
     {
-        $this->assertAdmin($this->user);
         $data = $this->inPut("data");
         if(empty($data)){
             $this->outPut(ResponseCode::INVALID_PARAMETER);

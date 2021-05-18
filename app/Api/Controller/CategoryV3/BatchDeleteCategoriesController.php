@@ -21,9 +21,19 @@ use App\Models\Category;
 use App\Common\ResponseCode;
 use App\Library\Json;
 use Discuz\Base\DzqController;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 
 class BatchDeleteCategoriesController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有删除分类权限');
+        }
+        return true;
+    }
+
     public function main()
     {
         $idString  = $this->inPut('id');
@@ -31,11 +41,6 @@ class BatchDeleteCategoriesController extends DzqController
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '未获取到必要参数', '');
         }
         $ids = explode(',', $idString);
-
-        // 管理员身份验证
-        if(!$this->user->isAdmin()){
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, '权限错误', '');
-        }
 
         // 批量添加的限制
         if(count($ids) > 100){

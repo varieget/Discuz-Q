@@ -21,18 +21,23 @@ use App\Models\Category;
 use App\Common\ResponseCode;
 use App\Library\Json;
 use Discuz\Base\DzqController;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 
 class BatchUpdateCategoriesController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有更新分类的权限');
+        }
+        return true;
+    }
+
     public function main()
     {
         $data = $this->inPut('data');
         $ip   = ip($this->request->getServerParams());
-
-        // 管理员身份验证
-        if(!$this->user->isAdmin()){
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, '权限错误', '');
-        }
 
         // 批量添加的限制
         if(count($data) > 100){
