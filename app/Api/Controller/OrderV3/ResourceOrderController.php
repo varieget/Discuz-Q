@@ -3,23 +3,26 @@
 namespace App\Api\Controller\OrderV3;
 
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use App\Models\Order;
 use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 
 class ResourceOrderController extends DzqController
 {
     use AssertPermissionTrait;
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return true;
+    }
+
     public function main()
     {
         $user = $this->user;
-        try {
-            $this->assertRegistered($user);
-        } catch (NotAuthenticatedException $e) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
-        }
         $order = Order::query()
             ->where([
                         'user_id' => $user->id,
