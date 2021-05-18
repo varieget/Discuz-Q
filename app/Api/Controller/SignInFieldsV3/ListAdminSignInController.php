@@ -21,14 +21,24 @@ use App\Common\ResponseCode;
 use App\Models\AdminSignInFields;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 
 class ListAdminSignInController extends DzqController
 {
 
     use AssertPermissionTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有获取注册扩展列表权限');
+        }
+        return true;
+    }
+
     public function main()
     {
-        $this->assertAdmin($this->user);
         $this->outPut(ResponseCode::SUCCESS,'',AdminSignInFields::instance()->getAdminSignInFields());
     }
 }

@@ -21,9 +21,18 @@ use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Permission;
 use Discuz\Base\DzqController;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 
 class AdminListCategoriesController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有查看分类列表权限');
+        }
+        return true;
+    }
 
     public function main()
     {
