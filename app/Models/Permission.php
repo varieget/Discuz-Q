@@ -45,7 +45,7 @@ class Permission extends DzqModel
         'thread.insertImage' => '插入图片',          //开启/允许插入图片
         'thread.insertVideo' => '插入视频',             //开启/允许发布视频
         'thread.insertAudio' => '插入语音',            //开启/允许发布语音
-        'thread.insertDoc' => '插入附件',             //开启/允许发布附件
+        'thread.insertAttachment' => '插入附件',             //开启/允许发布附件
         'thread.insertGoods' => '插入商品',           //开启/允许发布商品
         'thread.insertPay' => '插入付费',            //开启/允许发布付费
         'thread.insertReward' => '插入悬赏',          //开启/允许发布悬赏

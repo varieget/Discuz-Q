@@ -29,11 +29,11 @@ use Discuz\Base\DzqController;
 
 class InviteUsersListController extends DzqController
 {
-
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if (!$userRepo->canCreateInviteUserScale($this->user)) {
-            throw new PermissionDeniedException('您没有权限邀请他人');
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
         }
         return true;
     }
