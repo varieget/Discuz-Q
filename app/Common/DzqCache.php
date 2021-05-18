@@ -144,17 +144,17 @@ class DzqCache
     /**
      * @desc 添加缓存
      * @param $cacheKey
-     * @param $primaryKey
      * @param $value
+     * @param null $hashKey
      * @return
      */
-    public static function putCacheByPrimaryId($cacheKey,$value, $primaryKey = null)
+    public static function putCacheByHashKey($cacheKey,$value, $hashKey = null)
     {
         $data = app('cache')->get($cacheKey);
         if ($data) {
-            $data[$primaryKey] = $value;
+            $data[$hashKey] = $value;
         } else {
-            $data = [$primaryKey => $value];
+            $data = [$hashKey => $value];
         }
         return app('cache')->put($cacheKey, $data);
     }

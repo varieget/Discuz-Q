@@ -126,16 +126,9 @@ trait ThreadListTrait
 
     private function initDzqThreadsData($cacheKey, $threads)
     {
-        $cache = app('cache');
         $filter = $this->inPut('filter');
         $filterKey = md5(serialize($filter));
-        $data = $cache->get($cacheKey);
-        if ($data) {
-            $data[$filterKey] = $threads;
-        } else {
-            $data = [$filterKey => $threads];
-        }
-        $cache->put($cacheKey, $data);
+        DzqCache::putCacheByHashKey($cacheKey,$threads,$filterKey);
         $this->initDzqUnitData($this->user->id, $threads);
     }
 
