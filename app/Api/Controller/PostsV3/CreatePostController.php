@@ -20,6 +20,8 @@ namespace App\Api\Controller\PostsV3;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\CreatePost;
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Models\GroupUser;
@@ -63,7 +65,8 @@ class CreatePostController extends DzqController
         AttachmentSerializer $attachmentSerializer,
         Gate $gate,
         Dispatcher $bus
-    ) {
+    )
+    {
         $this->postSerializer = $postSerializer;
         $this->attachmentSerializer = $attachmentSerializer;
         $this->gate = $gate;
@@ -86,6 +89,13 @@ class CreatePostController extends DzqController
         return $userRepo->canReplyThread($this->user, $thread->category_id);
     }
 
+    public function clearCache($user)
+    {
+        $threadId = $this->inPut('id');
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+    }
+
     public function main()
     {
         $this->attachmentSerializer->setRequest($this->request);
@@ -102,39 +112,39 @@ class CreatePostController extends DzqController
             'commentUserId' => $this->inPut('commentUserId'),
         ];
         $threadId = $this->inPut('id');
-        if(empty($threadId)){
+        if (empty($threadId)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '主题id不能为空');
         }
 
-        $data['content'] = '<t><p>' .$data['content']. '</p></t>';
+        $data['content'] = '<t><p>' . $data['content'] . '</p></t>';
 
-        if(empty($data['content'])){
+        if (empty($data['content'])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
         }
 
-        if(empty($data['replyId'])){
+        if (empty($data['replyId'])) {
             unset($data['replyId']);
         }
 
-        if(empty($data['commentPostId'])){
+        if (empty($data['commentPostId'])) {
             unset($data['commentPostId']);
         }
 
         $requestData = [
             "type" => "posts",
-            "relationships" =>  [
-                "thread" =>[
-                "data" =>  [
-                    "type" => "threads",
-                    'id' => $this->inPut('id'),
+            "relationships" => [
+                "thread" => [
+                    "data" => [
+                        "type" => "threads",
+                        'id' => $this->inPut('id'),
                     ]
                 ],
             ]
         ];
 
-        if(!empty($this->inPut('attachments'))){
+        if (!empty($this->inPut('attachments'))) {
             $attachments = $this->inPut('attachments');
-            foreach ($attachments as $k=>$val){
+            foreach ($attachments as $k => $val) {
                 $requestData['relationships']['attachments']['data'][$k]['id'] = (string)$val['id'];
                 $requestData['relationships']['attachments']['data'][$k]['type'] = $val['type'];
             }
@@ -147,16 +157,16 @@ class CreatePostController extends DzqController
             new CreatePost($threadId, $actor, $requestData, $ip, $port)
         );
 
-        $build = $this->getPost($post,true);
+        $build = $this->getPost($post, true);
 
         $data = $this->camelData($build);
 
-        return $this->outPut(ResponseCode::SUCCESS,'',$data);
+        return $this->outPut(ResponseCode::SUCCESS, '', $data);
 
     }
 
 
-    protected function getPost(Post $post,bool $getRedPacketAmount)
+    protected function getPost(Post $post, bool $getRedPacketAmount)
     {
         $data = [
             'id' => $post['id'],
@@ -166,7 +176,7 @@ class CreatePostController extends DzqController
             'replyUserId' => $post['reply_user_id'],
             'commentPostId' => $post['comment_post_id'],
             'commentUserId' => $post['comment_user_id'],
-            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
+            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''], $post['content']),
             'replyCount' => $post['reply_count'],
             'likeCount' => $post['like_count'],
             'createdAt' => optional($post->created_at)->format('Y-m-d H:i:s'),
@@ -249,7 +259,7 @@ class CreatePostController extends DzqController
         return [
             'id' => $user['id'],
             'userName' => $user['nickname'] ? $user['nickname'] : $user['username'],
-            'groups' =>  $group,
+            'groups' => $group,
             'avatar' => $user['avatar'],
             'likedCount' => $user['liked_count'],
             'isRealName' => !empty($user['realname']),
