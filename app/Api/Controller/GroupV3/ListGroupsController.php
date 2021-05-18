@@ -29,7 +29,7 @@ class ListGroupsController extends DzqController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $this->user->isAdmin();
+        return $userRepo->canListGroup($this->user);
     }
 
     public function main()

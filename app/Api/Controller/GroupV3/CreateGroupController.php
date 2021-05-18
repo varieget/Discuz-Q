@@ -36,7 +36,7 @@ class CreateGroupController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $this->user->isAdmin();
+        return $userRepo->canCreateGroup($this->user);
     }
 
     public function main()

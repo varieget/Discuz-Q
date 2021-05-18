@@ -35,7 +35,9 @@ class BatchDeleteGroupsController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $this->user->isAdmin();
+        $ids = $this->inPut('ids') ?: '';
+        $ids = explode(',', $ids);
+        return $userRepo->canDeleteGroup($this->user, $ids);
     }
 
     public function main()
