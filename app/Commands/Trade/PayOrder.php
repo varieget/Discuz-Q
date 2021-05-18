@@ -158,7 +158,7 @@ class PayOrder
                             app('payLog')->info("密码错误达到上线,订单号:{$this->order_sn},用户id:{$this->actor->id}");
                             throw new Exception(trans('trade.pay_password_failures_times_toplimit'));
                         } else {
-                            $fail(trans('trade.wallet_pay_password_error', ['value'=>UserWalletFailLogs::TOPLIMIT - $failCount]));
+                            throw new Exception(trans('trade.wallet_pay_password_error', ['value'=>UserWalletFailLogs::TOPLIMIT - $failCount]));
                         }
                     }
                 }
@@ -167,7 +167,7 @@ class PayOrder
 
 
         if ($validator_info->fails()) {
-            app('payLog')->info("支付验证参数错误,订单号:{$this->order_sn},用户id:{$this->actor->id}");
+            app('payLog')->info("支付验证参数错误,订单号:{$this->order_sn},用户id:{$this->actor->id}" . "，错误信息：" . $validator_info);
             throw new ValidationException($validator_info);
         }
 

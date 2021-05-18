@@ -97,7 +97,11 @@ class PayOrderController extends DzqController
                 'wechatPayResult' => $this->camelData($payOrderResult)
             ];
         }
-        
+
+        if (isset($payOrderResult['result']) && $payOrderResult['result'] == 'fail') {
+            $this->outPut(ResponseCode::PAY_ORDER_FAIL, $payOrderResult['message'], $result);
+        }
+
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }
