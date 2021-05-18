@@ -37,7 +37,7 @@ class ThreadStickController extends DzqController
     public function main()
     {
         $categoryIds = $this->inPut('categoryids');
-        $threads = Thread::query()->select(['id', 'category_id', 'title']);
+        $threads = Thread::query()->select(['id', 'category_id', 'title','updated_at'])->orderByDesc('updated_at');
         if (!empty($categoryIds)) {
             if (!is_array($categoryIds)) {
                 $categoryIds = [$categoryIds];
@@ -81,6 +81,7 @@ class ThreadStickController extends DzqController
                 'threadId' => $thread['id'],
                 'categoryId' => $thread['category_id'],
                 'title' => $title,
+                'updatedAt'=>date('Y-m-d H:i:s',strtotime($thread['updated_at'])),
                 'canViewPosts' => $this->canViewPosts($thread, $permissions)
             ];
         }
