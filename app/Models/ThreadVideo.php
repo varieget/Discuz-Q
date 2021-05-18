@@ -109,6 +109,7 @@ class ThreadVideo extends DzqModel
             'height' => $video['height'],
             'width' => $video['width'],
             'duration' => $video['duration'],
+            'status' => $video['status'],
             'mediaUrl' => $this->getMediaUrl($video),
             'coverUrl' => $video['cover_url']
         ];
@@ -140,6 +141,7 @@ class ThreadVideo extends DzqModel
             'height' => $video['height'],
             'width' => $video['width'],
             'duration' => $video['duration'],
+            'status' => $video['status'],
             'mediaUrl' => $this->getMediaUrl($video),
             'coverUrl' => $video['cover_url']
         ];
@@ -157,6 +159,7 @@ class ThreadVideo extends DzqModel
             'width' => $threadVideo['width'],
             'duration' => $threadVideo['duration'],
             'mediaUrl' => $this->getMediaUrl($threadVideo),
+            'status' => $threadVideo['status'],
             'coverUrl' => $threadVideo['cover_url']
         ];
     }
