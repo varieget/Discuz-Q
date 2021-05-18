@@ -26,8 +26,7 @@ use App\Models\Thread;
 use App\Models\User;
 use App\Models\UserWalletCash;
 use App\Models\Setting;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\PermissionDeniedException;
+use App\Repositories\UserRepository;
 use Discuz\Foundation\Application;
 use Discuz\Foundation\Support\Decomposer;
 use Discuz\Qcloud\QcloudTrait;
@@ -38,7 +37,6 @@ use Psr\Http\Message\ResponseInterface;
 
 class SiteInfoV3Controller extends DzqController
 {
-    use AssertPermissionTrait;
     use QcloudTrait;
 
     /**
@@ -54,15 +52,13 @@ class SiteInfoV3Controller extends DzqController
         $this->app = $app;
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @throws PermissionDeniedException
-     */
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
+    }
+
     public function main()
     {
-        $this->assertCan($this->user, 'viewSiteInfo');
-
         $decomposer = new Decomposer($this->app, $this->request);
 
         $port = $this->request->getUri()->getPort();

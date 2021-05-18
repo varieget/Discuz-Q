@@ -21,10 +21,12 @@ namespace App\Repositories;
 use App\Common\PermissionKey;
 use App\Models\Attachment;
 use App\Models\Group;
+use App\Models\Thread;
 use App\Models\User;
 use Discuz\Foundation\AbstractRepository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Arr;
 
 class UserRepository extends AbstractRepository
 {
@@ -361,9 +363,21 @@ class UserRepository extends AbstractRepository
         if (!$thread) {
             return false;
         }
-        if ($user->id == $thread['user_id']) {
+
+        // 是本人，且已审核，且（没有删除或者是自己删除的）
+        if (
+            $thread['user_id'] == $user->id
+            && Arr::get($thread, 'is_approved') == Thread::APPROVED
+            && (!Arr::get($thread, 'deleted_at') || Arr::get($thread, 'deleted_user_id') == $user->id)
+        ) {
             return true;
         }
+
+        // 查看自己的草稿
+        if(Arr::get($thread, 'is_draft') && $thread['user_id'] == $user->id){
+            return true;
+        }
+
         return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS, $thread['category_id']);
     }
 
@@ -425,9 +439,6 @@ class UserRepository extends AbstractRepository
         ];
 
         $disabled = array_intersect($groups, $ids);
-        if ($disabled) {
-            return false;
-        }
 
         return empty($disabled) && $user->isAdmin();
     }

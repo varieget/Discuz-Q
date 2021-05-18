@@ -20,24 +20,18 @@ namespace App\Api\Controller\SettingsV3;
 
 use App\Common\ResponseCode;
 use App\Models\Setting;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
 class ListSettingsController extends DzqController
 {
-    use AssertPermissionTrait;
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
+    }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param Document $document
-     * @return array|mixed
-     * @throws \Discuz\Auth\Exception\PermissionDeniedException
-     */
     public function main()
     {
-        $this->assertAdmin($this->user);
         $key = $this->inPut('key');
         $tag = $this->inPut('tag');
         $this->outPut(ResponseCode::SUCCESS, '', Setting::where([['key', $key], ['tag', $tag]])->get());

@@ -23,6 +23,7 @@ use App\Common\ResponseCode;
 use Discuz\Auth\AssertPermissionTrait;
 use App\Models\Group;
 use App\Models\Invite;
+use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;

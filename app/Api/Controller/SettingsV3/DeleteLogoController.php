@@ -22,12 +22,10 @@ use App\Common\CacheKey;
 use App\Common\DzqCache;
 use App\Models\Setting;
 use App\Common\ResponseCode;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Filesystem\Factory;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
 class DeleteLogoController extends DzqController
 {
@@ -35,8 +33,6 @@ class DeleteLogoController extends DzqController
     {
         DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
     }
-
-    use AssertPermissionTrait;
 
     /**
      * @var Factory
@@ -71,19 +67,13 @@ class DeleteLogoController extends DzqController
         $this->settings = $settings;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param Document $document
-     * @return mixed
-     * @throws \Discuz\Auth\Exception\PermissionDeniedException
-     */
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
+    }
+
     public function main()
     {
-
-        $actor = $this->user;
-
-        $this->assertCan($actor, 'setting.site');
-
         $type = $this->inPut('type') ? $this->inPut('type') : 'logo';
 
         // 类型
