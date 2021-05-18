@@ -27,7 +27,9 @@ use App\Models\Order;
 use App\Models\Post;
 use App\Models\PostUser;
 use App\Models\Thread;
+use App\Models\ThreadTopic;
 use App\Models\ThreadUser;
+use App\Models\Topic;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Modules\ThreadTom\TomTrait;
@@ -240,7 +242,7 @@ trait ThreadTrait
                     $text = strip_tags($post['content']);
                     $freeLength = mb_strlen($text) * $freeWords;
                     $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
-                    $text = "<t><p>".$text."</p></t>";
+                    $text = "<t><p>" . $text . "</p></t>";
                 }
                 $content['text'] = $text;
             }
@@ -262,7 +264,7 @@ trait ThreadTrait
                 $xml = $post['content'];
                 // 针对 type为1的老数据，存在图文混排的混排的情况，需要特殊处理
                 $tom_image_key = $body = '';
-                if(!empty($content['indexes'])){
+                if (!empty($content['indexes'])) {
                     foreach ($content['indexes'] as $key => $val) {
                         if ($val['tomId'] == TomConfig::TOM_IMAGE) {
                             $body = $val['body'];
@@ -408,6 +410,29 @@ trait ThreadTrait
         return PostUser::query()->where('post_id', $post['id'])->where('user_id', $userId)->exists();
     }
 
+    private function saveTopic($thread, $content)
+    {
+        $threadId = $thread['id'];
+        $topics = $this->optimizeTopics($content['text']);
+        $userId = $this->user->id;
+        foreach ($topics as $topicItem) {
+            $topicName = str_replace('#', '', $topicItem);
+            $topic = Topic::query()->where('content', $topicName)->first();
+            if (empty($topic)) {
+                $topic = new Topic();
+                $topic->user_id = $userId;
+                $topic->content = $topicName;
+                $topic->thread_count = 1;
+                $topic->save();
+            } else {
+                $topic->increment('thread_count');
+            }
+            $topicId = $topic->id;
+            $attr = ['thread_id' => $threadId, 'topic_id' => $topicId];
+            ThreadTopic::query()->where($attr)->firstOrCreate($attr);
+        }
+    }
+
     /*
      * @desc 前端新编辑器只能上传完整url的emoji
      * 后端需要将其解析出代号进行存储
@@ -426,6 +451,17 @@ trait ThreadTrait
         }
         $text = str_replace($searches, $replaces, $text);
         return $text;
+    }
+
+    private function optimizeTopics($text)
+    {
+        preg_match_all('/#.+?#/', $text, $m1);
+        $topics = $m1[0];
+        $topics = array_values($topics);
+        array_walk($topics, function (&$item) {
+            $item = str_replace('#', '', $item);
+        });
+        return $topics;
     }
 
 }

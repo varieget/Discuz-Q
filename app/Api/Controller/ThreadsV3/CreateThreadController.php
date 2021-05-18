@@ -24,6 +24,8 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
+use App\Models\ThreadTopic;
+use App\Models\Topic;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -106,6 +108,8 @@ class CreateThreadController extends DzqController
         $thread = $this->saveThread($content);
         //插入post数据
         $post = $this->savePost($thread, $content);
+        //插入话题
+        $this->saveTopic($thread, $content);
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
