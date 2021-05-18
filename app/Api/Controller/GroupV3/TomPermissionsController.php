@@ -21,13 +21,21 @@ namespace App\Api\Controller\GroupV3;
 use App\Common\ResponseCode;
 use App\Models\Permission;
 use App\Repositories\GroupRepository;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class TomPermissionsController extends DzqController
 {
-    use AssertPermissionTrait;
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
 
     public function main()
     {
@@ -71,7 +79,7 @@ class TomPermissionsController extends DzqController
               $newk = substr($k,7);
               $newresult[$newk] = $value;
          }
-     //   dump($newresult);exit;
+
         return $this->outPut(ResponseCode::SUCCESS, '',$newresult);
     }
 

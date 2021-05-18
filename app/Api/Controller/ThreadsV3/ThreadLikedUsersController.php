@@ -57,20 +57,39 @@ class ThreadLikedUsersController extends DzqController
             'type' => 'required|integer|in:0,1,2'
         ]);
 
-        $thread = Thread::query()->where('id',$data['threadId'])->first(['price']);
+        $thread = Thread::query()->where('id',$data['threadId'])->first(['price','attachment_price']);
 
         $postUser = PostUser::query()
             ->where('post_id',$data['postId'])
             ->orderBy('created_at','desc')
             ->get(['user_id','created_at'])
+            ->map(function ($value) {
+                $value->type = 1;
+                return $value;
+            })
             ->toArray();
 
-        $isPaid = $thread['price'] > 0 ? Order::ORDER_TYPE_THREAD : Order::ORDER_TYPE_REWARD ;
+        if ($thread['price']  > 0) {
+            $isPaid = Order::ORDER_TYPE_THREAD;
+        } else if ($thread['attachment_price']  > 0) {
+            $isPaid = Order::ORDER_TYPE_ATTACHMENT;
+        } else {
+            $isPaid = Order::ORDER_TYPE_REWARD;
+        }
+
         $order = Order::query()->where('thread_id',$data['threadId'])
             ->where('type',$isPaid)
             ->where('status', Order::ORDER_STATUS_PAID)
             ->orderBy('created_at','desc')
-            ->get(['user_id','created_at'])
+            ->get(['user_id','created_at','type'])
+            ->map(function ($value) {
+                if ($value->type == Order::ORDER_TYPE_THREAD) {
+                    $value->type = 2;
+                } else {
+                    $value->type = 3;
+                }
+                return $value;
+            })
             ->toArray();
 
         if (empty($data['type'])) {
@@ -82,12 +101,12 @@ class ThreadLikedUsersController extends DzqController
         }
 
         $postUserIds = array_column($postUserAndorder,'user_id');
-        $user = User::query()->whereIn('id',array_unique($postUserIds))->get(['id','username','avatar'])->toArray();
+        $user = User::query()->whereIn('id',array_unique($postUserIds))->get(['id','nickname','avatar'])->toArray();
         $userArr = array_combine(array_column($user, 'id'), $user);
         $likeSort = $this->arraySort($postUserAndorder,'created_at','desc');
         foreach ($likeSort as $k=>$v) {
             $likeSort[$k]['passed_at'] = $this->format_date(strtotime($v['created_at']));
-            $likeSort[$k]['username'] = $userArr[$v['user_id']]['username'];
+            $likeSort[$k]['nickname'] = $userArr[$v['user_id']]['nickname'];
             $likeSort[$k]['avatar'] = $userArr[$v['user_id']]['avatar'];
         }
 

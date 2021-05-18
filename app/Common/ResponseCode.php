@@ -92,6 +92,7 @@ class ResponseCode
     const USER_LOGIN_STATUS_NOT_NULL = -7050;
     const NONSUPPORT_WECHAT_REBIND = -7051;
     const USERID_NOT_ALLOW_NULL = -7052;
+    const USER_MOBILE_NOT_ALLOW_NULL = -7053;
 
     const NEED_BIND_WECHAT = 8000;
     const NEED_BIND_PHONE = 8001;
@@ -164,5 +165,6 @@ class ResponseCode
         self::NONSUPPORT_WECHAT_REBIND => '该网站暂不支持微信换绑功能',
         self::PC_REBIND_ERROR => '换绑失败',
         self::USERID_NOT_ALLOW_NULL => '用户id不允许为空',
+        self::USER_MOBILE_NOT_ALLOW_NULL => '用户手机号不允许为空',
     ];
 }
