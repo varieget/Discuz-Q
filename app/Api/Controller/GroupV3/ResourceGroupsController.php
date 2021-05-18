@@ -20,8 +20,10 @@ namespace App\Api\Controller\GroupV3;
 
 use App\Common\ResponseCode;
 use App\Repositories\GroupRepository;
+use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
+use Discuz\Auth\Exception\PermissionDeniedException;
 
 class ResourceGroupsController extends DzqController
 {
@@ -32,11 +34,16 @@ class ResourceGroupsController extends DzqController
         'categoryPermissions',
     ];
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
 
     public function main()
     {
-        $actor = $this->user;
-        $this->assertAdmin($actor);
         $id = $this->inPut('id');
 
         if(!$id){

@@ -101,7 +101,7 @@ class ThreadLikedUsersController extends DzqController
         }
 
         $postUserIds = array_column($postUserAndorder,'user_id');
-        $user = User::query()->whereIn('id',array_unique($postUserIds))->get(['id','username','avatar'])->toArray();
+        $user = User::query()->whereIn('id',array_unique($postUserIds))->get(['id','nickname','avatar'])->toArray();
         $userArr = array_combine(array_column($user, 'id'), $user);
         $likeSort = $this->arraySort($postUserAndorder,'created_at','desc');
         foreach ($likeSort as $k=>$v) {
