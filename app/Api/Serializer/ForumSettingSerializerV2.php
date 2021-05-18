@@ -18,6 +18,7 @@
 
 namespace App\Api\Serializer;
 
+use App\Common\PermissionKey;
 use App\Common\SettingCache;
 use App\Models\User;
 use App\Settings\ForumSettingField;
@@ -165,13 +166,13 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'can_edit_user_status' => $editGroupPermission,                // 修改用户状态
 
                 // 至少在一个分类下有发布权限
-                'can_create_thread_in_category' => $this->userRepo->canCreateThread($actor),
+                'can_create_thread_in_category' => $actor->hasPermission('switch.'.PermissionKey::CREATE_THREAD),
 
-                // 至少在一个分类下有查看权限 或 有全局查看权限
-                'can_view_threads' => $this->userRepo->canViewThreads($actor),              // 查看主题列表
+                // 至少在一个分类下有查看主题列表权限 或 有全局查看权限
+                'can_view_threads' => $actor->hasPermission('switch.'.PermissionKey::VIEW_THREADS),
 
-                // 至少在一个分类下有免费查看权限 或 有全局免费查看权限
-                'can_free_view_paid_threads' => $this->userRepo->canFreeViewPosts($actor),            // 免费查看付费帖子权限
+                // 至少在一个分类下有免费查看付费帖子权限 或 有全局免费查看权限
+                'can_free_view_paid_threads' => $actor->hasPermission('switch.'.PermissionKey::THREAD_FREE_VIEW_POSTS),
 
                 // 发布权限
                 'can_create_dialog'            => $this->userRepo->canCreateDialog($actor),               // 发短消息
