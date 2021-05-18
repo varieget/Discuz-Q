@@ -19,13 +19,14 @@
 namespace App\Api\Controller\TradeV3;
 
 use App\Commands\Trade\PayOrder;
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Order;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Support\Arr;
 
 class PayOrderController extends DzqController
 {
@@ -40,6 +41,12 @@ class PayOrderController extends DzqController
             throw new PermissionDeniedException('您没有权限支付订单');
         }
         return true;
+    }
+
+    public function clearCache($user)
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USER_ORDERS, $user->id);
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $user->id);
     }
 
     /**
@@ -57,16 +64,16 @@ class PayOrderController extends DzqController
             $orderSn = $this->inPut("orderSn");
             $paymentType = $this->inPut("paymentType");
             $payPassword = $this->inPut("payPassword");
-            if (empty($orderSn) || empty($paymentType) || 
+            if (empty($orderSn) || empty($paymentType) ||
                 ($paymentType == Order::PAYMENT_TYPE_WALLET && empty($payPassword))) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
 
             $data = array(
-                'order_sn'=>$orderSn,
-                'payment_type'=>$paymentType
+                'order_sn' => $orderSn,
+                'payment_type' => $paymentType
             );
-            if(!empty($payPassword)){
+            if (!empty($payPassword)) {
                 $data['pay_password'] = $payPassword;
             }
             $data = collect($data);
