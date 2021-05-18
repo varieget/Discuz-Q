@@ -5,6 +5,7 @@ namespace App\Api\Controller\OrderV3;
 use App\Commands\Order\CreateOrder;
 use App\Common\ResponseCode;
 use App\Common\Utils;
+use App\Repositories\UserRepository;
 use Exception;
 use App\Models\Group;
 use App\Models\Order;
@@ -13,6 +14,7 @@ use App\Models\Thread;
 use App\Models\PayNotify;
 use App\Settings\SettingsRepository;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class CreateOrderController extends DzqController
@@ -26,9 +28,20 @@ class CreateOrderController extends DzqController
         $this->settings = $settings;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$userRepo->canCreateOrder($this->user)) {
+            throw new PermissionDeniedException('没有创建订单权限');
+        }
+
+        if ($this->inPut('type') == Order::ORDER_TYPE_REWARD){
+            if(empty($this->settings->get('site_can_reward'))) throw new PermissionDeniedException('站点没有开启打赏');
+        }
+        return true;
+    }
+
     public function main()
     {
-        $this->assertCan($this->user, 'order.create');
         $data = [
             'amount' => (float) $this->inPut('amount'),
             'red_amount' => (float) $this->inPut('redAmount') ?? 0,
@@ -90,8 +103,6 @@ class CreateOrderController extends DzqController
                     ->first();
 
                 if ($thread) {
-                    // 主题作者是否允许被打赏
-                    $this->assertCan($thread->user, 'canBeReward', $thread);
 
                     $payeeId = $thread->user_id;
                     $amount = sprintf('%.2f', $data['amount']);
