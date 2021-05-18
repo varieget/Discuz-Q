@@ -30,7 +30,8 @@ class SmsRebindController extends AuthBaseController
 
         if ($this->user->exists) {
             // 删除验证身份的验证码
-            $result = MobileCode::query()   ->where('mobile', '15659120428')
+
+            $result = MobileCode::query()   ->where('mobile', $this->user->getRawOriginal('mobile'))
                                             ->where('type', 'verify')
                                             ->where('state', 1)
                                             ->where('updated_at', '<', Carbon::now()->addMinutes(10))

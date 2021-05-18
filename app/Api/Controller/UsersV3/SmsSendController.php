@@ -84,6 +84,9 @@ class SmsSendController extends AuthBaseController
         // 直接使用用户手机号
         if ($type === 'verify' || $type === 'reset_pay_pwd') {
             $data['mobile'] = $actor->getRawOriginal('mobile');
+            if (empty($data['mobile'])) {
+                $this->outPut(ResponseCode::USER_MOBILE_NOT_ALLOW_NULL);
+            }
         }
 
         // 手机号验证规则
