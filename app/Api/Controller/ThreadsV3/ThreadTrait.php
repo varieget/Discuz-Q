@@ -240,6 +240,7 @@ trait ThreadTrait
                     $text = strip_tags($post['content']);
                     $freeLength = mb_strlen($text) * $freeWords;
                     $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+                    $text = "<t><p>".$text."</p></t>";
                 }
                 $content['text'] = $text;
             }
