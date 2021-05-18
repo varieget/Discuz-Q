@@ -22,20 +22,15 @@ use App\Common\CacheKey;
 use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Setting;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Http\UrlGenerator;
 use Exception;
 use Illuminate\Contracts\Filesystem\Factory as FileFactory;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
-use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Tobscure\JsonApi\Document;
 
 class UploadLogoController extends DzqController
 {
@@ -43,8 +38,6 @@ class UploadLogoController extends DzqController
     {
         DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
     }
-
-    use AssertPermissionTrait;
 
     /**
      * @var Factory
@@ -86,21 +79,13 @@ class UploadLogoController extends DzqController
         $this->url = $url;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param Document $document
-     * @return string[]
-     * @throws FileNotFoundException
-     * @throws PermissionDeniedException
-     * @throws ValidationException
-     * @throws Exception
-     */
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $this->user->isAdmin();
+    }
+
     public function main()
     {
-        $actor = $this->user;
-
-        $this->assertCan($actor, 'setting.site');
-
         UrlGenerator::setRequest($this->request);
 
         $type = $this->inPut('type') ? $this->inPut('type') : 'logo';
