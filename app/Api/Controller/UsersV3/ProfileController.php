@@ -27,6 +27,7 @@ use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\UserWechat;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -135,6 +136,9 @@ class ProfileController extends DzqController
         $groups = GroupUser::instance()->getGroupInfo($grounUser);
         $groups = array_column($groups, null, 'user_id');
         $data['group'] = $this->getGroupInfo($groups[$user_id]);
+
+        //用户是否绑定微信
+        $data['isBindWechat'] = !empty($user->wechat);
 
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
 
