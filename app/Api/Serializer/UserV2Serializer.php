@@ -74,7 +74,7 @@ class UserV2Serializer extends AbstractSerializer
         }
         $attributes = [
             'id'                => (int) $model->id,
-            'username'          => $model->username,
+            'username'          => $model->nickname,
             'avatarUrl'         => $model->avatar,
             'backgroundUrl'     => $backUrl,
             'isReal'            => $this->getIsReal($model),
