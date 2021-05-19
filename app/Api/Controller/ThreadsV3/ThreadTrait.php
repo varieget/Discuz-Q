@@ -100,7 +100,7 @@ trait ThreadTrait
         $repo = new UserRepository();
         if ($payType != Thread::PAY_FREE) {//付费贴
             $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
-            if ($canFreeViewThreadDetail || $paid) {
+            if ($canFreeViewThreadDetail || $paid || $user->id == $thread['user_id']) {
                 return true;
             } else {
                 return false;
@@ -249,12 +249,12 @@ trait ThreadTrait
             $content['text'] = $post['content'];
             $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
         } else {
-            if ($paid) {
+            if ($paid || $canFreeViewTom) {
                 $content['text'] = $post['content'];
                 $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
             } else {
                 $freeWords = $thread['free_words'];
-                if (empty($freeWords) || $canFreeViewTom) {
+                if (empty($freeWords)) {
                     $text = $post['content'];
                 } else{
                     $text = strip_tags($post['content']);

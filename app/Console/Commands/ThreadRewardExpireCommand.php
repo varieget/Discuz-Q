@@ -146,16 +146,32 @@ class ThreadRewardExpireCommand extends AbstractCommand
 
                 if ($order->payment_type == Order::PAYMENT_TYPE_WALLET) {
                     $userWallet->freeze_amount = $userWallet->freeze_amount - $remainMoney;
-                    $changeFreezeAmount = $remainMoney;
                 }
                 $userWallet->available_amount = $userWallet->available_amount + $remainMoney;
                 $userWallet->save();
 
-                $trueChangeFreezeAmount = $changeFreezeAmount ? -$changeFreezeAmount : 0;
+                if ($order->payment_type == Order::PAYMENT_TYPE_WALLET) {
+                    // 减少冻结金额
+                    UserWalletLog::createWalletLog(
+                        $order->user_id,
+                        0,
+                        -$remainMoney,
+                        UserWalletLog::TYPE_QUESTION_REWARD_FREEZE_RETURN,
+                        trans('wallet.question_reward_freeze_return'),
+                        null,
+                        null,
+                        0,
+                        0,
+                        0,
+                        $item->thread_id
+                    );
+                }
+
+                // 增加钱包余额
                 UserWalletLog::createWalletLog(
                     $order->user_id,
                     $remainMoney,
-                    $trueChangeFreezeAmount,
+                    0,
                     $changeType,
                     $changeDesc,
                     null,
