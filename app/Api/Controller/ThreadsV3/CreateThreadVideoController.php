@@ -82,15 +82,12 @@ class CreateThreadVideoController extends DzqController
         }
         $type = $this->inPut('type');
         $type = (int)$type ? (int)$type: ThreadVideo::TYPE_OF_VIDEO;
-        $validationData = [
-            'fileId' => 'required'
-        ];
-        $this->dzqValidate($validationData, [
-            'fileId' => 'required',
-        ]);
+
+        $media_url = $this->inPut('mediaUrl');
 
         //驼峰改下划线，适应以前的方法
         $data['attributes']['file_id'] = $fileId;
+        $data['attributes']['media_url'] = $media_url;
         $result = $this->bus->dispatch(
             new CreateThreadVideo(
                 $this->user,
