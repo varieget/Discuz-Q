@@ -51,7 +51,8 @@ trait ThreadTrait
         $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
         $payType = $this->threadPayStatus($loginUser, $thread, $paid);
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
-        $contentField = $this->getContentField($loginUser, $thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom);
+        $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
+        $contentField = $this->getContentField($loginUser, $thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom, $canFreeViewTom);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -98,14 +99,30 @@ trait ThreadTrait
     {
         if ($payType != Thread::PAY_FREE) {//付费贴
             $repo = new UserRepository();
-            $canViewThreadDetail = $repo->canViewThreadDetail($user, $thread);
-            if ($canViewThreadDetail || $paid) {
+            $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
+            if ($canFreeViewThreadDetail || $paid) {
                 return true;
             } else {
                 return false;
             }
         } else {
+            $canViewThreadDetail = $repo->canViewThreadDetail($user, $thread);
+            if ($canViewThreadDetail) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    private function canFreeViewTom($user, $thread)
+    {
+        $repo = new UserRepository();
+        $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
+        if ($canFreeViewThreadDetail) {
             return true;
+        } else {
+            return false;
         }
     }
 
@@ -154,6 +171,7 @@ trait ThreadTrait
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
             'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
+            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread['category_id'])
         ];
     }
 
@@ -221,7 +239,7 @@ trait ThreadTrait
         return $obj;
     }
 
-    private function getContentField($loginUser, $thread, $post, $tomInput, $payType, $paid, $canViewTom)
+    private function getContentField($loginUser, $thread, $post, $tomInput, $payType, $paid, $canViewTom, $canFreeViewTom)
     {
         $content = [
             'text' => null,
@@ -236,9 +254,9 @@ trait ThreadTrait
                 $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
             } else {
                 $freeWords = $thread['free_words'];
-                if (empty($freeWords)) {
+                if (empty($freeWords) || $canFreeViewTom) {
                     $text = $post['content'];
-                } else {
+                } else{
                     $text = strip_tags($post['content']);
                     $freeLength = mb_strlen($text) * $freeWords;
                     $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
