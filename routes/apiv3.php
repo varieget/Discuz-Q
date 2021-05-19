@@ -180,3 +180,6 @@ $route->get('/group.permission.list', 'group.permission.list', ApiController\Gro
 //附件分享
 $route->get('/attachment.share', 'attachment.share', ApiController\AttachmentV3\ShareAttachmentController::class);
 $route->get('/attachment.download', '/attachment.download', ApiController\AttachmentV3\DownloadAttachmentController::class);
+
+//生成jssdk签名
+$route->get('/offiaccount/jssdk', 'offiaccount.jssdk', ApiController\WechatV3\OffIAccountJSSDKController::class);
