@@ -182,7 +182,7 @@ abstract class AuthBaseController extends DzqController
             $result['isMissNickname'] = false;
         }
 
-        $result['avatar']       = !empty($user->avatar) ? $user->avatar : '';
+        $result['avatarUrl']    = !empty($user->avatar) ? $user->avatar : '';
         $result['userStatus']   = !empty($user->status) ? $user->status : 0;
         $result['uid']          = !empty($user->id) ? $user->id : 0;
 
