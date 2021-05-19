@@ -97,8 +97,8 @@ trait ThreadTrait
 
     private function canViewTom($user, $thread, $payType, $paid)
     {
+        $repo = new UserRepository();
         if ($payType != Thread::PAY_FREE) {//付费贴
-            $repo = new UserRepository();
             $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
             if ($canFreeViewThreadDetail || $paid) {
                 return true;
