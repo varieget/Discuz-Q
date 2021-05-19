@@ -79,6 +79,8 @@ return [
     'question_reward_income' => '悬赏收入',
     'question_reward_refund' => '悬赏过期退款',
     'question_order_abnormal_refund' => '悬赏订单异常退款',
+    'question_reward_expend' => '悬赏采纳支出',
+    'question_reward_freeze_return' => '悬赏冻结返回',
     'merge_freeze' => '合并订单冻结',
     'merge_refund' => '合并订单退款',
     'merge_order_abnormal_refund' => '合并订单异常退款'

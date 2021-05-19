@@ -144,6 +144,21 @@ class CreatePostRewardController extends DzqController
                 }else{
                     $userWallet->freeze_amount = $userWallet->freeze_amount - $rewards;
                     $userWallet->save();
+
+                    // 流水-减少冻结
+                    UserWalletLog::createWalletLog(
+                        $userWallet->user_id,
+                        0,
+                        -$rewards,
+                        UserWalletLog::TYPE_QUESTION_REWARD_EXPEND,
+                        trans('wallet.question_reward_expend'),
+                        null,
+                        null,
+                        0,
+                        0,
+                        $attributes['post_id'],
+                        $thread_id
+                    );
                 }
             }
 
