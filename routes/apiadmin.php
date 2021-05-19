@@ -32,4 +32,5 @@ $route->post('/permission.update', 'permission.update', ApiController\Permission
 
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
 //注册扩展
-$route->get('/admin/signinfields', 'admin.signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
+$route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
+$route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
