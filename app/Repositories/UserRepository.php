@@ -318,11 +318,11 @@ class UserRepository extends AbstractRepository
         if (!$thread) {
             return false;
         }
-        // 是作者本人，且有编辑自己帖子权限
+
+        // 作者本人，且（有编辑自己帖子的权限或者是草稿）
         if (
-            ($thread['user_id'] == $user->id)
-            && $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_OWN, $thread['category_id'])
-        ) {
+            $thread['user_id'] == $user->id
+            && ($this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_OWN, $thread['category_id']) || Arr::get($thread, 'is_draft'))) {
             return true;
         }
 
