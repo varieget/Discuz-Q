@@ -114,6 +114,7 @@ class LoginController extends AuthBaseController
                 //未绑定微信
                 $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
                 if(!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
+                    $data['uid'] = !empty($user->id) ? $user->id : 0;
                     return $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', $data);
                 }
             }

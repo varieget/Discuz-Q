@@ -48,27 +48,36 @@ class OperateThreadController extends DzqController
         $isSticky = $this->inPut('isSticky');
         $isEssence = $this->inPut('isEssence');
         $isFavorite = $this->inPut('isFavorite');
+        $isDeleted = $this->inPut('isDeleted');
 
         if ($actor->isGuest()) {
             throw new PermissionDeniedException('没有权限');
         }
+
         if (
-            isset($isSticky)
+            (!empty($isSticky) || $isSticky === 0 || is_bool($isSticky))
             && !$userRepo->canStickThread($actor)
         ) {
             throw new PermissionDeniedException('没有置顶权限');
         }
+
         if (
-            isset($isEssence)
+            (!empty($isEssence) || $isEssence === 0 || is_bool($isEssence))
             && !$userRepo->canEssenceThread($actor)
         ) {
             throw new PermissionDeniedException('没有加精权限');
         }
         if (
-            isset($isFavorite)
+            (!empty($isFavorite) || $isFavorite === 0 || is_bool($isFavorite))
             && !$userRepo->canFavoriteThread($actor)
         ) {
             throw new PermissionDeniedException('没有收藏权限');
+        }
+        if (
+            (!empty($isDeleted) || $isDeleted === 0 || is_bool($isDeleted))
+            && !$userRepo->canFavoriteThread($actor)
+        ) {
+            throw new PermissionDeniedException('没有删除权限');
         }
 
         return true;
@@ -78,6 +87,7 @@ class OperateThreadController extends DzqController
     {
         //参数校验
         $thread_id= $this->inPut('id');
+
         if(empty($thread_id))     return  $this->outPut(ResponseCode::INVALID_PARAMETER);
 
         $threadRow = Thread::query()->where('id',$thread_id)->first();
@@ -92,6 +102,7 @@ class OperateThreadController extends DzqController
         $isEssence = $this->inPut('isEssence');
         $isSticky = $this->inPut('isSticky');
         $isFavorite = $this->inPut('isFavorite');
+        $isDeleted = $this->inPut('isDeleted');
 
         $attributes = [];
         $requestData = [];
@@ -118,6 +129,9 @@ class OperateThreadController extends DzqController
         }
         if($isFavorite || $isFavorite===false){
             $attributes['isFavorite'] = $isFavorite;
+        }
+        if($isDeleted || $isDeleted===false){
+            $attributes['isDeleted'] = $isDeleted;
         }
 
         $requestData['id'] = $thread_id;

@@ -158,6 +158,10 @@ class UserWalletLog extends Model
 
     const TYPE_QUESTION_ORDER_ABNORMAL_REFUND = 163; // 悬赏订单异常退款
 
+    const TYPE_QUESTION_REWARD_EXPEND = 164; // 悬赏采纳支出
+
+    const TYPE_QUESTION_REWARD_FREEZE_RETURN = 165; // 悬赏冻结返回
+
     const TYPE_MERGE_FREEZE = 170; // 合并订单冻结
 
     const TYPE_MERGE_REFUND = 171; // 合并订单退款

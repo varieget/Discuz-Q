@@ -164,6 +164,11 @@ class CreateThreadController extends DzqController
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
         $thread->setRawAttributes($dataThread);
         $thread->save();
+        if (!$isApproved) {
+            $this->user->refreshThreadCount();
+            $this->user->save();
+        }
+
         return $thread;
     }
 
