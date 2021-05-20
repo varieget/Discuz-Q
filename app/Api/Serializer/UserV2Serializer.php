@@ -164,8 +164,8 @@ class UserV2Serializer extends AbstractSerializer
         $attributes += [
             'paid' => $model->paid,
             'payTime' => $this->formatDate($model->payTime),
-            'unreadNotifications' => $model->getUnreadNotificationCount(),
-            'typeUnreadNotifications' => $model->getUnreadTypesNotificationCount()
+//            'unreadNotifications' => $model->getUnreadNotificationCount(),
+//            'typeUnreadNotifications' => $model->getUnreadTypesNotificationCount()
         ];
         //是否屏蔽
         if($this->actor->id != $model->id){
