@@ -19,6 +19,7 @@ namespace App\Api\Controller\PostsV3;
 
 use App\Common\ResponseCode;
 use App\Models\Order;
+use App\Models\OrderChildren;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadReward;
@@ -113,6 +114,13 @@ class CreatePostRewardController extends DzqController
         }
 
         $threadRewardOrder = Order::query()->where(['thread_id' => $thread_id, 'status' => Order::ORDER_STATUS_PAID])->first();
+        //合并订单处理
+        if ($threadRewardOrder->type == Order::ORDER_TYPE_MERGE) {
+            $OrderChildren = OrderChildren::query()
+                ->where(['order_sn' => $threadRewardOrder['order_sn'], "type" => Order::ORDER_TYPE_QUESTION_REWARD ,'status' => Order::ORDER_STATUS_PAID])
+                ->first(['amount']);
+            $threadRewardOrder['amount'] = isset($OrderChildren['amount']) ? $OrderChildren['amount'] : 0;
+        }
         if(empty($threadRewardOrder)){
             app('log')->info('获取不到悬赏帖订单信息，作者' . $actor->username . '悬赏采纳失败！;悬赏问答帖ID为：' . $thread_id);
             return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_reward_order_error'));
@@ -124,7 +132,7 @@ class CreatePostRewardController extends DzqController
         }
 
         // 通过订单实付金额、用户钱包流水统计实际已悬赏的金额，获取真实的剩余金额
-        $postRewardLog = UserWalletLog::query()->where('thread_id', $thread_id)->get()->toArray();
+        $postRewardLog = UserWalletLog::query()->where(['thread_id' => $thread_id ,'change_type' => UserWalletLog::TYPE_INCOME_THREAD_REWARD])->get()->toArray();
         $rewardTotal = 0;
         if(!empty($postRewardLog)){
             $rewardTotal = array_sum(array_column($postRewardLog, 'change_available_amount'));
