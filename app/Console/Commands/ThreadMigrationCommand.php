@@ -168,14 +168,21 @@ class ThreadMigrationCommand extends AbstractCommand
                     break;
                 }
                 //还需要插入对应的  thread_tom
-                $order = Order::where(['thread_id' => $val->id, 'type' => Order::ORDER_TYPE_TEXT])->first();
+//                $order = Order::where(['thread_id' => $val->id, 'type' => Order::ORDER_TYPE_TEXT])->first();
                 $value = [
+                    'thread_id' => $val->id,
+                    'post_id'   => $val->post_id,
+                    'rule'  =>  $thread_red_packets->rule,
                     'condition' =>  $thread_red_packets->condition,
                     'likenum'   =>  $thread_red_packets->likenum,
+                    'money'     =>  $thread_red_packets->money,
+                    'remain_money'  =>  $thread_red_packets->remain_money,
                     'number'    =>  $thread_red_packets->number,
-                    'rule'  =>  $thread_red_packets->rule,
-                    'orderSn'   =>  $order->order_sn,
-                    'price' =>  $thread_red_packets->money,
+                    'remain_number' =>  $thread_red_packets->remain_number,
+                    'status'    =>  $thread_red_packets->status,
+                    'updated_at'    =>  $thread_red_packets->updated_at,
+                    'created_at'    =>  $thread_red_packets->created_at,
+                    'id'        =>  $thread_red_packets->id,
                     'content'   =>  '红包帖'
                 ];
                 $value = json_encode($value);
