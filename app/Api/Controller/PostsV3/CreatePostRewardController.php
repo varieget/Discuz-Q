@@ -40,7 +40,7 @@ class CreatePostRewardController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $thread = Thread::query()->where(['id' => $this->inPut("threadId"), 'is_approved' => 1])->whereNull('deleted_at')->first();
+        $thread = Thread::query()->where(['id' => $this->inPut('threadId'), 'is_approved' => 1])->whereNull('deleted_at')->first();
         if (!$thread) {
             return false;
         }

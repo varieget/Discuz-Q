@@ -25,7 +25,6 @@ use App\Models\Post;
 use App\Models\User;
 use App\Repositories\ThreadRepository;
 use App\Repositories\UserRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Common\Utils;
@@ -33,8 +32,6 @@ use Illuminate\Contracts\Routing\UrlGenerator;
 
 class ListPaidThreadsController extends DzqController
 {
-    use AssertPermissionTrait;
-
     //返回的数据一定包含的数据
     public $include = [
         'firstPost',

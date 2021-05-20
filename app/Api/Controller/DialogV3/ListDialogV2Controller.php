@@ -6,6 +6,7 @@ use App\Common\ResponseCode;
 use App\Models\Dialog;
 use App\Models\User;
 use App\Providers\DialogMessageServiceProvider;
+use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
@@ -17,6 +18,14 @@ class ListDialogV2Controller extends DzqController
     public $providers = [
         DialogMessageServiceProvider::class,
     ];
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
+    }
 
     public function main()
     {

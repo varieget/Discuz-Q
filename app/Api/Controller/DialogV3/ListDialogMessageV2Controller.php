@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Providers\DialogMessageServiceProvider;
 use App\Repositories\DialogMessageRepository;
 use App\Repositories\DialogRepository;
+use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
@@ -35,6 +36,14 @@ class ListDialogMessageV2Controller extends DzqController
     {
         $this->dialogs = $dialogs;
         $this->dialogMessage = $dialogMessage;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
     }
 
     public function main()

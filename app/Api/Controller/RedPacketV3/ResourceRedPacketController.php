@@ -20,6 +20,7 @@ namespace App\Api\Controller\RedPacketV3;
 
 use App\Common\ResponseCode;
 use App\Repositories\RedPacketRepository;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ResourceRedPacketController extends DzqController
@@ -29,6 +30,11 @@ class ResourceRedPacketController extends DzqController
     public function __construct(RedPacketRepository $redPacket)
     {
         $this->redPacket = $redPacket;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

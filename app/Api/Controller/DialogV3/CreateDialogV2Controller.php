@@ -5,6 +5,7 @@ namespace App\Api\Controller\DialogV3;
 use App\Commands\Dialog\CreateDialog;
 use App\Common\ResponseCode;
 use App\Providers\DialogMessageServiceProvider;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
@@ -27,6 +28,11 @@ class CreateDialogV2Controller extends DzqController
     {
         $this->validation = $validation;
         $this->bus = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $userRepo->canCreateDialog($this->user);
     }
 
     public function main()
