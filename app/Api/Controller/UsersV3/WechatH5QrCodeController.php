@@ -20,13 +20,14 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Models\User;
 use Discuz\Base\DzqController;
 use Endroid\QrCode\QrCode;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Wechat\EasyWechatTrait;
 
-class WechatH5QrCodeController extends DzqController
+class WechatH5QrCodeController extends AuthBaseController
 {
 
     use EasyWechatTrait;
@@ -93,9 +94,14 @@ class WechatH5QrCodeController extends DzqController
         if($type != 'mobile_browser_bind') {
             //跳转路由选择
             $actor = $this->user;
-            if ($type == 'pc_bind' && empty($actor)) {
-                $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+            if ($type == 'pc_bind') {
+                $userId = $this->getCookie('dzq_user_id');
+                $actor = User::query()->where('id', (int)$userId)->first();
+                if (empty($actor)) {
+                    $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+                }
             }
+
             if($actor && $actor->id) {
                 $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
             } else {
