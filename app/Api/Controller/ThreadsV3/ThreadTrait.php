@@ -228,7 +228,6 @@ trait ThreadTrait
                 $content['text'] = $text;
             }
         }
-        return $content;
         if (!empty($content['text'])) {
 //            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
             $content['text'] = app()->make(Formatter::class)->render($content['text']);
