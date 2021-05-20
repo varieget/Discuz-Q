@@ -39,3 +39,7 @@ $route->get('/check.thread.list', 'check.thread.list', ApiController\AdminV3\Che
 //审核评论列表
 $route->get('/check.posts.list', 'check.posts.list', ApiController\AdminV3\CheckReplyList::class);
 $route->post('/check.sub', 'check.sub', ApiController\AdminV3\CheckSub::class);
+//话题管理
+$route->get('/topics.list', 'topics.list', ApiController\TopicV3\AdminTopicListController::class);
+$route->post('/topics.batch.update', 'topics.batch.update', ApiController\TopicV3\BatchUpdateTopicController::class);
+$route->post('/topics.batch.delete', 'topics.batch.delete', ApiController\TopicV3\BatchDeleteTopicController::class);

@@ -186,6 +186,7 @@ class ResourceAnalysisGoodsController extends DzqController
             }
             $this->html = $response->getBody()->getContents();
         } elseif ($sendType == 'File') {
+            ini_set('user_agent','Mozilla/5.0 (Windows NT 6.1; rv:14.0) Gecko/20100101 Firefox/14.0.2');
             $this->html = file_get_contents($this->address);
         }
 
