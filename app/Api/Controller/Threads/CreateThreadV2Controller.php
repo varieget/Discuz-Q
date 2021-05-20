@@ -106,7 +106,7 @@ class CreateThreadV2Controller extends DzqController
             ];
             $data['redPacket'] = $redPacket;
             $requestData['relationships']['redpacket']['data']['order_id'] = $redPacketData['orderId'];
-            $requestData['relationships']['redpacket']['data']['price'] = $redPacketData['orderPrice'];
+            $requestData['relationships']['redpacket']['data']['price'] = $redPacketData['orderPrice'] ?? $redPacketData['price'];
         }
 
         //附件处理(包括图片)
