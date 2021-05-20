@@ -20,18 +20,13 @@ namespace App\Api\Controller\WechatV3;
 
 use App\Common\ResponseCode;
 use Discuz\Base\DzqController;
-use App\Api\Serializer\WechatJssdkSerializer;
 use App\Exceptions\TranslatorException;
-use Discuz\Api\Controller\AbstractCreateController;
 use Discuz\Wechat\EasyWechatTrait;
 use EasyWeChat\Kernel\Exceptions\InvalidConfigException;
 use EasyWeChat\Kernel\Exceptions\RuntimeException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Routing\UrlGenerator;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\SimpleCache\InvalidArgumentException;
-use Tobscure\JsonApi\Document;
 
 class OffIAccountJSSDKController extends DzqController
 {
