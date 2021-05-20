@@ -245,4 +245,13 @@ abstract class AuthBaseController extends DzqController
         return $wechatUser;
     }
 
+    public function getCookie($name = null){
+        if (empty($name)) {
+            return $this->request->getCookieParams();
+        } else {
+            $cookies = $this->request->getCookieParams();
+            return !empty($cookies[$name]) ? $cookies[$name] : '';
+        }
+    }
+
 }
