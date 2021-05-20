@@ -97,15 +97,15 @@ trait ThreadTrait
 
     private function canViewTom($user, $thread, $payType, $paid)
     {
-        $repo = new UserRepository();
         if ($payType != Thread::PAY_FREE) {//付费贴
-            $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
-            if ($canFreeViewThreadDetail || $paid || $user->id == $thread['user_id']) {
+            $canFreeViewThreadDetail = $this->canFreeViewTom($user, $thread);
+            if ($canFreeViewThreadDetail || $paid) {
                 return true;
             } else {
                 return false;
             }
         } else {
+            $repo = new UserRepository();
             $canViewThreadDetail = $repo->canViewThreadDetail($user, $thread);
             if ($canViewThreadDetail) {
                 return true;
@@ -119,7 +119,7 @@ trait ThreadTrait
     {
         $repo = new UserRepository();
         $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
-        if ($canFreeViewThreadDetail) {
+        if ($canFreeViewThreadDetail || $user->id == $thread['user_id']) {
             return true;
         } else {
             return false;
@@ -182,8 +182,11 @@ trait ThreadTrait
         $threadId = $thread['id'];
         $thread['price'] > 0 && $payType = Thread::PAY_THREAD;
         $thread['attachment_price'] > 0 && $payType = Thread::PAY_ATTACH;
+        $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
+        } else if($payType != Thread::PAY_FREE && $canFreeViewTom) {
+           $paid = true;
         } else {
             $orders = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userId);
             $orders = $orders[$userId] ?? [];
