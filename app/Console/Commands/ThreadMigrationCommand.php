@@ -572,24 +572,7 @@ class ThreadMigrationCommand extends AbstractCommand
         $this->info('迁移商品帖end');
     }
 
-/*
-    public function getThreadStatus($thread){
-        if(!empty($thread->deleted_at)){
-            $status = -1;
-        }elseif ($thread->is_display == 0){
-            $status = 3;
-        }elseif ($thread->is_approved == 0){
-            $status = 0;
-        }elseif ($thread->is_approved == 2){
-            $status = 4;
-        }elseif ($thread->is_draft){
-            $status = 2;
-        }else{
-            $status = 1;
-        }
-        return $status;
-    }
-*/
+
     public function getThreadStatus($thread){
         if(!empty($thread->deleted_at)){
             return -1;
@@ -597,29 +580,6 @@ class ThreadMigrationCommand extends AbstractCommand
         return 0;
     }
 
-    public function insertThreadText($value, $status){
-         return $this->db->table('thread_text')->insert(
-            [
-                'id'    =>  $value->id,
-                'user_id'   =>  $value->user_id,
-                'category_id'   =>  $value->category_id,
-                'title'   =>  $value->title,
-                'summary'   =>  Thread::find($value->id)->firstPost->summary,
-                'text'   =>  $value->content,
-                'longitude'   =>  $value->longitude,
-                'latitude'   =>  $value->latitude,
-                'address'   =>  $value->address,
-                'location'   =>  $value->location,
-                'is_sticky'   =>  $value->is_sticky,
-                'is_essence'   =>  $value->is_essence,
-                'is_anonymous'   =>  $value->is_anonymous,
-                'is_site'   =>  $value->is_site,
-                'status'   =>  $status,
-                'created_at' =>  $value->created_at->timestamp,
-                'updated_at' =>  $value->updated_at->timestamp,
-            ]
-        );
-    }
 
     public function insertThreadTag($thread, $tag){
         return $this->db->table('thread_tag')->insert([
@@ -631,38 +591,6 @@ class ThreadMigrationCommand extends AbstractCommand
 
     }
 
-    public function insertThreadHot($value){
-        return $this->db->table('thread_hot')->insert(
-            [
-                'thread_id' =>  $value->id,
-                'comment_count' =>  $value->post_count,
-                'view_count' =>  $value->view_count,
-                'reward_count' =>  $value->rewarded_count,
-                'pay_count' =>  $value->paid_count,
-                'last_post_time' =>  $value->posted_at->timestamp,
-                'last_post_user' =>  $value->last_posted_user_id,
-                'created_at' =>  $value->created_at->timestamp,
-                'updated_at' =>  $value->updated_at->timestamp,
-            ]
-        );
-    }
-
-    public function replaceContent($content, $attachments){
-        $i = 0;
-        return preg_replace_callback(
-            '(<IMG(.*)(title="(\d+)")(.*)\/IMG>)',
-            function ($m) use ($attachments, &$i){
-                foreach ($attachments as $vo){
-                    if($m[3] == $vo->id){
-                        $vo->key = '{$'.$i.'}';
-                        $i ++;
-                        return $vo->key;
-                    }
-                }
-            },
-            $content
-        );
-    }
 
     public function insertThreadTom($thread, $tom_type, $key, $value){
         return $this->db->table('thread_tom')->insert([
@@ -678,31 +606,5 @@ class ThreadMigrationCommand extends AbstractCommand
     }
 
 
-/*
-    public function insertThreadTom($tom, $thread){
-        if(in_array($thread->type,[Thread::TYPE_OF_VIDEO, Thread::TYPE_OF_AUDIO])){
-            $tom_type = $this->video_type[$tom->type];
-        }elseif(in_array($thread->type, [
-            Thread::TYPE_OF_LONG,
-            Thread::TYPE_OF_IMAGE,
-            Thread::TYPE_OF_QUESTION
-        ])){
-            $tom_type = $this->attachment_type[$tom->type];
-        }else{
-            $tom_type = $tom->type;
-        }
-        if(empty($tom_type))    $tom_type = 0;
-
-        return $this->db->table('thread_tom')->insert([
-            'thread_id' =>  $thread->id,
-            'tom_type'  =>  $tom_type,
-            'key'       =>  $tom->key,
-            'value'     =>  json_encode($tom->toArray()),
-            'created_at'    =>  $tom->created_at,
-            'updated_at'    =>  $tom->updated_at
-        ]);
-
-    }
-*/
 
 }
