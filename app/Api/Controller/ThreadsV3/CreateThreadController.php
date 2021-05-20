@@ -19,14 +19,13 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
+use App\Models\Category;
 use App\Models\Group;
 use App\Models\Permission;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
-use App\Models\ThreadTopic;
-use App\Models\Topic;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -36,6 +35,8 @@ use Discuz\Base\DzqController;
 class CreateThreadController extends DzqController
 {
     use ThreadTrait;
+
+    private $isDraft = false;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -114,6 +115,9 @@ class CreateThreadController extends DzqController
         $this->saveTopic($thread, $content);
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
+        //更新帖子条数
+        !$this->isDraft && Category::refreshThreadCountV3($thread['category_id']);
+
         return $this->getResult($thread, $post, $tomJsons);
     }
 
@@ -129,6 +133,7 @@ class CreateThreadController extends DzqController
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
+        $this->isDraft = $isDraft;
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
 //        empty($title) && $title = Post::autoGenerateTitle($content['text']);//不自动生成title
@@ -209,7 +214,7 @@ class CreateThreadController extends DzqController
     {
         $indexes = $content['indexes'];
         $attrs = [];
-        $tomJsons = $this->tomDispatcher($indexes, null, $thread['id'], $post['id']);
+        $tomJsons = $this->tomDispatcher($indexes, $this->CREATE_FUNC, $thread['id'], $post['id']);
         $tags = [];
         if (!empty($content['text'])) {
             $tags[] = [
@@ -253,6 +258,7 @@ class CreateThreadController extends DzqController
             $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，请稍后重试');
         }
     }
+
     public function clearCache($user)
     {
         DzqCache::delKey(CacheKey::CATEGORIES);

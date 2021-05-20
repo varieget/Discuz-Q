@@ -162,6 +162,34 @@ class Category extends DzqModel
 
         return $this;
     }
+    public static function refreshThreadCountV3($categoryId){
+        $categoryDetail = Category::query()->where('id', $categoryId)->first();
+        if(empty($categoryDetail)){
+            return false;
+        }
+        $category_ids = Category::query()->where('id', $categoryId)->orWhere('parentid', $categoryId)->pluck('id')->toArray();
+        $categoryDetail->thread_count =  Thread::query()
+            ->where('is_approved', Thread::APPROVED)
+            ->where('is_draft', 0)
+            ->whereIn('category_id', $category_ids)
+            ->whereNull('deleted_at')
+            ->whereNotNull('user_id')
+            ->count();
+        $categoryDetail->save();
+        if ($categoryDetail->parentid !== 0) {
+            $father_category_ids = Category::query()->where('id', $categoryDetail->parentid)->orWhere('parentid', $categoryDetail->parentid)->pluck('id')->toArray();
+            $categoryFatherDetail = Category::query()->where('id', $categoryDetail->parentid)->first();
+            $categoryFatherDetail->thread_count = Thread::query()
+                ->where('is_approved', Thread::APPROVED)
+                ->where('is_draft', 0)
+                ->whereIn('category_id', $father_category_ids)
+                ->whereNull('deleted_at')
+                ->whereNotNull('user_id')
+                ->count();
+            $categoryFatherDetail->save();
+        }
+        return true;
+    }
 
     /**
      * Define the relationship with the category's threads.
