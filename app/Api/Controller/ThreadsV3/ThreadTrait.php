@@ -158,7 +158,7 @@ trait ThreadTrait
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
         } else {
-            $paid = DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
+            $paid = DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
                 return Order::query()
                     ->where([
                         'thread_id' => $threadId,

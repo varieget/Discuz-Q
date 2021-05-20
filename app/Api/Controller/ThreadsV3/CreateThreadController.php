@@ -262,5 +262,9 @@ class CreateThreadController extends DzqController
     public function clearCache($user)
     {
         DzqCache::delKey(CacheKey::CATEGORIES);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
     }
 }

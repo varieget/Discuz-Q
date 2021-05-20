@@ -102,7 +102,7 @@ class ThreadListController extends DzqController
 
     private function getFilterThreads($filter, $page, $perPage)
     {
-        $cacheKey = CacheKey::LIST_THREADS_V3_1;
+        $cacheKey = $this->getCacheKey($filter);
         $filterId = md5(serialize([$this->perPage, $this->filter]));
 //        if ($page == 1) {//第一页检查是否需要初始化缓存
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
@@ -122,10 +122,9 @@ class ThreadListController extends DzqController
         return $threads;
     }
 
-
     function getSequenceThreads($filter, $page, $perPage)
     {
-        $cacheKey = CacheKey::LIST_THREADS_V3_0;
+        $cacheKey = CacheKey::LIST_THREADS_V3_SEQUENCE;
         $filterId = md5(serialize([$this->perPage, $this->filter]));
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
@@ -325,4 +324,21 @@ class ThreadListController extends DzqController
             ->where('th.is_draft', $isDraft)
             ->where('th.is_approved', Thread::BOOL_YES);
     }
+
+    private function getCacheKey($filter)
+    {
+        $sort = Thread::SORT_BY_THREAD;
+        isset($filter['sort']) && $sort = $filter['sort'];
+        $cacheKey = CacheKey::LIST_THREADS_V3_CREATE_TIME;
+        switch ($sort) {
+            case Thread::SORT_BY_POST://按照评论时间排序
+                $cacheKey = CacheKey::LIST_THREADS_V3_POST_TIME;
+                break;
+            case Thread::SORT_BY_HOT://按照热度排序
+                $cacheKey = CacheKey::LIST_THREADS_V3_VIEW_COUNT;
+                break;
+        }
+        return $cacheKey;
+    }
+
 }

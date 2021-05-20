@@ -922,16 +922,4 @@ class Thread extends DzqModel
         $toArray && $ret = $ret->toArray();
         return $ret;
     }
-
-
-    protected function clearCache()
-    {
-        $threadId = $this->id;
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TAGS, $threadId);
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_1);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_0);
-    }
 }

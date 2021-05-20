@@ -63,8 +63,18 @@ class CacheKey
 
     public const SEQUENCE = 'sequence';
 
-    public const LIST_THREADS_V3_1 = 'list_threads_v3_1';
-    public const LIST_THREADS_V3_0 = 'list_threads_v3_0';
+
+    public const LIST_THREADS_V3_CREATE_TIME = 'list_threads_v3_create_time';
+    public const LIST_THREADS_V3_SEQUENCE = 'list_threads_v3_sequence';
+    //热点数据变更排序规则
+    public const LIST_THREADS_V3_VIEW_COUNT = 'list_threads_v3_view_count';
+    public const LIST_THREADS_V3_POST_TIME = 'list_threads_v3_post_time';
+    public const LIST_THREADS_V3_POST_COUNT = 'list_threads_v3_post_count';
+    public const LIST_THREADS_V3_PAID_COUNT = 'list_threads_v3_paid_count';
+    public const LIST_THREADS_V3_REWARD_COUNT = 'list_threads_v3_rewarded_count';
+
+
+
 
 
     public const LIST_THREADS_V3_USERS = 'list_threads_v3_users';//发帖用户存储 id
@@ -75,7 +85,8 @@ class CacheKey
     public const LIST_THREADS_V3_TAGS = 'list_threads_v3_tags';//帖子标签存储 thread_id
     public const LIST_THREADS_V3_TOMS = 'list_threads_v3_toms';//帖子插件存储 thread_id
 
-    public const LIST_THREADS_V3_USER_ORDERS = 'list_threads_v3_orders';//用户付费贴订单信息 user_id
+    public const LIST_THREADS_V3_USER_PAY_ORDERS = 'list_threads_v3_user_pay_orders';//用户付费贴订单信息 user_id
+
     public const LIST_THREADS_V3_USER_REWARD_ORDERS = 'list_threads_v3_user_reward_orders';//打赏的订单信息 user_id
 
     public const LIST_THREADS_V3_GROUP_USER = 'list_threads_v3_group_user';//用户组 user_id

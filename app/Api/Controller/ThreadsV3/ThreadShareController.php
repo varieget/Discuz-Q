@@ -36,12 +36,7 @@ class ThreadShareController extends DzqController
         if (empty($thread)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        $this->updateThreadShare($thread);
-        $this->outPut(ResponseCode::SUCCESS, '');
-    }
-
-    private function updateThreadShare($thread)
-    {
         $thread->increment('share_count');
+        $this->outPut(ResponseCode::SUCCESS, '');
     }
 }

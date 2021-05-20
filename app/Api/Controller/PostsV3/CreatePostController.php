@@ -94,6 +94,7 @@ class CreatePostController extends DzqController
         $threadId = $this->inPut('id');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
     }
 
     public function main()

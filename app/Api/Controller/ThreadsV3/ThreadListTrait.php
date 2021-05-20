@@ -288,7 +288,7 @@ trait ThreadListTrait
                 $orderReward[] = $order;
             }
         }
-        DzqCache::hM2Set(CacheKey::LIST_THREADS_V3_USER_ORDERS, $orderPay, $userId, 'thread_id', false, $threadIds, null);
+        DzqCache::hM2Set(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $orderPay, $userId, 'thread_id', false, $threadIds, null);
         DzqCache::hM2Set(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $orderReward, $userId, 'thread_id', false, $threadIds, null);
     }
 

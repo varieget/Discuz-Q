@@ -362,6 +362,8 @@ class Order extends DzqModel
     protected function clearCache()
     {
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_USERS, $this->thread_id);
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USER_ORDERS, $this->user_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $this->user_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $this->user_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $this->thread_id);
     }
 }

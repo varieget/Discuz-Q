@@ -29,7 +29,7 @@ class Sequence extends DzqModel
 {
     protected function clearCache()
     {
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_0);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
         DzqCache::delKey(CacheKey::SEQUENCE);
     }
 

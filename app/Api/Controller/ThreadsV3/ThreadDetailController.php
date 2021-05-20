@@ -33,9 +33,11 @@ class ThreadDetailController extends DzqController
     use ThreadTrait;
 
     protected $thread;
+
     public function clearCache($user)
     {
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $this->inPut('threadId'));
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
