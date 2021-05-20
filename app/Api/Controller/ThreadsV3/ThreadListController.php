@@ -18,7 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
+use Discuz\Base\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Order;
@@ -57,16 +57,16 @@ class ThreadListController extends DzqController
     public function main()
     {
         $filter = $this->inPut('filter');
-        $currentPage = intval($this->inPut('page'));
+        $page = intval($this->inPut('page'));
         $perPage = $this->inPut('perPage');
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
-        $currentPage <= 0 && $currentPage = 1;
+        $page <= 0 && $page = 1;
 //        $this->openQueryLog();
         if (empty($sequence)) {
-            $threads = $this->getFilterThreads($filter, $currentPage, $perPage);
+            $threads = $this->getFilterThreads($filter, $page, $perPage);
         } else {
-            $threads = $this->getSequenceThreads($filter, $currentPage, $perPage);
+            $threads = $this->getSequenceThreads($filter, $page, $perPage);
         }
         $pageData = $threads['pageData'];
         //缓存中获取最新的threads
@@ -84,7 +84,7 @@ class ThreadListController extends DzqController
      */
     private function getThreadsFromCache($threadIds)
     {
-        $pageData = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ($threadIds) {
+        $pageData = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ($threadIds) {
             return Thread::query()->whereIn('id', $threadIds)->get()->keyBy('id')->toArray();
         });
         $threads = [];
@@ -101,14 +101,14 @@ class ThreadListController extends DzqController
         $filterId = md5(serialize($this->inPut('filter')));
 //        if ($page == 1) {//第一页检查是否需要初始化缓存
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
-            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
+            $threads = DzqCache::hM2Get($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
                 $threads = $this->buildFilterThreads($filter);
                 $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, 10, $threads, true);
                 $this->initDzqThreadsData($cacheKey, $threads);
                 return $threads;
             }, true);
         } else {//其他页从缓存取，取不到就重数据库取并写入缓存
-            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function ($page) use ($filter, $perPage) {
+            $threads = DzqCache::hM2Get($cacheKey, $filterId, $page, function ($page) use ($filter, $perPage) {
                 $threads = $this->buildFilterThreads($filter);
                 $threads = $this->pagination($page, $perPage, $threads, true);
                 return $threads;
@@ -123,14 +123,14 @@ class ThreadListController extends DzqController
         $cacheKey = CacheKey::LIST_THREADS_V3_0;
         $filterId = md5(serialize($this->inPut('filter')));
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
-            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
+            $threads = DzqCache::hM2Get($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
                 $threads = $this->buildSequenceThreads($filter);
                 $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, 10, $threads, true);
                 $this->initDzqThreadsData($cacheKey, $threads);
                 return $threads;
             }, true);
         } else {
-            $threads = DzqCache::extractThreadListData($cacheKey, $filterId, $page, function ($page) use ($filter, $perPage) {
+            $threads = DzqCache::hM2Get($cacheKey, $filterId, $page, function ($page) use ($filter, $perPage) {
                 $threads = $this->buildSequenceThreads($filter);
                 $threads = $this->pagination($page, $perPage, $threads, true);
                 return $threads;

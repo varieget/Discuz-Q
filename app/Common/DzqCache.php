@@ -140,22 +140,4 @@ class DzqCache
         }
         return true;
     }
-
-    /**
-     * @desc 添加缓存
-     * @param $cacheKey
-     * @param $value
-     * @param null $hashKey
-     * @return
-     */
-    public static function putCacheByHashKey($cacheKey,$value, $hashKey = null)
-    {
-        $data = app('cache')->get($cacheKey);
-        if ($data) {
-            $data[$hashKey] = $value;
-        } else {
-            $data = [$hashKey => $value];
-        }
-        return app('cache')->put($cacheKey, $data);
-    }
 }

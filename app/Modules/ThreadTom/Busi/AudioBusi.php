@@ -19,7 +19,7 @@ namespace App\Modules\ThreadTom\Busi;
 
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
+use Discuz\Base\DzqCache;
 use App\Models\ThreadVideo;
 use App\Modules\ThreadTom\TomBaseBusi;
 
@@ -45,12 +45,12 @@ class AudioBusi extends TomBaseBusi
     public function select()
     {
         $audioId = $this->getParams('audioId');
-        $audios = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_VIDEO, $audioId, function ($audioId) {
+        $audios = DzqCache::hGet(CacheKey::LIST_THREADS_V3_VIDEO, $audioId, function ($audioId) {
             $audios = ThreadVideo::query()->where(['id' => $audioId])->get()->toArray();
             if (empty($audios)) {
-                $audios = [$audioId => null];
+                $audios = null;
             } else {
-                $audios = [$audioId => current($audios)];
+                $audios = current($audios);
             }
             return $audios;
         });

@@ -19,7 +19,7 @@ namespace App\Modules\ThreadTom\Busi;
 
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
+use Discuz\Base\DzqCache;
 use App\Models\Thread;
 use App\Models\ThreadVideo;
 use App\Modules\ThreadTom\TomBaseBusi;
@@ -45,13 +45,13 @@ class VideoBusi extends TomBaseBusi
             }
             $video->save();
 
-            $thread = Thread::query()->where('id',$this->threadId)->first();
+            $thread = Thread::query()->where('id', $this->threadId)->first();
             if ($video->type == ThreadVideo::TYPE_OF_VIDEO && $thread && $thread['is_draft'] == 0) {
                 // 发布文章时，转码
                 $this->transcodeVideo($video->file_id, 'TranscodeTaskSet');
                 // 转动图
-                $taskflow = Setting::query()->where('key','qcloud_vod_taskflow_gif')->where('tag','qcloud')->first();
-                if($taskflow && $taskflow['value']){
+                $taskflow = Setting::query()->where('key', 'qcloud_vod_taskflow_gif')->where('tag', 'qcloud')->first();
+                if ($taskflow && $taskflow['value']) {
                     // 转动图
                     $this->processMediaByProcedure($video->file_id, $taskflow['value']);
 
@@ -70,12 +70,12 @@ class VideoBusi extends TomBaseBusi
     public function select()
     {
         $videoId = $this->getParams('videoId');
-        $videos = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_VIDEO, $videoId, function ($videoId) {
+        $videos = DzqCache::hGet(CacheKey::LIST_THREADS_V3_VIDEO, $videoId, function ($videoId) {
             $videos = ThreadVideo::query()->where(['id' => $videoId])->get()->toArray();
             if (empty($videos)) {
-                $videos = [$videoId => null];
+                $videos = null;
             } else {
-                $videos = [$videoId => current($videos)];
+                $videos = current($videos);
             }
             return $videos;
         });

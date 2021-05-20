@@ -818,7 +818,7 @@ class Thread extends DzqModel
         $m1 = array_unique($m1[0]);
         $m2 = array_unique($m2[0]);
         $m3 = array_unique($m3[0]);
-        $m2 = str_replace(['@', ''], '', $m2);
+        $m2 = str_replace(['@', ' '], '', $m2);
         $m3 = str_replace('#', '', $m3);
         $search = [];
         $replace = [];
@@ -856,6 +856,26 @@ class Thread extends DzqModel
             $search[] = $topic['content'];
             $replace[] = $topic['html'];
         }
+        foreach ($m1 as $item) {
+            if (!in_array($item, $search)) {
+                $search[] = $item;
+                $replace[] = $item;
+            }
+        }
+        foreach ($m2 as $item) {
+            $item = '@' . $item;
+            if (!in_array($item, $search)) {
+                $search[] = $item;
+                $replace[] = $item;
+            }
+        }
+        foreach ($m3 as $item) {
+            $item = '#' . $item . '#';
+            if (!in_array($item, $search)) {
+                $search[] = $item;
+                $replace[] = $item;
+            }
+        }
         return [$search, $replace];
     }
 
@@ -876,7 +896,7 @@ class Thread extends DzqModel
         list($searches, $replaces) = $this->getReplaceString($linkString);
         $sReplaces = [];
         foreach ($searches as $k => $v) {
-            $sReplaces[$v] = $replaces[$k] ?? $sReplaces[$v];
+            $sReplaces[$v] = $replaces[$k] ?? $searches[$k];
         }
         return $sReplaces;
     }
