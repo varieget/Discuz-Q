@@ -19,14 +19,12 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
-use App\Models\Thread;
 use App\Events\Category\Created;
 use Carbon\Carbon;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -292,6 +290,6 @@ class Category extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::CATEGORIES);
+        DzqCache::delKey(CacheKey::CATEGORIES);
     }
 }

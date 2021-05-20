@@ -20,11 +20,11 @@ namespace App\Api\Controller\PostsV3;
 use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\EditPost;
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Post;
 use App\Models\ThreadUser;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
@@ -79,8 +79,8 @@ class UpdatePostController extends DzqController
         );
         $threadId = $post['thread_id'];
 
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
 
         $isFavorite = ThreadUser::query()->where('thread_id', $threadId)->where('user_id', $actor->id)->exists();
 

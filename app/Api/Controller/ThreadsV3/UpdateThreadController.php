@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Group;
 use App\Models\Post;
@@ -26,6 +27,7 @@ use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 
 class UpdateThreadController extends DzqController
@@ -199,5 +201,9 @@ class UpdateThreadController extends DzqController
         $user = $this->user;
         $group = Group::getGroup($user->id);
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
+    }
+    public function clearCache($user)
+    {
+        DzqCache::delKey(CacheKey::CATEGORIES);
     }
 }

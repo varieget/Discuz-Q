@@ -19,7 +19,7 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 
 /**
@@ -29,8 +29,8 @@ class Sequence extends DzqModel
 {
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_0);
-        DzqCache::removeCacheByPrimaryId(CacheKey::SEQUENCE);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_0);
+        DzqCache::delKey(CacheKey::SEQUENCE);
     }
 
     public static function getSequence()

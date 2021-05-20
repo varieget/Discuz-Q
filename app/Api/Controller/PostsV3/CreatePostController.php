@@ -21,7 +21,6 @@ use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\CreatePost;
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Models\GroupUser;
@@ -31,6 +30,7 @@ use App\Models\User;
 use App\Providers\PostServiceProvider;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -92,8 +92,8 @@ class CreatePostController extends DzqController
     public function clearCache($user)
     {
         $threadId = $this->inPut('id');
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
     }
 
     public function main()

@@ -18,11 +18,13 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 
 class DeleteThreadController extends DzqController
@@ -49,5 +51,9 @@ class DeleteThreadController extends DzqController
             $this->outPut(ResponseCode::SUCCESS);
         }
         $this->outPut(ResponseCode::DB_ERROR, '删除失败');
+    }
+    public function clearCache($user)
+    {
+        DzqCache::delKey(CacheKey::CATEGORIES);
     }
 }

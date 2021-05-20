@@ -19,27 +19,23 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\Utils;
 use App\Events\Thread\Hidden;
 use App\Events\Thread\Restored;
-use App\Models\ThreadReward;
 use Carbon\Carbon;
 use DateTime;
 use Discuz\Auth\Anonymous;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
-use Discuz\Common\PubEnum;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
 use Discuz\SpecialChar\SpecialCharServer;
-use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
 
@@ -931,11 +927,11 @@ class Thread extends DzqModel
     protected function clearCache()
     {
         $threadId = $this->id;
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_TAGS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_1);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_0);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TAGS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_1);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_0);
     }
 }

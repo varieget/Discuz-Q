@@ -17,6 +17,7 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Group;
 use App\Models\Permission;
@@ -29,6 +30,7 @@ use App\Models\Topic;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 
 class CreateThreadController extends DzqController
@@ -250,5 +252,9 @@ class CreateThreadController extends DzqController
         if (!empty($threadFirst) && (time() - strtotime($threadFirst['created_at'])) < 30) {
             $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，请稍后重试');
         }
+    }
+    public function clearCache($user)
+    {
+        DzqCache::delKey(CacheKey::CATEGORIES);
     }
 }
