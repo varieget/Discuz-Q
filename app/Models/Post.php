@@ -222,14 +222,21 @@ class Post extends DzqModel
     public function getSummaryTextAttribute()
     {
        $content = Str::of($this->content ?: '');
-
-        if ($content->length() > self::SUMMARY_LENGTH) {
-
-            $content = static::$formatter->parse(
-                $content->substr(0, self::SUMMARY_LENGTH)->finish(self::SUMMARY_END_WITH)
-            );
+        if (substr($content, 0, 3) === '<r>' && substr($content, -4) != '</r>') {
+             $content = substr($content, 3, -4);
+        }
+        if (substr($content, 0, 3) === '<t>' && substr($content, -4) != '</t>') {
+            $content = substr($content, 3, -4);
+        }
+        if (substr($content, 0, 3) === '<p>' && substr($content, -4) != '</p>') {
+            $content = substr($content, 3, -4);
+        }
+        if (strlen($content) > self::SUMMARY_LENGTH) {
+            $content = mb_substr($content, 0, 80, "UTF-8") . self::SUMMARY_END_WITH;
+            $content = '<t><r><p>' . $content . '</p></r></t>';
             $content = static::$formatter->render($content);
         }
+
         return str_replace('<br>', '', $content);
     }
 
