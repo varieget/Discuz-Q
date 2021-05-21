@@ -40,6 +40,10 @@ class UsersListController extends DzqController
             $username = $filter['username'];
             $query->where('users.username', 'like', '%' . $username . '%');
         }
+        if (Arr::has($filter, 'nickname') && Arr::get($filter, 'nickname') !== '') {
+            $nickname = $filter['nickname'];
+            $query->where('users.nickname', 'like', '%' . $nickname . '%');
+        }
 
         if (isset($filter['hot']) && $filter['hot'] == 1) {
             $query->orderByDesc('users.login_at');
