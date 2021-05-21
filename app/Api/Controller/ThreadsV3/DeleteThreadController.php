@@ -18,6 +18,8 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomTrait;
@@ -30,6 +32,12 @@ class DeleteThreadController extends DzqController
     use TomTrait;
 
     private $thread;
+
+    public function clearCache($user)
+    {
+        $threadId = $this->inPut('threadId');
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+    }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

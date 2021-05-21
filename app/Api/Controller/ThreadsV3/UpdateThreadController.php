@@ -18,6 +18,8 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Group;
 use App\Models\Post;
@@ -33,6 +35,13 @@ class UpdateThreadController extends DzqController
     use ThreadTrait;
 
     private $thread;
+
+    public function clearCache($user)
+    {
+        $threadId = $this->inPut('threadId');
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_ATTACHMENT, $threadId);
+    }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

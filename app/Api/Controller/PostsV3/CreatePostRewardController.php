@@ -17,6 +17,8 @@
 
 namespace App\Api\Controller\PostsV3;
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Order;
 use App\Models\OrderChildren;
@@ -38,6 +40,13 @@ class CreatePostRewardController extends DzqController
     public function __construct(ConnectionInterface $connection) {
         $this->connection = $connection;
     }
+
+    public function clearCache($user)
+    {
+        $threadId = $this->inPut('threadId');
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+    }
+
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

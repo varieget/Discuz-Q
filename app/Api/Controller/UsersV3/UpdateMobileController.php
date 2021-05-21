@@ -18,6 +18,8 @@
 
 namespace App\Api\Controller\UsersV3;
 use App\Common\AuthUtils;
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -32,6 +34,11 @@ class UpdateMobileController extends AuthBaseController
         Dispatcher          $bus
     ){
         $this->bus      = $bus;
+    }
+
+    public function clearCache($user)
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USERS, $user->id);
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
