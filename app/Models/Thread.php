@@ -113,6 +113,8 @@ class Thread extends DzqModel
 
     const TYPE_OF_GOODS = 6;
 
+    const TYPE_OF_ALL = 99;
+
     const UNAPPROVED = 0;
 
     const APPROVED = 1;
