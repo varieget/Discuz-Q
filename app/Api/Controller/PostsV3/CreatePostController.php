@@ -28,6 +28,7 @@ use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\User;
+use App\Models\UserWalletLog;
 use App\Providers\PostServiceProvider;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
@@ -183,7 +184,7 @@ class CreatePostController extends DzqController
             'isFirst' => $post['is_first'],
             'isComment' => $post['is_comment'],
             'isApproved' => $post['is_approved'],
-            'rewards' => floatval(sprintf('%.2f', $post->getPostReward())),
+            'rewards' => floatval(sprintf('%.2f', $post->getPostReward(UserWalletLog::TYPE_INCOME_THREAD_REWARD))),
             'canApprove' => $this->gate->allows('approve', $post),
             'canDelete' => $this->gate->allows('delete', $post),
             'canHide' => $this->gate->allows('hide', $post),
