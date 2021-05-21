@@ -266,6 +266,13 @@ trait ThreadTrait
                     $text = "<t><p>" . $text . "</p></t>";
                 }
                 $content['text'] = $text;
+                // 如果有红包，则只显示红包
+                if (isset($tomInput[TomConfig::TOM_REDPACK])) {
+                    $content['indexes'] = $this->tomDispatcher(
+                        [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]],
+                        $this->SELECT_FUNC, $thread['id'], null, $canViewTom
+                    );
+                }
             }
         }
         if (!empty($content['text'])) {
