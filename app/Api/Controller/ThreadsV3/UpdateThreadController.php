@@ -127,14 +127,14 @@ class UpdateThreadController extends DzqController
         $content['text'] = $newContent;
         !empty($title) && $thread->title = $newTitle;
         if ($isApproved) {
-            $thread->is_approved = Thread::BOOL_YES;
-        } else {
             $thread->is_approved = Thread::BOOL_NO;
+        } else {
+            $thread->is_approved = Thread::BOOL_YES;
         }
         $isDraft && $thread->is_draft = Thread::BOOL_YES;
         !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
         $thread->save();
-        if ($isApproved && !$isDraft) {
+        if (!$isApproved && !$isDraft) {
             $this->user->refreshThreadCount();
             $this->user->save();
             Category::refreshThreadCountV3($categoryId);
