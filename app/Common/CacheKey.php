@@ -64,7 +64,9 @@ class CacheKey
     public const SEQUENCE = 'sequence';
 
 
+    //默认的创建时间降序
     public const LIST_THREADS_V3_CREATE_TIME = 'list_threads_v3_create_time';
+    //智能排序，不参与筛选
     public const LIST_THREADS_V3_SEQUENCE = 'list_threads_v3_sequence';
     //热点数据变更排序规则
     public const LIST_THREADS_V3_VIEW_COUNT = 'list_threads_v3_view_count';
