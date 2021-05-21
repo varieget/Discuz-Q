@@ -110,7 +110,9 @@ class WechatMiniProgramBindController extends AuthBaseController
 
             // PC扫码使用
             if (!empty($sessionToken) && $type == 'pc') {
-                $this->bound->bindVoid($sessionToken, $wechatUser);
+//                $this->bound->bindVoid($sessionToken, $wechatUser);
+                $accessToken = $this->getAccessToken($wechatUser->user);
+                $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
             }
 
             //用于用户名登录绑定微信使用
@@ -119,16 +121,7 @@ class WechatMiniProgramBindController extends AuthBaseController
                     $this->outPut(ResponseCode::USERNAME_NOT_NULL);
                 }
                 //token生成
-                $params = [
-                    'username' => $actor->username,
-                    'password' => ''
-                ];
-                GenJwtToken::setUid($actor->id);
-                $response = $this->bus->dispatch(
-                    new GenJwtToken($params)
-                );
-
-                $accessToken = json_decode($response->getBody(), true);
+                $accessToken = $this->getAccessToken($actor);
                 $result = $this->camelData(collect($accessToken));
                 $result = $this->addUserInfo($actor, $result);
 
