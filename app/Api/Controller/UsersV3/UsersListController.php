@@ -23,17 +23,12 @@ use App\Models\UserFollow;
 use App\Repositories\UserRepository;
 use App\Models\Group;
 use Illuminate\Support\Arr;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class UsersListController extends DzqController
 {
-
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
         return true;
     }
 
