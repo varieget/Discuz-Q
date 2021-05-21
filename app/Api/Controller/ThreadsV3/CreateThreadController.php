@@ -115,7 +115,7 @@ class CreateThreadController extends DzqController
         return $this->getResult($thread, $post, $tomJsons);
     }
 
-    private function saveThread($content)
+    private function saveThread(&$content)
     {
         $thread = new Thread();
         $userId = $this->user->id;
@@ -154,7 +154,9 @@ class CreateThreadController extends DzqController
             $dataThread['address'] = '';
             $dataThread['location'] = '';
         }
-        $this->boolApproved($title, $content['text'], $isApproved);
+        [$newTitle, $newContent] = $this->boolApproved($title, $content['text'], $isApproved);
+        $content['text'] = $newContent;
+        $dataThread['title'] = $newTitle;
         if ($isApproved) {
             $dataThread['is_approved'] = Thread::BOOL_NO;
         } else {

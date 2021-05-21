@@ -380,13 +380,13 @@ trait ThreadTrait
      */
     private function boolApproved($title, $text, &$isApproved = null)
     {
+        /** @var Censor $censor */
         $censor = app(Censor::class);
-        $sep = '__' . Str::random(6) . '__';
+        $sep = '__' . mt_rand(111111, 999999) . '__';
         $contentForCheck = $title . $sep . $text;
-        $censor->checkText($contentForCheck);
-        [$title, $content] = explode($sep, $censor->checkText($contentForCheck));
+        [$newTitle, $newContent] = explode($sep, $censor->checkText($contentForCheck));
         $isApproved = $censor->isMod;
-        return [$title, $content];
+        return [$newTitle, $newContent];
     }
 
     private function isReward($loginUser, $thread)
