@@ -157,15 +157,15 @@ class CreateThreadController extends DzqController
         $content['text'] = $newContent;
         $dataThread['title'] = $newTitle;
         if ($isApproved) {
-            $dataThread['is_approved'] = Thread::BOOL_YES;
-        } else {
             $dataThread['is_approved'] = Thread::BOOL_NO;
+        } else {
+            $dataThread['is_approved'] = Thread::BOOL_YES;
         }
         $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
         $thread->setRawAttributes($dataThread);
         $thread->save();
-        if ($isApproved && !$isDraft) {
+        if (!$isApproved && !$isDraft) {
             $this->user->refreshThreadCount();
             $this->user->save();
             Category::refreshThreadCountV3($categoryId);
