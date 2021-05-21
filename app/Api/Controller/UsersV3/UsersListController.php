@@ -36,9 +36,9 @@ class UsersListController extends DzqController
         $query->select('users.id AS userId', 'users.nickname', 'users.username', 'users.avatar', 'users.thread_count', 'users.question_count', 'users.liked_count', 'users.follow_count', 'group_id');
         $query->join('group_user', 'users.id', '=', 'group_user.user_id');
         $query->where('users.status', User::STATUS_NORMAL);
-        if (Arr::has($filter, 'nickname') && Arr::get($filter, 'nickname') !== '') {
-            $nickname = $filter['nickname'];
-            $query->where('users.nickname', 'like', '%' . $nickname . '%');
+        if (Arr::has($filter, 'username') && Arr::get($filter, 'username') !== '') {
+            $username = $filter['username'];
+            $query->where('users.username', 'like', '%' . $username . '%');
         }
 
         if (isset($filter['hot']) && $filter['hot'] == 1) {
@@ -46,7 +46,7 @@ class UsersListController extends DzqController
         } else {
             $query->orderBy('users.id');
         }
-        
+
 
         $users = $this->pagination($currentPage, $perPage, $query);
         $userDatas = $users['pageData'];
@@ -68,7 +68,6 @@ class UsersListController extends DzqController
             }
             $userDatas[$key]['groupName'] = $userGroupDatas[$value['group_id']]['name'] ?? '';
             unset($userDatas[$key]['group_id']);
-            unset($userDatas[$key]['username']);
         }
         $userDatas = $this->camelData($userDatas);
         $users['pageData'] = $userDatas ?? [];
