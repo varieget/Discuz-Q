@@ -185,8 +185,8 @@ trait ThreadTrait
         $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
-        } else if($payType != Thread::PAY_FREE && $canFreeViewTom) {
-           $paid = true;
+        } else if ($payType != Thread::PAY_FREE && $canFreeViewTom) {
+            $paid = true;
         } else {
             $orders = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userId);
             $orders = $orders[$userId] ?? [];
@@ -259,7 +259,7 @@ trait ThreadTrait
                 $freeWords = $thread['free_words'];
                 if (empty($freeWords)) {
                     $text = $post['content'];
-                } else{
+                } else {
                     $text = strip_tags($post['content']);
                     $text = $post['content'];
                     $freeLength = mb_strlen($text) * $freeWords;
@@ -318,10 +318,9 @@ trait ThreadTrait
                 }
                 $content['text'] = app()->make(Formatter::class)->render($xml);
             }
-
-
+        } else {
+            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
         }
-
         return $content;
     }
 
