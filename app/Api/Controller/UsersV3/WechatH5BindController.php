@@ -60,16 +60,9 @@ class WechatH5BindController extends AuthBaseController
     {
         $wxuser         = $this->getWxuser();
         $sessionToken   = $this->inPut('sessionToken');
-//        $sessionToken   = 'CbkVas9PsutNzh4l74I3EgQeF8FkTnnT';
         $token          = SessionToken::get($sessionToken);
         $type           = $this->inPut('type');//用于区分sessionToken来源于pc还是h5
         $actor          = !empty($token->user) ? $token->user : $this->user;
-//        $wxuser = UserWechat::query()
-//                ->where('id', 2)
-//                ->first();
-//        $actor = User::query()
-//                    ->where('id', 2)
-//                    ->first();
 
         if (empty($actor)) {
             $this->outPut(ResponseCode::NOT_FOUND_USER);
@@ -83,7 +76,6 @@ class WechatH5BindController extends AuthBaseController
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();
-//            $wechatUser = '';
         } catch (Exception $e) {
             $this->db->rollBack();
             $this->outPut(ResponseCode::NET_ERROR,
@@ -91,8 +83,6 @@ class WechatH5BindController extends AuthBaseController
                           $e->getMessage()
             );
         }
-
-//        $this->recordWechatLog($wechatUser);
 
         if (!$wechatUser || !$wechatUser->user) {
             if (!$wechatUser) {
@@ -104,9 +94,7 @@ class WechatH5BindController extends AuthBaseController
             $wechatUser->user_id = $actor->id;
             $wechatUser->setRelation('user', $actor);
             $wechatUser->save();
-
             $this->updateUserBindType($actor,AuthUtils::WECHAT);
-
             $this->db->commit();
 
             // PC扫码使用
