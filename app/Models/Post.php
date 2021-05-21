@@ -683,7 +683,7 @@ class Post extends DzqModel
         return $f1 || $f2;
     }
 
-    public function getPostReward()
+    public function getPostReward($changeType = '')
     {
         $this->removePostCache();
         $thread = ($this->relationLoaded('thread') && array_key_exists('type', $this->thread->attributes))
@@ -694,10 +694,14 @@ class Post extends DzqModel
         $rewardTom = ThreadTom::query()->where('thread_id',$thread['id'])
             ->where('tom_type',107)
             ->first();
-        if($rewardTom){
-            $this->rewards = UserWalletLog::query()
-                ->where(['post_id' => $this->id, 'thread_id' => $this->thread_id])
-                ->sum('change_available_amount');
+        if(!empty($rewardTom)){
+            $UserWalletLog = UserWalletLog::query()
+                ->where(['post_id' => $this->id, 'thread_id' => $this->thread_id]);
+            if ($changeType) {
+                $UserWalletLog->where( 'change_type' , $changeType);
+            }
+            $this->rewards = $UserWalletLog->sum('change_available_amount');
+
         }
         return $this->rewards;
     }

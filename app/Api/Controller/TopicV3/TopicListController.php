@@ -24,6 +24,7 @@ use App\Models\Category;
 use App\Models\Topic;
 use App\Models\Thread;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
 
@@ -31,6 +32,11 @@ class TopicListController extends DzqController
 {
     use ThreadTrait;
     use ThreadListTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
 
     public function main()
     {
@@ -45,32 +51,28 @@ class TopicListController extends DzqController
         $userDatas = array_column($userDatas, null, 'id');
         $topicThreadDatas = [];
 
-        if (Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 0) {
-            $threads = $this->getFilterThreads($topicIds);
-            $threads = $this->getFullThreadData($threads);
-            foreach ($threads as $key => $value) {
-                $topicThreadDatas[$value['topicId']][$value['threadId']] = $value;
-            }
+        $threads = $this->getFilterThreads($topicIds);
+        $threads = $this->getFullThreadData($threads);
+        foreach ($threads as $key => $value) {
+            $topicThreadDatas[$value['topicId']][$value['threadId']] = $value;
+        }
 
-            if (!Arr::has($filter, 'content') && (!Arr::has($filter, 'topicId') || (Arr::has($filter, 'topicId') && Arr::get($filter, 'topicId') == 0))) {
-                $topicLastThreadDatas = [];
-                foreach ($topicThreadDatas as $key => $value) {
-                    $topicThreadIds = array_column($value, 'threadId');
-                    $lastThreadId = max($topicThreadIds);
-                    $topicLastThreadDatas[$key][$lastThreadId] = $value[$lastThreadId];
-                }
-                $topicThreadDatas = $topicLastThreadDatas;
+        if (!Arr::has($filter, 'content') && (!Arr::has($filter, 'topicId') || (Arr::has($filter, 'topicId') && Arr::get($filter, 'topicId') == 0))) {
+            $topicLastThreadDatas = [];
+            foreach ($topicThreadDatas as $key => $value) {
+                $topicThreadIds = array_column($value, 'threadId');
+                $lastThreadId = max($topicThreadIds);
+                $topicLastThreadDatas[$key][$lastThreadId] = $value[$lastThreadId];
             }
+            $topicThreadDatas = $topicLastThreadDatas;
         }
 
         $result = [];
         foreach ($topicsList as $topic) {
             $topicId = $topic['id'];
             $thread = [];
-            if (Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 0) {
-                if (isset($topicThreadDatas[$topicId])) {
-                    $thread = array_values($topicThreadDatas[$topicId]);
-                }
+            if (isset($topicThreadDatas[$topicId])) {
+                $thread = array_values($topicThreadDatas[$topicId]);
             }
 
             $result[] = [

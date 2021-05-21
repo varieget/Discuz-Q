@@ -94,7 +94,7 @@ class UpdateThreadController extends DzqController
     }
 
 
-    private function saveThread($thread, $content)
+    private function saveThread($thread, &$content)
     {
         $title = $this->inPut('title');//非必填项
         $categoryId = $this->inPut('categoryId');
@@ -122,7 +122,9 @@ class UpdateThreadController extends DzqController
         floatval($price) > 0 && $thread->price = floatval($price);
         floatval($attachmentPrice) > 0 && $thread->attachment_price = floatval($attachmentPrice);
         floatval($freeWords) > 0 && $thread->free_words = floatval($freeWords);
-        $this->boolApproved($title, $content['text'], $isApproved);
+        [$newTitle, $newContent] = $this->boolApproved($title, $content['text'], $isApproved);
+        $content['text'] = $newContent;
+        !empty($title) && $thread->title = $newTitle;
         if ($isApproved) {
             $thread->is_approved = Thread::BOOL_NO;
         } else {

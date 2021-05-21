@@ -91,7 +91,7 @@ class RewardBusi extends TomBaseBusi
         $redPacket = ThreadReward::query()->where('id',$this->body['id'])->first(['remain_money']);
         $this->body['remain_money'] = $redPacket['remain_money'];
 
-        return $this->jsonReturn($this->body);
+        return $this->jsonReturn($this->camelData($this->body));
     }
 
     public function verification(){

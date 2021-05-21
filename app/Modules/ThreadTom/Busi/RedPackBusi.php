@@ -97,7 +97,7 @@ class RedPackBusi extends TomBaseBusi
         $this->body['remain_number'] = $redPacket['remain_number'];
         $this->body['status'] = $redPacket['remain_number'];
 
-        return $this->jsonReturn($this->body);
+        return $this->jsonReturn($this->camelData($this->body));
     }
 
     public function verification(){

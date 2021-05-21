@@ -266,6 +266,13 @@ trait ThreadTrait
                     $text = "<t><p>" . $text . "</p></t>";
                 }
                 $content['text'] = $text;
+                // 如果有红包，则只显示红包
+                if (isset($tomInput[TomConfig::TOM_REDPACK])) {
+                    $content['indexes'] = $this->tomDispatcher(
+                        [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]],
+                        $this->SELECT_FUNC, $thread['id'], null, $canViewTom
+                    );
+                }
             }
         }
         if (!empty($content['text'])) {
@@ -380,13 +387,13 @@ trait ThreadTrait
      */
     private function boolApproved($title, $text, &$isApproved = null)
     {
+        /** @var Censor $censor */
         $censor = app(Censor::class);
-        $sep = '__' . Str::random(6) . '__';
+        $sep = '__' . mt_rand(111111, 999999) . '__';
         $contentForCheck = $title . $sep . $text;
-        $censor->checkText($contentForCheck);
-        [$title, $content] = explode($sep, $censor->checkText($contentForCheck));
+        [$newTitle, $newContent] = explode($sep, $censor->checkText($contentForCheck));
         $isApproved = $censor->isMod;
-        return [$title, $content];
+        return [$newTitle, $newContent];
     }
 
     private function isReward($loginUser, $thread)
