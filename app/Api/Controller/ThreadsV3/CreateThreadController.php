@@ -18,14 +18,13 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
+use App\Models\Category;
 use App\Models\Group;
 use App\Models\Permission;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
-use App\Models\ThreadTopic;
-use App\Models\Topic;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -158,17 +157,18 @@ class CreateThreadController extends DzqController
         $content['text'] = $newContent;
         $dataThread['title'] = $newTitle;
         if ($isApproved) {
-            $dataThread['is_approved'] = Thread::BOOL_NO;
-        } else {
             $dataThread['is_approved'] = Thread::BOOL_YES;
+        } else {
+            $dataThread['is_approved'] = Thread::BOOL_NO;
         }
         $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
         $thread->setRawAttributes($dataThread);
         $thread->save();
-        if (!$isApproved) {
+        if ($isApproved && !$isDraft) {
             $this->user->refreshThreadCount();
             $this->user->save();
+            Category::refreshThreadCountV3($categoryId);
         }
 
         return $thread;

@@ -19,6 +19,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
+use App\Models\Category;
 use App\Models\Group;
 use App\Models\Post;
 use App\Models\Thread;
@@ -126,13 +127,18 @@ class UpdateThreadController extends DzqController
         $content['text'] = $newContent;
         !empty($title) && $thread->title = $newTitle;
         if ($isApproved) {
-            $thread->is_approved = Thread::BOOL_NO;
-        } else {
             $thread->is_approved = Thread::BOOL_YES;
+        } else {
+            $thread->is_approved = Thread::BOOL_NO;
         }
         $isDraft && $thread->is_draft = Thread::BOOL_YES;
         !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
         $thread->save();
+        if ($isApproved && !$isDraft) {
+            $this->user->refreshThreadCount();
+            $this->user->save();
+            Category::refreshThreadCountV3($categoryId);
+        }
     }
 
     private function savePost($post, $content)
