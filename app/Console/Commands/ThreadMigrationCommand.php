@@ -168,14 +168,21 @@ class ThreadMigrationCommand extends AbstractCommand
                     break;
                 }
                 //还需要插入对应的  thread_tom
-                $order = Order::where(['thread_id' => $val->id, 'type' => Order::ORDER_TYPE_TEXT])->first();
+//                $order = Order::where(['thread_id' => $val->id, 'type' => Order::ORDER_TYPE_TEXT])->first();
                 $value = [
+                    'thread_id' => $val->id,
+                    'post_id'   => $val->post_id,
+                    'rule'  =>  $thread_red_packets->rule,
                     'condition' =>  $thread_red_packets->condition,
                     'likenum'   =>  $thread_red_packets->likenum,
+                    'money'     =>  $thread_red_packets->money,
+                    'remain_money'  =>  $thread_red_packets->remain_money,
                     'number'    =>  $thread_red_packets->number,
-                    'rule'  =>  $thread_red_packets->rule,
-                    'orderSn'   =>  $order->order_sn,
-                    'price' =>  $thread_red_packets->money,
+                    'remain_number' =>  $thread_red_packets->remain_number,
+                    'status'    =>  $thread_red_packets->status,
+                    'updated_at'    =>  $thread_red_packets->updated_at,
+                    'created_at'    =>  $thread_red_packets->created_at,
+                    'id'        =>  $thread_red_packets->id,
                     'content'   =>  '红包帖'
                 ];
                 $value = json_encode($value);
@@ -275,15 +282,22 @@ class ThreadMigrationCommand extends AbstractCommand
                 }
             }
             if($thread_red_packets && !empty($thread_red_packets->toArray())){
-                $order = Order::where(['thread_id' => $val->id, 'type' => Order::ORDER_TYPE_LONG])->first();
+//                $order = Order::where(['thread_id' => $val->id, 'type' => Order::ORDER_TYPE_LONG])->first();
                 $key = '$'.$count;
                 $value = [
+                    'thread_id' => $val->id,
+                    'post_id'   => $val->post_id,
+                    'rule'  =>  $thread_red_packets->rule,
                     'condition' =>  $thread_red_packets->condition,
                     'likenum'   =>  $thread_red_packets->likenum,
+                    'money'     =>  $thread_red_packets->money,
+                    'remain_money'  =>  $thread_red_packets->remain_money,
                     'number'    =>  $thread_red_packets->number,
-                    'rule'  =>  $thread_red_packets->rule,
-                    'orderSn'   =>  $order->order_sn,
-                    'price' =>  $thread_red_packets->money,
+                    'remain_number' =>  $thread_red_packets->remain_number,
+                    'status'    =>  $thread_red_packets->status,
+                    'updated_at'    =>  $thread_red_packets->updated_at,
+                    'created_at'    =>  $thread_red_packets->created_at,
+                    'id'        =>  $thread_red_packets->id,
                     'content'   =>  '红包帖'
                 ];
                 $value = json_encode($value);
@@ -456,27 +470,49 @@ class ThreadMigrationCommand extends AbstractCommand
                     break;
                 }
             }
-            $q_type = !empty($question->be_user_id) ? 1 : 0;
-            $q_orderSn = "";
-            $q_price = $question->price;
-            $q_expired_at = $question->expired_at;
+
+            $q_type = 0;
+            $q_price = $remain_money = 0;
+            $answer_id = 0;
+            $q_expired_at = $q_created_at = $q_updated_at = '';
+            if($question && !empty($question->toArray())){
+                $q_type = !empty($question->be_user_id) ? 1 : 0;
+                $answer_id = 0;
+                $q_price = $question->price;
+                $q_expired_at = $question->expired_at;
+                $q_created_at = $question->created_at;
+                $q_updated_at = $question->updated_at;
+            }
+//            $q_orderSn = "";
             if($thread_reward && !empty($thread_reward->toArray())){
                 $q_type = $thread_reward->type;
                 $q_price = $thread_reward->money;
+                $remain_money = $thread_reward->remain_money;
                 $q_expired_at = $thread_reward->expired_at;
-                $q_orderSn = Order::query()->where('thread_id', $val->id)->value('order_sn');
+                $answer_id = $thread_reward->answer_id;
+                $q_created_at = $thread_reward->created_at;
+                $q_updated_at = $thread_reward->updated_at;
+//                $q_orderSn = Order::query()->where('thread_id', $val->id)->value('order_sn');
             }
             $count = 0;
             //统一成悬赏贴格式插入 thread_tom
             $key = '$'.$count;
             $count++;
             $body = [
-                'type'  =>  $q_type,
-                'orderSn'   =>  $q_orderSn,
-                'price' =>  $q_price,
-                'expiredAt' =>  $q_expired_at
+                'thread_id'  =>  $val->id,
+                'post_id'   =>  $val->post_id,
+                'type' =>  $q_type,
+                'user_id' =>  $val->user_id,
+                'answer_id' => $answer_id,
+                'money' =>  $q_price,
+                'remain_money' => $remain_money,
+                'expired_at'    =>  $q_expired_at,
+                'updated_at'    =>  $q_updated_at,
+                'created_at'    =>  $q_created_at,
+                'id'            =>  !empty($thread_reward) ? $thread_reward->id : 0,        //这里放悬赏id
+                'content'       =>  null
             ];
-            $value = json_encode(['body' => $body]);
+            $value = json_encode($body);
             $res = self::insertThreadTom($val, ThreadTag::REWARD, $key, $value);
             if(!$res){
                 $this->db->rollBack();
@@ -538,17 +574,21 @@ class ThreadMigrationCommand extends AbstractCommand
                 $key = '$'.$count;
                 $count++;
                 $body = [
+                    'id'        =>  $post_goods->id,
                     'userId'    =>  $post_goods->user_id,
+                    'postId'    =>  $post_goods->post_id,
                     'platformId'    =>  $post_goods->platform_id,
                     'title'     =>  $post_goods->title,
-                    'imagePath' =>  $post_goods->image_path,
                     'price'     =>  $post_goods->price,
+                    'imagePath' =>  self::preHttps($post_goods->image_path),
                     'type'      =>  $post_goods->type,
-                    'typeName'  =>  PostGoods::enumTypeName($post_goods->type),
+                    'status'    =>  $post_goods->status,
                     'readyContent'  =>  $post_goods->ready_content,
-                    'detailCcontent'    =>  $post_goods->detail_content
+                    'detailCcontent'    =>  $post_goods->detail_content,
+                    'createdAt'     =>  $post_goods->created_at,
+                    'updatedAt'     =>  $post_goods->updated_at,
                 ];
-                $value = json_encode(['body' => $body]);
+                $value = json_encode($body);
                 $res = self::insertThreadTom($val, ThreadTag::GOODS, $key, $value);
                 if(!$res){
                     $this->db->rollBack();
@@ -572,24 +612,13 @@ class ThreadMigrationCommand extends AbstractCommand
         $this->info('迁移商品帖end');
     }
 
-/*
-    public function getThreadStatus($thread){
-        if(!empty($thread->deleted_at)){
-            $status = -1;
-        }elseif ($thread->is_display == 0){
-            $status = 3;
-        }elseif ($thread->is_approved == 0){
-            $status = 0;
-        }elseif ($thread->is_approved == 2){
-            $status = 4;
-        }elseif ($thread->is_draft){
-            $status = 2;
-        }else{
-            $status = 1;
+    public function preHttps($url){
+        if(strpos($url, 'http') === false){
+            $url = 'https://'.$url;
         }
-        return $status;
+        return $url;
     }
-*/
+
     public function getThreadStatus($thread){
         if(!empty($thread->deleted_at)){
             return -1;
@@ -597,29 +626,6 @@ class ThreadMigrationCommand extends AbstractCommand
         return 0;
     }
 
-    public function insertThreadText($value, $status){
-         return $this->db->table('thread_text')->insert(
-            [
-                'id'    =>  $value->id,
-                'user_id'   =>  $value->user_id,
-                'category_id'   =>  $value->category_id,
-                'title'   =>  $value->title,
-                'summary'   =>  Thread::find($value->id)->firstPost->summary,
-                'text'   =>  $value->content,
-                'longitude'   =>  $value->longitude,
-                'latitude'   =>  $value->latitude,
-                'address'   =>  $value->address,
-                'location'   =>  $value->location,
-                'is_sticky'   =>  $value->is_sticky,
-                'is_essence'   =>  $value->is_essence,
-                'is_anonymous'   =>  $value->is_anonymous,
-                'is_site'   =>  $value->is_site,
-                'status'   =>  $status,
-                'created_at' =>  $value->created_at->timestamp,
-                'updated_at' =>  $value->updated_at->timestamp,
-            ]
-        );
-    }
 
     public function insertThreadTag($thread, $tag){
         return $this->db->table('thread_tag')->insert([
@@ -631,38 +637,6 @@ class ThreadMigrationCommand extends AbstractCommand
 
     }
 
-    public function insertThreadHot($value){
-        return $this->db->table('thread_hot')->insert(
-            [
-                'thread_id' =>  $value->id,
-                'comment_count' =>  $value->post_count,
-                'view_count' =>  $value->view_count,
-                'reward_count' =>  $value->rewarded_count,
-                'pay_count' =>  $value->paid_count,
-                'last_post_time' =>  $value->posted_at->timestamp,
-                'last_post_user' =>  $value->last_posted_user_id,
-                'created_at' =>  $value->created_at->timestamp,
-                'updated_at' =>  $value->updated_at->timestamp,
-            ]
-        );
-    }
-
-    public function replaceContent($content, $attachments){
-        $i = 0;
-        return preg_replace_callback(
-            '(<IMG(.*)(title="(\d+)")(.*)\/IMG>)',
-            function ($m) use ($attachments, &$i){
-                foreach ($attachments as $vo){
-                    if($m[3] == $vo->id){
-                        $vo->key = '{$'.$i.'}';
-                        $i ++;
-                        return $vo->key;
-                    }
-                }
-            },
-            $content
-        );
-    }
 
     public function insertThreadTom($thread, $tom_type, $key, $value){
         return $this->db->table('thread_tom')->insert([
@@ -678,31 +652,5 @@ class ThreadMigrationCommand extends AbstractCommand
     }
 
 
-/*
-    public function insertThreadTom($tom, $thread){
-        if(in_array($thread->type,[Thread::TYPE_OF_VIDEO, Thread::TYPE_OF_AUDIO])){
-            $tom_type = $this->video_type[$tom->type];
-        }elseif(in_array($thread->type, [
-            Thread::TYPE_OF_LONG,
-            Thread::TYPE_OF_IMAGE,
-            Thread::TYPE_OF_QUESTION
-        ])){
-            $tom_type = $this->attachment_type[$tom->type];
-        }else{
-            $tom_type = $tom->type;
-        }
-        if(empty($tom_type))    $tom_type = 0;
-
-        return $this->db->table('thread_tom')->insert([
-            'thread_id' =>  $thread->id,
-            'tom_type'  =>  $tom_type,
-            'key'       =>  $tom->key,
-            'value'     =>  json_encode($tom->toArray()),
-            'created_at'    =>  $tom->created_at,
-            'updated_at'    =>  $tom->updated_at
-        ]);
-
-    }
-*/
 
 }
