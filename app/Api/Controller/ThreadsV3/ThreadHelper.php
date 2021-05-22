@@ -50,6 +50,7 @@ class ThreadHelper
             ->orderByDesc('a.post_id')
             ->get()->each(function (&$item) use ($postIdThreadId) {
                 $item['thread_id'] = $postIdThreadId[$item['post_id']] ?? null;
+                $item['type'] = 1;
             })->toArray();
 
         $v2 = Order::query()
@@ -83,7 +84,9 @@ class ThreadHelper
                 $likedUsersInfo[$item['thread_id']][] = [
                     'userId' => $item['user_id'],
                     'avatar' => $user->avatar,
-                    'userName' => !empty($user->nickname) ? $user->nickname : $user->username
+                    'userName' => !empty($user->nickname) ? $user->nickname : $user->username,
+                    'type'  =>  $item['type'] ?? 2,
+                    'createdAt'    => strtotime($item['created_at'])
                 ];
             }
         }
