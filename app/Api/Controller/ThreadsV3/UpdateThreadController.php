@@ -25,6 +25,7 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
+use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -207,7 +208,7 @@ class UpdateThreadController extends DzqController
 
     private function getResult($thread, $post, $tomJsons)
     {
-        $user = $this->user;
+        $user = User::query()->where('id',$thread->user_id)->first();
         $group = Group::getGroup($user->id);
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
