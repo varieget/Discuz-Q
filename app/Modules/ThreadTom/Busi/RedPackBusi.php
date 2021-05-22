@@ -52,9 +52,9 @@ class RedPackBusi extends TomBaseBusi
 
             //ÅÐ¶Ïºì°ü½ð¶î
             if ($input['rule'] == 1) {
-                if ($input['price']*$input['number'] != $order['amount']) $this->outPut(ResponseCode::INVALID_PARAMETER,'¶©µ¥½ð¶î´íÎó');
-            } else {
                 if ($order->type == Order::ORDER_TYPE_REDPACKET && $order['amount'] != $input['price']) $this->outPut(ResponseCode::INVALID_PARAMETER,'¶©µ¥½ð¶î´íÎó');
+            } else {
+                if ($order->type == Order::ORDER_TYPE_REDPACKET && $input['price']*$input['number'] != $order['amount']) $this->outPut(ResponseCode::INVALID_PARAMETER,'¶©µ¥½ð¶î´íÎó');
             }
 
             if (empty($order) ||
