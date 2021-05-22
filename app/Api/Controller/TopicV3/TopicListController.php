@@ -23,6 +23,7 @@ use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Topic;
 use App\Models\Thread;
+use App\Models\ThreadTopic;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -43,6 +44,14 @@ class TopicListController extends DzqController
         $filter = $this->inPut('filter');
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
+
+        if (Arr::has($filter, 'topicId') && Arr::get($filter, 'topicId') != 0) {
+            $topicData = Topic::query()->where('id', $filter['topicId'])->first();
+            if (!empty($topicData)) {
+                $this->refreshTopicViewCount($topicData);
+                $this->refreshTopicThreadCount($topicData);
+            }
+        }
         $topics = $this->filterTopics($filter, $currentPage, $perPage);
         $topicsList = $topics['pageData'];
         $topicIds = array_column($topicsList, 'id');
@@ -173,5 +182,38 @@ class TopicListController extends DzqController
             ->where('th.is_approved', Thread::APPROVED)
             ->whereIn('tt.topic_id', $topicIds)
             ->orderByDesc('th.created_at');
+    }
+
+    /**
+     * refresh thread count
+     * 用户删除、帖子审核、帖子逻辑删除、帖子草稿不计算
+     */
+    private function refreshTopicThreadCount($topicData)
+    {
+        $threadCount = ThreadTopic::join('threads', 'threads.id', 'thread_topic.thread_id')
+            ->where('thread_topic.topic_id', $topicData->id)
+            ->where('threads.is_approved', Thread::APPROVED)
+            ->where('threads.is_draft', Thread::IS_NOT_DRAFT)
+            ->whereNull('threads.deleted_at')
+            ->whereNotNull('user_id')
+            ->count();
+        $topicData->thread_count = $threadCount;
+        $topicData->save();
+    }
+
+    /**
+     * refresh view count
+     * 帖子审核、帖子逻辑删除、帖子草稿不计算
+     */
+    private function refreshTopicViewCount($topicData)
+    {
+        $viewCount = ThreadTopic::join('threads', 'threads.id', 'thread_topic.thread_id')
+            ->where('thread_topic.topic_id', $topicData->id)
+            ->where('threads.is_approved', Thread::APPROVED)
+            ->where('threads.is_draft', Thread::IS_NOT_DRAFT)
+            ->whereNull('threads.deleted_at')
+            ->sum('view_count');
+        $topicData->view_count = $viewCount;
+        $topicData->save();
     }
 }
