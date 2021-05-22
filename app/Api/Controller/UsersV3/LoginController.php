@@ -106,10 +106,10 @@ class LoginController extends AuthBaseController
             //手机浏览器登录，需要做绑定前准备
             $token = SessionToken::generate(SessionToken::WECHAT_MOBILE_BIND, $accessToken , $user->id);
             $token->save();
-            $data = array_merge($this->camelData($accessToken),[
+            $data = [
                 'sessionToken'  => $token->token,
                 'nickname'      => $user->nickname
-            ]);
+            ];
             if($wechat || $miniWechat) { //开了微信，
                 //未绑定微信
                 $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);

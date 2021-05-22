@@ -26,8 +26,10 @@ use App\Models\UserWechat;
 use App\Repositories\MobileCodeRepository;
 use Discuz\Base\DzqController;
 use Discuz\Socialite\Exception\SocialiteException;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\App;
 
 abstract class AuthBaseController extends DzqController
 {
@@ -252,6 +254,22 @@ abstract class AuthBaseController extends DzqController
             $cookies = $this->request->getCookieParams();
             return !empty($cookies[$name]) ? $cookies[$name] : '';
         }
+    }
+
+    public function getAccessToken($user){
+        $bus = app(Dispatcher::class);
+        if (empty($user) || empty($user->username)) {
+            $this->outPut(ResponseCode::WECHAT_INVALID_ARGUMENT_EXCEPTION);
+        }
+        $params = [
+            'username' => $user->username,
+            'password' => !empty($user->password) ? $user->password : ''
+        ];
+        GenJwtToken::setUid($user->id);
+        $response = $bus->dispatch(
+            new GenJwtToken($params)
+        );
+        return json_decode($response->getBody(),true);
     }
 
 }
