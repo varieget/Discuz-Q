@@ -223,15 +223,15 @@ class Post extends DzqModel
     {
        $content = Str::of($this->content ?: '');
         if (substr($content, 0, 3) === '<r>' && substr($content, -4) != '</r>') {
-             $content = substr($content, 3, -4);
+             $content = mb_substr($content, 3, -4);
         }
         if (substr($content, 0, 3) === '<t>' && substr($content, -4) != '</t>') {
-            $content = substr($content, 3, -4);
+            $content = mb_substr($content, 3, -4);
         }
         if (substr($content, 0, 3) === '<p>' && substr($content, -4) != '</p>') {
-            $content = substr($content, 3, -4);
+            $content = mb_substr($content, 3, -4);
         }
-        if (strlen($content) > self::SUMMARY_LENGTH) {
+        if (mb_strlen($content) > self::SUMMARY_LENGTH) {
             $content = mb_substr($content, 0, 80, "UTF-8") . self::SUMMARY_END_WITH;
             $content = '<t><r><p>' . $content . '</p></r></t>';
             $content = static::$formatter->render($content);
