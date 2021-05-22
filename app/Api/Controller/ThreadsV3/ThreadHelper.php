@@ -85,7 +85,7 @@ class ThreadHelper
                     'userId' => $item['user_id'],
                     'avatar' => $user->avatar,
                     'userName' => !empty($user->nickname) ? $user->nickname : $user->username,
-                    'type'  =>  $item['type'] ?? 2,
+                    'type'  =>  !empty($item['type']) ?? 2,
                     'createdAt'    => strtotime($item['created_at'])
                 ];
             }
