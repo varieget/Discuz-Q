@@ -163,6 +163,8 @@ class CreatePostController extends DzqController
         $build = $this->getPost($post, true);
 
         $data = $this->camelData($build);
+        // 返回content要解析后的，方便前端直接展示最新的数据
+        if(!empty($data['content']))    $data['content'] = app()->make(Formatter::class)->render($data['content']);
 
         return $this->outPut(ResponseCode::SUCCESS, '', $data);
 
