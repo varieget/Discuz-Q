@@ -19,7 +19,6 @@ namespace App\Modules\ThreadTom\Busi;
 
 use App\Api\Serializer\AttachmentSerializer;
 use App\Common\CacheKey;
-use App\Common\DzqCache as DzqCache1;
 use Discuz\Base\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
@@ -55,11 +54,9 @@ class DocBusi extends TomBaseBusi
             return Attachment::query()->whereIn('id', $docIds)->get()->keyBy('id');
         });
         $threadId = $this->threadId;
-        $threads = DzqCache::hGet(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {
-            $threads = Thread::getOneThread($threadId, true);
-            return $threads;
+        $thread = DzqCache::hGet(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {
+            return Thread::getOneThread($threadId, true);
         });
-        $thread = $threads[$threadId] ?? null;
         foreach ($attachments as $attachment) {
             if (!empty($thread)) {
                 $item = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
