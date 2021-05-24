@@ -97,15 +97,15 @@ trait ThreadTrait
 
     private function canViewTom($user, $thread, $payType, $paid)
     {
-        $repo = new UserRepository();
         if ($payType != Thread::PAY_FREE) {//付费贴
-            $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
-            if ($canFreeViewThreadDetail || $paid || $user->id == $thread['user_id']) {
+            $canFreeViewThreadDetail = $this->canFreeViewTom($user, $thread);
+            if ($canFreeViewThreadDetail || $paid) {
                 return true;
             } else {
                 return false;
             }
         } else {
+            $repo = new UserRepository();
             $canViewThreadDetail = $repo->canViewThreadDetail($user, $thread);
             if ($canViewThreadDetail) {
                 return true;
@@ -119,7 +119,7 @@ trait ThreadTrait
     {
         $repo = new UserRepository();
         $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
-        if ($canFreeViewThreadDetail) {
+        if ($canFreeViewThreadDetail || $user->id == $thread['user_id']) {
             return true;
         } else {
             return false;
@@ -182,8 +182,11 @@ trait ThreadTrait
         $threadId = $thread['id'];
         $thread['price'] > 0 && $payType = Thread::PAY_THREAD;
         $thread['attachment_price'] > 0 && $payType = Thread::PAY_ATTACH;
+        $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
+        } else if ($payType != Thread::PAY_FREE && $canFreeViewTom) {
+            $paid = true;
         } else {
             $orders = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userId);
             $orders = $orders[$userId] ?? [];
@@ -256,16 +259,24 @@ trait ThreadTrait
                 $freeWords = $thread['free_words'];
                 if (empty($freeWords)) {
                     $text = $post['content'];
-                } else{
+                } else {
                     $text = strip_tags($post['content']);
+                    $text = $post['content'];
                     $freeLength = mb_strlen($text) * $freeWords;
                     $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
                     $text = "<t><p>" . $text . "</p></t>";
                 }
                 $content['text'] = $text;
+                // 如果有红包，则只显示红包
+                if (isset($tomInput[TomConfig::TOM_REDPACK])) {
+                    $content['indexes'] = $this->tomDispatcher(
+                        [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]],
+                        $this->SELECT_FUNC, $thread['id'], null, $canViewTom
+                    );
+                }
             }
         }
-        if (!empty($content['text'])) {
+        if (!empty($content['text']) && $thread['type'] != Thread::TYPE_OF_ALL) {
 //            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
             $content['text'] = app()->make(Formatter::class)->render($content['text']);
 
@@ -307,10 +318,9 @@ trait ThreadTrait
                 }
                 $content['text'] = app()->make(Formatter::class)->render($xml);
             }
-
-
+        } else {
+            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
         }
-
         return $content;
     }
 
@@ -377,13 +387,13 @@ trait ThreadTrait
      */
     private function boolApproved($title, $text, &$isApproved = null)
     {
+        /** @var Censor $censor */
         $censor = app(Censor::class);
-        $sep = '__' . Str::random(6) . '__';
+        $sep = '__' . mt_rand(111111, 999999) . '__';
         $contentForCheck = $title . $sep . $text;
-        $censor->checkText($contentForCheck);
-        [$title, $content] = explode($sep, $censor->checkText($contentForCheck));
+        [$newTitle, $newContent] = explode($sep, $censor->checkText($contentForCheck));
         $isApproved = $censor->isMod;
-        return [$title, $content];
+        return [$newTitle, $newContent];
     }
 
     private function isReward($loginUser, $thread)

@@ -50,32 +50,23 @@ class ThreadHelper
             ->orderByDesc('a.post_id')
             ->get()->each(function (&$item) use ($postIdThreadId) {
                 $item['thread_id'] = $postIdThreadId[$item['post_id']] ?? null;
+                $item['type'] = 1;
             })->toArray();
 
         $v2 = Order::query()
-            ->select(['a.thread_id', 'a.user_id', 'a.created_at', 'a.type', 'th.price'])
+            ->select(['a.thread_id', 'a.user_id', 'a.created_at'])
             ->from('orders as a')
-            ->whereIn('a.type', [Order::ORDER_TYPE_REWARD, Order::ORDER_TYPE_THREAD])
-            ->whereIn('a.thread_id', $threadIds)
-            ->where('a.status', Order::ORDER_STATUS_PAID)
+            ->whereIn('thread_id', $threadIds)
+            ->whereIn('a.type', [Order::ORDER_TYPE_REWARD, Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
+            ->where('status', Order::ORDER_STATUS_PAID)
             ->where(function ($query) {
                 $query->selectRaw('count(0)')
                     ->from('orders as b')
                     ->where('b.thread_id', 'a.thread_id')
                     ->where('b.created_at', '>', 'a.created_at');
             }, '<', 2)
-            ->leftJoin('threads as th','th.id','=','a.thread_id')
             ->orderByDesc('a.thread_id')
             ->get()->toArray();
-
-        foreach ($v2 as $k=>$v) {
-            if ($v2[$k]['price'] > 0 && $v2[$k]['type'] != Order::ORDER_TYPE_THREAD) {
-                unset($v2[$k]);
-            }
-            if ($v2[$k]['price'] == 0 && $v2[$k]['type'] != Order::ORDER_TYPE_REWARD) {
-                unset($v2[$k]);
-            }
-        }
 
         $userIds = array_unique(array_merge(array_column($v1, 'user_id'), array_column($v2, 'user_id')));
 
@@ -93,7 +84,9 @@ class ThreadHelper
                 $likedUsersInfo[$item['thread_id']][] = [
                     'userId' => $item['user_id'],
                     'avatar' => $user->avatar,
-                    'userName' => !empty($user->nickname) ? $user->nickname : $user->username
+                    'userName' => !empty($user->nickname) ? $user->nickname : $user->username,
+                    'type'  =>  !empty($item['type']) ? 1 : 2,
+                    'createdAt'    => strtotime($item['created_at'])
                 ];
             }
         }

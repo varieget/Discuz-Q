@@ -123,9 +123,8 @@ class WechatH5LoginController extends AuthBaseController
                 // 先设置关系，为了同步微信头像
                 $wechatUser->setRelation('user', $user);
                 $wechatUser->save();
-                $this->db->commit();
-
                 $this->updateUserBindType($user,AuthUtils::WECHAT);
+                $this->db->commit();
 
                 // 判断是否开启了注册审核
                 if (!(bool)$this->settings->get('register_validate')) {
@@ -139,9 +138,8 @@ class WechatH5LoginController extends AuthBaseController
                     $wechatUser->user_id = $actor->id;
                     $wechatUser->setRelation('user', $actor);
                     $wechatUser->save();
-                    $this->db->commit();
-
                     $this->updateUserBindType($actor,AuthUtils::WECHAT);
+                    $this->db->commit();
                 }
             }
         } else {

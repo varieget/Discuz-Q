@@ -54,7 +54,6 @@ class WechatH5RebindController extends AuthBaseController
     {
         $wxuser         = $this->getWxuser();
         $sessionToken   = $this->inPut('sessionToken');
-//        $sessionToken   = 'qX7i8WnKwqc7XVsOZuoKc2SpQZxc6mhk';
         $token          = SessionToken::get($sessionToken);
         $actor          = !empty($token->user) ? $token->user : $this->user;
 
@@ -82,8 +81,6 @@ class WechatH5RebindController extends AuthBaseController
                           $e->getMessage()
             );
         }
-
-//        $this->recordWechatLog($wechatUser);
 
         if (!$wechatUser || !$wechatUser->user) {
             // 更新微信用户信息

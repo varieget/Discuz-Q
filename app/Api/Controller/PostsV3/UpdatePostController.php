@@ -23,6 +23,7 @@ use App\Common\CacheKey;
 use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Post;
+use App\Models\Thread;
 use App\Models\ThreadUser;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -45,6 +46,7 @@ class UpdatePostController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+
         $post = Post::query()->where(['id' => $this->inPut('pid')])->first();
         if (!$post) {
             return false;
@@ -77,18 +79,25 @@ class UpdatePostController extends DzqController
         $post = $this->bus->dispatch(
             new EditPost($postId, $actor, $data)
         );
+
         $threadId = $post['thread_id'];
 
         DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
         DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
 
         $isFavorite = ThreadUser::query()->where('thread_id', $threadId)->where('user_id', $actor->id)->exists();
+        $thread = Thread::query()->where("id",$threadId)->first(["rewarded_count","paid_count"]);
 
+        $content = "";
+        if(!empty($data['attributes']['content'])){
+            $content = $data['attributes']['content'];
+        }
         $build = [
             'pid' => $postId,
             'threadId'=>$threadId,
-            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$data['attributes']['content']),
+            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$content),
             'likeCount' => $post['like_count'],
+            'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
             'replyCount' => $post['reply_count'],
             'isFirst' => $post['is_first'],
             'isApproved' => $post['is_approved'],
@@ -100,7 +109,6 @@ class UpdatePostController extends DzqController
             'rewards' => floatval(sprintf('%.2f', $post->getPostReward())),
             'redPacketAmount' => $this->postSerializer->getPostRedPacketAmount($post['id'], $post['thread_id'], $post['user_id']),
         ];
-
         DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_LIKED, $post['user_id']);
         DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_USERS, $post['thread_id']);
 

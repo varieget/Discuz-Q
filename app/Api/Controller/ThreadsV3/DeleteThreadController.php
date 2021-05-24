@@ -19,6 +19,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
+use App\Models\Category;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
@@ -34,10 +35,10 @@ class DeleteThreadController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
-        if (empty($thread)) {
+        if (empty($this->thread)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        $userRepo->canHideThread($this->user, $this->thread);
+        return $userRepo->canHideThread($this->user, $this->thread);
     }
 
     public function main()
@@ -48,6 +49,7 @@ class DeleteThreadController extends DzqController
         if ($thread->save()) {
             $this->outPut(ResponseCode::SUCCESS);
         }
+        Category::refreshThreadCountV3($thread['category_id']);
         $this->outPut(ResponseCode::DB_ERROR, '删除失败');
     }
 }

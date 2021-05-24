@@ -18,6 +18,8 @@
 
 namespace App\Models;
 
+use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Settings\SettingsRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqModel;
@@ -179,5 +181,9 @@ class ThreadVideo extends DzqModel
             $mediaUrl = $mediaUrl . '?t=' . $t . '&us=' . $us . '&sign=' . $sign;
         }
         return $mediaUrl;
+    }
+    protected function clearCache()
+    {
+        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_VIDEO,$this->id);
     }
 }

@@ -49,10 +49,6 @@ class ProfileController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
-        }
         return true;
     }
 

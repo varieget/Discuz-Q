@@ -19,11 +19,13 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\ResponseCode;
+use App\Models\Category;
 use App\Models\Group;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
+use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -94,7 +96,7 @@ class UpdateThreadController extends DzqController
     }
 
 
-    private function saveThread($thread, $content)
+    private function saveThread($thread, &$content)
     {
         $title = $this->inPut('title');//非必填项
         $categoryId = $this->inPut('categoryId');
@@ -122,7 +124,9 @@ class UpdateThreadController extends DzqController
         floatval($price) > 0 && $thread->price = floatval($price);
         floatval($attachmentPrice) > 0 && $thread->attachment_price = floatval($attachmentPrice);
         floatval($freeWords) > 0 && $thread->free_words = floatval($freeWords);
-        $this->boolApproved($title, $content['text'], $isApproved);
+        [$newTitle, $newContent] = $this->boolApproved($title, $content['text'], $isApproved);
+        $content['text'] = $newContent;
+        !empty($title) && $thread->title = $newTitle;
         if ($isApproved) {
             $thread->is_approved = Thread::BOOL_NO;
         } else {
@@ -131,6 +135,11 @@ class UpdateThreadController extends DzqController
         $isDraft && $thread->is_draft = Thread::BOOL_YES;
         !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
         $thread->save();
+        if (!$isApproved && !$isDraft) {
+            $this->user->refreshThreadCount();
+            $this->user->save();
+            Category::refreshThreadCountV3($categoryId);
+        }
     }
 
     private function savePost($post, $content)
@@ -199,7 +208,7 @@ class UpdateThreadController extends DzqController
 
     private function getResult($thread, $post, $tomJsons)
     {
-        $user = $this->user;
+        $user = User::query()->where('id',$thread->user_id)->first();
         $group = Group::getGroup($user->id);
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }

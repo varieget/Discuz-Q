@@ -19,6 +19,7 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Api\Serializer\UserProfileSerializer;
+use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -52,6 +53,21 @@ class UnbindWechatController extends DzqController
             try {
                 app('log')->info('被删除微信用户：'.$user->wechat.';ip：'.$ip.';port：'.$port);
                 $user->wechat->delete();
+
+                //更新用户绑定类型
+                $userBindType = empty($user->bind_type) ? 0 :$user->bind_type;
+                $existBindType = AuthUtils::getBindTypeArrByCombinationBindType($userBindType);
+                if (in_array(AuthUtils::WECHAT, $existBindType)) {
+                    $existBindType = array_diff($existBindType, [AuthUtils::WECHAT]);
+                    $newBindType  = AuthUtils::getBindType($existBindType);
+                    if (is_object($user)) {
+                        $user->bind_type = $newBindType;
+                        $user->save();
+                    } else {
+                        $this->outPut(ResponseCode::PARAM_IS_NOT_OBJECT);
+                    }
+                }
+
             } catch (\Exception $e) {
                 app('log')->info('被删除微信用户：'.$user->wechat.';ip：'.$ip.';port：'.$port.';$e:'.$e);
             }

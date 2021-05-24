@@ -29,8 +29,10 @@ class WechatPcBindPollController extends AuthBaseController
         $token = $this->getScanCodeToken();
 
         if (isset($token->payload['bind']) && $token->payload['bind']) {
+            $result = $this->camelData($token->payload);
+            $result = $this->addUserInfo($token->user, $result);
             // 绑定成功
-            $this->outPut(ResponseCode::SUCCESS, '', $token->payload);
+            $this->outPut(ResponseCode::SUCCESS, '', $result);
         }
 
         $this->outPut(ResponseCode::PC_BIND_ERROR);
