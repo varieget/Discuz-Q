@@ -19,6 +19,7 @@ use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Symfony\Component\Translation\Exception\NotFoundResourceException;
 
 class ListPostsController extends DzqController
 {
@@ -51,15 +52,11 @@ class ListPostsController extends DzqController
             return false;
         }
         $thread = Thread::query()
-            ->where([
-                'id' => $threadId,
-                'is_approved' => Thread::BOOL_YES,
-                'is_draft' => Thread::BOOL_NO,
-            ])
+            ->where(['id' => $threadId])
             ->whereNull('deleted_at')
             ->first();
         if (!$thread) {
-            return false;
+            throw new NotFoundResourceException();
         }
 
         return $userRepo->canViewThreadDetail($this->user, $thread);
