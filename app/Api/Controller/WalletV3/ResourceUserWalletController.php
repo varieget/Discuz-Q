@@ -21,16 +21,12 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserWalletRepository;
 use App\Settings\SettingsRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
 class ResourceUserWalletController extends DzqController
 {
-    use AssertPermissionTrait;
-
     public $wallet;
     public $setting;
 

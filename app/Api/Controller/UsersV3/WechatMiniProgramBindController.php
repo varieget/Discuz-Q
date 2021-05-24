@@ -24,6 +24,7 @@ use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
+use App\Repositories\UserRepository;
 use App\User\Bind;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
@@ -57,6 +58,11 @@ class WechatMiniProgramBindController extends AuthBaseController
         $this->db           = $db;
         $this->bound        = $bound;
         $this->bus          = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

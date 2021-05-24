@@ -22,6 +22,7 @@ use App\Commands\Users\GenJwtToken;
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Repositories\UserRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 
 class SmsBindController extends AuthBaseController
@@ -32,6 +33,11 @@ class SmsBindController extends AuthBaseController
         Dispatcher          $bus
     ){
         $this->bus      = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

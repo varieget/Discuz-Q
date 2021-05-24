@@ -99,6 +99,7 @@ class Permission extends DzqModel
         $cache = app('cache');
         $key = CacheKey::GROUP_PERMISSIONS;
         $permissions = $cache->get($key);
+        $permissions = [];
         if ($permissions) {
             if (isset($permissions[$groupKey])) {
                 $permission = $permissions[$groupKey];

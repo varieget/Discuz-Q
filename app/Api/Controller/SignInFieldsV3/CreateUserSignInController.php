@@ -22,6 +22,7 @@ use App\Commands\SignInFields\CreateUserSignIn;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\UserSignInFields;
+use App\Repositories\UserRepository;
 use Discuz\Api\Controller\AbstractCreateController;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -47,6 +48,11 @@ class CreateUserSignInController extends DzqController
         $this->validation = $validation;
         $this->setting = $setting;
         $this->bus = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

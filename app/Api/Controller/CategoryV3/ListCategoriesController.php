@@ -19,7 +19,6 @@ namespace App\Api\Controller\CategoryV3;
 
 use App\Common\ResponseCode;
 use App\Models\Category;
-use App\Models\Permission;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
@@ -30,13 +29,13 @@ class ListCategoriesController extends DzqController
         $this->userRepo = $userRepo;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
-        $groups = $this->user->groups->toArray();
-        $groupIds = array_column($groups, 'id');
-        $permissions = Permission::query()->whereIn('group_id', $groupIds)->get()->toArray();
-        $permissions = array_column($permissions, 'permission');
-
         $categories = Category::query()
             ->select([
                 'id as pid', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'

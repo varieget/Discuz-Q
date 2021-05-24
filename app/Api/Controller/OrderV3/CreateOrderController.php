@@ -13,14 +13,11 @@ use App\Models\OrderChildren;
 use App\Models\Thread;
 use App\Models\PayNotify;
 use App\Settings\SettingsRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class CreateOrderController extends DzqController
 {
-    use AssertPermissionTrait;
-
     protected $settings;
 
     public function __construct(SettingsRepository $settings)
@@ -253,7 +250,7 @@ class CreateOrderController extends DzqController
             case Order::ORDER_TYPE_RENEW:
                 $payeeId = Order::REGISTER_PAYEE_ID;
                 $amount = sprintf('%.2f', (float) $this->settings->get('site_price'));
-                
+
                 break;
 
             // 红包支出
@@ -277,7 +274,7 @@ class CreateOrderController extends DzqController
                 $amount = sprintf('%.2f', $data['amount']); // 设置红包+悬赏价格
                 $payeeId = 0;
                 break;
-            
+
             default:
                 $this->info('参数type枚举错误,传参枚举type:({$orderType}),用户id:{$this->user->id}');
                 throw new Exception(trans('order.order_type_error'));

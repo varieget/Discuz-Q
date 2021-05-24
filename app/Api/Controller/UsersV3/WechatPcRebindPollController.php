@@ -19,10 +19,15 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class WechatPcRebindPollController extends AuthBaseController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
 
     public function main()
     {

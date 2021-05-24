@@ -20,6 +20,7 @@ namespace App\Api\Controller\SignInFieldsV3;
 use App\Api\Serializer\UserSignInSerializer;
 use App\Common\ResponseCode;
 use App\Models\UserSignInFields;
+use App\Repositories\UserRepository;
 use Discuz\Api\Controller\AbstractListController;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
@@ -28,6 +29,11 @@ use Tobscure\JsonApi\Document;
 
 class ListUserSignInController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
         $userId = $this->inPut('userId');

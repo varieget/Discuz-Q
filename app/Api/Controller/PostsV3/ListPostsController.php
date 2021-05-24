@@ -46,7 +46,7 @@ class ListPostsController extends DzqController
     {
         $filters = $this->inPut('filter') ?: [];
         $threadId = Arr::get($filters, 'thread');
-        // 只有管理员能查看所有回复，暂时兼容管理后台
+        // 没有帖子ID筛选的情况下，只有管理员才能查看
         if (!$threadId && !$this->user->isAdmin()) {
             return false;
         }
@@ -179,7 +179,8 @@ class ListPostsController extends DzqController
 
     protected function getPost(Post $post, bool $getRedPacketAmount)
     {
-
+        /** @var UserRepository $userRepo */
+        $userRepo = app(UserRepository::class);
         $data = [
             'id' => $post['id'],
             'userId' => $post['user_id'],
@@ -198,16 +199,16 @@ class ListPostsController extends DzqController
             'isComment' => $post['is_comment'],
             'isApproved' => $post['is_approved'],
             'rewards' => floatval(sprintf('%.2f', $post->getPostReward(UserWalletLog::TYPE_INCOME_THREAD_REWARD))),
-            'canApprove' => $this->gate->allows('approve', $post),
-            'canDelete' => $this->gate->allows('delete', $post),
-            'canHide' => $this->gate->allows('hide', $post),
-            'canEdit' => $this->gate->allows('edit', $post),
+            'canApprove' => $this->user->isAdmin(),
+            'canDelete' => $this->user->isAdmin(),
+            'canHide' => $userRepo->canHidePost($this->user, $post),
+            'canEdit' => false, // 不能编辑回复
+            'canLike' => $userRepo->canLikePosts($this->user),
             'user' => $this->getUser($post->user),
             'images' => $post->images->map(function (Attachment $image) {
                 return $this->attachmentSerializer->getDefaultAttributes($image);
             }),
             'likeState' => $post->likeState,
-            'canLike' => $this->user->can('like', $post),
             'summaryText' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post->summary_text),
         ];
 

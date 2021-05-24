@@ -32,6 +32,7 @@ use App\Models\SessionToken;
 use App\Models\User;
 use App\Notifications\Messages\Wechat\RegisterWechatMessage;
 use App\Notifications\System;
+use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
 use Carbon\Carbon;
 use Discuz\Auth\AssertPermissionTrait;
@@ -67,6 +68,10 @@ class RegisterController extends AuthBaseController
 
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
 
     public function main()
     {

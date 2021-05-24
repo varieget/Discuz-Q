@@ -25,6 +25,7 @@ use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Models\SessionToken;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
@@ -44,6 +45,11 @@ class SmsLoginController extends AuthBaseController
         $this->bus      = $bus;
         $this->settings = $settings;
         $this->events   = $events;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

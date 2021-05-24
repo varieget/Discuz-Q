@@ -19,6 +19,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use App\Settings\SettingsRepository;
 use Discuz\Wechat\EasyWechatTrait;
@@ -40,6 +41,11 @@ class WechatPcRebindQrCodeController extends DzqController
         $this->settingsRepository   = $settingsRepository;
         $this->url                  = $url;
         $this->httpClient           = new Client();
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

@@ -5,6 +5,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Events\Users\UserFollowCreated;
+use App\Models\User;
 use App\Models\UserFollow;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -15,10 +16,19 @@ class CreateUserFollowController extends DzqController
 {
     use EventsDispatchTrait;
 
-    public function __construct(Dispatcher $bus,UserRepository $user,UserFollow $userFollow)
+    /**
+     * @var Dispatcher
+     */
+    protected $bus;
+
+    /**
+     * @var UserFollow 
+     */
+    protected $userFollow;
+
+    public function __construct(Dispatcher $bus,UserFollow $userFollow)
     {
         $this->bus = $bus;
-        $this->user = $user;
         $this->userFollow = $userFollow;
     }
 
@@ -37,13 +47,13 @@ class CreateUserFollowController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER,'');
         }
 
-        $toUserData = $this->user->query()
-            ->where('id', $to_user_id)->first();
-        if (!$toUserData) {
+        /** @var User $toUser */
+        $toUser = User::query()
+            ->where('id', $to_user_id)
+            ->first();
+        if (!$toUser) {
             $this->outPut(ResponseCode::INVALID_PARAMETER,'');
         }
-
-        $toUser = $this->user->findOrFail($to_user_id);
 
         //在黑名单中，不能创建会话
         if (in_array($actor->id, array_column($toUser->deny->toArray(), 'id'))) {
