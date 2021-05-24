@@ -39,7 +39,8 @@ class UpdatePostController extends DzqController
     public function __construct(
         PostSerializer $postSerializer,
         Dispatcher $bus
-    ) {
+    )
+    {
         $this->postSerializer = $postSerializer;
         $this->bus = $bus;
     }
@@ -52,7 +53,7 @@ class UpdatePostController extends DzqController
             return false;
         }
 
-        $data = $this->inPut('data',[]);
+        $data = $this->inPut('data', []);
         $data = Arr::get($data, 'attributes', []);
 
         // TODO 暂时改为只有管理员可审核和编辑
@@ -69,10 +70,10 @@ class UpdatePostController extends DzqController
     public function main()
     {
         $actor = $this->user;
-        $postId= $this->inPut('pid');
-        if(empty($postId)) return  $this->outPut(ResponseCode::INVALID_PARAMETER);
+        $postId = $this->inPut('pid');
+        if (empty($postId)) return $this->outPut(ResponseCode::INVALID_PARAMETER);
 
-        $data = $this->inPut('data',[]);
+        $data = $this->inPut('data', []);
 
         if (empty($data)) return $this->outPut(ResponseCode::INVALID_PARAMETER);
 
@@ -86,16 +87,16 @@ class UpdatePostController extends DzqController
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
 
         $isFavorite = ThreadUser::query()->where('thread_id', $threadId)->where('user_id', $actor->id)->exists();
-        $thread = Thread::query()->where("id",$threadId)->first(["rewarded_count","paid_count"]);
+        $thread = Thread::query()->where("id", $threadId)->first(["rewarded_count", "paid_count"]);
 
         $content = "";
-        if(!empty($data['attributes']['content'])){
+        if (!empty($data['attributes']['content'])) {
             $content = $data['attributes']['content'];
         }
         $build = [
             'pid' => $postId,
-            'threadId'=>$threadId,
-            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$content),
+            'threadId' => $threadId,
+            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''], $content),
             'likeCount' => $post['like_count'],
             'likePayCount' => $post['like_count'] + $thread['rewarded_count'] + $thread['paid_count'],
             'replyCount' => $post['reply_count'],
@@ -104,16 +105,16 @@ class UpdatePostController extends DzqController
             'updatedAt' => optional($post['updated_at'])->format('Y-m-d H:i:s'),
             'isLiked' => $data['attributes']['isLiked'],
             'canLike' => $this->user->can('like', $post),
-            'canFavorite' => (bool) $this->user->can('favorite',$post),
-            'isFavorite' =>  $isFavorite,
+            'canFavorite' => (bool)$this->user->can('favorite', $post),
+            'isFavorite' => $isFavorite,
             'rewards' => floatval(sprintf('%.2f', $post->getPostReward())),
             'redPacketAmount' => $this->postSerializer->getPostRedPacketAmount($post['id'], $post['thread_id'], $post['user_id']),
         ];
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_LIKED, $post['user_id']);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_USERS, $post['thread_id']);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_LIKED, $post['user_id']);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_USERS, $post['thread_id']);
 
         if ($post->id == $postId) {
-            return $this->outPut(ResponseCode::SUCCESS, '',$build);
+            return $this->outPut(ResponseCode::SUCCESS, '', $build);
         }
 
         return $this->outPut(ResponseCode::NET_ERROR, '', []);
