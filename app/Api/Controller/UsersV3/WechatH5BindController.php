@@ -95,6 +95,10 @@ class WechatH5BindController extends AuthBaseController
             $wechatUser->setRelation('user', $actor);
             $wechatUser->save();
             $this->updateUserBindType($actor,AuthUtils::WECHAT);
+            if (empty($actor->nickname)) {
+                $actor->nickname = $wechatUser->nickname;
+                $actor->save();
+            }
             $this->db->commit();
 
             // PC扫码使用
