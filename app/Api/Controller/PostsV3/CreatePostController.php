@@ -23,6 +23,7 @@ use App\Commands\Post\CreatePost;
 use App\Common\CacheKey;
 use App\Common\DzqCache;
 use App\Common\ResponseCode;
+use App\Formatter\Formatter;
 use App\Models\Attachment;
 use App\Models\GroupUser;
 use App\Models\Post;
@@ -117,7 +118,8 @@ class CreatePostController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '主题id不能为空');
         }
 
-        $data['content'] = '<t><p>' . $data['content'] . '</p></t>';
+//        $data['content'] = '<t><p>' . $data['content'] . '</p></t>';
+        if(!empty($data['content']))    $data['content'] = app()->make(Formatter::class)->parse($data['content']);
 
         if (empty($data['content'])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
