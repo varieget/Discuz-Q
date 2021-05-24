@@ -60,10 +60,11 @@ class SmsLoginController extends AuthBaseController
                 $this->outPut(ResponseCode::REGISTER_CLOSE);
             }
 
-            $data['register_ip']    = $ip;
-            $data['register_port']  = $port;
-            $data['mobile']         = $mobileCode->mobile;
-            $data['code']           = $inviteCode;
+            $data['register_ip']        = $ip;
+            $data['register_port']      = $port;
+            $data['mobile']             = $mobileCode->mobile;
+            $data['code']               = $inviteCode;
+            $data['register_reason']    = trans('user.register_by_sms');
             $user = $this->bus->dispatch(
                 new RegisterPhoneUser($this->user, $data)
             );
