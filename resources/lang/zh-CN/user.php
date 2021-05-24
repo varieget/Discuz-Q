@@ -28,6 +28,8 @@ return [
 
     'register_by_wechat_miniprogram' => '微信小程序注册',
     'register_by_wechat_h5' => '公众号网页注册',
+    'register_by_username' => '账号密码注册',
+    'register_by_sms' => '手机号注册',
     'register_by_auto' => '自动注册',
 
     'register_decrypt_code_failed' => '解密邀请码失败',

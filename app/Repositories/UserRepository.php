@@ -374,8 +374,8 @@ class UserRepository extends AbstractRepository
         }
 
         // 查看自己的草稿
-        if(Arr::get($thread, 'is_draft') && $thread['user_id'] == $user->id){
-            return true;
+        if (Arr::get($thread, 'is_draft')) {
+            return $thread['user_id'] == $user->id;
         }
 
         return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS, $thread['category_id']);

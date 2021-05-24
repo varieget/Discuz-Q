@@ -263,7 +263,7 @@ abstract class AuthBaseController extends DzqController
         }
         $params = [
             'username' => $user->username,
-            'password' => !empty($user->password) ? $user->password : ''
+            'password' => ''
         ];
         GenJwtToken::setUid($user->id);
         $response = $bus->dispatch(

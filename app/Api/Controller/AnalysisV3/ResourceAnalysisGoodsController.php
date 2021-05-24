@@ -189,9 +189,12 @@ class ResourceAnalysisGoodsController extends DzqController
             $ch = curl_init();
             $timeout = 10;
             curl_setopt ($ch, CURLOPT_URL,$this->address);
+            curl_setopt ($ch, CURLOPT_USERAGENT,'Mozilla/5.0 (compatible; MSIE 6.0; Windows NT 5.0)');
             curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
             $this->html = curl_exec($ch);
+
+            app('log')->info('商品贴京东解析打印'.curl_exec($ch));
         }
 
         /**
