@@ -116,12 +116,15 @@ class CountLikedMakeRedPacket
                             ',post_id:'        . $this->post->id.
                             ',msg:';
 
-        if (!($type == Thread::TYPE_OF_TEXT || $type == Thread::TYPE_OF_LONG)) {
-            $this->outDebugInfo('点赞领红包：该帖不为文字帖和长文贴');
+        $redPacketTom = ThreadTom::query()->where('thread_id',$thread['id'])
+            ->where('tom_type',106)
+            ->first();
+        if (!$redPacketTom) {
+            $this->outDebugInfo('点赞领红包：该帖不为红包贴');
             return;
         }
 
-        if ($thread['is_red_packet'] != Thread::HAVE_RED_PACKET
+        if (!$redPacketTom
             || $post['is_first'] == 1
             || $post['is_comment'] == 1
         ) {
@@ -142,9 +145,6 @@ class CountLikedMakeRedPacket
         }
 
         //领取过红包的用户不再领取
-        $redPacketTom = ThreadTom::query()->where('thread_id',$thread['id'])
-            ->where('tom_type',106)
-            ->first();
         if ($redPacketTom) {
             $change_type = UserWalletLog::TYPE_REDPACKET_INCOME;
         } else {

@@ -121,7 +121,7 @@ class CreateThreadController extends DzqController
         return $this->getResult($thread, $post, $tomJsons);
     }
 
-    private function saveThread($content)
+    private function saveThread(&$content)
     {
         $thread = new Thread();
         $userId = $this->user->id;
@@ -141,7 +141,8 @@ class CreateThreadController extends DzqController
             'user_id' => $userId,
             'category_id' => $categoryId,
             'title' => $title,
-            'post_count' => 1
+            'post_count' => 1,
+            'type'=>Thread::TYPE_OF_ALL
         ];
         $price = floatval($price);
         $attachmentPrice = floatval($attachmentPrice);
@@ -161,7 +162,9 @@ class CreateThreadController extends DzqController
             $dataThread['address'] = '';
             $dataThread['location'] = '';
         }
-        $this->boolApproved($title, $content['text'], $isApproved);
+        [$newTitle, $newContent] = $this->boolApproved($title, $content['text'], $isApproved);
+        $content['text'] = $newContent;
+        $dataThread['title'] = $newTitle;
         if ($isApproved) {
             $dataThread['is_approved'] = Thread::BOOL_NO;
         } else {
@@ -171,6 +174,12 @@ class CreateThreadController extends DzqController
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
         $thread->setRawAttributes($dataThread);
         $thread->save();
+        if (!$isApproved && !$isDraft) {
+            $this->user->refreshThreadCount();
+            $this->user->save();
+            Category::refreshThreadCountV3($categoryId);
+        }
+
         return $thread;
     }
 

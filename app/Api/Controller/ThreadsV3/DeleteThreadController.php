@@ -37,10 +37,10 @@ class DeleteThreadController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
-        if (empty($thread)) {
+        if (empty($this->thread)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        $userRepo->canHideThread($this->user, $this->thread);
+        return $userRepo->canHideThread($this->user, $this->thread);
     }
 
     public function main()

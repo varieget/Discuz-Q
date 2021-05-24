@@ -101,8 +101,9 @@ class RegisterUser
         $censor->checkText(Arr::get($this->data, 'username'), 'username');
         //昵称校验
         $censor->checkText(Arr::get($this->data, 'nickname'), 'nickname');
-
-
+        if (!empty($password)) {
+            $this->data['register_reason'] = trans('user.register_by_username');
+        }
         $user = User::register(Arr::only($this->data, ['username', 'password', 'nickname','register_ip', 'register_port', 'register_reason']));
         // 注册验证码(无感模式不走验证码，开启也不走)
         $captcha = '';  // 默认为空将不走验证

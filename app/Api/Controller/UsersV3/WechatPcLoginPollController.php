@@ -28,18 +28,10 @@ class WechatPcLoginPollController extends AuthBaseController
     {
         $token = $this->getScanCodeToken();
 
-        if (isset($token->payload['code'])) {
+        if (isset($token->payload['code']) ) {
             if (empty($token->payload['code'])) {
                 // 扫码中
                 $this->outPut(ResponseCode::PC_QRCODE_ERROR);
-            } else {
-                /*$noUserException = new NoUserException();
-                $noUserException->setToken((object) $token->payload['token']);
-                $noUserException->setUser((object) $token->payload['user']);
-                $token->payload['rebind'] && $noUserException->setCode('rebind_mp_wechat');
-
-                throw $noUserException;*/
-                //todo 增加code 存在逻辑
             }
         }
 
@@ -47,9 +39,7 @@ class WechatPcLoginPollController extends AuthBaseController
         $data['user_id'] = $token->user_id; // 用于序列化返回 user_id
 
         $result = $this->camelData($data);
-
-        $result = $this->addUserInfo( $token->user, $result);
-
+        $result = $this->addUserInfo($token->user, $result);
         $this->outPut(ResponseCode::SUCCESS, '', $result);
 
     }

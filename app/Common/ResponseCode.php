@@ -24,6 +24,12 @@ class ResponseCode
 {
     const SUCCESS = 0;
 
+    const WECHAT_INVALID_UNKNOWN_URL_EXCEPTION = -2001;
+    const WECHAT_INVALID_CONFIG_EXCEPTION = -2002;
+    const WECHAT_RUNTIME_EXCEPTION = -2003;
+    const WECHAT_INVALID_ARGUMENT_EXCEPTION = -2004;
+
+
     const JUMP_TO_LOGIN = -3001;
     const JUMP_TO_REGISTER = -3002;
     const JUMP_TO_AUDIT = -3003;
@@ -169,5 +175,9 @@ class ResponseCode
         self::USERID_NOT_ALLOW_NULL => '用户id不允许为空',
         self::USER_MOBILE_NOT_ALLOW_NULL => '用户手机号不允许为空',
         self::PAY_ORDER_FAIL => '支付失败',
+        self::WECHAT_INVALID_UNKNOWN_URL_EXCEPTION => '无效未知url地址',
+        self::WECHAT_INVALID_CONFIG_EXCEPTION => '无效配置',
+        self::WECHAT_INVALID_ARGUMENT_EXCEPTION => '无效参数',
+        self::WECHAT_RUNTIME_EXCEPTION => '运行时异常',
     ];
 }

@@ -222,14 +222,21 @@ class Post extends DzqModel
     public function getSummaryTextAttribute()
     {
        $content = Str::of($this->content ?: '');
-
-        if ($content->length() > self::SUMMARY_LENGTH) {
-
-            $content = static::$formatter->parse(
-                $content->substr(0, self::SUMMARY_LENGTH)->finish(self::SUMMARY_END_WITH)
-            );
+        if (substr($content, 0, 3) === '<r>' && substr($content, -4) != '</r>') {
+             $content = mb_substr($content, 3, -4);
+        }
+        if (substr($content, 0, 3) === '<t>' && substr($content, -4) != '</t>') {
+            $content = mb_substr($content, 3, -4);
+        }
+        if (substr($content, 0, 3) === '<p>' && substr($content, -4) != '</p>') {
+            $content = mb_substr($content, 3, -4);
+        }
+        if (mb_strlen($content) > self::SUMMARY_LENGTH) {
+            $content = mb_substr($content, 0, 80, "UTF-8") . self::SUMMARY_END_WITH;
+            $content = '<t><r><p>' . $content . '</p></r></t>';
             $content = static::$formatter->render($content);
         }
+
         return str_replace('<br>', '', $content);
     }
 
@@ -683,7 +690,7 @@ class Post extends DzqModel
         return $f1 || $f2;
     }
 
-    public function getPostReward()
+    public function getPostReward($changeType = '')
     {
         $this->removePostCache();
         $thread = ($this->relationLoaded('thread') && array_key_exists('type', $this->thread->attributes))
@@ -694,10 +701,14 @@ class Post extends DzqModel
         $rewardTom = ThreadTom::query()->where('thread_id',$thread['id'])
             ->where('tom_type',107)
             ->first();
-        if($rewardTom){
-            $this->rewards = UserWalletLog::query()
-                ->where(['post_id' => $this->id, 'thread_id' => $this->thread_id])
-                ->sum('change_available_amount');
+        if(!empty($rewardTom)){
+            $UserWalletLog = UserWalletLog::query()
+                ->where(['post_id' => $this->id, 'thread_id' => $this->thread_id]);
+            if ($changeType) {
+                $UserWalletLog->where( 'change_type' , $changeType);
+            }
+            $this->rewards = $UserWalletLog->sum('change_available_amount');
+
         }
         return $this->rewards;
     }

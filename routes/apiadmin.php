@@ -32,4 +32,16 @@ $route->post('/permission.update', 'permission.update', ApiController\Permission
 
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
 //注册扩展
-$route->get('/admin/signinfields', 'admin.signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
+$route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
+$route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
+//审核主题列表
+$route->get('/check.thread.list', 'check.thread.list', ApiController\AdminV3\CheckThemeList::class);
+//审核评论列表
+$route->get('/check.posts.list', 'check.posts.list', ApiController\AdminV3\CheckReplyList::class);
+$route->post('/check.sub', 'check.sub', ApiController\AdminV3\CheckSub::class);
+//话题管理
+$route->get('/topics.list', 'topics.list', ApiController\TopicV3\AdminTopicListController::class);
+$route->post('/topics.batch.update', 'topics.batch.update', ApiController\TopicV3\BatchUpdateTopicController::class);
+$route->post('/topics.batch.delete', 'topics.batch.delete', ApiController\TopicV3\BatchDeleteTopicController::class);
+
+$route->get('/statistic/firstChart', 'statistic/firstChart', ApiController\statisticV3\FirstChartController::class);

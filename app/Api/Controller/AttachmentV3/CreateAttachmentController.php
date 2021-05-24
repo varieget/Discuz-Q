@@ -24,8 +24,8 @@ use App\Events\Attachment\Saving;
 use App\Events\Attachment\Uploaded;
 use App\Events\Attachment\Uploading;
 use App\Models\Attachment;
+use App\Repositories\UserRepository;
 use App\Validators\AttachmentValidator;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
 use Discuz\Foundation\EventsDispatchTrait;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -35,7 +35,6 @@ use Illuminate\Http\UploadedFile;
 
 class CreateAttachmentController extends DzqController
 {
-    use AssertPermissionTrait;
     use EventsDispatchTrait;
 
     protected $events;
@@ -44,14 +43,31 @@ class CreateAttachmentController extends DzqController
 
     protected $uploader;
 
-    /**
-     * @param Dispatcher $bus
-     */
     public function __construct(Dispatcher $events, AttachmentValidator $validator, AttachmentUploader $uploader)
     {
         $this->events = $events;
         $this->validator = $validator;
         $this->uploader = $uploader;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $type = $this->inPut('type') ?: 0;
+
+        $typeMethodMap = [
+            Attachment::TYPE_OF_FILE => [$userRepo, 'canInsertAttachmentToThread'],
+            Attachment::TYPE_OF_IMAGE => [$userRepo, 'canInsertImageToThread'],
+            Attachment::TYPE_OF_AUDIO => [$userRepo, 'canInsertAudioToThread'],
+            Attachment::TYPE_OF_VIDEO => [$userRepo, 'canInsertVideoToThread'],
+            Attachment::TYPE_OF_ANSWER => [$userRepo, 'canInsertRewardToThread'],
+            Attachment::TYPE_OF_DIALOG_MESSAGE => [$userRepo, 'canCreateDialog'],
+        ];
+        // 不在这里面，则通过，后续会有 type 表单验证
+        if (!isset($typeMethodMap[$type])) {
+            return true;
+        }
+
+        return call_user_func_array($typeMethodMap[$type], [$this->user]);
     }
 
     public function main()
@@ -63,14 +79,6 @@ class CreateAttachmentController extends DzqController
         $order = (int) Arr::get($this->request->getParsedBody(), 'order', 0);
         $ipAddress = ip($this->request->getServerParams());
         ini_set('memory_limit',-1);
-
-
-
-        $this->assertCan($actor, 'attachment.create.' . (int) in_array($type, [
-                Attachment::TYPE_OF_IMAGE,
-                Attachment::TYPE_OF_DIALOG_MESSAGE,
-                Attachment::TYPE_OF_ANSWER,
-            ]));
 
         $ext = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
         $tmpFile = tempnam(storage_path('/tmp'), 'attachment');

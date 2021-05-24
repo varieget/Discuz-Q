@@ -18,6 +18,7 @@
 namespace App\Modules\ThreadTom\Busi;
 
 use App\Common\ResponseCode;
+use App\Models\Thread;
 use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\Order;
 use App\Models\OrderChildren;
@@ -29,48 +30,63 @@ class RewardBusi extends TomBaseBusi
     public function create()
     {
         $input = $this->verification();
-
         if(strtotime($input['expiredAt']) < time()+24*60*60){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
-        $order = Order::query()
-            ->where('order_sn',$input['orderSn'])
-            ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
+        $threadReward = ThreadReward::query()->where('thread_id', $this->threadId)->first();
 
-        if (empty($order) || 
-            ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id'])) || 
-            $order['user_id'] != $this->user['id'] || 
-            $order['status'] != Order::ORDER_STATUS_PAID || 
-            (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())|| 
-            ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        if (!empty($threadReward)) {
+            $thread = Thread::query()->where('id', $this->threadId)->first(['is_draft']);
+            if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'每个帖子只能发布一条悬赏');
         }
 
-        if ($order->type == Order::ORDER_TYPE_MERGE) {
-            $orderChildrenInfo = OrderChildren::query()
-                ->where('order_sn', $input['orderSn'])
-                ->where('type', Order::ORDER_TYPE_QUESTION_REWARD)
-                ->first();
-            if (empty($orderChildrenInfo) ||
-                $orderChildrenInfo->amount != $input['price'] ||
-                $orderChildrenInfo->status != Order::ORDER_STATUS_PAID) {
+        if ($input['draft'] != Thread::IS_DRAFT) {
+
+            $order = Order::query()
+                ->where('order_sn',$input['orderSn'])
+                ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
+
+            if (empty($order) ||
+                ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id'])) ||
+                $order['user_id'] != $this->user['id'] ||
+                $order['status'] != Order::ORDER_STATUS_PAID ||
+                (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())||
+                ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
+
+            if ($order->type == Order::ORDER_TYPE_MERGE) {
+                $orderChildrenInfo = OrderChildren::query()
+                    ->where('order_sn', $input['orderSn'])
+                    ->where('type', Order::ORDER_TYPE_QUESTION_REWARD)
+                    ->first();
+                if (empty($orderChildrenInfo) ||
+                    $orderChildrenInfo->amount != $input['price'] ||
+                    $orderChildrenInfo->status != Order::ORDER_STATUS_PAID) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER);
+                }
+            }
+
+            $order->thread_id = $this->threadId;
+            $order->save();
+            if ($order->type == Order::ORDER_TYPE_MERGE) {
+                $orderChildrenInfo->thread_id = $this->threadId;
+                $orderChildrenInfo->save();
+            }
+
+            if (empty($order['thread_id'])) {
+                $this->outPut(ResponseCode::NOT_FOUND_USER);
+            }
+
         }
 
-        $order->thread_id = $this->threadId;
-        $order->save();
-        if ($order->type == Order::ORDER_TYPE_MERGE) {
-            $orderChildrenInfo->thread_id = $this->threadId;
-            $orderChildrenInfo->save();
+        if (empty($threadReward)) {
+            $threadReward = new ThreadReward;
+        } else {
+            $threadReward->updated_at = date('Y-m-d H:i:s');
         }
 
-        if (empty($order['thread_id'])) {
-            $this->outPut(ResponseCode::NOT_FOUND_USER);
-        }
-
-        $threadReward = new ThreadReward;
         $threadReward->thread_id = $this->threadId;
         $threadReward->post_id = $this->postId;
         $threadReward->type = $input['type'];
@@ -78,7 +94,7 @@ class RewardBusi extends TomBaseBusi
         $threadReward->answer_id = 0; // 目前没有指定人问答
         $threadReward->money = $input['price'];
         $threadReward->remain_money = $input['price'];
-        $threadReward->expired_at = date("Y-m-d",strtotime($input['expiredAt']));
+        $threadReward->expired_at = date('Y-m-d H:i:s', strtotime($input['expiredAt']));
         $threadReward->save();
 
         $threadReward->content = $input['content'];
@@ -91,7 +107,7 @@ class RewardBusi extends TomBaseBusi
         $redPacket = ThreadReward::query()->where('id',$this->body['id'])->first(['remain_money']);
         $this->body['remain_money'] = $redPacket['remain_money'];
 
-        return $this->jsonReturn($this->body);
+        return $this->jsonReturn($this->camelData($this->body));
     }
 
     public function verification(){
@@ -101,14 +117,16 @@ class RewardBusi extends TomBaseBusi
             'type' => $this->getParams('type'),
             'expiredAt' => $this->getParams('expiredAt'),
             'content' => $this->getParams('content'),
+            'draft' => $this->getParams('draft')
         ];
         $rules = [
-            'orderSn' => 'required|numeric',
             'price' => 'required|numeric|min:0.1|max:1000000',
             'type' => 'required|integer|in:0,1',
             'expiredAt' => 'required|date',
             'content' => 'max:1000',
         ];
+
+        $input['draft'] != Thread::IS_DRAFT ? $rules['orderSn'] = 'required|numeric' : '';
 
         $this->dzqValidate($input, $rules);
 

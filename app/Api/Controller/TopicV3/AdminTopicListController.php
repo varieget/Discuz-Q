@@ -23,19 +23,22 @@ use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Topic;
 use App\Models\Thread;
-use App\Models\ThreadTopic;
 use App\Models\User;
 use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
 
-class TopicListController extends DzqController
+class AdminTopicListController extends DzqController
 {
     use ThreadTrait;
     use ThreadListTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有访问话题列表的权限');
+        }
         return true;
     }
 
@@ -44,14 +47,6 @@ class TopicListController extends DzqController
         $filter = $this->inPut('filter');
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
-
-        if (Arr::has($filter, 'topicId') && Arr::get($filter, 'topicId') != 0) {
-            $topicData = Topic::query()->where('id', $filter['topicId'])->first();
-            if (!empty($topicData)) {
-                $this->refreshTopicViewCount($topicData);
-                $this->refreshTopicThreadCount($topicData);
-            }
-        }
         $topics = $this->filterTopics($filter, $currentPage, $perPage);
         $topicsList = $topics['pageData'];
         $topicIds = array_column($topicsList, 'id');
@@ -60,25 +55,19 @@ class TopicListController extends DzqController
         $userDatas = array_column($userDatas, null, 'id');
         $topicThreadDatas = [];
 
-        $threads = $this->getFilterThreads($topicIds, $filter, $currentPage, $perPage);
-        if (isset($threads['pageData'])) {
-            $topics['pageLength'] = $threads['pageLength'];
-            $topics['totalCount'] = $threads['totalCount'];
-            $topics['totalPage'] = $threads['totalPage'];
-            $threads = $this->getFullThreadData($threads['pageData']);
-        } else {
-            $threads = $this->getFullThreadData($threads);
-        }
+        $threads = $this->getFilterThreads($topicIds);
+        $threads = $this->getFullThreadData($threads);
 
         foreach ($threads as $key => $value) {
-            $topicThreadDatas[$value['topicId']][] = $value;
+            $topicThreadDatas[$value['topicId']][$value['threadId']] = $value;
         }
 
         $result = [];
         foreach ($topicsList as $topic) {
             $topicId = $topic['id'];
             $thread = [];
-            if (isset($topicThreadDatas[$topicId])) {
+
+            if (isset($topicThreadDatas[$topicId]) && $topicId == Arr::has($filter, 'topicId')) {
                 $thread = array_values($topicThreadDatas[$topicId]);
             }
 
@@ -117,6 +106,7 @@ class TopicListController extends DzqController
         }
 
         if ($createdAtEnd = Arr::get($filter, 'createdAtEnd')) {
+            $createdAtEnd =  date("Y-m-d",strtotime("+1 day",strtotime($createdAtEnd)));
             $query->where('topics.created_at', '<=', $createdAtEnd);
         }
 
@@ -144,8 +134,7 @@ class TopicListController extends DzqController
             $query->where('topics.id', '=', $topicId);
         }
 
-        if ((Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 1) || 
-            (Arr::has($filter, 'sortBy') && Arr::get($filter, 'sortBy') == Topic::SORT_BY_VIEWCOUNT)) {
+        if ((Arr::has($filter, 'sortBy') && Arr::get($filter, 'sortBy') == Topic::SORT_BY_VIEWCOUNT)) {
             $query->orderByDesc('topics.view_count');
         } elseif (Arr::has($filter, 'sortBy') && Arr::get($filter, 'sortBy') == Topic::SORT_BY_THREADCOUNT) {
             $query->orderByDesc('topics.thread_count');
@@ -157,79 +146,28 @@ class TopicListController extends DzqController
         return $topics;
     }
 
-    function getFilterThreads($topicIds, $filter, $currentPage, $perPage)
+    function getFilterThreads($topicIds)
     {
         $categoryids = [];
         $categoryids = Category::instance()->getValidCategoryIds($this->user, $categoryids);
         if (!$categoryids) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有内容浏览权限');
         }
-
-        if (!Arr::has($filter, 'topicId') || Arr::get($filter, 'topicId') == 0) {
-            $threadTopics = ThreadTopic::query()
-                ->selectRaw('thread_topic.`topic_id`, MAX(thread_topic.`thread_id`) as thread_id')
-                ->join('threads', 'id', '=', 'thread_id')
-                ->where('threads.is_sticky', Thread::BOOL_NO)
-                ->where('threads.is_draft', Thread::IS_NOT_DRAFT)
-                ->where('threads.is_approved', Thread::APPROVED)
-                ->whereNull('threads.deleted_at')
-                ->whereNotNull('threads.user_id')
-                ->whereIn('threads.category_id', $categoryids)
-                ->whereIn('thread_topic.topic_id', $topicIds)
-                ->groupBy('thread_topic.topic_id')
-                ->get();
-            $threadIds = $threadTopics->pluck('thread_id')->toArray();
-            $threads = Thread::query()
-                ->select('threads.*', 'thread_topic.topic_id')
-                ->leftJoin('thread_topic', 'thread_topic.thread_id', '=', 'threads.id')
-                ->whereIn('threads.id', $threadIds)->get()->toArray();
-            return  $threads;
-        }
-
-        $query = Thread::query();
-        $query->join('thread_topic', 'thread_topic.thread_id', '=', 'threads.id');
-        $query->where('threads.is_sticky', Thread::BOOL_NO);
-        $query->where('threads.is_draft', Thread::IS_NOT_DRAFT);
-        $query->where('threads.is_approved', Thread::APPROVED);
-        $query->whereNull('threads.deleted_at');
-        $query->whereNotNull('threads.user_id');
-        $query->whereIn('threads.category_id', $categoryids);
-        $query->whereIn('thread_topic.topic_id', $topicIds);
-        $query->orderByDesc('threads.created_at');
-        $threads = $this->pagination($currentPage, $perPage, $query);
-        return $threads;
+        $threads = $this->getThreadsBuilder($topicIds);
+        !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
+        return $threads->get()->toArray();
     }
 
-    /**
-     * refresh thread count
-     * 用户删除、帖子审核、帖子逻辑删除、帖子草稿不计算
-     */
-    private function refreshTopicThreadCount($topicData)
+    private function getThreadsBuilder($topicIds)
     {
-        $threadCount = ThreadTopic::join('threads', 'threads.id', 'thread_topic.thread_id')
-            ->where('thread_topic.topic_id', $topicData->id)
-            ->where('threads.is_approved', Thread::APPROVED)
-            ->where('threads.is_draft', Thread::IS_NOT_DRAFT)
-            ->whereNull('threads.deleted_at')
-            ->whereNotNull('user_id')
-            ->count();
-        $topicData->thread_count = $threadCount;
-        $topicData->save();
-    }
-
-    /**
-     * refresh view count
-     * 帖子审核、帖子逻辑删除、帖子草稿不计算
-     */
-    private function refreshTopicViewCount($topicData)
-    {
-        $viewCount = ThreadTopic::join('threads', 'threads.id', 'thread_topic.thread_id')
-            ->where('thread_topic.topic_id', $topicData->id)
-            ->where('threads.is_approved', Thread::APPROVED)
-            ->where('threads.is_draft', Thread::IS_NOT_DRAFT)
-            ->whereNull('threads.deleted_at')
-            ->sum('view_count');
-        $topicData->view_count = $viewCount;
-        $topicData->save();
+        return Thread::query()
+            ->from('threads as th')
+            ->join('thread_topic as tt', 'tt.thread_id', '=', 'th.id')
+            ->whereNull('th.deleted_at')
+            ->where('th.is_sticky', Thread::BOOL_NO)
+            ->where('th.is_draft', Thread::IS_NOT_DRAFT)
+            ->where('th.is_approved', Thread::APPROVED)
+            ->whereIn('tt.topic_id', $topicIds)
+            ->orderByDesc('th.created_at');
     }
 }

@@ -109,6 +109,8 @@ class Thread extends DzqModel
 
     const TYPE_OF_GOODS = 6;
 
+    const TYPE_OF_ALL = 99;
+
     const UNAPPROVED = 0;
 
     const APPROVED = 1;
@@ -823,10 +825,11 @@ class Thread extends DzqModel
         foreach ($emojisList as $emoji) {
             if (in_array($emoji['code'], $m1)) {
                 $url = Utils::getDzqDomain() . '/' . $emoji['url'];
+                $alt = str_replace(':', '', $emoji['code']);
                 $emojis[] = [
                     'code' => $emoji['code'],
                     'url' => $url,
-                    'html' => sprintf('<img style="display:inline-block;vertical-align:top" src="%s" alt="ciya" class="qq-emotion">', $url)
+                    'html' => sprintf('<img style="display:inline-block;vertical-align:top" src="%s" alt="%s" class="qq-emotion">', $url, $alt)
                 ];
             }
         }

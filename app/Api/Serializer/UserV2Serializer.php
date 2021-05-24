@@ -124,8 +124,8 @@ class UserV2Serializer extends AbstractSerializer
         if ($canEdit || $this->actor->id === $model->id) {
             $attributes += [
                 'originalMobile'    => $model->getRawOriginal('mobile'),
-                'registerIp'        => $model->register_ip,
-                'registerPort'      => $model->register_port,
+//                'registerIp'        => $model->register_ip,
+//                'registerPort'      => $model->register_port,
                 //'lastLoginIp'       => $model->last_login_ip,
                 //'lastLoginPort'     => $model->last_login_port,
                 'identity'          => $model->identity,
@@ -164,8 +164,8 @@ class UserV2Serializer extends AbstractSerializer
         $attributes += [
             'paid' => $model->paid,
             'payTime' => $this->formatDate($model->payTime),
-            'unreadNotifications' => $model->getUnreadNotificationCount(),
-            'typeUnreadNotifications' => $model->getUnreadTypesNotificationCount()
+//            'unreadNotifications' => $model->getUnreadNotificationCount(),
+//            'typeUnreadNotifications' => $model->getUnreadTypesNotificationCount()
         ];
         //是否屏蔽
         if($this->actor->id != $model->id){

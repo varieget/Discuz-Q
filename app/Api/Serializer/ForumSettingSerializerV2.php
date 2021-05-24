@@ -116,8 +116,8 @@ class ForumSettingSerializerV2 extends AbstractSerializer
 
             // 第三方登录设置
             'passport' => [
-                'offiaccount_close' => (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount'), // 微信H5 开关
-                'miniprogram_close' => (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram'), // 微信小程序 开关
+                'offiaccount_open' => (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount'), // 微信H5 开关
+                'miniprogram_open' => (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram'), // 微信小程序 开关
 //                'oplatform_close' => (bool)$this->settings->get('oplatform_close', 'wx_oplatform'),       // 微信PC 开关
             ],
 

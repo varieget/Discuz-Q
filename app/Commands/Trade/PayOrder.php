@@ -172,7 +172,7 @@ class PayOrder
         }
 
         // 正确后清除错误记录
-        if ($failCount > 0) {
+        if ($this->data->get('payment_type') == Order::PAYMENT_TYPE_WALLET && $failCount > 0) {
             UserWalletFailLogs::deleteAll($this->actor->id);
         }
 

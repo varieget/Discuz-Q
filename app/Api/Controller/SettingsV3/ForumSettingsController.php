@@ -43,16 +43,16 @@ class ForumSettingsController extends DzqController
         $forum_serialize = $this->app->make(ForumSettingSerializerV2::class);
         $data = $forum_serialize->getDefaultAttributes($this->user);
 
-        $tag = Str::of($this->inPut('tag'))->replace(' ', '')->explode(',')->filter();
-        if($tag->contains('agreement')){
-            $agreement = $this->settings->tag('agreement') ?? [];
-            $data['agreement'] = [
-                'privacy' => (bool) ($agreement['privacy'] ?? false),
-                'privacy_content' => $agreement['privacy_content'] ?? '',
-                'register' => (bool) ($agreement['register'] ?? false),
-                'register_content' => $agreement['register_content'] ?? '',
-            ];
-        }
+//        $tag = Str::of($this->inPut('tag'))->replace(' ', '')->explode(',')->filter();
+//        if($tag->contains('agreement')){
+        $agreement = $this->settings->tag('agreement') ?? [];
+        $data['agreement'] = [
+            'privacy' => (bool) ($agreement['privacy'] ?? false),
+            'privacy_content' => $agreement['privacy_content'] ?? '',
+            'register' => (bool) ($agreement['register'] ?? false),
+            'register_content' => $agreement['register_content'] ?? '',
+        ];
+//        }
 
         $data = $this->camelData($data);
         return $this->outPut(ResponseCode::SUCCESS,'', $data);

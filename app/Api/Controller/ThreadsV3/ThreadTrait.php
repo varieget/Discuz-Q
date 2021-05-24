@@ -51,7 +51,8 @@ trait ThreadTrait
         $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
         $payType = $this->threadPayStatus($loginUser, $thread, $paid);
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
-        $contentField = $this->getContentField($loginUser, $thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom);
+        $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
+        $contentField = $this->getContentField($loginUser, $thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom, $canFreeViewTom);
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -97,15 +98,31 @@ trait ThreadTrait
     private function canViewTom($user, $thread, $payType, $paid)
     {
         if ($payType != Thread::PAY_FREE) {//付费贴
-            $repo = new UserRepository();
-            $canViewThreadDetail = $repo->canViewThreadDetail($user, $thread);
-            if ($canViewThreadDetail || $paid) {
+            $canFreeViewThreadDetail = $this->canFreeViewTom($user, $thread);
+            if ($canFreeViewThreadDetail || $paid) {
                 return true;
             } else {
                 return false;
             }
         } else {
+            $repo = new UserRepository();
+            $canViewThreadDetail = $repo->canViewThreadDetail($user, $thread);
+            if ($canViewThreadDetail) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    private function canFreeViewTom($user, $thread)
+    {
+        $repo = new UserRepository();
+        $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
+        if ($canFreeViewThreadDetail || $user->id == $thread['user_id']) {
             return true;
+        } else {
+            return false;
         }
     }
 
@@ -145,6 +162,7 @@ trait ThreadTrait
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
             'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
+            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread['category_id'])
         ];
     }
 
@@ -155,8 +173,11 @@ trait ThreadTrait
         $threadId = $thread['id'];
         $thread['price'] > 0 && $payType = Thread::PAY_THREAD;
         $thread['attachment_price'] > 0 && $payType = Thread::PAY_ATTACH;
+        $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
+        } else if ($payType != Thread::PAY_FREE && $canFreeViewTom) {
+            $paid = true;
         } else {
             $paid = DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
                 return Order::query()
@@ -202,7 +223,7 @@ trait ThreadTrait
         return $obj;
     }
 
-    private function getContentField($loginUser, $thread, $post, $tomInput, $payType, $paid, $canViewTom)
+    private function getContentField($loginUser, $thread, $post, $tomInput, $payType, $paid, $canViewTom, $canFreeViewTom)
     {
         $content = [
             'text' => null,
@@ -212,7 +233,7 @@ trait ThreadTrait
             $content['text'] = $post['content'];
             $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
         } else {
-            if ($paid) {
+            if ($paid || $canFreeViewTom) {
                 $content['text'] = $post['content'];
                 $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
             } else {
@@ -226,9 +247,16 @@ trait ThreadTrait
                     $text = "<t><p>" . $text . "</p></t>";
                 }
                 $content['text'] = $text;
+                // 如果有红包，则只显示红包
+                if (isset($tomInput[TomConfig::TOM_REDPACK])) {
+                    $content['indexes'] = $this->tomDispatcher(
+                        [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]],
+                        $this->SELECT_FUNC, $thread['id'], null, $canViewTom
+                    );
+                }
             }
         }
-        if (!empty($content['text'])) {
+        if (!empty($content['text']) && $thread['type'] != Thread::TYPE_OF_ALL) {
 //            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
             $content['text'] = app()->make(Formatter::class)->render($content['text']);
 
@@ -270,10 +298,9 @@ trait ThreadTrait
                 }
                 $content['text'] = app()->make(Formatter::class)->render($xml);
             }
-
-
+        } else {
+            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
         }
-
         return $content;
     }
 
@@ -341,13 +368,13 @@ trait ThreadTrait
      */
     private function boolApproved($title, $text, &$isApproved = null)
     {
+        /** @var Censor $censor */
         $censor = app(Censor::class);
-        $sep = '__' . Str::random(6) . '__';
+        $sep = '__' . mt_rand(111111, 999999) . '__';
         $contentForCheck = $title . $sep . $text;
-        $censor->checkText($contentForCheck);
-        [$title, $content] = explode($sep, $censor->checkText($contentForCheck));
+        [$newTitle, $newContent] = explode($sep, $censor->checkText($contentForCheck));
         $isApproved = $censor->isMod;
-        return [$title, $content];
+        return [$newTitle, $newContent];
     }
 
     private function isReward($loginUser, $thread)
