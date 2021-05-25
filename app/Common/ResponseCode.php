@@ -24,6 +24,8 @@ class ResponseCode
 {
     const SUCCESS = 0;
 
+    const NOT_INSTALL = -10001;
+
     const WECHAT_INVALID_UNKNOWN_URL_EXCEPTION = -2001;
     const WECHAT_INVALID_CONFIG_EXCEPTION = -2002;
     const WECHAT_RUNTIME_EXCEPTION = -2003;
@@ -109,6 +111,7 @@ class ResponseCode
     const PAY_ORDER_FAIL = -10000;
 
     public static $codeMap = [
+        self::NOT_INSTALL => '当前站点未安装',
         self::SITE_CLOSED => '站点已关闭',
         self::JUMP_TO_LOGIN => '跳转到登录页',
         self::JUMP_TO_AUDIT=>'跳转到审核页',
