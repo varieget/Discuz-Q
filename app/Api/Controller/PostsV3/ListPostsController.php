@@ -177,6 +177,8 @@ class ListPostsController extends DzqController
     protected function getPost(Post $post, bool $getRedPacketAmount)
     {
 
+        $userRepo = app(UserRepository::class);
+
         $data = [
             'id' => $post['id'],
             'userId' => $post['user_id'],
@@ -195,16 +197,16 @@ class ListPostsController extends DzqController
             'isComment' => $post['is_comment'],
             'isApproved' => $post['is_approved'],
             'rewards' => floatval(sprintf('%.2f', $post->getPostReward(UserWalletLog::TYPE_INCOME_THREAD_REWARD))),
-            'canApprove' => $this->gate->allows('approve', $post),
-            'canDelete' => $this->gate->allows('delete', $post),
-            'canHide' => $this->gate->allows('hide', $post),
-            'canEdit' => $this->gate->allows('edit', $post),
+            'canApprove' => $this->user->isAdmin(),
+            'canDelete' => $this->user->isAdmin(),
+            'canHide' => $userRepo->canHidePost($this->user, $post),
+            'canEdit' => false,
+            'canLike' => $userRepo->canLikePosts($this->user),
             'user' => $this->getUser($post->user),
             'images' => $post->images->map(function (Attachment $image) {
                 return $this->attachmentSerializer->getDefaultAttributes($image);
             }),
             'likeState' => $post->likeState,
-            'canLike' => $this->user->can('like', $post),
             'summaryText' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post->summary_text),
         ];
 
