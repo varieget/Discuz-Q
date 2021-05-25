@@ -49,10 +49,14 @@ class CreateGroupController extends DzqController
             'type' => $this->inPut('type')  ,
             'color' => $this->inPut('color'),
             'icon' => $this->inPut('icon'),
+            'default' => $this->inPut('default'),
             'isDisplay' => $this->inPut('isDisplay'),
             'isPaid' => $this->inPut('isPaid'),
             'fee' => $this->inPut('fee'),
             'days' => $this->inPut('days'),
+            'scale' => $this->inPut('scale'),
+            'isSubordinate' => $this->inPut('isSubordinate'),
+            'isCommission' => $this->inPut('isCommission'),
         ];
 
        // dump($group);die;

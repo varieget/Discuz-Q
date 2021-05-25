@@ -52,6 +52,7 @@ class UpdateAdminController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER,'');
         }
         $username = $this->inPut('username');
+        $nickname = $this->inPut('nickname');
         $password = $this->inPut('password');
         $newPassword = $this->inPut('newPassword');
         $passwordConfirmation = $this->inPut('passwordConfirmation');
@@ -90,6 +91,13 @@ class UpdateAdminController extends DzqController
             $requestData['refuse_message'] = $refuseMessage;
         }
 
+        if(!empty($registerReason)){
+            $requestData['registerReason'] = $registerReason;
+        }
+        if (!empty($nickname)) {
+            $requestData['nickname'] = $nickname;
+        }
+
         $requestData['status'] = $status;
 
         $result = $this->bus->dispatch(
@@ -105,12 +113,14 @@ class UpdateAdminController extends DzqController
         $returnData['username'] = $data['username'];
         $returnData['nickname'] = $data['nickname'];
         $returnData['mobile'] = $data['mobile'];
-        $returnData['threadCount'] = $data['threadCount'];
-        $returnData['followCount'] = $data['followCount'];
-        $returnData['fansCount'] = $data['fansCount'];
-        $returnData['likedCount'] = $data['likedCount'];
-        $returnData['questionCount'] = $data['questionCount'];
+        $returnData['status'] = $data['status'];
+        $returnData['registerReason'] = $data['registerReason'];
         $returnData['avatar'] = $data['avatar'];
+        $returnData['expiredAt'] = $data['expiredAt'];
+        $returnData['registerIp'] = $data['registerIp'];
+        $returnData['createdAt'] = $data['createdAt'];
+        $returnData['lastLoginIp'] = $data['lastLoginIp'];
+        $returnData['loginAt'] = $data['loginAt'];
 
         if($data['background']){
             $url = $this->request->getUri();
