@@ -355,7 +355,7 @@ trait ThreadTrait
             $ret = ThreadHelper::getThreadLikedDetail($threadId, $postId, $post, false);
             return $ret[$threadId] ?? [];
         });
-        !empty($postUsers[$threadId]) && $ret['users'] = $postUsers[$threadId];
+        $ret['users'] = $postUsers;
         return $ret;
     }
 
