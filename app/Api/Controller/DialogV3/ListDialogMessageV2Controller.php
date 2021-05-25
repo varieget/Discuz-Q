@@ -10,14 +10,11 @@ use App\Providers\DialogMessageServiceProvider;
 use App\Repositories\DialogMessageRepository;
 use App\Repositories\DialogRepository;
 use App\Repositories\UserRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 
 class ListDialogMessageV2Controller extends DzqController
 {
-    use AssertPermissionTrait;
-
     /**
      * @var DialogRepository
      */
@@ -49,11 +46,6 @@ class ListDialogMessageV2Controller extends DzqController
     public function main()
     {
         $user = $this->user;
-        try {
-            $this->assertRegistered($user);
-        } catch (NotAuthenticatedException $e) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
-        }
 
         $filters = $this->inPut('filter') ?: [];
         $page = $this->inPut('page') ?: 1;

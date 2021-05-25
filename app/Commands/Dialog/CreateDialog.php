@@ -22,7 +22,6 @@ use App\Censor\Censor;
 use App\Models\Dialog;
 use App\Models\User;
 use App\Repositories\UserRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -31,7 +30,6 @@ use Illuminate\Support\Arr;
 
 class CreateDialog
 {
-    use AssertPermissionTrait;
     use EventsDispatchTrait;
 
     /**
@@ -59,8 +57,6 @@ class CreateDialog
     public function handle(Dialog $dialog, UserRepository $user, Dispatcher $events, Censor $censor, DispatcherBus $bus)
     {
         $this->events = $events;
-
-        $this->assertCan($this->actor, 'dialog.create');
 
         $sender = $this->actor->id;
         $recipient = Arr::get($this->attributes, 'recipient_username');

@@ -30,11 +30,6 @@ class ListDialogV2Controller extends DzqController
     public function main()
     {
         $user = $this->user;
-        try {
-            $this->assertRegistered($user);
-        } catch (NotAuthenticatedException $e) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
-        }
 
         $page = $this->inPut('page') ?: 1;
         $perPage = $this->inPut('perPage') ?: 10;

@@ -35,7 +35,7 @@ class NicknameSettingController extends AuthBaseController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return true;
+        return !$this->user->isGuest();
     }
 
     public function main()
