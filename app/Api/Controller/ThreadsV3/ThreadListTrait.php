@@ -40,28 +40,21 @@ trait ThreadListTrait
         $userIds = array_unique(array_column($threads, 'user_id'));
         $groupUsers = $this->getGroupUserInfo($userIds);
         $users = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
-            $users = User::instance()->getUsers($userIds);
-            $users = array_column($users, null, 'id');
-            return $users;
-        });
+            return User::instance()->getUsers($userIds);
+        },'id');
         $threadIds = array_column($threads, 'id');
         $posts = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_POSTS, $threadIds, function ($threadIds) {
-            $posts = Post::instance()->getPosts($threadIds);
-            $posts = array_column($posts, null, 'thread_id');
-            return $posts;
-        });
+            return Post::instance()->getPosts($threadIds);
+        },'thread_id');
+
         $toms = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TOMS, $threadIds, function ($threadIds) {
-            $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
-            $toms = $this->arrayColumnMulti($toms, 'thread_id');
-            return $toms;
-        });
+            return ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
+        },'thread_id',true);
+
         $tags = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
-            $tags = [];
-            ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags) {
-                $tags[$item['thread_id']][] = $item->toArray();
-            });
-            return $tags;
-        });
+            return ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
+        },'thread_id',true);
+
         $inPutToms = $this->buildIPutToms($toms);
         $result = [];
         $concatString = '';
@@ -89,10 +82,8 @@ trait ThreadListTrait
     {
         $groups = array_column(Group::getGroups(), null, 'id');
         $groupUsers = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_GROUP_USER, $userIds, function ($userIds) {
-            $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
-            $groupUsers = array_column($groupUsers, null, 'user_id');
-            return $groupUsers;
-        });
+            return GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
+        },'user_id');
         foreach ($groupUsers as &$groupUser) {
             $groupUser['groups'] = $groups[$groupUser['group_id']];
         }
