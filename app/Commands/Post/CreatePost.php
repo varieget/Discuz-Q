@@ -229,7 +229,7 @@ class CreatePost
         $content = $post->content;
         $postContent = trim(Arr::get($this->data, 'attributes.content'));
 
-        if (mb_strlen($postContent) > 49999) {
+        if (mb_strlen($postContent) > 49998) {
             $dataString = json_encode(Arr::get($this->data, 'attributes'));
             app('log')->info('用户:' . $this->actor->id . '，帖子post-content字数超过限制，帖子thread_id为：' . $post->thread_id . '，内容为：' . $postContent . '，data数据为：' . $dataString);
             throw new \Exception('字数超出限制');
