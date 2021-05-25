@@ -45,7 +45,8 @@ class UpdateThreadController extends DzqController
         if (!$this->thread) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-
+        //编辑前验证手机，验证码，实名
+        $this->userVerify($this->user);
         return $userRepo->canEditThread($this->user, $this->thread);
     }
 

@@ -153,6 +153,9 @@ class UpdateAdminUser
         // 修改用户名
         $this->rename($user, $canEdit, $isSelf, $attributes, $validate);
 
+        // 修改昵称
+        $this->changeNickname($user, $canEdit, $isSelf, $attributes, $validate);
+
         // 修改登录密码
         $this->changePassword($user, $canEdit, $isSelf, $attributes, $validate);
 
@@ -510,6 +513,29 @@ class UpdateAdminUser
 
             $validate['register_reason'] = $registerReason;
         }
+
+        return $validate;
+    }
+
+
+    protected function changeNickname(User $user, bool $canEdit, bool $isSelf, array $attributes, array &$validate)
+    {
+        $nickname = Arr::get($attributes, 'nickname');
+
+        if (! $nickname || $nickname == $user->nickname) {
+            return $validate;
+        }
+        // 敏感词校验
+        $this->censor->checkText($nickname);
+
+        if ($this->censor->isMod) {
+            throw new TranslatorException(trans('user.user_nickname_censor_error'));
+        }
+
+        // 过滤内容
+        $nickname = $this->specialChar->purify($nickname);
+        $user->changeNickname($nickname);
+        $validate['nickname'] = $nickname;
 
         return $validate;
     }

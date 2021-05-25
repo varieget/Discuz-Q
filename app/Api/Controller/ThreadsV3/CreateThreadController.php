@@ -59,7 +59,8 @@ class CreateThreadController extends DzqController
         ) {
             throw new PermissionDeniedException('没有插入【位置信息】权限');
         }
-
+        //发帖前验证手机，验证码，实名
+        $this->userVerify($user);
         return true;
     }
 

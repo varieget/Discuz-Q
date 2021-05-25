@@ -44,4 +44,4 @@ $route->get('/topics.list', 'topics.list', ApiController\TopicV3\AdminTopicListC
 $route->post('/topics.batch.update', 'topics.batch.update', ApiController\TopicV3\BatchUpdateTopicController::class);
 $route->post('/topics.batch.delete', 'topics.batch.delete', ApiController\TopicV3\BatchDeleteTopicController::class);
 
-$route->get('/statistic/firstChart', 'statistic/firstChart', ApiController\statisticV3\FirstChartController::class);
+$route->get('/statistic/firstChart', 'statistic/firstChart', ApiController\StatisticV3\FirstChartController::class);

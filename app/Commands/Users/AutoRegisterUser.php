@@ -86,8 +86,12 @@ class AutoRegisterUser
         }
 
         $this->data['nickname'] = $this->data['username'];
-
-        $user = User::register(Arr::only($this->data, ['username', 'nickname', 'password', 'register_ip', 'register_port', 'register_reason', 'status']));
+        $this->data['bind_type'] = !empty($this->data['bind_type']) ? $this->data['bind_type'] : 0;
+        $user = User::register(Arr::only($this->data, [
+            'username', 'nickname', 'password', 'bind_type',
+            'register_ip', 'register_port', 'register_reason',
+            'status'
+        ]));
 
         $this->events->dispatch(
             new Saving($user, $this->actor, $this->data)

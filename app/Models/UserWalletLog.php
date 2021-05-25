@@ -53,7 +53,7 @@ class UserWalletLog extends Model
     protected $table = 'user_wallet_logs';
 
     /**
-     * 钱包明细类型
+     * 钱包明细类型(增加完类型之后记得同步到app\Api\Controller\WalletV3\ListUserWalletLogsController.php中)
      */
     const TYPE_QUESTION_FREEZE = 8; // 问答冻结
 
