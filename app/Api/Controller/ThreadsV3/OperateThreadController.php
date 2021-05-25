@@ -18,11 +18,13 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Commands\Thread\EditThread;
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
@@ -145,6 +147,12 @@ class OperateThreadController extends DzqController
 
         return $this->outPut(ResponseCode::SUCCESS,'', $result);
 
+    }
+
+    public function clearCache($user)
+    {
+        $threadId= $this->inPut('id');
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS,$threadId);
     }
 
 
