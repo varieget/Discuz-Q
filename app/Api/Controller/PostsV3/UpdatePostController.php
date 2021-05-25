@@ -83,9 +83,6 @@ class UpdatePostController extends DzqController
 
         $threadId = $post['thread_id'];
 
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
-
         $isFavorite = ThreadUser::query()->where('thread_id', $threadId)->where('user_id', $actor->id)->exists();
         $thread = Thread::query()->where("id", $threadId)->first(["rewarded_count", "paid_count"]);
 
@@ -110,9 +107,10 @@ class UpdatePostController extends DzqController
             'rewards' => floatval(sprintf('%.2f', $post->getPostReward())),
             'redPacketAmount' => $this->postSerializer->getPostRedPacketAmount($post['id'], $post['thread_id'], $post['user_id']),
         ];
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_LIKED, $post['user_id']);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::del2HashKey(CacheKey::LIST_THREADS_V3_POST_LIKED, $this->user->id,$threadId);
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_USERS, $post['thread_id']);
-
         if ($post->id == $postId) {
             return $this->outPut(ResponseCode::SUCCESS, '', $build);
         }

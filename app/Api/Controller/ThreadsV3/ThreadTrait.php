@@ -48,6 +48,7 @@ trait ThreadTrait
         $loginUser = $this->user;
         $userField = $this->getUserInfoField($loginUser, $user, $thread);
         $groupField = $this->getGroupInfoField($group);
+
         $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
         $payType = $this->threadPayStatus($loginUser, $thread, $paid);
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
@@ -396,7 +397,8 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $postId = $post['id'];
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId, $postId, function () use ($userId, $postId) {
+        $threadId = $post['thread_id'];
+        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId, $threadId, function () use ($userId, $postId) {
             return PostUser::query()->where('post_id', $postId)->where('user_id', $userId)->exists();
         });
     }

@@ -37,7 +37,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 50;//预加载的页数
+    const PRELOAD_PAGES = 5;//预加载的页数
 
     private $categoryIds = [];
 
@@ -76,8 +76,8 @@ class ThreadListController extends DzqController
         $pageData = $threads['pageData'];
         //缓存中获取最新的threads
         $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
-//        $this->closeQueryLog();
         $threads['pageData'] = $this->getFullThreadData($pageData);
+//        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
     }
 
@@ -91,7 +91,7 @@ class ThreadListController extends DzqController
     {
         $pageData = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ($threadIds) {
             return Thread::query()->whereIn('id', $threadIds)->get()->toArray();
-        },'id');
+        }, 'id');
         $threads = [];
         foreach ($threadIds as $threadId) {
             $threads[] = $pageData[$threadId] ?? null;
@@ -113,7 +113,7 @@ class ThreadListController extends DzqController
                 return $threads;
             }, true);
         } else {//其他页从缓存取，取不到就重数据库取并写入缓存
-            $threads = DzqCache::hM2Get($cacheKey, $filterId, $page, function () use ($filter,$page, $perPage) {
+            $threads = DzqCache::hM2Get($cacheKey, $filterId, $page, function () use ($filter, $page, $perPage) {
                 $threads = $this->buildFilterThreads($filter);
                 $threads = $this->pagination($page, $perPage, $threads, true);
                 return $threads;
