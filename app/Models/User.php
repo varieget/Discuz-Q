@@ -18,6 +18,7 @@
 
 namespace App\Models;
 
+use App\Common\AuthUtils;
 use App\Common\CacheKey;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
@@ -297,7 +298,28 @@ class User extends DzqModel
     {
         $this->mobile = $mobile;
 
+        $this->changeUserBindType();
+
         return $this;
+    }
+
+    public function changeUserBindType()
+    {
+        //更新用户绑定类型
+        $userBindType   = empty($this->bind_type) ? 0 :$this->bind_type;
+        $existBindType  = AuthUtils::getBindTypeArrByCombinationBindType($userBindType);
+
+        if (!empty($this->mobile) && !in_array(AuthUtils::PHONE, $existBindType)) {
+            //添加手机号绑定类型
+            array_push($existBindType, AuthUtils::PHONE);
+            $newBindType        = AuthUtils::getBindType($existBindType);
+            $this->bind_type    = $newBindType;
+        } elseif (empty($this->mobile) && in_array(AuthUtils::PHONE, $existBindType)) {
+            //删除手机号绑定类型
+            $existBindType      = array_diff($existBindType, [AuthUtils::PHONE]);
+            $newBindType        = AuthUtils::getBindType($existBindType);
+            $this->bind_type    = $newBindType;
+        }
     }
 
     public function changeStatus($status)

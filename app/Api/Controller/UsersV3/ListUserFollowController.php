@@ -17,11 +17,11 @@ use Illuminate\Support\Str;
 class ListUserFollowController extends DzqController
 {
     protected $userFollow;
+    protected $url;
 
-    public function __construct(UserFollowRepository $userFollow, UrlGenerator $url, UserRepository $user)
+    public function __construct(UserFollowRepository $userFollow, UrlGenerator $url)
     {
         $this->userFollow = $userFollow;
-        $this->user = $user;
         $this->url = $url;
     }
 
@@ -42,9 +42,6 @@ class ListUserFollowController extends DzqController
         $sort = $this->inPut('sort');
 
         $actor = $this->user;
-        if (!Arr::get($filter, 'userId')) {
-            $actor->isGuest();
-        }
 
         $UserFollows = $this->filterUserFollow($filter,$currentPage, $perPage,$actor,$sort);
         $userFollowList = $UserFollows['pageData'];
@@ -132,7 +129,7 @@ class ListUserFollowController extends DzqController
         }else{
             $UserFollows = [];
         }
-       // dump($UserFollows);die;
+        // dump($UserFollows);die;
         $this->outPut(ResponseCode::SUCCESS, '', $UserFollows);
     }
 
@@ -146,7 +143,7 @@ class ListUserFollowController extends DzqController
         $type = (int) Arr::get($filter, 'type', 1);
         $username = Arr::get($filter, 'userName');
         if ($user_id = (int)Arr::get($filter, 'userId')) {
-            $user = $this->user->findOrFail($user_id);
+            $user = User::query()->findOrFail($user_id);
         }
         $user_id = $user ? $user->id : $actor->id;
 

@@ -17,12 +17,13 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
 use App\Censor\Censor;
 use App\Common\CacheKey;
+use App\Common\ResponseCode;
 use Discuz\Base\DzqCache;
 use App\Formatter\Formatter;
 use App\Models\Category;
+use App\Models\MobileCode;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\PostUser;
@@ -33,22 +34,25 @@ use App\Models\Topic;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Modules\ThreadTom\TomTrait;
+use App\Repositories\MobileCodeRepository;
 use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
-use Illuminate\Support\Str;
+use App\SmsMessages\SendCodeMessage;
+use Discuz\Qcloud\QcloudTrait;
+use Illuminate\Support\Arr;
 use App\Common\Utils;
 
 
 trait ThreadTrait
 {
     use TomTrait;
+    use QcloudTrait;
 
     public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [])
     {
         $loginUser = $this->user;
         $userField = $this->getUserInfoField($loginUser, $user, $thread);
         $groupField = $this->getGroupInfoField($group);
-
         $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
         $payType = $this->threadPayStatus($loginUser, $thread, $paid);
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
@@ -94,6 +98,50 @@ trait ThreadTrait
             $result['content']['text'] = str_replace($searches, $replaces, $result['content']['text']);
         }
         return $result;
+    }
+
+    public function userVerify($user){
+        $settingRepo = app(SettingsRepository::class);
+        $mobileCodeRepo = app(MobileCodeRepository::class);
+        if ((bool)$settingRepo->get('qcloud_sms')) {
+            $realMobile = $user->getRawOriginal('mobile');
+            if (empty($realMobile)) {
+                $this->outPut(ResponseCode::USER_MOBILE_NOT_ALLOW_NULL);
+            }
+            //校验手机号和验证码
+            $type = "thread_verify";
+            $ip                 = ip($this->request->getServerParams());
+            $mobileCode = $mobileCodeRepo->getSmsCode($realMobile, $type);
+            if (!is_null($mobileCode) && $mobileCode->exists) {
+                $mobileCode = $mobileCode->refrecode(MobileCode::CODE_EXCEPTION, $ip);
+            } else {
+                $mobileCode = MobileCode::make($realMobile, MobileCode::CODE_EXCEPTION, $type, $ip);
+            }
+            $result = $this->smsSend($realMobile, new SendCodeMessage([
+                    'code'      => $mobileCode->code,
+                    'expire'    => MobileCode::CODE_EXCEPTION]
+            ));
+            if (!(isset($result['qcloud']['status']) && $result['qcloud']['status'] === 'success')) {
+                $this->outPut(ResponseCode::SMS_CODE_ERROR);
+            }
+            $mobileCode->save();
+        }
+        if((bool)$settingRepo->get('qcloud_faceid')){
+            $realName = $user->getRawOriginal('realname');
+            $identity = $user->getRawOriginal('identity');
+            if(empty($realName)){
+                $this->outPut(ResponseCode::REALNAME_NOT_NULL);
+            }
+            if(empty($identity)){
+                $this->outPut(ResponseCode::IDENTITY_NOT_NULL);
+            }
+            //检验身份证号码和姓名是否真实
+            $qcloud = $this->app->make('qcloud');
+            $res = $qcloud->service('faceid')->idCardVerification($identity, $realName);
+            if (Arr::get($res, 'Result', false) != User::NAME_ID_NUMBER_MATCH) {
+                $this->outPut(ResponseCode::REAL_USER_CHECK_FAIL);
+            }
+        }
     }
 
     private function canViewTom($user, $thread, $payType, $paid)

@@ -94,12 +94,14 @@ class ListUserWalletLogsController extends DzqController
         122, //悬赏帖过期-悬赏帖剩余悬赏金额平分
         123, //悬赏帖过期-悬赏帖剩余悬赏金额按点赞数分配
         124, //问答帖订单异常返现
+        130, //异常订单退款
         151, //红包收入
         152, //红包退款
         154, //红包订单异常退款
         161, //悬赏问答收入
         162, //悬赏问答退款
         163, //悬赏订单异常退款
+        165, //悬赏冻结返回
         171, //合并订单退款
         172, //合并订单异常退款
     ];
@@ -117,6 +119,7 @@ class ListUserWalletLogsController extends DzqController
         100, //文字帖红包支出
         110, //长文帖红包支出
         153, //红包支出
+        164, //悬赏采纳支出
     ];
 
     public $freezeLogChangeType = [

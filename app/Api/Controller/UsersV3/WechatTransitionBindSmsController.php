@@ -60,7 +60,7 @@ class WechatTransitionBindSmsController extends AuthBaseController
             $this->outPut(ResponseCode::TRANSITION_NOT_OPEN);
         }
         //未开启短信
-        if(!(bool)$this->settings->get('qcloud_cos', 'qcloud')) {
+        if(!(bool)$this->settings->get('qcloud_sms', 'qcloud')) {
             $this->outPut(ResponseCode::SMS_NOT_OPEN);
         }
         $mobileCode = $this->getMobileCode('login');

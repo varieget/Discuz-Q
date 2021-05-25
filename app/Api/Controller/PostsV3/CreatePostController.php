@@ -118,10 +118,9 @@ class CreatePostController extends DzqController
         if (empty($threadId)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '主题id不能为空');
         }
-
-//        $data['content'] = '<t><p>' . $data['content'] . '</p></t>';
         if(!empty($data['content']))    $data['content'] = app()->make(Formatter::class)->parse($data['content']);
-
+        $content = $data['content'];
+        
         if (empty($data['content'])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
         }
@@ -164,6 +163,8 @@ class CreatePostController extends DzqController
         $build = $this->getPost($post, true);
 
         $data = $this->camelData($build);
+        // 返回content要解析后的，方便前端直接展示最新的数据
+        if(!empty($data['content']))    $data['content'] = app()->make(Formatter::class)->render($content);
 
         return $this->outPut(ResponseCode::SUCCESS, '', $data);
 
