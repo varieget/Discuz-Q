@@ -71,9 +71,9 @@ class CacheKey
     //热点数据变更排序规则
     public const LIST_THREADS_V3_VIEW_COUNT = 'list_threads_v3_view_count';
     public const LIST_THREADS_V3_POST_TIME = 'list_threads_v3_post_time';
-    public const LIST_THREADS_V3_POST_COUNT = 'list_threads_v3_post_count';
-    public const LIST_THREADS_V3_PAID_COUNT = 'list_threads_v3_paid_count';
-    public const LIST_THREADS_V3_REWARD_COUNT = 'list_threads_v3_rewarded_count';
+//    public const LIST_THREADS_V3_POST_COUNT = 'list_threads_v3_post_count';
+//    public const LIST_THREADS_V3_PAID_COUNT = 'list_threads_v3_paid_count';
+//    public const LIST_THREADS_V3_REWARD_COUNT = 'list_threads_v3_rewarded_count';
 
 
 
