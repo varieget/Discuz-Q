@@ -19,7 +19,7 @@
 use Discuz\Database\Migration;
 use Illuminate\Database\Schema\Blueprint;
 
-class CreateDialogMessage extends Migration
+class AlterReadStatusToDialogMessage extends Migration
 {
     /**
      * Run the migrations.
