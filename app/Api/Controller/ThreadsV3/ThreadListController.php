@@ -37,7 +37,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 10;//预加载的页数
+    const PRELOAD_PAGES = 50;//预加载的页数
 
     private $categoryIds = [];
 
