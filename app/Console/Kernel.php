@@ -57,7 +57,9 @@ class Kernel extends ConsoleKernel
         $schedule->command('invite:expire')->everyMinute()->withoutOverlapping();
         $schedule->command('reward:expire')->everyMinute()->withoutOverlapping();
         $schedule->command('redPacket:expire')->everyMinute()->withoutOverlapping();
-        $schedule->command('abnormalOrder:clear')->everyMinute()->withoutOverlapping();
+
+        // 已放到 中间件中及时处理
+        // $schedule->command('abnormalOrder:clear')->everyMinute()->withoutOverlapping();
 
         // 维护清理
         $schedule->command('clear:attachment')->daily();

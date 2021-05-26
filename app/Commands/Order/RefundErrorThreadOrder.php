@@ -70,7 +70,7 @@ class RefundErrorThreadOrder
             Order::ORDER_TYPE_LONG,
         ];
 
-        $query = Order::query();
+        $query = Order::query()->with('user');
         // 有订单号，则忽略用户和时间范围
         if ($this->orderSn) {
             $query->where('order_sn', $this->orderSn);
@@ -88,15 +88,13 @@ class RefundErrorThreadOrder
         if (!$this->orderSn) {
             $query->whereBetween('created_at', [
                 Carbon::parse()->subDay()->format('Y-m-d 00:00:00'),
-                Carbon::parse()->subMinutes(2),
+                Carbon::parse()->subMinute(),
             ]);
         }
 
         $orders = $query->whereIn('type', $orderTypes)->get();
 
         $orders->each(function (Order $order) {
-            $user = User::query()->where('id', $order->user_id)->first();
-
             /** @var UserWallet $userWallet */
             $userWallet = UserWallet::query()->where('user_id', $order->user_id)->first();
             if (empty($userWallet)) {
@@ -157,8 +155,8 @@ class RefundErrorThreadOrder
                 $order->status = Order::ORDER_STATUS_RETURN;
                 $order->save();
 
-                if (!empty($user)) {
-                    $user->notify(new System(AbnormalOrderRefundMessage::class, $user, ['order_sn' => $order->order_sn, 'amount' => $order->amount]));
+                if (!empty($order->user)) {
+                    $order->user->notify(new System(AbnormalOrderRefundMessage::class, $order->user, ['order_sn' => $order->order_sn, 'amount' => $order->amount]));
                 }
 
                 $this->connection->commit();
