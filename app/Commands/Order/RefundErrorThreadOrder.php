@@ -49,10 +49,6 @@ class RefundErrorThreadOrder
         ];
 
         $query = Order::query()->with('user');
-        if ($this->user->id > 0) {
-            $query->where('user_id', $this->user->id);
-        }
-
         $query->where('status', Order::ORDER_STATUS_PAID)
             ->where(function (Builder $query) {
                 $query->whereNull('thread_id')->orWhere('thread_id', 0);
