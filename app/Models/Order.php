@@ -18,10 +18,6 @@
 
 namespace App\Models;
 
-use App\Models\UserWallet;
-use App\Models\UserWalletLog;
-use App\Notifications\System;
-use App\Notifications\Messages\Database\AbnormalOrderRefundMessage;
 use Carbon\Carbon;
 use Closure;
 use Exception;
@@ -341,75 +337,5 @@ class Order extends Model
     public function group()
     {
         return $this->belongsTo(Group::class);
-    }
-
-    public static function refundAbnormalOrder($threadId, $orderSn, $db, $user)
-    {
-        if (empty($orderSn)) {
-            return false;
-        }
-
-        $orderType = [Order::ORDER_TYPE_QUESTION, Order::ORDER_TYPE_TEXT, Order::ORDER_TYPE_LONG];
-        $orderData = Order::query()
-            ->where(['order_sn' => $orderSn, 'status' => Order::ORDER_STATUS_PAID])
-            ->whereIn('type', $orderType)
-            ->first();
-
-        if (empty($orderData)) {
-            return false;
-        }
-
-        $changeType = 0;
-        $changeDesc = "";
-        if ($orderData->type == Order::ORDER_TYPE_QUESTION) {
-            $changeType = UserWalletLog::TYPE_QUESTION_ABNORMAL_REFUND;
-            $changeDesc = trans('wallet.abnormal_return_question');
-        } else if ($orderData->type == Order::ORDER_TYPE_TEXT) {
-            $changeType = UserWalletLog::TYPE_TEXT_ABNORMAL_REFUND;
-            $changeDesc = trans('wallet.abnormal_return_text');
-        } else if ($orderData->type == Order::ORDER_TYPE_LONG) {
-            $changeType = UserWalletLog::TYPE_LONG_ABNORMAL_REFUND;
-            $changeDesc = trans('wallet.abnormal_return_long');
-        }
-
-        $userWallet = UserWallet::query()->lockForUpdate()->find($orderData->user_id);
-        if ($orderData->payment_type == Order::PAYMENT_TYPE_WALLET && $userWallet->freeze_amount < $orderData->amount) {
-            app('log')->info('异常订单退款错误：订单号(order_sn为' . $orderSn . ')，作者(ID为' . $orderData->user_id . ')，钱包冻结金额 小于 应返回的订单金额，订单退款失败！');
-            return false;
-        }
-
-        $db->beginTransaction();
-        try {
-            if ($orderData->payment_type == Order::PAYMENT_TYPE_WALLET) {
-                $userWallet->freeze_amount = $userWallet->freeze_amount - $orderData->amount;
-            }
-            $userWallet->available_amount = $userWallet->available_amount + $orderData->amount;
-            $userWallet->save();
-
-            UserWalletLog::createWalletLog(
-                $orderData->user_id,
-                $orderData->amount,
-                -$orderData->amount,
-                $changeType,
-                $changeDesc,
-                null,
-                $orderData->id,
-                $orderData->user_id,
-                0,
-                0,
-                $threadId
-            );
-
-            $orderData->status = Order::ORDER_STATUS_RETURN;
-            $orderData->save();
-            $db->commit();
-        } catch (Exception $e) {
-            $db->rollBack();
-            app('log')->info('异常订单退款错误：订单号(order_sn为' . $orderSn . ')，作者(ID为' . $orderData->user_id . ')');
-            return false;
-        }
-
-        $user->notify(new System(AbnormalOrderRefundMessage::class, $user, ['order_sn' => $orderSn, 'amount' => $orderData->amount]));
-        return true;
     }
 }
