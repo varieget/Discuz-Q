@@ -18,7 +18,6 @@
 
 namespace App\Console;
 
-use App\Console\Commands\AbnormalOrderDealCommand;
 use App\Console\Commands\AttachmentClearCommand;
 use App\Console\Commands\AvatarClearCommand;
 use App\Console\Commands\FinanceCreateCommand;
@@ -40,8 +39,7 @@ class Kernel extends ConsoleKernel
         InviteExpireCommand::class,
         QuestionClearCommand::class,
         ThreadRewardExpireCommand::class,
-        RedPacketExpireCommand::class,
-        AbnormalOrderDealCommand::class
+        RedPacketExpireCommand::class
     ];
 
     /**
@@ -57,9 +55,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('invite:expire')->everyMinute()->withoutOverlapping();
         $schedule->command('reward:expire')->everyMinute()->withoutOverlapping();
         $schedule->command('redPacket:expire')->everyMinute()->withoutOverlapping();
-
-        // 已放到 中间件中及时处理
-        // $schedule->command('abnormalOrder:clear')->everyMinute()->withoutOverlapping();
 
         // 维护清理
         $schedule->command('clear:attachment')->daily();

@@ -29,16 +29,6 @@ class RefundErrorThreadOrder
     protected $bus;
 
     /**
-     * @var User
-     */
-    protected $user;
-
-    /**
-     * @var string
-     */
-    protected $orderSn;
-
-    /**
      * @var LoggerInterface
      */
     protected $log;
@@ -50,18 +40,6 @@ class RefundErrorThreadOrder
         $this->log = $log;
     }
 
-    public function setUser(User $user)
-    {
-        $this->user = $user;
-        return $this;
-    }
-
-    public function setOrderSn(string $orderSn)
-    {
-        $this->orderSn = $orderSn;
-        return $this;
-    }
-
     public function handle()
     {
         $orderTypes = [
@@ -71,10 +49,7 @@ class RefundErrorThreadOrder
         ];
 
         $query = Order::query()->with('user');
-        // 有订单号，则忽略用户和时间范围
-        if ($this->orderSn) {
-            $query->where('order_sn', $this->orderSn);
-        } elseif ($this->user) {
+        if ($this->user->id > 0) {
             $query->where('user_id', $this->user->id);
         }
 
@@ -84,13 +59,10 @@ class RefundErrorThreadOrder
             })
             ->where('amount', '>', 0);
 
-        // 如果没有指定订单，则控制一下时间范围
-        if (!$this->orderSn) {
-            $query->whereBetween('created_at', [
-                Carbon::parse()->subDay()->format('Y-m-d 00:00:00'),
-                Carbon::parse()->subMinute(),
-            ]);
-        }
+        $query->whereBetween('created_at', [
+            Carbon::parse()->subDay()->format('Y-m-d 00:00:00'),
+            Carbon::parse()->subMinute(),
+        ]);
 
         $orders = $query->whereIn('type', $orderTypes)->get();
 
