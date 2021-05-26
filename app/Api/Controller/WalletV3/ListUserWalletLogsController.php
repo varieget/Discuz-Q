@@ -70,6 +70,7 @@ class ListUserWalletLogsController extends DzqController
         'updated_at'
     ];
 
+    public $titleLength = 10;
 
     public function __construct(Dispatcher $bus, UrlGenerator $url, UserWalletLogsRepository $walletLogs)
     {
@@ -218,12 +219,18 @@ class ListUserWalletLogsController extends DzqController
 
     public function filterData($data){
         foreach ($data['pageData'] as $key => $val) {
+
+            if (!empty($val['order']['thread']['title'])) {
+                $title = mb_substr($val['order']['thread']['title'],0,$this->titleLength);
+            } elseif (!empty($val['order']['thread']['firstPost']['content'])) {
+                $title = mb_substr(strip_tags($val['order']['thread']['firstPost']['content']),0,$this->titleLength);
+            } else {
+                $title = '';
+            }
+
             $pageData = [
                 'id'            =>  $val['id'],
-                'title'         =>  !empty($val['order']['thread']['title'])
-                                        ? $val['order']['thread']['title']
-                                        : (!empty($val['order']['thread']['firstPost']['content'])
-                                            ? $val['order']['thread']['firstPost']['content'] : ''),
+                'title'         =>  $title,
                 'amount'        =>  ($this->walletLogType == 'income' || $this->walletLogType == 'expend')
                                         ? $val['changeAvailableAmount'] : $val['changeFreezeAmount'],
                 'changeType'    =>  !empty($val['changeType']) ? $val['changeType'] : '',
@@ -233,6 +240,7 @@ class ListUserWalletLogsController extends DzqController
             ];
             $data['pageData'][$key] =  $pageData;
         }
+
         return $data;
     }
 
