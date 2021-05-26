@@ -22,6 +22,7 @@ use App\Commands\SignInFields\CreateUserSignIn;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\UserSignInFields;
+use App\Repositories\UserRepository;
 use Discuz\Api\Controller\AbstractCreateController;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -36,9 +37,6 @@ use Discuz\Auth\Exception\PermissionDeniedException;
 
 class CreateUserSignInController extends DzqController
 {
-    use AssertPermissionTrait;
-
-    public $serializer = UserSignInSerializer::class;
     private $bus;
     protected $validation;
     protected $setting;
@@ -49,14 +47,21 @@ class CreateUserSignInController extends DzqController
         $this->bus = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
     public function main()
     {
         $actor  = $this->user;
         $ip     = ip($this->request->getServerParams());
         $port   = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
         $data   = $this->inPut('data');
-
-//        $this->assertBatchData($data);
 
         foreach ($data as $k=>$v) {
 
