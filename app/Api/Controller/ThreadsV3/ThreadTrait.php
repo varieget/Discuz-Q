@@ -445,8 +445,7 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $postId = $post['id'];
-        $threadId = $post['thread_id'];
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId, $threadId, function () use ($userId, $postId) {
+        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId, $postId, function () use ($userId, $postId) {
             return PostUser::query()->where('post_id', $postId)->where('user_id', $userId)->exists();
         });
     }

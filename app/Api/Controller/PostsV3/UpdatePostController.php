@@ -107,15 +107,24 @@ class UpdatePostController extends DzqController
             'rewards' => floatval(sprintf('%.2f', $post->getPostReward())),
             'redPacketAmount' => $this->postSerializer->getPostRedPacketAmount($post['id'], $post['thread_id'], $post['user_id']),
         ];
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
-        DzqCache::del2HashKey(CacheKey::LIST_THREADS_V3_POST_LIKED, $this->user->id,$threadId);
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_USERS, $post['thread_id']);
         if ($post->id == $postId) {
             return $this->outPut(ResponseCode::SUCCESS, '', $build);
         }
 
         return $this->outPut(ResponseCode::NET_ERROR, '', []);
+    }
+
+    public function clearCache($user)
+    {
+        $postId = $this->inPut('pid');
+        DzqCache::del2HashKey(CacheKey::LIST_THREADS_V3_POST_LIKED, $user->id, $postId);
+        $post = Post::query()->where('id', $postId)->first();
+        if (!empty($post)) {
+            $threadId = $post['thread_id'];
+            DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+            DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+            DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_USERS, $threadId);
+        }
     }
 
 }
