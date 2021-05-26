@@ -22,7 +22,6 @@ use App\Censor\Censor;
 use App\Commands\Post\CreatePost;
 use App\Common\SettingCache;
 use App\Models\ThreadRedPacket;
-use App\Repositories\SequenceRepository;
 use App\Events\Thread\Created;
 use App\Events\Thread\Saving;
 use App\Models\Category;
@@ -31,6 +30,7 @@ use App\Models\Thread;
 use App\Models\User;
 use App\Models\RedPacket;
 use App\Models\Setting;
+use App\Models\Order;
 use App\Repositories\ThreadRepository;
 use App\Validators\ThreadValidator;
 use Carbon\Carbon;
@@ -41,6 +41,7 @@ use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 use Illuminate\Contracts\Events\Dispatcher as EventDispatcher;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -106,7 +107,7 @@ class CreateThread
      * @throws Exception
      * @throws GuzzleException
      */
-    public function handle(EventDispatcher $events, BusDispatcher $bus, Censor $censor, Thread $thread, ThreadRepository $threads, ThreadValidator $validator, SettingCache $settingcache)
+    public function handle(EventDispatcher $events, BusDispatcher $bus, Censor $censor, Thread $thread, ThreadRepository $threads, ThreadValidator $validator, SettingCache $settingcache, ConnectionInterface $db)
     {
         $this->events = $events;
 
@@ -173,6 +174,11 @@ class CreateThread
         }
 
         [$title, $content] = $this->checkTitleAndContent($censor);
+
+        if (empty($content)) {
+           throw new Exception(trans('post.thread_content_checktext_fail'));
+        }
+
         $attributes['content'] = $content;
         $attributes['title'] = $title;
         $this->data['attributes'] = $attributes;
@@ -256,8 +262,6 @@ class CreateThread
 
         $thread->save();
 
-        app(SequenceRepository::class)->updateSequenceCache($thread->id, 'add');
-
         try {
             $post = $bus->dispatch(
                 new CreatePost($thread->id, $this->actor, $this->data, $this->ip, $this->port, true)
@@ -265,6 +269,21 @@ class CreateThread
         } catch (Exception $e) {
             Post::query()->where('thread_id', $thread->id)->delete();
             RedPacket::query()->where('thread_id', $thread->id)->delete();
+            if (!$is_draft && 
+                ($thread->is_red_packet == 1 || 
+                $thread->type == Thread::TYPE_OF_QUESTION)) {
+                $orderSn = Arr::get($this->data, 'relationships.redpacket.data.order_id', '');
+                if (empty($orderSn)) {
+                     $orderSn = Arr::get($this->data, 'relationships.question.data.order_id', '');
+                }
+                $refundResult = Order::refundAbnormalOrder($thread->id, $orderSn, $db);
+                if ($refundResult) {
+                    app('log')->info('异常订单退款成功：订单号(order_sn为' . $orderSn . ')，作者(ID为' . $thread->user_id . ')，帖子回滚ID为： ' .$thread->id);
+                } else {
+                    app('log')->info('异常订单退款失败：订单号(order_sn为' . $orderSn . ')，作者(ID为' . $thread->user_id . ')，帖子回滚ID为： ' .$thread->id);
+                }
+            }
+            app('log')->info('用户:' . $this->actor->id . '，帖子内容保存发生错误，数据回滚中，帖子ID为：' . $thread->id . '，详细报错：' .  $e->getMessage());
             $thread->delete();
             throw $e;
         }
@@ -281,7 +300,7 @@ class CreateThread
 
     protected function checkTitleAndContent(Censor $censor)
     {
-        $sep = '__'.Str::random(6).'__';
+        $sep = '__' . mt_rand(111111, 999999) . '__';
         $contentForCheck = Arr::get($this->data, 'attributes.title', '')
             .$sep
             .Arr::get($this->data, 'attributes.content', '');
