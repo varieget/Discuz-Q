@@ -276,7 +276,7 @@ class CreateThread
                 if (empty($orderSn)) {
                      $orderSn = Arr::get($this->data, 'relationships.question.data.order_id', '');
                 }
-                $refundResult = Order::refundAbnormalOrder($thread->id, $orderSn, $db);
+                $refundResult = Order::refundAbnormalOrder($thread->id, $orderSn, $db, $this->actor);
                 if ($refundResult) {
                     app('log')->info('异常订单退款成功：订单号(order_sn为' . $orderSn . ')，作者(ID为' . $thread->user_id . ')，帖子回滚ID为： ' .$thread->id);
                 } else {

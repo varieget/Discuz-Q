@@ -20,6 +20,8 @@ namespace App\Models;
 
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
+use App\Notifications\System;
+use App\Notifications\Messages\Database\AbnormalOrderRefundMessage;
 use Carbon\Carbon;
 use Closure;
 use Exception;
@@ -341,7 +343,7 @@ class Order extends Model
         return $this->belongsTo(Group::class);
     }
 
-    public static function refundAbnormalOrder($threadId, $orderSn, $db)
+    public static function refundAbnormalOrder($threadId, $orderSn, $db, $user)
     {
         if (empty($orderSn)) {
             return false;
@@ -407,6 +409,7 @@ class Order extends Model
             return false;
         }
 
+        $user->notify(new System(AbnormalOrderRefundMessage::class, $user, ['order_sn' => $orderSn, 'amount' => $orderData->amount]));
         return true;
     }
 }
