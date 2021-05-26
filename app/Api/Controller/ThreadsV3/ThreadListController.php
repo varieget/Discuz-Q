@@ -179,7 +179,8 @@ class ThreadListController extends DzqController
         if (!empty($complex)) {
             switch ($complex) {
                 case Thread::MY_DRAFT_THREAD:
-                    $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT);
+                    $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT)
+                        ->where('user_id', $loginUserId);
                     break;
                 case Thread::MY_LIKE_THREAD:
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
