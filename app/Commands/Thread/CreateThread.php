@@ -173,7 +173,8 @@ class CreateThread
 
         [$title, $content] = $this->checkTitleAndContent($censor);
 
-        if (empty($content)) {
+        if (!empty($attributes['content']) && empty($content)) {
+           app('log')->info('用户:' . $this->actor->id . '，红包帖标题+内容结束文本检查失败，conten被清空，无法发帖');
            throw new Exception(trans('post.thread_content_checktext_fail'));
         }
 
