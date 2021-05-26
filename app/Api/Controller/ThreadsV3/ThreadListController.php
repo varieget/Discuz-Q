@@ -37,7 +37,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 5;//预加载的页数
+    const PRELOAD_PAGES = 10;//预加载的页数
 
     private $categoryIds = [];
 
@@ -104,8 +104,7 @@ class ThreadListController extends DzqController
     {
         $cacheKey = $this->getCacheKey($filter);
         $filterId = md5(serialize([$this->perPage, $this->filter]));
-//        if ($page == 1) {//第一页检查是否需要初始化缓存
-        if ($this->preload) {//第一页检查是否需要初始化缓存
+        if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterId, $page, function () use ($cacheKey, $filter, $page, $perPage) {
                 $threads = $this->buildFilterThreads($filter);
                 $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threads, true);
