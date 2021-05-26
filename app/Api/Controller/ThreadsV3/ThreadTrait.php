@@ -370,13 +370,13 @@ trait ThreadTrait
     private function getUserInfoField($loginUser, $user, $thread)
     {
         $userResult = [
-            'userName' => '匿名用户'
+            'nickname'=>'匿名用户'
         ];
         //非匿名用户
         if ((!$thread['is_anonymous'] && !empty($user)) || $loginUser->id == $thread['user_id']) {
             $userResult = [
                 'userId' => $user['id'],
-                'userName' => !empty($user['nickname']) ? $user['nickname'] : $user['username'],
+                'nickname' => !empty($user['nickname']) ? $user['nickname'] : $user['username'],
                 'avatar' => $user['avatar'],
                 'threadCount' => $user['thread_count'],
                 'followCount' => $user['follow_count'],
