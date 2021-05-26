@@ -17,7 +17,6 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
@@ -135,7 +134,13 @@ class UpdateThreadController extends DzqController
         } else {
             $thread->is_approved = Thread::BOOL_YES;
         }
-        $isDraft && $thread->is_draft = Thread::BOOL_YES;
+        
+        if ($isDraft) {
+            $thread->is_draft = Thread::BOOL_YES;
+        } else {
+            $thread->is_draft = Thread::BOOL_NO;
+        }
+
         !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
         $thread->save();
         if (!$isApproved && !$isDraft) {
@@ -148,7 +153,7 @@ class UpdateThreadController extends DzqController
     private function savePost($post, $content)
     {
         [$ip, $port] = $this->getIpPort();
-        $post->content = $content['text'];;
+        $post->content = $content['text'];
         $post->ip = $ip;
         $post->port = $port;
         $post->is_first = Post::FIRST_YES;
@@ -211,7 +216,7 @@ class UpdateThreadController extends DzqController
 
     private function getResult($thread, $post, $tomJsons)
     {
-        $user = User::query()->where('id',$thread->user_id)->first();
+        $user = User::query()->where('id', $thread->user_id)->first();
         $group = Group::getGroup($user->id);
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
