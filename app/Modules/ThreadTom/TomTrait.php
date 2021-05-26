@@ -18,7 +18,6 @@
 namespace App\Modules\ThreadTom;
 
 
-
 use App\Common\CacheKey;
 use Discuz\Base\DzqCache;
 use App\Common\ResponseCode;
@@ -60,12 +59,10 @@ trait TomTrait
         $tomList = [];
         if (!empty($threadId) && empty($operation)) {
             $tomList = DzqCache::hGet(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
-                $tomList = ThreadTom::query()
+                return ThreadTom::query()
                     ->select('tom_type', 'key')
                     ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
-                return $tomList;
             });
-            $tomList = $tomList[$threadId] ?? [];
         }
         foreach ($indexes as $key => $tomJson) {
             $this->setOperation($operation, $key, $tomJson, $tomList);

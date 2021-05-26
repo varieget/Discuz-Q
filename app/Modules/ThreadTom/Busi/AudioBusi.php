@@ -45,16 +45,15 @@ class AudioBusi extends TomBaseBusi
     public function select()
     {
         $audioId = $this->getParams('audioId');
-        $audios = DzqCache::hGet(CacheKey::LIST_THREADS_V3_VIDEO, $audioId, function ($audioId) {
+        $audio = DzqCache::hGet(CacheKey::LIST_THREADS_V3_VIDEO, $audioId, function ($audioId) {
             $audios = ThreadVideo::query()->where(['id' => $audioId])->get()->toArray();
             if (empty($audios)) {
-                $audios = null;
+                $audio = null;
             } else {
-                $audios = current($audios);
+                $audio = current($audios);
             }
-            return $audios;
+            return $audio;
         });
-        $audio = $audios[$audioId] ?? null;
         if ($audio) {
             $audio = ThreadVideo::instance()->threadVideoResult($audio);
             if (!$this->canViewTom) {
