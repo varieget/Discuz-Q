@@ -30,7 +30,6 @@ use App\Models\Thread;
 use App\Models\User;
 use App\Models\RedPacket;
 use App\Models\Setting;
-use App\Models\Order;
 use App\Repositories\ThreadRepository;
 use App\Validators\ThreadValidator;
 use Carbon\Carbon;
@@ -41,7 +40,6 @@ use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 use Illuminate\Contracts\Events\Dispatcher as EventDispatcher;
-use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -107,7 +105,7 @@ class CreateThread
      * @throws Exception
      * @throws GuzzleException
      */
-    public function handle(EventDispatcher $events, BusDispatcher $bus, Censor $censor, Thread $thread, ThreadRepository $threads, ThreadValidator $validator, SettingCache $settingcache, ConnectionInterface $db)
+    public function handle(EventDispatcher $events, BusDispatcher $bus, Censor $censor, Thread $thread, ThreadRepository $threads, ThreadValidator $validator, SettingCache $settingcache)
     {
         $this->events = $events;
 
@@ -269,20 +267,6 @@ class CreateThread
         } catch (Exception $e) {
             Post::query()->where('thread_id', $thread->id)->delete();
             RedPacket::query()->where('thread_id', $thread->id)->delete();
-            if (!$is_draft && 
-                ($thread->is_red_packet == 1 || 
-                $thread->type == Thread::TYPE_OF_QUESTION)) {
-                $orderSn = Arr::get($this->data, 'relationships.redpacket.data.order_id', '');
-                if (empty($orderSn)) {
-                     $orderSn = Arr::get($this->data, 'relationships.question.data.order_id', '');
-                }
-                $refundResult = Order::refundAbnormalOrder($thread->id, $orderSn, $db);
-                if ($refundResult) {
-                    app('log')->info('异常订单退款成功：订单号(order_sn为' . $orderSn . ')，作者(ID为' . $thread->user_id . ')，帖子回滚ID为： ' .$thread->id);
-                } else {
-                    app('log')->info('异常订单退款失败：订单号(order_sn为' . $orderSn . ')，作者(ID为' . $thread->user_id . ')，帖子回滚ID为： ' .$thread->id);
-                }
-            }
             app('log')->info('用户:' . $this->actor->id . '，帖子内容保存发生错误，数据回滚中，帖子ID为：' . $thread->id . '，详细报错：' .  $e->getMessage());
             $thread->delete();
             throw $e;
