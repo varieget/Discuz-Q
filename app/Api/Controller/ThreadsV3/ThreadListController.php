@@ -100,7 +100,7 @@ class ThreadListController extends DzqController
 
     private function getFilterThreads($filter, $page, $perPage)
     {
-        $cacheKey = $this->getCacheKey($filter);
+        $cacheKey = $this->cacheKey($filter);
         $filterKey = $this->filterKey($perPage, $filter);
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($cacheKey, $filter, $page, $perPage) {
@@ -322,7 +322,7 @@ class ThreadListController extends DzqController
             ->where('th.is_approved', Thread::BOOL_YES);
     }
 
-    private function getCacheKey($filter)
+    private function cacheKey($filter)
     {
         $sort = Thread::SORT_BY_THREAD;
         isset($filter['sort']) && $sort = $filter['sort'];
