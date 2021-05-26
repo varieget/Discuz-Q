@@ -99,15 +99,13 @@ class RefundErrorThreadOrder
             $userWallet = UserWallet::query()->where('user_id', $order->user_id)->first();
             if (empty($userWallet)) {
                 $this->log->info('未获取到订单创建者的钱包信息，无法处理订单金额！;订单号为：' . $order->order_sn . '，订单创建者ID为：' . $order->user_id);
-                $order->status = Order::ORDER_STATUS_UNTREATED;
-                $order->save();
+                $this->updateOrder($order->order_sn, ['status' => Order::ORDER_STATUS_UNTREATED]);
                 return;
             }
 
             if ($order->payment_type == Order::PAYMENT_TYPE_WALLET && $userWallet->freeze_amount < $order->amount) {
                 $this->log->info('用户冻结金额小于订单金额，无法退还订单金额！订单号为：' . $order->order_sn . ';订单创建者ID为：' . $order->user_id . ';用户冻结金额:' . $userWallet->freeze_amount . ';应退还金额:' . $order->amount);
-                $order->status = Order::ORDER_STATUS_UNTREATED;
-                $order->save();
+                $this->updateOrder($order->order_sn, ['status' => Order::ORDER_STATUS_UNTREATED]);
                 return;
             }
 
@@ -140,23 +138,22 @@ class RefundErrorThreadOrder
                     $walletOperate = UserWallet::OPERATE_INCREASE;
                 } else {
                     $this->log->info('订单金额退还失败, 订单号 ' . $order->order_sn . '的支付类型: ' . $order->payment_type . ', 不在处理范围内');
-                    $order->status = Order::ORDER_STATUS_UNTREATED;
-                    $order->save();
+                    $this->updateOrder($order->order_sn, ['status' => Order::ORDER_STATUS_UNTREATED]);
                     $this->connection->commit();
                     return;
                 }
 
-                $this->bus->dispatch(new ChangeUserWallet($order->user,
-                    $walletOperate,
-                    $order->amount,
-                    $data
-                ));
+                $orderUpdated = $this->updateOrder($order->order_sn, ['status' => Order::ORDER_STATUS_RETURN]);
+                if ($orderUpdated) {
+                    $this->bus->dispatch(new ChangeUserWallet($order->user,
+                        $walletOperate,
+                        $order->amount,
+                        $data
+                    ));
 
-                $order->status = Order::ORDER_STATUS_RETURN;
-                $order->save();
-
-                if (!empty($order->user)) {
-                    $order->user->notify(new System(AbnormalOrderRefundMessage::class, $order->user, ['order_sn' => $order->order_sn, 'amount' => $order->amount]));
+                    if (!empty($order->user)) {
+                        $order->user->notify(new System(AbnormalOrderRefundMessage::class, $order->user, ['order_sn' => $order->order_sn, 'amount' => $order->amount]));
+                    }
                 }
 
                 $this->connection->commit();
@@ -165,5 +162,13 @@ class RefundErrorThreadOrder
                 $this->connection->rollback();
             }
         });
+    }
+
+    protected function updateOrder(string $orderSn, array $data)
+    {
+        return Order::query()
+            ->where('order_sn', $orderSn)
+            ->where('status', Order::ORDER_STATUS_PAID)
+            ->update($data);
     }
 }
