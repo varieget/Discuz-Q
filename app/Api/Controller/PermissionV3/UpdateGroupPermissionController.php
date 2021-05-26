@@ -19,7 +19,6 @@
 namespace App\Api\Controller\PermissionV3;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Events\Group\PermissionUpdated;
 use App\Models\Group;
@@ -27,6 +26,7 @@ use App\Models\Permission;
 use App\Models\AdminActionLog;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Events\Dispatcher;
 
@@ -34,7 +34,7 @@ class UpdateGroupPermissionController extends DzqController
 {
     public function clearCache($user)
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::GROUP_PERMISSIONS);
+        DzqCache::delKey(CacheKey::GROUP_PERMISSIONS);
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)

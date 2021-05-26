@@ -17,18 +17,16 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
 use App\Censor\Censor;
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
+use Discuz\Base\DzqCache;
 use App\Formatter\Formatter;
 use App\Models\Category;
 use App\Models\MobileCode;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\PostUser;
-use App\Models\Setting;
 use App\Models\Thread;
 use App\Models\ThreadTopic;
 use App\Models\ThreadUser;
@@ -42,7 +40,6 @@ use App\Settings\SettingsRepository;
 use App\SmsMessages\SendCodeMessage;
 use Discuz\Qcloud\QcloudTrait;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use App\Common\Utils;
 
 
@@ -181,18 +178,9 @@ trait ThreadTrait
     private function getFavoriteField($threadId, $loginUser)
     {
         $userId = $loginUser->id;
-        $favorites = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_POST_FAVOR, $userId);
-        $favorites = $favorites[$userId] ?? [];
-        if ($favorites) {
-            if (array_key_exists($threadId, $favorites)) {
-                if (empty($favorites[$threadId])) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }
-        return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $loginUser->id])->exists();
+        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_FAVOR, $userId, $threadId, function () use ($userId, $threadId) {
+            return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $userId])->exists();
+        });
     }
 
     private function getCategoryNameField($categoryId)
@@ -240,24 +228,14 @@ trait ThreadTrait
         } else if ($payType != Thread::PAY_FREE && $canFreeViewTom) {
             $paid = true;
         } else {
-            $orders = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_USER_ORDERS, $userId);
-            $orders = $orders[$userId] ?? [];
-            if ($orders) {
-                if (array_key_exists($threadId, $orders)) {
-                    if (empty($orders[$threadId])) {
-                        $paid = false;
-                    } else {
-                        $paid = true;
-                    }
-                    return $payType;
-                }
-            }
-            $paid = Order::query()
-                ->where([
-                    'thread_id' => $threadId,
-                    'user_id' => $userId,
-                    'status' => Order::ORDER_STATUS_PAID
-                ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
+            $paid = DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
+                return Order::query()
+                    ->where([
+                        'thread_id' => $threadId,
+                        'user_id' => $userId,
+                        'status' => Order::ORDER_STATUS_PAID
+                    ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])->exists();
+            });
         }
         return $payType;
     }
@@ -392,13 +370,13 @@ trait ThreadTrait
     private function getUserInfoField($loginUser, $user, $thread)
     {
         $userResult = [
-            'userName' => '匿名用户'
+            'nickname'=>'匿名用户'
         ];
         //非匿名用户
         if ((!$thread['is_anonymous'] && !empty($user)) || $loginUser->id == $thread['user_id']) {
             $userResult = [
                 'userId' => $user['id'],
-                'userName' => $user['nickname'] ? $user['nickname'] : $user['username'],
+                'nickname' => !empty($user['nickname']) ? $user['nickname'] : $user['username'],
                 'avatar' => $user['avatar'],
                 'threadCount' => $user['thread_count'],
                 'followCount' => $user['follow_count'],
@@ -422,10 +400,11 @@ trait ThreadTrait
         ];
         $threadId = $thread['id'];
         $postId = $post['id'];
-        $postUsers = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_POST_USERS, $threadId, function ($threadId) use ($postId, $post) {
-            return ThreadHelper::getThreadLikedDetail($threadId, $postId, $post, false);
+        $postUsers = DzqCache::hGet(CacheKey::LIST_THREADS_V3_POST_USERS, $threadId, function ($threadId) use ($postId, $post) {
+            $ret = ThreadHelper::getThreadLikedDetail($threadId, $postId, $post, false);
+            return $ret[$threadId] ?? [];
         });
-        !empty($postUsers[$threadId]) && $ret['users'] = $postUsers[$threadId];
+        $ret['users'] = $postUsers;
         return $ret;
     }
 
@@ -454,18 +433,9 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $threadId = $thread['id'];
-        $rewardOrder = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $userId);
-        $rewardOrder = $rewardOrder[$userId] ?? [];
-        if ($rewardOrder) {
-            if (array_key_exists($threadId, $rewardOrder)) {
-                if (empty($rewardOrder[$threadId])) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }
-        return Order::query()->where(['user_id' => $userId, 'type' => Order::ORDER_TYPE_REWARD, 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])->exists();
+        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
+            return Order::query()->where(['user_id' => $userId, 'type' => Order::ORDER_TYPE_REWARD, 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])->exists();
+        });
     }
 
     private function isLike($loginUser, $post)
@@ -475,18 +445,9 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $postId = $post['id'];
-        $postUser = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId);
-        $postUser = $postUser[$userId] ?? [];
-        if ($postUser) {
-            if (array_key_exists($postId, $postUser)) {
-                if (empty($postUser[$postId])) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }
-        return PostUser::query()->where('post_id', $post['id'])->where('user_id', $userId)->exists();
+        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId, $postId, function () use ($userId, $postId) {
+            return PostUser::query()->where('post_id', $postId)->where('user_id', $userId)->exists();
+        });
     }
 
     private function saveTopic($thread, $content)

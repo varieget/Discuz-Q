@@ -70,68 +70,7 @@ class ListUserWalletLogsController extends DzqController
         'updated_at'
     ];
 
-    public $incomeLogChangeType = [
-//        12, //提现解冻
-        30, //注册收入
-        31, //打赏收入
-        32, //人工收入
-        33, //分成打赏收入
-        34, //注册分成收入
-        35, //问答答题收入
-        36, //问答围观收入
-        60, //付费主题收入
-        62, //分成付费主题收入
-        63, //付费附件收入
-        64, //付费附件分成收入
-        102, //文字帖红包收入
-        103, //文字帖冻结返还
-        104, //文字帖订单异常返现
-        112, //长文帖红包收入
-        113, //长文帖冻结返还
-        114, //长文帖订单异常返现
-        120, //悬赏问答收入
-        121, //悬赏帖过期-悬赏帖剩余悬赏金额返回
-        122, //悬赏帖过期-悬赏帖剩余悬赏金额平分
-        123, //悬赏帖过期-悬赏帖剩余悬赏金额按点赞数分配
-        124, //问答帖订单异常返现
-        130, //异常订单退款
-        151, //红包收入
-        152, //红包退款
-        154, //红包订单异常退款
-        161, //悬赏问答收入
-        162, //悬赏问答退款
-        163, //悬赏订单异常退款
-        165, //悬赏冻结返回
-        171, //合并订单退款
-        172, //合并订单异常退款
-    ];
-
-    public $expendLogChangeType = [
-//        11, //提现成功
-        41, //打赏支出
-        50, //人工支出
-        51, //加入用户组支出
-        52, //付费附件支出
-        61, //付费主题支出
-        71, //站点续费支出
-        81, //问答提问支出
-        82, //问答围观支出
-        100, //文字帖红包支出
-        110, //长文帖红包支出
-        153, //红包支出
-        164, //悬赏采纳支出
-    ];
-
-    public $freezeLogChangeType = [
-        8, //问答冻结
-        9, //问答返还解冻
-//        10, //提现冻结
-        101, //文字帖红包冻结
-        111, //长文帖红包冻结
-        150, //红包冻结
-        160, //悬赏问答冻结
-        170, //合并订单冻结
-    ];
+    public $titleLength = 10;
 
     public function __construct(Dispatcher $bus, UrlGenerator $url, UserWalletLogsRepository $walletLogs)
     {
@@ -160,7 +99,7 @@ class ListUserWalletLogsController extends DzqController
         $filter         = $this->inPut('filter') ?: [];
         $page           = $this->inPut('page') ?: 1;
         $perPage        = $this->inPut('perPage') ?: 5;
-        $requestInclude = explode(',', $this->inPut('include'));
+        $requestInclude = explode(',', 'userWallet,order.thread.firstPost');
 
         if(!empty($this->inPut('include')) && is_array($requestInclude) && array_diff($requestInclude, $this->optionalInclude)){       //如果include 超出optionalinclude 就报错
             return $this->outPut(ResponseCode::NET_ERROR);
@@ -191,7 +130,7 @@ class ListUserWalletLogsController extends DzqController
 
         $data = $this->camelData($walletLogs);
 
-        $data = $this->filterData($filter, $data);
+        $data = $this->filterData($data);
 
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
     }
@@ -216,29 +155,32 @@ class ListUserWalletLogsController extends DzqController
     {
         $log_user           = (int)Arr::get($filter, 'user'); //用户
         $log_change_desc    = Arr::get($filter, 'changeDesc'); //变动描述
-        $log_change_type    = Arr::get($filter, 'changeType', ''); //变动类型
+        $log_change_type    = Arr::get($filter, 'changeType', []); //变动类型
         $log_username       = Arr::get($filter, 'username'); //变动钱包所属人
         $log_start_time     = Arr::get($filter, 'startTime'); //变动时间范围：开始
         $log_end_time       = Arr::get($filter, 'endTime'); //变动时间范围：结束
         $log_source_user_id         = Arr::get($filter, 'sourceUserId');
         $log_change_type_exclude    = Arr::get($filter, 'changeTypeExclude');//排除变动类型
 
-        $query->when($log_user, function ($query) use ($log_user) {
-            $query->where('user_id', $log_user);
+//        $query->when($log_user, function ($query) use ($log_user) {
+//            $query->where('user_id', $log_user);
+//        });
+        $query->when($actor, function ($query) use ($actor) {
+            $query->where('user_id', $actor->id);
         });
+
         $query->when($log_change_desc, function ($query) use ($log_change_desc) {
             $query->where('change_desc', 'like', "%$log_change_desc%");
         });
 
-        if (empty($log_change_type)) {
-            if ($this->walletLogType == 'income') {
-                $log_change_type = $this->incomeLogChangeType;
-            } elseif ($this->walletLogType == 'expend') {
-                $log_change_type = $this->expendLogChangeType;
-            } elseif ($this->walletLogType == 'freeze') {
-                $log_change_type = $this->freezeLogChangeType;
-            }
+        if ($this->walletLogType == 'income') {
+            $query->where('change_available_amount', '>', 0);
+        } elseif ($this->walletLogType == 'expend') {
+            $query->where('change_available_amount', '<', 0);
+        } elseif ($this->walletLogType == 'freeze') {
+            $query->where('change_freeze_amount', '<>', 0);
         }
+
         if (!empty($log_change_type)) {
             $query->when($log_change_type, function ($query) use ($log_change_type) {
                 $query->whereIn('change_type', $log_change_type);
@@ -275,46 +217,28 @@ class ListUserWalletLogsController extends DzqController
         });
     }
 
-    public function filterData($filter, $data){
-        if (empty(Arr::get($filter, 'changeType', ''))) {
-            if ($this->walletLogType == 'income') {
-                foreach ($data['pageData'] as $key => $val) {
-                    $pageData = [
-                        'id'            =>  $key,
-                        'title'         =>  !empty($val['order']['thread']['title'])
-                                                ? (!empty($val['order']['thread']['title']) ? $val['order']['thread']['title'] : '')
-                                                : (!empty($val['order']['thread']['firstPost']['content']) ? $val['order']['thread']['firstPost']['content'] : ''),
-                        'amount'        =>  !empty($val['order']['amount']) ? $val['order']['amount'] : 0,
-                        'createdAt'     =>  !empty($val['createdAt']) ? $val['createdAt'] : 0,
-                    ];
-                    $data['pageData'][$key] =  $pageData;
-                }
-            } elseif ($this->walletLogType == 'expend') {
-                foreach ($data['pageData'] as $key => $val) {
-                    $pageData = [
-                        'id'            =>  $key,
-                        'title'         =>  !empty($val['order']['thread']['title'])
-                                                ? (!empty($val['order']['thread']['title']) ? $val['order']['thread']['title'] : '')
-                                                : (!empty($val['order']['thread']['firstPost']['content']) ? $val['order']['thread']['firstPost']['content'] : ''),
-                        'amount'        =>  !empty($val['order']['amount']) ? $val['order']['amount'] : 0,
-                        'createdAt'     =>  !empty($val['createdAt']) ? $val['createdAt'] : 0,
-                        'status'        =>  !empty($val['order']['status']) ? $val['order']['status'] : '',
-                    ];
-                    $data['pageData'][$key] =  $pageData;
-                }
-            } elseif ($this->walletLogType == 'freeze') {
-                foreach ($data['pageData'] as $key => $val) {
-                    $pageData = [
-                        'title'         =>  !empty($val['order']['thread']['title'])
-                                                ? (!empty($val['order']['thread']['title']) ? $val['order']['thread']['title'] : '')
-                                                : (!empty($val['order']['thread']['firstPost']['content']) ? $val['order']['thread']['firstPost']['content'] : ''),
-                        'amount'        =>  !empty($val['order']['amount']) ? $val['order']['amount'] : 0,
-                        'createdAt'     =>  !empty($val['createdAt']) ? $val['createdAt'] : 0,
-                        'id'            =>  !empty($val['order']['status']) ? $val['order']['id'] : '',
-                    ];
-                    $data['pageData'][$key] =  $pageData;
-                }
+    public function filterData($data){
+        foreach ($data['pageData'] as $key => $val) {
+
+            if (!empty($val['order']['thread']['title'])) {
+                $title = mb_substr($val['order']['thread']['title'],0,$this->titleLength);
+            } elseif (!empty($val['order']['thread']['firstPost']['content'])) {
+                $title = mb_substr(strip_tags($val['order']['thread']['firstPost']['content']),0,$this->titleLength);
+            } else {
+                $title = '';
             }
+
+            $pageData = [
+                'id'            =>  $val['id'],
+                'title'         =>  $title,
+                'amount'        =>  ($this->walletLogType == 'income' || $this->walletLogType == 'expend')
+                                        ? $val['changeAvailableAmount'] : $val['changeFreezeAmount'],
+                'changeType'    =>  !empty($val['changeType']) ? $val['changeType'] : '',
+                'changeDesc'    =>  !empty($val['changeDesc']) ? $val['changeDesc'] : '',
+                'status'        =>  !empty($val['order']['status']) ? $val['order']['status'] : '',
+                'createdAt'     =>  !empty($val['createdAt']) ? $val['createdAt'] : 0,
+            ];
+            $data['pageData'][$key] =  $pageData;
         }
 
         return $data;

@@ -78,8 +78,9 @@ class AdminTopicListController extends DzqController
                 'content' => $topic['content'],
                 'viewCount' => $topic['view_count'],
                 'threadCount' => $topic['thread_count'],
+                'createdAt' => date("Y-m-d H:i:s", strtotime($topic['created_at'])),
                 'recommended' => (bool) $topic['recommended'],
-                'recommendedAt' => $topic['recommended_at'] ?? '',
+                'recommendedAt' => $topic['recommended_at'] ? date("Y-m-d H:i:s", strtotime($topic['recommended_at'])): '',
                 'threads' => $thread
             ];
         }

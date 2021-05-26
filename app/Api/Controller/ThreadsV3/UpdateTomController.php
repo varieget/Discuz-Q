@@ -18,11 +18,13 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 
 class UpdateTomController extends DzqController
@@ -58,5 +60,10 @@ class UpdateTomController extends DzqController
             $db->rollBack();
             $this->outPut(ResponseCode::DB_ERROR, $e->getMessage());
         }
+    }
+    public function clearCache($user)
+    {
+        $threadId = $this->inPut('threadId');
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
     }
 }

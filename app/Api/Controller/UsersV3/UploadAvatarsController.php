@@ -20,29 +20,14 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\UploadAvatar;
 use App\Common\CacheKey;
+use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
-class UploadAvatarController extends DzqController
+class UploadAvatarsController extends DzqController
 {
-    public function clearCache($user)
-    {
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $user->id);
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
-
     /**
      * @var Dispatcher
      */
@@ -56,21 +41,22 @@ class UploadAvatarController extends DzqController
         $this->bus = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $userRepo->canCreateAvatar($this->user);
+    }
+
     public function main()
     {
+        $id =   $this->inPut('aid');
         $uploadFile = $this->request->getUploadedFiles();
-        if(empty($uploadFile)){
+
+        $file = $uploadFile['avatar'];
+        if(empty($id) || empty($file)){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'');
         }
-        $file = $uploadFile['avatar'];
         $actor = $this->user;
-        $id = $actor->id;
 
-        if(empty($id) || empty($file)){
-             $this->outPut(ResponseCode::INVALID_PARAMETER,'');
-        }
-
-        $actor = $this->user;
         $result = $this->bus->dispatch(
             new UploadAvatar($id, $file, $actor)
         );
@@ -78,8 +64,6 @@ class UploadAvatarController extends DzqController
             'id' => $result->id,
             'username' => $result->username,
             'avatarUrl' => $result->avatar,
-            'updatedAt' => optional($result->updated_at)->format('Y-m-d H:i:s'),
-            'createdAt' => optional($result->created_at)->format('Y-m-d H:i:s'),
         ];
 
         return $this->outPut(ResponseCode::SUCCESS,'', $result);

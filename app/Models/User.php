@@ -20,9 +20,6 @@ namespace App\Models;
 
 use App\Common\AuthUtils;
 use App\Common\CacheKey;
-use App\Common\DzqCache;
-use App\Models\Invite;
-use App\Models\Group;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -1002,6 +999,6 @@ class User extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USERS, $this->id);
+        \Discuz\Base\DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $this->id);
     }
 }

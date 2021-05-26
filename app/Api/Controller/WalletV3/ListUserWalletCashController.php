@@ -93,13 +93,13 @@ class ListUserWalletCashController extends DzqController
     private function getCashRecords($actor, $filter, $perPage = 0, $page = 0, $sort = [])
     {
         $cash_user         = (int) Arr::get($filter, 'user'); //提现用户
-        $cash_sn         = Arr::get($filter, 'cash_sn'); //提现流水号
-        $cash_status     = Arr::get($filter, 'cash_status'); //提现状态
+        $cash_sn         = Arr::get($filter, 'cashSn'); //提现流水号
+        $cash_status     = Arr::get($filter, 'cashStatus'); //提现状态
         $cash_username   = Arr::get($filter, 'username'); //提现人
-        $cash_type       = Arr::get($filter, 'cash_type'); //提现方式
-        $cash_mobile     = Arr::get($filter, 'cash_mobile'); //提现到的手机号码
-        $cash_start_time = Arr::get($filter, 'start_time'); //申请时间范围：开始
-        $cash_end_time   = Arr::get($filter, 'end_time'); //申请时间范围：结束
+        $cash_type       = Arr::get($filter, 'cashType'); //提现方式
+        $cash_mobile     = Arr::get($filter, 'cashMobile'); //提现到的手机号码
+        $cash_start_time = Arr::get($filter, 'startTime'); //申请时间范围：开始
+        $cash_end_time   = Arr::get($filter, 'endTime'); //申请时间范围：结束
 
         $query = $this->cash->query()->whereVisibleTo($actor);
         $query->when($cash_user, function ($query) use ($cash_user) {

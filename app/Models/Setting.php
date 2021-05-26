@@ -19,7 +19,7 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 
 /**
@@ -195,6 +195,6 @@ class Setting extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
+        DzqCache::delKey(CacheKey::SETTINGS);
     }
 }
