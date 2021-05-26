@@ -86,7 +86,7 @@ export default {
           return "已付款";
           break;
         default:
-          return "未知状态";
+          return "过期未支付";
       }
     },
     /*
