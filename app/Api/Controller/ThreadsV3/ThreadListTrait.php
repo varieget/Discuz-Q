@@ -119,9 +119,9 @@ trait ThreadListTrait
 
     private function initDzqThreadsData($cacheKey, $threads)
     {
-        $filter = $this->inPut('filter');
-        $filterKey = md5(serialize($filter));
-        DzqCache::hSet($cacheKey, $filterKey, $threads);
+//        $filter = $this->inPut('filter');
+//        $filterKey = md5(serialize($filter));
+//        DzqCache::hSet($cacheKey, $filterKey, $threads);
         $this->initDzqUnitData($this->user->id, $threads);
     }
 
