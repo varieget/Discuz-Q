@@ -20,7 +20,9 @@ namespace App\Api\Controller\SignInFieldsV3;
 use App\Api\Serializer\UserSignInSerializer;
 use App\Common\ResponseCode;
 use App\Models\UserSignInFields;
+use App\Repositories\UserRepository;
 use Discuz\Api\Controller\AbstractListController;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
@@ -28,9 +30,18 @@ use Tobscure\JsonApi\Document;
 
 class ListUserSignInController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            throw new PermissionDeniedException('没有权限');
+        }
+        return true;
+    }
+
     public function main()
     {
-        $userId = $this->inPut('userId');
+        $userId = $this->user->id;
         if(empty($userId)){
             $this->outPut(ResponseCode::USERID_NOT_ALLOW_NULL);
         }
