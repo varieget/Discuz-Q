@@ -19,13 +19,12 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Events\Group\Deleted;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -189,8 +188,9 @@ class Group extends DzqModel
         $cache->put(CacheKey::LIST_GROUPS, $groups, 60 * 60);
         return $groups;
     }
+
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_GROUPS);
+        DzqCache::delKey(CacheKey::LIST_GROUPS);
     }
 }

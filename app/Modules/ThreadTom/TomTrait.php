@@ -18,14 +18,11 @@
 namespace App\Modules\ThreadTom;
 
 
-use App\Api\Controller\ThreadsV3\DeleteTomController;
-use App\Api\Controller\ThreadsV3\SelectTomController;
-use App\Api\Controller\ThreadsV3\UpdateTomController;
+
 use App\Common\CacheKey;
-use App\Common\DzqCache;
+use Discuz\Base\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Permission;
-use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Common\Utils;
@@ -62,11 +59,10 @@ trait TomTrait
         if (empty($indexes)) return $tomJsons;
         $tomList = [];
         if (!empty($threadId) && empty($operation)) {
-            $tomList = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
+            $tomList = DzqCache::hGet(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
                 $tomList = ThreadTom::query()
                     ->select('tom_type', 'key')
                     ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
-                $tomList = [$threadId => $tomList];
                 return $tomList;
             });
             $tomList = $tomList[$threadId] ?? [];

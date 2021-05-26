@@ -63,8 +63,23 @@ class CacheKey
 
     public const SEQUENCE = 'sequence';
 
-    public const LIST_THREADS_V3_1 = 'list_threads_v3_1';
-    public const LIST_THREADS_V3_0 = 'list_threads_v3_0';
+
+    //默认的创建时间降序
+    public const LIST_THREADS_V3_CREATE_TIME = 'list_threads_v3_create_time';//filterId->pageId
+    //智能排序，不参与筛选
+    public const LIST_THREADS_V3_SEQUENCE = 'list_threads_v3_sequence';//filterId->pageId
+    //热点数据变更排序规则
+    public const LIST_THREADS_V3_VIEW_COUNT = 'list_threads_v3_view_count';//filterId->pageId
+    public const LIST_THREADS_V3_POST_TIME = 'list_threads_v3_post_time';//filterId->pageId
+
+    public const LIST_THREADS_V3_ATTENTION = 'list_threads_v3_attention';//filterId->pageId
+
+//    public const LIST_THREADS_V3_POST_COUNT = 'list_threads_v3_post_count';
+//    public const LIST_THREADS_V3_PAID_COUNT = 'list_threads_v3_paid_count';
+//    public const LIST_THREADS_V3_REWARD_COUNT = 'list_threads_v3_rewarded_count';
+
+
+
 
 
     public const LIST_THREADS_V3_USERS = 'list_threads_v3_users';//发帖用户存储 id
@@ -75,14 +90,15 @@ class CacheKey
     public const LIST_THREADS_V3_TAGS = 'list_threads_v3_tags';//帖子标签存储 thread_id
     public const LIST_THREADS_V3_TOMS = 'list_threads_v3_toms';//帖子插件存储 thread_id
 
-    public const LIST_THREADS_V3_USER_ORDERS = 'list_threads_v3_orders';//用户付费贴订单信息 user_id
-    public const LIST_THREADS_V3_USER_REWARD_ORDERS = 'list_threads_v3_user_reward_orders';//打赏的订单信息 user_id
+    public const LIST_THREADS_V3_USER_PAY_ORDERS = 'list_threads_v3_user_pay_orders';//用户付费贴订单信息 user_id->thread_id
+
+    public const LIST_THREADS_V3_USER_REWARD_ORDERS = 'list_threads_v3_user_reward_orders';//打赏的订单信息 user_id->thead_id
 
     public const LIST_THREADS_V3_GROUP_USER = 'list_threads_v3_group_user';//用户组 user_id
 
     public const LIST_THREADS_V3_SEARCH_REPLACE = 'list_threads_v3_search_replace';//替换标签、话题和艾特
-    public const LIST_THREADS_V3_POST_LIKED = 'list_threads_v3_post_liked';//是否点赞 user_id
-    public const LIST_THREADS_V3_POST_FAVOR = 'list_threads_v3_post_favor';//是否收藏 user_id
+    public const LIST_THREADS_V3_POST_LIKED = 'list_threads_v3_post_liked';//是否点赞 user_id->post_id
+    public const LIST_THREADS_V3_POST_FAVOR = 'list_threads_v3_post_favor';//是否收藏 user_id->thread_id
     public const LIST_THREADS_V3_POST_USERS = 'list_threads_v3_post_users';//帖子卡面底部的点赞支付摘要 thread_id
 
 

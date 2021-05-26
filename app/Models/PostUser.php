@@ -19,8 +19,8 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use Carbon\Carbon;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 
 /**
@@ -50,10 +50,10 @@ class PostUser extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_LIKED, $this->user_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_LIKED, $this->user_id);
         $post = Post::query()->where('id', $this->post_id)->first();
         if (!empty($post)) {
-            DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_USERS, $post['thread_id']);
+            DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_USERS, $post['thread_id']);
         }
     }
 }

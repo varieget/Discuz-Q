@@ -19,7 +19,6 @@
 namespace App\Api\Controller\SettingsV3;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
@@ -27,6 +26,7 @@ use App\Models\AdminActionLog;
 use App\Repositories\UserRepository;
 use App\Validators\SetSettingValidator;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Qcloud\QcloudTrait;
 use Discuz\Base\DzqController;
@@ -41,7 +41,7 @@ class SetSettingsController extends DzqController
 {
     public function clearCache($user)
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::SETTINGS);
+        DzqCache::delKey(CacheKey::SETTINGS);
     }
 
     use QcloudTrait;

@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
@@ -28,6 +29,7 @@ use App\Models\ThreadTom;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 
 class UpdateThreadController extends DzqController
@@ -212,5 +214,18 @@ class UpdateThreadController extends DzqController
         $user = User::query()->where('id',$thread->user_id)->first();
         $group = Group::getGroup($user->id);
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
+    }
+    public function clearCache($user)
+    {
+        DzqCache::delKey(CacheKey::CATEGORIES);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        $threadId = $this->inPut('threadId');
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TAGS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
     }
 }
