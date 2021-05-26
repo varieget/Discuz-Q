@@ -25,7 +25,6 @@ use App\Events\Thread\Restored;
 use Carbon\Carbon;
 use DateTime;
 use Discuz\Auth\Anonymous;
-use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
