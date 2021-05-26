@@ -55,7 +55,6 @@ class ThreadListController extends DzqController
     }
 
     private $filter = null;
-    private $perPage = null;
 
     public function main()
     {
@@ -65,7 +64,6 @@ class ThreadListController extends DzqController
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
         $this->filter = $filter;
-        $this->perPage = $perPage;
         $page <= 0 && $page = 1;
 //        $this->openQueryLog();
         if (empty($sequence)) {
@@ -345,11 +343,11 @@ class ThreadListController extends DzqController
 
     private function filterKey($perPage, $filter)
     {
-        $keyArray = ['page' => $perPage, 'filter' => $this->filter];
-        if (isset($filter['attention']) && $filter['attention'] == 1) {
-            $keyArray['user'] = $this->user->id;
+        $serialize = ['page' => $perPage, 'filter' => $filter];
+        if (isset($filter['attention']) && isset($filter['complex'])) {
+            $serialize['user'] = $this->user->id;
         }
-        return md5(serialize($keyArray));
+        return md5(serialize($serialize));
     }
 
 }
