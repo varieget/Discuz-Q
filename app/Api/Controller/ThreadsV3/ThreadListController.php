@@ -343,8 +343,8 @@ class ThreadListController extends DzqController
 
     private function filterKey($perPage, $filter)
     {
-        $serialize = ['page' => $perPage, 'filter' => $filter];
-        if (isset($filter['attention']) && isset($filter['complex'])) {
+        $serialize = ['perPage' => $perPage, 'filter' => $filter];
+        if (isset($filter['attention']) || isset($filter['complex'])) {
             $serialize['user'] = $this->user->id;
         }
         return md5(serialize($serialize));
