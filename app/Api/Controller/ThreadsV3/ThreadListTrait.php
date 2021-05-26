@@ -90,16 +90,6 @@ trait ThreadListTrait
         return $groupUsers;
     }
 
-    private function arrayColumnMulti($array, $field)
-    {
-        $p = [];
-        foreach ($array as $item) {
-            $p[$item[$field]][] = $item;
-        }
-        return $p;
-    }
-
-
     /**
      * @desc 未查询到的数据添加默认空值
      * @param $ids
@@ -117,14 +107,6 @@ trait ThreadListTrait
         return $array;
     }
 
-    private function initDzqThreadsData($cacheKey, $threads)
-    {
-//        $filter = $this->inPut('filter');
-//        $filterKey = md5(serialize($filter));
-//        DzqCache::hSet($cacheKey, $filterKey, $threads);
-        $this->initDzqUnitData($this->user->id, $threads);
-    }
-
     private function initDzqUnitData($loginUserId, $threadsList)
     {
         $threads = $this->getAllThreadsList($threadsList);
@@ -136,9 +118,9 @@ trait ThreadListTrait
         $this->cacheUsers($userIds);
         $this->cacheGroupUser($userIds);
         $this->cacheTags($threadIds);
+        $toms = $this->cacheToms($threadIds);
         $attachmentIds = [];
         $threadVideoIds = [];
-        $toms = $this->cacheToms($threadIds);
         $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds, true);
         $this->cacheAttachment($attachmentIds);
         $this->cacheVideo($threadVideoIds);
