@@ -45,3 +45,7 @@ $route->post('/topics.batch.update', 'topics.batch.update', ApiController\TopicV
 $route->post('/topics.batch.delete', 'topics.batch.delete', ApiController\TopicV3\BatchDeleteTopicController::class);
 
 $route->get('/statistic/firstChart', 'statistic/firstChart', ApiController\StatisticV3\FirstChartController::class);
+
+$route->get('/export/users', 'export.users', ApiController\UsersV3\ExportUserController::class);
+$route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarsController::class);
+$route->post('/delete/users/avatar', 'user.upload.avatar', ApiController\UsersV3\DeleteAvatarController::class);
