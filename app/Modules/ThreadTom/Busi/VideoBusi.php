@@ -70,16 +70,15 @@ class VideoBusi extends TomBaseBusi
     public function select()
     {
         $videoId = $this->getParams('videoId');
-        $videos = DzqCache::hGet(CacheKey::LIST_THREADS_V3_VIDEO, $videoId, function ($videoId) {
+        $video = DzqCache::hGet(CacheKey::LIST_THREADS_V3_VIDEO, $videoId, function ($videoId) {
             $videos = ThreadVideo::query()->where(['id' => $videoId])->get()->toArray();
             if (empty($videos)) {
-                $videos = null;
+                $video = null;
             } else {
-                $videos = current($videos);
+                $video = current($videos);
             }
-            return $videos;
+            return $video;
         });
-        $video = $videos[$videoId] ?? null;
         if ($video) {
             $video = ThreadVideo::instance()->threadVideoResult($video);
             if (!$this->canViewTom) {
