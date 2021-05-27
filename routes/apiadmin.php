@@ -33,6 +33,7 @@ $route->post('/permission.update', 'permission.update', ApiController\Permission
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
 //注册扩展
 $route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
+$route->post('/signinfields', 'signinfields.create', ApiController\SignInFieldsV3\CreateAdminSignInController::class);
 $route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
 //审核主题列表
 $route->get('/check.thread.list', 'check.thread.list', ApiController\AdminV3\CheckThemeList::class);

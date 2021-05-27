@@ -55,18 +55,25 @@ class CheckReplyList extends DzqController
         $isApproved = intval($this->inPut('isApproved')); //0未审核 1已忽略
         $createdAtBegin = $this->inPut('createdAtBegin'); //开始时间
         $createdAtEnd = $this->inPut('createdAtEnd'); //结束时间
+        $deletedAtBegin = $this->inPut('deletedAtBegin'); //删除开始时间
+        $deletedAtEnd = $this->inPut('deletedAtEnd'); //删除结束时间
+        $deletedNickname = $this->inPut('deletedNickname'); //删除帖子用户
         $categoryId = intval($this->inPut('categoryId')); //分类id
         $highlight = $this->inPut('highlight');  //是否显示敏感词
         $sort = $this->inPut('sort') ? $this->inPut('sort') : '-updated_at';//排序
 
         $query = Post::query()
-            ->select('posts.id', 'posts.thread_id',
-                'posts.content', 'posts.ip', 'posts.updated_at','users.nickname','threads.title');
+            ->select(
+                'posts.id', 'posts.thread_id', 'posts.user_id','posts.content', 'posts.ip',
+                'posts.updated_at', 'posts.deleted_user_id' ,'posts.deleted_at',
+                'users.nickname'
+            )
+            ->where('posts.is_first',false);
 
         $query->where('posts.is_approved', $isApproved);
 
         // 回收站
-        if ($isDeleted == 'yes' && $this->user->can('viewTrashed')) {
+        if ($isDeleted == 'yes') {
             // 只看回收站帖子
             $query->whereNotNull('posts.deleted_at');
         } elseif ($isDeleted == 'no') {
@@ -85,15 +92,27 @@ class CheckReplyList extends DzqController
             $query->where('posts.content','like','%'.$q.'%');
         }
 
+        //发帖删除时间筛选
+        if (!empty($deletedAtBegin) && !empty($deletedAtEnd)) {
+            $query->whereBetween('posts.deleted_at', [$deletedAtBegin, $deletedAtEnd]);
+        }
+
+        //用户删除用户昵称
+        if (!empty($deletedNickname)) {
+            $query->addSelect('users1.nickname as deleted_user')
+                ->leftJoin('users as users1', 'users1.id','=','posts.deleted_user_id')
+                ->where('users1.nickname','like','%'.$deletedNickname.'%');
+        }
+
         //时间筛选
         if (!empty($createdAtBegin) && !empty($createdAtEnd)) {
             $query->whereBetween('posts.updated_at', [$createdAtBegin, $createdAtEnd]);
         }
 
         //分类筛选
-        $query->leftJoin('threads', 'posts.thread_id', '=', 'threads.id');
         if (!empty($categoryId)) {
-            $query->where('threads.category_id', $categoryId);
+            $query->leftJoin('threads', 'posts.thread_id', '=', 'threads.id')
+            ->where('threads.category_id', $categoryId);
         }
 
         //排序
