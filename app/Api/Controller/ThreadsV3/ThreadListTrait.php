@@ -88,7 +88,7 @@ trait ThreadListTrait
             CacheKey::LIST_THREADS_V3_ATTACHMENT => DzqCache::get(CacheKey::LIST_THREADS_V3_ATTACHMENT),
             CacheKey::LIST_THREADS_V3_THREADS => DzqCache::get(CacheKey::LIST_THREADS_V3_THREADS),
             CacheKey::LIST_THREADS_V3_VIDEO => DzqCache::get(CacheKey::LIST_THREADS_V3_VIDEO),
-            CacheKey::LIST_THREADS_V3_POST_FAVOR => DzqCache::get(CacheKey::LIST_THREADS_V3_POST_FAVOR),
+            CacheKey::LIST_THREADS_V3_THREAD_USERS => DzqCache::get(CacheKey::LIST_THREADS_V3_THREAD_USERS),
             CacheKey::LIST_THREADS_V3_POST_LIKED => DzqCache::get(CacheKey::LIST_THREADS_V3_POST_LIKED),
             CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS => DzqCache::get(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS)
         ];
@@ -295,6 +295,6 @@ trait ThreadListTrait
         $postUsers = PostUser::query()->where('user_id', $userId)->whereIn('post_id', $postIds)->get()->toArray();
         DzqCache::hM2Set(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId, $postUsers, 'post_id', false, $postIds, null);
         $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $userId)->get()->toArray();
-        DzqCache::hM2Set(CacheKey::LIST_THREADS_V3_POST_FAVOR, $userId, $favorite, 'thread_id', false, $threadIds, null);
+        DzqCache::hM2Set(CacheKey::LIST_THREADS_V3_THREAD_USERS, $userId, $favorite, 'thread_id', false, $threadIds, null);
     }
 }

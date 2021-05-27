@@ -179,7 +179,7 @@ trait ThreadTrait
     private function getFavoriteField($threadId, $loginUser)
     {
         $userId = $loginUser->id;
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_FAVOR, $userId, $threadId, function () use ($userId, $threadId) {
+        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_THREAD_USERS, $userId, $threadId, function () use ($userId, $threadId) {
             return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $userId])->exists();
         });
     }
