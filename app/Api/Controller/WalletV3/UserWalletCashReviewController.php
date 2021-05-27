@@ -18,7 +18,6 @@
 
 namespace App\Api\Controller\WalletV3;
 
-use App\Commands\Wallet\UserWalletCashReview;
 use App\Common\ResponseCode;
 use App\Events\Wallet\Cash;
 use App\Exceptions\WalletException;

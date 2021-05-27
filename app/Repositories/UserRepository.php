@@ -569,7 +569,7 @@ class UserRepository extends AbstractRepository
     }
 
 
-    public function canEeportUser(User $user)
+    public function canExportUser(User $user)
     {
         return $user->isAdmin();
     }

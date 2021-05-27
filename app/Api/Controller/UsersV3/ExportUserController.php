@@ -46,7 +46,7 @@ class ExportUserController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $userRepo->canEeportUser($this->user);
+        return $userRepo->canExportUser($this->user);
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
