@@ -134,7 +134,7 @@ class UpdateThreadController extends DzqController
         } else {
             $thread->is_approved = Thread::BOOL_YES;
         }
-        
+
         if ($isDraft) {
             $thread->is_draft = Thread::BOOL_YES;
         } else {
@@ -220,6 +220,7 @@ class UpdateThreadController extends DzqController
         $group = Group::getGroup($user->id);
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
+
     public function clearCache($user)
     {
         DzqCache::delKey(CacheKey::CATEGORIES);

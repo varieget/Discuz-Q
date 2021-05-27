@@ -21,6 +21,9 @@ $route->post('/users/update.user', 'users.admin', ApiController\UsersV3\UpdateAd
 $route->get('/users.wallet.logs', 'users.wallet.logs', ApiController\WalletV3\UsersWalletLogsListController::class);
 $route->get('/users.order.logs', 'users.order.logs', ApiController\OrderV3\UsersOrderLogsListController::class);
 $route->get('/users.cash.logs', 'users.cash.logs', ApiController\WalletV3\UsersCashLogsListController::class);
+$route->post('/wallet.cash.review', 'wallet.cash.review', ApiController\WalletV3\UserWalletCashReviewController::class);
+$route->get('/statistic.finance', 'statistic.finance', ApiController\StatisticV3\FinanceProfileController::class);
+$route->get('/statistic.financeChart', 'statistic.financeChart', ApiController\StatisticV3\FinanceChartController::class);
 
 //内容分类
 $route->get('/categories', 'categories', ApiController\CategoryV3\AdminListCategoriesController::class);
@@ -33,6 +36,7 @@ $route->post('/permission.update', 'permission.update', ApiController\Permission
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
 //注册扩展
 $route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
+$route->post('/signinfields', 'signinfields.create', ApiController\SignInFieldsV3\CreateAdminSignInController::class);
 $route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
 //审核主题列表
 $route->get('/check.thread.list', 'check.thread.list', ApiController\AdminV3\CheckThemeList::class);
