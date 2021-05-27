@@ -33,6 +33,11 @@ use Illuminate\Support\Str;
  */
 abstract class TomBaseBusi
 {
+    /**
+     * 是否需要支付
+     */
+    public const NEED_PAY = 0;
+
     public $tomId = null;
     public $operation = null;
     public $body = [];

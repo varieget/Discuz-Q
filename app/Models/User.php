@@ -492,6 +492,7 @@ class User extends DzqModel
             ->where('is_approved', Thread::APPROVED)
             ->where('type', '<>', Thread::TYPE_OF_QUESTION)
             ->where('is_draft', '<>', 1)
+            ->where('order_paid', 1)
             ->whereNull('deleted_at')
             ->count();
 

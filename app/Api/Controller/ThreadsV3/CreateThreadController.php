@@ -31,6 +31,7 @@ use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
 class CreateThreadController extends DzqController
 {
@@ -173,9 +174,21 @@ class CreateThreadController extends DzqController
         }
         $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
+
+        // 帖子是否需要支付
+        $dataThread['order_paid'] = 1;
+        $tomTypes = array_keys($content['indexes'] ?? []);
+        foreach ($tomTypes as $tomType) {
+            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
+            if (constant($tomService.'::NEED_PAY')) {
+                $dataThread['order_paid'] = 0;
+                break;
+            }
+        }
+
         $thread->setRawAttributes($dataThread);
         $thread->save();
-        if (!$isApproved && !$isDraft) {
+        if (!$isApproved && !$isDraft && $thread->order_paid) {
             $this->user->refreshThreadCount();
             $this->user->save();
             Category::refreshThreadCountV3($categoryId);

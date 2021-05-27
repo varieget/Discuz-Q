@@ -19,6 +19,7 @@
 namespace App\Listeners\Order;
 
 use App\Events\Order\Updated;
+use App\Models\Category;
 use App\Models\Order;
 use Carbon\Carbon;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -82,6 +83,17 @@ class OrderSubscriber
             $order->status == Order::ORDER_STATUS_PAID
         ) {
             $order->thread->refreshPaidCount()->save();
+        }
+
+        // 红包、悬赏主题，付费成功后，把主题改为已付费
+        if (
+            in_array($order->type, [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
+            && $order->thread
+        ) {
+            $order->thread->order_paid = 1;
+            $order->thread->save();
+            $order->user->refreshThreadCount()->save();
+            Category::refreshThreadCountV3($order->thread->category_id);
         }
     }
 }

@@ -27,6 +27,8 @@ use App\Models\ThreadTom;
 
 class RewardBusi extends TomBaseBusi
 {
+    public const NEED_PAY = 1;
+
     public function create()
     {
         $input = $this->verification();
@@ -50,7 +52,7 @@ class RewardBusi extends TomBaseBusi
             if (empty($order) ||
                 ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id'])) ||
                 $order['user_id'] != $this->user['id'] ||
-                $order['status'] != Order::ORDER_STATUS_PAID ||
+                $order['status'] != Order::ORDER_STATUS_PENDING ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())||
                 ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
@@ -63,7 +65,7 @@ class RewardBusi extends TomBaseBusi
                     ->first();
                 if (empty($orderChildrenInfo) ||
                     $orderChildrenInfo->amount != $input['price'] ||
-                    $orderChildrenInfo->status != Order::ORDER_STATUS_PAID) {
+                    $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER);
                 }
             }
