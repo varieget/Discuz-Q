@@ -18,11 +18,13 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Commands\Thread\EditThread;
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
@@ -86,13 +88,13 @@ class OperateThreadController extends DzqController
     public function main()
     {
         //参数校验
-        $thread_id= $this->inPut('id');
+        $thread_id = $this->inPut('id');
 
-        if(empty($thread_id))     return  $this->outPut(ResponseCode::INVALID_PARAMETER);
+        if (empty($thread_id)) return $this->outPut(ResponseCode::INVALID_PARAMETER);
 
-        $threadRow = Thread::query()->where('id',$thread_id)->first();
-        if(empty($threadRow)){
-            return  $this->outPut(ResponseCode::INVALID_PARAMETER,"主题id".$thread_id."不存在");
+        $threadRow = Thread::query()->where('id', $thread_id)->first();
+        if (empty($threadRow)) {
+            return $this->outPut(ResponseCode::INVALID_PARAMETER, "主题id" . $thread_id . "不存在");
         }
 
         $categoriesId = $this->inPut('categoriesId');
@@ -106,12 +108,12 @@ class OperateThreadController extends DzqController
 
         $attributes = [];
         $requestData = [];
-        if($categoriesId){
+        if ($categoriesId) {
             $requestData = [
                 "type" => "threads",
-                "relationships" =>  [
-                    "category" =>  [
-                        "data" =>  [
+                "relationships" => [
+                    "category" => [
+                        "data" => [
                             "type" => "categories",
                             "id" => $categoriesId
                         ]
@@ -121,16 +123,16 @@ class OperateThreadController extends DzqController
             $attributes['type'] = (string)$type;
         }
 
-        if($isEssence || $isEssence===false){
+        if ($isEssence || $isEssence === false) {
             $attributes['isEssence'] = $isEssence;
         }
-        if($isSticky || $isSticky===false){
+        if ($isSticky || $isSticky === false) {
             $attributes['isSticky'] = $isSticky;
         }
-        if($isFavorite || $isFavorite===false){
+        if ($isFavorite || $isFavorite === false) {
             $attributes['isFavorite'] = $isFavorite;
         }
-        if($isDeleted || $isDeleted===false){
+        if ($isDeleted || $isDeleted === false) {
             $attributes['isDeleted'] = $isDeleted;
         }
 
@@ -143,8 +145,18 @@ class OperateThreadController extends DzqController
         );
         $result = $this->camelData($result);
 
-        return $this->outPut(ResponseCode::SUCCESS,'', $result);
+        return $this->outPut(ResponseCode::SUCCESS, '', $result);
 
+    }
+
+    public function clearCache($user)
+    {
+        $threadId = $this->inPut('id');
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
     }
 
 

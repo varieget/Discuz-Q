@@ -129,7 +129,7 @@ class ListUserFollowController extends DzqController
         }else{
             $UserFollows = [];
         }
-       // dump($UserFollows);die;
+        // dump($UserFollows);die;
         $this->outPut(ResponseCode::SUCCESS, '', $UserFollows);
     }
 

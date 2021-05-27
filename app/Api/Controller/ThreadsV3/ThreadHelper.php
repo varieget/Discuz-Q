@@ -19,12 +19,11 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Models\Order;
 use App\Models\PostUser;
 use App\Models\Thread;
-use App\Models\ThreadUser;
 use App\Models\User;
+use Discuz\Base\DzqCache;
 
 class ThreadHelper
 {
@@ -84,9 +83,9 @@ class ThreadHelper
                 $likedUsersInfo[$item['thread_id']][] = [
                     'userId' => $item['user_id'],
                     'avatar' => $user->avatar,
-                    'userName' => !empty($user->nickname) ? $user->nickname : $user->username,
-                    'type'  =>  !empty($item['type']) ? 1 : 2,
-                    'createdAt'    => strtotime($item['created_at'])
+                    'nickname' => !empty($user->nickname) ? $user->nickname : $user->username,
+                    'type' => !empty($item['type']) ? 1 : 2,
+                    'createdAt' => strtotime($item['created_at'])
                 ];
             }
         }
@@ -94,39 +93,10 @@ class ThreadHelper
         return $likedUsersInfo;
     }
 
-    public static function getPostLikedAndFavor($userId, $threadIds, $postIds)
-    {
-        $postUsers = PostUser::query()->where('user_id', $userId)
-            ->whereIn('post_id', $postIds)
-            ->get()
-            ->pluck(null, 'post_id')->toArray();
-
-        $postUsers = self::appendDefaultEmpty($postIds, $postUsers, null);
-
-        //是否点赞
-        $postLike = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_LIKED);
-        if ($postLike) {
-            $postLike[$userId] = $postUsers;
-        } else {
-            $postLike = [$userId => $postUsers];
-        }
-
-        $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $userId)->get()
-            ->pluck(null, 'thread_id')->toArray();
-        $favorite = self::appendDefaultEmpty($threadIds, $favorite, null);
-        $postFavor = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_FAVOR);
-        if ($postFavor) {
-            $postFavor[$userId] = $favorite;
-        } else {
-            $postFavor = [$userId => $favorite];
-        }
-        return [$postLike, $postFavor];
-    }
-
     public static function getThreadSearchReplace($concatString)
     {
         $searchIds = Thread::instance()->getSearchString($concatString);
-        $sReplaces = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $searchIds, function ($searchIds) use ($concatString) {
+        $sReplaces = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $searchIds, function () use ($concatString) {
             return Thread::instance()->getReplaceStringV3($concatString);
         });
         $searches = array_keys($sReplaces);

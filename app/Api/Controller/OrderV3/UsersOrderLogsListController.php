@@ -27,7 +27,7 @@ class UsersOrderLogsListController extends DzqController
         $filter = (array)$this->inPut('filter');
 
         $query = Order::query();
-        $query->select('orders.id as orderId', 'orders.user_id', 'orders.payee_id', 'orders.thread_id','users.nickname', 'orders.order_sn', 'orders.type', 'orders.amount', 'orders.status', 'orders.created_at',);
+        $query->select('orders.id as orderId', 'orders.user_id', 'orders.payee_id', 'orders.thread_id','users.nickname', 'orders.order_sn', 'orders.type', 'orders.amount', 'orders.status', 'orders.created_at');
         $query->join('users', 'orders.user_id', '=', 'users.id');
         if (isset($filter['orderSn']) && !empty($filter['orderSn'])) {
             $query->where('orders.order_sn', $filter['orderSn']);

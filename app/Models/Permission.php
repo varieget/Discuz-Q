@@ -19,7 +19,7 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -117,6 +117,6 @@ class Permission extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::GROUP_PERMISSIONS);
+        DzqCache::delKey(CacheKey::GROUP_PERMISSIONS);
     }
 }

@@ -57,10 +57,10 @@ class SiteInfoV3Controller extends DzqController
         return $this->user->isAdmin();
     }
 
+
     public function main()
     {
         $decomposer = new Decomposer($this->app, $this->request);
-
         $port = $this->request->getUri()->getPort();
         $siteUrl = $this->request->getUri()->getScheme() . '://' . $this->request->getUri()->getHost().(in_array($port, [80, 443, null]) ? '' : ':'.$port);
 
@@ -72,6 +72,22 @@ class SiteInfoV3Controller extends DzqController
 
         // 站长分成
         $masterAmount = Order::query()->where('status', Order::ORDER_STATUS_PAID)->sum('master_amount');
+
+        // 待审核用户数
+        $unapprovedUsers = User::where('status', 2)->count();
+
+        // 待审核主题数
+        $unapprovedThreads = Thread::where('is_approved', Thread::UNAPPROVED)
+            ->where('is_draft', 0)->whereNull('deleted_at')->whereNotNull('user_id')->count();
+
+        // 待审核回复数
+        $unapprovedPosts = Post::where('is_approved', Post::UNAPPROVED)
+            ->whereNull('deleted_at')->whereNotNull('user_id')->where('is_first', false)->count();
+
+        // 待审核提申请现数
+        $unapprovedMoneys = UserWalletCash::where('cash_status', UserWalletCash::STATUS_REVIEW)->count();
+
+
         $data = [
             'url' => $siteUrl,
             'site_id' => Setting::getValue('site_id'),
@@ -94,27 +110,22 @@ class SiteInfoV3Controller extends DzqController
         } catch (Exception $e) {
             return $this->outPut(ResponseCode::NET_ERROR,$e);
         }
-        return $this->outPut(ResponseCode::SUCCESS,'',$this->littleHump($decomposer->getSiteinfo()));
+
+        $dec = $this->camelData($decomposer->getSiteinfo());
+
+        $data = [
+            'unapprovedUsers' => $unapprovedUsers,
+            'unapprovedThreads' => $unapprovedThreads,
+            'unapprovedPosts' => $unapprovedPosts,
+            'unapprovedMoneys' => $unapprovedMoneys,
+        ];
+
+        $build = [
+               'siteinfo'=>$dec,
+               'unapproved' =>$data
+         ];
+
+        return $this->outPut(ResponseCode::SUCCESS,'',$build);
     }
 
-    protected function littleHump($data){
-        $res = [];
-        $keys = array_keys($data);
-        foreach($keys as $val){
-            if(strpos($val,'_')){
-                $str = '';
-                foreach (explode('_',$val) as $k=>$v){
-                    if($k > 0){
-                        $str .= ucfirst($v);
-                    }else{
-                        $str .= $v;
-                    }
-                }
-                $res[$str] = $data[$val];
-            }else{
-                $res[$val] = $data[$val];
-            }
-        }
-        return $res;
-    }
 }

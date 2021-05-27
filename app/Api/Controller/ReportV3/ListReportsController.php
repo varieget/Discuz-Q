@@ -68,6 +68,7 @@ class ListReportsController extends DzqController
             $reportList['prePageUrl']=$reports['prePageUrl'];
             $reportList['pageLength']=$reports['pageLength'];
             $reportList['totalPage']=$reports['totalPage'];
+            $reportList['totalCount']=$reports['totalCount'];
         }
 
         $this->outPut(ResponseCode::SUCCESS, '', $reportList);
@@ -76,26 +77,26 @@ class ListReportsController extends DzqController
     private function filterReports($filter, $currentPage, $perPage)
     {
         $reports = Report::query();
-        if (isset($filter['userName'])) {
+        if (!empty($filter['username'])) {
             $this->dzqValidate($filter, [
-                'userName' => 'string|max:200'
+                'username' => 'string|max:200'
             ]);
-            $reports->whereIn('user_id', User::query()->where('username', 'like', "%{$filter['userName']}%")->pluck('id'));
+            $reports->whereIn('user_id', User::query()->where('username', 'like', "%{$filter['username']}%")->pluck('id'));
         }
-        if (isset($filter['status'])) {
+        if (isset($filter['status']) && strlen($filter['status']) > 0) {
             $this->dzqValidate($filter, [
                 'status' => 'integer|in:0,1'
             ]);
             $reports->where('status', $filter['status']);
         }
 
-        if (isset($filter['type'])) {
+        if (isset($filter['type']) && strlen($filter['type']) > 0) {
             $this->dzqValidate($filter, [
                 'type' => 'integer|in:0,1,2'
             ]);
             $reports->where('type', $filter['type']);
         }
-        if (isset($filter['startTime']) && isset($filter['endTime'])) {
+        if (!empty($filter['startTime']) && !empty($filter['endTime'])) {
             $filter['endTime'] =  date("Y-m-d",strtotime("+1 day",strtotime($filter['endTime'])));
             $reports->whereBetween('created_at', array($filter['startTime'], $filter['endTime']));
         }

@@ -552,4 +552,25 @@ class UserRepository extends AbstractRepository
             return $user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_PHONE);
         }
     }
+
+
+    /**
+     * 上传头像与删除权限
+     */
+
+    public function canCreateAvatar(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+    public function canDeleteAvatar(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+
+    public function canEeportUser(User $user)
+    {
+        return $user->isAdmin();
+    }
 }

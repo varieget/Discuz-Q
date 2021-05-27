@@ -259,7 +259,6 @@ class UpdateClientUser
     protected function changePassword(User $user, bool $canEdit, bool $isSelf, array $attributes, array &$validate)
     {
         $newPassword = Arr::get($attributes, 'newPassword');
-
         if (! $newPassword) {
             return $validate;
         }
@@ -269,12 +268,12 @@ class UpdateClientUser
             if ($user->password) {
                 // 验证原密码
                 if (! $user->checkPassword(Arr::get($attributes, 'password'))) {
-                    throw new TranslatorException('user_update_error', ['not_match_used_password']);
+                    throw new TranslatorException(trans('user.not_match_used_password'));
                 }
 
                 // 验证新密码与原密码不能相同
                 if ($user->checkPassword($newPassword)) {
-                    throw new TranslatorException('user_update_error', ['cannot_use_the_same_password']);
+                    throw new TranslatorException(trans('user.cannot_use_the_same_password'));
                 }
             }
 
@@ -308,7 +307,7 @@ class UpdateClientUser
         if ($user->pay_password) {
             // 验证新密码与原密码不能相同
             if ($user->checkWalletPayPassword($payPassword)) {
-                throw new TranslatorException('user_update_error', ['cannot_use_the_same_password']);
+                throw new TranslatorException(trans('user.cannot_use_the_same_password'));
             }
             $this->validator->setUser($user);
             $validate['pay_password_token'] = Arr::get($attributes, 'pay_password_token');
@@ -349,9 +348,8 @@ class UpdateClientUser
             // 过滤内容
             $signature = $this->specialChar->purify($signature);
         }
-
         if (Str::of($signature)->length() > 140) {
-            throw new TranslatorException('user_signature_limit_error');
+            throw new TranslatorException(trans('user.user_signature_limit_error'));
         }
 
         $user->changeSignature($signature);

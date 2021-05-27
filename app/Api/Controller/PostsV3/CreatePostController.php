@@ -21,8 +21,8 @@ use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\CreatePost;
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
+use App\Formatter\Formatter;
 use App\Models\Attachment;
 use App\Models\GroupUser;
 use App\Models\Post;
@@ -32,6 +32,7 @@ use App\Models\UserWalletLog;
 use App\Providers\PostServiceProvider;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -93,8 +94,9 @@ class CreatePostController extends DzqController
     public function clearCache($user)
     {
         $threadId = $this->inPut('id');
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
     }
 
     public function main()
@@ -116,9 +118,9 @@ class CreatePostController extends DzqController
         if (empty($threadId)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '主题id不能为空');
         }
-
-        $data['content'] = '<t><p>' . $data['content'] . '</p></t>';
-
+        if(!empty($data['content']))    $data['content'] = app()->make(Formatter::class)->parse($data['content']);
+        $content = $data['content'];
+        
         if (empty($data['content'])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
         }
@@ -161,6 +163,8 @@ class CreatePostController extends DzqController
         $build = $this->getPost($post, true);
 
         $data = $this->camelData($build);
+        // 返回content要解析后的，方便前端直接展示最新的数据
+        if(!empty($data['content']))    $data['content'] = app()->make(Formatter::class)->render($content);
 
         return $this->outPut(ResponseCode::SUCCESS, '', $data);
 
@@ -259,7 +263,7 @@ class CreatePostController extends DzqController
 
         return [
             'id' => $user['id'],
-            'userName' => $user['nickname'] ? $user['nickname'] : $user['username'],
+            'nickname' => $user['nickname'] ? $user['nickname'] : "",
             'groups' => $group,
             'avatar' => $user['avatar'],
             'likedCount' => $user['liked_count'],

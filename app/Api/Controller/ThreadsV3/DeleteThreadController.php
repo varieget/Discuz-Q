@@ -18,12 +18,14 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 
 class DeleteThreadController extends DzqController
@@ -51,5 +53,19 @@ class DeleteThreadController extends DzqController
         }
         Category::refreshThreadCountV3($thread['category_id']);
         $this->outPut(ResponseCode::DB_ERROR, '删除失败');
+    }
+
+    public function clearCache($user)
+    {
+        DzqCache::delKey(CacheKey::CATEGORIES);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        $threadId = $this->inPut('threadId');
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TAGS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
     }
 }

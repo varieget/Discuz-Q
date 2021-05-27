@@ -47,10 +47,11 @@ class ListPostsController extends DzqController
     {
         $filters = $this->inPut('filter') ?: [];
         $threadId = Arr::get($filters, 'thread');
-        // 没有帖子ID筛选的情况下，只有管理员才能查看
+        // 只有管理员能查看所有回复，暂时兼容管理后台
         if (!$threadId && !$this->user->isAdmin()) {
             return false;
         }
+
         $thread = Thread::query()
             ->where(['id' => $threadId])
             ->whereNull('deleted_at')
@@ -76,6 +77,7 @@ class ListPostsController extends DzqController
         $sort = $this->inPut('sort');
 
         $posts = $this->search($filters, $perPage, $page, $sort);
+
         $posts['pageData'] = $posts['pageData']->map(function ($post) {
             return $this->getPost($post, true);
         })->sortByDesc('rewards')->values()->toArray();
@@ -104,6 +106,7 @@ class ListPostsController extends DzqController
 
     protected function applyFilters(Builder $query, array $filters, $sort)
     {
+
         $query->where('posts.is_first', false)
             ->whereNull('posts.deleted_at')
             ->where('posts.is_comment', false)
@@ -176,8 +179,9 @@ class ListPostsController extends DzqController
 
     protected function getPost(Post $post, bool $getRedPacketAmount)
     {
-        /** @var UserRepository $userRepo */
+
         $userRepo = app(UserRepository::class);
+
         $data = [
             'id' => $post['id'],
             'userId' => $post['user_id'],
@@ -186,7 +190,7 @@ class ListPostsController extends DzqController
             'replyUserId' => $post['reply_user_id'],
             'commentPostId' => $post['comment_post_id'],
             'commentUserId' => $post['comment_user_id'],
-//            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
+            //            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
             'content'  =>   app()->make(Formatter::class)->render($post['content']),
             'replyCount' => $post['reply_count'],
             'likeCount' => $post['like_count'],
@@ -199,7 +203,7 @@ class ListPostsController extends DzqController
             'canApprove' => $this->user->isAdmin(),
             'canDelete' => $this->user->isAdmin(),
             'canHide' => $userRepo->canHidePost($this->user, $post),
-            'canEdit' => false, // 不能编辑回复
+            'canEdit' => false,
             'canLike' => $userRepo->canLikePosts($this->user),
             'user' => $this->getUser($post->user),
             'images' => $post->images->map(function (Attachment $image) {
@@ -249,11 +253,8 @@ class ListPostsController extends DzqController
         }
 
         $userData = $user->toArray();
-        $userData['username'] = $userData['nickname'] ? $userData['nickname'] : $userData['username'];
-
         $data = array_merge($userData, [
-            'isReal'   => !empty($user->realname),
-            'userName' => !empty($user->nickname) ? $user->nickname: $user->username,
+            'isReal'   => !empty($user->realname)
         ]);
         if ($user->relationLoaded('groups')) {
             $data['groups'] = $user->groups->map(function (Group $i) {
