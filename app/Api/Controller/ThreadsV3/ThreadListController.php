@@ -54,7 +54,6 @@ class ThreadListController extends DzqController
         return true;
     }
 
-    private $filter = null;
 
     public function main()
     {
@@ -63,7 +62,6 @@ class ThreadListController extends DzqController
         $perPage = $this->inPut('perPage');
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
-        $this->filter = $filter;
         $page <= 0 && $page = 1;
 //        $this->openQueryLog();
         if (empty($sequence)) {
@@ -75,6 +73,7 @@ class ThreadListController extends DzqController
         //缓存中获取最新的threads
         $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
         $threads['pageData'] = $this->getFullThreadData($pageData);
+//        $this->info('query_log_main',$this->connection->getQueryLog());
 //        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
     }
