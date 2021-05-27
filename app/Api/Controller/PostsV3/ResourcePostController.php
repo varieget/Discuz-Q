@@ -38,7 +38,7 @@ class ResourcePostController extends DzqController
         'user:id,username,avatar',
         'user.groups:id,name,is_display',
         'likedUsers:id,username,avatar',
-        'imagesAnswer'
+        'images'
     ];
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -83,8 +83,8 @@ class ResourcePostController extends DzqController
         $data['canLike'] = true;
         $data['images'] = [];
         $data['likeUsers'] = $comment_post->likedUsers;
-        if(!empty($comment_post->imagesAnswer)){
-            foreach ($comment_post->imagesAnswer as $key => $val){
+        if(!empty($comment_post->images)){
+            foreach ($comment_post->images as $key => $val){
                 $data['images'][$key] = $attachment_serialize->getDefaultAttributes($val, $this->user);
                 $data['images'][$key]['typeId'] = $data['images'][$key]['type_id'];
                 unset($data['images'][$key]['type_id']);
