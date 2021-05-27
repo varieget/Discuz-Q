@@ -19,26 +19,43 @@ namespace App\Api\Controller\SignInFieldsV3;
 
 use App\Common\ResponseCode;
 use App\Models\AdminSignInFields;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Base\DzqController;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
-class ListAdminSignInController extends DzqController
+class CreateAdminSignInController extends DzqController
 {
-
-    use AssertPermissionTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('您没有获取注册扩展列表权限');
+            throw new PermissionDeniedException('没有权限');
         }
         return true;
     }
 
     public function main()
     {
-        $this->outPut(ResponseCode::SUCCESS,'',$this->camelData(AdminSignInFields::instance()->getAdminSignInFields()));
+        $dataArr = $this->request->getParsedBody()->get('data');
+
+        $retureArr = [];
+        foreach ($dataArr as $attribute) {
+            if (!empty($attribute['id'])) {
+                $adminSignIn = AdminSignInFields::query()->where('id', $attribute['id'])->first();
+                if (empty($adminSignIn)) {
+                    continue;
+                }
+            }else{
+                $adminSignIn = new AdminSignInFields();
+            }
+            foreach ($attribute as $key => $value) {
+                in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status','required']) && $adminSignIn[$key] = $value;
+            }
+            $adminSignIn->save() && $retureArr[] = $adminSignIn;
+        }
+
+        $this->outPut(ResponseCode::SUCCESS,'',$this->camelData($retureArr));
     }
+
 }
