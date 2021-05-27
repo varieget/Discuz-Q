@@ -145,7 +145,7 @@ class ListPostsController extends DzqController
                 'thread:id,type',
                 'user:id,username,avatar,realname',
                 'commentUser:id,username,avatar,realname',
-                'replyUser:id,username,avatar,realname',
+                'replyUser:id,nickname,avatar,realname',
                 'images',
             ])
             ->from('posts', 'a')
