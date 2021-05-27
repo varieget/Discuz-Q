@@ -122,6 +122,8 @@ class ProfileController extends DzqController
 
         //用户是否绑定微信
         $data['isBindWechat'] = !empty($user->wechat);
+        $data['wxNickname'] = !empty($user->wechat) ? $user->wechat->nickname : '';
+        $data['wxHeadImgUrl'] = !empty($user->wechat) ? $user->wechat->headimgurl : '';
 
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
 
