@@ -160,6 +160,8 @@ trait HasPaidContent
                 $words = ceil($content->length() * $post->thread->free_words);
             }
             $post->content = $content->substr(0, $words)->finish(Post::SUMMARY_END_WITH);
+            //替换最后一个  ![u%3D2496571732%2C442429806%26fm%3D26%26gp%3D0.png](https://discuzq-img-1258344699.cos.ap-guangzhou.myqcloud.com/public/attachments/2021/05/27/Q3UqtLIfRTGBHjenrnVXbtZB7...
+            $post->content = preg_replace('/\!\[u[^\]]*]\(http[^"]*\.\.\./s', '', $post->content);
         }
     }
 
@@ -180,7 +182,7 @@ trait HasPaidContent
                 $parts[0] = md5($parts[0]);
 
                 $attachment->attachment = implode('_blur.', $parts);
-            }                
+            }
             return;
         }
 
