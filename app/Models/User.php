@@ -20,6 +20,7 @@ namespace App\Models;
 
 use App\Common\AuthUtils;
 use App\Common\CacheKey;
+use App\Common\Utils;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -850,6 +851,7 @@ class User extends DzqModel
      */
     public function can($ability, $arguments = [])
     {
+        Utils::logOldPermissionPosition(__METHOD__);
         return static::$gate->forUser($this)->allows($ability, $arguments);
     }
 
