@@ -68,6 +68,7 @@ class ListReportsController extends DzqController
             $reportList['prePageUrl']=$reports['prePageUrl'];
             $reportList['pageLength']=$reports['pageLength'];
             $reportList['totalPage']=$reports['totalPage'];
+            $reportList['totalCount']=$reports['totalCount'];
         }
 
         $this->outPut(ResponseCode::SUCCESS, '', $reportList);

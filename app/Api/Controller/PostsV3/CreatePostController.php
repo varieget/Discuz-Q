@@ -263,7 +263,7 @@ class CreatePostController extends DzqController
 
         return [
             'id' => $user['id'],
-            'username' => $user['username'] ? $user['username'] : "",
+            'nickname' => $user['nickname'] ? $user['nickname'] : "",
             'groups' => $group,
             'avatar' => $user['avatar'],
             'likedCount' => $user['liked_count'],
