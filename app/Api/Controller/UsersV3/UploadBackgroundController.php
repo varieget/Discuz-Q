@@ -20,13 +20,14 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\UploadBackground;
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Discuz\Base\DzqCache;
+
 
 class UploadBackgroundController extends DzqController
 {
@@ -50,7 +51,7 @@ class UploadBackgroundController extends DzqController
 
     public function clearCache($user)
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USERS, $user->id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $user->id);
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)

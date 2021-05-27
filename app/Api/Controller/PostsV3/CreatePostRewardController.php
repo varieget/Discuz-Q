@@ -18,7 +18,6 @@
 namespace App\Api\Controller\PostsV3;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Order;
 use App\Models\OrderChildren;
@@ -32,6 +31,8 @@ use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
 use Illuminate\Database\ConnectionInterface;
+use Discuz\Base\DzqCache;
+
 
 class CreatePostRewardController extends DzqController
 {
@@ -44,7 +45,7 @@ class CreatePostRewardController extends DzqController
     public function clearCache($user)
     {
         $threadId = $this->inPut('threadId');
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
     }
 
 
