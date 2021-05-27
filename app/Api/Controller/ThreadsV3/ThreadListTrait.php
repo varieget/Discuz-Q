@@ -18,6 +18,8 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
+use App\Models\Category;
+use App\Models\Permission;
 use App\Models\PostUser;
 use App\Models\ThreadUser;
 use Discuz\Base\DzqCache;
@@ -54,7 +56,7 @@ trait ThreadListTrait
         $tags = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
             return ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
         }, 'thread_id', true);
-
+        $this->setGlobalCache();
         $inPutToms = $this->buildIPutToms($toms);
         $result = [];
         $concatString = '';
@@ -76,6 +78,21 @@ trait ThreadListTrait
             $item['content']['text'] = str_replace($searches, $replaces, $item['content']['text']);
         }
         return $result;
+    }
+
+    private function setGlobalCache()
+    {
+        $cache = [
+            CacheKey::LIST_THREADS_V3_POST_USERS => DzqCache::get(CacheKey::LIST_THREADS_V3_POST_USERS),
+            CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS => DzqCache::get(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS),
+            CacheKey::LIST_THREADS_V3_ATTACHMENT => DzqCache::get(CacheKey::LIST_THREADS_V3_ATTACHMENT),
+            CacheKey::LIST_THREADS_V3_THREADS => DzqCache::get(CacheKey::LIST_THREADS_V3_THREADS),
+            CacheKey::LIST_THREADS_V3_VIDEO => DzqCache::get(CacheKey::LIST_THREADS_V3_VIDEO),
+            CacheKey::LIST_THREADS_V3_POST_FAVOR => DzqCache::get(CacheKey::LIST_THREADS_V3_POST_FAVOR),
+            CacheKey::LIST_THREADS_V3_POST_LIKED => DzqCache::get(CacheKey::LIST_THREADS_V3_POST_LIKED),
+            CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS => DzqCache::get(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS)
+        ];
+        app()->instance(CacheKey::APP_CACHE, $cache);
     }
 
     private function getGroupUserInfo($userIds)

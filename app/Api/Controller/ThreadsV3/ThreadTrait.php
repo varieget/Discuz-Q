@@ -100,7 +100,8 @@ trait ThreadTrait
         return $result;
     }
 
-    public function userVerify($user){
+    public function userVerify($user)
+    {
         $settingRepo = app(SettingsRepository::class);
         $mobileCodeRepo = app(MobileCodeRepository::class);
         if ((bool)$settingRepo->get('qcloud_sms')) {
@@ -110,7 +111,7 @@ trait ThreadTrait
             }
             //校验手机号和验证码
             $type = "thread_verify";
-            $ip                 = ip($this->request->getServerParams());
+            $ip = ip($this->request->getServerParams());
             $mobileCode = $mobileCodeRepo->getSmsCode($realMobile, $type);
             if (!is_null($mobileCode) && $mobileCode->exists) {
                 $mobileCode = $mobileCode->refrecode(MobileCode::CODE_EXCEPTION, $ip);
@@ -118,21 +119,21 @@ trait ThreadTrait
                 $mobileCode = MobileCode::make($realMobile, MobileCode::CODE_EXCEPTION, $type, $ip);
             }
             $result = $this->smsSend($realMobile, new SendCodeMessage([
-                    'code'      => $mobileCode->code,
-                    'expire'    => MobileCode::CODE_EXCEPTION]
+                    'code' => $mobileCode->code,
+                    'expire' => MobileCode::CODE_EXCEPTION]
             ));
             if (!(isset($result['qcloud']['status']) && $result['qcloud']['status'] === 'success')) {
                 $this->outPut(ResponseCode::SMS_CODE_ERROR);
             }
             $mobileCode->save();
         }
-        if((bool)$settingRepo->get('qcloud_faceid')){
+        if ((bool)$settingRepo->get('qcloud_faceid')) {
             $realName = $user->getRawOriginal('realname');
             $identity = $user->getRawOriginal('identity');
-            if(empty($realName)){
+            if (empty($realName)) {
                 $this->outPut(ResponseCode::REALNAME_NOT_NULL);
             }
-            if(empty($identity)){
+            if (empty($identity)) {
                 $this->outPut(ResponseCode::IDENTITY_NOT_NULL);
             }
             //检验身份证号码和姓名是否真实
@@ -370,7 +371,7 @@ trait ThreadTrait
     private function getUserInfoField($loginUser, $user, $thread)
     {
         $userResult = [
-            'nickname'=>'匿名用户'
+            'nickname' => '匿名用户'
         ];
         //非匿名用户
         if ((!$thread['is_anonymous'] && !empty($user)) || $loginUser->id == $thread['user_id']) {
