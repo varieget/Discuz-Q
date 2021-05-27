@@ -17,6 +17,7 @@
 
 namespace App\Api\Controller\PostsV3;
 
+use App\Api\Controller\ThreadsV3\ThreadHelper;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\CreatePost;
@@ -118,9 +119,17 @@ class CreatePostController extends DzqController
         if (empty($threadId)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '主题id不能为空');
         }
+
+        //针对创建评论，前端不传标签的情况，转化 \n 为  <p></p>  实现换行
+        if(strpos($data['content'], "\n") !== false){
+            $data['content'] = preg_replace('/(.*)(\\n)/U', "<p>$1</p>", $data['content']);
+        }
+        $data['content'] = '<t><p>'.$data['content'].'</p></t>';
+        $content = $data['content'];
+
         if(!empty($data['content']))    $data['content'] = app()->make(Formatter::class)->parse($data['content']);
         $content = $data['content'];
-        
+
         if (empty($data['content'])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
         }
@@ -164,7 +173,9 @@ class CreatePostController extends DzqController
 
         $data = $this->camelData($build);
         // 返回content要解析后的，方便前端直接展示最新的数据
-        if(!empty($data['content']))    $data['content'] = app()->make(Formatter::class)->render($content);
+        $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content);
+        list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
+        $data['content'] = str_replace($searches, $replaces, $content);
 
         return $this->outPut(ResponseCode::SUCCESS, '', $data);
 
