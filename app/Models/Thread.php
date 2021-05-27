@@ -19,27 +19,22 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\Utils;
 use App\Events\Thread\Hidden;
 use App\Events\Thread\Restored;
-use App\Models\ThreadReward;
 use Carbon\Carbon;
 use DateTime;
 use Discuz\Auth\Anonymous;
 use Discuz\Base\DzqModel;
-use Discuz\Common\PubEnum;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
 use Discuz\SpecialChar\SpecialCharServer;
-use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
 
@@ -112,6 +107,8 @@ class Thread extends DzqModel
     const TYPE_OF_QUESTION = 5;
 
     const TYPE_OF_GOODS = 6;
+
+    const TYPE_OF_ALL = 99;
 
     const UNAPPROVED = 0;
 
@@ -818,7 +815,7 @@ class Thread extends DzqModel
         $m1 = array_unique($m1[0]);
         $m2 = array_unique($m2[0]);
         $m3 = array_unique($m3[0]);
-        $m2 = str_replace(['@', ''], '', $m2);
+        $m2 = str_replace(['@', ' '], '', $m2);
         $m3 = str_replace('#', '', $m3);
         $search = [];
         $replace = [];
@@ -827,10 +824,11 @@ class Thread extends DzqModel
         foreach ($emojisList as $emoji) {
             if (in_array($emoji['code'], $m1)) {
                 $url = Utils::getDzqDomain() . '/' . $emoji['url'];
+                $alt = str_replace(':', '', $emoji['code']);
                 $emojis[] = [
                     'code' => $emoji['code'],
                     'url' => $url,
-                    'html' => sprintf('<img style="display:inline-block;vertical-align:top" src="%s" alt="ciya" class="qq-emotion">', $url)
+                    'html' => sprintf('<img style="display:inline-block;vertical-align:top" src="%s" alt="%s" class="qq-emotion">', $url, $alt)
                 ];
             }
         }
@@ -856,6 +854,26 @@ class Thread extends DzqModel
             $search[] = $topic['content'];
             $replace[] = $topic['html'];
         }
+        foreach ($m1 as $item) {
+            if (!in_array($item, $search)) {
+                $search[] = $item;
+                $replace[] = $item;
+            }
+        }
+        foreach ($m2 as $item) {
+            $item = '@' . $item;
+            if (!in_array($item, $search)) {
+                $search[] = $item;
+                $replace[] = $item;
+            }
+        }
+        foreach ($m3 as $item) {
+            $item = '#' . $item . '#';
+            if (!in_array($item, $search)) {
+                $search[] = $item;
+                $replace[] = $item;
+            }
+        }
         return [$search, $replace];
     }
 
@@ -876,7 +894,7 @@ class Thread extends DzqModel
         list($searches, $replaces) = $this->getReplaceString($linkString);
         $sReplaces = [];
         foreach ($searches as $k => $v) {
-            $sReplaces[$v] = $replaces[$k] ?? $sReplaces[$v];
+            $sReplaces[$v] = $replaces[$k] ?? $searches[$k];
         }
         return $sReplaces;
     }
@@ -905,17 +923,5 @@ class Thread extends DzqModel
             ->first();
         $toArray && $ret = $ret->toArray();
         return $ret;
-    }
-
-
-    protected function clearCache()
-    {
-        $threadId = $this->id;
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_TAGS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_1);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_0);
     }
 }

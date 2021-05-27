@@ -17,13 +17,21 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 
 class ThreadShareController extends DzqController
 {
+    public function clearCache($user)
+    {
+        $threadId = $this->inPut('threadId');
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS,$threadId);
+    }
+
     public function checkRequestPermissions(UserRepository $userRepo)
     {
         return true;
@@ -36,12 +44,7 @@ class ThreadShareController extends DzqController
         if (empty($thread)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        $this->updateThreadShare($thread);
-        $this->outPut(ResponseCode::SUCCESS, '');
-    }
-
-    private function updateThreadShare($thread)
-    {
         $thread->increment('share_count');
+        $this->outPut(ResponseCode::SUCCESS, '');
     }
 }

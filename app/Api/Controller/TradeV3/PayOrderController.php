@@ -20,11 +20,11 @@ namespace App\Api\Controller\TradeV3;
 
 use App\Commands\Trade\PayOrder;
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Order;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
@@ -45,8 +45,8 @@ class PayOrderController extends DzqController
 
     public function clearCache($user)
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USER_ORDERS, $user->id);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $user->id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $user->id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $user->id);
     }
 
     /**

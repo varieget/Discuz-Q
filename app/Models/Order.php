@@ -19,13 +19,12 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use Carbon\Carbon;
 use Closure;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Database\ScopeVisibilityTrait;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -362,7 +361,9 @@ class Order extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_POST_USERS, $this->thread_id);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_USER_ORDERS, $this->user_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_USERS, $this->thread_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $this->user_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $this->user_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $this->thread_id);
     }
 }

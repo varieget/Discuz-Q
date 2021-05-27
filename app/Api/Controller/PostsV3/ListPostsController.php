@@ -19,6 +19,7 @@ use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Symfony\Component\Translation\Exception\NotFoundResourceException;
 
 class ListPostsController extends DzqController
 {
@@ -50,16 +51,13 @@ class ListPostsController extends DzqController
         if (!$threadId && !$this->user->isAdmin()) {
             return false;
         }
+
         $thread = Thread::query()
-            ->where([
-                'id' => $threadId,
-                'is_approved' => Thread::BOOL_YES,
-                'is_draft' => Thread::BOOL_NO,
-            ])
+            ->where(['id' => $threadId])
             ->whereNull('deleted_at')
             ->first();
         if (!$thread) {
-            return false;
+            throw new NotFoundResourceException();
         }
 
         return $userRepo->canViewThreadDetail($this->user, $thread);
@@ -79,6 +77,7 @@ class ListPostsController extends DzqController
         $sort = $this->inPut('sort');
 
         $posts = $this->search($filters, $perPage, $page, $sort);
+
         $posts['pageData'] = $posts['pageData']->map(function ($post) {
             return $this->getPost($post, true);
         })->sortByDesc('rewards')->values()->toArray();
@@ -107,6 +106,7 @@ class ListPostsController extends DzqController
 
     protected function applyFilters(Builder $query, array $filters, $sort)
     {
+
         $query->where('posts.is_first', false)
             ->whereNull('posts.deleted_at')
             ->where('posts.is_comment', false)
@@ -180,6 +180,8 @@ class ListPostsController extends DzqController
     protected function getPost(Post $post, bool $getRedPacketAmount)
     {
 
+        $userRepo = app(UserRepository::class);
+
         $data = [
             'id' => $post['id'],
             'userId' => $post['user_id'],
@@ -198,16 +200,16 @@ class ListPostsController extends DzqController
             'isComment' => $post['is_comment'],
             'isApproved' => $post['is_approved'],
             'rewards' => floatval(sprintf('%.2f', $post->getPostReward(UserWalletLog::TYPE_INCOME_THREAD_REWARD))),
-            'canApprove' => $this->gate->allows('approve', $post),
-            'canDelete' => $this->gate->allows('delete', $post),
-            'canHide' => $this->gate->allows('hide', $post),
-            'canEdit' => $this->gate->allows('edit', $post),
+            'canApprove' => $this->user->isAdmin(),
+            'canDelete' => $this->user->isAdmin(),
+            'canHide' => $userRepo->canHidePost($this->user, $post),
+            'canEdit' => false,
+            'canLike' => $userRepo->canLikePosts($this->user),
             'user' => $this->getUser($post->user),
             'images' => $post->images->map(function (Attachment $image) {
                 return $this->attachmentSerializer->getDefaultAttributes($image);
             }),
             'likeState' => $post->likeState,
-            'canLike' => $this->user->can('like', $post),
             'summaryText' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post->summary_text),
         ];
 
@@ -251,11 +253,8 @@ class ListPostsController extends DzqController
         }
 
         $userData = $user->toArray();
-        $userData['username'] = $userData['nickname'] ? $userData['nickname'] : $userData['username'];
-
         $data = array_merge($userData, [
-            'isReal'   => !empty($user->realname),
-            'userName' => !empty($user->nickname) ? $user->nickname: $user->username,
+            'isReal'   => !empty($user->realname)
         ]);
         if ($user->relationLoaded('groups')) {
             $data['groups'] = $user->groups->map(function (Group $i) {

@@ -39,6 +39,6 @@ class ListAdminSignInController extends DzqController
 
     public function main()
     {
-        $this->outPut(ResponseCode::SUCCESS,'',AdminSignInFields::instance()->getAdminSignInFields());
+        $this->outPut(ResponseCode::SUCCESS,'',$this->camelData(AdminSignInFields::instance()->getAdminSignInFields()));
     }
 }

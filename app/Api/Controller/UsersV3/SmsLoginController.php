@@ -60,10 +60,11 @@ class SmsLoginController extends AuthBaseController
                 $this->outPut(ResponseCode::REGISTER_CLOSE);
             }
 
-            $data['register_ip']    = $ip;
-            $data['register_port']  = $port;
-            $data['mobile']         = $mobileCode->mobile;
-            $data['code']           = $inviteCode;
+            $data['register_ip']        = $ip;
+            $data['register_port']      = $port;
+            $data['mobile']             = $mobileCode->mobile;
+            $data['code']               = $inviteCode;
+            $data['register_reason']    = trans('user.register_by_sms');
             $user = $this->bus->dispatch(
                 new RegisterPhoneUser($this->user, $data)
             );
@@ -109,19 +110,20 @@ class SmsLoginController extends AuthBaseController
                                             $accessToken ,
                                             $mobileCode->user->id
             );
-            //返回昵称，用于前端绑定微信时展示
-            $nickname = !empty($mobileCode->user->nickname) ? $mobileCode->user->nickname : $mobileCode->user->mobile;
 
-            $data = array_merge($this->camelData($accessToken),[
-                'sessionToken'  => $token->token,
-                'nickname'      => $nickname
-            ]);
             $token->save();
             if($wechat || $miniWechat) { //开了微信，
                 //未绑定微信
                 $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($mobileCode->user->bind_type);
                 if(!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
-                    $data['uid'] = !empty($mobileCode->user->id) ? $mobileCode->user->id : 0;
+                    //返回昵称，用于前端绑定微信时展示
+                    $nickname = !empty($mobileCode->user->nickname) ? $mobileCode->user->nickname : $mobileCode->user->mobile;
+                    $data = [
+                        'sessionToken'  => $token->token,
+                        'nickname'      => $nickname,
+                        'uid'           => !empty($mobileCode->user->id) ? $mobileCode->user->id : 0
+                    ];
+
                     return $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', $data);
                 }
             }

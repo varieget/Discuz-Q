@@ -19,7 +19,7 @@ namespace App\Models;
 
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 
 class GroupUser extends DzqModel
@@ -40,6 +40,6 @@ class GroupUser extends DzqModel
     }
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_GROUP_USER,$this->user_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_GROUP_USER,$this->user_id);
     }
 }

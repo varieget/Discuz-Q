@@ -103,10 +103,6 @@ class UploadAvatar
     {
         $user = $this->users->findOrFail($this->userId);
 
-        if ($this->actor->id !== $user->id) {
-            $this->assertCan($this->actor, 'edit', $user);
-        }
-
         $ext = pathinfo($this->avatar->getClientFilename(), PATHINFO_EXTENSION);
         $ext = $ext ? ".$ext" : '';
 

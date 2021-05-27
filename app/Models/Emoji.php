@@ -19,10 +19,8 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
-use App\Common\ResponseCode;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
-use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property string $category
@@ -50,6 +48,6 @@ class Emoji extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_EMOJI);
+        DzqCache::delKey(CacheKey::LIST_EMOJI);
     }
 }

@@ -95,11 +95,21 @@ class WechatH5BindController extends AuthBaseController
             $wechatUser->setRelation('user', $actor);
             $wechatUser->save();
             $this->updateUserBindType($actor,AuthUtils::WECHAT);
+            if (empty($actor->nickname)) {
+                $actor->nickname = $wechatUser->nickname;
+                $actor->save();
+            }
             $this->db->commit();
 
             // PC扫码使用
             if (!empty($sessionToken) && $type == 'pc') {
-                $this->bound->bindVoid($sessionToken, $wechatUser);
+                $accessToken = $this->getAccessToken($wechatUser->user);
+                $wechatUser = [
+                    'nickname'      =>  $wechatUser['nickname'],
+                    'headimgurl'    =>  $wechatUser['headimgurl']
+                ];
+                $this->bound->bindVoid($sessionToken, $wechatUser, $accessToken);
+
             }
 
             //用于用户名登录绑定微信使用
@@ -108,19 +118,9 @@ class WechatH5BindController extends AuthBaseController
                     $this->outPut(ResponseCode::USERNAME_NOT_NULL);
                 }
                 //token生成
-                $params = [
-                    'username' => $actor->username,
-                    'password' => ''
-                ];
-                GenJwtToken::setUid($actor->id);
-                $response = $this->bus->dispatch(
-                    new GenJwtToken($params)
-                );
-
-                $accessToken = json_decode($response->getBody(), true);
+                $accessToken = $this->getAccessToken($actor);
                 $result = $this->camelData(collect($accessToken));
                 $result = $this->addUserInfo($actor, $result);
-
                 $this->outPut(ResponseCode::SUCCESS, '', $result);
             }
 

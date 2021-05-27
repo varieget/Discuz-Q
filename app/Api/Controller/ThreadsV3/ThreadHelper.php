@@ -19,12 +19,11 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Models\Order;
 use App\Models\PostUser;
 use App\Models\Thread;
-use App\Models\ThreadUser;
 use App\Models\User;
+use Discuz\Base\DzqCache;
 
 class ThreadHelper
 {
@@ -50,32 +49,23 @@ class ThreadHelper
             ->orderByDesc('a.post_id')
             ->get()->each(function (&$item) use ($postIdThreadId) {
                 $item['thread_id'] = $postIdThreadId[$item['post_id']] ?? null;
+                $item['type'] = 1;
             })->toArray();
 
         $v2 = Order::query()
-            ->select(['a.thread_id', 'a.user_id', 'a.created_at', 'a.type', 'th.price'])
+            ->select(['a.thread_id', 'a.user_id', 'a.created_at'])
             ->from('orders as a')
-            ->whereIn('a.type', [Order::ORDER_TYPE_REWARD, Order::ORDER_TYPE_THREAD])
-            ->whereIn('a.thread_id', $threadIds)
-            ->where('a.status', Order::ORDER_STATUS_PAID)
+            ->whereIn('thread_id', $threadIds)
+            ->whereIn('a.type', [Order::ORDER_TYPE_REWARD, Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
+            ->where('status', Order::ORDER_STATUS_PAID)
             ->where(function ($query) {
                 $query->selectRaw('count(0)')
                     ->from('orders as b')
                     ->where('b.thread_id', 'a.thread_id')
                     ->where('b.created_at', '>', 'a.created_at');
             }, '<', 2)
-            ->leftJoin('threads as th','th.id','=','a.thread_id')
             ->orderByDesc('a.thread_id')
             ->get()->toArray();
-
-        foreach ($v2 as $k=>$v) {
-            if ($v2[$k]['price'] > 0 && $v2[$k]['type'] != Order::ORDER_TYPE_THREAD) {
-                unset($v2[$k]);
-            }
-            if ($v2[$k]['price'] == 0 && $v2[$k]['type'] != Order::ORDER_TYPE_REWARD) {
-                unset($v2[$k]);
-            }
-        }
 
         $userIds = array_unique(array_merge(array_column($v1, 'user_id'), array_column($v2, 'user_id')));
 
@@ -93,7 +83,9 @@ class ThreadHelper
                 $likedUsersInfo[$item['thread_id']][] = [
                     'userId' => $item['user_id'],
                     'avatar' => $user->avatar,
-                    'userName' => !empty($user->nickname) ? $user->nickname : $user->username
+                    'nickname' => !empty($user->nickname) ? $user->nickname : $user->username,
+                    'type' => !empty($item['type']) ? 1 : 2,
+                    'createdAt' => strtotime($item['created_at'])
                 ];
             }
         }
@@ -101,39 +93,10 @@ class ThreadHelper
         return $likedUsersInfo;
     }
 
-    public static function getPostLikedAndFavor($userId, $threadIds, $postIds)
-    {
-        $postUsers = PostUser::query()->where('user_id', $userId)
-            ->whereIn('post_id', $postIds)
-            ->get()
-            ->pluck(null, 'post_id')->toArray();
-
-        $postUsers = self::appendDefaultEmpty($postIds, $postUsers, null);
-
-        //是否点赞
-        $postLike = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_LIKED);
-        if ($postLike) {
-            $postLike[$userId] = $postUsers;
-        } else {
-            $postLike = [$userId => $postUsers];
-        }
-
-        $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $userId)->get()
-            ->pluck(null, 'thread_id')->toArray();
-        $favorite = self::appendDefaultEmpty($threadIds, $favorite, null);
-        $postFavor = app('cache')->get(CacheKey::LIST_THREADS_V3_POST_FAVOR);
-        if ($postFavor) {
-            $postFavor[$userId] = $favorite;
-        } else {
-            $postFavor = [$userId => $favorite];
-        }
-        return [$postLike, $postFavor];
-    }
-
     public static function getThreadSearchReplace($concatString)
     {
         $searchIds = Thread::instance()->getSearchString($concatString);
-        $sReplaces = DzqCache::extractCacheArrayData(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $searchIds, function ($searchIds) use ($concatString) {
+        $sReplaces = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $searchIds, function () use ($concatString) {
             return Thread::instance()->getReplaceStringV3($concatString);
         });
         $searches = array_keys($sReplaces);

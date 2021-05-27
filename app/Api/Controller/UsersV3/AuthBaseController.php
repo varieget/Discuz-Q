@@ -26,8 +26,10 @@ use App\Models\UserWechat;
 use App\Repositories\MobileCodeRepository;
 use Discuz\Base\DzqController;
 use Discuz\Socialite\Exception\SocialiteException;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\App;
 
 abstract class AuthBaseController extends DzqController
 {
@@ -157,22 +159,36 @@ abstract class AuthBaseController extends DzqController
     }
 
     public function updateUserBindType($user,$bindType){
+        if (!is_object($user)) {
+            $this->outPut(ResponseCode::PARAM_IS_NOT_OBJECT);
+        }
+
         if (!in_array($bindType,AuthUtils::getLoginTypeArr())) {
             $this->outPut(ResponseCode::BIND_TYPE_IS_NULL);
         }
-        $userBindType = empty($user->bind_type) ? 0 :$user->bind_type;
-        $existBindType = AuthUtils::getBindTypeArrByCombinationBindType($userBindType);
+
+        $data = [
+            'bindResult'    => false,
+            'msg'           => '',
+            'userInfo'      => $user
+        ];
+
+        $userBindType   = empty($user->bind_type) ? 0 :$user->bind_type;
+        $existBindType  = AuthUtils::getBindTypeArrByCombinationBindType($userBindType);
 
         if (!in_array($bindType, $existBindType)) {
             array_push($existBindType, $bindType);
-            $newBindType  = AuthUtils::getBindType($existBindType);
-            if (is_object($user)) {
-                $user->bind_type = $newBindType;
-                $user->save();
-            } else {
-                $this->outPut(ResponseCode::PARAM_IS_NOT_OBJECT);
-            }
+            $newBindType        = AuthUtils::getBindType($existBindType);
+            $user->bind_type    = $newBindType;
+            $user->save();
+
+            $data['bindResult'] = true;
+            $data['msg']        = '用户绑定该类型：'.$bindType.' 成功';
+            $data['userInfo']   = $user;
+        } else {
+            $data['msg']        = '用户已存在该绑定类型：'.$bindType;
         }
+        return $data;
     }
 
     public function addUserInfo($user, $result) {
@@ -252,6 +268,22 @@ abstract class AuthBaseController extends DzqController
             $cookies = $this->request->getCookieParams();
             return !empty($cookies[$name]) ? $cookies[$name] : '';
         }
+    }
+
+    public function getAccessToken($user){
+        $bus = app(Dispatcher::class);
+        if (empty($user) || empty($user->username)) {
+            $this->outPut(ResponseCode::WECHAT_INVALID_ARGUMENT_EXCEPTION);
+        }
+        $params = [
+            'username' => $user->username,
+            'password' => ''
+        ];
+        GenJwtToken::setUid($user->id);
+        $response = $bus->dispatch(
+            new GenJwtToken($params)
+        );
+        return json_decode($response->getBody(),true);
     }
 
 }

@@ -17,17 +17,18 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
 use App\Common\CacheKey;
-use App\Common\DzqCache;
 use App\Common\ResponseCode;
+use App\Models\Category;
 use App\Models\Group;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
+use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 
 class UpdateThreadController extends DzqController
@@ -35,13 +36,6 @@ class UpdateThreadController extends DzqController
     use ThreadTrait;
 
     private $thread;
-
-    public function clearCache($user)
-    {
-        $threadId = $this->inPut('threadId');
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
-        DzqCache::removeCacheByPrimaryId(CacheKey::LIST_THREADS_V3_ATTACHMENT, $threadId);
-    }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -52,7 +46,8 @@ class UpdateThreadController extends DzqController
         if (!$this->thread) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-
+        //编辑前验证手机，验证码，实名
+        $this->userVerify($this->user);
         return $userRepo->canEditThread($this->user, $this->thread);
     }
 
@@ -139,15 +134,26 @@ class UpdateThreadController extends DzqController
         } else {
             $thread->is_approved = Thread::BOOL_YES;
         }
-        $isDraft && $thread->is_draft = Thread::BOOL_YES;
+
+        if ($isDraft) {
+            $thread->is_draft = Thread::BOOL_YES;
+        } else {
+            $thread->is_draft = Thread::BOOL_NO;
+        }
+
         !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
         $thread->save();
+        if (!$isApproved && !$isDraft) {
+            $this->user->refreshThreadCount();
+            $this->user->save();
+            Category::refreshThreadCountV3($categoryId);
+        }
     }
 
     private function savePost($post, $content)
     {
         [$ip, $port] = $this->getIpPort();
-        $post->content = $content['text'];;
+        $post->content = $content['text'];
         $post->ip = $ip;
         $post->port = $port;
         $post->is_first = Post::FIRST_YES;
@@ -210,8 +216,22 @@ class UpdateThreadController extends DzqController
 
     private function getResult($thread, $post, $tomJsons)
     {
-        $user = $this->user;
+        $user = User::query()->where('id', $thread->user_id)->first();
         $group = Group::getGroup($user->id);
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
+    }
+
+    public function clearCache($user)
+    {
+        DzqCache::delKey(CacheKey::CATEGORIES);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        $threadId = $this->inPut('threadId');
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TAGS, $threadId);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
     }
 }

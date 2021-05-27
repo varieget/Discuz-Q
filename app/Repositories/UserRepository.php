@@ -374,8 +374,8 @@ class UserRepository extends AbstractRepository
         }
 
         // 查看自己的草稿
-        if(Arr::get($thread, 'is_draft') && $thread['user_id'] == $user->id){
-            return true;
+        if (Arr::get($thread, 'is_draft')) {
+            return $thread['user_id'] == $user->id;
         }
 
         return $this->checkCategoryPermission($user, PermissionKey::THREAD_VIEW_POSTS, $thread['category_id']);
@@ -551,5 +551,26 @@ class UserRepository extends AbstractRepository
         } else {
             return $user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_PHONE);
         }
+    }
+
+
+    /**
+     * 上传头像与删除权限
+     */
+
+    public function canCreateAvatar(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+    public function canDeleteAvatar(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+
+    public function canEeportUser(User $user)
+    {
+        return $user->isAdmin();
     }
 }

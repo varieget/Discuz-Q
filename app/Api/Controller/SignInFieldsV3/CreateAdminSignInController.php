@@ -17,23 +17,19 @@
 
 namespace App\Api\Controller\SignInFieldsV3;
 
-use App\Api\Serializer\UserSignInSerializer;
 use App\Common\ResponseCode;
-use App\Models\UserSignInFields;
+use App\Models\AdminSignInFields;
 use App\Repositories\UserRepository;
-use Discuz\Api\Controller\AbstractListController;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class ListUserSignInController extends DzqController
+class CreateAdminSignInController extends DzqController
 {
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
+        if (!$this->user->isAdmin()) {
             throw new PermissionDeniedException('没有权限');
         }
         return true;
@@ -41,13 +37,25 @@ class ListUserSignInController extends DzqController
 
     public function main()
     {
-        $userId = $this->user->id;
-        if(empty($userId)){
-            $this->outPut(ResponseCode::USERID_NOT_ALLOW_NULL);
+        $dataArr = $this->request->getParsedBody()->get('data');
+
+        $retureArr = [];
+        foreach ($dataArr as $attribute) {
+            if (!empty($attribute['id'])) {
+                $adminSignIn = AdminSignInFields::query()->where('id', $attribute['id'])->first();
+                if (empty($adminSignIn)) {
+                    continue;
+                }
+            }else{
+                $adminSignIn = new AdminSignInFields();
+            }
+            foreach ($attribute as $key => $value) {
+                in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status','required']) && $adminSignIn[$key] = $value;
+            }
+            $adminSignIn->save() && $retureArr[] = $adminSignIn;
         }
 
-        $result = UserSignInFields::instance()->getUserSignInFields($userId);
-
-        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
+        $this->outPut(ResponseCode::SUCCESS,'',$this->camelData($retureArr));
     }
+
 }

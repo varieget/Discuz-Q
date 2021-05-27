@@ -128,7 +128,7 @@ class ResourcePostController extends DzqController
         if (!$userIds) {
             return null;
         }
-        $users = User::query()->whereIn('id', $userIds)->get(['id','username','avatar','realname'])->toArray();
+        $users = User::query()->whereIn('id', $userIds)->get(['id','nickname','avatar','realname'])->toArray();
         $users = array_column($users, null, 'id');
         return $users;
     }
@@ -138,7 +138,7 @@ class ResourcePostController extends DzqController
         if (!$userId) {
             return null;
         }
-        $user = User::query()->where('id', $userId)->first(['id','username','avatar','realname'])->toArray();
+        $user = User::query()->where('id', $userId)->first(['id','nickname','avatar','realname'])->toArray();
         $groups = GroupUser::instance()->getGroupInfo($userId);
         $groups = array_column($groups, null, 'user_id');
         $user['groups'] = [];

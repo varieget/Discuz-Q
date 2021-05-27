@@ -19,14 +19,12 @@
 namespace App\Models;
 
 use App\Common\CacheKey;
-use App\Common\DzqCache;
-use App\Models\Thread;
 use App\Events\Category\Created;
 use Carbon\Carbon;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -164,6 +162,34 @@ class Category extends DzqModel
 
         return $this;
     }
+    public static function refreshThreadCountV3($categoryId){
+        $categoryDetail = Category::query()->where('id', $categoryId)->first();
+        if(empty($categoryDetail)){
+            return false;
+        }
+        $category_ids = Category::query()->where('id', $categoryId)->orWhere('parentid', $categoryId)->pluck('id')->toArray();
+        $categoryDetail->thread_count =  Thread::query()
+            ->where('is_approved', Thread::APPROVED)
+            ->where('is_draft', 0)
+            ->whereIn('category_id', $category_ids)
+            ->whereNull('deleted_at')
+            ->whereNotNull('user_id')
+            ->count();
+        $categoryDetail->save();
+        if ($categoryDetail->parentid !== 0) {
+            $father_category_ids = Category::query()->where('id', $categoryDetail->parentid)->orWhere('parentid', $categoryDetail->parentid)->pluck('id')->toArray();
+            $categoryFatherDetail = Category::query()->where('id', $categoryDetail->parentid)->first();
+            $categoryFatherDetail->thread_count = Thread::query()
+                ->where('is_approved', Thread::APPROVED)
+                ->where('is_draft', 0)
+                ->whereIn('category_id', $father_category_ids)
+                ->whereNull('deleted_at')
+                ->whereNotNull('user_id')
+                ->count();
+            $categoryFatherDetail->save();
+        }
+        return true;
+    }
 
     /**
      * Define the relationship with the category's threads.
@@ -292,6 +318,6 @@ class Category extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::removeCacheByPrimaryId(CacheKey::CATEGORIES);
+        DzqCache::delKey(CacheKey::CATEGORIES);
     }
 }

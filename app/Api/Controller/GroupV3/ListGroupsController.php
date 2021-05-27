@@ -74,24 +74,11 @@ class ListGroupsController extends DzqController
                 return $query->where('id', '<>', Group::GUEST_ID);
             });
 
-        $data = [];
-        foreach ($groups->get() as $lists) {
-            $data [] = [
-                'id' => $lists['id'],
-                'name' => $lists['name'],
-                'type' => $lists['type'],
-                'color' => $lists['color'],
-                'icon' => $lists['icon'],
-                'default' => $lists['default'],
-                'isDisplay' => $lists['is_display'],
-                'isPaid' => $lists['is_paid'],
-                'fee' => $lists['fee'],
-                'days' => $lists['days'],
-                'scale' => $lists['scale'],
-                'isSubordinate' => $lists['is_subordinate'],
-                'isCommission' => $lists['is_commission'],
-            ];
-        }
+        $data = [
+            $groups->get()
+        ];
+
+        $data = $this->camelData($data);
 
        return $this->outPut(ResponseCode::SUCCESS, '',$data);
     }
