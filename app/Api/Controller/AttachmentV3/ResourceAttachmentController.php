@@ -26,7 +26,6 @@ use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
-use Discuz\Auth\AssertPermissionTrait;
 use Exception;
 use GuzzleHttp\Client as HttpClient;
 use Illuminate\Contracts\Filesystem\Factory as Filesystem;
@@ -36,8 +35,6 @@ use Intervention\Image\ImageManager;
 
 class ResourceAttachmentController extends DzqController
 {
-    use AssertPermissionTrait;
-
     private $attachment;
 
     protected function checkRequestPermissions(UserRepository $userRepo)

@@ -21,14 +21,11 @@ namespace App\Api\Controller\GroupV3;
 use App\Common\ResponseCode;
 use App\Repositories\GroupRepository;
 use App\Repositories\UserRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
 class ResourceGroupsController extends DzqController
 {
-    use AssertPermissionTrait;
-
     public $optionalInclude = [
         'permission',
         'categoryPermissions',
