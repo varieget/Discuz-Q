@@ -35,6 +35,7 @@ use App\Models\Thread;
 use App\Models\ThreadReward;
 use App\Models\ThreadVideo;
 use App\Models\User;
+use App\Models\UserFollow;
 use App\Models\Setting;
 use Discuz\Base\DzqController;
 
@@ -481,9 +482,9 @@ class ListThreadsV2Controller extends DzqController
         }
         //关注
         if ($attention == 1 && !empty($this->user)) {
-            $threads->leftJoin('user_follow', 'user_follow.to_user_id', '=', 'threads.user_id')
-                ->where('user_follow.from_user_id', $this->user->id)
-                ->where('is_anonymous', 0);
+             $UserFollowList = UserFollow::query()->where('from_user_id',  $this->user->id)->get()->toArray();
+             $UserFollowIds = array_column($UserFollowList, 'to_user_id');
+             $threads->whereIn('user_id', $UserFollowIds)->where('is_anonymous', 0);
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
         !empty($types) && $threads->whereIn('type', $types);
