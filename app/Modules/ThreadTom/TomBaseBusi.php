@@ -21,7 +21,6 @@ use App\Common\ResponseCode;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Common\Utils;
-use Discuz\Http\DiscuzResponseFactory;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 

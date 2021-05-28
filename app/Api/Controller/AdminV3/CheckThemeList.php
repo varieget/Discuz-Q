@@ -18,6 +18,8 @@
 namespace App\Api\Controller\AdminV3;
 
 use App\Common\ResponseCode;
+use App\Models\ThreadTag;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Models\Thread;
 use App\Models\StopWord;
@@ -62,14 +64,22 @@ class CheckThemeList extends DzqController
         $perPage = intval($this->inPut('perPage')); //分页
         $createdAtBegin = $this->inPut('createdAtBegin'); //开始时间
         $createdAtEnd = $this->inPut('createdAtEnd'); //结束时间
+        $deletedAtBegin = $this->inPut('deletedAtBegin'); //删除开始时间
+        $deletedAtEnd = $this->inPut('deletedAtEnd'); //删除结束时间
+        $deletedNickname = $this->inPut('deletedNickname'); //删除帖子用户
         $categoryId = intval($this->inPut('categoryId')); //分类id
         $sort = $this->inPut('sort') ? $this->inPut('sort') : '-updated_at';     //排序
 
         $query = Thread::query()
             ->select(
-                'threads.id as thread_id', 'threads.title', 'threads.post_count', 'threads.view_count',
-                'threads.is_approved', 'threads.updated_at' ,'users.nickname' ,'categories.name'
-            );
+                'threads.id as thread_id', 'threads.user_id', 'threads.title', 'threads.post_count', 'threads.view_count',
+                'threads.is_approved', 'threads.updated_at' ,'threads.deleted_user_id' ,'threads.deleted_at', 'threads.price',
+                'posts.content',
+                'users.nickname',
+                'categories.name'
+            )
+            ->leftJoin('posts','threads.id','posts.thread_id')
+            ->where('posts.is_first',true);
 
         //是否审核
         $query->where('threads.is_approved', $isApproved);
@@ -78,15 +88,18 @@ class CheckThemeList extends DzqController
         if ($viewCountGt !== '') {
             $query->where('threads.view_count', '>=', intval($viewCountGt));
         }
+
         //浏览次数
         if ($viewCountLt !== '') {
             $query->where('threads.view_count', '<=', intval($viewCountLt));
         }
 
+        //回复次数
         if ($postCountGt !== '') {
             $query->where('threads.post_count', '>=', intval($postCountGt));
         }
 
+        //回复次数
         if ($postCountLt !== '') {
             $query->where('threads.post_count', '<=', intval($postCountLt));
         }
@@ -123,7 +136,7 @@ class CheckThemeList extends DzqController
         }
 
         // 回收站
-        if ($isDeleted == 'yes' && $this->user->hasPermission('viewTrashed')) {
+        if ($isDeleted == 'yes') {
             // 只看回收站帖子
             $query->whereNotNull('threads.deleted_at');
         } elseif ($isDeleted == 'no') {
@@ -142,10 +155,22 @@ class CheckThemeList extends DzqController
             $query->whereBetween('threads.updated_at', [$createdAtBegin, $createdAtEnd]);
         }
 
+        //发帖删除时间筛选
+        if (!empty($deletedAtBegin) && !empty($deletedAtEnd)) {
+            $query->whereBetween('threads.deleted_at', [$deletedAtBegin, $deletedAtEnd]);
+        }
+
+        //用户删除用户昵称
+        if (!empty($deletedNickname)) {
+            $query->addSelect('users1.nickname as deleted_user')
+                ->leftJoin('users as users1', 'users1.id','=','threads.deleted_user_id')
+                ->where('users1.nickname','like','%'.$deletedNickname.'%');
+        }
+
         //用户昵称筛选
         $query->leftJoin('users', 'users.id', '=', 'threads.user_id');
         if (!empty($nickname)) {
-            $query->where('users.nickname', $nickname);
+            $query->where('users.nickname', 'like','%'.$nickname.'%');
         }
 
         //排序

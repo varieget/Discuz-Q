@@ -51,6 +51,7 @@ class ListPostsController extends DzqController
         if (!$threadId && !$this->user->isAdmin()) {
             return false;
         }
+
         $thread = Thread::query()
             ->where(['id' => $threadId])
             ->whereNull('deleted_at')
@@ -76,6 +77,7 @@ class ListPostsController extends DzqController
         $sort = $this->inPut('sort');
 
         $posts = $this->search($filters, $perPage, $page, $sort);
+
         $posts['pageData'] = $posts['pageData']->map(function ($post) {
             return $this->getPost($post, true);
         })->sortByDesc('rewards')->values()->toArray();
@@ -104,6 +106,7 @@ class ListPostsController extends DzqController
 
     protected function applyFilters(Builder $query, array $filters, $sort)
     {
+
         $query->where('posts.is_first', false)
             ->whereNull('posts.deleted_at')
             ->where('posts.is_comment', false)
@@ -140,9 +143,9 @@ class ListPostsController extends DzqController
         $allLastThreeComments = Post::query()
             ->with([
                 'thread:id,type',
-                'user:id,username,avatar,realname',
-                'commentUser:id,username,avatar,realname',
-                'replyUser:id,username,avatar,realname',
+                'user:id,nickname,avatar,realname',
+                'commentUser:id,nickname,avatar,realname',
+                'replyUser:id,nickname,avatar,realname',
                 'images',
             ])
             ->from('posts', 'a')
@@ -250,11 +253,8 @@ class ListPostsController extends DzqController
         }
 
         $userData = $user->toArray();
-        $userData['username'] = $userData['nickname'] ? $userData['nickname'] : $userData['username'];
-
         $data = array_merge($userData, [
-            'isReal'   => !empty($user->realname),
-            'userName' => !empty($user->nickname) ? $user->nickname: $user->username,
+            'isReal'   => !empty($user->realname)
         ]);
         if ($user->relationLoaded('groups')) {
             $data['groups'] = $user->groups->map(function (Group $i) {

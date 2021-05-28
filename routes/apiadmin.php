@@ -11,6 +11,7 @@ $route->post('/settings/delete.logo', 'settings.delete.logo', ApiController\Sett
 $route->get('/siteinfo', 'site.info', ApiController\SiteInfoV3Controller::class);
 $route->post('/settings.create','settings.create',ApiController\SettingsV3\SetSettingsController::class);
 
+//用户组
 $route->post('/groups.create', 'groups.create', ApiController\GroupV3\CreateGroupController::class);
 $route->get('/groups.list', 'groups.list', ApiController\GroupV3\ListGroupsController::class);
 $route->post('/groups.batchupdate', 'groups.batchupdate', ApiController\GroupV3\BatchUpdateGroupController::class);
@@ -21,6 +22,11 @@ $route->post('/users/update.user', 'users.admin', ApiController\UsersV3\UpdateAd
 $route->get('/users.wallet.logs', 'users.wallet.logs', ApiController\WalletV3\UsersWalletLogsListController::class);
 $route->get('/users.order.logs', 'users.order.logs', ApiController\OrderV3\UsersOrderLogsListController::class);
 $route->get('/users.cash.logs', 'users.cash.logs', ApiController\WalletV3\UsersCashLogsListController::class);
+$route->post('/wallet.cash.review', 'wallet.cash.review', ApiController\WalletV3\UserWalletCashReviewController::class);
+$route->get('/statistic.finance', 'statistic.finance', ApiController\StatisticV3\FinanceProfileController::class);
+$route->get('/statistic.financeChart', 'statistic.financeChart', ApiController\StatisticV3\FinanceChartController::class);
+$route->get('/user.wallet', 'wallet.user', ApiController\WalletV3\ResourceUserWalletAdminController::class);
+$route->post('/update.user.wallet', 'update.wallet.user', ApiController\WalletV3\UpdateUserWalletController::class);
 
 //内容分类
 $route->get('/categories', 'categories', ApiController\CategoryV3\AdminListCategoriesController::class);
@@ -33,6 +39,7 @@ $route->post('/permission.update', 'permission.update', ApiController\Permission
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
 //注册扩展
 $route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
+$route->post('/signinfields', 'signinfields.create', ApiController\SignInFieldsV3\CreateAdminSignInController::class);
 $route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
 //审核主题列表
 $route->get('/check.thread.list', 'check.thread.list', ApiController\AdminV3\CheckThemeList::class);
@@ -45,3 +52,13 @@ $route->post('/topics.batch.update', 'topics.batch.update', ApiController\TopicV
 $route->post('/topics.batch.delete', 'topics.batch.delete', ApiController\TopicV3\BatchDeleteTopicController::class);
 
 $route->get('/statistic/firstChart', 'statistic/firstChart', ApiController\StatisticV3\FirstChartController::class);
+
+//用户
+$route->get('/export/users', 'export.users', ApiController\UsersV3\ExportUserController::class);
+$route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarsController::class);
+$route->post('/delete/users/avatar', 'user.upload.avatar', ApiController\UsersV3\DeleteAvatarController::class);
+$route->get('/users', 'users.list', ApiController\UsersV3\ListUserScreenController::class);
+//内容过滤
+$route->post('/stopwords.batch', 'stopwords.batch', ApiController\StopWordsV3\BatchCreateStopWordsController::class);
+$route->get('/stopwords.list', 'stopwords.list', ApiController\StopWordsV3\ListStopWordsController::class);
+$route->post('/stopwords.delete', 'stopwords.delete', ApiController\StopWordsV3\DeleteStopWordController::class);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -15,39 +16,38 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\SignInFieldsV3;
+namespace App\Api\Controller\StopWordsV3;
 
-use App\Api\Serializer\UserSignInSerializer;
 use App\Common\ResponseCode;
-use App\Models\UserSignInFields;
+use App\Models\StopWord;
 use App\Repositories\UserRepository;
-use Discuz\Api\Controller\AbstractListController;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class ListUserSignInController extends DzqController
+class DeleteStopWordController extends DzqController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有删除敏感词的权限');
         }
         return true;
     }
 
     public function main()
     {
-        $userId = $this->user->id;
-        if(empty($userId)){
-            $this->outPut(ResponseCode::USERID_NOT_ALLOW_NULL);
+        $ids = $this->inPut('ids');
+        if(empty($ids)){
+            return $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
-
-        $result = UserSignInFields::instance()->getUserSignInFields($userId);
-
-        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
+        $ids = explode(',', $ids);
+        foreach ($ids as $id) {
+            $stopWord = StopWord::query()->where('id',$id)->first();
+            if(!$stopWord){
+                break;
+            }
+            $stopWord->delete();
+        }
+        return $this->outPut(ResponseCode::SUCCESS);
     }
 }

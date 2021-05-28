@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -15,39 +16,39 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\SignInFieldsV3;
+namespace App\Api\Controller\StopWordsV3;
 
-use App\Api\Serializer\UserSignInSerializer;
 use App\Common\ResponseCode;
-use App\Models\UserSignInFields;
+use App\Models\StopWord;
 use App\Repositories\UserRepository;
-use Discuz\Api\Controller\AbstractListController;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class ListUserSignInController extends DzqController
+class ListStopWordsController extends DzqController
 {
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有访问敏感词列表的权限');
         }
         return true;
     }
 
     public function main()
     {
-        $userId = $this->user->id;
-        if(empty($userId)){
-            $this->outPut(ResponseCode::USERID_NOT_ALLOW_NULL);
+        $currentPage = $this->inPut('page');
+        $perPage = $this->inPut('perPage');
+        $filter = $this->inPut('filter');
+        $query = StopWord::query();
+        if ($keyword = trim(Arr::get($filter, 'keyword'))) {
+            $query = $query
+                ->when($keyword, function ($query, $keyword) {
+                    return $query->where('find', 'like', "%$keyword%");
+                });
         }
-
-        $result = UserSignInFields::instance()->getUserSignInFields($userId);
-
-        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
+        $stopWords = $this->pagination($currentPage, $perPage, $query);
+        return $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($stopWords));
     }
 }

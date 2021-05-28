@@ -26,19 +26,10 @@ use App\Models\AdminActionLog;
 use Exception;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
-use Illuminate\Validation\Factory as Validator;
-use Illuminate\Validation\ValidationException;
-use Discuz\Auth\AssertPermissionTrait;
 
 class UpdateUserWallet
 {
-    use AssertPermissionTrait;
 
-    /**
-     * 钱包用户ID
-     * @var int
-     */
     public $user_id;
 
     /**
@@ -60,11 +51,12 @@ class UpdateUserWallet
      * @param User   $actor        执行操作的用户.
      * @param array  $data         请求的数据.
      */
-    public function __construct($user_id, $actor, Collection $data)
+    public function __construct($user_id, $actor, $data)
     {
         $this->user_id = $user_id;
         $this->actor   = $actor;
-        $this->data    = $data->toArray();
+        $this->data    = $data;
+
     }
 
     /**
@@ -72,24 +64,13 @@ class UpdateUserWallet
      * @return model UserWallet
      * @throws Exception
      */
-    public function handle(Validator $validator, ConnectionInterface $db)
+    public function handle(ConnectionInterface $db)
     {
-        $this->assertCan($this->actor, 'wallet.update');
-        // 验证参数
-        $validator_info = $validator->make($this->data, [
-            'operate_type'   => 'sometimes|required|integer', //操作类型，1：增加；2：增加
-            'operate_amount' => 'sometimes|required|numeric|min:0.01', //操作金额
-            'wallet_status'  => 'sometimes|required|integer', //钱包状态
-        ]);
-
-        if ($validator_info->fails()) {
-            throw new ValidationException($validator_info);
-        }
-        $operate_type   = Arr::get($this->data, 'operate_type');
-        $operate_amount = Arr::get($this->data, 'operate_amount');
-        $operate_reason = Arr::get($this->data, 'operate_reason', '');
+        $operate_type   = Arr::get($this->data, 'operateType');
+        $operate_amount = Arr::get($this->data, 'operateAmount');
+        $operate_reason = Arr::get($this->data, 'operateReason', '');
         $operate_reason = trim($operate_reason);
-        $wallet_status  = Arr::get($this->data, 'wallet_status');
+        $wallet_status  = Arr::get($this->data, 'walletStatus');
         if (!is_null($operate_type)) {
             if (!in_array($operate_type, [UserWallet::OPERATE_INCREASE, UserWallet::OPERATE_DECREASE])) {
                 throw new WalletException('operate_type_error');

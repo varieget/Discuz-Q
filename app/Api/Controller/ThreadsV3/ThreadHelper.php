@@ -83,9 +83,9 @@ class ThreadHelper
                 $likedUsersInfo[$item['thread_id']][] = [
                     'userId' => $item['user_id'],
                     'avatar' => $user->avatar,
-                    'userName' => !empty($user->nickname) ? $user->nickname : $user->username,
-                    'type'  =>  !empty($item['type']) ? 1 : 2,
-                    'createdAt'    => strtotime($item['created_at'])
+                    'nickname' => !empty($user->nickname) ? $user->nickname : $user->username,
+                    'type' => !empty($item['type']) ? 1 : 2,
+                    'createdAt' => strtotime($item['created_at'])
                 ];
             }
         }

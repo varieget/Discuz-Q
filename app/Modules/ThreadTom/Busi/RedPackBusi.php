@@ -23,7 +23,6 @@ use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\RedPacket;
 use App\Models\Order;
 use App\Models\OrderChildren;
-use App\Models\ThreadTom;
 use App\Models\ThreadRedPacket;
 
 class RedPackBusi extends TomBaseBusi

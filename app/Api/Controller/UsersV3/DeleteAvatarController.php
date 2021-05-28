@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -15,39 +16,41 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\SignInFieldsV3;
+namespace App\Api\Controller\UsersV3;
 
-use App\Api\Serializer\UserSignInSerializer;
 use App\Common\ResponseCode;
-use App\Models\UserSignInFields;
 use App\Repositories\UserRepository;
-use Discuz\Api\Controller\AbstractListController;
-use Discuz\Auth\Exception\PermissionDeniedException;
+use App\User\AvatarUploader;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class ListUserSignInController extends DzqController
+class DeleteAvatarController extends DzqController
 {
+    protected $users;
+
+    protected $uploader;
+
+    public function __construct(UserRepository $users, AvatarUploader $uploader)
+    {
+        $this->users = $users;
+        $this->uploader = $uploader;
+    }
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
+        return $userRepo->canDeleteAvatar($this->user);
     }
+
 
     public function main()
     {
-        $userId = $this->user->id;
-        if(empty($userId)){
-            $this->outPut(ResponseCode::USERID_NOT_ALLOW_NULL);
-        }
+        $pid = $this->inPut('aid');
 
-        $result = UserSignInFields::instance()->getUserSignInFields($userId);
+        $user = $this->users->findOrFail($pid);
 
-        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
+        $this->uploader->remove($user);
+
+        $user->save();
+
+        return $this->outPut(ResponseCode::SUCCESS,'',[]);
     }
 }

@@ -231,6 +231,7 @@ class UpdateThreadController extends DzqController
         $group = Group::getGroup($user->id);
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
+
     public function clearCache($user)
     {
         DzqCache::delKey(CacheKey::CATEGORIES);
