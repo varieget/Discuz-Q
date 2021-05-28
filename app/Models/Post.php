@@ -594,6 +594,11 @@ class Post extends DzqModel
         return $this->hasMany(Attachment::class, 'type_id')->where('type', Attachment::TYPE_OF_IMAGE)->orderBy('order');
     }
 
+    public function imagesAnswer()
+    {
+        return $this->hasMany(Attachment::class, 'type_id')->where('type',Attachment::TYPE_OF_ANSWER )->orderBy('order');
+    }
+
     /**
      * Define the relationship with the post's attachments.
      *

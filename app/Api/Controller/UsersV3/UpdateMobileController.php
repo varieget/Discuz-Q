@@ -18,11 +18,14 @@
 
 namespace App\Api\Controller\UsersV3;
 use App\Common\AuthUtils;
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Discuz\Base\DzqCache;
+
 
 class UpdateMobileController extends AuthBaseController
 {
@@ -32,6 +35,11 @@ class UpdateMobileController extends AuthBaseController
         Dispatcher          $bus
     ){
         $this->bus      = $bus;
+    }
+
+    public function clearCache($user)
+    {
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $user->id);
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)

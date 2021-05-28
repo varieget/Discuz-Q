@@ -143,9 +143,9 @@ class ListPostsController extends DzqController
         $allLastThreeComments = Post::query()
             ->with([
                 'thread:id,type',
-                'user:id,username,avatar,realname',
-                'commentUser:id,username,avatar,realname',
-                'replyUser:id,username,avatar,realname',
+                'user:id,nickname,avatar,realname',
+                'commentUser:id,nickname,avatar,realname',
+                'replyUser:id,nickname,avatar,realname',
                 'images',
             ])
             ->from('posts', 'a')

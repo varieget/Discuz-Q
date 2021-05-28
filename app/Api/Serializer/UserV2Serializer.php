@@ -20,8 +20,8 @@ namespace App\Api\Serializer;
 
 use App\Models\DenyUser;
 use App\Models\User;
+use App\Models\UsernameChange;
 use App\Models\UserQq;
-use App\Models\UserSignInFields;
 use App\Repositories\UserFollowRepository;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -144,19 +144,6 @@ class UserV2Serializer extends AbstractSerializer
             ];
         }
 
-        // 是否管理员
-        if ($this->actor->isAdmin()) {
-            $attributes += [
-                'canEditUsername' => true,  // 可否更改用户名
-            ];
-        } else {
-            /** @var SettingsRepository $settings */
-            $settings = app(SettingsRepository::class);
-
-            $attributes += [
-                'canEditUsername' => $model->username_bout < $settings->get('username_bout', 'default', 1),
-            ];
-        }
         if($model->bind_type == 2) {
             $attributes['avatarUrl'] = ! empty($attributes['avatarUrl']) ? $attributes['avatarUrl'] : $this->qqAvatar($model);
         }
@@ -181,8 +168,22 @@ class UserV2Serializer extends AbstractSerializer
               'isDeny' => $isDeny
            ];
         }
-
-
+        if ($this->actor->id === $model->id) {
+            //是否可以修改用户名
+            $canEditUsername = true;
+            $usernamechange = UsernameChange::query()->where("user_id",$model->id)->orderBy('id', 'desc')
+                ->first();
+            if($usernamechange){
+                $currentTime=date("y-m-d h:i:s");
+                $oldTime=$usernamechange->updated_at;
+                if(strtotime($currentTime)<strtotime("+1years",strtotime($oldTime))){
+                    $canEditUsername = false;
+                }
+            }
+            $attributes += [
+                'canEditUsername' => $canEditUsername
+            ];
+        }
         return $attributes;
     }
 
