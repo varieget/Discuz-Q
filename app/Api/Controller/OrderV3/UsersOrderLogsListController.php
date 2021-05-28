@@ -6,6 +6,7 @@ use App\Common\ResponseCode;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Thread;
+use App\Models\Post;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
@@ -33,7 +34,7 @@ class UsersOrderLogsListController extends DzqController
             $query->where('orders.order_sn', $filter['orderSn']);
         }
 
-        if (isset($filter['status']) && !empty($filter['status'])) {
+        if (isset($filter['status']) && ($filter['status'] == 0 || !empty($filter['status']))) {
             $query->where('orders.status', $filter['status']);
         }
 
@@ -52,18 +53,25 @@ class UsersOrderLogsListController extends DzqController
 
         // 收入方
         if (isset($filter['payeeNickname']) && !empty($filter['payeeNickname'])) {
-            $query->where('users.nickname', 'like', '%' . $filter['payeeNickname'] . '%');
+            $payeeIds = User::query()->where('nickname', 'like', '%' . $filter['payeeNickname'] . '%')->pluck('id')->toArray();
+            $query->whereIn('orders.payee_id', $payeeIds);
         }
 
         // 商品
         if (isset($filter['product']) && !empty($filter['product'])) {
-            $threadIds = Thread::query()
-                ->join('posts', 'threads.id', '=', 'posts.thread_id')
-                ->where('posts.is_first', 1)
-                ->where('threads.title', 'like', '%' . $filter['product'] . '%')
-                ->orWhere('posts.content', 'like', '%' . $filter['product'] . '%')
-                ->pluck('threads.id')->toArray();
-            $query->whereIn('orders.thread_id', $threadIds);
+            $product = $filter['product'];
+            $query->when($product, function ($query, $product) {
+                $query->whereIn(
+                    'orders.thread_id',
+                    Thread::query()
+                        ->whereIn(
+                            'id',
+                            Post::query()->where('is_first', true)->where('content', 'like', "%$product%")->pluck('thread_id')
+                        )
+                        ->orWhere('threads.title', 'like', "%$product%")
+                        ->pluck('id')
+                );
+            });
         }
 
         $query->orderByDesc('orders.created_at');
