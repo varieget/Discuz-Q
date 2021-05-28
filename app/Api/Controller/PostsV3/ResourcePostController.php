@@ -18,6 +18,7 @@
 namespace App\Api\Controller\PostsV3;
 
 
+use App\Api\Controller\ThreadsV3\ThreadHelper;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\CommentPostSerializer;
 use App\Common\ResponseCode;
@@ -79,6 +80,11 @@ class ResourcePostController extends DzqController
         Post::setStateUser($this->user);
 
         $data = $coment_post_serialize->getDefaultAttributes($comment_post, $this->user);
+
+        //针对新数据格式的 post，使用内部封装方法正则
+        list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($data['content']);
+        $data['content'] = str_replace($searches, $replaces, $data['content']);
+
         $data['canLike'] = true;
 
         $data['images'] = [];
