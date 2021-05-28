@@ -1,0 +1,145 @@
+<?php
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+namespace App\Api\Controller\UsersV3;
+
+use App\Common\ResponseCode;
+use App\Models\DenyUser;
+use App\Models\User;
+use App\Repositories\UserRepository;
+use App\Models\Group;
+use Illuminate\Support\Arr;
+use Discuz\Base\DzqController;
+
+class ListUserScreenController extends DzqController
+{
+    // 权限检查，是否为管理员
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $userRepo->canListUserScren($this->user);
+    }
+
+
+    public function main()
+    {
+        $actor = $this->user;
+        $currentPage = $this->inPut('page');
+        $perPage = $this->inPut('perPage');
+        $filter = (array)$this->inPut('filter');
+
+        $query = User::query();
+        $query->select('users.id AS userId', 'users.nickname','users.mobile', 'users.username', 'users.avatar', 'users.thread_count', 'users.status', 'users.created_at', 'users.updated_at', 'group_id');
+        $query->join('group_user', 'users.id', '=', 'group_user.user_id');
+
+        if (Arr::has($filter, 'username') && Arr::get($filter, 'username') !== '') {
+            $username = $filter['username'];
+            $query->where('users.username', 'like', '%' . $username . '%');
+        }
+
+        if (Arr::has($filter, 'nickname') && Arr::get($filter, 'nickname') !== '') {
+            $nickname = $filter['nickname'];
+            $query->where('users.nickname', 'like', '%' . $nickname . '%');
+        }
+        //用户id
+        if ($ids = Arr::get($filter, 'id')) {
+            $ids = explode(',', $ids);
+            if (!empty($ids)) {
+                $query->whereIn('id', $ids);
+            }
+        }
+
+        // 手机号
+        if (Arr::has($filter, 'mobile')) {
+            $mobile = $filter['mobile'];
+            $query->where('users.mobile', $mobile);
+        }
+
+        // 状态
+        if (Arr::has($filter, 'status')) {
+            $status = $filter['status'];
+            $query->where('users.status', $status);
+        }
+
+        // 用户组
+        if ($group_id = Arr::get($filter, 'groupId')) {
+              $query  ->whereIn('group_id', $group_id);
+        }
+        // 是否实名认证
+        if ($isReal = Arr::get($filter, 'isReal')) {
+            if ($isReal == 'yes') {
+                $query->where('realname', '<>', '');
+            } elseif ($isReal == 'no') {
+                $query->where('realname', '');
+            }
+        }
+
+
+       // 是否绑定微信
+        if ($weChat = Arr::get($filter, 'wechat')) {
+            if ($weChat === 'yes') {
+                $query->has('wechat');
+            } elseif ($weChat === 'no') {
+                $query->doesntHave('wechat');
+            }
+        }
+
+       // 是否已lahei
+        if ($deny = Arr::get($filter, 'deny')) {
+            if ($deny === 'yes') {
+                $query->addSelect([
+                    'denyStatus' => DenyUser::query()
+                        ->select('user_id')
+                        ->where('user_id', $actor->id)
+                        ->whereRaw('deny_user_id = id')
+                        ->limit(1)
+                ]);
+            }
+        }
+
+
+        $users = $this->pagination($currentPage, $perPage, $query);
+        $userDatas = $users['pageData'];
+
+        $groupIds = array_column($userDatas, 'group_id');
+
+        $userGroupDatas = Group::query()->whereIn('id', $groupIds)->where('is_display', 1)->get()->toArray();
+        $userGroupDatas = array_column($userGroupDatas, null, 'id');
+
+        $result = [];
+        foreach ($userDatas as  $value) {
+            $result[] = [
+                'userId' => $value['userId'],
+                'username' => $value['username'],
+                'nickname' => $value['nickname'],
+                'mobile' => $value['mobile'],
+                'avatarUrl' => $value['avatar'],
+                'threadCount' => $value['thread_count'],
+                'status' => $value['status'],
+                'createdAt' => $value['created_at'],
+                'updatedAt' => $value['updated_at'],
+                'groupName' => $userGroupDatas[$value['group_id']]['name'] ?? ''
+
+            ];
+        }
+
+        $userDatas = $this->camelData($result);
+        $users['pageData'] = $userDatas ?? [];
+
+        return $this->outPut(ResponseCode::SUCCESS, '', $users);
+    }
+
+}
