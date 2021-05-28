@@ -31,11 +31,12 @@ class CreateDialogV2Controller extends DzqController
 
     public function main()
     {
-        $user = $this->user;
-        $data = array(
+        $actor = $this->user;
+        $data = [
             'message_text'=>$this->inPut('messageText'),
             'recipient_username'=>$this->inPut('recipientUsername'),
-        );
+        ];
+
         if(empty($data['message_text'])){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
@@ -58,13 +59,21 @@ class CreateDialogV2Controller extends DzqController
         }
 
         try {
-            $this->bus->dispatch(
-                new CreateDialog($user, $data)
+          $res = $this->bus->dispatch(
+                new CreateDialog($actor, $data)
             );
         } catch (\Exception $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->getMessage());
         }
 
-        $this->outPut(ResponseCode::SUCCESS, '已发送');
+        $res = $res->toArray();
+       
+        $data = [
+            'dialogId' =>$res['id'],
+        ];
+
+        $build = $this->camelData($data);
+
+        $this->outPut(ResponseCode::SUCCESS, '已发送', $build);
     }
 }
