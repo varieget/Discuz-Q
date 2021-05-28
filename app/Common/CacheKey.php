@@ -20,6 +20,9 @@ namespace App\Common;
 
 class CacheKey
 {
+
+    public const APP_CACHE = 'APP_CACHE';//容器全局变量
+
     //记录首页各个分类的数据缓存
     public const LIST_THREAD_HOME_INDEX = 'list_thread_home_index_';
 
@@ -68,11 +71,14 @@ class CacheKey
     public const LIST_THREADS_V3_CREATE_TIME = 'list_threads_v3_create_time';//filterId->pageId
     //智能排序，不参与筛选
     public const LIST_THREADS_V3_SEQUENCE = 'list_threads_v3_sequence';//filterId->pageId
-    //热点数据变更排序规则
+    //浏览数排序
     public const LIST_THREADS_V3_VIEW_COUNT = 'list_threads_v3_view_count';//filterId->pageId
+    //评论时间排序
     public const LIST_THREADS_V3_POST_TIME = 'list_threads_v3_post_time';//filterId->pageId
-
+    //关注排序
     public const LIST_THREADS_V3_ATTENTION = 'list_threads_v3_attention';//filterId->pageId
+    //个人中心复合数据排序
+    public const LIST_THREADS_V3_COMPLEX = 'list_threads_v3_complex';//filterId->pageId
 
 //    public const LIST_THREADS_V3_POST_COUNT = 'list_threads_v3_post_count';
 //    public const LIST_THREADS_V3_PAID_COUNT = 'list_threads_v3_paid_count';
@@ -98,7 +104,7 @@ class CacheKey
 
     public const LIST_THREADS_V3_SEARCH_REPLACE = 'list_threads_v3_search_replace';//替换标签、话题和艾特
     public const LIST_THREADS_V3_POST_LIKED = 'list_threads_v3_post_liked';//是否点赞 user_id->post_id
-    public const LIST_THREADS_V3_POST_FAVOR = 'list_threads_v3_post_favor';//是否收藏 user_id->thread_id
+    public const LIST_THREADS_V3_THREAD_USERS = 'list_threads_v3_thread_users';//是否收藏 user_id->thread_id
     public const LIST_THREADS_V3_POST_USERS = 'list_threads_v3_post_users';//帖子卡面底部的点赞支付摘要 thread_id
 
 

@@ -162,13 +162,15 @@ class Category extends DzqModel
 
         return $this;
     }
-    public static function refreshThreadCountV3($categoryId){
+
+    public static function refreshThreadCountV3($categoryId)
+    {
         $categoryDetail = Category::query()->where('id', $categoryId)->first();
-        if(empty($categoryDetail)){
+        if (empty($categoryDetail)) {
             return false;
         }
         $category_ids = Category::query()->where('id', $categoryId)->orWhere('parentid', $categoryId)->pluck('id')->toArray();
-        $categoryDetail->thread_count =  Thread::query()
+        $categoryDetail->thread_count = Thread::query()
             ->where('is_approved', Thread::APPROVED)
             ->where('is_draft', 0)
             ->whereIn('category_id', $category_ids)
@@ -306,12 +308,17 @@ class Category extends DzqModel
      */
     public static function getCategories()
     {
+        if (app()->has(CacheKey::CATEGORIES)) {
+            return app()->get(CacheKey::CATEGORIES);
+        }
         $cache = app('cache');
         $categories = $cache->get(CacheKey::CATEGORIES);
         if ($categories) {
+            app()->instance(CacheKey::CATEGORIES, $categories);
             return $categories;
         }
         $categories = self::query()->get()->toArray();
+        app()->instance(CacheKey::CATEGORIES, $categories);
         $cache->put(CacheKey::CATEGORIES, $categories, 60 * 60);
         return $categories;
     }

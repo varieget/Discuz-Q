@@ -23,7 +23,6 @@ use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\RedPacket;
 use App\Models\Order;
 use App\Models\OrderChildren;
-use App\Models\ThreadTom;
 use App\Models\ThreadRedPacket;
 
 class RedPackBusi extends TomBaseBusi
@@ -33,15 +32,15 @@ class RedPackBusi extends TomBaseBusi
     {
         $input = $this->verification();
 
-        //ÅĞ¶ÏËæ»ú½ğ¶îºì²¼¹»²»¹»·Ö
+        //åˆ¤æ–­éšæœºé‡‘é¢çº¢å¸ƒå¤Ÿä¸å¤Ÿåˆ†
         if ($input['rule'] == 1) {
-            if ($input['price']*100 <  $input['number']) $this->outPut(ResponseCode::INVALID_PARAMETER,'ºì°ü½ğ¶î²»¹»·Ö');
+            if ($input['price']*100 <  $input['number']) $this->outPut(ResponseCode::INVALID_PARAMETER,'çº¢åŒ…é‡‘é¢ä¸å¤Ÿåˆ†');
         }
 
         $threadRedPacket = ThreadRedPacket::query()->where('thread_id', $this->threadId)->first();
         if (!empty($threadRedPacket)) {
             $thread = Thread::query()->where('id', $this->threadId)->first(['is_draft']);
-            if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'Ã¿¸öÌû×ÓÖ»ÄÜ·¢²¼Ò»ÌõĞüÉÍ');
+            if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'æ¯ä¸ªå¸–å­åªèƒ½å‘å¸ƒä¸€æ¡æ‚¬èµ');
         }
 
         if ($input['draft'] != Thread::IS_DRAFT) {
@@ -50,11 +49,11 @@ class RedPackBusi extends TomBaseBusi
                 ->where('order_sn',$input['orderSn'])
                 ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
 
-            //ÅĞ¶Ïºì°ü½ğ¶î
+            //åˆ¤æ–­çº¢åŒ…é‡‘é¢
             if ($input['rule'] == 1) {
-                if ($order->type == Order::ORDER_TYPE_REDPACKET && $order['amount'] != $input['price']) $this->outPut(ResponseCode::INVALID_PARAMETER,'¶©µ¥½ğ¶î´íÎó');
+                if ($order->type == Order::ORDER_TYPE_REDPACKET && $order['amount'] != $input['price']) $this->outPut(ResponseCode::INVALID_PARAMETER,'è®¢å•é‡‘é¢é”™è¯¯');
             } else {
-                if ($order->type == Order::ORDER_TYPE_REDPACKET && $input['price']*$input['number'] != $order['amount']) $this->outPut(ResponseCode::INVALID_PARAMETER,'¶©µ¥½ğ¶î´íÎó');
+                if ($order->type == Order::ORDER_TYPE_REDPACKET && $input['price']*$input['number'] != $order['amount']) $this->outPut(ResponseCode::INVALID_PARAMETER,'è®¢å•é‡‘é¢é”™è¯¯');
             }
 
             if (empty($order) ||

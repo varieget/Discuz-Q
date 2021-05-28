@@ -579,4 +579,22 @@ class UserRepository extends AbstractRepository
     {
         return $user->isAdmin();
     }
+
+
+    public function canUserWallet(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+
+    public function canUpdateUserWallet(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+
+    public function canListUserScren(User $user)
+    {
+        return $user->isAdmin();
+    }
 }
