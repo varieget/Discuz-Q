@@ -76,6 +76,7 @@ class CacheKey
     public const LIST_THREADS_V3_POST_TIME = 'list_threads_v3_post_time';//filterId->pageId
 
     public const LIST_THREADS_V3_ATTENTION = 'list_threads_v3_attention';//filterId->pageId
+    public const LIST_THREADS_V3_COMPLEX = 'list_threads_v3_complex';//filterId->pageId
 
 //    public const LIST_THREADS_V3_POST_COUNT = 'list_threads_v3_post_count';
 //    public const LIST_THREADS_V3_PAID_COUNT = 'list_threads_v3_paid_count';

@@ -338,6 +338,9 @@ class ThreadListController extends DzqController
         if (isset($filter['attention']) && $filter['attention'] == 1) {
             $cacheKey = CacheKey::LIST_THREADS_V3_ATTENTION;
         }
+        if (isset($filter['complex'])) {
+            $cacheKey = CacheKey::LIST_THREADS_V3_COMPLEX;
+        }
         return $cacheKey;
     }
 
