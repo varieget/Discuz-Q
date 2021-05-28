@@ -73,7 +73,7 @@ class WechatTransitionBindSmsController extends AuthBaseController
                 $this->outPut(ResponseCode::REGISTER_CLOSE);
             }
 
-            $data['register_ip']    = ip($this->request->getServerParams());;
+            $data['register_ip']    = ip($this->request->getServerParams());
             $data['register_port']  = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
             $data['mobile']         = $mobileCode->mobile;
             $data['code']           = $inviteCode;
