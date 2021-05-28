@@ -18,25 +18,33 @@
 namespace App\Api\Controller\WalletV3;
 
 
-use App\Commands\Wallet\CreateUserWalletCash;
 use App\Common\ResponseCode;
 use App\Common\Utils;
+use App\Exceptions\WalletException;
+use App\Models\UserWallet;
+use App\Models\UserWalletCash;
+use App\Models\UserWalletLog;
 use App\Repositories\UserRepository;
+use App\Settings\SettingsRepository;
+use Carbon\Carbon;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class CreateUserWalletCashController extends DzqController
 {
     use AssertPermissionTrait;
 
-    public $bus;
+    private $settings;
 
 
-    public function __construct(Dispatcher $bus)
+    public function __construct(SettingsRepository $settings)
     {
-        $this->bus = $bus;
+        $this->settings = $settings;
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -53,32 +61,103 @@ class CreateUserWalletCashController extends DzqController
 
     public function main()
     {
-        $data = [
-            'cash_apply_amount' => $this->inPut('cashApplyAmount'),
-            'cash_mobile' => $this->inPut('cashMobile'),
-            'cash_type' => $this->inPut('cashType')
-        ];
-
-        if(empty($data['cash_apply_amount'])){
+        $cashApplyAmount = $this->inPut('cashApplyAmount');
+        if(empty($cashApplyAmount)){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
+        $cash_setting = $this->settings->tag('cash');
+        $cash_interval_time = (int)Arr::get($cash_setting, 'cash_interval_time', 0);//提现间隔
+        $cash_rate = (float)Arr::get($cash_setting, 'cash_rate', 0);//提现手续费
+        $cash_sum_limit = (float)Arr::get($cash_setting, 'cash_sum_limit', 5000);//每日总提现额
+        $cash_max_sum = (float)Arr::get($cash_setting, 'cash_max_sum', 5000);//每次最大金额
+        $cash_min_sum = (float)Arr::get($cash_setting, 'cash_min_sum', 0);//每次最小金额
+        $this->dzqValidate([
+            'cashApplyAmount'   =>  $cashApplyAmount
+        ],
+        [
+            'cashApplyAmount'   =>  "required|numeric|min:{$cash_min_sum}|max:{$cash_max_sum}"
+        ]);
 
-        if(empty($data['cash_mobile'])){
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        if ($cash_interval_time != 0) {
+            $time_before = Carbon::now()->addDays(-$cash_interval_time);
+            //提现间隔时间
+            $cash_record = UserWalletCash::where('created_at', '>=', $time_before)->where('user_id', $this->user->id)->first();
+            if (!empty($cash_record)) {
+                return $this->outPut(ResponseCode::NET_ERROR, '提现处于限制间隔天数内');
+            }
         }
-
-        $data = collect(Utils::arrayKeysToSnake($data));
-        $result = $this->bus->dispatch(
-            new CreateUserWalletCash($this->user, $data)
-        );
-
-        $wallet =  $this->camelData($result);
-
-        if($result['user_id'] = $this->user->id){
-            return $this->outPut(ResponseCode::SUCCESS,'',$wallet);
-        }else{
-            return $this->outPut(ResponseCode::NET_ERROR);
+        //今日已申提现总额
+        $totday_cash_amount = UserWalletCash::where('user_id', $this->user->id)
+            ->where('created_at', '>=', Carbon::today())
+            ->where('refunds_status', UserWalletCash::REFUNDS_STATUS_NO)
+            ->sum('cash_apply_amount');
+        if(bccomp($cash_sum_limit, $totday_cash_amount, 2) == -1){
+            return $this->outPut(ResponseCode::NET_ERROR, '超出每日提现金额限制');
         }
+        //计算手续费
+        $tax_ratio  = $cash_rate; //手续费率
+        $tax_amount = $cashApplyAmount * $tax_ratio; //手续费
+        $tax_amount = sprintf('%.2f', ceil($tax_amount * 100) / 100); //格式化手续费
+        //开始事务
+        DB::beginTransaction();
+        try {
+            //获取用户钱包
+            $user_wallet = $this->user->userWallet()->lockForUpdate()->first();
+            //检查钱包是否允许提现,1:钱包已冻结
+            if ($user_wallet->wallet_status == UserWallet::WALLET_STATUS_FROZEN) {
+                return $this->outPut(ResponseCode::NET_ERROR, '钱包已冻结提现');
+            }
+            //检查金额是否足够
+            if ($user_wallet->available_amount < $cashApplyAmount) {
+                return $this->outPut(ResponseCode::NET_ERROR, '钱包可用金额不足');
+            }
+            $cash_sn  = $this->getCashSn();
+            $cash_actual_amount = sprintf('%.2f', ($cashApplyAmount - $tax_amount));
+            //创建提现记录
+            $cash = UserWalletCash::createCash(
+                $this->user->id,
+                $cash_sn,
+                $tax_amount,
+                $cash_actual_amount,
+                $cashApplyAmount,
+                '',
+                0,              //创建申请提现时，默认为0，具体为什么值，待后台审核通过之后扣款才修改该值
+                ''
+            );
+            //冻结钱包金额
+            $user_wallet->available_amount = $user_wallet->available_amount - $cashApplyAmount;
+            $user_wallet->freeze_amount    = $user_wallet->freeze_amount + $cashApplyAmount;
+            $user_wallet->save();
+            //添加钱包明细,
+            $res = UserWalletLog::createWalletLog(
+                $this->user->id,
+                -$cashApplyAmount,
+                $cashApplyAmount,
+                UserWalletLog::TYPE_CASH_FREEZE,
+                app('translator')->get('wallet.cash_freeze_desc'),
+                $cash->id
+            );
+            if(!$res){
+                DB::rollBack();
+                return $this->outPut(ResponseCode::NET_ERROR, '提现申请失败');
+            }
+            DB::commit();
+            return $this->outPut(ResponseCode::SUCCESS,'申请提现成功');
+        }catch (\Exception $e){
+            DB::rollBack();
+            return $this->outPut(ResponseCode::NET_ERROR, '提现申请失败');
+        }
+    }
+
+    /**
+     * 生成提现编号
+     * @return string  18位字符串
+     */
+    public function getCashSn()
+    {
+        return date('Ymd')
+            . str_pad(strval(mt_rand(1, 99)), 2, '0', STR_PAD_LEFT)
+            . substr(implode(null, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, 8);
     }
 
 
