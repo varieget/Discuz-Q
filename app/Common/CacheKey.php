@@ -21,7 +21,7 @@ namespace App\Common;
 class CacheKey
 {
 
-    public const APP_CACHE = 'APP_CACHE';
+    public const APP_CACHE = 'APP_CACHE';//容器全局变量
 
     //记录首页各个分类的数据缓存
     public const LIST_THREAD_HOME_INDEX = 'list_thread_home_index_';
