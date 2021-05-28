@@ -53,3 +53,7 @@ $route->get('/statistic/firstChart', 'statistic/firstChart', ApiController\Stati
 $route->get('/export/users', 'export.users', ApiController\UsersV3\ExportUserController::class);
 $route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarsController::class);
 $route->post('/delete/users/avatar', 'user.upload.avatar', ApiController\UsersV3\DeleteAvatarController::class);
+//内容过滤
+$route->post('/stopwords.batch', 'stopwords.batch', ApiController\StopWordsV3\BatchCreateStopWordsController::class);
+$route->get('/stopwords.list', 'stopwords.list', ApiController\StopWordsV3\ListStopWordsController::class);
+$route->post('/stopwords.delete', 'stopwords.delete', ApiController\StopWordsV3\DeleteStopWordController::class);
