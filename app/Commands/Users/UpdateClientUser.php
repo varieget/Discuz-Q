@@ -199,7 +199,7 @@ class UpdateClientUser
         // 过滤内容
         $username = $this->specialChar->purify($username);
 
-        $usernamechange = UsernameChange::query()->orderBy('id', 'desc')
+        $usernamechange = UsernameChange::query()->where("user_id",$user->id)->orderBy('id', 'desc')
             ->first();
         if($usernamechange){
             $currentTime=date("y-m-d h:i:s");
