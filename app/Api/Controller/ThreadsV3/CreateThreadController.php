@@ -21,6 +21,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
+use App\Models\Order;
 use App\Models\Permission;
 use App\Models\Post;
 use App\Models\Thread;
@@ -135,6 +136,12 @@ class CreateThreadController extends DzqController
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
+
+        // 帖子是否需要支付，如果需要支付，则强制发布为草稿
+        if ($this->needPay($content['indexes'] ?? [])) {
+            $isDraft = true;
+        }
+
         $this->isDraft = $isDraft;
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
@@ -175,20 +182,9 @@ class CreateThreadController extends DzqController
         $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
 
-        // 帖子是否需要支付
-        $dataThread['order_paid'] = 1;
-        $tomTypes = array_keys($content['indexes'] ?? []);
-        foreach ($tomTypes as $tomType) {
-            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
-            if (constant($tomService.'::NEED_PAY')) {
-                $dataThread['order_paid'] = 0;
-                break;
-            }
-        }
-
         $thread->setRawAttributes($dataThread);
         $thread->save();
-        if (!$isApproved && !$isDraft && $thread->order_paid) {
+        if (!$isApproved && !$isDraft) {
             $this->user->refreshThreadCount();
             $this->user->save();
             Category::refreshThreadCountV3($categoryId);
@@ -267,7 +263,15 @@ class CreateThreadController extends DzqController
     {
         $user = $this->user;
         $group = Group::getGroup($user->id);
-        return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
+        $result = $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
+        if (
+            $this->needPay($tomJsons)
+            && ($order = $this->getPendingOrderInfo($thread))
+            && ($order->status == Order::ORDER_STATUS_PENDING)
+        ) {
+            $result['orderInfo'] = $this->camelData($order);
+        }
+        return $result;
     }
 
     private function limitCreateThread()

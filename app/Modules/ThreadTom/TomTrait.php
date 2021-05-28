@@ -25,6 +25,7 @@ use App\Models\Permission;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Common\Utils;
+use Illuminate\Support\Arr;
 
 trait TomTrait
 {
@@ -233,6 +234,24 @@ trait TomTrait
         if (!empty($threadUserId) && $user->id == $threadUserId) {
             $permission = 'category' . $categoryId . '.thread.hideOwnThreadOrPost';
             if (in_array('thread.hideOwnThreadOrPost', $permissions) || in_array($permission, $permissions)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 检测是否有需要支付的 tom
+     *
+     * @param array $tomJsons
+     * @return bool
+     */
+    private function needPay($tomJsons)
+    {
+        $tomTypes = array_keys($tomJsons);
+        foreach ($tomTypes as $tomType) {
+            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
+            if (constant($tomService.'::NEED_PAY')) {
                 return true;
             }
         }

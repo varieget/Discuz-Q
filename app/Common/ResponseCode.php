@@ -115,6 +115,7 @@ class ResponseCode
     const SMS_CODE_EXPIRE = -9003;
 
     const PAY_ORDER_FAIL = -10000;
+    const THREAD_NEED_PAY = -10001;
 
     public static $codeMap = [
         self::NOT_INSTALL => '当前站点未安装',
@@ -191,5 +192,6 @@ class ResponseCode
         self::REALNAME_NOT_NULL => '真实姓名不能为空',
         self::IDENTITY_NOT_NULL => '身份证不能为空',
         self::REAL_USER_CHECK_FAIL => '实名认证不通过',
+        self::THREAD_NEED_PAY => '发布帖子需要支付',
     ];
 }

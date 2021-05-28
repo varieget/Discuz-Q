@@ -21,6 +21,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
+use App\Models\Order;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
@@ -134,11 +135,21 @@ class UpdateThreadController extends DzqController
         } else {
             $thread->is_approved = Thread::BOOL_YES;
         }
-        
+
         if ($isDraft) {
             $thread->is_draft = Thread::BOOL_YES;
         } else {
             $thread->is_draft = Thread::BOOL_NO;
+        }
+
+        // 如果更新为非草稿状态，则要判断是否已付费
+        if ($thread->is_draft == Thread::BOOL_NO) {
+            $order = $this->getPendingOrderInfo($thread);
+            if ($order && ($order->status != Order::ORDER_STATUS_PAID)) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '订单未支付，无法发布', [
+                    'orderInfo' => $this->camelData($order),
+                ]);
+            }
         }
 
         !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
