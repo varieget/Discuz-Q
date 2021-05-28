@@ -190,7 +190,7 @@ class ListPostsController extends DzqController
             'replyUserId' => $post['reply_user_id'],
             'commentPostId' => $post['comment_post_id'],
             'commentUserId' => $post['comment_user_id'],
-            //            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
+//            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
             'content'  =>   app()->make(Formatter::class)->render($post['content']),
             'replyCount' => $post['reply_count'],
             'likeCount' => $post['like_count'],

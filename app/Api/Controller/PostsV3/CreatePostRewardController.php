@@ -30,6 +30,7 @@ use App\Repositories\ThreadRewardRepository;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
+use Exception;
 use Illuminate\Database\ConnectionInterface;
 use Discuz\Base\DzqCache;
 

@@ -33,7 +33,6 @@ class SelectTomController extends DzqController
     {
         $thread = Thread::query()
             ->where('id', $this->inPut('threadId'))
-            ->whereNotNull('deleted_at')
             ->first();
         if (!$thread) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
