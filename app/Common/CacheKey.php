@@ -71,11 +71,13 @@ class CacheKey
     public const LIST_THREADS_V3_CREATE_TIME = 'list_threads_v3_create_time';//filterId->pageId
     //智能排序，不参与筛选
     public const LIST_THREADS_V3_SEQUENCE = 'list_threads_v3_sequence';//filterId->pageId
-    //热点数据变更排序规则
+    //浏览数排序
     public const LIST_THREADS_V3_VIEW_COUNT = 'list_threads_v3_view_count';//filterId->pageId
+    //评论时间排序
     public const LIST_THREADS_V3_POST_TIME = 'list_threads_v3_post_time';//filterId->pageId
-
+    //关注排序
     public const LIST_THREADS_V3_ATTENTION = 'list_threads_v3_attention';//filterId->pageId
+    //个人中心复合数据排序
     public const LIST_THREADS_V3_COMPLEX = 'list_threads_v3_complex';//filterId->pageId
 
 //    public const LIST_THREADS_V3_POST_COUNT = 'list_threads_v3_post_count';
