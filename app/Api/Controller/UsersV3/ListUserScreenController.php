@@ -30,7 +30,7 @@ class ListUserScreenController extends DzqController
     // 权限检查，是否为管理员
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $userRepo->canUpdateUserWallet($this->user);
+        return $userRepo->canListUserScren($this->user);
     }
 
 
