@@ -72,8 +72,6 @@ class CreateDialogV2Controller extends DzqController
             'dialogId' =>$res['id'],
         ];
 
-        $build = $this->camelData($data);
-
-        $this->outPut(ResponseCode::SUCCESS, '已发送', $build);
+        $this->outPut(ResponseCode::SUCCESS, '已发送', $data);
     }
 }
