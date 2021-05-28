@@ -98,7 +98,11 @@ class Permission extends DzqModel
         $groupKey = md5(serialize($groupIds));
         $cache = app('cache');
         $key = CacheKey::GROUP_PERMISSIONS;
-        $permissions = $cache->get($key);
+        if (app()->has($key)) {
+            $permissions = app()->get($key);
+        } else {
+            $permissions = $cache->get($key);
+        }
         if ($permissions) {
             if (isset($permissions[$groupKey])) {
                 $permission = $permissions[$groupKey];
@@ -111,6 +115,7 @@ class Permission extends DzqModel
             $permissions = [$groupKey => $permission];
         }
         $cache->put($key, $permissions, 5 * 60);
+        app()->instance($key, $permissions);
         return $permission;
     }
 

@@ -341,6 +341,12 @@ class UserRepository extends AbstractRepository
         if (!$thread) {
             return false;
         }
+
+        // 删除自己的草稿
+        if (Arr::get($thread, 'is_draft') && (Arr::get($thread, 'user_id') == $user->id)) {
+            return true;
+        }
+
         return ($user->id === $thread['user_id'] && $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE_OWN, $thread['category_id']))
             || $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE, $thread['category_id']);
     }
@@ -570,6 +576,24 @@ class UserRepository extends AbstractRepository
 
 
     public function canExportUser(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+
+    public function canUserWallet(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+
+    public function canUpdateUserWallet(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+
+    public function canListUserScren(User $user)
     {
         return $user->isAdmin();
     }

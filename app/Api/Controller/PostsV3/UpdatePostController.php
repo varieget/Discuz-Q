@@ -118,6 +118,7 @@ class UpdatePostController extends DzqController
     {
         $postId = $this->inPut('pid');
         DzqCache::del2HashKey(CacheKey::LIST_THREADS_V3_POST_LIKED, $user->id, $postId);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
         $post = Post::query()->where('id', $postId)->first();
         if (!empty($post)) {
             $threadId = $post['thread_id'];

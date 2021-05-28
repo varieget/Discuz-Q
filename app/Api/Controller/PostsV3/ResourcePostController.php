@@ -21,6 +21,7 @@ namespace App\Api\Controller\PostsV3;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\CommentPostSerializer;
 use App\Common\ResponseCode;
+use App\Models\Attachment;
 use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\User;
@@ -34,6 +35,7 @@ class ResourcePostController extends DzqController
         'user:id,username,avatar',
         'user.groups:id,name,is_display',
         'likedUsers:id,username,avatar',
+        'images'
     ];
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -76,7 +78,6 @@ class ResourcePostController extends DzqController
 
         $data = $coment_post_serialize->getDefaultAttributes($comment_post, $this->user);
         $data['canLike'] = true;
-
         $data['images'] = [];
         $data['likeUsers'] = $comment_post->likedUsers;
         if(!empty($comment_post->images)){
@@ -104,8 +105,9 @@ class ResourcePostController extends DzqController
             $replyUsers = $this->getUser($reply_user_id);
             $comment_user_id = array_unique(array_column($replyIdArr, 'comment_user_id'));
             $commentUsers = $this->getUser($comment_user_id);
-
             $comment_post_id = array_column($replyIdArr,'id');
+
+            $attachments = $this->getAttachment($comment_post_id,$attachment_serialize);
             $comment_post_collect = Post::query()->whereIn('id', $comment_post_id)->get();
             foreach ($comment_post_collect as $k=>$value){
                 $comment_post_collect[$k]->loadMissing($include);
@@ -113,6 +115,7 @@ class ResourcePostController extends DzqController
                 $data['commentPosts'][$k]['user'] = $users[$value['user_id']];
                 $data['commentPosts'][$k]['replyUser'] = $replyUsers[$value['reply_user_id']];
                 $data['commentPosts'][$k]['commentUser'] = $commentUsers[$value['comment_user_id']];
+                $data['commentPosts'][$k]['attachments'] = !empty($attachments[$value['id']]) ? $attachments[$value['id']] : null;
             }
         }
 //        $cache->put($cacheKey, serialize($data), 5*60);
@@ -127,6 +130,24 @@ class ResourcePostController extends DzqController
         $users = User::query()->whereIn('id', $userIds)->get(['id','nickname','avatar','realname'])->toArray();
         $users = array_column($users, null, 'id');
         return $users;
+    }
+
+    protected function getAttachment($ids,$attachmentSerializer)
+    {
+        if (!$ids) {
+            return null;
+        }
+        $attachments = Attachment::query()->whereIn('type_id', $ids)->get();
+        $attachments = $attachments
+            ->map(function (Attachment $attachment) use ($attachmentSerializer) {
+                return $attachmentSerializer->getDefaultAttributes($attachment);
+            });
+        $attachments = $attachments->toArray();
+        $newAttachments = [];
+        foreach ($attachments as $k=>$val){
+            $newAttachments[$val['type_id']][] = $this->camelData($val);
+        }
+        return $newAttachments;
     }
 
     protected function getUserWithGroup($userId)
