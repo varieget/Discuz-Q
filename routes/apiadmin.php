@@ -62,3 +62,6 @@ $route->get('/users', 'users.list', ApiController\UsersV3\ListUserScreenControll
 $route->post('/stopwords.batch', 'stopwords.batch', ApiController\StopWordsV3\BatchCreateStopWordsController::class);
 $route->get('/stopwords.list', 'stopwords.list', ApiController\StopWordsV3\ListStopWordsController::class);
 $route->post('/stopwords.delete', 'stopwords.delete', ApiController\StopWordsV3\DeleteStopWordController::class);
+
+//管理端站点设置
+$route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);
