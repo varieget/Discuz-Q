@@ -41,7 +41,7 @@ class SmsBindController extends AuthBaseController
         $token          = SessionToken::get($sessionToken);
         $actor          = !empty($token->user) ? $token->user : $this->user;
 
-        // 判断手机号是否已经被绑定
+        // 用户手机号为空才可访问此接口
         if (!empty($actor->mobile)) {
             $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
         }
