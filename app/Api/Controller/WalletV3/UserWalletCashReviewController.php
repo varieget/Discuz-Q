@@ -73,7 +73,9 @@ class UserWalletCashReviewController extends DzqController
             'cashStatus'    => (int) $this->inPut('cashStatus'),
             'remark'        => $this->inPut('remark'),
         ];
-
+        $log = app('payLog');
+        $log_data = $this->data;
+        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：",$log_data);
         $this->dzqValidate($this->data,[
             'ids'           => 'required|array',
             'cashStatus'    => 'required|int',
@@ -82,6 +84,7 @@ class UserWalletCashReviewController extends DzqController
 
         //只允许修改为审核通过或审核不通过
         if (!in_array($this->data['cashStatus'], [UserWalletCash::STATUS_REVIEWED, UserWalletCash::STATUS_REVIEW_FAILED])) {
+            $log->error("非法操作 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
             return $this->outPut(ResponseCode::NET_ERROR, '非法操作');
         }
         $ip = ip($this->request->getServerParams());
@@ -92,13 +95,14 @@ class UserWalletCashReviewController extends DzqController
         $db = $this->db;
         $collection = collect($this->data['ids'])
             ->unique()
-            ->map(function ($id) use ($cash_status, &$status_result, $wxpay_mchpay_close, $ip, $db) {
+            ->map(function ($id) use ($cash_status, &$status_result, $wxpay_mchpay_close, $ip, $db, $log, $log_data) {
                 $db->beginTransaction();
                 //取出待审核数据
                 $cash_record = UserWalletCash::find($id);
                 //只允许修改未审核的数据。
                 if (empty($cash_record) || $cash_record->cash_status != UserWalletCash::STATUS_REVIEW) {
                     $db->rollBack();
+                    $log->error("只允许修改未审核的数据 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                     return $status_result[$id] = 'failure';
                 }
                 $cash_record->cash_status = $cash_status;
@@ -116,6 +120,7 @@ class UserWalletCashReviewController extends DzqController
                         $res = $user_wallet->save();
                         if($res === false){
                             $db->rollBack();
+                            $log->error("修改用户冻结金额、可用金额出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                             return $status_result[$id] = 'failure';
                         }
                         //冻结变动金额，为负数数
@@ -133,6 +138,7 @@ class UserWalletCashReviewController extends DzqController
                         );
                         if(!$res){
                             $db->rollBack();
+                            $log->error("添加钱包明细 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                             return $status_result[$id] = 'failure';
                         }
                         $cash_record->remark = Arr::get($this->data, 'remark', '');
@@ -140,12 +146,14 @@ class UserWalletCashReviewController extends DzqController
                         $res = $cash_record->save();
                         if($res === false){
                             $db->rollBack();
+                            $log->error("修改提现记录状态出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                             return $status_result[$id] = 'failure';
                         }
                         return $status_result[$id] = 'success';
                     } catch (\Exception $e) {
                         //回滚事务
                         $db->rollback();
+                        $log->error("审核出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
                         return $status_result[$id] = 'failure';
                     }
                 }
@@ -156,12 +164,14 @@ class UserWalletCashReviewController extends DzqController
                         //检查证书
                         if (!file_exists(storage_path().'/cert/apiclient_cert.pem') || !file_exists(storage_path().'/cert/apiclient_key.pem')) {
                             $db->rollBack();
+                            $log->error("检查证书失败 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                             return $status_result[$id] = 'pem_notexist';
                         }
                         $cash_record->cash_type = UserWalletCash::TRANSFER_TYPE_MCH;
                         $res = $cash_record->save();
                         if($res === false){
                             $db->rollBack();
+                            $log->error("修改提现记录出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                             return $status_result[$id] = 'failure';
                         }
                         //触发提现钩子事件
@@ -169,9 +179,11 @@ class UserWalletCashReviewController extends DzqController
                             new Cash($cash_record, $ip, GatewayConfig::WECAHT_TRANSFER)
                         );
                         $db->commit();
+                        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                         return $status_result[$id] = 'success';
                     }catch (\Exception $e){
                         $db->rollBack();
+                        $log->error("审核出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
                         return $status_result[$id] = 'failure';
                     }
                 }else{          //没有开通企业打款，直接扣款
@@ -182,6 +194,7 @@ class UserWalletCashReviewController extends DzqController
                         $res = $cash_record->save();
                         if($res === false){
                             $db->rollBack();
+                            $log->error("修改提现记录出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                             return $status_result[$id] = 'failure';
                         }
                         //获取用户钱包
@@ -191,6 +204,7 @@ class UserWalletCashReviewController extends DzqController
                         $res = $user_wallet->save();
                         if($res === false){
                             $db->rollBack();
+                            $log->error("修改用户冻结金额、可用金额出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                             return $status_result[$id] = 'failure';
                         }
                         //冻结变动金额，为负数
@@ -206,12 +220,15 @@ class UserWalletCashReviewController extends DzqController
                         );
                         if($res === false){
                             $db->rollBack();
+                            $log->error("添加钱包明细出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                             return $status_result[$id] = 'failure';
                         }
                         $db->commit();
+                        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                         return $status_result[$id] = 'success';
                     }catch (\Exception $e){
                         $db->rollBack();
+                        $log->error("审核出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
                         return $status_result[$id] = 'failure';
                     }
                 }
