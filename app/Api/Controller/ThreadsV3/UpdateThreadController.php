@@ -138,6 +138,9 @@ class UpdateThreadController extends DzqController
         if ($isDraft) {
             $thread->is_draft = Thread::BOOL_YES;
         } else {
+            if ($thread->is_draft) {
+                $thread->created_at = date('Y-m-d H:i:m', time());
+            }
             $thread->is_draft = Thread::BOOL_NO;
         }
 
