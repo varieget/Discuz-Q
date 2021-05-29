@@ -58,7 +58,14 @@ class CreateUserWalletCashController extends DzqController
     public function main()
     {
         $cashApplyAmount = $this->inPut('cashApplyAmount');
+        $log = app('payLog');
+        $log_data = [
+            "cashApplyAmount" => $cashApplyAmount,
+            'user_id' => $this->user->id
+        ];
+        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：",$log_data);
         if(empty($cashApplyAmount)){
+            $log->error("INVALID_PARAMETER requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
         $cash_setting = $this->settings->tag('cash');
@@ -79,6 +86,7 @@ class CreateUserWalletCashController extends DzqController
             //提现间隔时间
             $cash_record = UserWalletCash::where('created_at', '>=', $time_before)->where('user_id', $this->user->id)->first();
             if (!empty($cash_record)) {
+                $log->error("提现处于限制间隔天数内 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                 return $this->outPut(ResponseCode::NET_ERROR, '提现处于限制间隔天数内');
             }
         }
@@ -88,6 +96,7 @@ class CreateUserWalletCashController extends DzqController
             ->where('refunds_status', UserWalletCash::REFUNDS_STATUS_NO)
             ->sum('cash_apply_amount');
         if(bccomp($cash_sum_limit, $totday_cash_amount, 2) == -1){
+            $log->error("超出每日提现金额限制 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
             return $this->outPut(ResponseCode::NET_ERROR, '超出每日提现金额限制');
         }
         //计算手续费
@@ -103,11 +112,13 @@ class CreateUserWalletCashController extends DzqController
             //检查钱包是否允许提现,1:钱包已冻结
             if ($user_wallet->wallet_status == UserWallet::WALLET_STATUS_FROZEN) {
                 $db->rollback();
+                $log->error("钱包已冻结提现 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                 return $this->outPut(ResponseCode::NET_ERROR, '钱包已冻结提现');
             }
             //检查金额是否足够
             if ($user_wallet->available_amount < $cashApplyAmount) {
                 $db->rollback();
+                $log->error("钱包可用金额不足 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                 return $this->outPut(ResponseCode::NET_ERROR, '钱包可用金额不足');
             }
             $cash_sn  = $this->getCashSn();
@@ -129,6 +140,7 @@ class CreateUserWalletCashController extends DzqController
             $res = $user_wallet->save();
             if(!$res){
                 $db->rollBack();
+                $log->error("提现申请失败 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                 return $this->outPut(ResponseCode::NET_ERROR, '提现申请失败');
             }
             //添加钱包明细,
@@ -142,12 +154,15 @@ class CreateUserWalletCashController extends DzqController
             );
             if(!$res){
                 $db->rollBack();
+                $log->error("提现申请失败 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                 return $this->outPut(ResponseCode::NET_ERROR, '提现申请失败');
             }
             $db->commit();
+            $log->info("申请提现成功 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
             return $this->outPut(ResponseCode::SUCCESS,'申请提现成功');
         }catch (\Exception $e){
             $db->rollBack();
+            $log->error("提现申请失败Exception requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
             return $this->outPut(ResponseCode::NET_ERROR, '提现申请失败');
         }
     }
