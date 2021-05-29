@@ -101,7 +101,7 @@ class UploadBackgroundController extends DzqController
             }
             $backUrl = $remoteServer."/public/background/".$backgroundUrl;
         }
-        return $backUrl;
+        return $backUrl."?".time();
     }
 
 }
