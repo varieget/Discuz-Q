@@ -41,7 +41,7 @@ class UserWalletCashReviewController extends DzqController
      * @var \Illuminate\Contracts\Events\Dispatcher
      */
     public $events;
-
+    public $db;
 
     /**
      * @param Dispatcher $bus
@@ -50,6 +50,7 @@ class UserWalletCashReviewController extends DzqController
     {
         $this->settings = $settings;
         $this->events = $events;
+        $this->db = app('db');
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -88,16 +89,16 @@ class UserWalletCashReviewController extends DzqController
         $status_result  = []; //结果数组
         //是否开启企业打款
         $wxpay_mchpay_close = (bool)$this->settings->get('wxpay_mchpay_close', 'wxpay');
-
+        $db = $this->db;
         $collection = collect($this->data['ids'])
             ->unique()
-            ->map(function ($id) use ($cash_status, &$status_result, $wxpay_mchpay_close, $ip) {
-                DB::beginTransaction();
+            ->map(function ($id) use ($cash_status, &$status_result, $wxpay_mchpay_close, $ip, $db) {
+                $db->beginTransaction();
                 //取出待审核数据
                 $cash_record = UserWalletCash::find($id);
                 //只允许修改未审核的数据。
                 if (empty($cash_record) || $cash_record->cash_status != UserWalletCash::STATUS_REVIEW) {
-                    DB::rollBack();
+                    $db->rollBack();
                     return $status_result[$id] = 'failure';
                 }
                 $cash_record->cash_status = $cash_status;
@@ -114,7 +115,7 @@ class UserWalletCashReviewController extends DzqController
                         $user_wallet->available_amount = $user_wallet->available_amount + $cash_apply_amount;
                         $res = $user_wallet->save();
                         if($res === false){
-                            DB::rollBack();
+                            $db->rollBack();
                             return $status_result[$id] = 'failure';
                         }
                         //冻结变动金额，为负数数
@@ -131,20 +132,20 @@ class UserWalletCashReviewController extends DzqController
                             $cash_record->id
                         );
                         if(!$res){
-                            DB::rollBack();
+                            $db->rollBack();
                             return $status_result[$id] = 'failure';
                         }
                         $cash_record->remark = Arr::get($this->data, 'remark', '');
                         $cash_record->refunds_status = UserWalletCash::REFUNDS_STATUS_YES;
                         $res = $cash_record->save();
                         if($res === false){
-                            DB::rollBack();
+                            $db->rollBack();
                             return $status_result[$id] = 'failure';
                         }
                         return $status_result[$id] = 'success';
                     } catch (\Exception $e) {
                         //回滚事务
-                        DB::rollback();
+                        $db->rollback();
                         return $status_result[$id] = 'failure';
                     }
                 }
@@ -154,23 +155,23 @@ class UserWalletCashReviewController extends DzqController
                     try {
                         //检查证书
                         if (!file_exists(storage_path().'/cert/apiclient_cert.pem') || !file_exists(storage_path().'/cert/apiclient_key.pem')) {
-                            DB::rollBack();
+                            $db->rollBack();
                             return $status_result[$id] = 'pem_notexist';
                         }
                         $cash_record->cash_type = UserWalletCash::TRANSFER_TYPE_MCH;
                         $res = $cash_record->save();
                         if($res === false){
-                            DB::rollBack();
+                            $db->rollBack();
                             return $status_result[$id] = 'failure';
                         }
                         //触发提现钩子事件
                         $this->events->dispatch(
                             new Cash($cash_record, $ip, GatewayConfig::WECAHT_TRANSFER)
                         );
-                        DB::commit();
+                        $db->commit();
                         return $status_result[$id] = 'success';
                     }catch (\Exception $e){
-                        DB::rollBack();
+                        $db->rollBack();
                         return $status_result[$id] = 'failure';
                     }
                 }else{          //没有开通企业打款，直接扣款
@@ -180,7 +181,7 @@ class UserWalletCashReviewController extends DzqController
                         $cash_record->cash_status = UserWalletCash::STATUS_PAID;//已打款
                         $res = $cash_record->save();
                         if($res === false){
-                            DB::rollBack();
+                            $db->rollBack();
                             return $status_result[$id] = 'failure';
                         }
                         //获取用户钱包
@@ -189,7 +190,7 @@ class UserWalletCashReviewController extends DzqController
                         $user_wallet->freeze_amount = $user_wallet->freeze_amount - $cash_record->cash_apply_amount;
                         $res = $user_wallet->save();
                         if($res === false){
-                            DB::rollBack();
+                            $db->rollBack();
                             return $status_result[$id] = 'failure';
                         }
                         //冻结变动金额，为负数
@@ -204,13 +205,13 @@ class UserWalletCashReviewController extends DzqController
                             $cash_record->id
                         );
                         if($res === false){
-                            DB::rollBack();
+                            $db->rollBack();
                             return $status_result[$id] = 'failure';
                         }
-                        DB::commit();
+                        $db->commit();
                         return $status_result[$id] = 'success';
                     }catch (\Exception $e){
-                        DB::rollBack();
+                        $db->rollBack();
                         return $status_result[$id] = 'failure';
                     }
                 }
