@@ -19,8 +19,6 @@ namespace App\Api\Controller\WalletV3;
 
 
 use App\Common\ResponseCode;
-use App\Common\Utils;
-use App\Exceptions\WalletException;
 use App\Models\UserWallet;
 use App\Models\UserWalletCash;
 use App\Models\UserWalletLog;
@@ -30,10 +28,8 @@ use Carbon\Carbon;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
-use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class CreateUserWalletCashController extends DzqController
 {
@@ -98,17 +94,20 @@ class CreateUserWalletCashController extends DzqController
         $tax_ratio  = $cash_rate; //手续费率
         $tax_amount = $cashApplyAmount * $tax_ratio; //手续费
         $tax_amount = sprintf('%.2f', ceil($tax_amount * 100) / 100); //格式化手续费
+        $db = app('db');
         //开始事务
-        DB::beginTransaction();
+        $db->beginTransaction();
         try {
             //获取用户钱包
             $user_wallet = $this->user->userWallet()->lockForUpdate()->first();
             //检查钱包是否允许提现,1:钱包已冻结
             if ($user_wallet->wallet_status == UserWallet::WALLET_STATUS_FROZEN) {
+                $db->rollback();
                 return $this->outPut(ResponseCode::NET_ERROR, '钱包已冻结提现');
             }
             //检查金额是否足够
             if ($user_wallet->available_amount < $cashApplyAmount) {
+                $db->rollback();
                 return $this->outPut(ResponseCode::NET_ERROR, '钱包可用金额不足');
             }
             $cash_sn  = $this->getCashSn();
@@ -127,7 +126,11 @@ class CreateUserWalletCashController extends DzqController
             //冻结钱包金额
             $user_wallet->available_amount = $user_wallet->available_amount - $cashApplyAmount;
             $user_wallet->freeze_amount    = $user_wallet->freeze_amount + $cashApplyAmount;
-            $user_wallet->save();
+            $res = $user_wallet->save();
+            if(!$res){
+                $db->rollBack();
+                return $this->outPut(ResponseCode::NET_ERROR, '提现申请失败');
+            }
             //添加钱包明细,
             $res = UserWalletLog::createWalletLog(
                 $this->user->id,
@@ -138,13 +141,13 @@ class CreateUserWalletCashController extends DzqController
                 $cash->id
             );
             if(!$res){
-                DB::rollBack();
+                $db->rollBack();
                 return $this->outPut(ResponseCode::NET_ERROR, '提现申请失败');
             }
-            DB::commit();
+            $db->commit();
             return $this->outPut(ResponseCode::SUCCESS,'申请提现成功');
         }catch (\Exception $e){
-            DB::rollBack();
+            $db->rollBack();
             return $this->outPut(ResponseCode::NET_ERROR, '提现申请失败');
         }
     }
