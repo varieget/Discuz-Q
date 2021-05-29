@@ -919,7 +919,6 @@ class Thread extends DzqModel
             ->where([
                 'id' => $threadId,
             ])
-            ->whereNull('deleted_at')
             ->first();
         $toArray && $ret = $ret->toArray();
         return $ret;

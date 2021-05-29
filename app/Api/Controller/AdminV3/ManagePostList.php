@@ -19,13 +19,14 @@ namespace App\Api\Controller\AdminV3;
 
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
+use App\Models\UserActionLogs;
 use App\Models\Post;
 use App\Models\StopWord;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Str;
 
-class CheckReplyList extends DzqController
+class ManagePostList extends DzqController
 {
 
     private $sortFields = [
@@ -52,7 +53,7 @@ class CheckReplyList extends DzqController
         $page = intval($this->inPut('page')); //分页
         $perPage = intval($this->inPut('perPage')); //分页
         $q = $this->inPut('q'); //内容
-        $isApproved = intval($this->inPut('isApproved')); //0未审核 1已忽略
+        $isApproved = $this->inPut('isApproved') ? intval($this->inPut('isApproved')) : 0; //0未审核 1已忽略
         $createdAtBegin = $this->inPut('createdAtBegin'); //开始时间
         $createdAtEnd = $this->inPut('createdAtEnd'); //结束时间
         $deletedAtBegin = $this->inPut('deletedAtBegin'); //删除开始时间
@@ -64,7 +65,7 @@ class CheckReplyList extends DzqController
 
         $query = Post::query()
             ->select(
-                'posts.id', 'posts.thread_id', 'posts.user_id','posts.content', 'posts.ip',
+                'posts.id as post_id', 'posts.thread_id', 'posts.user_id','posts.content', 'posts.ip',
                 'posts.updated_at', 'posts.deleted_user_id' ,'posts.deleted_at',
                 'users.nickname'
             )
@@ -75,7 +76,9 @@ class CheckReplyList extends DzqController
         // 回收站
         if ($isDeleted == 'yes') {
             // 只看回收站帖子
-            $query->whereNotNull('posts.deleted_at');
+            $query->whereNotNull('posts.deleted_at')
+                ->addSelect('users1.nickname as deleted_nickname')
+                ->leftJoin('users as users1', 'users1.id','=','posts.deleted_user_id');
         } elseif ($isDeleted == 'no') {
             // 不看回收站帖子
             $query->whereNull('posts.deleted_at');
@@ -84,7 +87,7 @@ class CheckReplyList extends DzqController
         //用户昵称筛选
         $query->leftJoin('users', 'users.id', '=', 'posts.user_id');
         if (!empty($nickname)) {
-            $query->where('users.nickname', $nickname);
+            $query->where('users.nickname', 'like','%'.$nickname.'%');
         }
 
         //内容筛选
@@ -99,9 +102,7 @@ class CheckReplyList extends DzqController
 
         //用户删除用户昵称
         if (!empty($deletedNickname)) {
-            $query->addSelect('users1.nickname as deleted_user')
-                ->leftJoin('users as users1', 'users1.id','=','posts.deleted_user_id')
-                ->where('users1.nickname','like','%'.$deletedNickname.'%');
+            $query->where('users1.nickname','like','%'.$deletedNickname.'%');
         }
 
         //时间筛选
@@ -116,11 +117,12 @@ class CheckReplyList extends DzqController
         }
 
         //排序
-        $sort = ltrim(Str::snake($sort), '-');
-        if (!in_array($sort, $this->sortFields)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '不合法的排序字段:'.$sort);
+        $sortDetect = ltrim(Str::snake($sort), '-');
+        if (!in_array($sortDetect, $this->sortFields)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '不合法的排序字段:'.$sortDetect);
         }
-        $query = $query->orderBy('posts.'.$sort,
+
+        $query = $query->orderBy('posts.'.$sortDetect,
         Str::startsWith($sort, '-') ? 'desc' : 'asc');
 
         $pagination = $this->pagination($page, $perPage, $query);
@@ -138,7 +140,62 @@ class CheckReplyList extends DzqController
             }
         }
 
-        $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($pagination));
+        $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($this->paramHandle($pagination)));
+    }
+
+
+    public function paramHandle($pagination)
+    {
+        $pageData = $pagination['pageData'];
+
+        $isDeleted = $this->inPut('isDeleted');
+
+        $userActionLogs = [];
+
+        if ($isDeleted == 'yes') {
+            $userIds = array_column($pageData,'post_id');
+
+            $userActionLogs = UserActionLogs::query()
+                ->whereIn('log_able_id',$userIds)
+                ->where(['action' => 'hide', 'log_able_type' => 'App\Models\Post'])
+                ->orderBy('id','desc')
+                ->get(['log_able_id as post_id','message'])
+                ->pluck('message','post_id')
+                ->toArray();
+        }
+
+        foreach ($pageData as $k=>$v) {
+            if (!isset($userActionLogs[$v['post_id']])) {
+                $userActionLogs[$v['post_id']] = '';
+            }
+
+            if (!isset($v['deleted_nickname'])) {
+                $pageData[$k]['deleted_nickname'] = '';
+            }
+
+            $pageData[$k]['lastDeletedLog'] = [
+                'message' => $userActionLogs[$v['post_id']]
+            ];
+
+            $pageData[$k]['deletedUserArr'] = [
+              'deletedNickname' => $pageData[$k]['deleted_nickname'],
+              'deletedAt' => $pageData[$k]['deleted_at'],
+              'deletedUserId' => $pageData[$k]['deleted_user_id'],
+            ];
+
+            $pageData[$k]['cotent'] = [
+                'text' => $v['content'],
+                'indexes' => []
+            ];
+
+            unset($pageData[$k]['deleted_nickname']);
+            unset($pageData[$k]['deleted_at']);
+            unset($pageData[$k]['deleted_user_id']);
+        }
+
+        $pagination['pageData'] = $pageData;
+
+        return $pagination;
     }
 
 }
