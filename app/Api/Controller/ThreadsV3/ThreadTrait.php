@@ -179,7 +179,7 @@ trait ThreadTrait
     private function getFavoriteField($threadId, $loginUser)
     {
         $userId = $loginUser->id;
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_THREAD_USERS, $userId, $threadId, function () use ($userId, $threadId) {
+        return DzqCache::exists(CacheKey::LIST_THREADS_V3_THREAD_USERS . $userId, $threadId, function () use ($userId, $threadId) {
             return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $userId])->exists();
         });
     }
@@ -229,7 +229,7 @@ trait ThreadTrait
         } else if ($payType != Thread::PAY_FREE && $canFreeViewTom) {
             $paid = true;
         } else {
-            $paid = DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
+            $paid = DzqCache::exists(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId, $threadId, function () use ($userId, $threadId) {
                 return Order::query()
                     ->where([
                         'thread_id' => $threadId,
@@ -434,7 +434,7 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $threadId = $thread['id'];
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
+        return DzqCache::exists(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $userId, $threadId, function () use ($userId, $threadId) {
             return Order::query()->where(['user_id' => $userId, 'type' => Order::ORDER_TYPE_REWARD, 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])->exists();
         });
     }
@@ -446,7 +446,7 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $postId = $post['id'];
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId, $postId, function () use ($userId, $postId) {
+        return DzqCache::exists(CacheKey::LIST_THREADS_V3_POST_LIKED . $userId, $postId, function () use ($userId, $postId) {
             return PostUser::query()->where('post_id', $postId)->where('user_id', $userId)->exists();
         });
     }
