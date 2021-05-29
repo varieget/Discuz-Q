@@ -27,6 +27,7 @@ use App\Exceptions\TranslatorException;
 use App\Models\Group;
 use App\Models\GroupPaidUser;
 use App\Models\User;
+use App\Common\ResponseCode;
 use App\Models\UserActionLogs;
 use App\Models\AdminActionLog;
 use App\Models\UserSignInFields;
@@ -329,7 +330,7 @@ class UpdateAdminUser
         // 手机号是否已绑定
         if (! empty($mobile)) {
             if (User::query()->where('mobile', $mobile)->where('id', '<>', $user->id)->exists()) {
-                throw new Exception('mobile_is_already_bind');
+                \Discuz\Common\Utils::outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
             }
         }
 
