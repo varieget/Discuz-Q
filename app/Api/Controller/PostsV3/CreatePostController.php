@@ -127,9 +127,6 @@ class CreatePostController extends DzqController
         $data['content'] = '<t><p>'.$data['content'].'</p></t>';
         $content = $data['content'];
 
-        if(!empty($data['content']))    $data['content'] = app()->make(Formatter::class)->parse($data['content']);
-        $content = $data['content'];
-
         if (empty($data['content'])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
         }
