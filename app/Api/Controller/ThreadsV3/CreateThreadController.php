@@ -19,7 +19,6 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
-use App\Notifications\Related;
 use App\Models\Category;
 use App\Models\Group;
 use App\Models\Permission;
@@ -27,7 +26,6 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
-use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -117,7 +115,7 @@ class CreateThreadController extends DzqController
         //插入话题
         $this->saveTopic($thread, $content);
         //发帖@用户
-        $this->sendRelated($post);
+        $this->sendRelated($thread,$post);
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
         //更新帖子条数
@@ -126,37 +124,6 @@ class CreateThreadController extends DzqController
         return $this->getResult($thread, $post, $tomJsons);
     }
 
-    //发帖@用户
-    public function sendRelated($post){
-        if (!empty($post->parsedContent)) {
-            preg_match_all('/@.+? /', $post->parsedContent, $newsNameArr);
-
-            $newsNameArr = array_reduce($newsNameArr, 'array_merge', array());
-
-            if (empty($newsNameArr)) return;
-
-            $newsNameArr2 = [];
-            foreach ($newsNameArr as $v) {
-                $newsNameArr2[] = substr($v, 1);
-            }
-
-            $users = User::query()->whereIn('nickname', $newsNameArr2)->get();
-
-            if (empty($users)) return;
-
-            $post->mentionUsers()->sync(array_column($users->toArray(),'id'));
-
-            $users->load('deny');
-            $actor = $this->user;
-            $users->filter(function ($user) use ($post) {
-                //把作者拉黑的用户不发通知
-                return ! in_array($post->user_id, array_column($user->deny->toArray(), 'id'));
-            })->each(function (User $user) use ($post, $actor) {
-                // Tag 发送通知
-                $user->notify(new Related($actor, $post));
-            });
-        }
-    }
 
     private function saveThread(&$content)
     {

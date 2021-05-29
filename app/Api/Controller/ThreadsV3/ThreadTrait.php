@@ -22,6 +22,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use Discuz\Base\DzqCache;
 use App\Formatter\Formatter;
+use App\Notifications\Related;
 use App\Models\Category;
 use App\Models\MobileCode;
 use App\Models\Order;
@@ -472,6 +473,44 @@ trait ThreadTrait
             $attr = ['thread_id' => $threadId, 'topic_id' => $topicId];
             ThreadTopic::query()->where($attr)->firstOrCreate($attr);
         }
+    }
+
+    //发帖@用户发送通知消息
+    private function sendRelated($thread, $post){
+        //如果是草稿或需要审核 不发送消息
+        if ($thread->is_draft == Thread::IS_DRAFT || $thread->is_approved == Thread::UNAPPROVED || empty($post->parsedContent)) {
+            return;
+        }
+
+        preg_match_all('/@.+? /', $post->parsedContent, $newsNameArr);
+
+        $newsNameArr = array_reduce($newsNameArr, 'array_merge', array());
+
+        if (empty($newsNameArr)) return;
+
+        $newsNameArr2 = [];
+        foreach ($newsNameArr as $v) {
+            $string = trim(substr($v, 1));
+            if ($this->user->nickname != $string) {
+                $newsNameArr2[] = $string;
+            }
+        }
+
+        $users = User::query()->whereIn('nickname', $newsNameArr2)->get();
+
+        if (empty($users)) return;
+
+        $post->mentionUsers()->sync(array_column($users->toArray(),'id'));
+
+        $users->load('deny');
+        $actor = $this->user;
+        $users->filter(function ($user) use ($post) {
+            //把作者拉黑的用户不发通知
+            return ! in_array($post->user_id, array_column($user->deny->toArray(), 'id'));
+        })->each(function (User $user) use ($post, $actor) {
+            // Tag 发送通知
+            $user->notify(new Related($actor, $post));
+        });
     }
 
     /*

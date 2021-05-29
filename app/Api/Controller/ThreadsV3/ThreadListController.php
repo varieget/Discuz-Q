@@ -179,26 +179,31 @@ class ThreadListController extends DzqController
             switch ($complex) {
                 case Thread::MY_DRAFT_THREAD:
                     $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT)
-                        ->where('user_id', $loginUserId);
+                        ->where('user_id', $loginUserId)
+                        ->orderByDesc('th.id');
                     break;
                 case Thread::MY_LIKE_THREAD:
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
                     $threads = $threads->leftJoin('posts as post', 'post.thread_id', '=', 'th.id')
                         ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
                         ->leftJoin('post_user as postu', 'postu.post_id', '=', 'post.id')
-                        ->where(['postu.user_id' => $userId]);
+                        ->where(['postu.user_id' => $userId])
+                        ->orderByDesc('postu.created_at');
                     break;
                 case Thread::MY_COLLECT_THREAD:
                     $threads = $threads->leftJoin('thread_user as thu', 'thu.thread_id', '=', 'th.id')
-                        ->where(['thu.user_id' => $loginUserId]);
+                        ->where(['thu.user_id' => $loginUserId])
+                        ->orderByDesc('thu.created_at');
                     break;
                 case Thread::MY_BUY_THREAD:
                     $threads = $threads->leftJoin('orders as order', 'order.thread_id', '=', 'th.id')
-                        ->where(['order.user_id' => $loginUserId, 'status' => Order::ORDER_STATUS_PAID]);
+                        ->where(['order.user_id' => $loginUserId, 'status' => Order::ORDER_STATUS_PAID])
+                        ->orderByDesc('order.updated_at');
                     break;
                 case Thread::MY_OR_HIS_THREAD:
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
-                    $threads = $threads->where('user_id', $userId);
+                    $threads = $threads->where('user_id', $userId)
+                        ->orderByDesc('th.id');
                     break;
             }
         }
