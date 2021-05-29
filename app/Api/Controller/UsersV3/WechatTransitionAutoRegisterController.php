@@ -42,7 +42,6 @@ use Illuminate\Database\ConnectionInterface;
 class WechatTransitionAutoRegisterController extends AuthBaseController
 {
 
-
     protected $bus;
 
     protected $settings;
@@ -70,6 +69,7 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
         if(!(bool)$this->settings->get('is_need_transition')) {
             $this->outPut(ResponseCode::TRANSITION_NOT_OPEN);
         }
+        $type = intval($this->inPut('type'));
         //过度页开关打开需要把微信信息绑定至新用户，只在微信内有效
         $sessionToken = $this->inPut('sessionToken');
         if(! $sessionToken) {
@@ -102,7 +102,7 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
         $data['code']               = $inviteCode;
         $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
         $data['nickname']           = Str::of($wechatUser->nickname)->substr(0, 15);
-        $data['register_reason']    = trans('user.register_by_wechat_h5');
+        $data['register_reason']    = $type == 1 ? trans('user.register_by_wechat_miniprogram') : trans('user.register_by_wechat_h5');
         $data['bind_type']          = AuthUtils::WECHAT;
         $user = $this->bus->dispatch(
             new AutoRegisterUser(new User(), $data)

@@ -2,6 +2,7 @@
 
 namespace App\Api\Controller\PostsV3;
 
+use App\Api\Controller\ThreadsV3\ThreadHelper;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\PostSerializer;
 use App\Common\ResponseCode;
@@ -77,7 +78,6 @@ class ListPostsController extends DzqController
         $sort = $this->inPut('sort');
 
         $posts = $this->search($filters, $perPage, $page, $sort);
-
         $posts['pageData'] = $posts['pageData']->map(function ($post) {
             return $this->getPost($post, true);
         })->sortByDesc('rewards')->values()->toArray();
@@ -159,7 +159,6 @@ class ListPostsController extends DzqController
             ->get()
             ->map(function (Post $post) {
                 $content = Str::of($post->content);
-
                 if ($content->length() > Post::SUMMARY_LENGTH) {
                     $post->content = $content->substr(0, Post::SUMMARY_LENGTH)->finish(Post::SUMMARY_END_WITH);
                 }
@@ -191,7 +190,6 @@ class ListPostsController extends DzqController
             'commentPostId' => $post['comment_post_id'],
             'commentUserId' => $post['comment_user_id'],
 //            'content' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post['content']),
-            'content'  =>   app()->make(Formatter::class)->render($post['content']),
             'replyCount' => $post['reply_count'],
             'likeCount' => $post['like_count'],
             'createdAt' => optional($post->created_at)->format('Y-m-d H:i:s'),
@@ -212,7 +210,14 @@ class ListPostsController extends DzqController
             'likeState' => $post->likeState,
             'summaryText' => str_replace(['<t><p>', '</p></t>'], ['', ''],$post->summary_text),
         ];
-
+        if($post->thread->type != Thread::TYPE_OF_ALL){     //老数据
+            $data['content']  =  app()->make(Formatter::class)->render($post['content']);
+        }else{
+            $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $post['content']);
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
+            $data['content'] = str_replace($searches, $replaces, $content);
+        }
+        
         if ($post->deleted_at) {
             $data['isDeleted'] = true;
             $data['deletedAt'] = $post->deleted_at->format('Y-m-d H:i:s');

@@ -92,6 +92,8 @@ class UpdateThreadController extends DzqController
         $this->savePost($post, $content);
         //插入话题
         $this->saveTopic($thread, $content);
+        //发帖@用户
+        $this->sendRelated($thread,$post);
         //更新tom数据
         $tomJsons = $this->saveThreadTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
@@ -138,6 +140,9 @@ class UpdateThreadController extends DzqController
         if ($isDraft) {
             $thread->is_draft = Thread::BOOL_YES;
         } else {
+            if ($thread->is_draft) {
+                $thread->created_at = date('Y-m-d H:i:m', time());
+            }
             $thread->is_draft = Thread::BOOL_NO;
         }
 

@@ -16,47 +16,39 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\UsersV3;
+namespace App\Api\Controller\StopWordsV3;
 
 use App\Common\ResponseCode;
+use App\Models\StopWord;
 use App\Repositories\UserRepository;
-use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
-class ListDenyUserController extends DzqController
+class ListStopWordsController extends DzqController
 {
-
-    private $databaseField = [
-        'id',
-        'updated_at',
-        'created_at'
-    ];
-
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有访问敏感词列表的权限');
         }
         return true;
     }
 
     public function main()
     {
-        $actor = $this->user;
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
-
-        $query = User::query();
-        $query->leftJoin('deny_users', 'id', '=', 'deny_user_id')
-            ->where('user_id', $actor->id);
-        $query->select('deny_users.user_id','deny_users.deny_user_id','users.id AS pid', 'users.username', 'users.avatar');
-        $query->orderByDesc('deny_users.created_at');
-        $users = $this->pagination($currentPage, $perPage, $query);
-        $data = $this->camelData($users);
-
-        return $this->outPut(ResponseCode::SUCCESS,'', $data);
+        $filter = $this->inPut('filter');
+        $query = StopWord::query();
+        if ($keyword = trim(Arr::get($filter, 'keyword'))) {
+            $query = $query
+                ->when($keyword, function ($query, $keyword) {
+                    return $query->where('find', 'like', "%$keyword%");
+                });
+        }
+        $stopWords = $this->pagination($currentPage, $perPage, $query);
+        return $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($stopWords));
     }
 }
