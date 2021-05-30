@@ -276,5 +276,7 @@ class CreateThreadController extends DzqController
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_ATTENTION);
     }
 }
