@@ -101,23 +101,38 @@ class ThreadListController extends DzqController
     {
         $cacheKey = $this->cacheKey($filter);
         $filterKey = $this->filterKey($perPage, $filter);
+
+        $builder = $this->buildFilterThreads($filter);
+        $count = $builder->count();
+        $threads = $builder->limit($perPage*self::PRELOAD_PAGES)->get()->toArray();
+        $this->initDzqGlobalData1($threads,$count);
+
+
+
+
+
+
+
         //初始化exist数据
-        if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($cacheKey, $filter, $page, $perPage) {
-                $threads = $this->buildFilterThreads($filter);
-                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threads, true);
-                $this->initDzqGlobalData($threads);
-                return $threads;
-            }, true);
-            $this->initDzqUserData($this->user->id,$cacheKey,$filterKey);
-        } else {//其他页从缓存取，取不到就重数据库取并写入缓存
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($filter, $page, $perPage) {
-                $threads = $this->buildFilterThreads($filter);
-                $threads = $this->pagination($page, $perPage, $threads, true);
-                return $threads;
-            });
-        }
+//        if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
+//            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($cacheKey, $filter, $page, $perPage) {
+//                $threads = $this->buildFilterThreads($filter);
+//                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threads, true);
+//                $this->initDzqGlobalData($threads);
+//                return $threads;
+//            }, true);
+//            $this->initDzqUserData($this->user->id,$cacheKey,$filterKey);
+//        } else {//其他页从缓存取，取不到就重数据库取并写入缓存
+//            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($filter, $page, $perPage) {
+//                $threads = $this->buildFilterThreads($filter);
+//                $threads = $this->pagination($page, $perPage, $threads, true);
+//                return $threads;
+//            });
+//        }
         return $threads;
+    }
+    private function f1($builder){
+
     }
 
     function getSequenceThreads($filter, $page, $perPage)

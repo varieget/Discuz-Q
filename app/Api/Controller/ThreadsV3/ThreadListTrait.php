@@ -152,6 +152,27 @@ trait ThreadListTrait
         $this->cacheSearchReplace($threads, $posts);
     }
 
+    private function initDzqGlobalData1($threads,$count)
+    {
+        $threadIds = array_column($threads, 'id');
+        $posts = $this->cachePosts($threadIds);
+        $postIds = array_column($posts, 'id');
+        $userIds = array_unique(array_column($threads, 'user_id'));
+        $this->cacheThreads($threads);
+        $this->cacheUsers($userIds);
+        $this->cacheGroupUser($userIds);
+        $this->cacheTags($threadIds);
+        $toms = $this->cacheToms($threadIds);
+        $attachmentIds = [];
+        $threadVideoIds = [];
+        $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds, true);
+        $this->cacheAttachment($attachmentIds);
+        $this->cacheVideo($threadVideoIds);
+        $this->cachePostUsers($threadIds, $postIds, $posts);
+        $posts = array_column($posts, null, 'thread_id');
+        $this->cacheSearchReplace($threads, $posts);
+    }
+
     /**
      * @desc 当前登录用户个性化数据
      * @param $loginUserId
