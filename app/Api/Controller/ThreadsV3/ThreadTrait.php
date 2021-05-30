@@ -78,6 +78,7 @@ trait ThreadTrait
             'isLike' => $this->isLike($loginUser, $post),
             'isReward' => $this->isReward($loginUser, $thread),
             'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
+            'updatedAt'=>date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
