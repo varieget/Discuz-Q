@@ -21,6 +21,7 @@ namespace App\Models;
 use App\Common\AuthUtils;
 use App\Common\CacheKey;
 use App\Common\Utils;
+use App\Common\ResponseCode;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -297,6 +298,11 @@ class User extends DzqModel
 
     public function changeMobile($mobile)
     {
+        $exists = User::query()->where('mobile', $mobile)->where('id', '<>', $this->id)->exists();
+        if($exists){
+            \Discuz\Common\Utils::outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+        }
+
         $this->mobile = $mobile;
 
         $this->changeUserBindType();

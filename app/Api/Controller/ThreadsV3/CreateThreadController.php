@@ -114,6 +114,8 @@ class CreateThreadController extends DzqController
         $post = $this->savePost($thread, $content);
         //插入话题
         $this->saveTopic($thread, $content);
+        //发帖@用户
+        $this->sendRelated($thread,$post);
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
         //更新帖子条数
@@ -121,6 +123,7 @@ class CreateThreadController extends DzqController
 
         return $this->getResult($thread, $post, $tomJsons);
     }
+
 
     private function saveThread(&$content)
     {
@@ -276,5 +279,7 @@ class CreateThreadController extends DzqController
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_ATTENTION);
     }
 }

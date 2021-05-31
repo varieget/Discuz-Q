@@ -35,20 +35,17 @@ use App\User\Bind;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Guest;
-use Discuz\Socialite\Exception\SocialiteException;
-use Discuz\Wechat\EasyWechatTrait;
 use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class WechatMiniProgramLoginController extends AuthBaseController
 {
     use AssertPermissionTrait;
-    use EasyWechatTrait;
+
 
     protected $bus;
     protected $validation;
@@ -87,15 +84,10 @@ class WechatMiniProgramLoginController extends AuthBaseController
     public function main()
     {
         $this->miniParam    = $this->getWechatMiniProgramParam();
-        $jsCode             = $this->miniParam['jsCode'];
-        $iv                 = $this->miniParam['iv'];
-        $encryptedData      = $this->miniParam['encryptedData'];
         $sessionToken       = $this->inPut('sessionToken');
         $user               = !$this->user->isGuest() ? $this->user : new Guest();
-//        $user               = User::query()->where('id',2)->first();
         $this->miniUser     = $user;
         $inviteCode         = $this->inPut('inviteCode');
-        $this->app          = $this->miniProgram();
         //过渡开关打开
         if((bool)$this->settings->get('is_need_transition') && empty($sessionToken)) {
             $this->transitionLoginLogicVoid();
@@ -105,7 +97,6 @@ class WechatMiniProgramLoginController extends AuthBaseController
         $this->db->beginTransaction();
         try {
             $wechatUser = $this->getMiniWechatUser(
-                $this->app,
                 $this->miniParam['jsCode'],
                 $this->miniParam['iv'],
                 $this->miniParam['encryptedData'],
@@ -143,9 +134,9 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 // 先设置关系，为了同步微信头像
                 $wechatUser->setRelation('user', $user);
                 $wechatUser->save();
-                $this->db->commit();
 
                 $this->updateUserBindType($user,AuthUtils::WECHAT);
+                $this->db->commit();
 
                 // 判断是否开启了注册审核
                 if (!(bool)$this->settings->get('register_validate')) {
@@ -159,9 +150,9 @@ class WechatMiniProgramLoginController extends AuthBaseController
                     $wechatUser->user_id = $user->id;
                     $wechatUser->setRelation('user', $user);
                     $wechatUser->save();
-                    $this->db->commit();
 
                     $this->updateUserBindType($user,AuthUtils::WECHAT);
+                    $this->db->commit();
                 }
             }
         } else {
@@ -217,20 +208,22 @@ class WechatMiniProgramLoginController extends AuthBaseController
      */
     private function transitionLoginLogicVoid()
     {
-        /** @var UserWechat $wechatUser */
-        $wechatUser = $this->getMiniWechatUser(
-            $this->app,
-            $this->miniParam['jsCode'],
-            $this->miniParam['iv'],
-            $this->miniParam['encryptedData'],
-            $this->miniUser
-        );
         $this->db->beginTransaction();
-//        $wechatUser = UserWechat::query()
-//            ->where('mp_openid', $wxuser->getId())
-//            ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
-//            ->lockForUpdate()
-//            ->first();
+        try {
+            /** @var UserWechat $wechatUser */
+            $wechatUser = $this->getMiniWechatUser(
+                $this->miniParam['jsCode'],
+                $this->miniParam['iv'],
+                $this->miniParam['encryptedData'],
+                $this->miniUser
+            );
+        } catch (Exception $e) {
+            $this->db->rollback();
+            $this->outPut(ResponseCode::NET_ERROR,
+                ResponseCode::$codeMap[ResponseCode::NET_ERROR],
+                $e->getMessage()
+            );
+        }
         // 微信信息不存在
         if(! $wechatUser) {
             $wechatUser = new UserWechat();
@@ -242,7 +235,6 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 $this->db->rollBack();
                 $this->outPut(ResponseCode::REGISTER_CLOSE);
             }
-//            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), new User()));
             $wechatUser->save();//微信信息写入user_wechats
             $userWechatId = $wechatUser->id ? $wechatUser->id : $userWechatId;
             $this->db->commit();
@@ -256,7 +248,6 @@ class WechatMiniProgramLoginController extends AuthBaseController
         }
 
         // 登陆用户和微信绑定相同，更新微信信息
-//        $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $wechatUser->user));
         $wechatUser->save();
         $this->db->commit();
 

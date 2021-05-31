@@ -47,11 +47,12 @@ class UsersWalletLogsListController extends DzqController
         }
 
         if (isset($filter['changeType']) && !empty($filter['changeType'])) {
-            $query->where('user_wallet_logs.change_type', $filter['changeType']);
+            $changeType = explode(',', $filter['changeType']);
+            $query->whereIn('user_wallet_logs.change_type', $changeType);
         }
 
         if (isset($filter['changeDesc']) && !empty($filter['changeDesc'])) {
-            $query->where('user_wallet_logs.change_desc', 'like', '%' . $$filter['changeDesc'] . '%');
+            $query->where('user_wallet_logs.change_desc', 'like', '%' . $filter['changeDesc'] . '%');
         }
 
         if (isset($filter['startTime']) && !empty($filter['startTime'])) {

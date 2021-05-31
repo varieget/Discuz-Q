@@ -24,6 +24,7 @@ use App\Models\Category;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
+use App\Traits\ThreadNoticesTrait;
 use Carbon\Carbon;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
@@ -31,6 +32,7 @@ use Discuz\Base\DzqController;
 class DeleteThreadController extends DzqController
 {
     use TomTrait;
+    use ThreadNoticesTrait;
 
     private $thread;
 
@@ -51,11 +53,17 @@ class DeleteThreadController extends DzqController
         $thread = $this->thread;
         $thread->deleted_at = Carbon::now();
         $thread->deleted_user_id = $this->user->id;
-        if ($thread->save()) {
-            $this->outPut(ResponseCode::SUCCESS);
+        if (!$thread->save()) {
+            $this->outPut(ResponseCode::DB_ERROR, '删除失败');
         }
+
         Category::refreshThreadCountV3($thread['category_id']);
-        $this->outPut(ResponseCode::DB_ERROR, '删除失败');
+
+        if ($thread->user_id != $this->user->id) {
+            $this->sendIsDeleted($thread, $this->user, ['refuse' => $this->inPut('message')]);
+        }
+
+        $this->outPut(ResponseCode::SUCCESS);
     }
 
     public function clearCache($user)
@@ -65,6 +73,8 @@ class DeleteThreadController extends DzqController
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_ATTENTION);
         $threadId = $this->inPut('threadId');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);

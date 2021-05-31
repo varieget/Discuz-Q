@@ -104,8 +104,8 @@ class SmsSendController extends AuthBaseController
                 },
             ];
         } elseif ($type == 'bind') {
-            // 判断手机号是否已经被绑定
-            if ($actor->mobile) {
+            // 用户手机号为空才可发送绑定验证码
+            if (!empty($actor->mobile)) {
                 $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
             }
 

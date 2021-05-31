@@ -29,10 +29,10 @@ use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
+use Discuz\Contracts\Setting\SettingsRepository;
 
 class ThreadListController extends DzqController
 {
-
     use ThreadTrait;
     use ThreadListTrait;
 
@@ -40,6 +40,13 @@ class ThreadListController extends DzqController
     const PRELOAD_PAGES = 50;//预加载的页数
 
     private $categoryIds = [];
+
+    protected $settings;
+
+    public function __construct(SettingsRepository $settings)
+    {
+        $this->settings = $settings;
+    }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -63,6 +70,11 @@ class ThreadListController extends DzqController
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
         $page <= 0 && $page = 1;
+        $siteMode = $this->settings->get('site_mode');
+        if (($this->user->id == 0) && $siteMode == 'pay') {
+            $this->outPut(ResponseCode::JUMP_TO_REGISTER, '', '站点需要付费加入');
+        }
+
 //        $this->openQueryLog();
         if (empty($sequence)) {
             $threads = $this->getFilterThreads($filter, $page, $perPage);
@@ -118,7 +130,7 @@ class ThreadListController extends DzqController
         return $threads;
     }
 
-    function getSequenceThreads($filter, $page, $perPage)
+    public function getSequenceThreads($filter, $page, $perPage)
     {
         $cacheKey = CacheKey::LIST_THREADS_V3_SEQUENCE;
         $filterKey = $this->filterKey($perPage, $filter);
@@ -146,7 +158,9 @@ class ThreadListController extends DzqController
      */
     private function buildFilterThreads($filter)
     {
-        if (empty($filter)) $filter = [];
+        if (empty($filter)) {
+            $filter = [];
+        }
         $this->dzqValidate($filter, [
             'sticky' => 'integer|in:0,1',
             'essence' => 'integer|in:0,1',
@@ -179,26 +193,31 @@ class ThreadListController extends DzqController
             switch ($complex) {
                 case Thread::MY_DRAFT_THREAD:
                     $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT)
-                        ->where('user_id', $loginUserId);
+                        ->where('user_id', $loginUserId)
+                        ->orderByDesc('th.id');
                     break;
                 case Thread::MY_LIKE_THREAD:
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
                     $threads = $threads->leftJoin('posts as post', 'post.thread_id', '=', 'th.id')
                         ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
                         ->leftJoin('post_user as postu', 'postu.post_id', '=', 'post.id')
-                        ->where(['postu.user_id' => $userId]);
+                        ->where(['postu.user_id' => $userId])
+                        ->orderByDesc('postu.created_at');
                     break;
                 case Thread::MY_COLLECT_THREAD:
                     $threads = $threads->leftJoin('thread_user as thu', 'thu.thread_id', '=', 'th.id')
-                        ->where(['thu.user_id' => $loginUserId]);
+                        ->where(['thu.user_id' => $loginUserId])
+                        ->orderByDesc('thu.created_at');
                     break;
                 case Thread::MY_BUY_THREAD:
                     $threads = $threads->leftJoin('orders as order', 'order.thread_id', '=', 'th.id')
-                        ->where(['order.user_id' => $loginUserId, 'status' => Order::ORDER_STATUS_PAID]);
+                        ->where(['order.user_id' => $loginUserId, 'status' => Order::ORDER_STATUS_PAID])
+                        ->orderByDesc('order.updated_at');
                     break;
                 case Thread::MY_OR_HIS_THREAD:
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
-                    $threads = $threads->where('user_id', $userId);
+                    $threads = $threads->where('user_id', $userId)
+                        ->orderByDesc('th.id');
                     break;
             }
         }
@@ -258,7 +277,9 @@ class ThreadListController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
         }
 
-        if (empty($filter)) $filter = [];
+        if (empty($filter)) {
+            $filter = [];
+        }
         isset($filter['types']) && $types = $filter['types'];
 
         !empty($sequence['group_ids']) && $groupIds = explode(',', $sequence['group_ids']);
@@ -352,5 +373,4 @@ class ThreadListController extends DzqController
         }
         return md5(serialize($serialize));
     }
-
 }
