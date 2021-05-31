@@ -92,7 +92,7 @@ trait ThreadTrait
             ],
             'ability' => $this->getAbilityField($loginUser, $thread),
             'content' => $contentField,
-            'freewords' => $this->percentFreeWord($thread, $post)
+            'freewords' => $thread['free_words']
         ];
         if ($analysis) {
             $concatString = $thread['title'] . $post['content'];
@@ -544,20 +544,6 @@ trait ThreadTrait
             $item = str_replace('#', '', $item);
         });
         return $topics;
-    }
-
-    public function percentFreeWord($thread, $post)
-    {
-        if ($thread['free_words'] <= 1) {
-            return $thread['free_words'];
-        } else {
-            $percent = $thread['free_words'] / strlen(strip_tags($post['content']));
-            if ($percent > 1) {
-                return 1;
-            } else {
-                return sprintf('%.2f', $percent);
-            }
-        }
     }
 
 }
