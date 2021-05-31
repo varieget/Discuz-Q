@@ -62,6 +62,11 @@ class LoginController extends AuthBaseController
         $this->setting = $settingsRepository;
     }
 
+    protected function checkRequestPermissions(\App\Repositories\UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
         $data = [

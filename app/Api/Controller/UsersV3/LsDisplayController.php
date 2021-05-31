@@ -23,6 +23,7 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\UserWechat;
 use App\Models\UserQq;
+use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Discuz\Base\DzqController;
 
@@ -34,6 +35,11 @@ class LsDisplayController extends DzqController
     public function __construct(SettingsRepository $settingsRepository)
     {
         $this->settings = $settingsRepository;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

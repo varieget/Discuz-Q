@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Endroid\QrCode\QrCode;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -69,6 +70,11 @@ class WechatH5QrCodeController extends AuthBaseController
     public function __construct(UrlGenerator $url)
     {
         $this->url = $url;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

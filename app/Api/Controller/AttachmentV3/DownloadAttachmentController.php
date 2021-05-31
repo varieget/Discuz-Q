@@ -21,6 +21,7 @@ namespace App\Api\Controller\AttachmentV3;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Models\AttachmentShare;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -37,6 +38,11 @@ class DownloadAttachmentController extends DzqController
     {
         $this->filesystem = $filesystem;
         $this->settings = $settings;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

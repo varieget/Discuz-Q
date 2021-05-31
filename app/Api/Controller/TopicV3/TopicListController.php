@@ -167,7 +167,7 @@ class TopicListController extends DzqController
 
         if (!Arr::has($filter, 'topicId') || Arr::get($filter, 'topicId') == 0) {
             $threadTopics = ThreadTopic::query()
-                ->selectRaw('thread_topic.`topic_id`, MAX(thread_topic.`thread_id`) as thread_id')
+                ->selectRaw(' `topic_id`, MAX(`thread_id`) as thread_id')
                 ->join('threads', 'id', '=', 'thread_id')
                 ->where('threads.is_sticky', Thread::BOOL_NO)
                 ->where('threads.is_draft', Thread::IS_NOT_DRAFT)

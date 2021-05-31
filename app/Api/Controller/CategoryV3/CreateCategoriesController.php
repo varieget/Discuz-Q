@@ -20,15 +20,12 @@ namespace App\Api\Controller\CategoryV3;
 use App\Common\ResponseCode;
 use App\Models\AdminActionLog;
 use App\Models\Category;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
 class CreateCategoriesController extends DzqController
 {
-    use AssertPermissionTrait;
-
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if (!$this->user->isAdmin()) {

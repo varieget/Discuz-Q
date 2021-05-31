@@ -22,6 +22,7 @@ use App\Commands\Users\DeleteUsers;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\UserWechat;
+use App\Repositories\UserRepository;
 use Discuz\Api\Controller\AbstractDeleteController;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -30,6 +31,11 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class DeleteUserController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
         if ($this->user->id != 1) {

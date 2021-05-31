@@ -20,10 +20,20 @@ namespace App\Api\Controller\DialogV3;
 
 use App\Models\DialogMessage;
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 
 class UpdateUnreadStatusController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
+    }
+
     public function main()
     {
 
@@ -39,7 +49,7 @@ class UpdateUnreadStatusController extends DzqController
                     'readStatus'   => 'required|int|in:1'
                 ]);
 
-                $dialog = DialogMessage::query()->findOrFail($value['id']);
+                $dialog = DialogMessage::query()->where('user_id', $this->user->id)->findOrFail($value['id']);
                 $dialog->read_status = $value['readStatus'];
                 $dialog->save();
                // dump($dialog);die;

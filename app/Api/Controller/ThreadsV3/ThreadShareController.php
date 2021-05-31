@@ -23,9 +23,15 @@ use App\Models\Thread;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Symfony\Component\Translation\Exception\NotFoundResourceException;
 
 class ThreadShareController extends DzqController
 {
+    /**
+     * @var Thread
+     */
+    protected $thread;
+
     public function clearCache($user)
     {
         $threadId = $this->inPut('threadId');
@@ -34,17 +40,18 @@ class ThreadShareController extends DzqController
 
     public function checkRequestPermissions(UserRepository $userRepo)
     {
-        return true;
+        $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
+        if (!$this->thread) {
+            throw new NotFoundResourceException();
+        }
+
+        return $userRepo->canViewThreads($this->user, $this->thread->category_id)
+            || $userRepo->canViewThreadDetail($this->user, $this->thread);
     }
 
     public function main()
     {
-        $threadId = $this->inPut('threadId');
-        $thread = Thread::getOneActiveThread($threadId);
-        if (empty($thread)) {
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-        }
-        $thread->increment('share_count');
+        $this->thread->increment('share_count');
         $this->outPut(ResponseCode::SUCCESS, '');
     }
 }

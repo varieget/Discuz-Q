@@ -31,10 +31,6 @@ use Discuz\Base\DzqController;
 
 class ResourcePostController extends DzqController
 {
-    public $providers = [
-        \App\Providers\PostServiceProvider::class,
-    ];
-
     //返回的数据一定包含的数据
     public $include = [
         'user:id,username,avatar',
@@ -55,9 +51,12 @@ class ResourcePostController extends DzqController
 
     public function main()
     {
-
+        /** @var CommentPostSerializer $coment_post_serialize */
         $coment_post_serialize = $this->app->make(CommentPostSerializer::class);
+        $coment_post_serialize->setRequest($this->request);
+        /** @var AttachmentSerializer $attachment_serialize */
         $attachment_serialize = $this->app->make(AttachmentSerializer::class);
+        $attachment_serialize->setRequest($this->request);
 
         $post_id = $this->inPut('pid');
         if(empty($post_id))       return  $this->outPut(ResponseCode::INVALID_PARAMETER );
@@ -81,13 +80,10 @@ class ResourcePostController extends DzqController
 
         Post::setStateUser($this->user);
 
-        $data = $coment_post_serialize->getDefaultAttributes($comment_post, $this->user);
+        $data = $coment_post_serialize->getDefaultAttributes($comment_post);
 
-        //针对新数据格式的 post，使用内部封装方法正则
-        list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($data['content']);
-        $data['content'] = str_replace($searches, $replaces, $data['content']);
 
-        $data['canLike'] = true;
+        $data['canLike'] = app(UserRepository::class)->canLikePosts($this->user);
         $data['images'] = [];
         $data['likeUsers'] = $comment_post->likedUsers;
         if(!empty($comment_post->images)){
@@ -105,6 +101,7 @@ class ResourcePostController extends DzqController
         if(intval($data['replyCount']) > 0){
             $replyId = Post::query()
                 ->where('reply_post_id',$post_id)
+                ->whereNull("deleted_at")
                 ->where('is_comment', true)
                 ->get(['id','user_id','reply_user_id','comment_user_id']);
             $replyIdArr = $replyId->toArray();

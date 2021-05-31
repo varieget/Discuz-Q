@@ -18,20 +18,14 @@
 
 namespace App\Api\Controller\StatisticV3;
 
-use App\Api\Serializer\FinanceSerializer;
-use App\Commands\Statistic\FinanceChart;
 use App\Common\ResponseCode;
 use App\Models\Finance;
 use App\Repositories\FinanceRepository;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
-use Discuz\Api\Controller\AbstractListController;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
 class FinanceChartController extends DzqController
 {

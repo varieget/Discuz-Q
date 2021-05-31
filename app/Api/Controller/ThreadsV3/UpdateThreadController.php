@@ -27,6 +27,8 @@ use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
+use App\Notifications\Messages\Database\PostMessage;
+use App\Notifications\System;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
@@ -56,10 +58,24 @@ class UpdateThreadController extends DzqController
         $threadId = $this->inPut('threadId');
         $thread = $this->thread;
         $post = Post::getOneActivePost($threadId);
+        $oldContent = $post->content;
         if (empty($post)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
         $result = $this->updateThread($thread, $post);
+
+        if (
+            ($thread->user_id != $this->user->id)
+            && ($oldContent != $post->content)
+            && $thread->user
+        ) {
+            $thread->user->notify(new System(PostMessage::class, $this->user, [
+                'message' => $oldContent,
+                'post' => $post,
+                'notify_type' => Post::NOTIFY_EDIT_CONTENT_TYPE,
+            ]));
+        }
+
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 
@@ -228,11 +244,7 @@ class UpdateThreadController extends DzqController
 
     public function clearCache($user)
     {
-        DzqCache::delKey(CacheKey::CATEGORIES);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        CacheKey::delListCache();
         $threadId = $this->inPut('threadId');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);

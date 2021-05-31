@@ -17,9 +17,13 @@
 
 namespace App\Common;
 
-
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\RotatingFileHandler;
+use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 
 class Utils
 {
@@ -123,5 +127,31 @@ class Utils
     public static function arrayKeysToSnake(array $params, array $exceptKeys = []): array
     {
         return static::arrayKeysTransform($params, [\Illuminate\Support\Str::class, 'snake'], $exceptKeys);
+    }
+
+    public static function logOldPermissionPosition($method)
+    {
+        // 整改完之前，先忽略日志，增长太快
+        return;
+        if (!app()->has('permLog')) {
+            $logConfig = [
+                'alias' => 'permLog',
+                'path' => 'logs/permLog.log',
+                'level' => Logger::INFO,
+            ];
+
+            $handler = new RotatingFileHandler(
+                storage_path(Arr::get($logConfig, 'path')),
+                200,
+                Arr::get($logConfig, 'level')
+            );
+            $handler->setFormatter(new LineFormatter(null, null, true, true));
+            app()->instance(Arr::get($logConfig, 'alias'), new Logger(Arr::get($logConfig, 'alias'), [$handler]));
+            app()->alias(Arr::get($logConfig, 'alias'), LoggerInterface::class);
+        }
+
+        /** @var LoggerInterface $logger */
+        $logger = app('permLog');
+        $logger->info('in: '.$method.': '.json_encode(debug_backtrace()));
     }
 }

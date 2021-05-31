@@ -33,6 +33,11 @@ class NicknameSettingController extends AuthBaseController
         $this->censor = $censor;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
         $nickname = $this->inPut('nickname');

@@ -22,6 +22,7 @@ use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
+use App\Repositories\UserRepository;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Contracts\Socialite\Factory;
@@ -48,6 +49,11 @@ class WechatH5RebindController extends AuthBaseController
         $this->validation   = $validation;
         $this->db           = $db;
         $this->bound        = $bound;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

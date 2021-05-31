@@ -20,6 +20,7 @@ namespace App\Models;
 
 use App\Common\AuthUtils;
 use App\Common\CacheKey;
+use App\Common\Utils;
 use App\Common\ResponseCode;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
@@ -297,11 +298,12 @@ class User extends DzqModel
 
     public function changeMobile($mobile)
     {
-        $exists = User::query()->where('mobile', $mobile)->where('id', '<>', $this->id)->exists();
-        if($exists){
-            \Discuz\Common\Utils::outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+        if (! empty($mobile)) {
+            $exists = User::query()->where('mobile', $mobile)->where('id', '<>', $this->id)->exists();
+            if($exists){
+                \Discuz\Common\Utils::outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+            }
         }
-
         $this->mobile = $mobile;
 
         $this->changeUserBindType();
@@ -463,6 +465,35 @@ class User extends DzqModel
         } else {
             return app(Filesystem::class)->disk('avatar_cos')->url($path)
                 . '?' . Carbon::parse($this->avatar_at)->timestamp;
+        }
+    }
+
+    /**
+     * @param $value
+     * @return string
+     * @throws \Exception
+     */
+    public function getBackgroundAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        if (strpos($value, '://') === false) {
+            return app(UrlGenerator::class)->to('/storage/background/' . $value)
+                . '?' . time();
+        }
+
+        /** @var SettingsRepository $settings */
+        $settings = app(SettingsRepository::class);
+
+        $path = 'public/background/' . Str::after($value, '://');
+
+        if ($settings->get('qcloud_cos_sign_url', 'qcloud', true)) {
+            return app(Filesystem::class)->disk('background_cos')->temporaryUrl($path, Carbon::now()->addDay());
+        } else {
+            return app(Filesystem::class)->disk('background_cos')->url($path)
+                . '?' . time();
         }
     }
 
@@ -856,6 +887,7 @@ class User extends DzqModel
      */
     public function can($ability, $arguments = [])
     {
+        Utils::logOldPermissionPosition(__METHOD__);
         return static::$gate->forUser($this)->allows($ability, $arguments);
     }
 

@@ -21,7 +21,6 @@ namespace App\Api\Controller\UsersV3;
 use App\Commands\Users\UpdateAdminUser;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -78,9 +77,9 @@ class UpdateAdminController extends DzqController
         if(!empty($passwordConfirmation)){
             $requestData['password_confirmation'] = $passwordConfirmation;
         }
-        if(!empty($mobile)){
-            $requestData['mobile'] = $mobile;
-        }
+
+        $requestData['mobile'] = $mobile;
+
         if(!empty($expire_at)){
             $requestData['expired_at'] = $expire_at;
         }

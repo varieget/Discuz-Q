@@ -26,6 +26,7 @@ use App\Events\Users\Logind;
 use App\Events\Users\TransitionBind;
 use App\Models\SessionToken;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Support\Arr;
@@ -51,6 +52,11 @@ class WechatTransitionBindSmsController extends AuthBaseController
         $this->bus      = $bus;
         $this->settings = $settings;
         $this->events   = $events;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

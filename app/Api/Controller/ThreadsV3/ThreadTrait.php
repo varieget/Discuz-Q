@@ -78,6 +78,7 @@ trait ThreadTrait
             'isLike' => $this->isLike($loginUser, $post),
             'isReward' => $this->isReward($loginUser, $thread),
             'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
+            'updatedAt'=>date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
@@ -90,7 +91,8 @@ trait ThreadTrait
                 'location' => $thread['location']
             ],
             'ability' => $this->getAbilityField($loginUser, $thread),
-            'content' => $contentField
+            'content' => $contentField,
+            'freewords' => $thread['free_words']
         ];
         if ($analysis) {
             $concatString = $thread['title'] . $post['content'];
@@ -169,18 +171,13 @@ trait ThreadTrait
     private function canFreeViewTom($user, $thread)
     {
         $repo = new UserRepository();
-        $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
-        if ($canFreeViewThreadDetail || $user->id == $thread['user_id']) {
-            return true;
-        } else {
-            return false;
-        }
+        return $repo->canFreeViewPosts($user, $thread);
     }
 
     private function getFavoriteField($threadId, $loginUser)
     {
         $userId = $loginUser->id;
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_THREAD_USERS, $userId, $threadId, function () use ($userId, $threadId) {
+        return DzqCache::exists(CacheKey::LIST_THREADS_V3_THREAD_USERS . $userId, $threadId, function () use ($userId, $threadId) {
             return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $userId])->exists();
         });
     }
@@ -213,7 +210,7 @@ trait ThreadTrait
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
             'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
-            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread['category_id'])
+            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread)
         ];
     }
 
@@ -230,7 +227,7 @@ trait ThreadTrait
         } else if ($payType != Thread::PAY_FREE && $canFreeViewTom) {
             $paid = true;
         } else {
-            $paid = DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
+            $paid = DzqCache::exists(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId, $threadId, function () use ($userId, $threadId) {
                 return Order::query()
                     ->where([
                         'thread_id' => $threadId,
@@ -435,7 +432,7 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $threadId = $thread['id'];
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
+        return DzqCache::exists(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $userId, $threadId, function () use ($userId, $threadId) {
             return Order::query()->where(['user_id' => $userId, 'type' => Order::ORDER_TYPE_REWARD, 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])->exists();
         });
     }
@@ -447,7 +444,7 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $postId = $post['id'];
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId, $postId, function () use ($userId, $postId) {
+        return DzqCache::exists(CacheKey::LIST_THREADS_V3_POST_LIKED . $userId, $postId, function () use ($userId, $postId) {
             return PostUser::query()->where('post_id', $postId)->where('user_id', $userId)->exists();
         });
     }

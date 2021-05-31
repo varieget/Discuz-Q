@@ -20,6 +20,7 @@ namespace App\Api\Controller\QcloudV3;
 
 use App\Commands\Qcloud\CreateVodUploadSignature;
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
@@ -31,6 +32,11 @@ class CreateVodUploadSignatureController extends DzqController
     public function __construct(Dispatcher $bus)
     {
         $this->bus = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

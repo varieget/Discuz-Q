@@ -19,6 +19,7 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
 
 class SmsResetPwdController extends AuthBaseController
@@ -27,6 +28,11 @@ class SmsResetPwdController extends AuthBaseController
 
     public function __construct(UserValidator $validator) {
         $this->validator = $validator;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

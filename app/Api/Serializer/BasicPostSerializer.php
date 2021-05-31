@@ -18,11 +18,15 @@
 
 namespace App\Api\Serializer;
 
+use App\Api\Controller\ThreadsV3\ThreadHelper;
+use App\Common\CacheKey;
 use App\Formatter\Formatter;
 use App\Models\Post;
+use App\Models\Thread;
 use App\Traits\HasPaidContent;
+use App\Repositories\UserRepository;
 use Discuz\Api\Serializer\AbstractSerializer;
-use Illuminate\Contracts\Auth\Access\Gate;
+use Discuz\Base\DzqCache;
 use s9e\TextFormatter\Utils;
 use Tobscure\JsonApi\Relationship;
 
@@ -36,16 +40,16 @@ class BasicPostSerializer extends AbstractSerializer
     protected $type = 'posts';
 
     /**
-     * @var Gate
+     * @var UserRepository
      */
-    protected $gate;
+    protected $userRepo;
 
     /**
-     * @param Gate $gate
+     * @param UserRepository $userRepo
      */
-    public function __construct(Gate $gate)
+    public function __construct(UserRepository $userRepo)
     {
-        $this->gate = $gate;
+        $this->userRepo = $userRepo;
     }
 
     /**
@@ -57,10 +61,6 @@ class BasicPostSerializer extends AbstractSerializer
     {
         $this->paidContent($model);
 
-        $gate = $this->gate->forUser($this->actor);
-
-        $canEdit = $gate->allows('edit', $model);
-
         // 插入文中的图片及附件 ID
         $contentAttachIds = collect(
             Utils::getAttributeValues($model->getRawOriginal('content'), 'IMG', 'title')
@@ -70,7 +70,7 @@ class BasicPostSerializer extends AbstractSerializer
 
         $attributes = [
             'id'                => $model->id,
-            'userId'                => $model->user_id,
+            'userId'            => $model->user_id,
             'replyPostId'       => $model->reply_post_id,
             'replyUserId'       => $model->reply_user_id,
             'commentPostId'     => $model->comment_post_id,
@@ -84,10 +84,9 @@ class BasicPostSerializer extends AbstractSerializer
             'createdAt'         => optional($model->created_at)->format('Y-m-d H:i:s'),
             'updatedAt'         => optional($model->updated_at)->format('Y-m-d H:i:s'),
             'isApproved'        => (int) $model->is_approved,
-            'canEdit'           => $canEdit,
-            'canApprove'        => $gate->allows('approve', $model),
-            'canDelete'         => $gate->allows('delete', $model),
-            'canHide'           => $gate->allows('hide', $model),
+            'canApprove'        => $this->actor->isAdmin(),
+            'canDelete'         => $this->actor->isAdmin(),
+            'canHide'           => $this->userRepo->canHidePost($this->actor, $model),
             'contentAttachIds'  => $contentAttachIds,
         ];
 
@@ -97,8 +96,21 @@ class BasicPostSerializer extends AbstractSerializer
             $attributes['parseContentHtml'] = $model->parseContentHtml;
         }
 
+        //获取评论对应的帖子类型，如果是老数据就走 s9e，新数据就走封装方法
+        $thread = DzqCache::hGet(CacheKey::LIST_THREADS_V3_THREADS, $model->thread_id, function ($threadId) {
+            return Thread::getOneThread($threadId, true);
+        });
+        if($thread['type'] != Thread::TYPE_OF_ALL){
+            $attributes['content']  =  app()->make(Formatter::class)->render($model->content);
+        }else{
+            $content = str_replace(['<t><p>', '</p></t>'], ['', ''],$model->content);
+            //针对新数据格式的 post，使用内部封装方法正则
+            [$searches, $replaces] = ThreadHelper::getThreadSearchReplace($content);
+            $attributes['content'] = str_replace($searches, $replaces, $content);
+        }
 
-        if ($canEdit || $this->actor->id === $model->user_id) {
+
+        if ($user->isAdmin() || $user->id === $model->user_id) {
             $attributes += [
                 'ip'    => $model->ip,
                 'port'  => $model->port,
@@ -112,7 +124,7 @@ class BasicPostSerializer extends AbstractSerializer
             $attributes['isDeleted'] = false;
         }
 
-        Post::setStateUser($this->actor);
+        Post::setStateUser($user);
 
         return $attributes;
     }

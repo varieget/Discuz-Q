@@ -19,25 +19,18 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Commands\Thread\CreateThreadVideo;
-use App\Commands\Thread\EditThread;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Models\ThreadVideo;
 use App\Repositories\UserRepository;
-use Discuz\Api\Client;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
-use Discuz\Http\UrlGenerator;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
-use Illuminate\Support\Arr;
 
 
 class CreateThreadVideoController extends DzqController
 {
-    use AssertPermissionTrait;
-
     protected $bus;
     protected $validation;
 
@@ -75,7 +68,6 @@ class CreateThreadVideoController extends DzqController
 
     public function main()
     {
-        $this->assertCan($this->user, 'createThread');
         $fileId = $this->inPut('fileId');
         if(empty($fileId)){
             return $this->outPut(ResponseCode::INVALID_PARAMETER);

@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Censor\Censor;
 use App\Common\ResponseCode;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Discuz\Foundation\EventsDispatchTrait;
 use Discuz\Auth\AssertPermissionTrait;
@@ -35,6 +36,11 @@ class CheckController extends DzqController
     public function __construct(Censor $censor)
     {
         $this->censor = $censor;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
 
