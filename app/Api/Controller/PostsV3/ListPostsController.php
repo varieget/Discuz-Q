@@ -201,7 +201,6 @@ class ListPostsController extends DzqController
             'canApprove' => $this->user->isAdmin(),
             'canDelete' => $this->user->isAdmin(),
             'canHide' => $userRepo->canHidePost($this->user, $post),
-            'canEdit' => false,
             'canLike' => $userRepo->canLikePosts($this->user),
             'user' => $this->getUser($post->user),
             'images' => $post->images->map(function (Attachment $image) {
