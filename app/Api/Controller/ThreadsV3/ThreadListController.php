@@ -64,7 +64,7 @@ class ThreadListController extends DzqController
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
         $page <= 0 && $page = 1;
-//        $this->openQueryLog();
+        $this->openQueryLog();
         if (empty($sequence)) {
             $threads = $this->getFilterThreads($filter, $page, $perPage);
         } else {
@@ -74,7 +74,7 @@ class ThreadListController extends DzqController
         //缓存中获取最新的threads
         $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
         $threads['pageData'] = $this->getFullThreadData($pageData);
-//        $this->info('query_sql_log', $this->connection->getQueryLog());
+        $this->info('query_sql_log', $this->connection->getQueryLog());
 //        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
     }
@@ -145,7 +145,7 @@ class ThreadListController extends DzqController
     /**
      * @desc 普通筛选SQL
      * @param $filter
-     * @param bool $withUser
+     * @param bool $withLoginUser
      * @return \Illuminate\Database\Eloquent\Builder
      */
     private function buildFilterThreads($filter, &$withLoginUser = false)
@@ -244,7 +244,7 @@ class ThreadListController extends DzqController
         }
         //deny用户
         if (!empty($loginUserId)) {
-            $denyUserIds = DenyUser::query()->where('user_id', $userId)->get()->pluck('deny_user_id')->toArray();
+            $denyUserIds = DenyUser::query()->where('user_id', $loginUserId)->get()->pluck('deny_user_id')->toArray();
             if (!empty($denyUserIds)) {
                 $threads = $threads->whereNotIn('th.user_id', $denyUserIds);
                 $withLoginUser = true;
@@ -268,10 +268,6 @@ class ThreadListController extends DzqController
         $categoryIds = [];
         !empty($sequence['category_ids']) && $categoryIds = explode(',', $sequence['category_ids']);
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
-        if (!$categoryIds) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '没有浏览权限');
-        }
-
         if (empty($filter)) $filter = [];
         isset($filter['types']) && $types = $filter['types'];
 
