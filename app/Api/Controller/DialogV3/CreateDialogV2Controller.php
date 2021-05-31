@@ -24,15 +24,15 @@ class CreateDialogV2Controller extends DzqController
         DialogMessageServiceProvider::class,
     ];
 
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $userRepo->canCreateDialog($this->user);
-    }
-
     public function __construct(Dispatcher $bus, Factory $validation)
     {
         $this->validation = $validation;
         $this->bus = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $userRepo->canCreateDialog($this->user);
     }
 
     public function main()

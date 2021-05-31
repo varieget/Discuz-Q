@@ -91,7 +91,8 @@ trait ThreadTrait
                 'location' => $thread['location']
             ],
             'ability' => $this->getAbilityField($loginUser, $thread),
-            'content' => $contentField
+            'content' => $contentField,
+            'freewords' => $thread['free_words']
         ];
         if ($analysis) {
             $concatString = $thread['title'] . $post['content'];

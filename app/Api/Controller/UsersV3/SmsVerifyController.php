@@ -19,9 +19,15 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 
 class SmsVerifyController extends AuthBaseController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
         $mobileCode = $this->getMobileCode('verify');

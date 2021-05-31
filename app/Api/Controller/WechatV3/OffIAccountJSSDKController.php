@@ -19,6 +19,7 @@ namespace App\Api\Controller\WechatV3;
 
 
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use App\Exceptions\TranslatorException;
 use Discuz\Wechat\EasyWechatTrait;
@@ -52,6 +53,11 @@ class OffIAccountJSSDKController extends DzqController
     {
         $this->bus = $bus;
         $this->url = $url;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     /**

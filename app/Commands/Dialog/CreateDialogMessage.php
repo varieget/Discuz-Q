@@ -24,7 +24,6 @@ use App\Models\Dialog;
 use App\Models\DialogMessage;
 use App\Models\User;
 use App\Repositories\DialogRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
 use EasyWeChat\Kernel\Exceptions\InvalidConfigException;
@@ -36,7 +35,6 @@ use Illuminate\Support\Arr;
 
 class CreateDialogMessage
 {
-    use AssertPermissionTrait;
     use EventsDispatchTrait;
 
     /**
@@ -74,8 +72,6 @@ class CreateDialogMessage
     public function handle(DialogRepository $dialog, Dispatcher $events, Censor $censor)
     {
         $this->events = $events;
-
-        $this->assertCan($this->actor, 'dialog.create');
 
         $dialog_id = Arr::get($this->attributes, 'dialog_id');
 

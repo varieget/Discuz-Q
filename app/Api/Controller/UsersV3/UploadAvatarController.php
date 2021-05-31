@@ -22,7 +22,7 @@ use App\Commands\Users\UploadAvatar;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -32,15 +32,6 @@ class UploadAvatarController extends DzqController
     public function clearCache($user)
     {
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $user->id);
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
     }
 
     /**
@@ -54,6 +45,14 @@ class UploadAvatarController extends DzqController
     public function __construct(Dispatcher $bus)
     {
         $this->bus = $bus;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
     }
 
     public function main()
@@ -84,5 +83,4 @@ class UploadAvatarController extends DzqController
 
         return $this->outPut(ResponseCode::SUCCESS,'', $result);
     }
-
 }

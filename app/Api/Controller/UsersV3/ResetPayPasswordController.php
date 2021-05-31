@@ -21,7 +21,9 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\UserWalletFailLogs;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 use Illuminate\Validation\Factory as Validator;
 
@@ -35,6 +37,14 @@ class ResetPayPasswordController extends DzqController
     public function __construct(Validator $validator)
     {
         $this->validator = $validator;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
     }
 
     public function main()

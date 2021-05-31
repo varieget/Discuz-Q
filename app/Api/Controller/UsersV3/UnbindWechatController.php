@@ -22,6 +22,7 @@ use App\Api\Serializer\UserProfileSerializer;
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use Discuz\Api\Controller\AbstractResourceController;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
@@ -31,6 +32,11 @@ use Tobscure\JsonApi\Document;
 
 class UnbindWechatController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
         if ($this->user->id != 1) {

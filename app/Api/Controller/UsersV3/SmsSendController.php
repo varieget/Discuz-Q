@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Models\MobileCode;
 use App\Repositories\MobileCodeRepository;
+use App\Repositories\UserRepository;
 use App\Rules\Captcha;
 use App\SmsMessages\SendCodeMessage;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -56,6 +57,11 @@ class SmsSendController extends AuthBaseController
         $this->validation           = $validation;
         $this->mobileCodeRepository = $mobileCodeRepository;
         $this->settings             = $settings;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

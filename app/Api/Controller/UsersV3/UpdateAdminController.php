@@ -21,7 +21,6 @@ namespace App\Api\Controller\UsersV3;
 use App\Commands\Users\UpdateAdminUser;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;

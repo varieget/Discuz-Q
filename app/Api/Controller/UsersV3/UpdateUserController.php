@@ -20,10 +20,12 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\UpdateUser;
 use App\Common\ResponseCode;
-use App\Common\Utils;
+use App\Models\User;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Symfony\Component\Translation\Exception\NotFoundResourceException;
 
 class UpdateUserController extends DzqController
 {
@@ -35,6 +37,17 @@ class UpdateUserController extends DzqController
     {
         $this->bus = $bus;
         $this->settings = $settings;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        $user = User::query()->where('id', $this->inPut('id'))->first();
+        if (!$user) {
+            throw new NotFoundResourceException();
+        }
+        $isSelf = $this->user->id == $user->id;
+
+        return $isSelf || $this->user->isAdmin();
     }
 
     public function main()

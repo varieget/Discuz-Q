@@ -9,11 +9,9 @@ use App\Models\UserFollow;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Discuz\Auth\AssertPermissionTrait;
 
 class DeleteUserFollowController extends DzqController
 {
-    use AssertPermissionTrait;
     protected $bus;
 
     public function __construct(Dispatcher $bus)

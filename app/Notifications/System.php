@@ -192,7 +192,7 @@ class System extends AbstractNotification
             }
             // set other message relationship
             if ($this->message instanceof RegisterWechatMessage) {
-                $this->messageRelationship['database'] = app(RegisterMessage::class);
+                $this->messageRelationship['database'] = '';
                 $this->messageRelationship['wechat'] = app(RegisterWechatMessage::class);
             }
             $this->messageRelationship['sms'] = app(RegisterSmsMessage::class);

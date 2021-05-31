@@ -24,7 +24,9 @@ use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\AttachmentShare;
 use App\Modules\ThreadTom\TomConfig;
+use App\Repositories\UserRepository;
 use Carbon\Carbon;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
@@ -36,6 +38,14 @@ class ShareAttachmentController extends DzqController
     public function __construct(UrlGenerator $url)
     {
         $this->url = $url;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
     }
 
     public function main()
@@ -110,6 +120,4 @@ class ShareAttachmentController extends DzqController
             str_split(bin2hex($stringArr), 4));
         return md5($string.$data['threadId'].$data['attachmentsId']);
     }
-
-
 }
