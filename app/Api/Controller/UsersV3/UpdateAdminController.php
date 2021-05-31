@@ -78,9 +78,9 @@ class UpdateAdminController extends DzqController
         if(!empty($passwordConfirmation)){
             $requestData['password_confirmation'] = $passwordConfirmation;
         }
-        if(!empty($mobile)){
-            $requestData['mobile'] = $mobile;
-        }
+
+        $requestData['mobile'] = $mobile;
+
         if(!empty($expire_at)){
             $requestData['expired_at'] = $expire_at;
         }

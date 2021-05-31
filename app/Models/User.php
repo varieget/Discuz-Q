@@ -297,11 +297,12 @@ class User extends DzqModel
 
     public function changeMobile($mobile)
     {
-        $exists = User::query()->where('mobile', $mobile)->where('id', '<>', $this->id)->exists();
-        if($exists){
-            \Discuz\Common\Utils::outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+        if (! empty($mobile)) {
+            $exists = User::query()->where('mobile', $mobile)->where('id', '<>', $this->id)->exists();
+            if($exists){
+                \Discuz\Common\Utils::outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+            }
         }
-
         $this->mobile = $mobile;
 
         $this->changeUserBindType();
