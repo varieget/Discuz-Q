@@ -18,10 +18,14 @@
 
 namespace App\Api\Serializer;
 
+use App\Api\Controller\ThreadsV3\ThreadHelper;
+use App\Common\CacheKey;
 use App\Formatter\Formatter;
 use App\Models\Post;
+use App\Models\Thread;
 use App\Traits\HasPaidContent;
 use Discuz\Api\Serializer\AbstractSerializer;
+use Discuz\Base\DzqCache;
 use Illuminate\Contracts\Auth\Access\Gate;
 use s9e\TextFormatter\Utils;
 use Tobscure\JsonApi\Relationship;
@@ -95,6 +99,19 @@ class BasicPostSerializer extends AbstractSerializer
         $attributes['parseContentHtml'] = $attributes['content'];
         if(!empty($model->parseContentHtml)){
             $attributes['parseContentHtml'] = $model->parseContentHtml;
+        }
+
+        //获取评论对应的帖子类型，如果是老数据就走 s9e，新数据就走封装方法
+        $thread = DzqCache::hGet(CacheKey::LIST_THREADS_V3_THREADS, $model->thread_id, function ($threadId) {
+            return Thread::getOneThread($threadId, true);
+        });
+        if($thread['type'] != Thread::TYPE_OF_ALL){
+            $attributes['content']  =  app()->make(Formatter::class)->render($model->content);
+        }else{
+            $content = str_replace(['<t><p>', '</p></t>'], ['', ''],$model->content);
+            //针对新数据格式的 post，使用内部封装方法正则
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
+            $attributes['content'] = str_replace($searches, $replaces, $content);
         }
 
 
