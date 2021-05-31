@@ -49,6 +49,10 @@ class SmsBindController extends AuthBaseController
 
         // 用户手机号为空才可访问此接口
         if (!empty($actor->mobile)) {
+            $this->outPut(ResponseCode::BIND_ERROR);
+        }
+
+        if (!is_null($mobileCode->user)) {
             $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
         }
 

@@ -34,6 +34,10 @@ class SmsRebindController extends AuthBaseController
     {
         $mobileCode = $this->getMobileCode('rebind');
 
+        if (!is_null($mobileCode->user)) {
+            $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+        }
+
         if ($this->user->exists) {
             // 删除验证身份的验证码
 
