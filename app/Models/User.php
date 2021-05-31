@@ -468,6 +468,35 @@ class User extends DzqModel
         }
     }
 
+    /**
+     * @param $value
+     * @return string
+     * @throws \Exception
+     */
+    public function getBackgroundAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        if (strpos($value, '://') === false) {
+            return app(UrlGenerator::class)->to('/storage/background/' . $value)
+                . '?' . time();
+        }
+
+        /** @var SettingsRepository $settings */
+        $settings = app(SettingsRepository::class);
+
+        $path = 'public/background/' . Str::after($value, '://');
+
+        if ($settings->get('qcloud_cos_sign_url', 'qcloud', true)) {
+            return app(Filesystem::class)->disk('background_cos')->temporaryUrl($path, Carbon::now()->addDay());
+        } else {
+            return app(Filesystem::class)->disk('background_cos')->url($path)
+                . '?' . time();
+        }
+    }
+
     public function getMobileAttribute($value)
     {
         return $value ? substr_replace($value, '****', 3, 4) : '';
