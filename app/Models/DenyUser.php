@@ -25,6 +25,7 @@ use Discuz\Base\DzqModel;
 class DenyUser extends DzqModel
 {
 
+    public const UPDATED_AT = null;
     public function clearCache()
     {
         CacheKey::delListCache();
