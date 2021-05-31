@@ -76,8 +76,7 @@ class ThreadListController extends DzqController
         if (($this->user->id == 0) && $siteMode == 'pay') {
             $this->outPut(ResponseCode::JUMP_TO_REGISTER, '', '站点需要付费加入');
         }
-
-        $this->openQueryLog();
+//        $this->openQueryLog();
         if (empty($sequence)) {
             $threads = $this->getFilterThreads($filter, $page, $perPage);
         } else {
@@ -87,7 +86,7 @@ class ThreadListController extends DzqController
         //缓存中获取最新的threads
         $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
         $threads['pageData'] = $this->getFullThreadData($pageData);
-        $this->info('query_sql_log', $this->connection->getQueryLog());
+//        $this->info('query_sql_log', $this->connection->getQueryLog());
 //        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
     }
