@@ -170,9 +170,7 @@ trait ThreadListTrait
             $threadIds = array_merge($threadIds, array_column($page, 'id'));
         }
         $this->cacheUserOrders($loginUserId, $threadIds);
-        $posts = Post::instance()->getPosts($threadIds);
-        $postIds = array_column($posts, 'id');
-        $this->cachePostLikedAndFavor($loginUserId, $threadIds, $postIds);
+        $this->cachePostLikedAndFavor($loginUserId, $threadIds);
     }
 
     private function getAllThreadsList($threadsByPage)
@@ -298,6 +296,12 @@ trait ThreadListTrait
 
     private function cacheUserOrders($userId, $threadIds)
     {
+
+        $key1 = CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId;
+        $key2 = CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $userId;
+//        if (DzqCache::get($key1) && DzqCache::get($key2)) {
+//            return;
+//        }
         $orders = Order::query()
             ->where([
                 'user_id' => $userId,
@@ -313,16 +317,23 @@ trait ThreadListTrait
                 $orderReward[] = $order;
             }
         }
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId, $orderPay, 'thread_id', false, $threadIds, null);
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $userId, $orderReward, 'thread_id', false, $threadIds, null);
+        DzqCache::hMSet($key1, $orderPay, 'thread_id', false, $threadIds, null);
+        DzqCache::hMSet($key2, $orderReward, 'thread_id', false, $threadIds, null);
     }
 
     //点赞收藏
-    private function cachePostLikedAndFavor($userId, $threadIds, $postIds)
+    private function cachePostLikedAndFavor($userId, $threadIds)
     {
+        $key1 = CacheKey::LIST_THREADS_V3_POST_LIKED . $userId;
+        $key2 = CacheKey::LIST_THREADS_V3_THREAD_USERS . $userId;
+//        if (DzqCache::get($key1) && DzqCache::get($key2)) {
+//            return;
+//        }
+        $posts = Post::instance()->getPosts($threadIds);
+        $postIds = array_column($posts, 'id');
         $postUsers = PostUser::query()->where('user_id', $userId)->whereIn('post_id', $postIds)->get()->toArray();
         $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $userId)->get()->toArray();
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_POST_LIKED . $userId, $postUsers, 'post_id', false, $postIds, null);
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_THREAD_USERS . $userId, $favorite, 'thread_id', false, $threadIds, null);
+        DzqCache::hMSet($key1, $postUsers, 'post_id', false, $postIds, null);
+        DzqCache::hMSet($key2, $favorite, 'thread_id', false, $threadIds, null);
     }
 }
