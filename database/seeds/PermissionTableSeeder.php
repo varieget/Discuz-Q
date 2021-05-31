@@ -41,8 +41,8 @@ class PermissionTableSeeder extends Seeder
         // 内容发布权限
         PermissionKey::CREATE_THREAD                => [10],    // 发布帖子
         PermissionKey::THREAD_INSERT_IMAGE          => [10],    // 插入图片
-        PermissionKey::THREAD_INSERT_VIDEO          => [10],    // 插入视频
-        PermissionKey::THREAD_INSERT_AUDIO          => [10],    // 插入语音
+//        PermissionKey::THREAD_INSERT_VIDEO          => [],    // 插入视频
+//        PermissionKey::THREAD_INSERT_AUDIO          => [],    // 插入语音
         PermissionKey::THREAD_INSERT_ATTACHMENT     => [10],    // 插入附件
         PermissionKey::THREAD_INSERT_GOODS          => [10],    // 插入商品
         PermissionKey::THREAD_INSERT_PAY            => [10],    // 插入付费
