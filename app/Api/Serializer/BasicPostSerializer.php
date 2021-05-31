@@ -40,6 +40,11 @@ class BasicPostSerializer extends AbstractSerializer
     protected $type = 'posts';
 
     /**
+     * @var UserRepository
+     */
+    protected $userRepo;
+
+    /**
      * @param UserRepository $userRepo
      */
     public function __construct(UserRepository $userRepo)
@@ -52,7 +57,7 @@ class BasicPostSerializer extends AbstractSerializer
      *
      * @param Post $model
      */
-    protected function getDefaultAttributes($model, $user = null)
+    protected function getDefaultAttributes($model)
     {
         $this->paidContent($model);
 
@@ -79,9 +84,9 @@ class BasicPostSerializer extends AbstractSerializer
             'createdAt'         => optional($model->created_at)->format('Y-m-d H:i:s'),
             'updatedAt'         => optional($model->updated_at)->format('Y-m-d H:i:s'),
             'isApproved'        => (int) $model->is_approved,
-            'canApprove'        => $user->isAdmin(),
-            'canDelete'         => $user->isAdmin(),
-            'canHide'           => $this->userRepo->canHidePost($user, $model),
+            'canApprove'        => $this->actor->isAdmin(),
+            'canDelete'         => $this->actor->isAdmin(),
+            'canHide'           => $this->userRepo->canHidePost($this->actor, $model),
             'contentAttachIds'  => $contentAttachIds,
         ];
 
@@ -100,7 +105,7 @@ class BasicPostSerializer extends AbstractSerializer
         }else{
             $content = str_replace(['<t><p>', '</p></t>'], ['', ''],$model->content);
             //针对新数据格式的 post，使用内部封装方法正则
-            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
+            [$searches, $replaces] = ThreadHelper::getThreadSearchReplace($content);
             $attributes['content'] = str_replace($searches, $replaces, $content);
         }
 
