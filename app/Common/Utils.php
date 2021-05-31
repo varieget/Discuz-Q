@@ -131,6 +131,8 @@ class Utils
 
     public static function logOldPermissionPosition($method)
     {
+        // 整改完之前，先忽略日志，增长太快
+        return;
         if (!app()->has('permLog')) {
             $logConfig = [
                 'alias' => 'permLog',
