@@ -126,8 +126,7 @@ class ThreadListController extends DzqController
             $this->initDzqUserData($this->user->id, $cacheKey, $filterKey);
         } else {//其他页从缓存取，取不到就重数据库取并写入缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
-                $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
-                return $threads;
+                return $this->pagination($page, $perPage, $threadsBuilder, true);
             });
         }
         return $threads;
@@ -147,8 +146,7 @@ class ThreadListController extends DzqController
             $this->initDzqUserData($this->user->id, $cacheKey, $filterKey);
         } else {
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
-                $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
-                return $threads;
+                return $this->pagination($page, $perPage, $threadsBuilder, true);
             });
         }
         return $threads;
