@@ -33,9 +33,9 @@ class CommentPostSerializer extends BasicPostSerializer
      *
      * @param Post $model
      */
-    public function getDefaultAttributes($model)
+    public function getDefaultAttributes($model,$user = null)
     {
-        $attributes = parent::getDefaultAttributes($model);
+        $attributes = parent::getDefaultAttributes($model,$user);
 
         $attributes['isFirst'] = false;
         $attributes['isComment'] = (bool) $model->is_comment;
