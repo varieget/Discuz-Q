@@ -67,13 +67,16 @@ class BatchThreadsController extends DzqController
             $requestData[$key]['id'] = $val;
             $requestData[$key]['attributes'] = [];
             if(!empty($categoryId)){
-                $requestData[$key]['relationships']['category']['data']['id'] = $categoryId;
+                $requestData[$key]['relationships']['category']['data']['id']=$categoryId;
             }
             if(!empty($isApproved) || $isApproved === 0){
                 $requestData[$key]['attributes']['isApproved'] = $isApproved;
             }
             if(!empty($isSticky) || $isSticky === 0){
                 $requestData[$key]['attributes']['isSticky'] = $isSticky;
+            }
+            if(!empty($isEssence) || $isEssence === 0){
+                $requestData[$key]['attributes']['isSite'] = $isEssence;
             }
             if(!empty($isDeleted) || $isDeleted === 0){
                 $requestData[$key]['attributes']['isDeleted'] = $isDeleted;

@@ -24,9 +24,9 @@ use App\Formatter\Formatter;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Traits\HasPaidContent;
-use App\Repositories\UserRepository;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Base\DzqCache;
+use Illuminate\Contracts\Auth\Access\Gate;
 use s9e\TextFormatter\Utils;
 use Tobscure\JsonApi\Relationship;
 
@@ -40,11 +40,16 @@ class BasicPostSerializer extends AbstractSerializer
     protected $type = 'posts';
 
     /**
-     * @param UserRepository $userRepo
+     * @var Gate
      */
-    public function __construct(UserRepository $userRepo)
+    protected $gate;
+
+    /**
+     * @param Gate $gate
+     */
+    public function __construct(Gate $gate)
     {
-        $this->userRepo = $userRepo;
+        $this->gate = $gate;
     }
 
     /**
@@ -52,9 +57,13 @@ class BasicPostSerializer extends AbstractSerializer
      *
      * @param Post $model
      */
-    protected function getDefaultAttributes($model, $user = null)
+    protected function getDefaultAttributes($model)
     {
         $this->paidContent($model);
+
+        $gate = $this->gate->forUser($this->actor);
+
+        $canEdit = $gate->allows('edit', $model);
 
         // 插入文中的图片及附件 ID
         $contentAttachIds = collect(
@@ -65,7 +74,7 @@ class BasicPostSerializer extends AbstractSerializer
 
         $attributes = [
             'id'                => $model->id,
-            'userId'            => $model->user_id,
+            'userId'                => $model->user_id,
             'replyPostId'       => $model->reply_post_id,
             'replyUserId'       => $model->reply_user_id,
             'commentPostId'     => $model->comment_post_id,
@@ -79,9 +88,10 @@ class BasicPostSerializer extends AbstractSerializer
             'createdAt'         => optional($model->created_at)->format('Y-m-d H:i:s'),
             'updatedAt'         => optional($model->updated_at)->format('Y-m-d H:i:s'),
             'isApproved'        => (int) $model->is_approved,
-            'canApprove'        => $user->isAdmin(),
-            'canDelete'         => $user->isAdmin(),
-            'canHide'           => $this->userRepo->canHidePost($user, $model),
+            'canEdit'           => $canEdit,
+            'canApprove'        => $gate->allows('approve', $model),
+            'canDelete'         => $gate->allows('delete', $model),
+            'canHide'           => $gate->allows('hide', $model),
             'contentAttachIds'  => $contentAttachIds,
         ];
 
@@ -105,7 +115,7 @@ class BasicPostSerializer extends AbstractSerializer
         }
 
 
-        if ($user->isAdmin() || $user->id === $model->user_id) {
+        if ($canEdit || $this->actor->id === $model->user_id) {
             $attributes += [
                 'ip'    => $model->ip,
                 'port'  => $model->port,
@@ -119,7 +129,7 @@ class BasicPostSerializer extends AbstractSerializer
             $attributes['isDeleted'] = false;
         }
 
-        Post::setStateUser($user);
+        Post::setStateUser($this->actor);
 
         return $attributes;
     }
