@@ -83,7 +83,7 @@ class ThreadLikedUsersController extends DzqController
             ->orderBy('created_at','desc')
             ->get(['user_id','created_at','type'])
             ->map(function ($value) {
-                if ($value->type == Order::ORDER_TYPE_THREAD) {
+                if (in_array([Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT],$value->type)) {
                     $value->type = 2;
                 } else {
                     $value->type = 3;

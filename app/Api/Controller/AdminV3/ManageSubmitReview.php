@@ -17,19 +17,23 @@
 
 namespace App\Api\Controller\AdminV3;
 
-use App\Common\ResponseCode;
+use App\Models\AdminActionLog;
 use App\Models\Post;
+use App\Models\UserActionLogs;
+use App\Traits\ThreadNoticesTrait;
+use App\Traits\PostNoticesTrait;
+use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use App\Models\Thread;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Str;
-use App\Models\AdminActionLog;
 
-
-class CheckSub extends DzqController
+class ManageSubmitReview extends DzqController
 {
+
+    use ThreadNoticesTrait;
+    use PostNoticesTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -55,33 +59,35 @@ class CheckSub extends DzqController
         $logArr = [];
         switch ($type) {
             case 1:
-                $logArr = $this->threads($user, $data);
+                $logArr = $this->threads();
                 break;
             case 2:
-                $logArr = $this->posts($user, $data);
+                $logArr = $this->posts();
                 break;
         }
 
         if (!empty($logArr)) {
             AdminActionLog::insert($logArr);
-            $this->outPut(ResponseCode::SUCCESS,'', $logArr);
+            $this->outPut(ResponseCode::SUCCESS);
         }
 
-        $this->outPut(ResponseCode::INVALID_PARAMETER,'', $logArr);
+        $this->outPut(ResponseCode::INVALID_PARAMETER);
     }
 
-    public function threads($user, $data){
+    public function threads(){
 
+        $user = $this->user;
+        $data = $this->inPut('data');
         $ids = array_column($data,'id');
         $arr = array_column($data,null,'id');
         $serverParams = $this->request->getServerParams();
         $ip = ip($serverParams);
 
-        $thread = Thread::query()->whereIn('id',$ids)
-            ->get(['id','is_approved','title','deleted_at']);
-
         $logArr = [];
-        foreach( $thread as $k => $v ){
+        $thread = Thread::query()->whereIn('id',$ids)
+            ->get();
+
+        foreach ($thread as  $k => $v) {
 
             if($v->title == '' || empty($v->title)) {
                 $threadTitle = '，其ID为'. $v->id;
@@ -89,9 +95,9 @@ class CheckSub extends DzqController
                 $threadTitle = '【'. $v->title .'】';
             }
 
-            if (empty($v->deleted_at) && ($arr[$v->id]['isApproved'] == 1 || $arr[$v->id]['isApproved'] == 2)) {
+            if (empty($v->deleted_at) && in_array($arr[$v->id]['isApproved'], [1, 2]) && $v->is_approved != $arr[$v->id]['isApproved']) {
 
-                if ($arr[$v->id]['isApproved']==1) {
+                if ($arr[$v->id]['isApproved'] == 1) {
                     $action_desc = $threadTitle.',通过审核';
                 } else {
                     $action_desc = $threadTitle.',被忽略';
@@ -107,16 +113,21 @@ class CheckSub extends DzqController
                     'created_at' => Carbon::now()
                 ];
 
-            } else if (is_bool($arr[$v->id]['isDeleted'])) {
+            }else if (in_array($arr[$v->id]['isDeleted'],[true, false])) {
 
                 if (empty($v->deleted_at) && $arr[$v->id]['isDeleted'] == true) {
 
-                    $action_desc = '批量删除用户主题帖'. $threadTitle;
+                    $action_desc = '删除用户主题帖'. $threadTitle;
 
-                    $v->is_approved = $arr[$v->id]['isApproved'];
                     $v->deleted_user_id = $user->id;
                     $v->deleted_at = Carbon::now();
                     $v->save();
+
+                    // 通知
+                    $this->threadNotices($v, $user, 'isDeleted', $arr[$v->id]['message'] ?? '');
+
+                    // 日志
+                    UserActionLogs::writeLog($user, $v, 'hide', $arr[$v->id]['message'] ?? '');
 
                     $logArr[] = [
                         'user_id' => $user->id,
@@ -126,14 +137,16 @@ class CheckSub extends DzqController
                     ];
                 }
 
-                if (empty($v->deleted_at) && $arr[$v->id]['isDeleted'] == false) {
+                if (!empty($v->deleted_at) && $arr[$v->id]['isDeleted'] == false) {
 
-                    $action_desc = '批量还原用户主题帖'. $threadTitle;
+                    $action_desc = '还原用户主题帖'. $threadTitle;
 
-                    $v->is_approved = $arr[$v->id]['isApproved'];
                     $v->deleted_user_id = null;
                     $v->deleted_at = null;
                     $v->save();
+
+                    // 日志
+                    UserActionLogs::writeLog($user, $v, 'restore', $arr[$v->id]['message'] ?? '');
 
                     $logArr[] = [
                         'user_id' => $user->id,
@@ -144,19 +157,20 @@ class CheckSub extends DzqController
                 }
             }
         }
-
         return $logArr;
     }
 
-    public function posts($user, $data){
+    public function posts(){
 
+        $user = $this->user;
+        $data = $this->inPut('data');
         $ids = array_column($data,'id');
         $arr = array_column($data,null,'id');
         $serverParams = $this->request->getServerParams();
         $ip = ip($serverParams);
 
         $Post = Post::query()->whereIn('id',$ids)
-            ->get(['id','is_approved','content','deleted_at']);
+            ->get();
 
         $logArr = [];
         foreach( $Post as $k => $v ){
@@ -167,7 +181,7 @@ class CheckSub extends DzqController
                 $threadContent = '【'. $v->content .'】';
             }
 
-            if (empty($v->deleted_at) && ($arr[$v->id]['isApproved'] == 1 || $arr[$v->id]['isApproved'] == 2)) {
+            if (empty($v->deleted_at) && in_array($arr[$v->id]['isApproved'], [1, 2]) && $v->is_approved != $arr[$v->id]['isApproved']) {
 
                 if ($arr[$v->id]['isApproved']==1) {
                     $action_desc = $threadContent.',通过审核';
@@ -185,16 +199,21 @@ class CheckSub extends DzqController
                     'created_at' => Carbon::now()
                 ];
 
-            } else if (is_bool($arr[$v->id]['isDeleted'])) {
+            } else if (in_array($arr[$v->id]['isDeleted'],[true, false])) {
 
-                if (empty($v->deleted_at)  &&  $arr[$v->id]['isDeleted'] == true) {
+                if (empty($v->deleted_at) && $arr[$v->id]['isDeleted'] == true) {
 
-                    $action_desc = '批量删除用户回复评论'. $threadContent;
+                    $action_desc = '删除用户回复评论'. $threadContent;
 
-                    $v->is_approved = $arr[$v->id]['isApproved'];
                     $v->deleted_user_id = $user->id;
                     $v->deleted_at = Carbon::now();
                     $v->save();
+
+                    // 通知
+                    $this->postNotices($v, $user, 'isDeleted', $arr[$v->id]['message'] ?? '');
+
+                    // 日志
+                    UserActionLogs::writeLog($user, $v, 'hide', $arr[$v->id]['message'] ?? '');
 
                     $logArr[] = [
                         'user_id' => $user->id,
@@ -206,13 +225,14 @@ class CheckSub extends DzqController
                 }
                 if ( !empty($v->deleted_at) && $arr[$v->id]['isDeleted'] == false) {
 
-                    $action_desc = '批量还原用户回复评论'. $threadContent;
+                    $action_desc = '还原用户回复评论'. $threadContent;
 
-                    $v->is_approved = $arr[$v->id]['isApproved'];
                     $v->deleted_user_id = null;
                     $v->deleted_at = null;
                     $v->save();
 
+                    // 日志
+                    UserActionLogs::writeLog($user, $v, 'restore', $arr[$v->id]['message'] ?? '');
 
                     $logArr[] = [
                         'user_id' => $user->id,
@@ -227,5 +247,6 @@ class CheckSub extends DzqController
 
         return $logArr;
     }
+
 
 }

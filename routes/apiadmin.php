@@ -42,10 +42,11 @@ $route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\L
 $route->post('/signinfields', 'signinfields.create', ApiController\SignInFieldsV3\CreateAdminSignInController::class);
 $route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
 //审核主题列表
-$route->get('/check.thread.list', 'check.thread.list', ApiController\AdminV3\CheckThemeList::class);
+$route->get('/manage.thread.list', 'manage.thread.list', ApiController\AdminV3\ManageThemeList::class);
 //审核评论列表
-$route->get('/check.posts.list', 'check.posts.list', ApiController\AdminV3\CheckReplyList::class);
-$route->post('/check.sub', 'check.sub', ApiController\AdminV3\CheckSub::class);
+$route->get('/manage.posts.list', 'manage.posts.list', ApiController\AdminV3\ManagePostList::class);
+//提交审核
+$route->post('/manage.submit.review', 'manage.review', ApiController\AdminV3\ManageSubmitReview::class);
 //话题管理
 $route->get('/topics.list', 'topics.list', ApiController\TopicV3\AdminTopicListController::class);
 $route->post('/topics.batch.update', 'topics.batch.update', ApiController\TopicV3\BatchUpdateTopicController::class);
@@ -62,3 +63,6 @@ $route->get('/users', 'users.list', ApiController\UsersV3\ListUserScreenControll
 $route->post('/stopwords.batch', 'stopwords.batch', ApiController\StopWordsV3\BatchCreateStopWordsController::class);
 $route->get('/stopwords.list', 'stopwords.list', ApiController\StopWordsV3\ListStopWordsController::class);
 $route->post('/stopwords.delete', 'stopwords.delete', ApiController\StopWordsV3\DeleteStopWordController::class);
+
+//管理端站点设置
+$route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);

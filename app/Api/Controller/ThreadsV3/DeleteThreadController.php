@@ -24,6 +24,7 @@ use App\Models\Category;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
+use App\Traits\ThreadNoticesTrait;
 use Carbon\Carbon;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
@@ -31,12 +32,16 @@ use Discuz\Base\DzqController;
 class DeleteThreadController extends DzqController
 {
     use TomTrait;
+    use ThreadNoticesTrait;
 
     private $thread;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
+        $this->thread = Thread::query()
+            ->where(['id' => $this->inPut('threadId')])
+            ->whereNull('deleted_at')
+            ->first();
         if (empty($this->thread)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
@@ -48,11 +53,17 @@ class DeleteThreadController extends DzqController
         $thread = $this->thread;
         $thread->deleted_at = Carbon::now();
         $thread->deleted_user_id = $this->user->id;
-        if ($thread->save()) {
-            $this->outPut(ResponseCode::SUCCESS);
+        if (!$thread->save()) {
+            $this->outPut(ResponseCode::DB_ERROR, '删除失败');
         }
+
         Category::refreshThreadCountV3($thread['category_id']);
-        $this->outPut(ResponseCode::DB_ERROR, '删除失败');
+
+        if ($thread->user_id != $this->user->id) {
+            $this->sendIsDeleted($thread, $this->user, ['refuse' => $this->inPut('message')]);
+        }
+
+        $this->outPut(ResponseCode::SUCCESS);
     }
 
     public function clearCache($user)

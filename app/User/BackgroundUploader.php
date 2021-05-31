@@ -63,11 +63,11 @@ class BackgroundUploader
      */
     public function upload(User $user, Image $image)
     {
-        if (extension_loaded('exif')) {
+        /*if (extension_loaded('exif')) {
             $image->orientate();
-        }
+        }*/
 
-        $encodedImage = $image->fit(200, 200)->encode('png')->save();
+        $encodedImage = $image->fit(800, 800)->encode('png')->save();
 
         // 检测敏感图
         $this->censor->checkImage($image->dirname .'/'. $image->basename);

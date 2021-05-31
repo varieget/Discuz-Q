@@ -25,6 +25,7 @@ use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
+use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Bus\Dispatcher as DispatcherBus;
 use Illuminate\Support\Arr;
@@ -60,15 +61,13 @@ class CreateDialog
     {
         $this->events = $events;
 
-        $this->assertCan($this->actor, 'dialog.create');
-
         $sender = $this->actor->id;
         $recipient = Arr::get($this->attributes, 'recipient_username');
 
         $recipientUser = $user->query()->where('username', $recipient)->firstOrFail();
 
         if ($sender == $recipientUser->id) {
-            throw new PermissionDeniedException();
+            throw new Exception('不能给自己发送私信');
         }
         //在黑名单中，不能创建会话
         if (in_array($sender, array_column($recipientUser->deny->toArray(), 'id'))) {
