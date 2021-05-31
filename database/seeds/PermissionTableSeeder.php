@@ -31,19 +31,19 @@ class PermissionTableSeeder extends Seeder
     protected $permissions = [
         //通用权限：
         PermissionKey::CASH_CREATE                  => [10],    // 申请提现
-        PermissionKey::ORDER_CREATE                 => [10,6],  // 创建订单
+        PermissionKey::ORDER_CREATE                 => [10],    // 创建订单
         PermissionKey::THREAD_FAVORITE              => [10],    // 帖子收藏
         PermissionKey::THREAD_LIKE_POSTS            => [10],    // 帖子点赞
-        PermissionKey::TRADE_PAY_ORDER              => [10,6],  // 订单支付
-        PermissionKey::USER_VIEW                    => [10,7],  // 查看某个用户信息权限
+        PermissionKey::TRADE_PAY_ORDER              => [10],    // 订单支付
+        PermissionKey::USER_VIEW                    => [10],    // 查看某个用户信息权限
         PermissionKey::USER_FOLLOW_CREATE           => [10],    // 关注/取关用户
 
         // 内容发布权限
         PermissionKey::CREATE_THREAD                => [10],    // 发布帖子
-        PermissionKey::THREAD_INSERT_IMAGE          => [10,6],  // 插入图片
+        PermissionKey::THREAD_INSERT_IMAGE          => [10],    // 插入图片
         PermissionKey::THREAD_INSERT_VIDEO          => [10],    // 插入视频
         PermissionKey::THREAD_INSERT_AUDIO          => [10],    // 插入语音
-        PermissionKey::THREAD_INSERT_ATTACHMENT     => [10,6],  // 插入附件
+        PermissionKey::THREAD_INSERT_ATTACHMENT     => [10],    // 插入附件
         PermissionKey::THREAD_INSERT_GOODS          => [10],    // 插入商品
         PermissionKey::THREAD_INSERT_PAY            => [10],    // 插入付费
         PermissionKey::THREAD_INSERT_REWARD         => [10],    // 插入悬赏
@@ -55,10 +55,10 @@ class PermissionTableSeeder extends Seeder
         'category1.'.PermissionKey::THREAD_REPLY    => [10],    // 回复主题
 
         //查看权限
-        'switch.'.PermissionKey::VIEW_THREADS       => [10,7], // 查看主题列表
-        'category1.'.PermissionKey::VIEW_THREADS    => [10,7], // 查看主题列表
-        'switch.'.PermissionKey::THREAD_VIEW_POSTS      => [10,7],   // 查看主题详情
-        'category1.'.PermissionKey::THREAD_VIEW_POSTS   => [10,7],   // 查看主题详情
+        'switch.'.PermissionKey::VIEW_THREADS           => [10,7],  // 查看主题列表
+        'category1.'.PermissionKey::VIEW_THREADS        => [10,7],  // 查看主题列表
+        'switch.'.PermissionKey::THREAD_VIEW_POSTS      => [10,7],  // 查看主题详情
+        'category1.'.PermissionKey::THREAD_VIEW_POSTS   => [10,7],  // 查看主题详情
 
         //管理权限
         PermissionKey::THREAD_EDIT_OWN              => [10],    // 编辑自己的主题
