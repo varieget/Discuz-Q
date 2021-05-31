@@ -253,12 +253,14 @@ class UserRepository extends AbstractRepository
      * 免费查看付费帖子权限
      *
      * @param User $user
-     * @param null $categoryId
+     * @param array|Thread $thread
      * @return bool
      */
-    public function canFreeViewPosts(User $user, $categoryId = null)
+    public function canFreeViewPosts(User $user, $thread)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_FREE_VIEW_POSTS, $categoryId);
+        // 是作者自己，或者有对应权限
+        return ($user->id == $thread['user_id'])
+            || $this->checkCategoryPermission($user, PermissionKey::THREAD_FREE_VIEW_POSTS, $thread['category_id']);
     }
 
     /**

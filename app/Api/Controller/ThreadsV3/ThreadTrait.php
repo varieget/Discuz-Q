@@ -171,12 +171,7 @@ trait ThreadTrait
     private function canFreeViewTom($user, $thread)
     {
         $repo = new UserRepository();
-        $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
-        if ($canFreeViewThreadDetail || $user->id == $thread['user_id']) {
-            return true;
-        } else {
-            return false;
-        }
+        return $repo->canFreeViewPosts($user, $thread);
     }
 
     private function getFavoriteField($threadId, $loginUser)
@@ -215,7 +210,7 @@ trait ThreadTrait
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
             'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
-            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread['category_id'])
+            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread)
         ];
     }
 
