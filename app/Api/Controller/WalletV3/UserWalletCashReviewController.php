@@ -149,6 +149,7 @@ class UserWalletCashReviewController extends DzqController
                             $log->error("修改提现记录状态出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                             return $status_result[$id] = 'failure';
                         }
+                        $db->commit();
                         return $status_result[$id] = 'success';
                     } catch (\Exception $e) {
                         //回滚事务
