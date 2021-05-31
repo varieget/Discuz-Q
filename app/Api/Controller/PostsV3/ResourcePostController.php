@@ -51,8 +51,12 @@ class ResourcePostController extends DzqController
 
     public function main()
     {
+        /** @var CommentPostSerializer $coment_post_serialize */
         $coment_post_serialize = $this->app->make(CommentPostSerializer::class);
+        $coment_post_serialize->setRequest($this->request);
+        /** @var AttachmentSerializer $attachment_serialize */
         $attachment_serialize = $this->app->make(AttachmentSerializer::class);
+        $attachment_serialize->setRequest($this->request);
 
         $post_id = $this->inPut('pid');
         if(empty($post_id))       return  $this->outPut(ResponseCode::INVALID_PARAMETER );
@@ -76,7 +80,7 @@ class ResourcePostController extends DzqController
 
         Post::setStateUser($this->user);
 
-        $data = $coment_post_serialize->getDefaultAttributes($comment_post, $this->user);
+        $data = $coment_post_serialize->getDefaultAttributes($comment_post);
 
 
         $data['canLike'] = app(UserRepository::class)->canLikePosts($this->user);
