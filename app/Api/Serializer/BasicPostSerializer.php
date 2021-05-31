@@ -27,7 +27,6 @@ use App\Traits\HasPaidContent;
 use App\Repositories\UserRepository;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Base\DzqCache;
-use Illuminate\Contracts\Auth\Access\Gate;
 use s9e\TextFormatter\Utils;
 use Tobscure\JsonApi\Relationship;
 
@@ -41,16 +40,10 @@ class BasicPostSerializer extends AbstractSerializer
     protected $type = 'posts';
 
     /**
-     * @var Gate
+     * @param UserRepository $userRepo
      */
-    protected $gate;
-
-    /**
-     * @param Gate $gate
-     */
-    public function __construct(Gate $gate, UserRepository $userRepo)
+    public function __construct(UserRepository $userRepo)
     {
-        $this->gate = $gate;
         $this->userRepo = $userRepo;
     }
 
@@ -62,8 +55,6 @@ class BasicPostSerializer extends AbstractSerializer
     protected function getDefaultAttributes($model, $user = null)
     {
         $this->paidContent($model);
-
-        $gate = $this->gate->forUser($user);
 
         // 插入文中的图片及附件 ID
         $contentAttachIds = collect(
