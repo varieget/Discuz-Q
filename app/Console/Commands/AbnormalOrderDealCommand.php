@@ -72,9 +72,11 @@ class AbnormalOrderDealCommand extends AbstractCommand
         $this->info('异常订单脚本执行 [开始]');
         $this->info('');
 
-        $orderType = [Order::ORDER_TYPE_QUESTION, Order::ORDER_TYPE_REDPACKET, 
-                Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE, 
-                Order::ORDER_TYPE_TEXT, Order::ORDER_TYPE_LONG];
+        $orderType = [
+            Order::ORDER_TYPE_QUESTION, Order::ORDER_TYPE_REDPACKET,
+            Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE,
+            Order::ORDER_TYPE_TEXT, Order::ORDER_TYPE_LONG,
+        ];
 
         $date = Carbon::parse('-1 day')->toDateString();
         $dateTimeBegin = $date . ' 00:00:00';
@@ -82,7 +84,7 @@ class AbnormalOrderDealCommand extends AbstractCommand
         $dateTimeEnd = date("Y-m-d H:i:s", $preTime); // 筛选昨天至当前15分钟前的异常订单
         $query = Order::query();
         $query->whereBetween('created_at', [$dateTimeBegin, $dateTimeEnd]);
-        $query->where('status', Order::ORDER_STATUS_PAID); 
+        $query->where('status', Order::ORDER_STATUS_PAID);
         $query->where('amount', '>', 0);
         $query->whereIn('type', $orderType);
         $query->whereNull('thread_id');
@@ -124,7 +126,7 @@ class AbnormalOrderDealCommand extends AbstractCommand
             }
 
             if ($item->payment_type == Order::PAYMENT_TYPE_WALLET && $userWallet->freeze_amount < $item->amount) {
-                app('log')->info('用户冻结金额小于订单金额，无法退还订单金额！订单号为：' . $item->order_sn . ';订单创建者ID为：' . $item->user_id. ';用户冻结金额:' . $userWallet->freeze_amount . ';应退还金额:' . $item->amount);
+                app('log')->info('用户冻结金额小于订单金额，无法退还订单金额！订单号为：' . $item->order_sn . ';订单创建者ID为：' . $item->user_id . ';用户冻结金额:' . $userWallet->freeze_amount . ';应退还金额:' . $item->amount);
                 $item->status = Order::ORDER_STATUS_UNTREATED;
                 $item->save();
                 $this->connection->commit();
@@ -132,11 +134,11 @@ class AbnormalOrderDealCommand extends AbstractCommand
             }
 
             $data = [
-                'order_id'      => $item->id,
-                'thread_id'     => $item->thread_id ? $item->thread_id : 0,
-                'post_id'       => $item->post_id ? $item->post_id : 0,
-                'change_type'   => $changeType,
-                'change_desc'   => $changeDesc
+                'order_id' => $item->id,
+                'thread_id' => $item->thread_id ? $item->thread_id : 0,
+                'post_id' => $item->post_id ? $item->post_id : 0,
+                'change_type' => $changeType,
+                'change_desc' => $changeDesc,
             ];
 
             // Start Transaction
@@ -145,21 +147,21 @@ class AbnormalOrderDealCommand extends AbstractCommand
                 if ($item->payment_type == Order::PAYMENT_TYPE_WALLET) {
                     // 钱包支付 减少冻结金额，增加可用金额
                     $this->bus->dispatch(new ChangeUserWallet($item->user,
-                                                              UserWallet::OPERATE_UNFREEZE,
-                                                              $item->amount,
-                                                              $data
-                                         ));
+                        UserWallet::OPERATE_UNFREEZE,
+                        $item->amount,
+                        $data
+                    ));
                 } elseif (
-                    $item->payment_type     == Order::PAYMENT_TYPE_WECHAT_NATIVE
-                    || $item->payment_type  == Order::PAYMENT_TYPE_WECHAT_WAP
-                    || $item->payment_type  == Order::PAYMENT_TYPE_WECHAT_JS
-                    || $item->payment_type  == Order::PAYMENT_TYPE_WECHAT_MINI
+                    $item->payment_type == Order::PAYMENT_TYPE_WECHAT_NATIVE
+                    || $item->payment_type == Order::PAYMENT_TYPE_WECHAT_WAP
+                    || $item->payment_type == Order::PAYMENT_TYPE_WECHAT_JS
+                    || $item->payment_type == Order::PAYMENT_TYPE_WECHAT_MINI
                 ) {
                     $this->bus->dispatch(new ChangeUserWallet($item->user,
-                                                              UserWallet::OPERATE_INCREASE,
-                                                              $item->amount,
-                                                              $data
-                                         ));
+                        UserWallet::OPERATE_INCREASE,
+                        $item->amount,
+                        $data
+                    ));
                 } else {
                     app('log')->info('订单金额退还失败, 订单号 ' . $item->order_sn . '的支付类型: ' . $item->payment_type . ', 不在处理范围内');
                     $item->status = Order::ORDER_STATUS_UNTREATED;

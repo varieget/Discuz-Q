@@ -29,6 +29,7 @@ use App\Models\User;
 use App\Models\UserWechat;
 use App\Notifications\Messages\Wechat\RegisterWechatMessage;
 use App\Notifications\System;
+use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use App\User\Bound;
 use Exception;
@@ -71,7 +72,10 @@ class WechatH5LoginController extends AuthBaseController
         $this->db           = $db;
     }
 
-
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
 
     public function main()
     {

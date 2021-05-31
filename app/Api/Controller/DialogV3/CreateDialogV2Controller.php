@@ -35,6 +35,11 @@ class CreateDialogV2Controller extends DzqController
         $this->bus = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $userRepo->canCreateDialog($this->user);
+    }
+
     public function main()
     {
         $actor = $this->user;

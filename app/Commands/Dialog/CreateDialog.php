@@ -22,7 +22,6 @@ use App\Censor\Censor;
 use App\Models\Dialog;
 use App\Models\User;
 use App\Repositories\UserRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
 use Exception;
@@ -32,7 +31,6 @@ use Illuminate\Support\Arr;
 
 class CreateDialog
 {
-    use AssertPermissionTrait;
     use EventsDispatchTrait;
 
     /**

@@ -18,6 +18,7 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use App\User\MiniprogramSchemeManage;
 use Discuz\Wechat\EasyWechatTrait;
 use GuzzleHttp\Client;
@@ -32,6 +33,11 @@ class MiniProgramSchemeGenController extends AuthBaseController
     {
         $this->httpClient = new Client();
         $this->manage = $manage;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()

@@ -31,10 +31,6 @@ use Discuz\Base\DzqController;
 
 class ResourcePostController extends DzqController
 {
-    public $providers = [
-        \App\Providers\PostServiceProvider::class,
-    ];
-
     //返回的数据一定包含的数据
     public $include = [
         'user:id,username,avatar',
