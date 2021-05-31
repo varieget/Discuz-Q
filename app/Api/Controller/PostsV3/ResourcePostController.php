@@ -126,6 +126,8 @@ class ResourcePostController extends DzqController
                 $data['commentPosts'][$k]['replyUser'] = $replyUsers[$value['reply_user_id']];
                 $data['commentPosts'][$k]['commentUser'] = $commentUsers[$value['comment_user_id']];
                 $data['commentPosts'][$k]['attachments'] = !empty($attachments[$value['id']]) ? $attachments[$value['id']] : null;
+                list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($data['commentPosts'][$k]['content']);
+                $data['commentPosts'][$k]['content'] = str_replace($searches, $replaces, $data['commentPosts'][$k]['content']);
             }
         }
 //        $cache->put($cacheKey, serialize($data), 5*60);
