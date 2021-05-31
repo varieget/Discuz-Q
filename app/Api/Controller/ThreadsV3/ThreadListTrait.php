@@ -157,8 +157,9 @@ trait ThreadListTrait
      * @param $loginUserId
      * @param $cacheKey
      * @param $filterKey
+     * @param $preloadCount
      */
-    private function initDzqUserData($loginUserId, $cacheKey, $filterKey)
+    private function initDzqUserData($loginUserId, $cacheKey, $filterKey, $preloadCount)
     {
         $data = DzqCache::hGet($cacheKey, $filterKey);
         if (!$data) {
@@ -169,8 +170,8 @@ trait ThreadListTrait
         foreach ($pages as $page) {
             $threadIds = array_merge($threadIds, array_column($page, 'id'));
         }
-        $this->cacheUserOrders($loginUserId, $threadIds);
-        $this->cachePostLikedAndFavor($loginUserId, $threadIds);
+        $this->cacheUserOrders($loginUserId, $threadIds, $preloadCount);
+        $this->cachePostLikedAndFavor($loginUserId, $threadIds, $preloadCount);
     }
 
     private function getAllThreadsList($threadsByPage)
@@ -294,14 +295,15 @@ trait ThreadListTrait
         return $likedUsers;
     }
 
-    private function cacheUserOrders($userId, $threadIds)
+    private function cacheUserOrders($userId, $threadIds, $preloadCount)
     {
-
         $key1 = CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId;
         $key2 = CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $userId;
-//        if (DzqCache::get($key1) && DzqCache::get($key2)) {
-//            return;
-//        }
+        $d1 = DzqCache::get($key1);
+        $d2 = DzqCache::get($key2);
+        if (is_array($d1) && count($d1) >= $preloadCount && is_array($d2) && count($d1) >= $preloadCount) {
+            return;
+        }
         $orders = Order::query()
             ->where([
                 'user_id' => $userId,
@@ -322,13 +324,15 @@ trait ThreadListTrait
     }
 
     //点赞收藏
-    private function cachePostLikedAndFavor($userId, $threadIds)
+    private function cachePostLikedAndFavor($userId, $threadIds, $preloadCount)
     {
         $key1 = CacheKey::LIST_THREADS_V3_POST_LIKED . $userId;
         $key2 = CacheKey::LIST_THREADS_V3_THREAD_USERS . $userId;
-//        if (DzqCache::get($key1) && DzqCache::get($key2)) {
-//            return;
-//        }
+        $d1 = DzqCache::get($key1);
+        $d2 = DzqCache::get($key2);
+        if (is_array($d1) && count($d1) >= $preloadCount && is_array($d2) && count($d1) >= $preloadCount) {
+            return;
+        }
         $posts = Post::instance()->getPosts($threadIds);
         $postIds = array_column($posts, 'id');
         $postUsers = PostUser::query()->where('user_id', $userId)->whereIn('post_id', $postIds)->get()->toArray();

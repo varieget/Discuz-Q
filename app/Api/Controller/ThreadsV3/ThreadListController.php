@@ -41,9 +41,11 @@ class ThreadListController extends DzqController
     private $preload = false;
     const PRELOAD_PAGES = 50;//预加载的页数
 
+    private $preloadCount = 0;
     private $categoryIds = [];
 
     protected $settings;
+
 
     public function __construct(SettingsRepository $settings)
     {
@@ -77,6 +79,7 @@ class ThreadListController extends DzqController
             $this->outPut(ResponseCode::JUMP_TO_REGISTER, '', '站点需要付费加入');
         }
 //        $this->openQueryLog();
+        $this->preloadCount = self::PRELOAD_PAGES * $perPage;
         if (empty($sequence)) {
             $threads = $this->getFilterThreads($filter, $page, $perPage);
         } else {
@@ -122,7 +125,7 @@ class ThreadListController extends DzqController
                 $this->initDzqGlobalData($threads);
                 return $threads;
             }, true);
-            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey);
+            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey,$this->preloadCount);
         } else {//其他页从缓存取，取不到就重数据库取并写入缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
                 return $this->pagination($page, $perPage, $threadsBuilder, true);
@@ -142,7 +145,7 @@ class ThreadListController extends DzqController
                 $this->initDzqGlobalData($threads);
                 return $threads;
             }, true);
-            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey);
+            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey,$this->preloadCount);
         } else {
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
                 return $this->pagination($page, $perPage, $threadsBuilder, true);
