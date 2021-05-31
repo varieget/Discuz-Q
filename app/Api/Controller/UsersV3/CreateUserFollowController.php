@@ -44,7 +44,7 @@ class CreateUserFollowController extends DzqController
         $to_user_id = $this->inPut('toUserId');
 
         if ($actor->id == $to_user_id) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'');
+            $this->outPut(ResponseCode::NOT_FOLLOW_YOURSELE);
         }
 
         /** @var User $toUser */
@@ -52,18 +52,18 @@ class CreateUserFollowController extends DzqController
             ->where('id', $to_user_id)
             ->first();
         if (!$toUser) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'');
+            $this->outPut(ResponseCode::NOT_FOLLOW_USER);
         }
 
         //在黑名单中，不能创建会话
         if (in_array($actor->id, array_column($toUser->deny->toArray(), 'id'))) {
-            $this->outPut(ResponseCode::UNAUTHORIZED,'');
+            $this->outPut(ResponseCode::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION);
         }
 
         //判断是否已经关注
         $toFromUserFollow = $this->userFollow->where(['to_user_id'=>$to_user_id,'from_user_id'=>$actor->id])->first();
         if($toFromUserFollow){
-            $this->outPut(ResponseCode::RESOURCE_EXIST,'');
+            $this->outPut(ResponseCode::RESOURCE_EXIST);
         }
 
         //判断是否需要设置互相关注
