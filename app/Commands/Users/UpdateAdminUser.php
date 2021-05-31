@@ -530,7 +530,7 @@ class UpdateAdminUser
         $this->censor->checkText($nickname);
 
         if ($this->censor->isMod) {
-            \Discuz\Common\Utils::outPut(ResponseCode::USER_NICKNAME_CENSOR_ERROR);
+            \Discuz\Common\Utils::outPut(ResponseCode::NICKNAME_CENSOR_NOT_PASSED);
         }
 
         // 过滤内容

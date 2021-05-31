@@ -104,7 +104,7 @@ class ResponseCode
     const REALNAME_NOT_NULL = -7054;
     const IDENTITY_NOT_NULL = -7055;
     const REAL_USER_CHECK_FAIL = -7056;
-    const USER_NICKNAME_CENSOR_ERROR = -7057;
+    const NICKNAME_CENSOR_NOT_PASSED = -7057;
     const USER_SINGATURE_LINIT_ERROR = -7058;
     const NOT_FOLLOW_YOURSELE = -7059;
     const NOT_FOLLOW_USER= -7060;
@@ -197,7 +197,7 @@ class ResponseCode
         self::IDENTITY_NOT_NULL => '身份证不能为空',
         self::REAL_USER_CHECK_FAIL => '实名认证不通过',
         self::USER_SINGATURE_LINIT_ERROR => '用户签名限制错误',
-        self::USER_NICKNAME_CENSOR_ERROR => 'User用户昵称敏感词校验',
+        self::NICKNAME_CENSOR_NOT_PASSED => '昵称未通过敏感词校验',
         self::NOT_FOLLOW_YOURSELE => '不能关注自己',
         self::NOT_FOLLOW_USER => '关注用户不存在',
         self::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION => '已被对方拉黑',
