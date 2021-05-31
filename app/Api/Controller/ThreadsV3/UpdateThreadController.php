@@ -244,13 +244,7 @@ class UpdateThreadController extends DzqController
 
     public function clearCache($user)
     {
-        DzqCache::delKey(CacheKey::CATEGORIES);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_ATTENTION);
+        CacheKey::delListCache();
         $threadId = $this->inPut('threadId');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);
