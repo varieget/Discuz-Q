@@ -98,6 +98,7 @@ class ResourcePostController extends DzqController
         if(intval($data['replyCount']) > 0){
             $replyId = Post::query()
                 ->where('reply_post_id',$post_id)
+                ->whereNull("deleted_at")
                 ->where('is_comment', true)
                 ->get(['id','user_id','reply_user_id','comment_user_id']);
             $replyIdArr = $replyId->toArray();
