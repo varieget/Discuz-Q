@@ -101,7 +101,7 @@ class ThreadListController extends DzqController
     private function getThreadsFromCache($threadIds)
     {
         $pageData = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ($threadIds) {
-            return   Thread::query()->whereIn('id', $threadIds)->get()->toArray();
+            return Thread::query()->whereIn('id', $threadIds)->get()->toArray();
         }, 'id');
         $threads = [];
         foreach ($threadIds as $threadId) {
@@ -370,7 +370,7 @@ class ThreadListController extends DzqController
         return $cacheKey;
     }
 
-    private function filterKey($perPage, $filter, $withLoginUser)
+    private function filterKey($perPage, $filter, $withLoginUser = false)
     {
         $serialize = ['perPage' => $perPage, 'filter' => $filter];
         $withLoginUser && $serialize['user'] = $this->user->id;
