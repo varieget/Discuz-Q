@@ -51,7 +51,6 @@ class ResourcePostController extends DzqController
 
     public function main()
     {
-
         $coment_post_serialize = $this->app->make(CommentPostSerializer::class);
         $attachment_serialize = $this->app->make(AttachmentSerializer::class);
 
@@ -80,7 +79,7 @@ class ResourcePostController extends DzqController
         $data = $coment_post_serialize->getDefaultAttributes($comment_post, $this->user);
 
 
-        $data['canLike'] = true;
+        $data['canLike'] = app(UserRepository::class)->canLikePosts($this->user);
         $data['images'] = [];
         $data['likeUsers'] = $comment_post->likedUsers;
         if(!empty($comment_post->images)){

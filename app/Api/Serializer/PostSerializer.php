@@ -33,7 +33,7 @@ class PostSerializer extends BasicPostSerializer
      * @param Post $model
      * @throws Exception
      */
-    public function getDefaultAttributes($model)
+    public function getDefaultAttributes($model, $user = null)
     {
         $attributes = parent::getDefaultAttributes($model);
 
