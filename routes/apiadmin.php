@@ -73,3 +73,5 @@ $route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsCo
 $route->get('/notification/tpl', 'notification.tpl.list', ApiController\NotificationV3\ListNotificationTplV3Controller::class);
 $route->get('/notification/tpl/detail', 'notification.tpl.detail', ApiController\NotificationV3\ResourceNotificationTplV3Controller::class);
 $route->post('/notification/tpl/update', 'notification.tpl.update', ApiController\NotificationV3\UpdateNotificationTplV3Controller::class);
+
+$route->get('/cache.delete', 'cache.delete', ApiController\CacheV3\DeleteCacheController::class);
