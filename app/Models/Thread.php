@@ -810,13 +810,7 @@ class Thread extends DzqModel
     public function getReplaceString($linkString)
     {
         preg_match_all('/:[a-z]+:/i', $linkString, $m1);
-        preg_match_all('/@.+? /', $linkString, $m2);
-        preg_match_all('/#.+?#/', $linkString, $m3);
         $m1 = array_unique($m1[0]);
-        $m2 = array_unique($m2[0]);
-        $m3 = array_unique($m3[0]);
-        $m2 = str_replace(['@', ' '], '', $m2);
-        $m3 = str_replace('#', '', $m3);
         $search = [];
         $replace = [];
         $emojisList = Emoji::getEmojis();
@@ -832,6 +826,23 @@ class Thread extends DzqModel
                 ];
             }
         }
+        foreach ($emojis as $emoji) {
+            $search[] = $emoji['code'];
+            $replace[] = $emoji['html'];
+        }
+        foreach ($m1 as $item) {
+            if (!in_array($item, $search)) {
+                $search[] = $item;
+                $replace[] = $item;
+            }
+        }
+        /* 正则只处理表情，@ # 在数据迁移时完成，这里不在匹配
+        preg_match_all('/@.+? /', $linkString, $m2);
+        preg_match_all('/#.+?#/', $linkString, $m3);
+        $m2 = array_unique($m2[0]);
+        $m3 = array_unique($m3[0]);
+        $m2 = str_replace(['@', ' '], '', $m2);
+        $m3 = str_replace('#', '', $m3);
         $ats = User::query()->select('id', 'username')->whereIn('username', $m2)->get()->map(function ($item) {
             $item['username'] = '@' . $item['username'];
             $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
@@ -842,10 +853,6 @@ class Thread extends DzqModel
             $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
             return $item;
         })->toArray();
-        foreach ($emojis as $emoji) {
-            $search[] = $emoji['code'];
-            $replace[] = $emoji['html'];
-        }
         foreach ($ats as $at) {
             $search[] = $at['username'];
             $replace[] = $at['html'];
@@ -854,12 +861,7 @@ class Thread extends DzqModel
             $search[] = $topic['content'];
             $replace[] = $topic['html'];
         }
-        foreach ($m1 as $item) {
-            if (!in_array($item, $search)) {
-                $search[] = $item;
-                $replace[] = $item;
-            }
-        }
+
         foreach ($m2 as $item) {
             $item = '@' . $item;
             if (!in_array($item, $search)) {
@@ -874,19 +876,24 @@ class Thread extends DzqModel
                 $replace[] = $item;
             }
         }
+        */
+
         return [$search, $replace];
     }
 
     public function getSearchString($linkString)
     {
         preg_match_all('/:[a-z]+:/i', $linkString, $m1);
+        $m1 = array_unique($m1[0]);
+        /* 正则只处理表情，@ # 在数据迁移时完成，这里不在匹配
         preg_match_all('/@.+? /', $linkString, $m2);
         preg_match_all('/#.+?#/', $linkString, $m3);
-        $m1 = array_unique($m1[0]);
         $m2 = array_unique($m2[0]);
         $m3 = array_unique($m3[0]);
         $m2 = str_replace([' '], '', $m2);
         return array_merge(array_values($m1), array_values($m2), array_values($m3));
+        */
+        return array_values($m1);
     }
 
     public function getReplaceStringV3($linkString)

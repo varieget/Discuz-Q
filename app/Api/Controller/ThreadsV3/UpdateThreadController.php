@@ -84,6 +84,10 @@ class UpdateThreadController extends DzqController
 
         if (!empty($content['text'])) {
             $content['text'] = $this->optimizeEmoji($content['text']);
+            //处理@
+            $content['text'] = $this->renderCall($content['text']);
+            //处理 #
+            $content['text'] = $this->renderTopic($content['text']);
         }
 
         //更新thread数据

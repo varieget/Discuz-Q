@@ -297,7 +297,7 @@ trait ThreadTrait
                     $text = strip_tags($post['content']);
                     $freeLength = mb_strlen($text) * $freeWords;
                     $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
-                    $text = "<t><p>" . $text . "</p></t>";
+//                    $text = "<t><p>" . $text . "</p></t>";
                 }
                 $content['text'] = $text;
                 // 如果有红包，则只显示红包
@@ -544,6 +544,40 @@ trait ThreadTrait
             $item = str_replace('#', '', $item);
         });
         return $topics;
+    }
+
+    private function renderTopic($text){
+        preg_match_all('/#.+?#/', $text, $topic);
+        if(empty($topic)){
+            return  $text;
+        }
+        $topic = array_unique($topic[0]);
+        $topic = str_replace('#', '', $topic);
+        $topics = Topic::query()->select('id', 'content')->whereIn('content', $topic)->get()->map(function ($item) {
+            $item['content'] = '#' . $item['content'] . '#';
+            $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
+            return $item;
+        })->toArray();
+        $contents = array_column($topics, 'content');
+        $htmls = array_column($topics, 'html');
+        return str_replace($contents, $htmls, $text);
+    }
+
+    private function renderCall($text){
+        preg_match_all('/@.+? /', $text, $call);
+        if(empty($call)){
+            return  $text;
+        }
+        $call = array_unique($call[0]);
+        $call = str_replace(['@', ' '], '', $call);
+        $ats = User::query()->select('id', 'username')->whereIn('username', $call)->get()->map(function ($item) {
+            $item['username'] = '@' . $item['username'];
+            $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
+            return $item;
+        })->toArray();
+        $call_usernames = array_column($ats, 'username');
+        $call_htmls = array_column($ats, 'html');
+        return str_replace($call_usernames, $call_htmls, $text);
     }
 
 }
