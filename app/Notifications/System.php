@@ -191,12 +191,10 @@ class System extends AbstractNotification
                 return;
             }
             // set other message relationship
-            if ($this->message instanceof RegisterWechatMessage) {
-                $this->messageRelationship['database'] = app(RegisterMessage::class);
-                $this->messageRelationship['wechat'] = app(RegisterWechatMessage::class);
-            }
-            $this->messageRelationship['sms'] = app(RegisterSmsMessage::class);
-            $this->messageRelationship['miniProgram'] = app(RegisterMiniProgramMessage::class);
+            $this->messageRelationship['database']      = app(RegisterMessage::class);
+            $this->messageRelationship['wechat']        = app(RegisterWechatMessage::class);
+            $this->messageRelationship['sms']           = app(RegisterSmsMessage::class);
+            $this->messageRelationship['miniProgram']   = app(RegisterMiniProgramMessage::class);
             // set tpl id
             $this->tplId = [
                 'database'    => 'system.registered.passed',

@@ -131,11 +131,11 @@ class WechatH5LoginController extends AuthBaseController
                 $this->db->commit();
 
                 // 判断是否开启了注册审核
-                if (!(bool)$this->settings->get('register_validate')) {
-                    // Tag 发送通知 (在注册绑定微信后 发送注册微信通知)
-                    $user->setRelation('wechat', $wechatUser);
-                    $user->notify(new System(RegisterWechatMessage::class, $user, ['send_type' => 'wechat']));
-                }
+//                if (!(bool)$this->settings->get('register_validate')) {
+//                    // Tag 发送通知 (在注册绑定微信后 发送注册微信通知)
+//                    $user->setRelation('wechat', $wechatUser);
+//                    $user->notify(new System(RegisterWechatMessage::class, $user, ['send_type' => 'wechat']));
+//                }
             } else {
                 if (!$actor->isGuest() && is_null($actor->wechat)) {
                     // 登陆用户且没有绑定||换绑微信 添加微信绑定关系
