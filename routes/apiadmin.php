@@ -40,6 +40,8 @@ $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\Resourc
 //注册扩展
 $route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
 $route->post('/signinfields', 'signinfields.create', ApiController\SignInFieldsV3\CreateAdminSignInController::class);
+$route->get('/user/signinfields', 'user.signinfields.resource', ApiController\SignInFieldsV3\ResourceUserSignInController::class);
+
 $route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
 //审核主题列表
 $route->get('/manage.thread.list', 'manage.thread.list', ApiController\AdminV3\ManageThemeList::class);
@@ -66,3 +68,10 @@ $route->post('/stopwords.delete', 'stopwords.delete', ApiController\StopWordsV3\
 
 //管理端站点设置
 $route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);
+
+//消息模板
+$route->get('/notification/tpl', 'notification.tpl.list', ApiController\NotificationV3\ListNotificationTplV3Controller::class);
+$route->get('/notification/tpl/detail', 'notification.tpl.detail', ApiController\NotificationV3\ResourceNotificationTplV3Controller::class);
+$route->post('/notification/tpl/update', 'notification.tpl.update', ApiController\NotificationV3\UpdateNotificationTplV3Controller::class);
+
+$route->get('/cache.delete', 'cache.delete', ApiController\CacheV3\DeleteCacheController::class);

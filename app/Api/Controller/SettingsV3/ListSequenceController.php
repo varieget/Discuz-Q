@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Copyright (C) 2020 Tencent Cloud.
+ * Copyright (C) 2021 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +15,24 @@
  * limitations under the License.
  */
 
-namespace App\Models;
+namespace App\Api\Controller\SettingsV3;
 
-use App\Common\CacheKey;
-use Carbon\Carbon;
-use Discuz\Base\DzqCache;
-use Discuz\Base\DzqModel;
+use App\Common\ResponseCode;
+use App\Models\Sequence;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqController;
 
-/**
- * Models a thread-user state record in the database.
- *
- * @property int $user_id
- * @property int $thread_id
- * @property Carbon|null $created_at
- * @property Thread $thread
- * @property User $user
- */
-class ThreadUser extends DzqModel
+class ListSequenceController extends DzqController
 {
-    protected $table = 'thread_user';
-
-    protected function clearCache()
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_THREAD_USERS . $this->user_id);
+        return $this->user->isAdmin();
+    }
+
+    public function main()
+    {
+        $sequence = Sequence::query()->first();
+        $data = $this->camelData($sequence);
+        return $this->outPut(ResponseCode::SUCCESS,'', $data);
     }
 }

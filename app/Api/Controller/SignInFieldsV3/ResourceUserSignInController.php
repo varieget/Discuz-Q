@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -16,28 +15,19 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\UsersV3;
+namespace App\Api\Controller\SignInFieldsV3;
 
 use App\Common\ResponseCode;
+use App\Models\UserSignInFields;
 use App\Repositories\UserRepository;
-use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
-class ListDenyUserController extends DzqController
+class ResourceUserSignInController extends DzqController
 {
-
-    private $databaseField = [
-        'id',
-        'updated_at',
-        'created_at'
-    ];
-
-
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $this->user;
-        if ($actor->isGuest()) {
+        if (!$this->user->isAdmin()) {
             throw new PermissionDeniedException('没有权限');
         }
         return true;
@@ -45,18 +35,17 @@ class ListDenyUserController extends DzqController
 
     public function main()
     {
-        $actor = $this->user;
-        $currentPage = $this->inPut('page');
-        $perPage = $this->inPut('perPage');
+        $userId = $this->inPut('uid');
 
-        $query = User::query();
-        $query->leftJoin('deny_users', 'id', '=', 'deny_user_id')
-            ->where('user_id', $actor->id);
-        $query->select('deny_users.user_id','deny_users.deny_user_id','users.id AS pid', 'users.username','users.nickname', 'users.avatar');
-        $query->orderByDesc('deny_users.created_at');
-        $users = $this->pagination($currentPage, $perPage, $query);
-        $data = $this->camelData($users);
+        if(empty($userId)){
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,'id不能为空');
+        }
 
-        return $this->outPut(ResponseCode::SUCCESS,'', $data);
+        $list = UserSignInFields::instance()->getUserRecordFields($userId);
+
+        $data =$this->camelData($list);
+
+        return  $this->outPut(ResponseCode::SUCCESS,'',$data);
     }
+
 }

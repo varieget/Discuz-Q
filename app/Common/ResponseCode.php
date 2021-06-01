@@ -17,9 +17,6 @@
 
 namespace App\Common;
 
-
-use function Complex\sec;
-
 class ResponseCode
 {
     const SUCCESS = 0;
@@ -37,6 +34,7 @@ class ResponseCode
     const JUMP_TO_AUDIT = -3003;
     const JUMP_TO_HOME_INDEX = -3004;
     const SITE_CLOSED = -3005;
+    const JUMP_TO_PAY_SITE = -3006;
 
     const INVALID_PARAMETER = -4001;
     const UNAUTHORIZED = -4002;
@@ -128,6 +126,7 @@ class ResponseCode
         self::JUMP_TO_AUDIT=>'跳转到审核页',
         self::JUMP_TO_HOME_INDEX=>'跳转到首页',
         self::JUMP_TO_REGISTER =>'跳转到注册页',
+        self::JUMP_TO_PAY_SITE => '跳转到站点付费页',
         self::SUCCESS => '接口调用成功',
         self::INVALID_PARAMETER => '参数错误',
         self::UNAUTHORIZED => '没有权限',
