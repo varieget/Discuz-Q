@@ -551,16 +551,17 @@ trait ThreadTrait
         if(empty($topic)){
             return  $text;
         }
-        $topic = array_unique($topic[0]);
+        $topic = $topic[0];
         $topic = str_replace('#', '', $topic);
         $topics = Topic::query()->select('id', 'content')->whereIn('content', $topic)->get()->map(function ($item) {
             $item['content'] = '#' . $item['content'] . '#';
             $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
             return $item;
         })->toArray();
-        $contents = array_column($topics, 'content');
-        $htmls = array_column($topics, 'html');
-        return str_replace($contents, $htmls, $text);
+        foreach ($topics as $val){
+            $text = str_replace($val['content'], $val['html'], $text);
+        }
+        return $text;
     }
 
     private function renderCall($text){
@@ -568,16 +569,17 @@ trait ThreadTrait
         if(empty($call)){
             return  $text;
         }
-        $call = array_unique($call[0]);
+        $call = $call[0];
         $call = str_replace(['@', ' '], '', $call);
         $ats = User::query()->select('id', 'username')->whereIn('username', $call)->get()->map(function ($item) {
             $item['username'] = '@' . $item['username'];
             $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
             return $item;
         })->toArray();
-        $call_usernames = array_column($ats, 'username');
-        $call_htmls = array_column($ats, 'html');
-        return str_replace($call_usernames, $call_htmls, $text);
+        foreach ($ats as $val){
+            $text = str_replace($val['username'], $val['html'], $text);
+        }
+        return $text;
     }
 
 }
