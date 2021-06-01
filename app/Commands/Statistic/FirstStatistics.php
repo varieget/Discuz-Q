@@ -22,7 +22,6 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\User;
 use App\Models\Finance;
-use Discuz\Auth\Exception\PermissionDeniedException;
 
 class FirstStatistics
 {
@@ -50,16 +49,8 @@ class FirstStatistics
         return call_user_func([$this, '__invoke']);
     }
 
-    /**
-     * @return mixed
-     * @throws PermissionDeniedException
-     */
     public function __invoke()
     {
-        if (!$this->actor->isAdmin()) {
-            throw new PermissionDeniedException('您没有查看统计图表的权限！');
-        }
-
         $beginTime = $this->getBeginTime();
         $endTime = $this->getEndTime();
 
