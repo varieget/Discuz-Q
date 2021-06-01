@@ -49,7 +49,6 @@ class LikedMessage extends SimpleMessage
             'post_content' => '',
             'reply_post_id' => 0, // 根据该字段判断是否是楼中楼
             'post_created_at' => '',
-            'is_first'=>$this->post->is_first
         ];
 
         $this->changeBuild($build);
