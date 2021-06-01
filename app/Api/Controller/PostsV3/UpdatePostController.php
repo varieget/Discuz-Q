@@ -47,6 +47,9 @@ class UpdatePostController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            return false;
+        }
 
         $post = Post::query()->where(['id' => $this->inPut('pid')])->first();
         if (!$post) {

@@ -79,9 +79,9 @@ class BasicPostSerializer extends AbstractSerializer
             'createdAt'         => optional($model->created_at)->format('Y-m-d H:i:s'),
             'updatedAt'         => optional($model->updated_at)->format('Y-m-d H:i:s'),
             'isApproved'        => (int) $model->is_approved,
-            'canApprove'        => $user->isAdmin(),
-            'canDelete'         => $user->isAdmin(),
-            'canHide'           => $this->userRepo->canHidePost($user, $model),
+            'canApprove'        => empty($user) ? false : $user->isAdmin(),
+            'canDelete'         => empty($user) ? false : $user->isAdmin(),
+            'canHide'           => empty($user) ? false : $this->userRepo->canHidePost($user, $model),
             'contentAttachIds'  => $contentAttachIds,
         ];
 
@@ -105,7 +105,7 @@ class BasicPostSerializer extends AbstractSerializer
         }
 
 
-        if ($user->isAdmin() || $user->id === $model->user_id) {
+        if (!empty($user) && ($user->isAdmin() || $user->id === $model->user_id)) {
             $attributes += [
                 'ip'    => $model->ip,
                 'port'  => $model->port,
