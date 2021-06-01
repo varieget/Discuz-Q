@@ -114,7 +114,7 @@ class ResourcePostController extends DzqController
             $comment_post_collect = Post::query()->whereIn('id', $comment_post_id)->get();
             foreach ($comment_post_collect as $k=>$value){
                 $comment_post_collect[$k]->loadMissing($include);
-                $data['commentPosts'][$k] = $coment_post_serialize->getDefaultAttributes($comment_post_collect[$k]);
+                $data['commentPosts'][$k] = $coment_post_serialize->getDefaultAttributes($comment_post_collect[$k], $this->user);
                 $data['commentPosts'][$k]['user'] = $users[$value['user_id']];
                 $data['commentPosts'][$k]['replyUser'] = $replyUsers[$value['reply_user_id']];
                 $data['commentPosts'][$k]['commentUser'] = $commentUsers[$value['comment_user_id']];
