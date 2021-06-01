@@ -22,6 +22,7 @@ use App\Models\DenyUser;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Models\Group;
+use App\Models\UserSignInFields;
 use Illuminate\Support\Arr;
 use Discuz\Base\DzqController;
 
@@ -132,8 +133,8 @@ class ListUserScreenController extends DzqController
                 'createdAt' => $value['created_at'],
                 'updatedAt' => $value['updated_at'],
                 'groupName' => $userGroupDatas[$value['group_id']]['name'] ?? '',
-                'expirationTime' =>$value['expiration_time']
-
+                'expirationTime' =>$value['expiration_time'],
+                'extFields' =>  UserSignInFields::instance()->getUserSignInFields($value['userId']),
             ];
         }
 

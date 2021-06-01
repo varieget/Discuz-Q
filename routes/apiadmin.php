@@ -40,6 +40,8 @@ $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\Resourc
 //注册扩展
 $route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
 $route->post('/signinfields', 'signinfields.create', ApiController\SignInFieldsV3\CreateAdminSignInController::class);
+$route->get('/user/signinfields', 'user.signinfields.resource', ApiController\SignInFieldsV3\ResourceUserSignInController::class);
+
 $route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
 //审核主题列表
 $route->get('/manage.thread.list', 'manage.thread.list', ApiController\AdminV3\ManageThemeList::class);

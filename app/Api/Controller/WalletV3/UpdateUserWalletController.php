@@ -42,7 +42,7 @@ class UpdateUserWalletController extends DzqController
     public function main()
     {
         $actor = $this->user;
-
+        $log = app('payLog');
         $data = [
             'userId' => $this->inPut('userId'),
             'operateType' => $this->inPut('operateType'),
@@ -51,8 +51,11 @@ class UpdateUserWalletController extends DzqController
             'operateReason' => $this->inPut('operateReason'),
         ];
 
+        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：",$data);
+
         if(empty($data['userId'])){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少必要参数','');
+            $log->error("INVALID_PARAMETER requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
         $datas = $this->bus->dispatch(

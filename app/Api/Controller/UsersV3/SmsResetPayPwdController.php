@@ -43,6 +43,7 @@ class SmsResetPayPwdController extends AuthBaseController
 
     public function main()
     {
+        $log = app('payLog');
         $mobileCode                 = $this->getMobileCode('reset_pay_pwd');
         $payPassword                = $this->inPut('payPassword');
         $payPasswordConfirmation    = $this->inPut('payPasswordConfirmation');
@@ -50,6 +51,7 @@ class SmsResetPayPwdController extends AuthBaseController
         $data = array();
         $data['payPassword']                = $payPassword;
         $data['payPasswordConfirmation']    = $payPasswordConfirmation;
+        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：",$data);
 
         $this->dzqValidate($data, [
             'payPassword'                   => 'required',
@@ -64,6 +66,7 @@ class SmsResetPayPwdController extends AuthBaseController
 
             // 验证新密码与原密码不能相同
             if ($mobileCode->user->checkWalletPayPassword($payPassword)) {
+                $log->error("USER_UPDATE_ERROR requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
                 $this->outPut(ResponseCode::USER_UPDATE_ERROR,
                               ResponseCode::$codeMap[ResponseCode::USER_UPDATE_ERROR]
                 );
