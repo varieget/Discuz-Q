@@ -38,6 +38,6 @@ class ThreadUser extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREAD_USERS,$this->user_id);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_THREAD_USERS . $this->user_id);
     }
 }

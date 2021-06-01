@@ -50,7 +50,7 @@ class PostUser extends DzqModel
 
     protected function clearCache()
     {
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_LIKED, $this->user_id);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_LIKED . $this->user_id);
         $post = Post::query()->where('id', $this->post_id)->first();
         if (!empty($post)) {
             DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_USERS, $post['thread_id']);
