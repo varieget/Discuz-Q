@@ -79,7 +79,7 @@ class AdminBatchEditThreads
             }
 
             /** @var Thread $thread */
-            $thread = $threads->query()->whereVisibleTo($this->actor)->find($id);
+            $thread = $threads->query()->find($id);
 
             if ($thread) {
                 $thread->timestamps = false;
