@@ -52,7 +52,7 @@ class ListDenyUserController extends DzqController
         $query = User::query();
         $query->leftJoin('deny_users', 'id', '=', 'deny_user_id')
             ->where('user_id', $actor->id);
-        $query->select('deny_users.user_id','deny_users.deny_user_id','users.id AS pid', 'users.username', 'users.avatar');
+        $query->select('deny_users.user_id','deny_users.deny_user_id','users.id AS pid', 'users.username','users.nickname', 'users.avatar');
         $query->orderByDesc('deny_users.created_at');
         $users = $this->pagination($currentPage, $perPage, $query);
         $data = $this->camelData($users);
