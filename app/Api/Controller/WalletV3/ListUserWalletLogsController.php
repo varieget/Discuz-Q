@@ -24,7 +24,6 @@ use App\Models\User;
 use App\Models\UserWalletLog;
 use App\Repositories\UserRepository;
 use App\Repositories\UserWalletLogsRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Http\UrlGenerator;
@@ -36,8 +35,6 @@ use Tobscure\JsonApi\Parameters;
 
 class ListUserWalletLogsController extends DzqController
 {
-    use AssertPermissionTrait;
-
     protected $bus;
     protected $url;
     protected $cash;
@@ -138,7 +135,7 @@ class ListUserWalletLogsController extends DzqController
 
     public function search($actor, $filter, $sort, $page = 0, $perPage = 0)
     {
-        $query = $this->walletLogs->query()->whereVisibleTo($actor);
+        $query = $this->walletLogs->query();
         $this->applyFilters($query, $filter, $actor);
 
         // 求和变动可用金额

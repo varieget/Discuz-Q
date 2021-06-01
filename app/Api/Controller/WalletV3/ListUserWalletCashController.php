@@ -24,7 +24,6 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Repositories\UserWalletCashRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Http\UrlGenerator;
@@ -35,8 +34,6 @@ use Tobscure\JsonApi\Parameters;
 
 class ListUserWalletCashController extends DzqController
 {
-    use AssertPermissionTrait;
-
     protected $bus;
     protected $url;
     protected $cash;
@@ -101,7 +98,7 @@ class ListUserWalletCashController extends DzqController
         $cash_start_time = Arr::get($filter, 'startTime'); //申请时间范围：开始
         $cash_end_time   = Arr::get($filter, 'endTime'); //申请时间范围：结束
 
-        $query = $this->cash->query()->whereVisibleTo($actor);
+        $query = $this->cash->query();
         $query->when($cash_user, function ($query) use ($cash_user) {
             $query->where('user_id', $cash_user);
         });
