@@ -89,7 +89,7 @@ class ListUserWalletCashController extends DzqController
 
     private function getCashRecords($actor, $filter, $perPage = 0, $page = 0, $sort = [])
     {
-        $cash_user         = (int) Arr::get($filter, 'user'); //提现用户
+        $cash_user       = $actor; //提现用户
         $cash_sn         = Arr::get($filter, 'cashSn'); //提现流水号
         $cash_status     = Arr::get($filter, 'cashStatus'); //提现状态
         $cash_username   = Arr::get($filter, 'username'); //提现人
