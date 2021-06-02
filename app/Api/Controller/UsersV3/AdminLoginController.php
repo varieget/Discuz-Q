@@ -22,6 +22,7 @@ use App\Commands\Users\GenJwtToken;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Models\User;
+use Exception;
 use App\Passport\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Discuz\Foundation\Application;
@@ -60,24 +61,32 @@ class AdminLoginController extends DzqController
             'password' => 'required',
         ]);
 
-        $exists = User::query()->where(['username'=>$data['username'],'password'=>$data['password']])->exists();
-        if (!$exists) {
-            return $this->outPut(ResponseCode::NET_ERROR,'','用户名或密码错误');
+        try {
+            $response = $this->bus->dispatch(
+                new GenJwtToken($data)
+            );
+        } catch (Exception $e) {
+            if (empty($e->getMessage())) {
+                return $this->outPut(ResponseCode::USERNAME_OR_PASSWORD_ERROR);
+            }
+            if ((int)$e->getMessage() > 0) {
+                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录失败，您还可以尝试'.(int)$e->getMessage().'次');
+            } else {
+                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录次数超出限制');
+            }
         }
 
-        $response = $this->bus->dispatch(
-            new GenJwtToken($data)
-        );
+        if($response->getStatusCode() != 200) {
+            return $this->outPut(ResponseCode::LOGIN_FAILED);
+        }
+
+        $user = $this->app->make(UserRepository::class)->getUser();
+        if (! $user->isAdmin()) {
+            return $this->outPut(ResponseCode::UNAUTHORIZED);
+        }
+        $this->events->dispatch(new Logind($user));
 
         $accessToken = json_decode($response->getBody());
-
-        if ($response->getStatusCode() === 200) {
-            /** @var User $user */
-            $user = $this->app->make(UserRepository::class)->getUser();
-
-            $this->events->dispatch(new Logind($user));
-        }
-
         return $this->outPut(ResponseCode::SUCCESS,'',$this->camelData(collect($accessToken)));
     }
 }

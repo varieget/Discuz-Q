@@ -109,7 +109,7 @@ class ResponseCode
     const NOT_FOLLOW_YOURSELE = -7059;
     const NOT_FOLLOW_USER= -7060;
     const HAS_BEEN_BLOCKED_BY_THE_OPPOSITION= -7061;
-
+    const USERNAME_OR_PASSWORD_ERROR= -7061;
 
 
 
@@ -201,5 +201,7 @@ class ResponseCode
         self::NOT_FOLLOW_YOURSELE => '不能关注自己',
         self::NOT_FOLLOW_USER => '关注用户不存在',
         self::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION => '已被对方拉黑',
+        self::USERNAME_OR_PASSWORD_ERROR => '用户名或密码错误',
+        self::LOGIN_FAILED => '登录失败',
     ];
 }
