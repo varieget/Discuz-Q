@@ -309,51 +309,41 @@ trait ThreadTrait
                 }
             }
         }
-        if (!empty($content['text']) && $thread['type'] != Thread::TYPE_OF_ALL) {
-//            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
-            $content['text'] = app()->make(Formatter::class)->render($content['text']);
-
-            //针对老数据，需要做特殊处理
-            $old_thread_type = [
-                Thread::TYPE_OF_LONG,
-                Thread::TYPE_OF_VIDEO,
-                Thread::TYPE_OF_IMAGE,
-                Thread::TYPE_OF_AUDIO,
-                Thread::TYPE_OF_QUESTION,
-                Thread::TYPE_OF_GOODS
-            ];
-            if (in_array($thread['type'], $old_thread_type)) {
-                $xml = $post['content'];
-                // 针对 type为1的老数据，存在图文混排的混排的情况，需要特殊处理
-                $tom_image_key = $body = '';
-                if (!empty($content['indexes'])) {
-                    foreach ($content['indexes'] as $key => $val) {
-                        if ($val['tomId'] == TomConfig::TOM_IMAGE) {
-                            $body = $val['body'];
-                            $tom_image_key = $key;
-                        }
+        $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+        //考虑到升级V3，帖子的type 都要转为 99，所以针对 type 为 99 的也需要处理图文混排
+        if(!empty($content['text'])){
+            $xml = $post['content'];
+            $tom_image_key = $body = '';
+            if (!empty($content['indexes'])) {
+                foreach ($content['indexes'] as $key => $val) {
+                    if ($val['tomId'] == TomConfig::TOM_IMAGE) {
+                        $body = $val['body'];
+                        $tom_image_key = $key;
                     }
                 }
-                if ($thread['type'] == Thread::TYPE_OF_LONG && !empty($body)) {
-                    //url
-                    $attachments_body = $body;
-                    $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
-                    // 替换插入内容中的图片 URL
-                    $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'IMG', function ($attributes) use ($attachments) {
-                        if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
-                            $attributes['src'] = $attachments[$attributes['title']];
-                        }
-                        return $attributes;
-                    });
-
-                    //针对图文混排的情况，这里要去掉外部图片展示
-                    if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
-                }
-                $content['text'] = app()->make(Formatter::class)->render($xml);
             }
-        } else {
-            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+            if (!empty($body)) {
+                $attachments_body = $body;
+                $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
+                $xml = preg_replace_callback(
+                    '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
+                    function($m) use ($attachments){
+                        if(!empty($m)){
+                            $id = trim($m[3], '"');
+                            return 'img src="'.$attachments[$id].'" alt="'.$m[2].'" title="'.$id.'"';
+                        }
+                    },
+                    $xml
+                );
+                //针对图文混排的情况，这里要去掉外部图片展示
+                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
+                $content['text'] = $xml;
+            }
+
         }
+
+
+
         return $content;
     }
 
