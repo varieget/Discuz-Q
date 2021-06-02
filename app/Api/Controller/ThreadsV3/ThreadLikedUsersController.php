@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 #帖子点赞打赏用户列表
+use App\Common\Utils;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Models\PostUser;
@@ -105,7 +106,7 @@ class ThreadLikedUsersController extends DzqController
         $userArr = array_combine(array_column($user, 'id'), $user);
         $likeSort = $this->arraySort($postUserAndorder,'created_at','desc');
         foreach ($likeSort as $k=>$v) {
-            $likeSort[$k]['passed_at'] = $this->format_date(strtotime($v['created_at']));
+            $likeSort[$k]['passed_at'] =  Utils::diffTime($v['created_at']);
             $likeSort[$k]['nickname'] = $userArr[$v['user_id']]['nickname'];
             $likeSort[$k]['avatar'] = $userArr[$v['user_id']]['avatar'];
         }
@@ -162,22 +163,4 @@ class ThreadLikedUsersController extends DzqController
         return $new_array;
     }
 
-    public function format_date($time){
-        $t=time()-$time;
-        $f=array(
-            '31536000'=>'年',
-            '2592000'=>'个月',
-            '604800'=>'星期',
-            '86400'=>'天',
-            '3600'=>'小时',
-            '60'=>'分钟',
-            '1'=>'秒'
-        );
-        foreach ($f as $k=>$v)    {
-            if (0 !=$c=floor($t/(int)$k)) {
-                return $c.$v;
-            }
-        }
-        return $f;
-    }
 }
