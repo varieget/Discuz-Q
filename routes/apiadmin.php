@@ -83,3 +83,6 @@ $route->get('/cache.delete', 'cache.delete', ApiController\CacheV3\DeleteCacheCo
 $route->get('/sequence', 'sequence.list', ApiController\SettingsV3\ListSequenceController::class);
 $route->post('/sequence', 'sequence', ApiController\SettingsV3\UpdateSequenceController::class);
 $route->post('/refresh.token', 'refresh.token', ApiController\Oauth2V3\RefreshTokenController::class);
+
+$route->get('/recommend.users', 'recommend.users', ApiController\Recommend\RecommendedUserListController::class);
+$route->get('/recommend.topics', 'recommend.topics', ApiController\Recommend\RecommendedTopicListController::class);
