@@ -36,29 +36,19 @@ class UpdateUnreadStatusController extends DzqController
 
     public function main()
     {
+        $dialogId = $this->inPut('dialogId');
 
-        $data = $this->inPut('data');
-        if(empty($data)) {
-            return $this->outPut(ResponseCode::NET_ERROR);
+        if(empty($dialogId)) {
+            return $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
-        foreach ($data as $key => $value) {
-            try{
-                $this->dzqValidate($value, [
-                    'id'       => 'required|int|min:1',
-                    'readStatus'   => 'required|int|in:1'
-                ]);
-
-                $dialog = DialogMessage::query()->where('user_id', $this->user->id)->findOrFail($value['id']);
-                $dialog->read_status = $value['readStatus'];
-                $dialog->save();
-               // dump($dialog);die;
-            } catch (\Exception $e) {
-                 $this->outPut(ResponseCode::INTERNAL_ERROR, '修改出错', [$e->getMessage(), $value]);
-            }
+        $dialogList = DialogMessage::query()->where('dialog_id', $dialogId)->get(['id','read_status']);
+        foreach ($dialogList as $value) {
+            $value->read_status = 1;
+            $value->save();
         }
 
-        return $this->outPut(ResponseCode::SUCCESS,'','');
+        return $this->outPut(ResponseCode::SUCCESS,'');
     }
 
 }
