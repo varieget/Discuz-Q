@@ -96,6 +96,8 @@ class CreateDialogMessage
             throw new PermissionDeniedException('user_deny');
         }
 
+        $read_status = Arr::get($this->attributes, 'read_status',0);
+
         $attachment_id = Arr::get($this->attributes, 'attachment_id', 0);
 
         if ($attachment_id) {
@@ -115,7 +117,7 @@ class CreateDialogMessage
             'image_url'     => $image_url
         ];
 
-        $dialogMessage = DialogMessage::build($this->actor->id, $dialog_id, $attachment_id, $message);
+        $dialogMessage = DialogMessage::build($this->actor->id, $dialog_id, $attachment_id, $message,$read_status);
         $dialogMessageRes = $dialogMessage->save();
 
         if ($dialogMessageRes) {

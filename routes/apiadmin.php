@@ -17,6 +17,7 @@ $route->get('/groups.list', 'groups.list', ApiController\GroupV3\ListGroupsContr
 $route->post('/groups.batchupdate', 'groups.batchupdate', ApiController\GroupV3\BatchUpdateGroupController::class);
 $route->post('/groups.batchdelete', 'groups.batchdelete', ApiController\GroupV3\BatchDeleteGroupsController::class);
 $route->post('/users/update.user', 'users.admin', ApiController\UsersV3\UpdateAdminController::class);
+$route->post('/users/examine', 'users.examine', ApiController\UsersV3\UpdateUsersStatusController::class);
 
 // 财务
 $route->get('/users.wallet.logs', 'users.wallet.logs', ApiController\WalletV3\UsersWalletLogsListController::class);
@@ -61,6 +62,8 @@ $route->get('/export/users', 'export.users', ApiController\UsersV3\ExportUserCon
 $route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarsController::class);
 $route->post('/delete/users/avatar', 'user.upload.avatar', ApiController\UsersV3\DeleteAvatarController::class);
 $route->get('/users', 'users.list', ApiController\UsersV3\ListUserScreenController::class);
+$route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
+
 //内容过滤
 $route->post('/stopwords.batch', 'stopwords.batch', ApiController\StopWordsV3\BatchCreateStopWordsController::class);
 $route->get('/stopwords.list', 'stopwords.list', ApiController\StopWordsV3\ListStopWordsController::class);

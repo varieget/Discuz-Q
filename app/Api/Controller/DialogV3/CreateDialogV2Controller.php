@@ -43,9 +43,6 @@ class CreateDialogV2Controller extends DzqController
             'recipient_username'=>$this->inPut('recipientUsername'),
         ];
 
-        if(empty($data['message_text'])){
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
-        }
         if(empty($data['recipient_username'])){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
@@ -58,7 +55,7 @@ class CreateDialogV2Controller extends DzqController
 
         try {
             $this->validation->make($data, [
-                'message_text' => 'required_without:messageText|max:450',
+                'message_text' => 'sometimes:messageText|max:450',
             ])->validate();
         } catch (ValidationException $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->validator->getMessageBag()->first());
