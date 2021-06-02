@@ -312,7 +312,7 @@ trait ThreadTrait
         $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
         //考虑到升级V3，帖子的type 都要转为 99，所以针对 type 为 99 的也需要处理图文混排
         if(!empty($content['text'])){
-            $xml = $post['content'];
+            $xml = $content['text'];
             $tom_image_key = $body = '';
             if (!empty($content['indexes'])) {
                 foreach ($content['indexes'] as $key => $val) {
@@ -336,7 +336,7 @@ trait ThreadTrait
                     $xml
                 );
                 //针对图文混排的情况，这里要去掉外部图片展示
-                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
+//                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
                 $content['text'] = $xml;
             }
 
@@ -512,7 +512,7 @@ trait ThreadTrait
      */
     private function optimizeEmoji($text)
     {
-        $text = '<r>' . $text . '</r>';
+//        $text = '<r>' . $text . '</r>';
         preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
         $searches = $m1[0];
         $replaces = [];
