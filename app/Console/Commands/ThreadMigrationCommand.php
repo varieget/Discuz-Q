@@ -141,7 +141,7 @@ class ThreadMigrationCommand extends AbstractCommand
         app('log')->info('数据迁移end');
         //v3数据迁移之后，下面的操作会比较刺激 -- 修改 posts 中的 content 字段数据
         $page = 1;
-        $limit = 10;
+        $limit = 100000;
         $data = self::getOldData($page, $limit);
         try {
             while (!empty($data)){
@@ -180,6 +180,7 @@ class ThreadMigrationCommand extends AbstractCommand
                 $page += 1;
                 $data = self::getOldData($page, $limit);
             }
+            app('log')->info('data完成', [$data]);
         }catch (\Exception $e){
             $this->db->rollBack();
             $this->info($e->getMessage());
@@ -710,6 +711,9 @@ class ThreadMigrationCommand extends AbstractCommand
     //将s9e render 渲染后的数据，正则匹配替换调表情，如不切换，当站长更换域名时，表情url会失效
     public function v3Content($text){
         preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
+        if(empty($m1[0])){
+            return $text;
+        }
         $searches = $m1[0];
         $replaces = [];
         foreach ($searches as $search) {
