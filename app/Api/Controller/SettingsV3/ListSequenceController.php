@@ -19,6 +19,8 @@ namespace App\Api\Controller\SettingsV3;
 
 use App\Common\ResponseCode;
 use App\Models\Sequence;
+use App\Models\Topic;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
@@ -32,7 +34,39 @@ class ListSequenceController extends DzqController
     public function main()
     {
         $sequence = Sequence::query()->first();
-        $data = $this->camelData($sequence);
+        $data = [];
+        if($sequence){
+            $sequence = $sequence->toArray();
+            $userInfo = null;
+            if(!empty($sequence['user_ids'])){
+                $userIdArr = explode(',',$sequence['user_ids']);
+                $userInfo = User::query()->whereIn('id',$userIdArr)->get(['id','username'])->toArray();
+            }
+            $blockUserInfo = null;
+            if(!empty($sequence['block_user_ids'])){
+                $blockUserIdArr = explode(',',$sequence['block_user_ids']);
+                $blockUserInfo = User::query()->whereIn('id',$blockUserIdArr)->get(['id','username'])->toArray();
+            }
+            $topicInfo = null;
+            if(!empty($sequence['topic_ids'])){
+                $topicIdArr = explode(',',$sequence['topic_ids']);
+                $topicInfo = Topic::query()->whereIn('id',$topicIdArr)->get(['id','content'])->toArray();
+            }
+            $blockTopicInfo = null;
+            if(!empty($sequence['block_topic_ids'])){
+                $blockTopicIdArr = explode(',',$sequence['block_topic_ids']);
+                $blockTopicInfo = Topic::query()->whereIn('id',$blockTopicIdArr)->get(['id','content'])->toArray();
+            }
+            $sequence['userInfo'] = $userInfo;
+            $sequence['blockUserInfo'] = $blockUserInfo;
+            $sequence['topicInfo'] = $topicInfo;
+            $sequence['blockTopicInfo'] = $blockTopicInfo;
+            unset($sequence['user_ids']);
+            unset($sequence['block_user_ids']);
+            unset($sequence['topic_ids']);
+            unset($sequence['block_topic_ids']);
+            $data = $this->camelData($sequence);
+        }
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
     }
 }
