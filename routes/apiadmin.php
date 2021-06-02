@@ -2,6 +2,8 @@
 
 use App\Api\Controller as ApiController;
 
+$route->post('/login', 'login', ApiController\UsersV3\AdminLoginController::class);
+
 $route->get('/reports', 'reports.list', ApiController\ReportV3\ListReportsController::class);
 $route->post('/reports/batch', 'reports.batchUpdate', ApiController\ReportV3\BatchUpdateReportsController::class);
 $route->post('/reports/delete', 'reports.batchDelete', ApiController\ReportV3\BatchDeleteReportsController::class);
