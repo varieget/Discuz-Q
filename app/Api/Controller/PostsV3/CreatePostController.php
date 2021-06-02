@@ -18,6 +18,7 @@
 namespace App\Api\Controller\PostsV3;
 
 use App\Api\Controller\ThreadsV3\ThreadHelper;
+use App\Api\Controller\ThreadsV3\ThreadTrait;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\CreatePost;
@@ -41,6 +42,7 @@ use Illuminate\Support\Arr;
 
 class CreatePostController extends DzqController
 {
+    use ThreadTrait;
     public $include = [
         'user',
         'thread',
@@ -124,9 +126,11 @@ class CreatePostController extends DzqController
         if(strpos($data['content'], "\n") !== false){
             $data['content'] = preg_replace('/(.*)(\\n)/U', "<p>$1</p>", $data['content']);
         }
-        $data['content'] = '<t><p>'.$data['content'].'</p></t>';
-        $content = $data['content'];
+        //转换 @ #
+        $data['content'] = $this->renderCall($data['content']);
+        $data['content'] = $this->renderTopic($data['content']);
 
+        $content = $data['content'];
         if (empty($data['content'])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
         }
@@ -165,9 +169,7 @@ class CreatePostController extends DzqController
         $post = $this->bus->dispatch(
             new CreatePost($threadId, $actor, $requestData, $ip, $port)
         );
-
         $build = $this->getPost($post, true);
-
         $data = $this->camelData($build);
         // 返回content要解析后的，方便前端直接展示最新的数据
         $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content);
