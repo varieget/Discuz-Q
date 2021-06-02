@@ -116,6 +116,8 @@ $route->get('/posts', 'posts', ApiController\PostsV3\ListPostsController::class)
 $route->post('/posts.update', 'posts.update', ApiController\PostsV3\UpdatePostController::class);
 $route->post('/posts', 'posts', ApiController\PostsV3\CreatePostController::class);
 $route->get('/posts.detail', 'posts.resource', ApiController\PostsV3\ResourcePostController::class);
+$route->get('/posts.reply', 'posts.reply', ApiController\PostsV3\ResourcePostReplyController::class);
+
 //用户
 $route->post('/users/real', 'users.real', ApiController\UsersV3\RealUserController::class);
 $route->get('/wallet/user', 'wallet.wallet', ApiController\WalletV3\ResourceUserWalletController::class);
