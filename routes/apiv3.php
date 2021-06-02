@@ -140,8 +140,7 @@ $route->post('/dialog.create', 'dialog.create', ApiController\DialogV3\CreateDia
 $route->post('/dialog/message.create', 'dialog.message.create', ApiController\DialogV3\CreateDialogMessageV2Controller::class);
 $route->post('/dialog.delete', 'dialog.delete', ApiController\DialogV3\DeleteDialogV2Controller::class);
 $route->post('/dialog.update', 'dialog.update', ApiController\DialogV3\UpdateUnreadStatusController::class);
-
-
+$route->get('/dialog.record', 'dialog.record', ApiController\DialogV3\DialogRecordController::class);
 
 $route->post('/users/pay-password/reset', '', ApiController\UsersV3\ResetPayPasswordController::class);
 $route->post('/users/update.user', 'users.update', ApiController\UsersV3\UpdateUsersController::class);
