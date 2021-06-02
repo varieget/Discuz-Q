@@ -75,3 +75,5 @@ $route->get('/notification/tpl/detail', 'notification.tpl.detail', ApiController
 $route->post('/notification/tpl/update', 'notification.tpl.update', ApiController\NotificationV3\UpdateNotificationTplV3Controller::class);
 
 $route->get('/cache.delete', 'cache.delete', ApiController\CacheV3\DeleteCacheController::class);
+$route->get('/sequence', 'sequence.list', ApiController\SettingsV3\ListSequenceController::class);
+$route->post('/sequence', 'sequence', ApiController\SettingsV3\UpdateSequenceController::class);
