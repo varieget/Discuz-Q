@@ -80,3 +80,4 @@ $route->post('/notification/tpl/update', 'notification.tpl.update', ApiControlle
 $route->get('/cache.delete', 'cache.delete', ApiController\CacheV3\DeleteCacheController::class);
 $route->get('/sequence', 'sequence.list', ApiController\SettingsV3\ListSequenceController::class);
 $route->post('/sequence', 'sequence', ApiController\SettingsV3\UpdateSequenceController::class);
+$route->post('/refresh.token', 'refresh.token', ApiController\Oauth2V3\RefreshTokenController::class);
