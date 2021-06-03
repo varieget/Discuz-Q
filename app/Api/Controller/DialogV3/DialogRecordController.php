@@ -45,9 +45,11 @@ class DialogRecordController extends DzqController
 
 
         $dialog = Dialog::query()
-            ->where('sender_user_id','=',$userId)
-            ->orWhere('recipient_user_id','=',$userId)
-            ->first('id');
+            ->where(['sender_user_id' => $actor->id, 'recipient_user_id' => $userId])
+            ->orWhere(function ($query) use ($actor, $userId) {
+                $query->where(['sender_user_id' => $userId, 'recipient_user_id' => $actor->id]);
+            })
+            ->first();
 
         $data = [];
         if (empty($dialog)){
