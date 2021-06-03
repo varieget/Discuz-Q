@@ -109,8 +109,11 @@ class ResponseCode
     const NOT_FOLLOW_YOURSELE = -7059;
     const NOT_FOLLOW_USER= -7060;
     const HAS_BEEN_BLOCKED_BY_THE_OPPOSITION= -7061;
-    const USERNAME_OR_PASSWORD_ERROR= -7061;
-
+    const USERNAME_OR_PASSWORD_ERROR= -7062;
+    const NOT_REBIND_SELF_MOBILE= -7063;
+    const NONSUPPORT_MOBILE_BIND= -7064;
+    const NONSUPPORT_MOBILE_REBIND= -7065;
+    const ORIGINAL_USER_MOBILE_VERIFY_ERROR= -7066;
 
 
     const NEED_BIND_WECHAT = 8000;
@@ -185,6 +188,8 @@ class ResponseCode
         self::USERNAME_NOT_NULL => '用户名不能为空',
         self::USER_LOGIN_STATUS_NOT_NULL => '用户登录态不能为空',
         self::NONSUPPORT_WECHAT_REBIND => '该网站暂不支持微信换绑功能',
+        self::NONSUPPORT_MOBILE_BIND => '该网站暂不支持手机绑定功能',
+        self::NONSUPPORT_MOBILE_REBIND => '该网站暂不支持手机换绑功能',
         self::PC_REBIND_ERROR => '换绑失败',
         self::USERID_NOT_ALLOW_NULL => '用户id不允许为空',
         self::USER_MOBILE_NOT_ALLOW_NULL => '用户手机号不允许为空',
@@ -203,5 +208,7 @@ class ResponseCode
         self::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION => '已被对方拉黑',
         self::USERNAME_OR_PASSWORD_ERROR => '用户名或密码错误',
         self::LOGIN_FAILED => '登录失败',
+        self::NOT_REBIND_SELF_MOBILE => '不能换绑自己的手机号',
+        self::ORIGINAL_USER_MOBILE_VERIFY_ERROR => '原有手机号验证码处理失败',
     ];
 }
