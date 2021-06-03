@@ -76,8 +76,8 @@ class ThreadListController extends DzqController
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
         $page <= 0 && $page = 1;
         $siteMode = $this->settings->get('site_mode');
-        if (($this->user->id == 0) && $siteMode == 'pay') {
-            $this->outPut(ResponseCode::JUMP_TO_REGISTER, '', '站点需要付费加入');
+        if (($this->user->id == 0) && $siteMode == 'pay' && empty($this->inPut('pay'))) {
+            $this->outPut(ResponseCode::JUMP_TO_PAY_SITE);
         }
 //        $this->openQueryLog();
         $this->preloadCount = self::PRELOAD_PAGES * $perPage;
