@@ -121,7 +121,7 @@ class ThreadListController extends DzqController
         //初始化exist数据
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder, true);
+                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
                 $this->initDzqGlobalData($threads);
                 return $threads;
             }, true);
@@ -141,7 +141,7 @@ class ThreadListController extends DzqController
         $filterKey = $this->filterKey($perPage, $filter);
         if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder, true);
+                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
                 $this->initDzqGlobalData($threads);
                 return $threads;
             }, true);
