@@ -93,7 +93,7 @@ class CreateDialogMessage
             throw new ModelNotFoundException();
         }
         if (in_array($this->actor->id, array_column($user->deny->toArray(), 'id'))) {
-            throw new PermissionDeniedException('user_deny');
+            throw new PermissionDeniedException('你屏蔽了对方,不能发起私信对话');
         }
 
         $read_status = Arr::get($this->attributes, 'read_status',0);

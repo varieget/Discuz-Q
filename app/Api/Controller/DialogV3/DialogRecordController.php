@@ -3,6 +3,7 @@
 namespace App\Api\Controller\DialogV3;
 
 use App\Common\ResponseCode;
+use App\Models\Dialog;
 use App\Models\DialogMessage;
 use App\Models\User;
 use App\Providers\DialogMessageServiceProvider;
@@ -42,13 +43,17 @@ class DialogRecordController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER,'自己不能给自己发私信');
         }
 
-        $dialog =DialogMessage::query()->distinct('user_id')
-            ->where('user_id' ,'=',$userId)->first('dialog_id');
+
+        $dialog = Dialog::query()
+            ->where('sender_user_id','=',$userId)
+            ->orWhere('recipient_user_id','=',$userId)
+            ->first('id');
+
         $data = [];
         if (empty($dialog)){
-            $data['dialogId'] = '';
+            $data['dialogId'] = "";
         }else{
-            $data['dialogId'] = $dialog['dialog_id'];
+            $data['dialogId'] = $dialog['id'];
         }
 
         $this->outPut(ResponseCode::SUCCESS,'', $data);
