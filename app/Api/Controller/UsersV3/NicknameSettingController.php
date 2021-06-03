@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use App\Censor\Censor;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 
 class NicknameSettingController extends AuthBaseController
 {
@@ -35,6 +36,9 @@ class NicknameSettingController extends AuthBaseController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
         return true;
     }
 
@@ -47,7 +51,7 @@ class NicknameSettingController extends AuthBaseController
             'nickname'      => 'required',
         ]);
         $this->censor->checkText($nickname);
-        $user = $this->userRepository->findOrFail($this->user->id, $this->user);
+        $user = $this->user;
         $user->changeNickname($nickname);
         $user->save();
 

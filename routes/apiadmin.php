@@ -2,6 +2,8 @@
 
 use App\Api\Controller as ApiController;
 
+$route->post('/login', 'login', ApiController\UsersV3\AdminLoginController::class);
+
 $route->get('/reports', 'reports.list', ApiController\ReportV3\ListReportsController::class);
 $route->post('/reports/batch', 'reports.batchUpdate', ApiController\ReportV3\BatchUpdateReportsController::class);
 $route->post('/reports/delete', 'reports.batchDelete', ApiController\ReportV3\BatchDeleteReportsController::class);
@@ -17,6 +19,7 @@ $route->get('/groups.list', 'groups.list', ApiController\GroupV3\ListGroupsContr
 $route->post('/groups.batchupdate', 'groups.batchupdate', ApiController\GroupV3\BatchUpdateGroupController::class);
 $route->post('/groups.batchdelete', 'groups.batchdelete', ApiController\GroupV3\BatchDeleteGroupsController::class);
 $route->post('/users/update.user', 'users.admin', ApiController\UsersV3\UpdateAdminController::class);
+$route->post('/users/examine', 'users.examine', ApiController\UsersV3\UpdateUsersStatusController::class);
 
 // 财务
 $route->get('/users.wallet.logs', 'users.wallet.logs', ApiController\WalletV3\UsersWalletLogsListController::class);
@@ -61,6 +64,8 @@ $route->get('/export/users', 'export.users', ApiController\UsersV3\ExportUserCon
 $route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarsController::class);
 $route->post('/delete/users/avatar', 'user.upload.avatar', ApiController\UsersV3\DeleteAvatarController::class);
 $route->get('/users', 'users.list', ApiController\UsersV3\ListUserScreenController::class);
+$route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
+
 //内容过滤
 $route->post('/stopwords.batch', 'stopwords.batch', ApiController\StopWordsV3\BatchCreateStopWordsController::class);
 $route->get('/stopwords.list', 'stopwords.list', ApiController\StopWordsV3\ListStopWordsController::class);
@@ -75,3 +80,9 @@ $route->get('/notification/tpl/detail', 'notification.tpl.detail', ApiController
 $route->post('/notification/tpl/update', 'notification.tpl.update', ApiController\NotificationV3\UpdateNotificationTplV3Controller::class);
 
 $route->get('/cache.delete', 'cache.delete', ApiController\CacheV3\DeleteCacheController::class);
+$route->get('/sequence', 'sequence.list', ApiController\SettingsV3\ListSequenceController::class);
+$route->post('/sequence', 'sequence', ApiController\SettingsV3\UpdateSequenceController::class);
+$route->post('/refresh.token', 'refresh.token', ApiController\Oauth2V3\RefreshTokenController::class);
+
+$route->get('/recommend.users', 'recommend.users', ApiController\Recommend\RecommendedUserListController::class);
+$route->get('/recommend.topics', 'recommend.topics', ApiController\Recommend\RecommendedTopicListController::class);

@@ -599,4 +599,10 @@ class UserRepository extends AbstractRepository
     {
         return $user->isAdmin();
     }
+
+
+    public function canUserStatus(User $user)
+    {
+        return $user->isAdmin();
+    }
 }

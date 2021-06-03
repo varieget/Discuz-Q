@@ -101,7 +101,7 @@ class UploadAvatar
      */
     public function __invoke()
     {
-        $user = $this->users->findOrFail($this->userId);
+        $user = User::query()->where('id',$this->userId)->first();
 
         $ext = pathinfo($this->avatar->getClientFilename(), PATHINFO_EXTENSION);
         $ext = $ext ? ".$ext" : '';

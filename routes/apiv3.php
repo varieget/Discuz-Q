@@ -116,6 +116,8 @@ $route->get('/posts', 'posts', ApiController\PostsV3\ListPostsController::class)
 $route->post('/posts.update', 'posts.update', ApiController\PostsV3\UpdatePostController::class);
 $route->post('/posts', 'posts', ApiController\PostsV3\CreatePostController::class);
 $route->get('/posts.detail', 'posts.resource', ApiController\PostsV3\ResourcePostController::class);
+$route->get('/posts.reply', 'posts.reply', ApiController\PostsV3\ResourcePostReplyController::class);
+
 //用户
 $route->post('/users/real', 'users.real', ApiController\UsersV3\RealUserController::class);
 $route->get('/wallet/user', 'wallet.wallet', ApiController\WalletV3\ResourceUserWalletController::class);
@@ -138,8 +140,7 @@ $route->post('/dialog.create', 'dialog.create', ApiController\DialogV3\CreateDia
 $route->post('/dialog/message.create', 'dialog.message.create', ApiController\DialogV3\CreateDialogMessageV2Controller::class);
 $route->post('/dialog.delete', 'dialog.delete', ApiController\DialogV3\DeleteDialogV2Controller::class);
 $route->post('/dialog.update', 'dialog.update', ApiController\DialogV3\UpdateUnreadStatusController::class);
-
-
+$route->get('/dialog.record', 'dialog.record', ApiController\DialogV3\DialogRecordController::class);
 
 $route->post('/users/pay-password/reset', '', ApiController\UsersV3\ResetPayPasswordController::class);
 $route->post('/users/update.user', 'users.update', ApiController\UsersV3\UpdateUsersController::class);

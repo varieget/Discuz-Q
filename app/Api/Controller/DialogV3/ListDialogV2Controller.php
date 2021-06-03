@@ -4,6 +4,7 @@ namespace App\Api\Controller\DialogV3;
 
 use App\Common\ResponseCode;
 use App\Models\Dialog;
+use App\Models\DialogMessage;
 use App\Models\User;
 use App\Providers\DialogMessageServiceProvider;
 use App\Repositories\UserRepository;
@@ -73,24 +74,40 @@ class ListDialogV2Controller extends DzqController
 
             $actor = $this->user;
 
-            $dialog = Dialog::query()->distinct('sender_user_id')
+            $dQuery = Dialog::query()
                 ->where('sender_user_id',$actor->id)
                 ->orWhere('recipient_user_id',$actor->id)
-                ->get()->pluck('id');
+                ->get('id')->toArray();
 
+            $dialogIds = array_column($dQuery, 'id');
 
-            $dialogList = Dialog::query()
-                ->leftJoin('dialog_message as dm', 'dm.dialog_id', '=', 'dialog.id')
-                ->where('dm.user_id','!=',$actor->id)
-                ->whereIn('dm.dialog_id' ,$dialog)
-                ->where('read_status','=',0)
-                ->count();
+            $dMQuery = DialogMessage::query()
+                ->whereIn('dialog_id', $dialogIds)
+                ->where('user_id','!=',$actor->id)
+                ->get()->toArray();
 
+            $newList = [];
+            foreach ($dMQuery as $key => $value) {
+                if (isset($newList[$value['user_id']])) {
+                    if ($value['read_status'] == 0) {
+                        $newList[$value['user_id']]['unreadCount'] = $newList[$value['user_id']]['unreadCount'] + 1;
+                    }
+                    $newList[$value['user_id']]['message'][] = $value;
+                } else {
+                    $newList[$value['user_id']]['unreadCount'] = 0;
+                    if ($value['read_status'] == 0) {
+                        $newList[$value['user_id']]['unreadCount'] = 1;
+                    }
+                    $newList[$value['user_id']]['message'][] = $value;
+                }
+
+            }
             $msg = $i->dialogMessage;
             $msg = $msg
                 ? [
                     'id' => $msg->id,
                     'userId' => $msg->user_id,
+                    'unreadCount' => $newList[$msg->user_id]['unreadCount'] ?? 0,
                     'dialogId' => $msg->dialog_id,
                     'attachmentId' => $msg->attachment_id,
                     'summary' => $msg->summary,
@@ -105,7 +122,6 @@ class ListDialogV2Controller extends DzqController
                 'id' => $i->id,
                 'dialogMessageId' => $i->dialog_message_id ?: 0,
                 'senderUserId' => $i->sender_user_id,
-                'unreadCount' =>  $dialogList,
                 'recipientUserId' => $i->recipient_user_id,
                 'senderReadAt' => optional($i->sender_read_at)->format('Y-m-d H:i:s'),
                 'recipientReadAt' => optional($i->recipient_read_at)->format('Y-m-d H:i:s'),
@@ -114,6 +130,7 @@ class ListDialogV2Controller extends DzqController
                 'sender' => $i->sender,
                 'recipient' => $i->recipient,
                 'dialogMessage' => $msg,
+
             ];
         });
 

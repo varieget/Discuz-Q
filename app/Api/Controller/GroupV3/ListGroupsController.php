@@ -20,6 +20,7 @@ namespace App\Api\Controller\GroupV3;
 
 use App\Models\Group;
 use App\Common\ResponseCode;
+use App\Models\Sequence;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Database\Eloquent\Builder;
@@ -74,13 +75,34 @@ class ListGroupsController extends DzqController
                 return $query->where('id', '<>', Group::GUEST_ID);
             });
 
-        $data = [
-            $groups->get()
-        ];
-
+        $data = [];
+        foreach ($groups->get() as $lists) {
+            $data [] = [
+                'id' => $lists['id'],
+                'name' => $lists['name'],
+                'type' => $lists['type'],
+                'default' => $lists['default'],
+                'isDisplay' => $lists['is_display'],
+                'isPaid' => $lists['is_paid'],
+                'fee' => $lists['fee'],
+                'days' => $lists['days'],
+                'scale' => $lists['scale'],
+                'isSubordinate' => $lists['is_subordinate'],
+                'isCommission' => $lists['is_commission'],
+                'checked'           => in_array($lists['id'], $this->getCheckList()) ? 1 : 0
+            ];
+        }
         $data = $this->camelData($data);
 
        return $this->outPut(ResponseCode::SUCCESS, '',$data);
+    }
+
+
+    public function getCheckList(){
+        $groupsList = Sequence::query()->first();
+        if (empty($groupsList)) return [];
+        $groupsList = explode(',',$groupsList['group_ids']);
+        return $groupsList;
     }
 
 }

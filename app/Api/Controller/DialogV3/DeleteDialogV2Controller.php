@@ -36,7 +36,7 @@ class DeleteDialogV2Controller extends DzqController
         $id = $this->inPut('id');
         $dialogData = Dialog::query()->where("id",$id)->first();
         if(empty($dialogData)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '');
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
         try {

@@ -93,8 +93,10 @@ class CreateDialogMessage
             throw new ModelNotFoundException();
         }
         if (in_array($this->actor->id, array_column($user->deny->toArray(), 'id'))) {
-            throw new PermissionDeniedException('user_deny');
+            throw new PermissionDeniedException('你屏蔽了对方,不能发起私信对话');
         }
+
+        $read_status = Arr::get($this->attributes, 'read_status',0);
 
         $attachment_id = Arr::get($this->attributes, 'attachment_id', 0);
 
@@ -115,7 +117,7 @@ class CreateDialogMessage
             'image_url'     => $image_url
         ];
 
-        $dialogMessage = DialogMessage::build($this->actor->id, $dialog_id, $attachment_id, $message);
+        $dialogMessage = DialogMessage::build($this->actor->id, $dialog_id, $attachment_id, $message,$read_status);
         $dialogMessageRes = $dialogMessage->save();
 
         if ($dialogMessageRes) {

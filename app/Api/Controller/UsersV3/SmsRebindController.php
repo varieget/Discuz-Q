@@ -20,42 +20,79 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\MobileCode;
+use App\Models\User;
 use App\Repositories\UserRepository;
+use App\Settings\SettingsRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
+use Exception;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\ConnectionInterface;
 
 class SmsRebindController extends AuthBaseController
 {
+    public $connection;
+    public $settings;
+
+    public function __construct(
+        ConnectionInterface $connection,
+        SettingsRepository  $settings
+    ){
+        $this->connection   = $connection;
+        $this->settings     = $settings;
+    }
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
         return true;
     }
 
     public function main()
     {
-        $mobileCode = $this->getMobileCode('rebind');
-
-        if (!is_null($mobileCode->user)) {
-            $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+        $sms = (bool)$this->settings->get('qcloud_sms', 'qcloud');
+        if (!$sms) {
+            $this->outPut(ResponseCode::NONSUPPORT_MOBILE_REBIND);
         }
 
-        if ($this->user->exists) {
-            // 删除验证身份的验证码
+        $mobileCode = $this->getMobileCode('rebind');
 
+        $this->connection->beginTransaction();
+        try {
+            $actor = User::query()->where('mobile', $mobileCode->mobile)->lockForUpdate()->first();
+            if (empty($this->user->mobile)) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::PC_REBIND_ERROR);
+            }
+            if ($mobileCode->mobile == $this->user->mobile) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::NOT_REBIND_SELF_MOBILE);
+            }
+            if (!empty($actor)) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+            }
+
+            // 删除验证身份的验证码
             $result = MobileCode::query()   ->where('mobile', $this->user->getRawOriginal('mobile'))
-                                            ->where('type', 'verify')
-                                            ->where('state', 1)
-                                            ->where('updated_at', '<', Carbon::now()->addMinutes(10))
-                                            ->delete();
+                ->where('type', 'verify')
+                ->where('state', 1)
+                ->where('updated_at', '<', Carbon::now()->addMinutes(10))
+                ->delete();
             if ($result != 1) {
-                $this->outPut(ResponseCode::SMS_CODE_EXPIRE, '', []);
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::ORIGINAL_USER_MOBILE_VERIFY_ERROR, '', []);
             }
 
             $this->user->changeMobile($mobileCode->mobile);
             $this->user->save();
 
+            $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', []);
+        } catch (Exception $e) {
+            $this->connection->rollback();
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '', $e->getMessage());
         }
-
-        $this->outPut(ResponseCode::NOT_FOUND_USER);
     }
 }

@@ -98,6 +98,11 @@ class RegisterController extends AuthBaseController
             'captcha_rand_str'      => $this->inPut('captchaRandStr'),
         ];
 
+        $result = strpos($data['password'],' ');
+        if ($result !== false) {
+            $this->outPut(ResponseCode::PASSWORD_ILLEGALITY);
+        }
+
         $user = $this->bus->dispatch(
             new RegisterUser($this->request->getAttribute('actor'), $data)
         );
