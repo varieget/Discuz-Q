@@ -85,9 +85,9 @@ class ThreadListController extends DzqController
         } else {
             $threads = $this->getSequenceThreads($filter, $page, $perPage);
         }
-        $pageData = $threads['pageData'];
+        $threadIds = $threads['pageData'];
         //缓存中获取最新的threads
-        $pageData = $this->getThreadsFromCache(array_column($pageData, 'id'));
+        $pageData = $this->getThreadsFromCache($threadIds);
         $threads['pageData'] = $this->getFullThreadData($pageData);
 //        $this->info('query_sql_log', $this->connection->getQueryLog());
 //        $this->closeQueryLog();
@@ -123,12 +123,17 @@ class ThreadListController extends DzqController
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
                 $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
                 $this->initDzqGlobalData($threads);
+                array_walk($threads, function (&$v) {
+                    $v['pageData'] = array_column($v['pageData'], 'id');
+                });
                 return $threads;
             }, true);
-            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey,$this->preloadCount);
+            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
         } else {//其他页从缓存取，取不到就重数据库取并写入缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
-                return $this->pagination($page, $perPage, $threadsBuilder, true);
+                $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
+                $threads['pageData'] = array_column($threads['pageData'], 'id');
+                return $threads;
             });
         }
         return $threads;
@@ -143,12 +148,17 @@ class ThreadListController extends DzqController
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
                 $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
                 $this->initDzqGlobalData($threads);
+                array_walk($threads, function (&$v) {
+                    $v['pageData'] = array_column($v['pageData'], 'id');
+                });
                 return $threads;
             }, true);
-            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey,$this->preloadCount);
+            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
         } else {
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
-                return $this->pagination($page, $perPage, $threadsBuilder, true);
+                $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
+                $threads['pageData'] = array_column($threads['pageData'], 'id');
+                return $threads;
             });
         }
         return $threads;
