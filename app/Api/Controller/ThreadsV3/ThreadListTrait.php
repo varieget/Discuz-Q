@@ -167,8 +167,8 @@ trait ThreadListTrait
         }
         $pages = array_column($data, 'pageData');
         $threadIds = [];
-        foreach ($pages as $page) {
-            $threadIds = array_merge($threadIds, array_column($page, 'id'));
+        foreach ($pages as $ids) {
+            $threadIds = array_merge($threadIds, $ids);
         }
         $this->cacheUserOrders($loginUserId, $threadIds, $preloadCount);
         $this->cachePostLikedAndFavor($loginUserId, $threadIds, $preloadCount);
@@ -299,11 +299,11 @@ trait ThreadListTrait
     {
         $key1 = CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId;
         $key2 = CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $userId;
-        $d1 = DzqCache::get($key1);
-        $d2 = DzqCache::get($key2);
-        if (is_array($d1) && count($d1) >= $preloadCount && is_array($d2) && count($d1) >= $preloadCount) {
-            return;
-        }
+//        $d1 = DzqCache::get($key1);
+//        $d2 = DzqCache::get($key2);
+//        if (is_array($d1) && count($d1) >= $preloadCount && is_array($d2) && count($d1) >= $preloadCount) {
+//            return;
+//        }
         $orders = Order::query()
             ->where([
                 'user_id' => $userId,
@@ -328,11 +328,11 @@ trait ThreadListTrait
     {
         $key1 = CacheKey::LIST_THREADS_V3_POST_LIKED . $userId;
         $key2 = CacheKey::LIST_THREADS_V3_THREAD_USERS . $userId;
-        $d1 = DzqCache::get($key1);
-        $d2 = DzqCache::get($key2);
-        if (is_array($d1) && count($d1) >= $preloadCount && is_array($d2) && count($d1) >= $preloadCount) {
-            return;
-        }
+//        $d1 = DzqCache::get($key1);
+//        $d2 = DzqCache::get($key2);
+//        if (is_array($d1) && count($d1) >= $preloadCount && is_array($d2) && count($d1) >= $preloadCount) {
+//            return;
+//        }
         $posts = Post::instance()->getPosts($threadIds);
         $postIds = array_column($posts, 'id');
         $postUsers = PostUser::query()->where('user_id', $userId)->whereIn('post_id', $postIds)->get()->toArray();
