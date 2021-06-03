@@ -46,9 +46,9 @@ class DialogRecordController extends DzqController
             ->where('user_id' ,'=',$userId)->first('dialog_id');
         $data = [];
         if (empty($dialog)){
-            $data['dialog_id'] = '';
+            $data['dialogId'] = '';
         }else{
-            $data['dialog_id'] = $dialog['dialog_id'];
+            $data['dialogId'] = $dialog['dialog_id'];
         }
 
         $this->outPut(ResponseCode::SUCCESS,'', $data);

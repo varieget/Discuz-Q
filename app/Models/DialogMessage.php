@@ -68,7 +68,7 @@ class DialogMessage extends Model
     public function getMessageTextAttribute($value)
     {
         $value = json_decode(stripslashes($value));
-        $value['message_text'] = static::$formatter->unparse($value['message_text']);
+      //  $value['message_text'] = static::$formatter->unparse($value['message_text']);
         $value = json_encode($value);
 
         return $value;
