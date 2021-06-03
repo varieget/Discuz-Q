@@ -40,7 +40,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 10;//预加载的页数
+    const PRELOAD_PAGES = 30;//预加载的页数
 
     private $preloadCount = 0;
     private $categoryIds = [];
@@ -79,7 +79,7 @@ class ThreadListController extends DzqController
         if (($this->user->id == 0) && $siteMode == 'pay') {
             $this->outPut(ResponseCode::JUMP_TO_REGISTER, '', '站点需要付费加入');
         }
-        $this->openQueryLog();
+//        $this->openQueryLog();
         $this->preloadCount = self::PRELOAD_PAGES * $perPage;
         if (empty($sequence)) {
             $threads = $this->getFilterThreads($filter, $page, $perPage);
@@ -90,7 +90,7 @@ class ThreadListController extends DzqController
         //缓存中获取最新的threads
         $pageData = $this->getThreads($threadIds);
         $threads['pageData'] = $this->getFullThreadData($pageData);
-        $this->info('query_sql_log', app(ConnectionInterface::class)->getQueryLog());
+//        $this->info('query_sql_log', app(ConnectionInterface::class)->getQueryLog());
 //        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
     }
