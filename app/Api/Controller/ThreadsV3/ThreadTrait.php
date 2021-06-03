@@ -43,7 +43,6 @@ use Discuz\Qcloud\QcloudTrait;
 use Illuminate\Support\Arr;
 use App\Common\Utils;
 
-
 trait ThreadTrait
 {
     use TomTrait;
@@ -121,7 +120,8 @@ trait ThreadTrait
             } else {
                 $mobileCode = MobileCode::make($realMobile, MobileCode::CODE_EXCEPTION, $type, $ip);
             }
-            $result = $this->smsSend($realMobile, new SendCodeMessage([
+            $result = $this->smsSend($realMobile, new SendCodeMessage(
+                [
                     'code' => $mobileCode->code,
                     'expire' => MobileCode::CODE_EXCEPTION]
             ));
@@ -224,7 +224,7 @@ trait ThreadTrait
         $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
-        } else if ($payType != Thread::PAY_FREE && $canFreeViewTom) {
+        } elseif ($payType != Thread::PAY_FREE && $canFreeViewTom) {
             $paid = true;
         } else {
             $paid = DzqCache::exists(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId, $threadId, function () use ($userId, $threadId) {
@@ -287,7 +287,7 @@ trait ThreadTrait
             } else {
                 $freeWords = $thread['free_words'];
                 if (empty($freeWords)) {
-                    $text = $post['content'];
+                    $text = '';
                 } else {
                     $text = strip_tags($post['content']);
                     $freeLength = mb_strlen($text) * $freeWords;
@@ -299,14 +299,17 @@ trait ThreadTrait
                 if (isset($tomInput[TomConfig::TOM_REDPACK])) {
                     $content['indexes'] = $this->tomDispatcher(
                         [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]],
-                        $this->SELECT_FUNC, $thread['id'], null, $canViewTom
+                        $this->SELECT_FUNC,
+                        $thread['id'],
+                        null,
+                        $canViewTom
                     );
                 }
             }
         }
         $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
         //考虑到升级V3，帖子的type 都要转为 99，所以针对 type 为 99 的也需要处理图文混排
-        if(!empty($content['text'])){
+        if (!empty($content['text'])) {
             $xml = $content['text'];
             $tom_image_key = $body = '';
             if (!empty($content['indexes'])) {
@@ -322,8 +325,8 @@ trait ThreadTrait
                 $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
                 $xml = preg_replace_callback(
                     '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
-                    function($m) use ($attachments){
-                        if(!empty($m)){
+                    function ($m) use ($attachments) {
+                        if (!empty($m)) {
                             $id = trim($m[3], '"');
                             return 'img src="'.$attachments[$id].'" alt="'.$m[2].'" title="'.$id.'"';
                         }
@@ -334,7 +337,6 @@ trait ThreadTrait
 //                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
                 $content['text'] = $xml;
             }
-
         }
 
 
@@ -463,7 +465,8 @@ trait ThreadTrait
     }
 
     //发帖@用户发送通知消息
-    private function sendRelated($thread, $post){
+    private function sendRelated($thread, $post)
+    {
         //如果是草稿或需要审核 不发送消息
         if ($thread->is_draft == Thread::IS_DRAFT || $thread->is_approved == Thread::UNAPPROVED || empty($post->parsedContent)) {
             return;
@@ -473,7 +476,9 @@ trait ThreadTrait
 
         $newsNameArr = array_reduce($newsNameArr, 'array_merge', array());
 
-        if (empty($newsNameArr)) return;
+        if (empty($newsNameArr)) {
+            return;
+        }
 
         $newsNameArr2 = [];
         foreach ($newsNameArr as $v) {
@@ -485,9 +490,11 @@ trait ThreadTrait
 
         $users = User::query()->whereIn('nickname', $newsNameArr2)->get();
 
-        if (empty($users)) return;
+        if (empty($users)) {
+            return;
+        }
 
-        $post->mentionUsers()->sync(array_column($users->toArray(),'id'));
+        $post->mentionUsers()->sync(array_column($users->toArray(), 'id'));
 
         $users->load('deny');
         $actor = $this->user;
@@ -531,9 +538,10 @@ trait ThreadTrait
         return $topics;
     }
 
-    private function renderTopic($text){
+    private function renderTopic($text)
+    {
         preg_match_all('/#.+?#/', $text, $topic);
-        if(empty($topic)){
+        if (empty($topic)) {
             return  $text;
         }
         $topic = $topic[0];
@@ -543,15 +551,16 @@ trait ThreadTrait
             $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
             return $item;
         })->toArray();
-        foreach ($topics as $val){
+        foreach ($topics as $val) {
             $text = preg_replace("/{$val['content']}/", $val['html'], $text, 1);
         }
         return $text;
     }
 
-    private function renderCall($text){
+    private function renderCall($text)
+    {
         preg_match_all('/@.+? /', $text, $call);
-        if(empty($call)){
+        if (empty($call)) {
             return  $text;
         }
         $call = $call[0];
@@ -561,10 +570,9 @@ trait ThreadTrait
             $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
             return $item;
         })->toArray();
-        foreach ($ats as $val){
+        foreach ($ats as $val) {
             $text = preg_replace("/{$val['username']}/", "{$val['html']}", $text, 1);
         }
         return $text;
     }
-
 }
