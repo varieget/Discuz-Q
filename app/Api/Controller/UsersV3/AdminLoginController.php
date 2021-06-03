@@ -87,6 +87,7 @@ class AdminLoginController extends DzqController
         $this->events->dispatch(new Logind($user));
 
         $accessToken = json_decode($response->getBody());
-        return $this->outPut(ResponseCode::SUCCESS,'',$this->camelData(collect($accessToken)));
+        $accessToken = array_merge($this->camelData(collect($accessToken)),['id' => $user->id]);
+        return $this->outPut(ResponseCode::SUCCESS,'',$accessToken);
     }
 }

@@ -84,7 +84,7 @@ class ResourcePostReplyController extends DzqController
             $comment_post_id = $replyIdArr['id'];
             $attachments = $this->getAttachment($comment_post_id,$attachment_serialize);
             $comment_post_collect = Post::query()->where('id', $comment_post_id)->first();
-            $replyData = $coment_post_serialize->getDefaultAttributes($comment_post_collect);
+            $replyData = $coment_post_serialize->getDefaultAttributes($comment_post_collect,$this->user);
             $replyData['user'] = $users;
             $replyData['replyUser'] = $replyUsers;
             $replyData['commentUser'] = !empty($commentUsers) ? $commentUsers : null;
