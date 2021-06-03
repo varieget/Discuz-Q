@@ -167,8 +167,8 @@ trait ThreadListTrait
         }
         $pages = array_column($data, 'pageData');
         $threadIds = [];
-        foreach ($pages as $page) {
-            $threadIds = array_merge($threadIds, array_column($page, 'id'));
+        foreach ($pages as $ids) {
+            $threadIds = array_merge($threadIds, $ids);
         }
         $this->cacheUserOrders($loginUserId, $threadIds, $preloadCount);
         $this->cachePostLikedAndFavor($loginUserId, $threadIds, $preloadCount);
