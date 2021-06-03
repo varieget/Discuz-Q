@@ -85,7 +85,7 @@ class CacheKey
 
     const LIST_THREADS_V3_USERS = 'list_threads_v3_users';//发帖用户存储 id
     const LIST_THREADS_V3_THREADS = 'list_threads_v3_threads';//帖子数据存储 id
-    const LIST_THREADS_V3_POSTS = 'list_threads_v3_posts';//帖子正文数据存储 thread_id
+    const LIST_THREADS_V3_POSTS = 'list_threads_v3_posts';//帖子正文数据存储 thread_id,【碎片化多文件存储】
     const LIST_THREADS_V3_ATTACHMENT = 'list_threads_v3_attachment';//帖子附件数据存储 id
     const LIST_THREADS_V3_VIDEO = 'list_threads_v3_video';//帖子视频文件存储 id
     const LIST_THREADS_V3_TAGS = 'list_threads_v3_tags';//帖子标签存储 thread_id
