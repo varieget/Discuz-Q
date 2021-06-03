@@ -67,16 +67,9 @@ class WalletPayNotify
         try {
             // 从钱包余额中扣除订单金额
             $userWallet = UserWallet::query()->lockForUpdate()->find($this->data['user_id']);
-
-            $log->info('用户(ID为' . $userWallet->user_id . ')支付订单，钱包扣款前：可用余额为' . $userWallet->available_amount . '，冻结金额为：' . $userWallet->freeze_amount . '，订单金额为' . $this->data['amount']);
-
             $changeAvailableAmount = bcsub($userWallet->available_amount, $this->data['amount'], 2);
             $changeFreezeAmount = bcadd($userWallet->freeze_amount, $this->data['amount'], 2);
-
-            $log->info('用户(ID为' . $userWallet->user_id . ')支付订单，钱包变动后应为：可用余额为' . $changeAvailableAmount . '，冻结金额为：' . $changeFreezeAmount);
-
-            $userWallet->available_amount = $changeAvailableAmount;
-
+            $updateData = ['available_amount' => $changeAvailableAmount];
 
             // 记录钱包变更明细
             switch ($this->data['type']) {
@@ -100,7 +93,7 @@ class WalletPayNotify
                     $change_type = UserWalletLog::TYPE_QUESTION_FREEZE;
                     $change_type_lang = 'wallet.question_freeze_desc';
                     // 钱包&钱包日志 增加冻结金额数
-                    $userWallet->freeze_amount = $changeFreezeAmount;
+                    $updateData = ['available_amount' => $changeAvailableAmount, 'freeze_amount' => $changeFreezeAmount];
                     $freezeAmount = $this->data['amount'];
                     break;
                 case Order::ORDER_TYPE_ONLOOKER:
@@ -119,41 +112,40 @@ class WalletPayNotify
                     $change_type = UserWalletLog::TYPE_TEXT_FREEZE;
                     $change_type_lang = 'wallet.freeze_text';
                     // 钱包&钱包日志 增加文字帖红包冻结金额数
-                    $userWallet->freeze_amount = $changeFreezeAmount;
+                    $updateData = ['available_amount' => $changeAvailableAmount, 'freeze_amount' => $changeFreezeAmount];
                     $freezeAmount = $this->data['amount'];
                     break;
                 case Order::ORDER_TYPE_LONG:
                     $change_type = UserWalletLog::TYPE_LONG_FREEZE;
                     $change_type_lang = 'wallet.freeze_long';
                     // 钱包&钱包日志 增加长文帖红包冻结金额数
-                    $userWallet->freeze_amount = $changeFreezeAmount;
+                    $updateData = ['available_amount' => $changeAvailableAmount, 'freeze_amount' => $changeFreezeAmount];
                     $freezeAmount = $this->data['amount'];
                     break;
                 case Order::ORDER_TYPE_REDPACKET:
                     $change_type = UserWalletLog::TYPE_REDPACKET_FREEZE;
                     $change_type_lang = 'wallet.redpacket_freeze';
-                    $userWallet->freeze_amount = $changeFreezeAmount;
+                    $updateData = ['available_amount' => $changeAvailableAmount, 'freeze_amount' => $changeFreezeAmount];
                     $freezeAmount = $this->data['amount'];
                     break;
                 case Order::ORDER_TYPE_QUESTION_REWARD:
                     $change_type = UserWalletLog::TYPE_QUESTION_REWARD_FREEZE;
                     $change_type_lang = 'wallet.question_reward_freeze';
-                    $userWallet->freeze_amount = $changeFreezeAmount;
+                    $updateData = ['available_amount' => $changeAvailableAmount, 'freeze_amount' => $changeFreezeAmount];
                     $freezeAmount = $this->data['amount'];
                     break;
                 case Order::ORDER_TYPE_MERGE:
                     $change_type = UserWalletLog::TYPE_MERGE_FREEZE;
                     $change_type_lang = 'wallet.merge_freeze';
-                    $userWallet->freeze_amount = $changeFreezeAmount;
+                    $updateData = ['available_amount' => $changeAvailableAmount, 'freeze_amount' => $changeFreezeAmount];
                     $freezeAmount = $this->data['amount'];
                     break;
                 default:
                     $change_type = $this->data['type'];
                     $change_type_lang = '';
             }
-            $log->info('用户(ID为' . $userWallet->user_id . ')支付订单，钱包扣款数据save保存前：可用余额为' . $userWallet->available_amount . '，冻结金额为：' . $userWallet->freeze_amount . '，订单金额为' . $this->data['amount']);
-            $userWallet->save();
-            $log->info('用户(ID为' . $userWallet->user_id . ')支付订单，钱包扣款数据save保存后：可用余额为' . $userWallet->available_amount . '，冻结金额为：' . $userWallet->freeze_amount . '，订单金额为' . $this->data['amount']);
+
+            $userWallet = UserWallet::query()->where('user_id', $this->data['user_id'])->update($updateData);
 
             UserWalletLog::createWalletLog(
                 $this->data['user_id'],
