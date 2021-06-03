@@ -99,7 +99,7 @@ class RegisterController extends AuthBaseController
         ];
 
         $result = strpos($data['password'],' ');
-        if ($result === false) {
+        if ($result !== false) {
             $this->outPut(ResponseCode::PASSWORD_ILLEGALITY);
         }
 
