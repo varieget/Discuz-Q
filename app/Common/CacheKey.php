@@ -85,7 +85,6 @@ class CacheKey
 
     const LIST_THREADS_V3_USERS = 'list_threads_v3_users';//发帖用户存储 id
     const LIST_THREADS_V3_THREADS = 'list_threads_v3_threads';//帖子数据存储 id
-    const LIST_THREADS_V3_POSTS = 'list_threads_v3_posts';//帖子正文数据存储 thread_id,【碎片化多文件存储】--切分成20个缓存文件
     const LIST_THREADS_V3_ATTACHMENT = 'list_threads_v3_attachment';//帖子附件数据存储 id
     const LIST_THREADS_V3_VIDEO = 'list_threads_v3_video';//帖子视频文件存储 id
     const LIST_THREADS_V3_TAGS = 'list_threads_v3_tags';//帖子标签存储 thread_id
@@ -94,11 +93,15 @@ class CacheKey
     const LIST_THREADS_V3_SEARCH_REPLACE = 'list_threads_v3_search_replace';//替换标签、话题和艾特
     const LIST_THREADS_V3_POST_USERS = 'list_threads_v3_post_users';//帖子卡面底部的点赞支付摘要 thread_id
 
+    const LIST_THREADS_V3_POSTS = 'list_threads_v3_posts:';//帖子正文数据存储 thread_id,【碎片化多文件存储】--切分成20个缓存文件
     const LIST_THREADS_V3_USER_PAY_ORDERS = 'list_threads_v3_user_pay_orders:';//用户付费贴订单信息 user_id->thread_id
     const LIST_THREADS_V3_USER_REWARD_ORDERS = 'list_threads_v3_user_reward_orders:';//打赏的订单信息 user_id->thead_id
     const LIST_THREADS_V3_POST_LIKED = 'list_threads_v3_post_liked:';//是否点赞 user_id->post_id
     const LIST_THREADS_V3_THREAD_USERS = 'list_threads_v3_thread_users:';//是否收藏 user_id->thread_id
 
+    public static $fileStore = [
+        self::LIST_THREADS_V3_POSTS => 20
+    ];
 
     public static function delListCache()
     {

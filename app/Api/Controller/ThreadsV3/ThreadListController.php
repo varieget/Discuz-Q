@@ -31,6 +31,8 @@ use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
+use Illuminate\Database\Connection;
+use Illuminate\Database\ConnectionInterface;
 
 class ThreadListController extends DzqController
 {
@@ -39,7 +41,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 50;//预加载的页数
+    const PRELOAD_PAGES = 10;//预加载的页数
 
     private $preloadCount = 0;
     private $categoryIds = [];
@@ -78,7 +80,7 @@ class ThreadListController extends DzqController
         if (($this->user->id == 0) && $siteMode == 'pay') {
             $this->outPut(ResponseCode::JUMP_TO_REGISTER, '', '站点需要付费加入');
         }
-//        $this->openQueryLog();
+        $this->openQueryLog();
         $this->preloadCount = self::PRELOAD_PAGES * $perPage;
         if (empty($sequence)) {
             $threads = $this->getFilterThreads($filter, $page, $perPage);
@@ -89,7 +91,7 @@ class ThreadListController extends DzqController
         //缓存中获取最新的threads
         $pageData = $this->getThreadsFromCache($threadIds);
         $threads['pageData'] = $this->getFullThreadData($pageData);
-//        $this->info('query_sql_log', $this->connection->getQueryLog());
+        $this->info('query_sql_log', app(ConnectionInterface::class)->getQueryLog());
 //        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
     }
@@ -128,7 +130,7 @@ class ThreadListController extends DzqController
                 });
                 return $threads;
             }, true);
-            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
+//            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
         } else {//其他页从缓存取，取不到就重数据库取并写入缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
                 $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
