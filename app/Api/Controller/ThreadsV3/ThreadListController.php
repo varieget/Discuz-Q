@@ -19,6 +19,7 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
 use App\Models\DenyUser;
+use App\Models\Group;
 use Discuz\Base\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Category;
@@ -60,10 +61,22 @@ class ThreadListController extends DzqController
         $complex = $filter['complex'] ?? null;
 
         $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
-        if (!$this->categoryIds && empty($complex)) {
-            throw new PermissionDeniedException('没有浏览权限');
+        if (!$this->isUnPaid()) {
+            if (!$this->categoryIds && empty($complex)) {
+                throw new PermissionDeniedException('没有浏览权限');
+            }
         }
         return true;
+    }
+
+    private function isUnPaid()
+    {
+        $groups = $this->user->groups->toArray();
+        $group = current($groups);
+        if (!empty($group) && $group['id'] == Group::UNPAID) {
+            return true;
+        }
+        return false;
     }
 
 
@@ -75,9 +88,11 @@ class ThreadListController extends DzqController
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
         $page <= 0 && $page = 1;
-        $siteMode = $this->settings->get('site_mode');
-        if (($this->user->id == 0) && $siteMode == 'pay' && empty($this->inPut('pay'))) {
-            $this->outPut(ResponseCode::JUMP_TO_PAY_SITE);
+        if ($this->isUnPaid()) {
+            $page = 1;
+            $sequence = 0;
+            $perPage = 10;
+            $filter = ['sort' => Thread::SORT_BY_HOT];
         }
 //        $this->openQueryLog();
         $this->preloadCount = self::PRELOAD_PAGES * $perPage;
