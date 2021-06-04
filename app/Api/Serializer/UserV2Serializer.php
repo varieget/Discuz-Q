@@ -134,7 +134,7 @@ class UserV2Serializer extends AbstractSerializer
         // 钱包余额
         if ($this->actor->id === $model->id) {
             $attributes += [
-                'canWalletPay'  => $gate->allows('walletPay', $model),
+                'canWalletPay'  => $this->actor->checkWalletPay(),
                 'walletBalance' => $this->actor->userWallet->available_amount,
                 'walletFreeze'  => $this->actor->userWallet->freeze_amount,
             ];

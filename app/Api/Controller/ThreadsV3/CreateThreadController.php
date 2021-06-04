@@ -142,6 +142,7 @@ class CreateThreadController extends DzqController
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
         $this->isDraft = $isDraft;
+        if (mb_strlen($title) > 100) $this->outPut(ResponseCode::INVALID_PARAMETER, '标题字数不能大于100');
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
 //        empty($title) && $title = Post::autoGenerateTitle($content['text']);//不自动生成title

@@ -18,24 +18,19 @@
 
 namespace App\Api\Controller\NotificationV3;
 
-use App\Api\Serializer\NotificationTplSerializer;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use App\Models\NotificationTpl;
-use Discuz\Api\Controller\AbstractListController;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
-use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
-use Tobscure\JsonApi\Document;
 use Discuz\Base\DzqController;
 
 class UpdateNotificationTplV3Controller extends DzqController
 {
+    use NotificationTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -58,7 +53,7 @@ class UpdateNotificationTplV3Controller extends DzqController
             }
         });
 
-        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($tpl));
+        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($this->getDefaultAttributes($tpl)));
     }
 
     /**

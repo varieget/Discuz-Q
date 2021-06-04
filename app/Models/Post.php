@@ -352,10 +352,12 @@ class Post extends DzqModel
                     $firstContent = $content;
                 } else {
                     $firstContent = $this->thread->getContentByType(self::NOTICE_LENGTH, $parse);
+                    if(is_object($firstContent)){
+                        $firstContent = (string)$firstContent;
+                    }
                 }
             }
         }
-
         $build['content'] = $content;
         $build['first_content'] = $firstContent ?? $special->purify($this->thread->getContentByType(Thread::CONTENT_LENGTH, $parse));
 

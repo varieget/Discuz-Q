@@ -132,7 +132,6 @@ class Utils
     public static function logOldPermissionPosition($method)
     {
         // 整改完之前，先忽略日志，增长太快
-        return;
         if (!app()->has('permLog')) {
             $logConfig = [
                 'alias' => 'permLog',
@@ -152,6 +151,9 @@ class Utils
 
         /** @var LoggerInterface $logger */
         $logger = app('permLog');
-        $logger->info('in: '.$method.': '.json_encode(debug_backtrace()));
+        $trace = collect(debug_backtrace())->map(function ($trace) {
+            return Arr::only($trace, ['file', 'line', 'function', 'class', 'type']);
+        })->slice(0, 10);
+        $logger->info('in: '.$method.':'.PHP_EOL.json_encode($trace));
     }
 }
