@@ -301,8 +301,8 @@ class ThreadListController extends DzqController
             $threads = $threads->whereIn('th.category_id', $categoryIds);
         }
         if (!empty($types)) {
-            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.user_id')
-                ->whereIn('tag', $types);
+            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
+                ->whereIn('tag.tag', $types);
         }
         if (!empty($groupIds)) {
             $threads = $threads
