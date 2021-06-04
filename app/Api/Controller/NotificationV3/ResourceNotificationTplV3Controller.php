@@ -30,7 +30,7 @@ class ResourceNotificationTplV3Controller extends DzqController
 
         $tpl = NotificationTpl::query();
 
-        $tpl->when(isset($type), function ($query) use ($type) {
+        $tpl->when($type != '', function ($query) use ($type) {
             $query->where('type', $type);
         });
 
