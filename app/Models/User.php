@@ -412,6 +412,14 @@ class User extends DzqModel
         return static::$hasher->check($password, $this->pay_password);
     }
 
+    public function checkWalletPay(){
+        if($this->pay_password){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     /*
     |--------------------------------------------------------------------------
     | 修改器
