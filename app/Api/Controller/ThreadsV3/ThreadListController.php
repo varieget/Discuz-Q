@@ -21,7 +21,6 @@ use App\Common\CacheKey;
 use App\Models\DenyUser;
 use App\Models\Group;
 use Discuz\Base\DzqCache;
-use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Post;
