@@ -107,7 +107,6 @@ class ThreadMigrationCommand extends AbstractCommand
     public function handle()
     {
         app('log')->info('开始数据迁移start');
-        $this->info('开始帖子内容数据迁移start');
         foreach ($this->old_type as $type){
             try {
                 switch ($type){
@@ -137,7 +136,6 @@ class ThreadMigrationCommand extends AbstractCommand
                 continue;
             }
         }
-        $this->info('帖子内容数据迁移end');
         app('log')->info('数据迁移end');
         //v3数据迁移之后，下面的操作会比较刺激 -- 修改 posts 中的 content 字段数据
         $page = 1;
@@ -185,14 +183,11 @@ class ThreadMigrationCommand extends AbstractCommand
             $this->db->rollBack();
             $this->info($e->getMessage());
         }
-
-        $this->info('帖子内容 posts 的 content 修改完成');
         app('log')->info('帖子内容 posts 的 content 修改完成');
     }
 
 
     public function migrateText(){
-        $this->info('迁移文字帖start');
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_TEXT)
@@ -248,12 +243,10 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移文字帖end');
     }
 
 
     public function migrateLong(){
-        $this->info('迁移长文帖start');
         //todo
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
@@ -364,11 +357,9 @@ class ThreadMigrationCommand extends AbstractCommand
 
             $this->db->commit();
         }
-        $this->info('迁移长文帖end');
     }
 
     public function migrateVideo(){
-        $this->info('迁移视频帖start');
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_VIDEO)
@@ -406,11 +397,9 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移视频帖end');
     }
 
     public function migrateImage(){
-        $this->info('迁移图片帖start');
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_IMAGE)
@@ -445,12 +434,9 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移图片帖end');
     }
 
     public function migrateAudio(){
-        $this->info('迁移音频帖start');
-        //todo
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_AUDIO)
@@ -488,12 +474,9 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移音频帖end');
     }
 
     public function migrateQuestion(){
-        $this->info('迁移问答帖start');
-        //todo
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_QUESTION)
@@ -585,12 +568,9 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移问答帖end');
     }
 
     public function migrateGoods(){
-        $this->info('迁移商品帖start');
-        //todo
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_GOODS)
@@ -662,7 +642,6 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移商品帖end');
     }
 
     public function preHttps($url){
@@ -718,6 +697,7 @@ class ThreadMigrationCommand extends AbstractCommand
         $replaces = [];
         foreach ($searches as $search) {
             preg_match('/:[a-z]+?:/i', $search, $m2);
+            if(empty($m2[0]))   continue;
             $emoji = $m2[0];
             $replaces[] = $emoji;
         }
