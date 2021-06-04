@@ -44,8 +44,8 @@ class ListDialogV2Controller extends DzqController
     {
         $query = Dialog::query()
             ->with([
-                'sender:id,username,avatar',
-                'recipient:id,username,avatar',
+                'sender:id,username,avatar,nickname',
+                'recipient:id,username,avatar,nickname',
                 'dialogMessage',
             ]);
         $tablePrefix = config('database.connections.mysql.prefix');

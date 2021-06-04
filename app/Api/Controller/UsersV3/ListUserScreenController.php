@@ -43,7 +43,7 @@ class ListUserScreenController extends DzqController
         $filter = (array)$this->inPut('filter');
 
         $query = User::query();
-        $query->select('users.id AS userId', 'users.nickname','users.mobile', 'users.username', 'users.avatar', 'users.thread_count', 'users.status', 'users.created_at', 'users.updated_at', 'group_id','expiration_time');
+        $query->select('users.id AS userId', 'users.expired_at','users.nickname','users.mobile', 'users.username', 'users.avatar', 'users.thread_count', 'users.status', 'users.created_at', 'users.updated_at', 'group_id','expiration_time');
         $query->join('group_user', 'users.id', '=', 'group_user.user_id');
 
         if (Arr::has($filter, 'username') && Arr::get($filter, 'username') !== '') {
@@ -128,6 +128,7 @@ class ListUserScreenController extends DzqController
                 'nickname' => $value['nickname'],
                 'mobile' => $value['mobile'],
                 'avatarUrl' => $value['avatar'],
+                'expiredAt' => $value['expired_at'],
                 'threadCount' => $value['thread_count'],
                 'status' => $value['status'],
                 'createdAt' => $value['created_at'],

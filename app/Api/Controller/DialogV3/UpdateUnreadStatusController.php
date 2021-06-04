@@ -36,13 +36,19 @@ class UpdateUnreadStatusController extends DzqController
 
     public function main()
     {
+        $actor = $this->user;
+
         $dialogId = $this->inPut('dialogId');
 
         if(empty($dialogId)) {
             return $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
-        $dialogList = DialogMessage::query()->where('dialog_id', $dialogId)->get(['id','read_status']);
+        $dialogList = DialogMessage::query()
+            ->where('dialog_id', $dialogId)
+            ->where('user_id','!=',$actor->id)
+            ->get(['id','read_status']);
+
         foreach ($dialogList as $value) {
             $value->read_status = 1;
             $value->save();

@@ -328,6 +328,9 @@ class Post extends DzqModel
             // 原文
             $content = $this->content;
         } else {
+            if(is_object($this->content)){
+                $this->content = (string)$this->content;
+            }
             $content = $this->formatContent();
         }
 
@@ -349,10 +352,12 @@ class Post extends DzqModel
                     $firstContent = $content;
                 } else {
                     $firstContent = $this->thread->getContentByType(self::NOTICE_LENGTH, $parse);
+                    if(is_object($firstContent)){
+                        $firstContent = (string)$firstContent;
+                    }
                 }
             }
         }
-
         $build['content'] = $content;
         $build['first_content'] = $firstContent ?? $special->purify($this->thread->getContentByType(Thread::CONTENT_LENGTH, $parse));
 

@@ -67,11 +67,14 @@ class ManagePostList extends DzqController
             ->select(
                 'posts.id as post_id', 'posts.thread_id', 'posts.user_id','posts.content', 'posts.ip',
                 'posts.updated_at', 'posts.deleted_user_id' ,'posts.deleted_at',
+                'threads.title',
                 'users.nickname'
             )
             ->where('posts.is_first',false);
 
         $query->where('posts.is_approved', $isApproved);
+
+        $query->leftJoin('threads', 'posts.thread_id', '=', 'threads.id');
 
         // 回收站
         if ($isDeleted == 'yes') {
@@ -112,8 +115,7 @@ class ManagePostList extends DzqController
 
         //分类筛选
         if (!empty($categoryId)) {
-            $query->leftJoin('threads', 'posts.thread_id', '=', 'threads.id')
-            ->where('threads.category_id', $categoryId);
+            $query->where('threads.category_id', $categoryId);
         }
 
         //排序
@@ -185,9 +187,9 @@ class ManagePostList extends DzqController
 
             $pageData[$k]['cotent'] = [
                 'text' => $v['content'],
-                'indexes' => []
             ];
 
+            unset($pageData[$k]['content']);
             unset($pageData[$k]['deleted_nickname']);
             unset($pageData[$k]['deleted_at']);
             unset($pageData[$k]['deleted_user_id']);

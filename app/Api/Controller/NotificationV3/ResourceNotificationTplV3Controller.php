@@ -7,9 +7,12 @@ use App\Repositories\UserRepository;
 use App\Models\NotificationTpl;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
+use Discuz\Wechat\EasyWechatTrait;
 
 class ResourceNotificationTplV3Controller extends DzqController
 {
+    use NotificationTrait;
+    use EasyWechatTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -27,7 +30,7 @@ class ResourceNotificationTplV3Controller extends DzqController
 
         $tpl = NotificationTpl::query();
 
-        $tpl->when($type, function ($query) use ($type) {
+        $tpl->when($type != '', function ($query) use ($type) {
             $query->where('type', $type);
         });
 
@@ -52,6 +55,7 @@ class ResourceNotificationTplV3Controller extends DzqController
             });
         }
 
-        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($data));
+
+        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($this->getDefaultAttributes($data)));
     }
 }

@@ -130,6 +130,7 @@ class Thread extends DzqModel
      * 通知内容展示长度(字)
      */
     const CONTENT_LENGTH = 80;
+    const TITLE_LENGTH = 100;
 
     const  SORT_BY_THREAD = 1;//帖子创建时间排序
     const  SORT_BY_POST = 2;//评论创建时间排序
@@ -271,7 +272,7 @@ class Thread extends DzqModel
     {
         $special = app(SpecialCharServer::class);
 
-        if ($this->type == 1) {
+        if ($this->type == 99) {
             $firstPost = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
             $firstPost = $special->purify($firstPost);
         } else {

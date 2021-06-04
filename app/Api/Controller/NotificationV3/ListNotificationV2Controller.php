@@ -193,13 +193,23 @@ class ListNotificationV2Controller extends DzqController
             'createdAt' => optional($data->created_at)->format('Y-m-d H:i:s'),
         ], Utils::arrayKeysToCamel($data->data));
 
-        $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['postContent']);
-        list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
-        $result['postContent'] = str_replace($searches, $replaces, $content);
+        if(!empty($result['postContent'])){
+            $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['postContent']);
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
+            $result['postContent'] = str_replace($searches, $replaces, $content);
+        }
 
-        $threadTitle = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['threadTitle']);
-        list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($threadTitle);
-        $result['threadTitle'] = str_replace($searches, $replaces, $threadTitle);
+        if(!empty($result['threadTitle'])) {
+            $threadTitle = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['threadTitle']);
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($threadTitle);
+            $result['threadTitle'] = str_replace($searches, $replaces, $threadTitle);
+        }
+
+        if(!empty($result['replyPostContent'])) {
+            $replyPostContent = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['replyPostContent']);
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($replyPostContent);
+            $result['replyPostContent'] = str_replace($searches, $replaces, $replyPostContent);
+        }
 
         // 默认必须要有的字段
         if (!array_key_exists('reply_post_id', $result)) {
