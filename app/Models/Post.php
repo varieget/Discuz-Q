@@ -328,6 +328,9 @@ class Post extends DzqModel
             // 原文
             $content = $this->content;
         } else {
+            if(is_object($this->content)){
+                $this->content = (string)$this->content;
+            }
             $content = $this->formatContent();
         }
 
