@@ -69,7 +69,7 @@ class CreateDialog
         }
         //在黑名单中，不能创建会话
         if (in_array($sender, array_column($recipientUser->deny->toArray(), 'id'))) {
-            throw new PermissionDeniedException('你屏蔽了对方,不能发起私信对话');
+            throw new PermissionDeniedException('已被屏蔽，不能发起私信对话');
         }
 
         $dialogRes = $dialog::buildOrFetch($sender, $recipientUser->id);
