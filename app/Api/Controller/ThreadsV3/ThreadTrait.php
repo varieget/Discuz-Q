@@ -451,6 +451,8 @@ trait ThreadTrait
         $userId = $this->user->id;
         foreach ($topics as $topicItem) {
             $topicName = str_replace('#', '', $topicItem);
+            //话题名称长度超过20就不创建了
+            if(mb_strlen($topicName) > 20)      continue;
             $topic = Topic::query()->where('content', $topicName)->first();
             if (empty($topic)) {
                 $topic = new Topic();
