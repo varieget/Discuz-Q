@@ -36,7 +36,7 @@ class ThreadStickController extends DzqController
 
     public function main()
     {
-        $categoryIds = $this->inPut('categoryids');
+        $categoryIds = $this->inPut('categoryIds');
         $threads = Thread::query()->select(['id', 'category_id', 'title','updated_at'])->orderByDesc('updated_at');
         if (!empty($categoryIds)) {
             if (!is_array($categoryIds)) {

@@ -20,6 +20,7 @@ namespace App\Api\Controller\AdminV3;
 use App\Api\Controller\ThreadsV3\ThreadTrait;
 use App\Api\Controller\ThreadsV3\ThreadListTrait;
 use App\Common\ResponseCode;
+use App\Models\Post;
 use App\Models\UserActionLogs;
 use App\Repositories\UserRepository;
 use App\Models\Thread;
@@ -211,17 +212,28 @@ class ManageThemeList extends DzqController
 
         $userActionLogs = [];
 
+        $threadsIds = array_column($snapArr,'id');
+
         if ($isDeleted == 'yes') {
-            $userIds = array_column($snapArr,'id');
 
             $userActionLogs = UserActionLogs::query()
-                ->whereIn('log_able_id',$userIds)
+                ->whereIn('log_able_id',$threadsIds)
                 ->where(['action' => 'hide', 'log_able_type' => 'App\Models\Thread'])
                 ->orderBy('id','desc')
                 ->get(['log_able_id as thread_id','message'])
                 ->pluck('message','thread_id')
                 ->toArray();
         }
+
+        //获取最后回复用户id
+        $post = Post::query()
+            ->whereIn('thread_id',$threadsIds)
+            ->where('posts.is_first',Post::FIRST_NO)
+            ->leftJoin('users','posts.user_id','=','users.id')
+            ->orderBy('posts.created_at','desc')
+            ->get(['users.nickname','posts.user_id','posts.thread_id','posts.created_at'])
+            ->pluck(null,'thread_id')
+            ->toArray();
 
         //参数归类
         foreach ($pageData as $k => $v) {
@@ -236,6 +248,13 @@ class ManageThemeList extends DzqController
             $pageData[$k]['lastDeletedLog'] = [
                 'message' => $userActionLogs[$v['threadId']]
             ];
+
+            $pageData[$k]['lastPostedUser'] = [
+                'lastNickname' => $post[$v['threadId']]['nickname'],
+                'userId' => $post[$v['threadId']]['user_id'],
+                'createdAt' => date('Y-m-d H:i:s',strtotime($post[$v['threadId']]['created_at'])),
+            ];
+
             $pageData[$k]['deletedUserArr'] = [
                 'deletedNickname' => $snapArr[$v['threadId']]['deleted_user'],
                 'deletedAt' => date('Y-m-d H:i:s',strtotime($snapArr[$v['threadId']]['deleted_at'])),

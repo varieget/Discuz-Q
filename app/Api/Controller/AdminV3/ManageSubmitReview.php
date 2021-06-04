@@ -265,7 +265,7 @@ class ManageSubmitReview extends DzqController
     public function logs($actionDesc){
         return [
             'user_id' => $this->user->id,
-            'action_desc' => '还原用户回复评论'. $actionDesc,
+            'action_desc' => $actionDesc,
             'ip' => ip($this->request->getServerParams()),
             'created_at' => Carbon::now()
         ];
