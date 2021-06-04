@@ -27,8 +27,6 @@ use Discuz\Base\DzqController;
 use Discuz\Foundation\Application;
 use Discuz\Http\DiscuzResponseFactory;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 class ExportUserController extends DzqController
 {
@@ -49,10 +47,13 @@ class ExportUserController extends DzqController
         return $userRepo->canExportUser($this->user);
     }
 
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    public function main()
     {
-        $filters = $this->inPut('filter');
-        $data = $this->main($filters);
+        $filter = $this->inPut('filter');
+        $filters = $filter ?: [];
+        $ids = $this->inPut('ids','');
+        $filters['id'] = $ids;
+        $data= $this->ExportFilter($filters);
 
         $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . 'user_excel.xlsx';
         //TODO 判断满足条件的excel是否存在,if exist 直接返回;
@@ -65,14 +66,9 @@ class ExportUserController extends DzqController
         return $this->outPut(ResponseCode::SUCCESS,'',$build);
     }
 
-    /**
-     * @param $filters
-     * @return array
-     */
-    public function main()
-    {
-        $filters = $this->inPut('filters');
 
+    public function ExportFilter($filters)
+    {
         $userField = [
             'id',
             'username',
