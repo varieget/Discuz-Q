@@ -86,3 +86,6 @@ $route->post('/refresh.token', 'refresh.token', ApiController\Oauth2V3\RefreshTo
 
 $route->get('/recommend.users', 'recommend.users', ApiController\Recommend\RecommendedUserListController::class);
 $route->get('/recommend.topics', 'recommend.topics', ApiController\Recommend\RecommendedTopicListController::class);
+
+// 判断是否已配置腾讯云  CheckQcloudController
+$route->get('/checkQcloud', 'checkQcloud',  ApiController\CheckQcloudV3Controller::class);
