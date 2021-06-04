@@ -161,8 +161,7 @@ class CreatePostRewardController extends DzqController
                     app('log')->info('作者' . $actor->username . '的冻结金额小于采纳金额，悬赏采纳失败！;悬赏问答帖ID为：' . $thread_id);
                     return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_reward_user_wallet_error'));
                 }else{
-                    $userWallet->freeze_amount = $userWallet->freeze_amount - $rewards;
-                    $userWallet->save();
+                    $userWalletUpdateResult = UserWallet::query()->where('user_id', $actor->id)->update(['freeze_amount' => $userWallet->freeze_amount - $rewards]);
 
                     // 流水-减少冻结
                     UserWalletLog::createWalletLog(
@@ -182,8 +181,7 @@ class CreatePostRewardController extends DzqController
             }
 
             $postUserWallet = UserWallet::query()->lockForUpdate()->find($posts['user_id']);
-            $postUserWallet->available_amount = $postUserWallet->available_amount + $rewards;
-            $postUserWallet->save();
+            $postUserWalletUpdateResult = UserWallet::query()->where('user_id', $posts['user_id'])->update(['available_amount' => $postUserWallet->available_amount + $rewards]);
 
             $threadRewardRemainMoney = ThreadReward::query()->lockForUpdate()->find($threadReward['id']);
             $threadRewardRemainMoney->remain_money = $threadRewardRemainMoney->remain_money - $rewards;
