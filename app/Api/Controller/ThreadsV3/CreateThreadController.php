@@ -119,7 +119,7 @@ class CreateThreadController extends DzqController
         //插入话题
         $this->saveTopic($thread, $content);
         //发帖@用户
-        $this->sendRelated($thread,$post);
+        $this->sendRelated($thread, $post);
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
         //更新帖子条数
@@ -145,6 +145,11 @@ class CreateThreadController extends DzqController
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
 //        empty($title) && $title = Post::autoGenerateTitle($content['text']);//不自动生成title
+
+        if (!empty($title) && mb_strlen($title) >= Thread::TITLE_LENGTH) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '标题不能超过' . Thread::TITLE_LENGTH . '字');
+        }
+
         $dataThread = [
             'user_id' => $userId,
             'category_id' => $categoryId,
