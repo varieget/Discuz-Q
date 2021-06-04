@@ -889,7 +889,6 @@ class User extends DzqModel
      */
     public function can($ability, $arguments = [])
     {
-        Utils::logOldPermissionPosition(__METHOD__);
         return static::$gate->forUser($this)->allows($ability, $arguments);
     }
 
