@@ -154,6 +154,14 @@ class Thread extends DzqModel
     const PAY_FREE = 0;
     const PAY_THREAD = 1;
     const PAY_ATTACH = 2;
+
+    /**
+     * 订单标题展示长度
+     */
+    const ORDER_TITLE_LENGTH = 20;
+    const ORDER_TITLE_END_WITH = '...';
+
+
     /**
      * {@inheritdoc}
      */
