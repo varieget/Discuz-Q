@@ -5,6 +5,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Events\Users\UserFollowCreated;
+use App\Models\DenyUser;
 use App\Models\User;
 use App\Models\UserFollow;
 use App\Repositories\UserRepository;
@@ -26,10 +27,13 @@ class CreateUserFollowController extends DzqController
      */
     protected $userFollow;
 
-    public function __construct(Dispatcher $bus,UserFollow $userFollow)
+    protected $denyUser;
+
+    public function __construct(Dispatcher $bus,UserFollow $userFollow,DenyUser $denyUser)
     {
         $this->bus = $bus;
         $this->userFollow = $userFollow;
+        $this->denyUser = $denyUser;
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -48,15 +52,21 @@ class CreateUserFollowController extends DzqController
         }
 
         /** @var User $toUser */
-        $toUser = User::query()
-            ->where('id', $to_user_id)
-            ->first();
+        $toUser = User::query()->where('id', $to_user_id)->first();
+
         if (!$toUser) {
             $this->outPut(ResponseCode::NOT_FOLLOW_USER);
         }
 
-        //在黑名单中，不能创建会话
-        if (in_array($actor->id, array_column($toUser->deny->toArray(), 'id'))) {
+        //你的屏蔽
+        $Mdeny = $this->denyUser->where(['user_id' => $actor->id, 'deny_user_id' => $to_user_id])->first();
+        if($Mdeny){
+            $this->outPut(ResponseCode::YOU_BLOCKED_HIM);
+        }
+
+         //对方屏蔽
+        $Udeny = $this->denyUser->where(['user_id' => $to_user_id, 'deny_user_id' => $actor->id])->first();
+        if($Udeny){
             $this->outPut(ResponseCode::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION);
         }
 
