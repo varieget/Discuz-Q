@@ -122,7 +122,7 @@ class LoginController extends AuthBaseController
             }
             $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
         } catch (\Exception $e) {
-            app('log')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 登录出错： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 登录出错： ' . $e->getMessage());
             $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名登录出错');
         }
 

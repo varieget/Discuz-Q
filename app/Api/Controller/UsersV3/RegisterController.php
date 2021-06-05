@@ -132,7 +132,7 @@ class RegisterController extends AuthBaseController
                                  $this->camelData($this->addUserInfo($user, $accessToken))
             );
         } catch (\Exception $e) {
-            app('log')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 注册出错： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 注册出错： ' . $e->getMessage());
             $this->connection->rollback();
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册出错');
         }

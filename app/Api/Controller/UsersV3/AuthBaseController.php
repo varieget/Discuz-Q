@@ -294,7 +294,7 @@ abstract class AuthBaseController extends DzqController
             );
             return $response;
         } catch (\Exception $e) {
-            app('log')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 登录出错： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 登录出错： ' . $e->getMessage());
             if (empty($e->getMessage())) {
                 return $this->outPut(ResponseCode::USERNAME_OR_PASSWORD_ERROR);
             }
