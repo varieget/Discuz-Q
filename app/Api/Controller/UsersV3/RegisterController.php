@@ -84,21 +84,21 @@ class RegisterController extends AuthBaseController
             'captcha_rand_str'      => $this->inPut('captchaRandStr'),
         ];
 
-        $this->dzqValidate($data, [
-            'username' => 'required',
-            'password' => 'required',
-            'nickname' => 'required',
-        ]);
-
-        //用户名校验
-        $result = strpos($data['username'],' ');
-        if ($result !== false) {
-            $this->connection->rollback();
-            $this->outPut(ResponseCode::USERNAME_NOT_ALLOW_HAS_SPACE);
-        }
-
         $this->connection->beginTransaction();
         try {
+            $this->dzqValidate($data, [
+                'username' => 'required',
+                'password' => 'required',
+                'nickname' => 'required',
+            ]);
+
+            //用户名校验
+            $result = strpos($data['username'],' ');
+            if ($result !== false) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::USERNAME_NOT_ALLOW_HAS_SPACE);
+            }
+
             //重名校验
             $user = User::query()->where('username',$data['username'])->lockForUpdate()->first();
             if (!empty($user)) {
