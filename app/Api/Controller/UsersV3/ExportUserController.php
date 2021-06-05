@@ -25,7 +25,6 @@ use App\Repositories\UserRepository;
 use App\Traits\UserTrait;
 use Discuz\Base\DzqController;
 use Discuz\Foundation\Application;
-use Discuz\Http\DiscuzResponseFactory;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 
 class ExportUserController extends DzqController
@@ -61,9 +60,11 @@ class ExportUserController extends DzqController
             new UsersExport($filename, $data)
         );
 
-        $build =  DiscuzResponseFactory::FileResponse($filename);
+        $fileUrl = [
+            'fileNameUrl'=>$filename
+        ];
 
-        return $this->outPut(ResponseCode::SUCCESS,'',$build);
+        return $this->outPut(ResponseCode::SUCCESS,'',$fileUrl);
     }
 
 

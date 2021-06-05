@@ -113,6 +113,7 @@ class ResponseCode
     const NONSUPPORT_MOBILE_REBIND= -7065;
     const ORIGINAL_USER_MOBILE_VERIFY_ERROR= -7066;
     const PASSWORD_ILLEGALITY= -7067;
+    const YOU_BLOCKED_HIM= -7068;
 
 
     const NEED_BIND_WECHAT = 8000;
@@ -211,5 +212,6 @@ class ResponseCode
         self::NOT_REBIND_SELF_MOBILE => '不能换绑自己的手机号',
         self::ORIGINAL_USER_MOBILE_VERIFY_ERROR => '原有手机号验证码处理失败',
         self::PASSWORD_ILLEGALITY => '密码输入非法',
+        self::YOU_BLOCKED_HIM => '你已拉黑对方',
     ];
 }
