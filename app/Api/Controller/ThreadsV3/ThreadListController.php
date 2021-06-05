@@ -239,7 +239,8 @@ class ThreadListController extends DzqController
                     break;
                 case Thread::MY_BUY_THREAD:
                     $threads = $threads->leftJoin('orders as order', 'order.thread_id', '=', 'th.id')
-                        ->where(['order.user_id' => $loginUserId, 'status' => Order::ORDER_STATUS_PAID])
+                        ->whereIn('order.type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
+                        ->where(['order.user_id' => $loginUserId, 'order.status' => Order::ORDER_STATUS_PAID])
                         ->orderByDesc('order.updated_at');
                     break;
                 case Thread::MY_OR_HIS_THREAD:
