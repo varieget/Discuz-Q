@@ -10,6 +10,7 @@ use App\Models\Post;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Str;
 
 class UsersOrderLogsListController extends DzqController
 {
@@ -92,7 +93,14 @@ class UsersOrderLogsListController extends DzqController
         $threadData = array_column($threadData, null, 'threadId');
         foreach ($orders as $key => $value) {
             $orders[$key]['payeeNickname'] = $payeeUserDatas[$value['payee_id']]['nickname'] ?? '';
-            $orders[$key]['thread'] = $threadData[$value['thread_id']] ?? [];
+            $orders[$key]['thread'] = $threadData[$value['thread_id']] ?? ['title' => '该订单暂无对应帖子'];
+            if(empty($orders[$key]['thread']['title'])){
+                if(Str::length($orders['threads']['content']) > Thread::ORDER_TITLE_LENGTH ){
+                    $orders[$key]['thread']['title'] = Str::finish(Str::substr(strip_tags($orders[$key]['content']), 0, Thread::ORDER_TITLE_LENGTH), Thread::ORDER_TITLE_END_WITH);
+                }else{
+                    $orders[$key]['thread']['title'] = strip_tags($orders[$key]['thread']['content']);
+                }
+            }
         }
 
         $usersOrderLogs['pageData'] = $this->camelData($orders) ?? [];
