@@ -272,7 +272,7 @@ class Thread extends DzqModel
     {
         $special = app(SpecialCharServer::class);
 
-        if ($this->type == 99) {
+        if ($this->type == Thread::TYPE_OF_ALL && $this->title) {
             $firstPost = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
             $firstPost = $special->purify($firstPost);
         } else {
@@ -284,6 +284,9 @@ class Thread extends DzqModel
             } else {
                 $firstPost = $this->firstPost->formatContent();
             }
+        }
+        if(is_object($firstPost)){
+            $firstPost = (string)$firstPost;
         }
 
         return $firstPost;
