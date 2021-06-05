@@ -19,8 +19,10 @@
 namespace App\Listeners\User;
 
 use App\Common\ResponseCode;
+use Carbon\Carbon;
 use Discuz\Common\Utils;
 use App\Models\User;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Http\DiscuzResponseFactory;
 
@@ -30,6 +32,15 @@ class BanLogin
     {
         $user = $event->user;
         switch ($user->status) {
+            case 0:
+                $settings = app(SettingsRepository::class);
+                if ($user->status == 0
+                    && $settings->get('site_mode') == 'pay'
+                    && $event->user->expired_at < Carbon::now()
+                ) {
+                    Utils::outPut(ResponseCode::JUMP_TO_PAY_SITE);
+                }
+                break;
             case 1:
                 Utils::outPut(ResponseCode::USER_BAN);
                 throw new PermissionDeniedException('ban_user');

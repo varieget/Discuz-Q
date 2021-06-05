@@ -119,6 +119,7 @@ class ResponseCode
     const USER_IN_REVIEW= -7071;
     const PAY_JOIN_SITE= -7072;
     const USERNAME_NOT_ALLOW_HAS_SPACE= -7073;
+    const TRY_LOGIN_AGAIN= -7074;
 
 
     const NEED_BIND_WECHAT = 8000;
@@ -223,5 +224,6 @@ class ResponseCode
         self::USER_NEED_SIGNIN_FIELDS => '用户需填写扩展字段',
         self::USER_IN_REVIEW => '用户审核中',
         self::PAY_JOIN_SITE => '请付费加入站点',
+        self::TRY_LOGIN_AGAIN => '当前注册人数过多，请稍后登录',
     ];
 }

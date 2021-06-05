@@ -55,14 +55,13 @@ class SmsBindController extends AuthBaseController
         if (!$sms) {
             $this->outPut(ResponseCode::NONSUPPORT_MOBILE_REBIND);
         }
-
-        $mobileCode     = $this->getMobileCode('bind');
-        $sessionToken   = $this->inPut('sessionToken');
-        $token          = SessionToken::get($sessionToken);
-        $actor          = !empty($token->user) ? $token->user : $this->user;
-
         $this->connection->beginTransaction();
         try {
+            $mobileCode     = $this->getMobileCode('bind');
+            $sessionToken   = $this->inPut('sessionToken');
+            $token          = SessionToken::get($sessionToken);
+            $actor          = !empty($token->user) ? $token->user : $this->user;
+
             $actor = User::query()->lockForUpdate()->find($actor->id);
 
             if (empty($actor) || $actor->isGuest()) {
