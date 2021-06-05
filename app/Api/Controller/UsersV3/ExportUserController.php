@@ -60,10 +60,11 @@ class ExportUserController extends DzqController
             new UsersExport($filename, $data)
         );
 
+        $fileUrl = [
+            'fileNameUrl'=>$filename
+        ];
 
-     //   dd($this->FileResponse($filename));
-
-        return $this->outPut(ResponseCode::SUCCESS,'',$filename);
+        return $this->outPut(ResponseCode::SUCCESS,'',$fileUrl);
     }
 
 
