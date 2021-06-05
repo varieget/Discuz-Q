@@ -22,7 +22,6 @@ namespace App\Api\Controller\UsersV3;
 use App\Commands\Users\GenJwtToken;
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
-use App\Common\Utils;
 use App\Events\Users\Logind;
 use App\Events\Users\TransitionBind;
 use App\Models\SessionToken;
@@ -35,31 +34,25 @@ use Discuz\Foundation\Application;
 
 class LoginController extends AuthBaseController
 {
-    protected $bus;
-
-    protected $app;
-
-    protected $events;
-
-    protected $type;
-
-    protected $validator;
-
-    protected $setting;
+    public $bus;
+    public $app;
+    public $events;
+    public $type;
+    public $validator;
+    public $setting;
 
     public function __construct(
-        Dispatcher $bus,
-        Application $app,
-        Events $events,
-        Validator $validator,
-        SettingsRepository $settingsRepository
-    )
-    {
-        $this->bus = $bus;
-        $this->app = $app;
-        $this->events = $events;
-        $this->validator = $validator;
-        $this->setting = $settingsRepository;
+        Dispatcher          $bus,
+        Application         $app,
+        Events              $events,
+        Validator           $validator,
+        SettingsRepository  $settingsRepository
+    ){
+        $this->bus          = $bus;
+        $this->app          = $app;
+        $this->events       = $events;
+        $this->validator    = $validator;
+        $this->setting      = $settingsRepository;
     }
 
     protected function checkRequestPermissions(\App\Repositories\UserRepository $userRepo)
@@ -74,60 +67,64 @@ class LoginController extends AuthBaseController
             'password' => $this->inPut('password'),
         ];
 
-        $this->validator->make($data, [
-            'username' => 'required',
-            'password' => 'required',
-        ])->validate();
+        try {
+            $this->validator->make($data, [
+                'username' => 'required',
+                'password' => 'required',
+            ])->validate();
 
-        $type = $this->inPut('type');
-        $response = $this->bus->dispatch(
-            new GenJwtToken($data)
-        );
-        if($response->getStatusCode() != 200) {
-            return $this->outPut(ResponseCode::LOGIN_FAILED, '登录失败');
-        }
-        $accessToken = json_decode($response->getBody(), true);
+            $type = $this->inPut('type');
+            $response = $this->genJwtToken($data);
+            if($response->getStatusCode() != 200) {
+                $this->outPut(ResponseCode::LOGIN_FAILED, '登录失败');
+            }
+            $accessToken = json_decode($response->getBody(), true);
 
-        $user = $this->app->make(UserRepository::class)->getUser();
+            $user = $this->app->make(UserRepository::class)->getUser();
 
-        $this->events->dispatch(new Logind($user));
+            $this->events->dispatch(new Logind($user));
 
-        $wechat = (bool)$this->setting->get('offiaccount_close', 'wx_offiaccount');
-        $miniWechat = (bool)$this->setting->get('miniprogram_close', 'wx_miniprogram');
-        $sms = (bool)$this->setting->get('qcloud_sms', 'qcloud');
-        //短信，微信，小程序均未开启
-        if(! $sms && !$wechat && !$miniWechat ) {
-            return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
-        }
+            $wechat = (bool)$this->setting->get('offiaccount_close', 'wx_offiaccount');
+            $miniWechat = (bool)$this->setting->get('miniprogram_close', 'wx_miniprogram');
+            $sms = (bool)$this->setting->get('qcloud_sms', 'qcloud');
+            //短信，微信，小程序均未开启
+            if(! $sms && !$wechat && !$miniWechat ) {
+                $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
+            }
 
-        //过渡时期微信绑定用户名密码登录的用户
-        $sessionToken = $this->inPut('sessionToken');
-        if($sessionToken && strlen($sessionToken) != 0 && (bool)$this->setting->get('is_need_transition')) {
-            $this->events->dispatch(new TransitionBind($user, ['sessionToken' => $sessionToken]));
-            return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
-        }
+            //过渡时期微信绑定用户名密码登录的用户
+            $sessionToken = $this->inPut('sessionToken');
+            if($sessionToken && strlen($sessionToken) != 0 && (bool)$this->setting->get('is_need_transition')) {
+                $this->events->dispatch(new TransitionBind($user, ['sessionToken' => $sessionToken]));
+                $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
+            }
 
-        if($type == 'mobilebrowser_username_login') {
-            //手机浏览器登录，需要做绑定前准备
-            $token = SessionToken::generate(SessionToken::WECHAT_MOBILE_BIND, $accessToken , $user->id);
-            $token->save();
-            $data = [
-                'sessionToken'  => $token->token,
-                'nickname'      => $user->nickname
-            ];
-            if($wechat || $miniWechat) { //开了微信，
-                //未绑定微信
-                $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
-                if(!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
-                    $data['uid'] = !empty($user->id) ? $user->id : 0;
-                    return $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', $data);
+            if($type == 'mobilebrowser_username_login') {
+                //手机浏览器登录，需要做绑定前准备
+                $token = SessionToken::generate(SessionToken::WECHAT_MOBILE_BIND, $accessToken , $user->id);
+                $token->save();
+                $data = [
+                    'sessionToken'  => $token->token,
+                    'nickname'      => $user->nickname
+                ];
+                if($wechat || $miniWechat) { //开了微信，
+                    //未绑定微信
+                    $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
+                    if(!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
+                        $data['uid'] = !empty($user->id) ? $user->id : 0;
+                        $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', $data);
+                    }
                 }
+                if(! $wechat && ! $miniWechat && $sms && !$user->mobile) {//开了短信配置未绑定手机号
+                    $this->outPut(ResponseCode::NEED_BIND_PHONE, '', $data);
+                }
+                $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
             }
-            if(! $wechat && ! $miniWechat && $sms && !$user->mobile) {//开了短信配置未绑定手机号
-                return $this->outPut(ResponseCode::NEED_BIND_PHONE, '', $data);
-            }
-            return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
+            $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
+        } catch (\Exception $e) {
+            app('log')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 登录出错： ' . $e->getMessage());
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名登录出错');
         }
-        return $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
+
     }
 }

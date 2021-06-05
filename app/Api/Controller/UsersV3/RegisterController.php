@@ -18,54 +18,41 @@
 
 namespace App\Api\Controller\UsersV3;
 
-
 use App\Censor\Censor;
-use App\Commands\Users\GenJwtToken;
 use App\Commands\Users\RegisterUser;
 use App\Common\ResponseCode;
-use App\Events\Users\Registered;
 use App\Events\Users\RegisteredCheck;
-use App\Events\Users\Saving;
-use App\Events\Users\TransitionBind;
-use App\Models\Invite;
-use App\Models\SessionToken;
 use App\Models\User;
-use App\Notifications\Messages\Wechat\RegisterWechatMessage;
-use App\Notifications\System;
 use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
-use Carbon\Carbon;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
-use Discuz\Foundation\EventsDispatchTrait;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
-use Illuminate\Support\Arr;
+use Illuminate\Database\ConnectionInterface;
 
 class RegisterController extends AuthBaseController
 {
-    use EventsDispatchTrait;
-    use AssertPermissionTrait;
+    public $bus;
+    public $settings;
+    public $events;
+    public $censor;
+    public $userValidator;
+    public $connection;
 
-    protected $bus;
-
-    protected $settings;
-
-    protected $events;
-
-    protected $censor;
-
-    protected $validator;
-
-    public function __construct(Dispatcher $bus, SettingsRepository $settings, Events $events, Censor $censor, UserValidator $validator)
-    {
-        $this->bus = $bus;
-        $this->settings = $settings;
-        $this->events = $events;
-        $this->censor = $censor;
-        $this->validator = $validator;
-
+    public function __construct(
+        Dispatcher          $bus,
+        SettingsRepository  $settings,
+        Events              $events,
+        Censor              $censor,
+        UserValidator       $userValidator,
+        ConnectionInterface $connection
+    ){
+        $this->bus              = $bus;
+        $this->settings         = $settings;
+        $this->events           = $events;
+        $this->censor           = $censor;
+        $this->userValidator    = $userValidator;
+        $this->connection       = $connection;
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -85,7 +72,6 @@ class RegisterController extends AuthBaseController
             $this->outPut(ResponseCode::REGISTER_CLOSE, '请使用微信或者手机号注册登录');
         }
 
-
         $data = [
             'username'              => $this->inPut('username'),
             'password'              => $this->inPut('password'),
@@ -98,26 +84,58 @@ class RegisterController extends AuthBaseController
             'captcha_rand_str'      => $this->inPut('captchaRandStr'),
         ];
 
-        $result = strpos($data['password'],' ');
+        $this->dzqValidate($data, [
+            'username' => 'required',
+            'password' => 'required',
+            'nickname' => 'required',
+        ]);
+
+        //用户名校验
+        $result = strpos($data['username'],' ');
         if ($result !== false) {
-            $this->outPut(ResponseCode::PASSWORD_ILLEGALITY);
+            $this->connection->rollback();
+            $this->outPut(ResponseCode::USERNAME_NOT_ALLOW_HAS_SPACE);
         }
 
-        $user = $this->bus->dispatch(
-            new RegisterUser($this->request->getAttribute('actor'), $data)
-        );
+        $this->connection->beginTransaction();
+        try {
+            //重名校验
+            $user = User::query()->where('username',$data['username'])->lockForUpdate()->first();
+            if (!empty($user)) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::USERNAME_HAD_EXIST);
+            }
 
-        // 注册后的登录检查
-        if (!(bool)$this->settings->get('register_validate')) {
-            $this->events->dispatch(new RegisteredCheck($user));
+            $this->censor->checkText($data['username'], 'username');
+            //密码校验
+            $result = strpos($data['password'],' ');
+            if ($result !== false) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::PASSWORD_NOT_ALLOW_HAS_SPACE);
+            }
+            //昵称校验
+            $this->censor->checkText($data['nickname'], 'nickname');
+
+            $user = $this->bus->dispatch(
+                new RegisterUser($this->request->getAttribute('actor'), $data)
+            );
+
+            // 注册后的登录检查
+            if (!(bool)$this->settings->get('register_validate')) {
+                $this->events->dispatch(new RegisteredCheck($user));
+            }
+
+            $accessToken = $this->getAccessToken($user);
+            $this->connection->commit();
+            return $this->outPut(ResponseCode::SUCCESS,
+                                 '',
+                                 $this->camelData($this->addUserInfo($user, $accessToken))
+            );
+        } catch (\Exception $e) {
+            app('log')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 注册出错： ' . $e->getMessage());
+            $this->connection->rollback();
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册出错');
         }
-        GenJwtToken::setUid($user->id);
-        $response = $this->bus->dispatch(
-            new GenJwtToken(Arr::only($data, 'username'))
-        );
-        return $this->outPut(ResponseCode::SUCCESS,
-                             '',
-                             $this->addUserInfo($user, $this->camelData(json_decode($response->getBody(),true)))
-        );
+
     }
 }

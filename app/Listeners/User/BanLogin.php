@@ -34,6 +34,9 @@ class BanLogin
                 Utils::outPut(ResponseCode::USER_BAN);
                 throw new PermissionDeniedException('ban_user');
                 break;
+            case 2:
+                Utils::outPut(ResponseCode::USER_IN_REVIEW);
+                break;
             case 3:
                 Utils::outPut(ResponseCode::VALIDATE_REJECT,ResponseCode::$codeMap[ResponseCode::VALIDATE_REJECT],User::getUserReject($user->id));
                 $response = [
@@ -49,8 +52,11 @@ class BanLogin
 //                throw new PermissionDeniedException('validate_reject');
                 break;
             case 4:
-                Utils::outPut(ResponseCode::VALIDATE_IGNORE,ResponseCode::$codeMap[ResponseCode::VALIDATE_IGNORE]);
+                Utils::outPut(ResponseCode::VALIDATE_IGNORE);
                 throw new PermissionDeniedException('validate_ignore');
+                break;
+            case 10:
+                Utils::outPut(ResponseCode::USER_NEED_SIGNIN_FIELDS);
                 break;
         }
     }

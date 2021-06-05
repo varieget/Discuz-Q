@@ -52,7 +52,7 @@ class CheckController extends DzqController
         //敏感词检查
         $this->censor->checkText($username, 'username');
         if(strlen($username) == 0) {
-            return $this->outPut(ResponseCode::NAME_LENGTH_ERROR, '用户名不能为空');
+            return $this->outPut(ResponseCode::USERNAME_NOT_NULL);
         }
         //长度检查
         if(mb_strlen($username,'UTF8') > 15){

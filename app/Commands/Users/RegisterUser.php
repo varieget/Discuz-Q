@@ -85,13 +85,13 @@ class RegisterUser
             if (Invite::lengthByAdmin($code)) {
                 if (!$exists = Invite::query()->where('code', Arr::get($this->data, 'code'))->exists()) {
                     //兼容v2,v3
-                    Utils::outPut(ResponseCode::REGISTER_DECRYPT_CODE_FAILED, ResponseCode::$codeMap[ResponseCode::REGISTER_DECRYPT_CODE_FAILED]);
+                    Utils::outPut(ResponseCode::REGISTER_DECRYPT_CODE_FAILED);
                     throw new DecryptException(trans('user.register_decrypt_code_failed'));
                 }
             } else {
                 if (!$exists = User::query()->find($code)->exists()) {
                     //兼容v2,v3
-                    Utils::outPut(ResponseCode::REGISTER_DECRYPT_CODE_FAILED, ResponseCode::$codeMap[ResponseCode::REGISTER_DECRYPT_CODE_FAILED]);
+                    Utils::outPut(ResponseCode::REGISTER_DECRYPT_CODE_FAILED);
                     throw new DecryptException(trans('user.register_decrypt_code_failed'));
                 }
             }
@@ -123,8 +123,14 @@ class RegisterUser
         }
         // 审核模式，设置注册为审核状态
         if ($settings->get('register_validate') || $censor->isMod) {
-            $user->status = 2;
+            $user->status = User::STATUS_MOD;
         }
+
+        //扩展字段
+        if ($settings->get('open_ext_fields')) {
+            $user->status = User::STATUS_NEED_FIELDS;
+        }
+
         //todo 暂时未使用到
         $this->events->dispatch(
             new Saving($user, $this->actor, $this->data)
