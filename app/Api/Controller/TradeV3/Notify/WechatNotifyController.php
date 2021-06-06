@@ -18,8 +18,6 @@
 
 namespace App\Api\Controller\TradeV3\Notify;
 
-use App\Common\ResponseCode;
-use Discuz\Base\DzqController;
 use Discuz\Http\DiscuzResponseFactory;
 use Illuminate\Contracts\Bus\Dispatcher;
 use App\Commands\Trade\Notify\WechatNotify;
@@ -28,7 +26,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
 
-class WechatNotifyController extends DzqController
+class WechatNotifyController extends AbstractResourceController
 {
     /**
      * @var Dispatcher
@@ -43,31 +41,22 @@ class WechatNotifyController extends DzqController
         $this->bus = $bus;
     }
 
-    public function main()
-    {
-        app('payLog')->info("支付回调通知", [$this->request->getParsedBody()]);
-        $res = $this->bus->dispatch(
-            new WechatNotify()
-        );
-        $this->outPut(ResponseCode::SUCCESS);
-    }
-
     /**
      * {@inheritdoc}
      */
-//    public function handle(ServerRequestInterface $request): ResponseInterface
-//    {
-//        app('payLog')->info("支付回调通知", [$this->request->getParsedBody()]);
-//        $document = new Document();
-//        $data     = $this->data($request, $document);
-//
-//        return DiscuzResponseFactory::XmlResponse($data);
-//    }
-//
-//    public function data(ServerRequestInterface $request, Document $document)
-//    {
-//        return $this->bus->dispatch(
-//            new WechatNotify($request->getParsedBody())
-//        );
-//    }
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        app('payLog')->info("支付回调通知", [file_get_contents('php://input')]);
+        $document = new Document();
+        $data     = $this->data($request, $document);
+
+        return DiscuzResponseFactory::XmlResponse($data);
+    }
+
+    public function data(ServerRequestInterface $request, Document $document)
+    {
+        return $this->bus->dispatch(
+            new WechatNotify()
+        );
+    }
 }
