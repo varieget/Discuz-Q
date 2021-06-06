@@ -100,10 +100,10 @@ class UserLoginFailLog extends Model
             ->update(['count'=>0]);
     }
 
-    public static function reSetFailCountByUsername($username)
+    public static function reSetFailCountByUserId($userId)
     {
         return self::query()
-            ->where(['username'=>$username])
+            ->where(['user_id'=>$userId])
             ->update(['count'=>0]);
     }
 

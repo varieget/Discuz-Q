@@ -114,7 +114,9 @@ class WechatH5RebindController extends AuthBaseController
                 $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
             }
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5换绑接口异常-WechatH5BindController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5换绑接口异常-WechatH5BindController： '
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR,'H5换绑接口异常');
         }

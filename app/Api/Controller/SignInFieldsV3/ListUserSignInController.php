@@ -51,7 +51,9 @@ class ListUserSignInController extends DzqController
 
             $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '扩展字段查询接口异常-ListUserSignInController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '扩展字段查询接口异常-ListUserSignInController：入参：'
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '扩展字段查询接口异常');
         }
     }

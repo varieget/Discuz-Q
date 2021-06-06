@@ -90,7 +90,10 @@ class WechatMiniProgramLoginController extends AuthBaseController
             $this->miniUser     = $user;
             $inviteCode         = $this->inPut('inviteCode');
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序参数获取接口异常-WechatMiniProgramLoginController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序参数获取接口异常-WechatMiniProgramLoginController： '
+                                  .';inviteCode:'.$this->inPut('inviteCode')
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序参数获取接口异常');
         }
         //过渡开关打开

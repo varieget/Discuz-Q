@@ -144,7 +144,12 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '微信过渡阶段自动注册用户接口异常-WechatTransitionAutoRegisterController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '微信过渡阶段自动注册用户接口异常-WechatTransitionAutoRegisterController：入参：'
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';type:'.$this->inPut('type')
+                                  .';inviteCode:'.$this->inPut('inviteCode')
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR,'微信过渡阶段自动注册用户接口异常');
         }

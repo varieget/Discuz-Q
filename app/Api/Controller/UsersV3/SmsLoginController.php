@@ -66,6 +66,13 @@ class SmsLoginController extends AuthBaseController
             $ip         = ip($this->request->getServerParams());
             $port       = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
 
+            $paramData = [
+                'mobile'        => $this->inPut('mobile'),
+                'code'          => $this->inPut('code'),
+                'type'          => $this->inPut('type'),
+                'inviteCode'    => $this->inPut('inviteCode')
+            ];
+
             //register new user
             if (is_null($mobileCode->user)) {
                 if (!(bool)$this->settings->get('register_close')) {
@@ -90,7 +97,6 @@ class SmsLoginController extends AuthBaseController
                 $mobileCode->setRelation('user', $user);
 
                 $this->updateUserBindType($mobileCode->user,AuthUtils::PHONE);
-                $this->connection->commit();
             }
 
             //手机号登录需要填写扩展字段审核的场景
@@ -142,7 +148,8 @@ class SmsLoginController extends AuthBaseController
             $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号: "' . $mobileCode->mobile . '" 注册/登录接口异常-SmsLoginController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '" 注册/登录接口异常-SmsLoginController： 入参：'
+                                  . json_encode($paramData) . ';用户id：' . $this->user->id . ';异常：' . $e->getMessage());
             $this->connection->rollback();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号注册/登录接口异常',);
         }

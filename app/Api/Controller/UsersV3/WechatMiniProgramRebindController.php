@@ -72,7 +72,10 @@ class WechatMiniProgramRebindController extends AuthBaseController
             $token          = SessionToken::get($sessionToken);
             $actor          = !empty($token->user) ? $token->user : $this->user;
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序参数换绑接口异常-WechatMiniProgramRebindController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序参数换绑接口异常-WechatMiniProgramRebindController：入参：'
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序参数换绑接口异常');
         }
 
@@ -121,7 +124,10 @@ class WechatMiniProgramRebindController extends AuthBaseController
                 $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
             }
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序换绑接口异常-WechatMiniProgramRebindController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序换绑接口异常-WechatMiniProgramRebindController：入参：'
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR,'小程序换绑接口异常');
         }

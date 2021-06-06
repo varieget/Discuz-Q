@@ -111,7 +111,10 @@ class MiniProgramQrcodeController extends DzqController
 
             $this->outPut(ResponseCode::SUCCESS, '', $data);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序二维码生成接口异常-MiniProgramQrcodeController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId
+                                  . '-二维码异常-' . '小程序二维码生成接口异常-MiniProgramQrcodeController： 入参：'
+                                  . 'type:'.$this->inPut('type') . ';userId:'. $this->user->id . ';异常：' .$e->getMessage()
+            );
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序二维码生成接口异常');
         }
     }

@@ -207,7 +207,10 @@ class WechatH5LoginController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', $result);
 
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5登录接口异常-WechatH5LoginController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5登录接口异常-WechatH5LoginController： 入参：'
+                                  .'mp_openid:' . $wxuser->getId() .'inviteCode:'.$this->inPut('inviteCode')
+                                  .'sessionToken:'.$this->inPut('sessionToken')
+                                  .'userId:'.$this->user->id . ';异常：' . $e->getMessage());
             $this->db->rollBack();
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录接口异常');
         }
@@ -326,7 +329,10 @@ class WechatH5LoginController extends AuthBaseController
             $this->db->commit();
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5过渡阶段登录异常-WechatH5LoginController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5过渡阶段登录异常-WechatH5LoginController： '
+                                  .'mp_openid:' . $wxuser->getId() .'inviteCode:'.$this->inPut('inviteCode')
+                                  .'sessionToken:'.$this->inPut('sessionToken')
+                                  .'userId:'.$this->user->id . ';异常：' . $e->getMessage());
             $this->db->rollBack();
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5过渡阶段登录异常');
         }

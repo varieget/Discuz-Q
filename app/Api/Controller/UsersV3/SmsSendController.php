@@ -74,6 +74,13 @@ class SmsSendController extends AuthBaseController
             $captchaRandStr     = $this->inPut('captchaRandStr');
             $ip                 = ip($this->request->getServerParams());
 
+            $paramData = [
+                'mobile'         => $this->inPut('mobile'),
+                'type'           => $this->inPut('type'),
+                'captchaTicket'  => $this->inPut('captchaTicket'),
+                'captchaRandStr' => $this->inPut('captchaRandStr')
+            ];
+
             $data = array();
             $data['mobile']     = $mobile;
             $data['type']       = $type;
@@ -159,7 +166,8 @@ class SmsSendController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', ['interval' => self::CODE_INTERVAL]);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号发送接口异常-SmsSendController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号发送接口异常-SmsSendController： 入参：'
+                                  . json_encode($paramData) . ';用户id:'.$this->user->id.';异常:'. $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号发送接口异常');
         }
     }

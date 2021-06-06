@@ -48,8 +48,8 @@ class WechatH5OauthController implements RequestHandlerInterface
             $this->socialite->setRequest($request);
             return $this->socialite->driver($this->type)->redirect();
         } catch (\Exception $e) {
-            app('errorLog')->info('H5授权接口异常-WechatH5OauthController： ' . $e->getMessage());
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5授权接口异常');
+            app('errorLog')->info('H5授权接口异常-WechatH5OauthController： 入参：' . json_encode($request) . '异常:' . $e->getMessage());
+            \Discuz\Common\Utils::outPut(ResponseCode::INTERNAL_ERROR, 'H5授权接口异常');
         }
     }
 }
