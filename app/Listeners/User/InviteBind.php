@@ -85,44 +85,6 @@ class InviteBind
                     $event->user->expired_at = Carbon::now()->addDays($this->settings->get('site_expire'));
                     $event->user->save();
                 }
-
-                $fromUserId = $invite->user_id; // 邀请人userID
-                $toUserId = $event->user->id; // 受邀人
-
-                // 保持数据一致性
-                $this->db->beginTransaction();
-                try {
-                    // 触发互相关注
-                    UserFollow::query()->create([
-                                                    'from_user_id' => $fromUserId,
-                                                    'to_user_id' => $toUserId,
-                                                    'is_mutual' => 1,
-                                                ]);
-                    UserFollow::query()->create([
-                                                    'from_user_id' => $toUserId,
-                                                    'to_user_id' => $fromUserId,
-                                                    'is_mutual' => 1,
-                                                ]);
-
-                    /**
-                     * 刷新关注数和粉丝数
-                     */
-                    /** @var User $fromUser */
-                    $fromUser = User::query()->find($fromUserId);
-                    $fromUser->refreshUserFollow();
-                    $fromUser->refreshUserFans();
-                    $fromUser->save();
-                    /** @var User $toUser */
-                    $toUser = User::query()->find($toUserId);
-                    $toUser->refreshUserFollow();
-                    $toUser->refreshUserFans();
-                    $toUser->save();
-
-                    $this->db->commit();
-                } catch (Exception $e) {
-                    app('errorLog')->info('邀请码: "' . $invite . '" 邀请绑定触发相互关注出错： ' . $e->getMessage());
-                    $this->db->rollback();
-                }
             }
         } else {
             $fromUserId = $code; // 邀请人userID
