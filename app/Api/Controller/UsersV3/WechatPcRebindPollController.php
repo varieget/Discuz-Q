@@ -31,13 +31,18 @@ class WechatPcRebindPollController extends AuthBaseController
 
     public function main()
     {
-        $token = $this->getScanCodeToken();
+        try {
+            $token = $this->getScanCodeToken();
 
-        if (isset($token->payload['rebind']) && $token->payload['rebind']) {
-            // 绑定成功
-            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($token->payload));
+            if (isset($token->payload['rebind']) && $token->payload['rebind']) {
+                // 绑定成功
+                $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($token->payload));
+            }
+
+            $this->outPut(ResponseCode::PC_REBIND_ERROR);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'PC端H5换绑接口异常-WechatPcRebindPollController： ' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'PC端H5换绑接口异常');
         }
-
-        $this->outPut(ResponseCode::PC_REBIND_ERROR);
     }
 }

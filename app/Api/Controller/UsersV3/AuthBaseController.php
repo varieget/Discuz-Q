@@ -282,4 +282,28 @@ abstract class AuthBaseController extends DzqController
         return json_decode($response->getBody(),true);
     }
 
+    //用户名、密码同时存在时获取token
+    public function genJwtToken($data){
+        if (empty($data['username']) || empty($data['password'])) {
+            return $this->outPut(ResponseCode::WECHAT_INVALID_ARGUMENT_EXCEPTION);
+        }
+        $bus = app(Dispatcher::class);
+        try {
+            $response = $bus->dispatch(
+                new GenJwtToken($data)
+            );
+            return $response;
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 登录出错： ' . $e->getMessage());
+            if (empty($e->getMessage())) {
+                return $this->outPut(ResponseCode::USERNAME_OR_PASSWORD_ERROR);
+            }
+            if ((int)$e->getMessage() > 0) {
+                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录失败，您还可以尝试'.(int)$e->getMessage().'次');
+            } else {
+                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录次数超出限制');
+            }
+        }
+    }
+
 }
