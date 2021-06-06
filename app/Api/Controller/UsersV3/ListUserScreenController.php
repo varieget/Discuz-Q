@@ -70,7 +70,7 @@ class ListUserScreenController extends DzqController
         }
 
         // 状态
-        if (Arr::has($filter, 'status')) {
+        if (Arr::has($filter, 'status') && ($filter['status'] === 0 || !empty($filter['status']))) {
             $status = $filter['status'];
             $query->where('users.status', $status);
         }
@@ -114,7 +114,6 @@ class ListUserScreenController extends DzqController
 
         $users = $this->pagination($currentPage, $perPage, $query);
         $userDatas = $users['pageData'];
-
         $groupIds = array_column($userDatas, 'group_id');
 
         $userGroupDatas = Group::query()->whereIn('id', $groupIds)->where('is_display', 1)->get()->toArray();
