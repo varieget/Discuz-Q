@@ -57,9 +57,6 @@ class BanLogin
                 Utils::outPut(ResponseCode::VALIDATE_IGNORE);
                 throw new PermissionDeniedException('validate_ignore');
                 break;
-            case 10:
-                Utils::outPut(ResponseCode::USER_NEED_SIGNIN_FIELDS);
-                break;
         }
     }
 }
