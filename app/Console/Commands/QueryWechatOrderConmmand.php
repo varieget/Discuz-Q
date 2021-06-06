@@ -72,7 +72,7 @@ class QueryWechatOrderConmmand extends AbstractCommand
     {
         //查询已经过期的订单
         $query_orders = Order::where('status', Order::ORDER_STATUS_PENDING)
-            ->where('created_at', '<', Carbon::now()->subMinute(Order::ORDER_EXPIRE_TIME + 1))
+            ->where('created_at', '<', Carbon::now()->subMinute())
             ->limit(500)
             ->get();
         if ($query_orders->count()) {
