@@ -42,22 +42,27 @@ class MiniProgramSchemeGenController extends AuthBaseController
 
     public function main()
     {
-        $scheme = $this->manage->getMiniProgramScheme();
-        if(!empty($scheme)) {
-            $this->outPut(ResponseCode::SUCCESS, '', ['openLink' => $scheme]);
-        }
-        $app = $this->miniProgram();
-        $globalAccessToken = $app->access_token->getToken(true);
-        if(! isset($globalAccessToken['access_token'])) {
-            //todo 记录错误日志
-            return $this->outPut(ResponseCode::MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR);
-        }
-        $miniProgramScheme = $this->manage->getMiniProgramSchemeRefresh($globalAccessToken['access_token']);
-        if($miniProgramScheme == 'gen_scheme_error') {
-            return $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR);
-        }
+        try {
+            $scheme = $this->manage->getMiniProgramScheme();
+            if(!empty($scheme)) {
+                $this->outPut(ResponseCode::SUCCESS, '', ['openLink' => $scheme]);
+            }
+            $app = $this->miniProgram();
+            $globalAccessToken = $app->access_token->getToken(true);
+            if(! isset($globalAccessToken['access_token'])) {
+                //todo 记录错误日志
+                return $this->outPut(ResponseCode::MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR);
+            }
+            $miniProgramScheme = $this->manage->getMiniProgramSchemeRefresh($globalAccessToken['access_token']);
+            if($miniProgramScheme == 'gen_scheme_error') {
+                return $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR);
+            }
 
-        $data['openLink'] = $miniProgramScheme;
-        $this->outPut(ResponseCode::SUCCESS, '', $data);
+            $data['openLink'] = $miniProgramScheme;
+            $this->outPut(ResponseCode::SUCCESS, '', $data);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序SchemeGen接口异常-MiniProgramSchemeGenController： ' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序SchemeGen接口异常');
+        }
     }
 }

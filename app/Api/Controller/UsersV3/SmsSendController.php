@@ -66,96 +66,101 @@ class SmsSendController extends AuthBaseController
 
     public function main()
     {
-        $actor              = $this->user;
-        $mobile             = $this->inPut('mobile');
-        $type               = $this->inPut('type');
-        $captchaTicket      = $this->inPut('captchaTicket');
-        $captchaRandStr     = $this->inPut('captchaRandStr');
-        $ip                 = ip($this->request->getServerParams());
+        try {
+            $actor              = $this->user;
+            $mobile             = $this->inPut('mobile');
+            $type               = $this->inPut('type');
+            $captchaTicket      = $this->inPut('captchaTicket');
+            $captchaRandStr     = $this->inPut('captchaRandStr');
+            $ip                 = ip($this->request->getServerParams());
 
-        $data = array();
-        $data['mobile']     = $mobile;
-        $data['type']       = $type;
-        $data['captcha']    = [
-            $captchaTicket,
-            $captchaRandStr,
-            $ip
-        ];
-
-        $this->dzqValidate($data, [
-            'captcha'   => [new Captcha],//暂时注释方便联调走主流程
-            'type'      => 'required|in:' . implode(',', $this->type)
-        ]);
-
-        // 直接使用用户手机号
-        if ($type === 'verify' || $type === 'reset_pay_pwd') {
-            $data['mobile'] = $actor->getRawOriginal('mobile');
-            if (empty($data['mobile'])) {
-                $this->outPut(ResponseCode::USER_MOBILE_NOT_ALLOW_NULL);
-            }
-        }
-
-        // 手机号验证规则
-        if (!(bool)$this->settings->get('qcloud_sms', 'qcloud')) {
-            // 未开启短信服务不发送短信
-            $mobileRule = [
-                function ($attribute, $value, $fail) {
-                    $this->outPut(ResponseCode::SMS_SERVICE_ENABLED);
-                },
+            $data = array();
+            $data['mobile']     = $mobile;
+            $data['type']       = $type;
+            $data['captcha']    = [
+                $captchaTicket,
+                $captchaRandStr,
+                $ip
             ];
-        } elseif ($type == 'bind') {
-            // 用户手机号为空才可发送绑定验证码
-            if (!empty($actor->mobile)) {
-                $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+
+            $this->dzqValidate($data, [
+                'captcha'   => [new Captcha],//暂时注释方便联调走主流程
+                'type'      => 'required|in:' . implode(',', $this->type)
+            ]);
+
+            // 直接使用用户手机号
+            if ($type === 'verify' || $type === 'reset_pay_pwd') {
+                $data['mobile'] = $actor->getRawOriginal('mobile');
+                if (empty($data['mobile'])) {
+                    $this->outPut(ResponseCode::USER_MOBILE_NOT_ALLOW_NULL);
+                }
             }
 
-            $mobileRule = 'required';
-        } elseif ($type == 'rebind') {
-            // 如果是重新绑定，需要在验证旧手机后 10 分钟内
-            $unverified = MobileCode::where('mobile', $actor->getRawOriginal('mobile'))
-                ->where('type', 'verify')
-                ->where('state', 1)
-                ->where('updated_at', '<', Carbon::now()->addMinutes(10))
-                ->doesntExist();
-            $mobileRule = [
-                function ($attribute, $value, $fail) use ($actor, $unverified) {
-                    if ($unverified) {
-                        $this->outPut(ResponseCode::VERIFY_OLD_PHONE_NUMBER);
-                    } elseif ($value == $actor->getRawOriginal('mobile')) {
-                        $this->outPut(ResponseCode::ENTER_NEW_PHONE_NUMBER);
-                    }
-                },
-                'required'
-            ];
-        } elseif (in_array($type, ['reset_pwd', 'reset_pay_pwd'])) {
-            // 如果已经绑定，不能再发送绑定短息
-            // 如果重设密码，必须要已绑定的手机号
-            $mobileRule = 'required|exists:users,mobile';
-        } else {
-            $mobileRule = 'required';
+            // 手机号验证规则
+            if (!(bool)$this->settings->get('qcloud_sms', 'qcloud')) {
+                // 未开启短信服务不发送短信
+                $mobileRule = [
+                    function ($attribute, $value, $fail) {
+                        $this->outPut(ResponseCode::SMS_SERVICE_ENABLED);
+                    },
+                ];
+            } elseif ($type == 'bind') {
+                // 用户手机号为空才可发送绑定验证码
+                if (!empty($actor->mobile)) {
+                    $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+                }
+
+                $mobileRule = 'required';
+            } elseif ($type == 'rebind') {
+                // 如果是重新绑定，需要在验证旧手机后 10 分钟内
+                $unverified = MobileCode::where('mobile', $actor->getRawOriginal('mobile'))
+                    ->where('type', 'verify')
+                    ->where('state', 1)
+                    ->where('updated_at', '<', Carbon::now()->addMinutes(10))
+                    ->doesntExist();
+                $mobileRule = [
+                    function ($attribute, $value, $fail) use ($actor, $unverified) {
+                        if ($unverified) {
+                            $this->outPut(ResponseCode::VERIFY_OLD_PHONE_NUMBER);
+                        } elseif ($value == $actor->getRawOriginal('mobile')) {
+                            $this->outPut(ResponseCode::ENTER_NEW_PHONE_NUMBER);
+                        }
+                    },
+                    'required'
+                ];
+            } elseif (in_array($type, ['reset_pwd', 'reset_pay_pwd'])) {
+                // 如果已经绑定，不能再发送绑定短息
+                // 如果重设密码，必须要已绑定的手机号
+                $mobileRule = 'required|exists:users,mobile';
+            } else {
+                $mobileRule = 'required';
+            }
+
+            $this->dzqValidate($data, [
+                'mobile'    => $mobileRule
+            ]);
+
+            $mobileCode = $this->mobileCodeRepository->getSmsCode($data['mobile'], $type);
+
+            if (!is_null($mobileCode) && $mobileCode->exists) {
+                $mobileCode = $mobileCode->refrecode(self::CODE_EXCEPTION, $ip);
+            } else {
+                $mobileCode = MobileCode::make($data['mobile'], self::CODE_EXCEPTION, $type, $ip);
+            }
+
+            $result = $this->smsSend($data['mobile'], new SendCodeMessage([
+                'code'      => $mobileCode->code,
+                'expire'    => self::CODE_EXCEPTION]
+            ));
+
+            if (isset($result['qcloud']['status']) && $result['qcloud']['status'] === 'success') {
+                $mobileCode->save();
+            }
+
+            $this->outPut(ResponseCode::SUCCESS, '', ['interval' => self::CODE_INTERVAL]);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号发送接口异常-SmsSendController： ' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号发送接口异常');
         }
-
-        $this->dzqValidate($data, [
-            'mobile'    => $mobileRule
-        ]);
-
-        $mobileCode = $this->mobileCodeRepository->getSmsCode($data['mobile'], $type);
-
-        if (!is_null($mobileCode) && $mobileCode->exists) {
-            $mobileCode = $mobileCode->refrecode(self::CODE_EXCEPTION, $ip);
-        } else {
-            $mobileCode = MobileCode::make($data['mobile'], self::CODE_EXCEPTION, $type, $ip);
-        }
-
-        $result = $this->smsSend($data['mobile'], new SendCodeMessage([
-            'code'      => $mobileCode->code,
-            'expire'    => self::CODE_EXCEPTION]
-        ));
-
-        if (isset($result['qcloud']['status']) && $result['qcloud']['status'] === 'success') {
-            $mobileCode->save();
-        }
-
-        $this->outPut(ResponseCode::SUCCESS, '', ['interval' => self::CODE_INTERVAL]);
     }
 }

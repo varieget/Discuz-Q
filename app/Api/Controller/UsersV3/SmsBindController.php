@@ -102,8 +102,9 @@ class SmsBindController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', []);
 
         } catch (Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号绑定接口异常-SmsBindController： ' . $e->getMessage());
             $this->connection->rollback();
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '', $e->getMessage());
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号绑定接口异常');
         }
     }
 }

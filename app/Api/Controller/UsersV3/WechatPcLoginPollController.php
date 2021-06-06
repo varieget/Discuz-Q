@@ -31,21 +31,25 @@ class WechatPcLoginPollController extends AuthBaseController
 
     public function main()
     {
-        $token = $this->getScanCodeToken();
+        try {
+            $token = $this->getScanCodeToken();
 
-        if (isset($token->payload['code']) ) {
-            if (empty($token->payload['code'])) {
-                // 扫码中
-                $this->outPut(ResponseCode::PC_QRCODE_ERROR);
+            if (isset($token->payload['code']) ) {
+                if (empty($token->payload['code'])) {
+                    // 扫码中
+                    $this->outPut(ResponseCode::PC_QRCODE_ERROR);
+                }
             }
+
+            $data = $token->payload;
+            $data['user_id'] = $token->user_id; // 用于序列化返回 user_id
+
+            $result = $this->camelData($data);
+            $result = $this->addUserInfo($token->user, $result);
+            $this->outPut(ResponseCode::SUCCESS, '', $result);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'pc、H5轮询登录接口异常-WechatPcLoginPollController： ' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc、H5轮询登录接口异常');
         }
-
-        $data = $token->payload;
-        $data['user_id'] = $token->user_id; // 用于序列化返回 user_id
-
-        $result = $this->camelData($data);
-        $result = $this->addUserInfo($token->user, $result);
-        $this->outPut(ResponseCode::SUCCESS, '', $result);
-
     }
 }

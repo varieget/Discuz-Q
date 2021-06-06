@@ -51,15 +51,15 @@ class SmsRebindController extends AuthBaseController
 
     public function main()
     {
-        $sms = (bool)$this->settings->get('qcloud_sms', 'qcloud');
-        if (!$sms) {
-            $this->outPut(ResponseCode::NONSUPPORT_MOBILE_REBIND);
-        }
-
-        $mobileCode = $this->getMobileCode('rebind');
-
         $this->connection->beginTransaction();
         try {
+            $sms = (bool)$this->settings->get('qcloud_sms', 'qcloud');
+            if (!$sms) {
+                $this->outPut(ResponseCode::NONSUPPORT_MOBILE_REBIND);
+            }
+
+            $mobileCode = $this->getMobileCode('rebind');
+
             $actor = User::query()->where('mobile', $mobileCode->mobile)->lockForUpdate()->first();
             if (empty($this->user->mobile)) {
                 $this->connection->rollback();
@@ -91,8 +91,9 @@ class SmsRebindController extends AuthBaseController
             $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', []);
         } catch (Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号换绑接口异常-SmsRebindController： ' . $e->getMessage());
             $this->connection->rollback();
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '', $e->getMessage());
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号换绑接口异常');
         }
     }
 }

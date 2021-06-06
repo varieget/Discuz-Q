@@ -90,6 +90,7 @@ class SmsLoginController extends AuthBaseController
                 $mobileCode->setRelation('user', $user);
 
                 $this->updateUserBindType($mobileCode->user,AuthUtils::PHONE);
+                $this->connection->commit();
             }
 
             //手机号登录需要填写扩展字段审核的场景
@@ -141,9 +142,9 @@ class SmsLoginController extends AuthBaseController
             $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号: "' . $mobileCode->mobile . '" 注册/登录出错： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号: "' . $mobileCode->mobile . '" 注册/登录接口异常-SmsLoginController： ' . $e->getMessage());
             $this->connection->rollback();
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号注册/登录出错',);
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号注册/登录接口异常',);
         }
     }
 }
