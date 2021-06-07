@@ -44,18 +44,26 @@ class NicknameSettingController extends AuthBaseController
 
     public function main()
     {
-        $nickname = $this->inPut('nickname');
-        $this->dzqValidate([
-            'nickname'      => $nickname,
-        ], [
-            'nickname'      => 'required',
-        ]);
-        $this->censor->checkText($nickname);
-        $user = $this->user;
-        $user->changeNickname($nickname);
-        $user->save();
+        try {
+            $nickname = $this->inPut('nickname');
+            $this->dzqValidate([
+                'nickname'      => $nickname,
+            ], [
+                'nickname'      => 'required',
+            ]);
+            $this->censor->checkText($nickname);
+            $user = $this->user;
+            $user->changeNickname($nickname);
+            $user->save();
 
-        return $this->outPut(ResponseCode::SUCCESS);
+            return $this->outPut(ResponseCode::SUCCESS);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '昵称设置接口异常-SmsVerifyController： 入参：'
+                                  .';nickname:'.$this->inPut('nickname')
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '昵称设置接口异常');
+        }
     }
 
 }

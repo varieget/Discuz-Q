@@ -46,25 +46,31 @@ class CheckController extends DzqController
 
     public function main()
     {
-        $username = $this->inPut('username');
-        //去除字符串中空格
-        $username = str_replace(' ', '', $username);
-        //敏感词检查
-        $this->censor->checkText($username, 'username');
-        if(strlen($username) == 0) {
-            return $this->outPut(ResponseCode::NAME_LENGTH_ERROR, '用户名不能为空');
-        }
-        //长度检查
-        if(mb_strlen($username,'UTF8') > 15){
-            return $this->outPut(ResponseCode::NAME_LENGTH_ERROR);
-        }
-        //重名检查
-        $userNameCount = User::query()->where('username', $username)->count('id');
-        if($userNameCount > 0){
-            return $this->outPut(ResponseCode::USERNAME_HAD_EXIST);
-        }
+        try {
+            $username = $this->inPut('username');
+            //去除字符串中空格
+            $username = str_replace(' ', '', $username);
+            //敏感词检查
+            $this->censor->checkText($username, 'username');
+            if(strlen($username) == 0) {
+                return $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+            }
+            //长度检查
+            if(mb_strlen($username,'UTF8') > 15){
+                return $this->outPut(ResponseCode::NAME_LENGTH_ERROR);
+            }
+            //重名检查
+            $userNameCount = User::query()->where('username', $username)->count('id');
+            if($userNameCount > 0){
+                return $this->outPut(ResponseCode::USERNAME_HAD_EXIST);
+            }
 
-        return $this->outPut(ResponseCode::SUCCESS);
+            return $this->outPut(ResponseCode::SUCCESS);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户昵称检测接口异常-CheckController： 入参：username:'
+                                  . $this->inPut('username') . ';异常:' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户昵称检测接口异常');
+        }
     }
 
 }

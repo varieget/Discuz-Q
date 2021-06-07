@@ -155,6 +155,14 @@ class Thread extends DzqModel
     const PAY_FREE = 0;
     const PAY_THREAD = 1;
     const PAY_ATTACH = 2;
+
+    /**
+     * 订单标题展示长度
+     */
+    const ORDER_TITLE_LENGTH = 20;
+    const ORDER_TITLE_END_WITH = '...';
+
+
     /**
      * {@inheritdoc}
      */
@@ -272,7 +280,7 @@ class Thread extends DzqModel
     {
         $special = app(SpecialCharServer::class);
 
-        if ($this->type == 1) {
+        if ($this->type == Thread::TYPE_OF_ALL && $this->title) {
             $firstPost = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
             $firstPost = $special->purify($firstPost);
         } else {
@@ -284,6 +292,9 @@ class Thread extends DzqModel
             } else {
                 $firstPost = $this->firstPost->formatContent();
             }
+        }
+        if(is_object($firstPost)){
+            $firstPost = (string)$firstPost;
         }
 
         return $firstPost;

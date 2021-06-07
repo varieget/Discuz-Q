@@ -37,30 +37,36 @@ class SmsResetPwdController extends AuthBaseController
 
     public function main()
     {
-        $mobileCode         = $this->getMobileCode('reset_pwd');
-        $data['password']   = $this->inPut('password');
-        $password           = $data['password'];
+        try {
+            $mobileCode         = $this->getMobileCode('reset_pwd');
+            $data['password']   = $this->inPut('password');
+            $password           = $data['password'];
 
-        $this->dzqValidate($data, [
-            'password'  => 'required'
-        ]);
-
-        if ($mobileCode->user && isset($password)) {
-            $this->validator->valid([
-                'password' => $password
+            $this->dzqValidate($data, [
+                'password'  => 'required'
             ]);
 
-            // 验证新密码与原密码不能相同
-            if ($mobileCode->user->checkPassword($password)) {
-                $this->outPut(ResponseCode::USER_UPDATE_ERROR);
+            if ($mobileCode->user && isset($password)) {
+                $this->validator->valid([
+                    'password' => $password
+                ]);
+
+                // 验证新密码与原密码不能相同
+                if ($mobileCode->user->checkPassword($password)) {
+                    $this->outPut(ResponseCode::USER_UPDATE_ERROR);
+                }
+
+                $mobileCode->user->changePassword($password);
+                $mobileCode->user->save();
+
+                $this->outPut(ResponseCode::SUCCESS, '', []);
             }
 
-            $mobileCode->user->changePassword($password);
-            $mobileCode->user->save();
-
-            $this->outPut(ResponseCode::SUCCESS, '', []);
+            $this->outPut(ResponseCode::NET_ERROR);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号重置密码接口异常-SmsResetPwdController： 入参：'
+                                  .'mobile:'.$this->inPut('mobile').';code:'.$this->inPut('code') . ';用户id：'. $this->user->id . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号重置密码接口异常');
         }
-
-        $this->outPut(ResponseCode::NET_ERROR);
     }
 }

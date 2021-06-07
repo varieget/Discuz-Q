@@ -233,6 +233,7 @@ class ListUserFollowController extends DzqController
             'pid' => $user['id'],
             'userName' => $user['username'],
             'avatar' => $user['avatar'],
+            'nickname' => $user['nickname'],
         ];
     }
 

@@ -113,6 +113,13 @@ class ResponseCode
     const NONSUPPORT_MOBILE_REBIND= -7065;
     const ORIGINAL_USER_MOBILE_VERIFY_ERROR= -7066;
     const PASSWORD_ILLEGALITY= -7067;
+    const YOU_BLOCKED_HIM= -7068;
+    const PASSWORD_NOT_ALLOW_HAS_SPACE= -7069;
+    const USER_NEED_SIGNIN_FIELDS= -7070;
+    const USER_IN_REVIEW= -7071;
+    const PAY_JOIN_SITE= -7072;
+    const USERNAME_NOT_ALLOW_HAS_SPACE= -7073;
+    const TRY_LOGIN_AGAIN= -7074;
 
 
     const NEED_BIND_WECHAT = 8000;
@@ -211,5 +218,12 @@ class ResponseCode
         self::NOT_REBIND_SELF_MOBILE => '不能换绑自己的手机号',
         self::ORIGINAL_USER_MOBILE_VERIFY_ERROR => '原有手机号验证码处理失败',
         self::PASSWORD_ILLEGALITY => '密码输入非法',
+        self::YOU_BLOCKED_HIM => '你已拉黑对方',
+        self::USERNAME_NOT_ALLOW_HAS_SPACE => '用户名不允许包含空格',
+        self::PASSWORD_NOT_ALLOW_HAS_SPACE => '密码不允许包含空格',
+        self::USER_NEED_SIGNIN_FIELDS => '用户需填写扩展字段',
+        self::USER_IN_REVIEW => '用户审核中',
+        self::PAY_JOIN_SITE => '请付费加入站点',
+        self::TRY_LOGIN_AGAIN => '当前注册人数过多，请稍后登录',
     ];
 }

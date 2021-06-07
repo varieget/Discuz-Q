@@ -40,6 +40,15 @@ class CreateInviteLinkController extends DzqController
 
     public function main()
     {
+        if (!$this->user->isAdmin()) {
+            $result = array(
+            'userId' => $this->user->id,
+            'code'   => $this->user->id
+            );
+
+            return $this->outPut(ResponseCode::SUCCESS, '', $result);
+        }
+
         $group = Group::query()->where('default', 1)->first();
         $groupId = $group->id;
 

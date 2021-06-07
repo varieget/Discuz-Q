@@ -169,6 +169,7 @@ class UserWalletCashReviewController extends DzqController
                             return $status_result[$id] = 'pem_notexist';
                         }
                         $cash_record->cash_type = UserWalletCash::TRANSFER_TYPE_MCH;
+                        $cash_record->cash_status = UserWalletCash::STATUS_IN_PAYMENT;
                         $res = $cash_record->save();
                         if($res === false){
                             $db->rollBack();

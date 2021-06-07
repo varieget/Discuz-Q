@@ -49,6 +49,9 @@ class InviteUsersListController extends DzqController
         $query->where('invites.user_id', $this->user->id);
         $query->where('invites.status', Invite::STATUS_USED);
 
+        // 总邀请人数
+        $totalInviteUsers = $query->count();
+
         $inviteUsersList = $this->pagination($currentPage, $perPage, $query);
         $inviteData = $inviteUsersList['pageData'] ?? [];
         $userIds = array_column($inviteData, 'to_user_id');
@@ -71,13 +74,18 @@ class InviteUsersListController extends DzqController
         $groups = GroupUser::instance()->getGroupInfo([$this->user->id]);
         $groups = array_column($groups, null, 'user_id');
 
+        // 总邀请赏金
+        $totalInviteBounties = Order::query()
+            ->where(['type' => Order::ORDER_TYPE_REGISTER, 'status' => Order::ORDER_STATUS_PAID, 'third_party_id' => $this->user->id])
+            ->sum('third_party_amount');
+
         $result = array(
             'userId' => $this->user->id,
             'nickname' => $this->user->nickname,
             'avatar' => $this->user->avatar,
             'groupName' => $groups[$this->user->id]['groups']['name'],
-            'totalInviteUsers' => count($inviteData),
-            'totalInviteBounties' => array_sum(array_column($inviteData, 'bounty')),
+            'totalInviteUsers' => $totalInviteUsers,
+            'totalInviteBounties' => $totalInviteBounties,
             'inviteUsersList' => $inviteData
         );
         $inviteUsersList['pageData'] = $result;

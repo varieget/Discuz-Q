@@ -131,7 +131,7 @@ class Order extends DzqModel
     /**
      * 订单过期时间，单位分钟，订单过期后无法支付
      */
-    const ORDER_EXPIRE_TIME = 10;
+    const ORDER_EXPIRE_TIME = 15;
 
     /**
      * {@inheritdoc}
