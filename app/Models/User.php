@@ -1018,24 +1018,6 @@ class User extends DzqModel
         return $user->username;
     }
 
-    public function isInviteUser($userId)
-    {
-        $result = Invite::query()
-            ->where(['to_user_id' => $userId, 'status' => Invite::STATUS_USED])
-            ->first();
-        if ($result) {
-            return $result;
-        }
-        return false;
-    }
-
-    public function getInviteScale($groupId)
-    {
-        $groupData = Group::query()->where('id', $groupId)->first();
-        // $be_scale
-        return $groupData['scale'] ?? 0;
-    }
-
     protected function clearCache()
     {
         \Discuz\Base\DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $this->id);
