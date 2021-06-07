@@ -27,7 +27,4 @@ $route->post('/threads/notify/video', 'threads.notify.video', ApiController\Thre
 //微信支付回调
 $route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\Trade\Notify\WechatNotifyController::class);
 
-
-
-
-
+$route->get('/oauth/wechat/web/user/event', 'wechat.web.user.event', ApiController\Users\WechatWebUserLoginEventController::class);
