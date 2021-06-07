@@ -74,7 +74,7 @@ class ChangeLastActived
             $user->save();
 
             //清除用户登录失败次数
-            UserLoginFailLog::reSetFailCountByUsername($user->username);
+            UserLoginFailLog::reSetFailCountByUserId($user->id);
         } catch (\Exception $e){
             app('errorLog')->info('改变用户登录状态出错：' . $e->getMessage());
             Utils::outPut(ResponseCode::INTERNAL_ERROR, '改变用户登录状态失败');

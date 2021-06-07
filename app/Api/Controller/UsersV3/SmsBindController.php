@@ -57,6 +57,12 @@ class SmsBindController extends AuthBaseController
         }
         $this->connection->beginTransaction();
         try {
+            $paramData = [
+                'mobile'        => $this->inPut('mobile'),
+                'code'          => $this->inPut('code'),
+                'sessionToken'  => $this->inPut('sessionToken')
+            ];
+
             $mobileCode     = $this->getMobileCode('bind');
             $sessionToken   = $this->inPut('sessionToken');
             $token          = SessionToken::get($sessionToken);
@@ -102,7 +108,8 @@ class SmsBindController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', []);
 
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号绑定接口异常-SmsBindController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号绑定接口异常-SmsBindController： 入参：'
+                                  . json_encode($paramData) . ';userId:' . $this->user->id . '；异常：' . $e->getMessage());
             $this->connection->rollback();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号绑定接口异常');
         }

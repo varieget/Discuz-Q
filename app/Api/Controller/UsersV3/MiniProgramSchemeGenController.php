@@ -61,7 +61,8 @@ class MiniProgramSchemeGenController extends AuthBaseController
             $data['openLink'] = $miniProgramScheme;
             $this->outPut(ResponseCode::SUCCESS, '', $data);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序SchemeGen接口异常-MiniProgramSchemeGenController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . '小程序SchemeGen接口异常-MiniProgramSchemeGenController： '
+                                  . ';userId:'. $this->user->id . ';异常：' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序SchemeGen接口异常');
         }
     }

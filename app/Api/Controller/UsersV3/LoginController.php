@@ -62,19 +62,21 @@ class LoginController extends AuthBaseController
 
     public function main()
     {
-        $data = [
-            'username' => $this->inPut('username'),
-            'password' => $this->inPut('password'),
+        $paramData = [
+            'username'      => $this->inPut('username'),
+            'password'      => $this->inPut('password'),
+            'type'          => $this->inPut('type'),
+            'sessionToken'  => $this->inPut('sessionToken'),
         ];
 
         try {
-            $this->validator->make($data, [
+            $this->validator->make($paramData, [
                 'username' => 'required',
                 'password' => 'required',
             ])->validate();
 
             $type = $this->inPut('type');
-            $response = $this->genJwtToken($data);
+            $response = $this->genJwtToken($paramData);
             if($response->getStatusCode() != 200) {
                 $this->outPut(ResponseCode::LOGIN_FAILED, '登录失败');
             }
@@ -122,7 +124,8 @@ class LoginController extends AuthBaseController
             }
             $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 登录接口异常-LoginController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-登录异常-'. '" 登录接口异常-LoginController： 入参：'
+                                  . json_encode($paramData) . '用户id: "' . $this->user->id. ';异常：' . $e->getMessage());
             $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名登录接口异常');
         }
 

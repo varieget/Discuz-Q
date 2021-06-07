@@ -41,7 +41,8 @@ class MiniProgramPcBindPollController extends AuthBaseController
 
             $this->outPut(ResponseCode::PC_BIND_ERROR);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'pc端小程序绑定轮询接口异常-MiniProgramPcBindPollController： ' . $e->getMessage());
+            app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . 'pc端小程序绑定轮询接口异常-MiniProgramPcBindPollController：入参：'
+                                  . 'sessionToken:'.$this->inPut('sessionToken') . ';userId:'. $this->user->id . ';异常：' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc端小程序绑定轮询接口异常');
         }
     }
