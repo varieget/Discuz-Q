@@ -59,6 +59,7 @@ class ThreadStickController extends DzqController
         $threads = $threads
             ->where('is_sticky', 1)
             ->whereNull('deleted_at')
+            ->whereNotNull("user_id")
             ->get();
         $threadIds = $threads->pluck('id')->toArray();
         $posts = Post::query()

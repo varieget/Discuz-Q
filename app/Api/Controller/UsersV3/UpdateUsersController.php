@@ -94,9 +94,9 @@ class UpdateUsersController extends DzqController
         if (!empty($payPasswordToken)) {
             $requestData['pay_password_token'] = $payPasswordToken;
         }
-        if (!empty($signature)) {
-            $requestData['signature'] = $signature;
-        }
+
+        $requestData['signature'] = $signature;
+
         if (!empty($registerReason)) {
             $requestData['register_reason'] = $registerReason;
         }

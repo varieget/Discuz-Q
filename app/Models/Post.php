@@ -324,13 +324,13 @@ class Post extends DzqModel
         ];
 
         $this->content = $substr ? Str::of($this->content)->substr(0, $substr) : $this->content;
+        if(is_object($this->content)){
+            $this->content = (string)$this->content;
+        }
         if ($parse) {
             // 原文
             $content = $this->content;
         } else {
-            if(is_object($this->content)){
-                $this->content = (string)$this->content;
-            }
             $content = $this->formatContent();
         }
 
@@ -344,7 +344,8 @@ class Post extends DzqModel
             /**
              * 判断长文点赞通知内容为标题
              */
-            if ($this->thread->type === Thread::TYPE_OF_LONG) {
+
+            if ($this->thread->type === Thread::TYPE_OF_ALL) {
                 $firstContent = $this->thread->getContentByType(self::NOTICE_LENGTH, $parse);
             } else {
                 // 如果是首帖 firstContent === content 内容一样
@@ -352,12 +353,14 @@ class Post extends DzqModel
                     $firstContent = $content;
                 } else {
                     $firstContent = $this->thread->getContentByType(self::NOTICE_LENGTH, $parse);
-                    if(is_object($firstContent)){
-                        $firstContent = (string)$firstContent;
-                    }
                 }
             }
+            if(is_object($firstContent)){
+                $firstContent = (string)$firstContent;
+            }
         }
+
+
         $build['content'] = $content;
         $build['first_content'] = $firstContent ?? $special->purify($this->thread->getContentByType(Thread::CONTENT_LENGTH, $parse));
 

@@ -31,29 +31,35 @@ class MiniProgramPcLoginPollController extends AuthBaseController
 
     public function main()
     {
-        $token = $this->getScanCodeToken();
-        if (isset($token->payload['code'])) {
-            if (empty($token->payload['code'])) {
-                // 扫码中
-                $this->outPut(ResponseCode::PC_QRCODE_ERROR);
-            } else {
-                /*$noUserException = new NoUserException();
-                $noUserException->setToken((object) $token->payload['token']);
-                $noUserException->setUser((object) $token->payload['user']);
-                $token->payload['rebind'] && $noUserException->setCode('rebind_mp_wechat');
+        try {
+            $token = $this->getScanCodeToken();
+            if (isset($token->payload['code'])) {
+                if (empty($token->payload['code'])) {
+                    // 扫码中
+                    $this->outPut(ResponseCode::PC_QRCODE_ERROR);
+                } else {
+                    /*$noUserException = new NoUserException();
+                    $noUserException->setToken((object) $token->payload['token']);
+                    $noUserException->setUser((object) $token->payload['user']);
+                    $token->payload['rebind'] && $noUserException->setCode('rebind_mp_wechat');
 
-                throw $noUserException;*/
-                //todo 增加code 存在逻辑
+                    throw $noUserException;*/
+                    //todo 增加code 存在逻辑
+                }
             }
+
+            $data = $token->payload;
+            $data['user_id'] = $token->user_id; // 用于序列化返回 user_id
+
+            $result = $this->camelData($data);
+
+            $result = $this->addUserInfo( $token->user, $result);
+
+            $this->outPut(ResponseCode::SUCCESS, '', $result);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . 'pc端小程序登录轮询接口异常-MiniProgramPcLoginPollController：入参：'
+                                  . 'sessionToken:'.$this->inPut('sessionToken') . ';userId:'. $this->user->id . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc端小程序登录轮询接口异常');
         }
-
-        $data = $token->payload;
-        $data['user_id'] = $token->user_id; // 用于序列化返回 user_id
-
-        $result = $this->camelData($data);
-
-        $result = $this->addUserInfo( $token->user, $result);
-
-        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

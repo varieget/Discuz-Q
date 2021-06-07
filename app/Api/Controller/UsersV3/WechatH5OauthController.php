@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Traits\RequestContainerTrait;
 use Discuz\Contracts\Socialite\Factory;
@@ -40,10 +41,15 @@ class WechatH5OauthController implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $this->setSiteRequest($request);
+        try {
+            $this->setSiteRequest($request);
 
-        $request = $request->withAttribute('session', new SessionToken());
-        $this->socialite->setRequest($request);
-        return $this->socialite->driver($this->type)->redirect();
+            $request = $request->withAttribute('session', new SessionToken());
+            $this->socialite->setRequest($request);
+            return $this->socialite->driver($this->type)->redirect();
+        } catch (\Exception $e) {
+            app('errorLog')->info('H5授权接口异常-WechatH5OauthController： 入参：' . json_encode($request) . '异常:' . $e->getMessage());
+            \Discuz\Common\Utils::outPut(ResponseCode::INTERNAL_ERROR, 'H5授权接口异常');
+        }
     }
 }

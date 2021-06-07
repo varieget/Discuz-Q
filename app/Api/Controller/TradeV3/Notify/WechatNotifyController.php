@@ -46,6 +46,7 @@ class WechatNotifyController extends AbstractResourceController
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        app('payLog')->info("支付回调通知", [file_get_contents('php://input')]);
         $document = new Document();
         $data     = $this->data($request, $document);
 
@@ -55,7 +56,7 @@ class WechatNotifyController extends AbstractResourceController
     public function data(ServerRequestInterface $request, Document $document)
     {
         return $this->bus->dispatch(
-            new WechatNotify($request->getParsedBody())
+            new WechatNotify()
         );
     }
 }

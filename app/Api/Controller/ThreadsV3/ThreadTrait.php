@@ -69,6 +69,7 @@ trait ThreadTrait
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
             'isApproved' => $thread['is_approved'],
             'isStick' => $thread['is_sticky'],
+            'isDraft' => boolval($thread['is_draft']),
             'isFavorite' => $this->getFavoriteField($thread['id'], $loginUser),
             'price' => floatval($thread['price']),
             'attachmentPrice' => floatval($thread['attachment_price']),

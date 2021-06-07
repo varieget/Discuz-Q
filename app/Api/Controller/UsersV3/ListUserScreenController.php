@@ -70,7 +70,7 @@ class ListUserScreenController extends DzqController
         }
 
         // 状态
-        if (Arr::has($filter, 'status')) {
+        if (Arr::has($filter, 'status') && Arr::get($filter, 'status') !== '') {
             $status = $filter['status'];
             $query->where('users.status', $status);
         }

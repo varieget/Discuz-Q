@@ -46,25 +46,27 @@ class UpdateUserWalletController extends DzqController
         $data = [
             'userId' => $this->inPut('userId'),
             'operateType' => $this->inPut('operateType'),
-            'operateAmount' => $this->inPut('operateAmount')  ,
+            'operateAmount' => $this->inPut('operateAmount'),
             'walletStatus' => $this->inPut('walletStatus'),
             'operateReason' => $this->inPut('operateReason'),
         ];
+        if (intval($data['operateAmount']) > 10000) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '操作金额小于10000');
+        }
+        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
 
-        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：",$data);
-
-        if(empty($data['userId'])){
+        if (empty($data['userId'])) {
             $log->error("INVALID_PARAMETER requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
         $datas = $this->bus->dispatch(
-            new UpdateUserWallet($data['userId'], $actor,$data)
+            new UpdateUserWallet($data['userId'], $actor, $data)
         );
 
         $build = $this->camelData($datas);
 
-        return $this->outPut(ResponseCode::SUCCESS,'', $build);
+        return $this->outPut(ResponseCode::SUCCESS, '', $build);
 
     }
 }
