@@ -25,10 +25,12 @@ use App\Events\Users\RegisteredCheck;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
+use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Support\Arr;
 
 class RegisterController extends AuthBaseController
 {
@@ -84,14 +86,34 @@ class RegisterController extends AuthBaseController
             'captcha_rand_str'      => $this->inPut('captchaRandStr'),
         ];
 
+        $this->dzqValidate($data, [
+            'username' => 'required',
+            'password' => 'required',
+            'nickname' => 'required',
+        ]);
+
+        // 注册验证码(无感模式不走验证码，开启也不走)
+        $captcha = '';  // 默认为空将不走验证
+        if ((bool)$this->settings->get('register_captcha') &&
+            (bool)$this->settings->get('qcloud_captcha', 'qcloud') &&
+            ($this->settings->get('register_type', 'default') != 2)) {
+            $captcha = [
+                Arr::get($data, 'captcha_ticket', ''),
+                Arr::get($data, 'captcha_rand_str', ''),
+                Arr::get($data, 'register_ip', ''),
+            ];
+        }
+
+        // 密码为空的时候，不验证密码，允许创建密码为空的用户(但无法登录，只能用其它方法登录)
+        $attrs_to_validate = array_merge($data, compact('password', 'password_confirmation', 'captcha'));
+        if ($data['password'] === '') {
+            unset($attrs_to_validate['password']);
+        }
+        unset($attrs_to_validate['register_reason']);
+        $this->userValidator->valid($attrs_to_validate);
+
         $this->connection->beginTransaction();
         try {
-            $this->dzqValidate($data, [
-                'username' => 'required',
-                'password' => 'required',
-                'nickname' => 'required',
-            ]);
-
             //用户名校验
             $result = strpos($data['username'],' ');
             if ($result !== false) {
