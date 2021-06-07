@@ -81,11 +81,9 @@ class DeleteThread
 
         $thread = $threads->findOrFail($this->threadId, $this->actor);
         //如果是草稿，则不做处理
-        $isDraft = Arr::get($events->data, 'attributes.is_draft', 0);
-
-       if ($isDraft) {
-            $this->assertCan($this->actor, 'delete', $thread);
-        }
+       if(!($this->actor->id == $thread['user_id'] && $thread['is_draft'] == 1)){
+           $this->assertCan($this->actor, 'delete', $thread);
+       }
 
         $this->events->dispatch(
             new Deleting($thread, $this->actor, $this->data)
