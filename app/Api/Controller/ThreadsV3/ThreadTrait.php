@@ -70,6 +70,7 @@ trait ThreadTrait
             'isApproved' => $thread['is_approved'],
             'isStick' => $thread['is_sticky'],
             'isDraft' => boolval($thread['is_draft']),
+            'isAnonymous'=>$thread['is_anonymous'],
             'isFavorite' => $this->getFavoriteField($thread['id'], $loginUser),
             'price' => floatval($thread['price']),
             'attachmentPrice' => floatval($thread['attachment_price']),

@@ -124,9 +124,9 @@ class UpdateThreadController extends DzqController
     {
         $title = $this->inPut('title');//非必填项
         $categoryId = $this->inPut('categoryId');
-        $price = $this->inPut('price');
-        $attachmentPrice = $this->inPut('attachmentPrice');
-        $freeWords = $this->inPut('freeWords');
+        $price = floatval($this->inPut('price'));
+        $attachmentPrice = floatval($this->inPut('attachmentPrice'));
+        $freeWords = floatval($this->inPut('freeWords'));
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
@@ -139,9 +139,11 @@ class UpdateThreadController extends DzqController
             $thread->address = $position['address'] ?? '';
             $thread->location = $position['location'] ?? '';
         }
-        floatval($price) > 0 && $thread->price = floatval($price);
-        floatval($attachmentPrice) > 0 && $thread->attachment_price = floatval($attachmentPrice);
-        floatval($freeWords) > 0 && $thread->free_words = floatval($freeWords);
+
+        $thread->price = $price > 0 ? ($price) : 0;
+        $thread->attachment_price = $attachmentPrice > 0 ? $attachmentPrice : 0;
+        $thread->free_words = $freeWords > 0 ? $freeWords : 0;
+
         [$newTitle, $newContent] = $this->boolApproved($title, $content['text'], $isApproved);
         $content['text'] = $newContent;
         !empty($title) && $thread->title = $newTitle;
