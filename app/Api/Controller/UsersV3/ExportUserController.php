@@ -59,8 +59,8 @@ class ExportUserController extends DzqController
         $this->bus->dispatch(
             new UsersExport($filename, $data)
         );
-
-        $this->downloadFile($filename);
+        
+        return $this->outPut(ResponseCode::SUCCESS,'', $this->downloadFile($filename));
     }
 
 
