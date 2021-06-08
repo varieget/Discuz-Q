@@ -33,6 +33,7 @@ use App\Notifications\System;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
 class UpdateThreadController extends DzqController
 {
@@ -192,6 +193,17 @@ class UpdateThreadController extends DzqController
     {
         $threadId = $thread->id;
         $tags = [];
+
+        //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
+        $tomTypes = array_keys($content['indexes']);
+        foreach ($tomTypes as $tomType) {
+            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
+            if (constant($tomService.'::NEED_PAY') && $content['indexes'][$tomType]['body']['draft'] != 1 ) {
+                $content['indexes'][$tomType]['body']['draft'] = 1;
+//                throw new \Exception('红包/悬赏红包状态应为草稿', ResponseCode::INVALID_PARAMETER);
+            }
+        }
+
         $tomJsons = $this->tomDispatcher($content, null, $thread->id, $post->id);
         if (!empty($content['text'])) {
             $tags[] = [
