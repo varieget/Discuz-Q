@@ -20,6 +20,7 @@ namespace App\Events\Attachment;
 
 use App\Commands\Attachment\AttachmentUploader;
 use App\Models\User;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Uploaded
 {
@@ -42,9 +43,10 @@ class Uploaded
      * @param User $actor
      * @param AttachmentUploader $uploader
      */
-    public function __construct(User $actor, AttachmentUploader $uploader)
+    public function __construct(User $actor, AttachmentUploader $uploader,UploadedFile $file)
     {
         $this->actor = $actor;
         $this->uploader = $uploader;
+        $this->file = $file;
     }
 }
