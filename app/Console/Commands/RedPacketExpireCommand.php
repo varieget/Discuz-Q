@@ -96,7 +96,8 @@ class RedPacketExpireCommand extends AbstractCommand
                     app('log')->info('获取不到该红包帖订单信息，无法处理剩余红包金额！;红包帖ID为：' . $item->thread_id . '，红包附属信息ID为：' . $item->id);
                     $item->remain_money = 0;
                     $item->remain_number = 0;
-                    $item->save;
+                    $item->status = RedPacket::RED_PACKET_STATUS_UNTREATED;
+                    $item->save();
                     $this->connection->commit();
                     return;
                 }

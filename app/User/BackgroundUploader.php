@@ -76,8 +76,7 @@ class BackgroundUploader
             throw new UploadException();
         }
 
-        $backgroundPath = $this->getAvatarPath($user);
-
+        $backgroundPath = $this->getBackgroundPath($user);
         // 判断是否开启云储存
         if ($this->settings->get('qcloud_cos', 'qcloud')) {
             $user->changeBackground($backgroundPath, true);
@@ -138,5 +137,15 @@ class BackgroundUploader
         $dir2 = substr($uid, 3, 2);
         $dir3 = substr($uid, 5, 2);
         return $dir1.'/'.$dir2.'/'.$dir3.'/'.substr($uid, -2).'.png';
+    }
+
+    public function getBackgroundPath(User $user)
+    {
+        $uid = sprintf('%09d', $user->id);
+        $dir1 = substr($uid, 0, 3);
+        $dir2 = substr($uid, 3, 2);
+        $dir3 = substr($uid, 5, 2);
+        $str = Str::random(40);
+        return $dir1.'/'.$dir2.'/'.$dir3.'/'.$str.'.png';
     }
 }

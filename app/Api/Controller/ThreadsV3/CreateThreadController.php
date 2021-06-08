@@ -193,7 +193,7 @@ class CreateThreadController extends DzqController
             $this->user->save();
             Category::refreshThreadCountV3($categoryId);
         }
-
+        $thread = Thread::find($thread->id);
         return $thread;
     }
 
