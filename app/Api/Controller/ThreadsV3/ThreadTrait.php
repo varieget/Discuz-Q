@@ -290,7 +290,7 @@ trait ThreadTrait
                 $text = '';
                 if ($payType == Thread::PAY_ATTACH) {
                     $text = $post['content'];
-                } else if($payType == Thread::PAY_THREAD) {
+                } else if ($payType == Thread::PAY_THREAD) {
                     $freeWords = $thread['free_words'];
                     if (floatval($freeWords) > 0) {
                         $text = strip_tags($post['content']);
@@ -456,7 +456,7 @@ trait ThreadTrait
             if (empty($topic)) {
                 //话题名称长度超过20就不创建了
                 if (mb_strlen($topicName) > 20) {
-                    throw new \Exception('创建话题长度不能超过20个字符');
+                    \Discuz\Common\Utils::outPut(ResponseCode::INVALID_PARAMETER, '创建话题长度不能超过20个字符');
                 }
                 $topic = new Topic();
                 $topic->user_id = $userId;
