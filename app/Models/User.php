@@ -293,6 +293,7 @@ class User extends DzqModel
     public function changeBackground($path, $isRemote = false)
     {
         $this->background = ($isRemote ? 'cos://' : '') . $path;
+        $this->background_at = $path ? Carbon::now() : null;
         return $this;
     }
 
@@ -483,7 +484,7 @@ class User extends DzqModel
 
         if (strpos($value, '://') === false) {
             return app(UrlGenerator::class)->to('/storage/background/' . $value)
-                . '?' . time();
+                . '?' . Carbon::parse($this->background_at)->timestamp;
         }
 
         /** @var SettingsRepository $settings */
@@ -495,7 +496,7 @@ class User extends DzqModel
             return app(Filesystem::class)->disk('background_cos')->temporaryUrl($path, Carbon::now()->addDay());
         } else {
             return app(Filesystem::class)->disk('background_cos')->url($path)
-                . '?' . time();
+                . '?' . Carbon::parse($this->background_at)->timestamp;
         }
     }
 
