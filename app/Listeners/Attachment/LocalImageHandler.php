@@ -53,6 +53,7 @@ class LocalImageHandler
     public function handle(Uploaded $event)
     {
         $uploader = $event->uploader;
+        $file = $event->file;
 
         // 非帖子图片 或 远程图片 不处理
         if ((int) Arr::get($this->data, 'type') !== Attachment::TYPE_OF_IMAGE || $uploader->isRemote()) {
@@ -64,6 +65,20 @@ class LocalImageHandler
             storage_path('app/' . $uploader->getFullPath())
         );
 
+        $exif = exif_read_data($file);
+        if(!empty($exif['Orientation'])) {
+            switch($exif['Orientation']) {
+                case Attachment::ORIENTATION_EIGHT:
+                    $image->rotate(90)->save();
+                    break;
+                case Attachment::ORIENTATION_THREE:
+                    $image->rotate(180)->save();
+                    break;
+                case Attachment::ORIENTATION_SIX:
+                    $image->rotate(-90)->save();
+                    break;
+            }
+        }
         // 缩略图及高斯模糊图存储路径
         $thumbPath = Str::replaceLast($image->filename, $image->filename . '_thumb', $image->basePath());
         $blurPath = Str::replaceLast($image->filename, md5($image->filename) . '_blur', $image->basePath());

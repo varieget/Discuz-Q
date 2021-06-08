@@ -110,7 +110,7 @@ class CreateAttachmentController extends DzqController
             $this->uploader->upload($file, $actor);
 
             $this->events->dispatch(
-                new Uploaded($actor, $this->uploader)
+                new Uploaded($actor, $this->uploader,$file)
             );
 
             $attachment = Attachment::build(
