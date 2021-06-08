@@ -17,8 +17,10 @@
 
 namespace App\Api\Controller\AdminV3;
 
+use App\Api\Serializer\AttachmentSerializer;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
+use App\Models\Attachment;
 use App\Models\UserActionLogs;
 use App\Models\Post;
 use App\Models\StopWord;
@@ -28,6 +30,8 @@ use Illuminate\Support\Str;
 
 class ManagePostList extends DzqController
 {
+
+    protected $attachmentSerializer;
 
     private $sortFields = [
         'id',
@@ -46,8 +50,14 @@ class ManagePostList extends DzqController
         return true;
     }
 
+    public function __construct( AttachmentSerializer $attachmentSerializer) {
+        $this->attachmentSerializer = $attachmentSerializer;
+    }
+
     public function main()
     {
+        $this->attachmentSerializer->setRequest($this->request);
+
         $isDeleted = $this->inPut('isDeleted'); //是否删除
         $nickname = $this->inPut('nickname'); //用户名
         $page = intval($this->inPut('page')); //分页
@@ -127,7 +137,7 @@ class ManagePostList extends DzqController
         $query = $query->orderBy('posts.'.$sortDetect,
         Str::startsWith($sort, '-') ? 'desc' : 'asc');
 
-        $pagination = $this->pagination($page, $perPage, $query);
+        $pagination = $this->pagination($page, $perPage, $query, false);
 
         // 高亮敏感词
         if ($highlight == 'yes') {
@@ -155,7 +165,7 @@ class ManagePostList extends DzqController
         $userActionLogs = [];
 
         if ($isDeleted == 'yes') {
-            $userIds = array_column($pageData,'post_id');
+            $userIds = array_column($pageData->toArray(),'post_id');
 
             $userActionLogs = UserActionLogs::query()
                 ->whereIn('log_able_id',$userIds)
@@ -185,14 +195,22 @@ class ManagePostList extends DzqController
               'deletedUserId' => $pageData[$k]['deleted_user_id'],
             ];
 
+            $v['id'] = $v['post_id'];
             $pageData[$k]['cotent'] = [
                 'text' => $v['content'],
+                'indexs' => $v->images->map(function (Attachment $image) {
+                    return $this->attachmentSerializer->getDefaultAttributes($image);
+                }),
             ];
 
-            unset($pageData[$k]['content']);
-            unset($pageData[$k]['deleted_nickname']);
-            unset($pageData[$k]['deleted_at']);
-            unset($pageData[$k]['deleted_user_id']);
+            unset(
+                $pageData[$k]['id'],
+                $pageData[$k]['images'],
+                $pageData[$k]['content'],
+                $pageData[$k]['deleted_nickname'],
+                $pageData[$k]['deleted_at'],
+                $pageData[$k]['deleted_user_id']
+            );
         }
 
         $pagination['pageData'] = $pageData;

@@ -61,10 +61,10 @@ trait NotifyTrait
             switch ($this->orderInfo->type) {
                 case Order::ORDER_TYPE_REGISTER:
                     // 上级分成
-                    $bossAmount = $this->orderInfo->calculateInviteScale();
-                    $this->orderInfo->save();
+                    $bossAmount = $this->orderInfo->calculateAuthorAmount();                
                     // 是否创建上级金额分成
                     $this->isCreateBossAmount($bossAmount);
+                    $this->orderInfo->save();
 
                     // 注册时，返回支付成功。
                     return $this->orderInfo;
@@ -81,12 +81,11 @@ trait NotifyTrait
                     } else {
                         // 未设置或设置错误时站长分成为0，被打赏人检测是否有上级然后分成
                         $bossAmount = $this->orderInfo->calculateAuthorAmount();
-                    }
-
-                    $this->orderInfo->save();
+                    }                                       
 
                     // 是否创建上级金额分成
                     $this->isCreateBossAmount($bossAmount);
+                    $this->orderInfo->save();
 
                     if ($this->orderInfo->author_amount > 0) {
                         // 收款人钱包可用金额增加
@@ -294,20 +293,21 @@ trait NotifyTrait
              */
             if ($this->orderInfo->type == Order::ORDER_TYPE_REGISTER) {
                 // 注册
-                $userDistribution = $this->orderInfo->be_scale;
+                $userDistribution = $this->orderInfo->user->userDistribution;
                 $sourceUserId = $this->orderInfo->user_id; // 注册的用户 = 金额来源用户
-                $inviteData = User::instance()->isInviteUser($this->orderInfo->user_id);
-                $parentUserId = $inviteData['user_id'] ?? 0; // 上级user_id
             } else {
                 $userDistribution = $this->orderInfo->payee->userDistribution;
                 $sourceUserId = $this->orderInfo->payee_id;
-                $parentUserId = $userDistribution->pid; // 上级user_id
             }
 
             if (! empty($userDistribution)) {
+                $parentUserId = $userDistribution->pid; // 上级user_id
                 $user_wallet = UserWallet::query()->lockForUpdate()->find($parentUserId);
                 $user_wallet->available_amount = $user_wallet->available_amount + $bossAmount;
                 $user_wallet->save();
+
+                $this->orderInfo->third_party_id = $parentUserId; 
+                $this->orderInfo->third_party_amount = $bossAmount; 
 
                 // 添加分成钱包明细
                 $scaleOrderDetail = $this->orderByDetailType(true);

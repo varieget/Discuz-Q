@@ -69,7 +69,7 @@ trait TomTrait
             $this->busiPermission($this->user, $tomJson);
             if (isset($tomJson['tomId']) && isset($tomJson['operation'])) {
                 if (in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
-                    $tomId = $tomJson['tomId'];
+                    $tomId = strval($tomJson['tomId']);
                     $op = $tomJson['operation'];
                     $body = $tomJson['body'];
                     if (isset($config[$tomId])) {

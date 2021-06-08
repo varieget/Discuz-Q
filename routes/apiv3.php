@@ -178,7 +178,6 @@ $route->get('/redpacket.resource', 'redpacket.resource', ApiController\RedPacket
 // 邀请invite
 $route->get('/invite.users.list','invite.users.list',ApiController\InviteV3\InviteUsersListController::class);
 $route->get('/invite.link.create','invite.link.create',ApiController\InviteV3\CreateInviteLinkController::class);
-$route->get('/invite.detail', 'invite.detail', ApiController\InviteV3\InviteDetailController::class);
 
 // 个人中心-站点信息-我的权限
 $route->get('/group.permission.list', 'group.permission.list', ApiController\GroupV3\GroupPermissionListController::class);

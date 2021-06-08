@@ -19,7 +19,7 @@
 namespace App\Api\Controller\InviteV3;
 
 use App\Common\ResponseCode;
-use App\Models\Invite;
+use App\Models\UserDistribution;
 use App\Models\GroupUser;
 use App\Models\User;
 use App\Models\Order;
@@ -43,18 +43,17 @@ class InviteUsersListController extends DzqController
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
 
-        $query = Invite::query();
-        $query->select('invites.user_id', 'invites.to_user_id', 'users.avatar', 'users.joined_at');
-        $query->join('users', 'users.id', '=', 'invites.user_id');
-        $query->where('invites.user_id', $this->user->id);
-        $query->where('invites.status', Invite::STATUS_USED);
+        $query = UserDistribution::query();
+        $query->select('user_distributions.pid', 'user_distributions.user_id', 'users.avatar', 'users.joined_at');
+        $query->join('users', 'users.id', '=', 'user_distributions.user_id');
+        $query->where('user_distributions.pid', $this->user->id);
 
         // 总邀请人数
         $totalInviteUsers = $query->count();
 
         $inviteUsersList = $this->pagination($currentPage, $perPage, $query);
         $inviteData = $inviteUsersList['pageData'] ?? [];
-        $userIds = array_column($inviteData, 'to_user_id');
+        $userIds = array_column($inviteData, 'user_id');
         $users = User::instance()->getUsers($userIds);
         $users = array_column($users, null, 'id');
 
@@ -64,10 +63,10 @@ class InviteUsersListController extends DzqController
             ->get()->toArray();
         $registOrderDatas = array_column($registOrderDatas, null, 'user_id');
         foreach ($inviteData as $key => $value) {
-            $inviteData[$key]['nickname'] = $users[$value['to_user_id']]['nickname'] ?? '';
+            $inviteData[$key]['nickname'] = $users[$value['user_id']]['nickname'] ?? '';
             $inviteData[$key]['bounty'] = 0;
-            if (isset($registOrderDatas[$value['to_user_id']])) {
-                $inviteData[$key]['bounty'] = floatval($registOrderDatas[$value['to_user_id']]['third_party_amount']);
+            if (isset($registOrderDatas[$value['user_id']])) {
+                $inviteData[$key]['bounty'] = floatval($registOrderDatas[$value['user_id']]['third_party_amount']);
             }
         }
 

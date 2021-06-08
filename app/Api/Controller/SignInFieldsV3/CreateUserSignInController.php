@@ -58,29 +58,37 @@ class CreateUserSignInController extends DzqController
 
     public function main()
     {
-        $actor  = $this->user;
-        $ip     = ip($this->request->getServerParams());
-        $port   = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
-        $data   = $this->inPut('data');
+        try {
+            $actor  = $this->user;
+            $ip     = ip($this->request->getServerParams());
+            $port   = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
+            $data   = $this->inPut('data');
 
-        foreach ($data as $k=>$v) {
+            foreach ($data as $k=>$v) {
 
-            $this->validation->make($data[$k], [
-                'name'         => 'sometimes|max:20',
-                'fieldsExt'    => 'sometimes|max:20000',
-                'fieldsDesc'   => 'sometimes|max:20000',
-            ])->validate();
-        }
-
-        if ($actor->status != User::STATUS_NEED_FIELDS) {
-            $isOpen = $this->setting->where('key', 'open_ext_fields')->where('value', 1)->count();
-            if ($isOpen == 0) {
-                throw new PermissionDeniedException;
+                $this->validation->make($data[$k], [
+                    'name'         => 'sometimes|max:20',
+                    'fieldsExt'    => 'sometimes|max:20000',
+                    'fieldsDesc'   => 'sometimes|max:20000',
+                ])->validate();
             }
-        }
 
-        $result = $this->userSaveUserSignInFields($actor->id,$data);
-        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
+            if ($actor->status != User::STATUS_NEED_FIELDS) {
+                $isOpen = $this->setting->where('key', 'open_ext_fields')->where('value', 1)->count();
+                if ($isOpen == 0) {
+                    throw new PermissionDeniedException;
+                }
+            }
+
+            $result = $this->userSaveUserSignInFields($actor->id,$data);
+            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '创建扩展字段接口异常-CreateUserSignInController：入参：'
+                                  .';data:'.json_encode($data)
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '创建扩展字段接口异常');
+        }
     }
 
     /**

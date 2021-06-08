@@ -373,6 +373,7 @@ class ThreadListController extends DzqController
             ->whereNull('th.deleted_at')
             ->where('th.is_sticky', Thread::BOOL_NO)
             ->where('th.is_draft', $isDraft)
+            ->where('th.is_display', Thread::BOOL_YES)
             ->where('th.is_approved', Thread::BOOL_YES);
     }
 

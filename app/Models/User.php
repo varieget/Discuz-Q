@@ -482,8 +482,7 @@ class User extends DzqModel
         }
 
         if (strpos($value, '://') === false) {
-            return app(UrlGenerator::class)->to('/storage/background/' . $value)
-                . '?' . time();
+            return app(UrlGenerator::class)->to('/storage/background/' . $value);
         }
 
         /** @var SettingsRepository $settings */
@@ -494,8 +493,7 @@ class User extends DzqModel
         if ($settings->get('qcloud_cos_sign_url', 'qcloud', true)) {
             return app(Filesystem::class)->disk('background_cos')->temporaryUrl($path, Carbon::now()->addDay());
         } else {
-            return app(Filesystem::class)->disk('background_cos')->url($path)
-                . '?' . time();
+            return app(Filesystem::class)->disk('background_cos')->url($path);
         }
     }
 
@@ -1016,24 +1014,6 @@ class User extends DzqModel
             return null;
         }
         return $user->username;
-    }
-
-    public function isInviteUser($userId)
-    {
-        $result = Invite::query()
-            ->where(['to_user_id' => $userId, 'status' => Invite::STATUS_USED])
-            ->first();
-        if ($result) {
-            return $result;
-        }
-        return false;
-    }
-
-    public function getInviteScale($groupId)
-    {
-        $groupData = Group::query()->where('id', $groupId)->first();
-        // $be_scale
-        return $groupData['scale'] ?? 0;
     }
 
     protected function clearCache()

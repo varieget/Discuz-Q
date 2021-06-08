@@ -65,11 +65,19 @@ class WechatMiniProgramRebindController extends AuthBaseController
 
     public function main()
     {
-        $param          = $this->getWechatMiniProgramParam();
-        $sessionToken   = $this->inPut('sessionToken');// PC扫码使用
-//        $sessionToken   = 'GJt8B1AxRjhLHR1VGJ2ZpsW5mLa6aRP2';
-        $token          = SessionToken::get($sessionToken);
-        $actor          = !empty($token->user) ? $token->user : $this->user;
+        try {
+            $param          = $this->getWechatMiniProgramParam();
+            $sessionToken   = $this->inPut('sessionToken');// PC扫码使用
+    //        $sessionToken   = 'GJt8B1AxRjhLHR1VGJ2ZpsW5mLa6aRP2';
+            $token          = SessionToken::get($sessionToken);
+            $actor          = !empty($token->user) ? $token->user : $this->user;
+        } catch (Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序参数换绑接口异常-WechatMiniProgramRebindController：入参：'
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序参数换绑接口异常');
+        }
 
         if (empty($actor) || $actor->isGuest() || is_null($actor->wechat)) {
             $this->outPut(ResponseCode::NOT_FOUND_USER);
@@ -89,38 +97,39 @@ class WechatMiniProgramRebindController extends AuthBaseController
                 $param['iv'],
                 $param['encryptedData']
             );
+
+            if (!$wechatUser || !$wechatUser->user) {
+                if (!$wechatUser) {
+                    $wechatUser = new UserWechat();
+                }
+
+                //删除用户原先绑定的微信信息
+                UserWechat::query()->where('user_id', $actor->id)->delete();
+
+                $wechatUser->user_id = $actor->id;
+                // 先设置关系再save，为了同步微信头像
+                $wechatUser->setRelation('user', $actor);
+                $wechatUser->save();
+
+                $this->db->commit();
+
+                // PC扫码使用
+                if ($sessionToken) {
+                    $this->bound->rebindVoid($sessionToken, $wechatUser);
+                }
+
+                $this->outPut(ResponseCode::SUCCESS, '', []);
+            } else {
+                $this->db->rollBack();
+                $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
+            }
         } catch (Exception $e) {
-            $this->db->rollback();
-            $this->outPut(ResponseCode::NET_ERROR,
-                          ResponseCode::$codeMap[ResponseCode::NET_ERROR],
-                          $e->getMessage()
-            );
-        }
-
-        if (!$wechatUser || !$wechatUser->user) {
-            if (!$wechatUser) {
-                $wechatUser = new UserWechat();
-            }
-
-            //删除用户原先绑定的微信信息
-            UserWechat::query()->where('user_id', $actor->id)->delete();
-
-            $wechatUser->user_id = $actor->id;
-            // 先设置关系再save，为了同步微信头像
-            $wechatUser->setRelation('user', $actor);
-            $wechatUser->save();
-
-            $this->db->commit();
-
-            // PC扫码使用
-            if ($sessionToken) {
-                $this->bound->rebindVoid($sessionToken, $wechatUser);
-            }
-
-            $this->outPut(ResponseCode::SUCCESS, '', []);
-        } else {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序换绑接口异常-WechatMiniProgramRebindController：入参：'
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
             $this->db->rollBack();
-            $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
+            $this->outPut(ResponseCode::INTERNAL_ERROR,'小程序换绑接口异常');
         }
     }
 }
