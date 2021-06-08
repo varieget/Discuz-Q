@@ -212,7 +212,7 @@ class ResponseCode
         self::NICKNAME_CENSOR_NOT_PASSED => '昵称未通过敏感词校验',
         self::NOT_FOLLOW_YOURSELE => '不能关注自己',
         self::NOT_FOLLOW_USER => '关注用户不存在',
-        self::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION => '已被对方拉黑',
+        self::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION => '根据对方的设置，您无法进行该操作',
         self::USERNAME_OR_PASSWORD_ERROR => '用户名或密码错误',
         self::LOGIN_FAILED => '登录失败',
         self::NOT_REBIND_SELF_MOBILE => '不能换绑自己的手机号',
