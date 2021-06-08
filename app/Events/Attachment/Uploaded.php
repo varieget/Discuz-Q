@@ -43,10 +43,9 @@ class Uploaded
      * @param User $actor
      * @param AttachmentUploader $uploader
      */
-    public function __construct(User $actor, AttachmentUploader $uploader,UploadedFile $file)
+    public function __construct(User $actor, AttachmentUploader $uploader)
     {
         $this->actor = $actor;
         $this->uploader = $uploader;
-        $this->file = $file;
     }
 }
