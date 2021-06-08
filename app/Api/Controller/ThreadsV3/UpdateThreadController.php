@@ -131,12 +131,7 @@ class UpdateThreadController extends DzqController
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
 
-        !empty($position) && $this->dzqValidate($position, [
-            'longitude' => 'required',
-            'latitude' => 'required',
-            'address' => 'required',
-            'location' => 'required'
-        ]);
+
         !empty($title) && $thread->title = $title;
         !empty($categoryId) && $thread->category_id = $categoryId;
         if (!empty($position)) {
