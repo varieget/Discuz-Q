@@ -44,7 +44,7 @@ class ResponseCode
     const CONTENT_BANNED = -4006;
     const VALIDATE_REJECT = -4007;
     const VALIDATE_IGNORE = -4008;
-    const USER_BAN  = -4009;
+    const USER_BAN = -4009;
 
     const NET_ERROR = -5001;
     const INTERNAL_ERROR = -5002;
@@ -105,26 +105,26 @@ class ResponseCode
     const NICKNAME_CENSOR_NOT_PASSED = -7057;
     const USER_SINGATURE_LINIT_ERROR = -7058;
     const NOT_FOLLOW_YOURSELE = -7059;
-    const NOT_FOLLOW_USER= -7060;
-    const HAS_BEEN_BLOCKED_BY_THE_OPPOSITION= -7061;
-    const USERNAME_OR_PASSWORD_ERROR= -7062;
-    const NOT_REBIND_SELF_MOBILE= -7063;
-    const NONSUPPORT_MOBILE_BIND= -7064;
-    const NONSUPPORT_MOBILE_REBIND= -7065;
-    const ORIGINAL_USER_MOBILE_VERIFY_ERROR= -7066;
-    const PASSWORD_ILLEGALITY= -7067;
-    const YOU_BLOCKED_HIM= -7068;
-    const PASSWORD_NOT_ALLOW_HAS_SPACE= -7069;
-    const USER_NEED_SIGNIN_FIELDS= -7070;
-    const USER_IN_REVIEW= -7071;
-    const PAY_JOIN_SITE= -7072;
-    const USERNAME_NOT_ALLOW_HAS_SPACE= -7073;
-    const TRY_LOGIN_AGAIN= -7074;
+    const NOT_FOLLOW_USER = -7060;
+    const HAS_BEEN_BLOCKED_BY_THE_OPPOSITION = -7061;
+    const USERNAME_OR_PASSWORD_ERROR = -7062;
+    const NOT_REBIND_SELF_MOBILE = -7063;
+    const NONSUPPORT_MOBILE_BIND = -7064;
+    const NONSUPPORT_MOBILE_REBIND = -7065;
+    const ORIGINAL_USER_MOBILE_VERIFY_ERROR = -7066;
+    const PASSWORD_ILLEGALITY = -7067;
+    const YOU_BLOCKED_HIM = -7068;
+    const PASSWORD_NOT_ALLOW_HAS_SPACE = -7069;
+    const USER_NEED_SIGNIN_FIELDS = -7070;
+    const USER_IN_REVIEW = -7071;
+    const PAY_JOIN_SITE = -7072;
+    const USERNAME_NOT_ALLOW_HAS_SPACE = -7073;
+    const TRY_LOGIN_AGAIN = -7074;
 
 
-    const NEED_BIND_WECHAT = 8000;
-    const NEED_BIND_PHONE = 8001;
-    const SMS_NOT_OPEN= -9001;
+    const NEED_BIND_WECHAT = -8000;
+    const NEED_BIND_PHONE = -8001;
+    const SMS_NOT_OPEN = -9001;
     const SMS_CODE_ERROR = -9002;
     const SMS_CODE_EXPIRE = -9003;
 
@@ -134,9 +134,9 @@ class ResponseCode
         self::NOT_INSTALL => '当前站点未安装',
         self::SITE_CLOSED => '站点已关闭',
         self::JUMP_TO_LOGIN => '跳转到登录页',
-        self::JUMP_TO_AUDIT=>'跳转到审核页',
-        self::JUMP_TO_HOME_INDEX=>'跳转到首页',
-        self::JUMP_TO_REGISTER =>'跳转到注册页',
+        self::JUMP_TO_AUDIT => '跳转到审核页',
+        self::JUMP_TO_HOME_INDEX => '跳转到首页',
+        self::JUMP_TO_REGISTER => '跳转到注册页',
         self::JUMP_TO_PAY_SITE => '跳转到站点付费页',
         self::SUCCESS => '接口调用成功',
         self::INVALID_PARAMETER => '参数错误',
@@ -182,14 +182,14 @@ class ResponseCode
         self::USERNAME_HAD_EXIST => '用户名已经存在',
         self::SMS_SERVICE_ENABLED => '短信服务未开启',
         self::NEED_BIND_WECHAT => '需要绑定微信',
-        self::NEED_BIND_PHONE  => '需要绑定手机',
+        self::NEED_BIND_PHONE => '需要绑定手机',
         self::BIND_TYPE_IS_NULL => '绑定类型不存在',
         self::AUTH_INFO_HAD_EXPIRED => '授权信息已过期，请重新授权',
         self::USER_BIND_TYPE_IS_NULL => '用户绑定类型不存在',
-        self::USER_BAN  => '用户已被封禁',
+        self::USER_BAN => '用户已被封禁',
         self::PARAM_IS_NOT_OBJECT => '参数不为对象',
         self::TRANSITION_NOT_OPEN => '过渡开关未开启',
-        self::SMS_NOT_OPEN  => '短信未开启',
+        self::SMS_NOT_OPEN => '短信未开启',
         self::SMS_CODE_ERROR => '验证码错误',
         self::SMS_CODE_EXPIRE => '验证码已过期',
         self::USERNAME_NOT_NULL => '用户名不能为空',
@@ -212,7 +212,7 @@ class ResponseCode
         self::NICKNAME_CENSOR_NOT_PASSED => '昵称未通过敏感词校验',
         self::NOT_FOLLOW_YOURSELE => '不能关注自己',
         self::NOT_FOLLOW_USER => '关注用户不存在',
-        self::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION => '已被对方拉黑',
+        self::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION => '根据对方的设置，您无法进行该操作',
         self::USERNAME_OR_PASSWORD_ERROR => '用户名或密码错误',
         self::LOGIN_FAILED => '登录失败',
         self::NOT_REBIND_SELF_MOBILE => '不能换绑自己的手机号',

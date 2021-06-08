@@ -70,7 +70,7 @@ trait ThreadTrait
             'isApproved' => $thread['is_approved'],
             'isStick' => $thread['is_sticky'],
             'isDraft' => boolval($thread['is_draft']),
-            'isAnonymous'=>$thread['is_anonymous'],
+            'isAnonymous' => $thread['is_anonymous'],
             'isFavorite' => $this->getFavoriteField($thread['id'], $loginUser),
             'price' => floatval($thread['price']),
             'attachmentPrice' => floatval($thread['attachment_price']),
@@ -79,7 +79,7 @@ trait ThreadTrait
             'isLike' => $this->isLike($loginUser, $post),
             'isReward' => $this->isReward($loginUser, $thread),
             'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
-            'updatedAt'=>date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
+            'updatedAt' => date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
@@ -287,14 +287,16 @@ trait ThreadTrait
                 $content['text'] = $post['content'];
                 $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
             } else {
-                $freeWords = $thread['free_words'];
-                if (empty($freeWords)) {
-                    $text = '';
-                } else {
-                    $text = strip_tags($post['content']);
-                    $freeLength = mb_strlen($text) * $freeWords;
-                    $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
-//                    $text = "<t><p>" . $text . "</p></t>";
+                $text = '';
+                if ($payType == Thread::PAY_ATTACH) {
+                    $text = $post['content'];
+                } else if ($payType == Thread::PAY_THREAD) {
+                    $freeWords = $thread['free_words'];
+                    if (floatval($freeWords) > 0) {
+                        $text = strip_tags($post['content']);
+                        $freeLength = mb_strlen($text) * $freeWords;
+                        $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+                    }
                 }
                 $content['text'] = $text;
                 // 如果有红包，则只显示红包
@@ -330,7 +332,7 @@ trait ThreadTrait
                     function ($m) use ($attachments) {
                         if (!empty($m)) {
                             $id = trim($m[3], '"');
-                            return 'img src="'.$attachments[$id].'" alt="'.$m[2].'" title="'.$id.'"';
+                            return 'img src="' . $attachments[$id] . '" alt="' . $m[2] . '" title="' . $id . '"';
                         }
                     },
                     $xml
@@ -340,7 +342,6 @@ trait ThreadTrait
                 $content['text'] = $xml;
             }
         }
-
 
 
         return $content;
@@ -454,8 +455,8 @@ trait ThreadTrait
             $topic = Topic::query()->where('content', $topicName)->first();
             if (empty($topic)) {
                 //话题名称长度超过20就不创建了
-                if(mb_strlen($topicName) > 20){
-                    throw new \Exception('创建话题长度不能超过20个字符');
+                if (mb_strlen($topicName) > 20) {
+                    \Discuz\Common\Utils::outPut(ResponseCode::INVALID_PARAMETER, '创建话题长度不能超过20个字符');
                 }
                 $topic = new Topic();
                 $topic->user_id = $userId;
@@ -507,7 +508,7 @@ trait ThreadTrait
         $actor = $this->user;
         $users->filter(function ($user) use ($post) {
             //把作者拉黑的用户不发通知
-            return ! in_array($post->user_id, array_column($user->deny->toArray(), 'id'));
+            return !in_array($post->user_id, array_column($user->deny->toArray(), 'id'));
         })->each(function (User $user) use ($post, $actor) {
             // Tag 发送通知
             $user->notify(new Related($actor, $post));
@@ -549,7 +550,7 @@ trait ThreadTrait
     {
         preg_match_all('/#.+?#/', $text, $topic);
         if (empty($topic)) {
-            return  $text;
+            return $text;
         }
         $topic = $topic[0];
         $topic = str_replace('#', '', $topic);
@@ -568,7 +569,7 @@ trait ThreadTrait
     {
         preg_match_all('/@.+? /', $text, $call);
         if (empty($call)) {
-            return  $text;
+            return $text;
         }
         $call = $call[0];
         $call = str_replace(['@', ' '], '', $call);

@@ -482,8 +482,7 @@ class User extends DzqModel
         }
 
         if (strpos($value, '://') === false) {
-            return app(UrlGenerator::class)->to('/storage/background/' . $value)
-                . '?' . time();
+            return app(UrlGenerator::class)->to('/storage/background/' . $value);
         }
 
         /** @var SettingsRepository $settings */
@@ -494,8 +493,7 @@ class User extends DzqModel
         if ($settings->get('qcloud_cos_sign_url', 'qcloud', true)) {
             return app(Filesystem::class)->disk('background_cos')->temporaryUrl($path, Carbon::now()->addDay());
         } else {
-            return app(Filesystem::class)->disk('background_cos')->url($path)
-                . '?' . time();
+            return app(Filesystem::class)->disk('background_cos')->url($path);
         }
     }
 
