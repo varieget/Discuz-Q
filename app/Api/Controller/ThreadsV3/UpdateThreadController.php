@@ -155,12 +155,12 @@ class UpdateThreadController extends DzqController
         }
 
         if ($isDraft) {
-            $thread->is_draft = Thread::BOOL_YES;
+            $thread->is_draft = Thread::IS_DRAFT;
         } else {
             if ($thread->is_draft) {
                 $thread->created_at = date('Y-m-d H:i:m', time());
             }
-            $thread->is_draft = Thread::BOOL_NO;
+            $thread->is_draft = Thread::IS_NOT_DRAFT;
         }
 
         // 如果更新为非草稿状态，则要判断是否已付费
