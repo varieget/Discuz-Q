@@ -52,8 +52,8 @@ class OrientateImage
     public function handle(Uploading $event)
     {
         // 帖子图片自适应旋转
-        if ((int) Arr::get($this->data, 'type') === Attachment::TYPE_OF_IMAGE && extension_loaded('exif')) {
+        /*if ((int) Arr::get($this->data, 'type') === Attachment::TYPE_OF_IMAGE && extension_loaded('exif')) {
             $this->image->make($event->file)->orientate()->save();
-        }
+        }*/
     }
 }
