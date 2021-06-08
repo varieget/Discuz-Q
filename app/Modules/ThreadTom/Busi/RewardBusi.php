@@ -40,7 +40,7 @@ class RewardBusi extends TomBaseBusi
 
         if (!empty($threadReward)) {
             $thread = Thread::query()->where('id', $this->threadId)->first(['is_draft']);
-            if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'每个帖子只能发布一条悬赏');
+            if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'已发布的悬赏不可编辑');
         }
 
         if ($input['draft'] != Thread::IS_DRAFT) {

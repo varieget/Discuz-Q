@@ -19,7 +19,7 @@
 namespace App\Api\Controller\InviteV3;
 
 use App\Common\ResponseCode;
-use App\Models\Invite;
+use App\Models\UserDistribution;
 use App\Models\GroupUser;
 use App\Models\User;
 use App\Models\Order;
@@ -43,15 +43,17 @@ class InviteUsersListController extends DzqController
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
 
-        $query = Invite::query();
-        $query->select('invites.user_id', 'invites.to_user_id', 'users.avatar', 'users.joined_at');
-        $query->join('users', 'users.id', '=', 'invites.user_id');
-        $query->where('invites.user_id', $this->user->id);
-        $query->where('invites.status', Invite::STATUS_USED);
+        $query = UserDistribution::query();
+        $query->select('user_distributions.pid', 'user_distributions.user_id', 'users.avatar', 'users.joined_at');
+        $query->join('users', 'users.id', '=', 'user_distributions.user_id');
+        $query->where('user_distributions.pid', $this->user->id);
+
+        // 总邀请人数
+        $totalInviteUsers = $query->count();
 
         $inviteUsersList = $this->pagination($currentPage, $perPage, $query);
         $inviteData = $inviteUsersList['pageData'] ?? [];
-        $userIds = array_column($inviteData, 'to_user_id');
+        $userIds = array_column($inviteData, 'user_id');
         $users = User::instance()->getUsers($userIds);
         $users = array_column($users, null, 'id');
 
@@ -61,23 +63,28 @@ class InviteUsersListController extends DzqController
             ->get()->toArray();
         $registOrderDatas = array_column($registOrderDatas, null, 'user_id');
         foreach ($inviteData as $key => $value) {
-            $inviteData[$key]['nickname'] = $users[$value['to_user_id']]['nickname'] ?? '';
+            $inviteData[$key]['nickname'] = $users[$value['user_id']]['nickname'] ?? '';
             $inviteData[$key]['bounty'] = 0;
-            if (isset($registOrderDatas[$value['to_user_id']])) {
-                $inviteData[$key]['bounty'] = floatval($registOrderDatas[$value['to_user_id']]['third_party_amount']);
+            if (isset($registOrderDatas[$value['user_id']])) {
+                $inviteData[$key]['bounty'] = floatval($registOrderDatas[$value['user_id']]['third_party_amount']);
             }
         }
 
         $groups = GroupUser::instance()->getGroupInfo([$this->user->id]);
         $groups = array_column($groups, null, 'user_id');
 
+        // 总邀请赏金
+        $totalInviteBounties = Order::query()
+            ->where(['type' => Order::ORDER_TYPE_REGISTER, 'status' => Order::ORDER_STATUS_PAID, 'third_party_id' => $this->user->id])
+            ->sum('third_party_amount');
+
         $result = array(
             'userId' => $this->user->id,
             'nickname' => $this->user->nickname,
             'avatar' => $this->user->avatar,
             'groupName' => $groups[$this->user->id]['groups']['name'],
-            'totalInviteUsers' => count($inviteData),
-            'totalInviteBounties' => array_sum(array_column($inviteData, 'bounty')),
+            'totalInviteUsers' => $totalInviteUsers,
+            'totalInviteBounties' => $totalInviteBounties,
             'inviteUsersList' => $inviteData
         );
         $inviteUsersList['pageData'] = $result;

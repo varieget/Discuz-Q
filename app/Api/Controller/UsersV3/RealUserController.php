@@ -20,7 +20,6 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\User;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
 use App\Repositories\UserRepository;
@@ -28,8 +27,6 @@ use Discuz\Auth\Exception\NotAuthenticatedException;
 
 class RealUserController extends DzqController
 {
-    use AssertPermissionTrait;
-
     // 权限检查，是否为注册用户
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

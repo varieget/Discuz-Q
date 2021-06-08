@@ -19,6 +19,7 @@ namespace App\Api\Controller\NotificationV3;
 
 
 use App\Common\ResponseCode;
+use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use App\Repositories\UserRepository;
@@ -49,7 +50,8 @@ class UnreadNotificationController extends DzqController
     public function main()
     {
         $actor = $this->user;
-        $user = $this->users->findOrFail($actor->id, $actor);
+        /** @var User $user */
+        $user = User::query()->findOrFail($actor->id);
         $data['unreadNotifications'] = $user->getUnreadNotificationCount();
         $data['typeUnreadNotifications'] = $user->getUnreadTypesNotificationCount();
 

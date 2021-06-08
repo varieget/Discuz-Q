@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use App\Censor\Censor;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 
 class NicknameSettingController extends AuthBaseController
 {
@@ -33,20 +34,36 @@ class NicknameSettingController extends AuthBaseController
         $this->censor = $censor;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
+    }
+
     public function main()
     {
-        $nickname = $this->inPut('nickname');
-        $this->dzqValidate([
-            'nickname'      => $nickname,
-        ], [
-            'nickname'      => 'required',
-        ]);
-        $this->censor->checkText($nickname);
-        $user = $this->userRepository->findOrFail($this->user->id, $this->user);
-        $user->changeNickname($nickname);
-        $user->save();
+        try {
+            $nickname = $this->inPut('nickname');
+            $this->dzqValidate([
+                'nickname'      => $nickname,
+            ], [
+                'nickname'      => 'required',
+            ]);
+            $this->censor->checkText($nickname);
+            $user = $this->user;
+            $user->changeNickname($nickname);
+            $user->save();
 
-        return $this->outPut(ResponseCode::SUCCESS);
+            return $this->outPut(ResponseCode::SUCCESS);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '昵称设置接口异常-SmsVerifyController： 入参：'
+                                  .';nickname:'.$this->inPut('nickname')
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '昵称设置接口异常');
+        }
     }
 
 }

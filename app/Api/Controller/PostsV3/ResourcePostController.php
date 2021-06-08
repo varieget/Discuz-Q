@@ -18,6 +18,7 @@
 namespace App\Api\Controller\PostsV3;
 
 
+use App\Api\Controller\ThreadsV3\ThreadHelper;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\CommentPostSerializer;
 use App\Common\ResponseCode;
@@ -30,10 +31,6 @@ use Discuz\Base\DzqController;
 
 class ResourcePostController extends DzqController
 {
-    public $providers = [
-        \App\Providers\PostServiceProvider::class,
-    ];
-
     //返回的数据一定包含的数据
     public $include = [
         'user:id,username,avatar',
@@ -54,7 +51,6 @@ class ResourcePostController extends DzqController
 
     public function main()
     {
-
         $coment_post_serialize = $this->app->make(CommentPostSerializer::class);
         $attachment_serialize = $this->app->make(AttachmentSerializer::class);
 
@@ -81,7 +77,9 @@ class ResourcePostController extends DzqController
         Post::setStateUser($this->user);
 
         $data = $coment_post_serialize->getDefaultAttributes($comment_post, $this->user);
-        $data['canLike'] = true;
+
+
+        $data['canLike'] = app(UserRepository::class)->canLikePosts($this->user);
         $data['images'] = [];
         $data['likeUsers'] = $comment_post->likedUsers;
         if(!empty($comment_post->images)){
@@ -99,6 +97,7 @@ class ResourcePostController extends DzqController
         if(intval($data['replyCount']) > 0){
             $replyId = Post::query()
                 ->where('reply_post_id',$post_id)
+                ->whereNull("deleted_at")
                 ->where('is_comment', true)
                 ->get(['id','user_id','reply_user_id','comment_user_id']);
             $replyIdArr = $replyId->toArray();
@@ -115,7 +114,7 @@ class ResourcePostController extends DzqController
             $comment_post_collect = Post::query()->whereIn('id', $comment_post_id)->get();
             foreach ($comment_post_collect as $k=>$value){
                 $comment_post_collect[$k]->loadMissing($include);
-                $data['commentPosts'][$k] = $coment_post_serialize->getDefaultAttributes($comment_post_collect[$k]);
+                $data['commentPosts'][$k] = $coment_post_serialize->getDefaultAttributes($comment_post_collect[$k], $this->user);
                 $data['commentPosts'][$k]['user'] = $users[$value['user_id']];
                 $data['commentPosts'][$k]['replyUser'] = $replyUsers[$value['reply_user_id']];
                 $data['commentPosts'][$k]['commentUser'] = $commentUsers[$value['comment_user_id']];

@@ -2,6 +2,8 @@
 
 use App\Api\Controller as ApiController;
 
+$route->post('/login', 'login', ApiController\UsersV3\AdminLoginController::class);
+
 $route->get('/reports', 'reports.list', ApiController\ReportV3\ListReportsController::class);
 $route->post('/reports/batch', 'reports.batchUpdate', ApiController\ReportV3\BatchUpdateReportsController::class);
 $route->post('/reports/delete', 'reports.batchDelete', ApiController\ReportV3\BatchDeleteReportsController::class);
@@ -17,6 +19,7 @@ $route->get('/groups.list', 'groups.list', ApiController\GroupV3\ListGroupsContr
 $route->post('/groups.batchupdate', 'groups.batchupdate', ApiController\GroupV3\BatchUpdateGroupController::class);
 $route->post('/groups.batchdelete', 'groups.batchdelete', ApiController\GroupV3\BatchDeleteGroupsController::class);
 $route->post('/users/update.user', 'users.admin', ApiController\UsersV3\UpdateAdminController::class);
+$route->post('/users/examine', 'users.examine', ApiController\UsersV3\UpdateUsersStatusController::class);
 
 // 财务
 $route->get('/users.wallet.logs', 'users.wallet.logs', ApiController\WalletV3\UsersWalletLogsListController::class);
@@ -40,12 +43,15 @@ $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\Resourc
 //注册扩展
 $route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
 $route->post('/signinfields', 'signinfields.create', ApiController\SignInFieldsV3\CreateAdminSignInController::class);
+$route->get('/user/signinfields', 'user.signinfields.resource', ApiController\SignInFieldsV3\ResourceUserSignInController::class);
+
 $route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
 //审核主题列表
-$route->get('/check.thread.list', 'check.thread.list', ApiController\AdminV3\CheckThemeList::class);
+$route->get('/manage.thread.list', 'manage.thread.list', ApiController\AdminV3\ManageThemeList::class);
 //审核评论列表
-$route->get('/check.posts.list', 'check.posts.list', ApiController\AdminV3\CheckReplyList::class);
-$route->post('/check.sub', 'check.sub', ApiController\AdminV3\CheckSub::class);
+$route->get('/manage.posts.list', 'manage.posts.list', ApiController\AdminV3\ManagePostList::class);
+//提交审核
+$route->post('/manage.submit.review', 'manage.review', ApiController\AdminV3\ManageSubmitReview::class);
 //话题管理
 $route->get('/topics.list', 'topics.list', ApiController\TopicV3\AdminTopicListController::class);
 $route->post('/topics.batch.update', 'topics.batch.update', ApiController\TopicV3\BatchUpdateTopicController::class);
@@ -58,7 +64,28 @@ $route->get('/export/users', 'export.users', ApiController\UsersV3\ExportUserCon
 $route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarsController::class);
 $route->post('/delete/users/avatar', 'user.upload.avatar', ApiController\UsersV3\DeleteAvatarController::class);
 $route->get('/users', 'users.list', ApiController\UsersV3\ListUserScreenController::class);
+$route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
+
 //内容过滤
 $route->post('/stopwords.batch', 'stopwords.batch', ApiController\StopWordsV3\BatchCreateStopWordsController::class);
 $route->get('/stopwords.list', 'stopwords.list', ApiController\StopWordsV3\ListStopWordsController::class);
 $route->post('/stopwords.delete', 'stopwords.delete', ApiController\StopWordsV3\DeleteStopWordController::class);
+
+//管理端站点设置
+$route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);
+
+//消息模板
+$route->get('/notification/tpl', 'notification.tpl.list', ApiController\NotificationV3\ListNotificationTplV3Controller::class);
+$route->get('/notification/tpl/detail', 'notification.tpl.detail', ApiController\NotificationV3\ResourceNotificationTplV3Controller::class);
+$route->post('/notification/tpl/update', 'notification.tpl.update', ApiController\NotificationV3\UpdateNotificationTplV3Controller::class);
+
+$route->get('/cache.delete', 'cache.delete', ApiController\CacheV3\DeleteCacheController::class);
+$route->get('/sequence', 'sequence.list', ApiController\SettingsV3\ListSequenceController::class);
+$route->post('/sequence', 'sequence', ApiController\SettingsV3\UpdateSequenceController::class);
+$route->post('/refresh.token', 'refresh.token', ApiController\Oauth2V3\RefreshTokenController::class);
+
+$route->get('/recommend.users', 'recommend.users', ApiController\Recommend\RecommendedUserListController::class);
+$route->get('/recommend.topics', 'recommend.topics', ApiController\Recommend\RecommendedTopicListController::class);
+
+// 判断是否已配置腾讯云  CheckQcloudController
+$route->get('/checkQcloud', 'checkQcloud',  ApiController\CheckQcloudV3Controller::class);

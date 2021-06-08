@@ -17,9 +17,11 @@
 
 namespace App\Api\Controller\AdminV3;
 
+use App\Api\Controller\ThreadsV3\ThreadTrait;
+use App\Api\Controller\ThreadsV3\ThreadListTrait;
 use App\Common\ResponseCode;
-use App\Models\ThreadTag;
-use App\Models\User;
+use App\Models\Post;
+use App\Models\UserActionLogs;
 use App\Repositories\UserRepository;
 use App\Models\Thread;
 use App\Models\StopWord;
@@ -27,8 +29,10 @@ use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Str;
 
-class CheckThemeList extends DzqController
+class ManageThemeList extends DzqController
 {
+    use ThreadTrait;
+    use ThreadListTrait;
 
     private $sortFields = [
         'id',
@@ -72,14 +76,8 @@ class CheckThemeList extends DzqController
 
         $query = Thread::query()
             ->select(
-                'threads.id as thread_id', 'threads.user_id', 'threads.title', 'threads.post_count', 'threads.view_count',
-                'threads.is_approved', 'threads.updated_at' ,'threads.deleted_user_id' ,'threads.deleted_at', 'threads.price',
-                'posts.content',
-                'users.nickname',
-                'categories.name'
-            )
-            ->leftJoin('posts','threads.id','posts.thread_id')
-            ->where('posts.is_first',true);
+                'threads.*'
+            );
 
         //是否审核
         $query->where('threads.is_approved', $isApproved);
@@ -120,9 +118,9 @@ class CheckThemeList extends DzqController
         } else if ($threadType == 4){
             $query->where('threads.is_site', 1)
                 ->where(function ($query) {
-                     $query->orWhere('threads.price', '>', 0)
-                     ->orWhere('threads.attachment_price', '>' ,0);
-                 });
+                    $query->orWhere('threads.price', '>', 0)
+                        ->orWhere('threads.attachment_price', '>' ,0);
+                });
         }
 
         //帖子id筛选
@@ -138,7 +136,9 @@ class CheckThemeList extends DzqController
         // 回收站
         if ($isDeleted == 'yes') {
             // 只看回收站帖子
-            $query->whereNotNull('threads.deleted_at');
+            $query->whereNotNull('threads.deleted_at')
+                ->addSelect('users1.nickname as deleted_user')
+                ->leftJoin('users as users1', 'users1.id','=','threads.deleted_user_id');
         } elseif ($isDeleted == 'no') {
             // 不看回收站帖子
             $query->whereNull('threads.deleted_at');
@@ -162,9 +162,7 @@ class CheckThemeList extends DzqController
 
         //用户删除用户昵称
         if (!empty($deletedNickname)) {
-            $query->addSelect('users1.nickname as deleted_user')
-                ->leftJoin('users as users1', 'users1.id','=','threads.deleted_user_id')
-                ->where('users1.nickname','like','%'.$deletedNickname.'%');
+            $query->where('users1.nickname','like','%'.$deletedNickname.'%');
         }
 
         //用户昵称筛选
@@ -174,14 +172,14 @@ class CheckThemeList extends DzqController
         }
 
         //排序
-        $sort = ltrim(Str::snake($sort), '-');
-        if (!in_array($sort, $this->sortFields)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '不合法的排序字段:'.$sort);
+        $sortDetect = ltrim(Str::snake($sort), '-');
+        if (!in_array($sortDetect, $this->sortFields)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '不合法的排序字段:'.$sortDetect);
         }
 
         //排序
-        $query = $query->orderBy('threads.'.$sort,
-        Str::startsWith($sort, '-') ? 'desc' : 'asc');
+        $query = $query->orderBy('threads.'.$sortDetect,
+            Str::startsWith($sort, '-') ? 'desc' : 'asc');
 
         //分页
         $pagination = $this->pagination($page, $perPage, $query);
@@ -199,7 +197,74 @@ class CheckThemeList extends DzqController
             }
         }
 
-        $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($pagination));
+        $snapArr = array_column($pagination['pageData'],null,'id');
+
+        $pagination['pageData'] = $this->getFullThreadData($pagination['pageData']);
+
+        $this->outPut(ResponseCode::SUCCESS,'', $this->paramHandle($snapArr, $pagination));
+    }
+
+    public function paramHandle($snapArr, $pagination)
+    {
+        $isDeleted = $this->inPut('isDeleted');
+
+        $pageData = $pagination['pageData'];
+
+        $userActionLogs = [];
+
+        $threadsIds = array_column($snapArr,'id');
+
+        if ($isDeleted == 'yes') {
+
+            $userActionLogs = UserActionLogs::query()
+                ->whereIn('log_able_id',$threadsIds)
+                ->where(['action' => 'hide', 'log_able_type' => 'App\Models\Thread'])
+                ->orderBy('id','desc')
+                ->get(['log_able_id as thread_id','message'])
+                ->pluck('message','thread_id')
+                ->toArray();
+        }
+
+        //获取最后回复用户id
+        $post = Post::query()
+            ->whereIn('thread_id',$threadsIds)
+            ->where('posts.is_first',Post::FIRST_NO)
+            ->leftJoin('users','posts.user_id','=','users.id')
+            ->orderBy('posts.created_at','desc')
+            ->get(['users.nickname','posts.user_id','posts.thread_id','posts.created_at'])
+            ->pluck(null,'thread_id')
+            ->toArray();
+
+        //参数归类
+        foreach ($pageData as $k => $v) {
+            if (!isset($userActionLogs[$v['threadId']])) {
+                $userActionLogs[$v['threadId']] = '';
+            }
+
+            if (!isset($snapArr[$v['threadId']]['deleted_user'])) {
+                $snapArr[$v['threadId']]['deleted_user'] = '';
+            }
+
+            $pageData[$k]['lastDeletedLog'] = [
+                'message' => $userActionLogs[$v['threadId']]
+            ];
+
+            $pageData[$k]['lastPostedUser'] = [
+                'lastNickname' => $post[$v['threadId']]['nickname'],
+                'userId' => $post[$v['threadId']]['user_id'],
+                'createdAt' => date('Y-m-d H:i:s',strtotime($post[$v['threadId']]['created_at'])),
+            ];
+
+            $pageData[$k]['deletedUserArr'] = [
+                'deletedNickname' => $snapArr[$v['threadId']]['deleted_user'],
+                'deletedAt' => date('Y-m-d H:i:s',strtotime($snapArr[$v['threadId']]['deleted_at'])),
+                'deletedUserId' => $snapArr[$v['threadId']]['deleted_user_id']
+            ];
+        }
+
+         $pagination['pageData'] = $pageData;
+
+        return $pagination;
     }
 
 }

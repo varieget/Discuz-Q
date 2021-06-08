@@ -18,7 +18,6 @@
 
 namespace App\Api\Controller\WalletV3;
 
-use App\Commands\Wallet\UserWalletCashReview;
 use App\Common\ResponseCode;
 use App\Events\Wallet\Cash;
 use App\Exceptions\WalletException;
@@ -26,49 +25,32 @@ use App\Models\UserWallet;
 use App\Models\UserWalletCash;
 use App\Models\UserWalletLog;
 use App\Repositories\UserRepository;
+use App\Settings\SettingsRepository;
 use App\Trade\Config\GatewayConfig;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
-use Discuz\Http\DiscuzResponseFactory;
-use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Events\Dispatcher as Events;
-use Illuminate\Database\ConnectionInterface;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
+use Illuminate\Support\Facades\DB;
 
 class UserWalletCashReviewController extends DzqController
 {
-    /**
-     * @var Dispatcher
-     */
-    protected $bus;
-    /**
-     * @var ConnectionInterface
-     */
-    public $connection;
-    /**
-     * @var Events
-     */
-    private $events;
-    /**
-     * @var string
-     */
-    private $ip_address;
-    /**
-     * @var array
-     */
+    private $settings;
     private $data;
+    /**
+     * @var \Illuminate\Contracts\Events\Dispatcher
+     */
+    public $events;
+    public $db;
 
     /**
      * @param Dispatcher $bus
      */
-    public function __construct(Dispatcher $bus, ConnectionInterface $connection, Events $events)
+    public function __construct(SettingsRepository $settings, Dispatcher $events)
     {
-        $this->bus = $bus;
-        $this->connection = $connection;
+        $this->settings = $settings;
         $this->events = $events;
+        $this->db = app('db');
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -91,7 +73,9 @@ class UserWalletCashReviewController extends DzqController
             'cashStatus'    => (int) $this->inPut('cashStatus'),
             'remark'        => $this->inPut('remark'),
         ];
-
+        $log = app('payLog');
+        $log_data = $this->data;
+        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：",$log_data);
         $this->dzqValidate($this->data,[
             'ids'           => 'required|array',
             'cashStatus'    => 'required|int',
@@ -99,61 +83,52 @@ class UserWalletCashReviewController extends DzqController
         ]);
 
         //只允许修改为审核通过或审核不通过
-        if (!in_array($this->data['cashStatus'], [UserWalletCash::STATUS_REVIEWED, UserWalletCash::STATUS_REVIEW_FAILED, UserWalletCash::STATUS_PAID])) {
-            throw new WalletException('operate_forbidden');
+        if (!in_array($this->data['cashStatus'], [UserWalletCash::STATUS_REVIEWED, UserWalletCash::STATUS_REVIEW_FAILED])) {
+            $log->error("非法操作 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+            return $this->outPut(ResponseCode::NET_ERROR, '非法操作');
         }
-
+        $ip = ip($this->request->getServerParams());
         $cash_status    = $this->data['cashStatus'];
         $status_result  = []; //结果数组
-
-        $collection     = collect($this->data['ids'])
+        //是否开启企业打款
+        $wxpay_mchpay_close = (bool)$this->settings->get('wxpay_mchpay_close', 'wxpay');
+        $db = $this->db;
+        $collection = collect($this->data['ids'])
             ->unique()
-            ->map(function ($id) use ($cash_status, &$status_result) {
-
+            ->map(function ($id) use ($cash_status, &$status_result, $wxpay_mchpay_close, $ip, $db, $log, $log_data) {
+                $db->beginTransaction();
                 //取出待审核数据
                 $cash_record = UserWalletCash::find($id);
                 //只允许修改未审核的数据。
                 if (empty($cash_record) || $cash_record->cash_status != UserWalletCash::STATUS_REVIEW) {
+                    $db->rollBack();
+                    $log->error("只允许修改未审核的数据 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                     return $status_result[$id] = 'failure';
                 }
                 $cash_record->cash_status = $cash_status;
-                if ($cash_status == UserWalletCash::STATUS_REVIEWED) {
-                    //检查证书
-                    if (!file_exists(storage_path().'/cert/apiclient_cert.pem') || !file_exists(storage_path().'/cert/apiclient_key.pem')) {
-                        throw new WalletException('pem_notexist');
-                    }
-                    //零钱付款
-                    if ($cash_record->cash_type != UserWalletCash::TRANSFER_TYPE_MCH) {
-                        return $status_result[$id] = 'failure';
-                    }
-                    //审核通过
-                    if ($cash_record->save()) {
-                        //触发提现钩子事件
-                        $this->events->dispatch(
-                            new Cash($cash_record, $this->ip_address, GatewayConfig::WECAHT_TRANSFER)
-                        );
-                        return $status_result[$id] = 'success';
-                    }
-                } elseif ($cash_status == UserWalletCash::STATUS_REVIEW_FAILED) {
+                if ($cash_status == UserWalletCash::STATUS_REVIEW_FAILED) {
                     $cash_apply_amount = $cash_record->cash_apply_amount;//提现申请金额
                     //审核不通过解冻金额
                     $user_id = $cash_record->user_id;
                     //开始事务
-                    $this->connection->beginTransaction();
                     try {
                         //获取用户钱包
                         $user_wallet = UserWallet::lockForUpdate()->find($user_id);
                         //返回冻结金额至用户钱包
                         $user_wallet->freeze_amount    = $user_wallet->freeze_amount - $cash_apply_amount;
                         $user_wallet->available_amount = $user_wallet->available_amount + $cash_apply_amount;
-                        $user_wallet->save();
-
+                        $res = $user_wallet->save();
+                        if($res === false){
+                            $db->rollBack();
+                            $log->error("修改用户冻结金额、可用金额出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+                            return $status_result[$id] = 'failure';
+                        }
                         //冻结变动金额，为负数数
                         $change_freeze_amount = -$cash_apply_amount;
                         //可用金额增加
                         $change_available_amount = $cash_apply_amount;
                         //添加钱包明细
-                        $user_wallet_log = UserWalletLog::createWalletLog(
+                        $res = UserWalletLog::createWalletLog(
                             $user_id,
                             $change_available_amount,
                             $change_freeze_amount,
@@ -161,37 +136,83 @@ class UserWalletCashReviewController extends DzqController
                             app('translator')->get('wallet.cash_review_failure'),
                             $cash_record->id
                         );
-
+                        if(!$res){
+                            $db->rollBack();
+                            $log->error("添加钱包明细 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+                            return $status_result[$id] = 'failure';
+                        }
                         $cash_record->remark = Arr::get($this->data, 'remark', '');
                         $cash_record->refunds_status = UserWalletCash::REFUNDS_STATUS_YES;
-                        $cash_record->save();
-                        $this->connection->commit();
+                        $res = $cash_record->save();
+                        if($res === false){
+                            $db->rollBack();
+                            $log->error("修改提现记录状态出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+                            return $status_result[$id] = 'failure';
+                        }
+                        $db->commit();
                         return $status_result[$id] = 'success';
-                    } catch (Exception $e) {
+                    } catch (\Exception $e) {
                         //回滚事务
-                        $this->connection->rollback();
-                        throw new WalletException($e->getMessage(), 500);
-                    }
-                } elseif ($cash_status == UserWalletCash::STATUS_PAID) {
-                    //人工打款
-                    if ($cash_record->cash_type != UserWalletCash::TRANSFER_TYPE_MANUAL) {
+                        $db->rollback();
+                        $log->error("审核出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
                         return $status_result[$id] = 'failure';
                     }
-                    //开始事务
-                    $this->connection->beginTransaction();
+                }
+
+                // 审核通过，判断后台是否开了微信自动打款，如果开了就走自动打款，否则直接已打款，站长线下打款
+                if($wxpay_mchpay_close){        //开通了企业打款
                     try {
+                        //检查证书
+                        if (!file_exists(storage_path().'/cert/apiclient_cert.pem') || !file_exists(storage_path().'/cert/apiclient_key.pem')) {
+                            $db->rollBack();
+                            $log->error("检查证书失败 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+                            return $status_result[$id] = 'pem_notexist';
+                        }
+                        $cash_record->cash_type = UserWalletCash::TRANSFER_TYPE_MCH;
+                        $cash_record->cash_status = UserWalletCash::STATUS_IN_PAYMENT;
+                        $res = $cash_record->save();
+                        if($res === false){
+                            $db->rollBack();
+                            $log->error("修改提现记录出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+                            return $status_result[$id] = 'failure';
+                        }
+                        //触发提现钩子事件
+                        $this->events->dispatch(
+                            new Cash($cash_record, $ip, GatewayConfig::WECAHT_TRANSFER)
+                        );
+                        $db->commit();
+                        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+                        return $status_result[$id] = 'success';
+                    }catch (\Exception $e){
+                        $db->rollBack();
+                        $log->error("审核出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
+                        return $status_result[$id] = 'failure';
+                    }
+                }else{          //没有开通企业打款，直接扣款
+                    try {
+                        $cash_record->cash_type = UserWalletCash::TRANSFER_TYPE_MANUAL;
                         $cash_record->remark = Arr::get($this->data, 'remark', '');
                         $cash_record->cash_status = UserWalletCash::STATUS_PAID;//已打款
-                        $cash_record->save();
+                        $res = $cash_record->save();
+                        if($res === false){
+                            $db->rollBack();
+                            $log->error("修改提现记录出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+                            return $status_result[$id] = 'failure';
+                        }
                         //获取用户钱包
                         $user_wallet = UserWallet::lockForUpdate()->find($cash_record->user_id);
                         //去除冻结金额
                         $user_wallet->freeze_amount = $user_wallet->freeze_amount - $cash_record->cash_apply_amount;
-                        $user_wallet->save();
+                        $res = $user_wallet->save();
+                        if($res === false){
+                            $db->rollBack();
+                            $log->error("修改用户冻结金额、可用金额出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+                            return $status_result[$id] = 'failure';
+                        }
                         //冻结变动金额，为负数
                         $change_freeze_amount = -$cash_record->cash_apply_amount;
                         //添加钱包明细
-                        $user_wallet_log = UserWalletLog::createWalletLog(
+                        $res = UserWalletLog::createWalletLog(
                             $cash_record->user_id,
                             0,
                             $change_freeze_amount,
@@ -199,16 +220,20 @@ class UserWalletCashReviewController extends DzqController
                             app('translator')->get('wallet.cash_success'),
                             $cash_record->id
                         );
-                        //提交事务
-                        $this->connection->commit();
+                        if($res === false){
+                            $db->rollBack();
+                            $log->error("添加钱包明细出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
+                            return $status_result[$id] = 'failure';
+                        }
+                        $db->commit();
+                        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                         return $status_result[$id] = 'success';
-                    } catch (\Exception $e) {
-                        //回滚事务
-                        $this->connection->rollback();
-                        throw new WalletException($e->getMessage(), 500);
+                    }catch (\Exception $e){
+                        $db->rollBack();
+                        $log->error("审核出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
+                        return $status_result[$id] = 'failure';
                     }
                 }
-                return $status_result[$id] = 'failure';
             });
         return $this->outPut(ResponseCode::SUCCESS,'',$status_result);
     }

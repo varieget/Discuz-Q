@@ -64,14 +64,13 @@ class AutoRegisterUser
         $this->data['password'] = '';
 
         // 敏感词校验
-        try {
-            $censor->checkText(Arr::get($this->data, 'username'), 'username');
-            $user = User::where('username', Arr::get($this->data, 'username'))->first();
-            if ($user) {
-                throw new CensorNotPassedException();
-            }
-        } catch (CensorNotPassedException $e) {
+        $username = $censor->checkText(Arr::get($this->data, 'username'), 'username');
+        $username = preg_replace('/\s/ui', '', $username);
+        $exists = User::where('username', $username)->exists();
+        if ($exists) {
             $this->data['username'] = User::getNewUsername();
+        } else {
+            $this->data['username'] = $username;
         }
 
         // 审核模式，设置注册为审核状态

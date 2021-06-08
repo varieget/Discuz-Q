@@ -19,20 +19,31 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class MiniProgramPcBindPollController extends AuthBaseController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
 
     public function main()
     {
-        $token = $this->getScanCodeToken();
+        try {
+            $token = $this->getScanCodeToken();
 
-        if (isset($token->payload['bind']) && $token->payload['bind']) {
-            // 绑定成功
-            $this->outPut(ResponseCode::SUCCESS, '', $token->payload);
+            if (isset($token->payload['bind']) && $token->payload['bind']) {
+                // 绑定成功
+                $this->outPut(ResponseCode::SUCCESS, '', $token->payload);
+            }
+
+            $this->outPut(ResponseCode::PC_BIND_ERROR);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . 'pc端小程序绑定轮询接口异常-MiniProgramPcBindPollController：入参：'
+                                  . 'sessionToken:'.$this->inPut('sessionToken') . ';userId:'. $this->user->id . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc端小程序绑定轮询接口异常');
         }
-
-        $this->outPut(ResponseCode::PC_BIND_ERROR);
     }
 }

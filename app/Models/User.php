@@ -20,6 +20,8 @@ namespace App\Models;
 
 use App\Common\AuthUtils;
 use App\Common\CacheKey;
+use App\Common\Utils;
+use App\Common\ResponseCode;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
@@ -410,6 +412,14 @@ class User extends DzqModel
         return static::$hasher->check($password, $this->pay_password);
     }
 
+    public function checkWalletPay(){
+        if($this->pay_password){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     /*
     |--------------------------------------------------------------------------
     | 修改器
@@ -457,6 +467,33 @@ class User extends DzqModel
         } else {
             return app(Filesystem::class)->disk('avatar_cos')->url($path)
                 . '?' . Carbon::parse($this->avatar_at)->timestamp;
+        }
+    }
+
+    /**
+     * @param $value
+     * @return string
+     * @throws \Exception
+     */
+    public function getBackgroundAttribute($value)
+    {
+        if (empty($value)) {
+            return $value;
+        }
+
+        if (strpos($value, '://') === false) {
+            return app(UrlGenerator::class)->to('/storage/background/' . $value);
+        }
+
+        /** @var SettingsRepository $settings */
+        $settings = app(SettingsRepository::class);
+
+        $path = 'public/background/' . Str::after($value, '://');
+
+        if ($settings->get('qcloud_cos_sign_url', 'qcloud', true)) {
+            return app(Filesystem::class)->disk('background_cos')->temporaryUrl($path, Carbon::now()->addDay());
+        } else {
+            return app(Filesystem::class)->disk('background_cos')->url($path);
         }
     }
 
@@ -977,24 +1014,6 @@ class User extends DzqModel
             return null;
         }
         return $user->username;
-    }
-
-    public function isInviteUser($userId)
-    {
-        $result = Invite::query()
-            ->where(['to_user_id' => $userId, 'status' => Invite::STATUS_USED])
-            ->first();
-        if ($result) {
-            return $result;
-        }
-        return false;
-    }
-
-    public function getInviteScale($groupId)
-    {
-        $groupData = Group::query()->where('id', $groupId)->first();
-        // $be_scale
-        return $groupData['scale'] ?? 0;
     }
 
     protected function clearCache()

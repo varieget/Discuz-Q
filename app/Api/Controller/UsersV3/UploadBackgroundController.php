@@ -75,33 +75,15 @@ class UploadBackgroundController extends DzqController
         $result = $this->bus->dispatch(
             new UploadBackground($id, $file, $actor)
         );
-        $backUrl = $this->getBackground($result->background);
+
         $result = [
             'id' => $result->id,
             'username' => $result->username,
-            'backgroundUrl' => $backUrl,
+            'backgroundUrl' => $result->background."?".time(),
             'updatedAt' => optional($result->updated_at)->format('Y-m-d H:i:s'),
             'createdAt' => optional($result->created_at)->format('Y-m-d H:i:s'),
         ];
         return $this->outPut(ResponseCode::SUCCESS,'', $result);
-    }
-
-    protected function getBackground($background){
-        $url = $this->request->getUri();
-        $port = $url->getPort();
-        $port = $port == null ? '' : ':' . $port;
-        $path = $url->getScheme() . '://' . $url->getHost() . $port;
-        $backUrl = $path."/storage/background/".$background;
-        if (strpos($background,"cos://") !== false) {
-            $backgroundUrl = str_replace("cos://","",$background);
-            $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
-            $right =  substr($remoteServer, -1);
-            if("/"==$right){
-                $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
-            }
-            $backUrl = $remoteServer."/public/background/".$backgroundUrl;
-        }
-        return $backUrl;
     }
 
 }

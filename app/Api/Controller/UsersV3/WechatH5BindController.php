@@ -24,6 +24,7 @@ use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
+use App\Repositories\UserRepository;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Contracts\Socialite\Factory;
@@ -56,13 +57,27 @@ class WechatH5BindController extends AuthBaseController
         $this->bus          = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
-        $wxuser         = $this->getWxuser();
-        $sessionToken   = $this->inPut('sessionToken');
-        $token          = SessionToken::get($sessionToken);
-        $type           = $this->inPut('type');//用于区分sessionToken来源于pc还是h5
-        $actor          = !empty($token->user) ? $token->user : $this->user;
+        try {
+            $wxuser         = $this->getWxuser();
+            $sessionToken   = $this->inPut('sessionToken');
+            $token          = SessionToken::get($sessionToken);
+            $type           = $this->inPut('type');//用于区分sessionToken来源于pc还是h5
+            $actor          = !empty($token->user) ? $token->user : $this->user;
+        } catch (Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5绑定获取wx用户接口异常-WechatH5BindController： '
+                                  .'sessionToken:'.$this->inPut('sessionToken')
+                                  .';type:'.$this->inPut('type')
+                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5绑定获取wx用户接口异常');
+        }
+
 
         if (empty($actor)) {
             $this->outPut(ResponseCode::NOT_FOUND_USER);
@@ -76,59 +91,62 @@ class WechatH5BindController extends AuthBaseController
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            $this->outPut(ResponseCode::NET_ERROR,
-                          ResponseCode::$codeMap[ResponseCode::NET_ERROR],
-                          $e->getMessage()
-            );
-        }
 
-        if (!$wechatUser || !$wechatUser->user) {
-            if (!$wechatUser) {
-                $wechatUser = new UserWechat();
-            }
-
-            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
-            // 登陆用户且没有绑定||换绑微信 添加微信绑定关系
-            $wechatUser->user_id = $actor->id;
-            $wechatUser->setRelation('user', $actor);
-            $wechatUser->save();
-            $this->updateUserBindType($actor,AuthUtils::WECHAT);
-            if (empty($actor->nickname)) {
-                $actor->nickname = $wechatUser->nickname;
-                $actor->save();
-            }
-            $this->db->commit();
-
-            // PC扫码使用
-            if (!empty($sessionToken) && $type == 'pc') {
-                $accessToken = $this->getAccessToken($wechatUser->user);
-                $wechatUser = [
-                    'nickname'      =>  $wechatUser['nickname'],
-                    'headimgurl'    =>  $wechatUser['headimgurl']
-                ];
-                $this->bound->bindVoid($sessionToken, $wechatUser, $accessToken);
-
-            }
-
-            //用于用户名登录绑定微信使用
-            if (!empty($token->user) && $type == 'h5') {
-                if (empty($actor->username)) {
-                    $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+            if (!$wechatUser || !$wechatUser->user) {
+                if (!$wechatUser) {
+                    $wechatUser = new UserWechat();
                 }
-                //token生成
-                $accessToken = $this->getAccessToken($actor);
-                $result = $this->camelData(collect($accessToken));
-                $result = $this->addUserInfo($actor, $result);
-                $this->outPut(ResponseCode::SUCCESS, '', $result);
+
+                $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
+                // 登陆用户且没有绑定||换绑微信 添加微信绑定关系
+                $wechatUser->user_id = $actor->id;
+                $wechatUser->setRelation('user', $actor);
+                $wechatUser->save();
+                $this->updateUserBindType($actor,AuthUtils::WECHAT);
+                if (empty($actor->nickname)) {
+                    $actor->nickname = $wechatUser->nickname;
+                    $actor->save();
+                }
+                $this->db->commit();
+
+                // PC扫码使用
+                if (!empty($sessionToken) && $type == 'pc') {
+                    $accessToken = $this->getAccessToken($wechatUser->user);
+                    $wechatUser = [
+                        'nickname'      =>  $wechatUser['nickname'],
+                        'headimgurl'    =>  $wechatUser['headimgurl']
+                    ];
+                    $this->bound->bindVoid($sessionToken, $wechatUser, $accessToken);
+
+                }
+
+                //用于用户名登录绑定微信使用
+                if (!empty($token->user) && $type == 'h5') {
+                    if (empty($actor->username)) {
+                        $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+                    }
+                    //token生成
+                    $accessToken = $this->getAccessToken($actor);
+                    $result = $this->camelData(collect($accessToken));
+                    $result = $this->addUserInfo($actor, $result);
+                    $this->outPut(ResponseCode::SUCCESS, '', $result);
+                }
+
+                $this->outPut(ResponseCode::SUCCESS, '', []);
+
+            } else {
+                $this->db->rollBack();
+                $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
             }
-
-            $this->outPut(ResponseCode::SUCCESS, '', []);
-
-        } else {
+        } catch (Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5绑定接口异常-WechatH5BindController： '
+                                  .'mp_openid:' . $wxuser->getId()
+                                  .';inviteCode:'.$this->inPut('inviteCode')
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';type:'.$this->inPut('type')
+                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
             $this->db->rollBack();
-            $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
+            $this->outPut(ResponseCode::INTERNAL_ERROR,'H5绑定接口异常');
         }
     }
 }

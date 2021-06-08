@@ -2,6 +2,7 @@
 
 namespace App\Api\Controller\NotificationV3;
 
+use App\Api\Controller\ThreadsV3\ThreadHelper;
 use App\Common\ResponseCode;
 use App\Common\Utils;
 use App\Models\Thread;
@@ -33,7 +34,6 @@ class ListNotificationV2Controller extends DzqController
         $perPage = $this->inPut('perPage') ?: 10;
 
         $pageData = $this->search($user, $filters, $perPage, $page);
-
         $pageData['pageData'] = $pageData['pageData']->map(function (DatabaseNotification $i) {
             return $this->formatData($i);
         });
@@ -192,6 +192,24 @@ class ListNotificationV2Controller extends DzqController
             'readAt' => optional($data->read_at)->format('Y-m-d H:i:s'),
             'createdAt' => optional($data->created_at)->format('Y-m-d H:i:s'),
         ], Utils::arrayKeysToCamel($data->data));
+
+        if(!empty($result['postContent'])){
+            $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['postContent']);
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
+            $result['postContent'] = str_replace($searches, $replaces, $content);
+        }
+
+        if(!empty($result['threadTitle'])) {
+            $threadTitle = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['threadTitle']);
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($threadTitle);
+            $result['threadTitle'] = str_replace($searches, $replaces, $threadTitle);
+        }
+
+        if(!empty($result['replyPostContent'])) {
+            $replyPostContent = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['replyPostContent']);
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($replyPostContent);
+            $result['replyPostContent'] = str_replace($searches, $replaces, $replyPostContent);
+        }
 
         // 默认必须要有的字段
         if (!array_key_exists('reply_post_id', $result)) {

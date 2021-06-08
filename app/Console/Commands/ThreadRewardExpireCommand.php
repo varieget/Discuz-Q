@@ -145,10 +145,13 @@ class ThreadRewardExpireCommand extends AbstractCommand
                 }
 
                 if ($order->payment_type == Order::PAYMENT_TYPE_WALLET) {
-                    $userWallet->freeze_amount = $userWallet->freeze_amount - $remainMoney;
+                    $userWalletUpdateResult = UserWallet::query()->where('user_id', $item->user_id)
+                        ->update(['available_amount' => $userWallet->available_amount + $remainMoney, 
+                                  'freeze_amount' => $userWallet->freeze_amount - $remainMoney]);
+                } else {
+                    $userWalletUpdateResult = UserWallet::query()->where('user_id', $item->user_id)
+                        ->update(['available_amount' => $userWallet->available_amount + $remainMoney]);
                 }
-                $userWallet->available_amount = $userWallet->available_amount + $remainMoney;
-                $userWallet->save();
 
                 if ($order->payment_type == Order::PAYMENT_TYPE_WALLET) {
                     // 减少冻结金额

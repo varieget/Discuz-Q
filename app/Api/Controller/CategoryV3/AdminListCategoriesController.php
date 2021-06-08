@@ -20,6 +20,7 @@ namespace App\Api\Controller\CategoryV3;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Permission;
+use App\Models\Sequence;
 use Discuz\Base\DzqController;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -52,6 +53,10 @@ class AdminListCategoriesController extends DzqController
         $categoriesFather = [];
         $categoriesChild = [];
 
+        $sequence = Sequence::query()->first();
+
+        $sequenceCategories = $sequence->category_ids;
+        $sequenceCategories = explode(",", $sequenceCategories);
         foreach ($categories as $category) {
             $createThreadPermission = 'category' . $category['pid'] . '.createThread';
             // 全局或单个分类创建权限
@@ -59,6 +64,11 @@ class AdminListCategoriesController extends DzqController
                 $category['canCreateThread'] = true;
             } else {
                 $category['canCreateThread'] = false;
+            }
+            if(in_array($category['pid'],$sequenceCategories)){
+                $category['checked'] = true;
+            }else{
+                $category['checked'] = false;
             }
 
             $category['searchIds'] = (int)$category['pid'];

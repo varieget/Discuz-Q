@@ -41,13 +41,20 @@ class ListUserSignInController extends DzqController
 
     public function main()
     {
-        $userId = $this->user->id;
-        if(empty($userId)){
-            $this->outPut(ResponseCode::USERID_NOT_ALLOW_NULL);
+        try {
+            $userId = $this->user->id;
+            if(empty($userId)){
+                $this->outPut(ResponseCode::USERID_NOT_ALLOW_NULL);
+            }
+
+            $result = UserSignInFields::instance()->getUserSignInFields($userId);
+
+            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '扩展字段查询接口异常-ListUserSignInController：入参：'
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '扩展字段查询接口异常');
         }
-
-        $result = UserSignInFields::instance()->getUserSignInFields($userId);
-
-        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
     }
 }

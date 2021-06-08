@@ -28,6 +28,8 @@ use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
+use App\Notifications\Messages\Database\PostMessage;
+use App\Notifications\System;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
@@ -57,10 +59,24 @@ class UpdateThreadController extends DzqController
         $threadId = $this->inPut('threadId');
         $thread = $this->thread;
         $post = Post::getOneActivePost($threadId);
+        $oldContent = $post->content;
         if (empty($post)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
         $result = $this->updateThread($thread, $post);
+
+        if (
+            ($thread->user_id != $this->user->id)
+            && ($oldContent != $post->content)
+            && $thread->user
+        ) {
+            $thread->user->notify(new System(PostMessage::class, $this->user, [
+                'message' => $oldContent,
+                'post' => $post,
+                'notify_type' => Post::NOTIFY_EDIT_CONTENT_TYPE,
+            ]));
+        }
+
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 
@@ -85,6 +101,10 @@ class UpdateThreadController extends DzqController
 
         if (!empty($content['text'])) {
             $content['text'] = $this->optimizeEmoji($content['text']);
+            //处理@
+            $content['text'] = $this->renderCall($content['text']);
+            //处理 #
+            $content['text'] = $this->renderTopic($content['text']);
         }
 
         //更新thread数据
@@ -93,6 +113,8 @@ class UpdateThreadController extends DzqController
         $this->savePost($post, $content);
         //插入话题
         $this->saveTopic($thread, $content);
+        //发帖@用户
+        $this->sendRelated($thread, $post);
         //更新tom数据
         $tomJsons = $this->saveThreadTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
@@ -103,30 +125,26 @@ class UpdateThreadController extends DzqController
     {
         $title = $this->inPut('title');//非必填项
         $categoryId = $this->inPut('categoryId');
-        $price = $this->inPut('price');
-        $attachmentPrice = $this->inPut('attachmentPrice');
-        $freeWords = $this->inPut('freeWords');
+        $price = floatval($this->inPut('price'));
+        $attachmentPrice = floatval($this->inPut('attachmentPrice'));
+        $freeWords = floatval($this->inPut('freeWords'));
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
 
-        !empty($position) && $this->dzqValidate($position, [
-            'longitude' => 'required',
-            'latitude' => 'required',
-            'address' => 'required',
-            'location' => 'required'
-        ]);
         !empty($title) && $thread->title = $title;
         !empty($categoryId) && $thread->category_id = $categoryId;
         if (!empty($position)) {
-            $thread->longitude = $position['longitude'];
-            $thread->latitude = $position['latitude'];
-            $thread->address = $position['address'];
-            $thread->location = $position['location'];
+            $thread->longitude = $position['longitude'] ?? 0;
+            $thread->latitude = $position['latitude'] ?? 0;
+            $thread->address = $position['address'] ?? '';
+            $thread->location = $position['location'] ?? '';
         }
-        floatval($price) > 0 && $thread->price = floatval($price);
-        floatval($attachmentPrice) > 0 && $thread->attachment_price = floatval($attachmentPrice);
-        floatval($freeWords) > 0 && $thread->free_words = floatval($freeWords);
+
+        $thread->price = $price > 0 ? ($price) : 0;
+        $thread->attachment_price = $attachmentPrice > 0 ? $attachmentPrice : 0;
+        $thread->free_words = $freeWords > 0 ? $freeWords : 0;
+
         [$newTitle, $newContent] = $this->boolApproved($title, $content['text'], $isApproved);
         $content['text'] = $newContent;
         !empty($title) && $thread->title = $newTitle;
@@ -139,6 +157,9 @@ class UpdateThreadController extends DzqController
         if ($isDraft) {
             $thread->is_draft = Thread::BOOL_YES;
         } else {
+            if ($thread->is_draft) {
+                $thread->created_at = date('Y-m-d H:i:m', time());
+            }
             $thread->is_draft = Thread::BOOL_NO;
         }
 
@@ -229,11 +250,7 @@ class UpdateThreadController extends DzqController
 
     public function clearCache($user)
     {
-        DzqCache::delKey(CacheKey::CATEGORIES);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        CacheKey::delListCache();
         $threadId = $this->inPut('threadId');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POSTS, $threadId);

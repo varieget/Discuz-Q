@@ -18,6 +18,7 @@
 
 namespace App\Console\Commands;
 
+use App\Formatter\Formatter;
 use App\Models\Attachment;
 use App\Models\Order;
 use App\Models\Post;
@@ -29,6 +30,8 @@ use App\Models\ThreadReward;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\ThreadVideo;
+use App\Models\Topic;
+use App\Models\User;
 use App\Repositories\ThreadVideoRepository;
 use Carbon\Carbon;
 use Discuz\Console\AbstractCommand;
@@ -39,6 +42,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Facade;
+use s9e\TextFormatter\Configurator\RendererGenerators\PHP\BranchOutputOptimizer;
 
 /**
  * thread 迁移脚本，迁移数据库  thread_tag、thread_tom，其中帖子中图文混排中的图片情况先不管，只考虑单独添加的图片/附件
@@ -61,6 +65,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     protected $video_type;
 
+    const V3_TYPE = 99;
 
     /**
      * AvatarCleanCommand constructor.
@@ -102,7 +107,6 @@ class ThreadMigrationCommand extends AbstractCommand
     public function handle()
     {
         app('log')->info('开始数据迁移start');
-        $this->info('开始帖子内容数据迁移start');
         foreach ($this->old_type as $type){
             try {
                 switch ($type){
@@ -131,15 +135,59 @@ class ThreadMigrationCommand extends AbstractCommand
             }catch (\Exception $e){
                 continue;
             }
-
         }
-        $this->info('帖子内容数据迁移end');
         app('log')->info('数据迁移end');
+        //v3数据迁移之后，下面的操作会比较刺激 -- 修改 posts 中的 content 字段数据
+        $page = 1;
+        $limit = 100000;
+        $data = self::getOldData($page, $limit);
+        try {
+            while (!empty($data)){
+                foreach ($data as $key => $val){
+                    $this->db->beginTransaction();
+                    foreach ($val as $vi){
+                        $content = $vi['content'];
+                        if(empty($content))     continue;
+                        $content = self::s9eRender($content);
+                        $content = self::v3Content($content);
+//                        if(1){
+//                            $content = self::renderTopic($content);
+//                            $content = self::renderCall($content);
+//                        }
+
+                        //先将posts全部改掉
+                        $res = $this->db->table('posts')->where('id', $vi['post_id'])->update(['content' => $content]);
+                        if($res === false){
+                            $this->db->rollBack();
+                            $this->info('修改 posts 的content出错');
+                            app('log')->info('修改 posts 的content出错', [$vi]);
+                            break;
+                        }
+                    }
+                    $thread_id = $key;
+                    //最后将 posts 对应的 thread 的 type 修改为 99
+                    $res = $this->db->table('threads')->where('id', $thread_id)->update(['type' => self::V3_TYPE]);
+                    if($res === false){
+                        $this->db->rollBack();
+                        $this->info('修改 threads 出错');
+                        app('log')->info('修改 threads 出错', ['thread_id' => $thread_id]);
+                        break;
+                    }
+                    $this->db->commit();
+                }
+                $page += 1;
+                $data = self::getOldData($page, $limit);
+            }
+            app('log')->info('data完成', [$data]);
+        }catch (\Exception $e){
+            $this->db->rollBack();
+            $this->info($e->getMessage());
+        }
+        app('log')->info('帖子内容 posts 的 content 修改完成');
     }
 
 
     public function migrateText(){
-        $this->info('迁移文字帖start');
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_TEXT)
@@ -195,12 +243,10 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移文字帖end');
     }
 
 
     public function migrateLong(){
-        $this->info('迁移长文帖start');
         //todo
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
@@ -311,11 +357,9 @@ class ThreadMigrationCommand extends AbstractCommand
 
             $this->db->commit();
         }
-        $this->info('迁移长文帖end');
     }
 
     public function migrateVideo(){
-        $this->info('迁移视频帖start');
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_VIDEO)
@@ -353,11 +397,9 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移视频帖end');
     }
 
     public function migrateImage(){
-        $this->info('迁移图片帖start');
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_IMAGE)
@@ -392,12 +434,9 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移图片帖end');
     }
 
     public function migrateAudio(){
-        $this->info('迁移音频帖start');
-        //todo
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_AUDIO)
@@ -435,12 +474,9 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移音频帖end');
     }
 
     public function migrateQuestion(){
-        $this->info('迁移问答帖start');
-        //todo
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_QUESTION)
@@ -532,12 +568,9 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移问答帖end');
     }
 
     public function migrateGoods(){
-        $this->info('迁移商品帖start');
-        //todo
         $list = $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_GOODS)
@@ -609,7 +642,6 @@ class ThreadMigrationCommand extends AbstractCommand
             }
             $this->db->commit();
         }
-        $this->info('迁移商品帖end');
     }
 
     public function preHttps($url){
@@ -648,9 +680,84 @@ class ThreadMigrationCommand extends AbstractCommand
             'created_at'    =>  $thread->created_at,
             'updated_at'    =>  $thread->updated_at
         ]);
-
     }
 
+    //通过s9e，将threads中的 content 转为接口获取的 html 渲染格式
+    public function s9eRender($text){
+        return $this->app->make(Formatter::class)->render($text);
+    }
+
+    //将s9e render 渲染后的数据，正则匹配替换调表情，如不切换，当站长更换域名时，表情url会失效
+    public function v3Content($text){
+        preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
+        if(empty($m1[0])){
+            return $text;
+        }
+        $searches = $m1[0];
+        $replaces = [];
+        foreach ($searches as $key => $search) {
+            preg_match('/:[a-z]+?:/i', $search, $m2);
+            if(empty($m2[0])){      //没有匹配上
+                unset($searches[$key]);
+                continue;
+            }
+            $emoji = $m2[0];
+            $replaces[] = $emoji;
+        }
+        $text = str_replace($searches, $replaces, $text);
+        return $text;
+    }
+
+    public function renderTopic($text){
+        preg_match_all('/#.+?#/', $text, $topic);
+        if(empty($topic)){
+            return  $text;
+        }
+        $topic = $topic[0];
+        $topic = str_replace('#', '', $topic);
+        $topics = Topic::query()->select('id', 'content')->whereIn('content', $topic)->get()->map(function ($item) {
+            $item['content'] = '#' . $item['content'] . '#';
+            $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
+            return $item;
+        })->toArray();
+        foreach ($topics as $val){
+            $text = preg_replace("/{$val['content']}/", $val['html'], $text, 1);
+        }
+        return $text;
+    }
+
+    public function renderCall($text){
+        preg_match_all('/@.+? /', $text, $call);
+        if(empty($call)){
+            return  $text;
+        }
+        $call = $call[0];
+        $call = str_replace(['@', ' '], '', $call);
+        $ats = User::query()->select('id', 'username')->whereIn('username', $call)->get()->map(function ($item) {
+            $item['username'] = '@' . $item['username'];
+            $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
+            return $item;
+        })->toArray();
+        foreach ($ats as $val){
+            $text = preg_replace("/{$val['username']}/", "{$val['html']}", $text, 1);
+        }
+        return $text;
+    }
+
+    //获取老数据 threads 、posts
+    public function getOldData($page, $limit){
+        $data = [];
+        $threadIds = Thread::query()->where('type','!=', self::V3_TYPE)->offset(($page - 1)*$limit)->limit($limit)->pluck('id')->toArray();
+        if(empty($threadIds))   return $data;
+        $posts = Post::query()->whereIn('thread_id', $threadIds)->get(['id', 'content', 'thread_id']);
+        foreach ($posts as $val){
+            $data[$val->thread_id][] = [
+                'post_id'   =>  $val->id,
+                'content'   =>  $val->content
+            ];
+        }
+        return $data;
+    }
 
 
 }

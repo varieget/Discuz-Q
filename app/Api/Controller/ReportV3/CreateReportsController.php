@@ -5,17 +5,22 @@ use App\Common\ResponseCode;
 use App\Models\Post;
 use App\Models\Report;
 use App\Models\Thread;
-use App\Models\User;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
-use Discuz\Auth\AssertPermissionTrait;
 
 class CreateReportsController extends DzqController
 {
-    use AssertPermissionTrait;
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
+    }
 
     public function main()
     {
-        $this->assertRegistered($this->user);
         $userId   = (int)$this->inPut('userId');
         $threadId = (int)$this->inPut('threadId');
         $postId   = $this->inPut('postId') ? (int)$this->inPut('postId') : 0;

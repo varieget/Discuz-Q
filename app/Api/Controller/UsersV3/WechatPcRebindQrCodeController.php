@@ -19,6 +19,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use App\Settings\SettingsRepository;
 use Discuz\Wechat\EasyWechatTrait;
@@ -42,58 +43,71 @@ class WechatPcRebindQrCodeController extends DzqController
         $this->httpClient           = new Client();
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
-        $actor = $this->user;
-        if (empty($actor->id)) {
-            $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
-        }
-
-        $miniWechat = (bool)$this->settingsRepository->get('miniprogram_close', 'wx_miniprogram');
-        $wechat     = (bool)$this->settingsRepository->get('offiaccount_close', 'wx_offiaccount');
-        if (!$miniWechat && !$wechat) {
-            $this->outPut(ResponseCode::NONSUPPORT_WECHAT_REBIND);
-        }
-
-        $token = SessionToken::generate(SessionToken::WECHAT_PC_REBIND, null, $actor->id);
-        $token->save();
-        $sessionToken = $token->token;
-
-        if ($miniWechat) {
-//        if (true) {
-            //获取小程序全局token
-            $app = $this->miniProgram();
-            $optional['path'] = '/pages/user/pc-login';
-            $wxqrcodeResponse = $app->app_code->getUnlimit($sessionToken, $optional);
-            if(is_array($wxqrcodeResponse) && isset($wxqrcodeResponse['errcode']) && isset($wxqrcodeResponse['errmsg'])) {
-                //todo 日志记录
-                $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR);
+        try {
+            $actor = $this->user;
+            if (empty($actor->id)) {
+                $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
             }
-            //图片二进制转base64
-            $data = [
-                'sessionToken' => $sessionToken,
-                'base64Img' => 'data:image/png;base64,' . base64_encode($wxqrcodeResponse->getBody()->getContents())
-            ];
+
+            $miniWechat = (bool)$this->settingsRepository->get('miniprogram_close', 'wx_miniprogram');
+            $wechat     = (bool)$this->settingsRepository->get('offiaccount_close', 'wx_offiaccount');
+            if (!$miniWechat && !$wechat) {
+                $this->outPut(ResponseCode::NONSUPPORT_WECHAT_REBIND);
+            }
+
+            $token = SessionToken::generate(SessionToken::WECHAT_PC_REBIND, null, $actor->id);
+            $token->save();
+            $sessionToken = $token->token;
+
+            if ($miniWechat) {
+    //        if (true) {
+                //获取小程序全局token
+                $app = $this->miniProgram();
+                $optional['path'] = '/pages/user/pc-login';
+                $wxqrcodeResponse = $app->app_code->getUnlimit($sessionToken, $optional);
+                if(is_array($wxqrcodeResponse) && isset($wxqrcodeResponse['errcode']) && isset($wxqrcodeResponse['errmsg'])) {
+                    //todo 日志记录
+                    $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR);
+                }
+                //图片二进制转base64
+                $data = [
+                    'sessionToken' => $sessionToken,
+                    'base64Img' => 'data:image/png;base64,' . base64_encode($wxqrcodeResponse->getBody()->getContents())
+                ];
+            }
+
+            if ($wechat) {
+    //        if (false) {
+                $redirectUri = urldecode($this->inPut('redirectUri'));
+                $conData = $this->parseUrlQuery($redirectUri);
+                $redirectUri = $conData['url'];
+                $locationUrl = $this->url->action('/apiv3/users/wechat/h5.oauth?redirect='.$redirectUri);
+
+                $qrCode = new QrCode($locationUrl);
+
+                $binary = $qrCode->writeString();
+
+                $data = [
+                    'sessionToken' => $sessionToken,
+                    'base64Img' => 'data:image/png;base64,' . base64_encode($binary),
+                ];
+            }
+
+            $this->outPut(ResponseCode::SUCCESS, '', $data);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId
+                                  . '-二维码异常-' . 'pc换绑二维码生成接口异常-WechatPcRebindQrCodeController：入参：'
+                                  . '用户id:'.$this->user->id. 'redirectUri:'. $this->inPut('redirectUri') . '异常：' .$e->getMessage()
+            );
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc换绑二维码生成接口异常');
         }
-
-        if ($wechat) {
-//        if (false) {
-            $redirectUri = urldecode($this->inPut('redirectUri'));
-            $conData = $this->parseUrlQuery($redirectUri);
-            $redirectUri = $conData['url'];
-            $locationUrl = $this->url->action('/apiv3/users/wechat/h5.oauth?redirect='.$redirectUri);
-
-            $qrCode = new QrCode($locationUrl);
-
-            $binary = $qrCode->writeString();
-
-            $data = [
-                'sessionToken' => $sessionToken,
-                'base64Img' => 'data:image/png;base64,' . base64_encode($binary),
-            ];
-        }
-
-        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 
     /**

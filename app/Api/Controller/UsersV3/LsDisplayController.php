@@ -23,6 +23,7 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Models\UserWechat;
 use App\Models\UserQq;
+use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Discuz\Base\DzqController;
 
@@ -36,20 +37,30 @@ class LsDisplayController extends DzqController
         $this->settings = $settingsRepository;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
-        //用户名密码模式，默认展示用户名和密码登录
-        $registerType = $this->settings->get('register_type');
-        if($registerType == 0) {
-            $this->outPut(ResponseCode::SUCCESS, '',['status' => true]);
-        }
-        //存在未绑定任何第三方的信息用户，则展示用户名和密码登录
-        $status = false;
-        if(User::query()->where('bind_type',AuthUtils::DEFAULT)->count('id') > 0){
-            $status = true;
-        }
+        try {
+            //用户名密码模式，默认展示用户名和密码登录
+            $registerType = $this->settings->get('register_type');
+            if($registerType == 0) {
+                $this->outPut(ResponseCode::SUCCESS, '',['status' => true]);
+            }
+            //存在未绑定任何第三方的信息用户，则展示用户名和密码登录
+            $status = false;
+            if(User::query()->where('bind_type',AuthUtils::DEFAULT)->count('id') > 0){
+                $status = true;
+            }
 
-        return $this->outPut(ResponseCode::SUCCESS, '',['status' => $status]);
+            return $this->outPut(ResponseCode::SUCCESS, '',['status' => $status]);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户名密码入口是否展示接口异常-LsDisplayController： ' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名密码入口是否展示接口异常');
+        }
     }
 
 }

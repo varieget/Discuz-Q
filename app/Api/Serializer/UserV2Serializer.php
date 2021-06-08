@@ -68,15 +68,11 @@ class UserV2Serializer extends AbstractSerializer
 
         $canEdit = $gate->allows('edit', $model);
 
-        $backUrl = "";
-        if($model->background){
-            $backUrl = $this->getBackground($model->background);
-        }
         $attributes = [
             'id'                => (int) $model->id,
             'username'          => $model->username,
             'avatarUrl'         => $model->avatar,
-            'backgroundUrl'     => $backUrl,
+            'backgroundUrl'     => $model->background,
             'isReal'            => $this->getIsReal($model),
             'threadCount'       => (int) $model->thread_count,
             'followCount'       => (int) $model->follow_count,
@@ -138,7 +134,7 @@ class UserV2Serializer extends AbstractSerializer
         // 钱包余额
         if ($this->actor->id === $model->id) {
             $attributes += [
-                'canWalletPay'  => $gate->allows('walletPay', $model),
+                'canWalletPay'  => $this->actor->checkWalletPay(),
                 'walletBalance' => $this->actor->userWallet->available_amount,
                 'walletFreeze'  => $this->actor->userWallet->freeze_amount,
             ];
@@ -185,25 +181,6 @@ class UserV2Serializer extends AbstractSerializer
             ];
         }
         return $attributes;
-    }
-
-    protected function getBackground($backgroundUrl){
-        $url = $this->request->getUri();
-        $port = $url->getPort();
-        $port = $port == null ? '' : ':' . $port;
-        $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
-
-        $backUrl = $path."/storage/background/".$backgroundUrl;
-        if (strpos($backgroundUrl,"cos://") !== false) {
-            $background = str_replace("cos://","",$backgroundUrl);
-            $remoteServer = $this->settings->get('qcloud_cos_cdn_url', 'qcloud', true);
-            $right =  substr($remoteServer, -1);
-            if("/"==$right){
-                $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
-            }
-            $backUrl = $remoteServer."/public/background/".$background;
-        }
-        return $backUrl;
     }
 
     /**

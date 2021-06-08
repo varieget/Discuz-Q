@@ -161,11 +161,14 @@ class RedPacketExpireCommand extends AbstractCommand
                 }
 
                 if ($order->payment_type == Order::PAYMENT_TYPE_WALLET) {
-                    $userWallet->freeze_amount = $userWallet->freeze_amount - $remainMoney;
+                    $userWalletUpdateResult = UserWallet::query()->where('user_id', $order->user_id)
+                        ->update(['available_amount' => $userWallet->available_amount + $remainMoney, 
+                                  'freeze_amount' => $userWallet->freeze_amount - $remainMoney]);
                     $changeFreezeAmount = $remainMoney;
+                } else {
+                    $userWalletUpdateResult = UserWallet::query()->where('user_id', $order->user_id)
+                        ->update(['available_amount' => $userWallet->available_amount + $remainMoney]);
                 }
-                $userWallet->available_amount = $userWallet->available_amount + $remainMoney;
-                $userWallet->save();
 
                 $trueChangeFreezeAmount = $changeFreezeAmount ? -$changeFreezeAmount : 0;
                 UserWalletLog::createWalletLog(

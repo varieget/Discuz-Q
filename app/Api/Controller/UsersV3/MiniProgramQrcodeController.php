@@ -19,6 +19,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use App\Settings\SettingsRepository;
 use Discuz\Wechat\EasyWechatTrait;
@@ -66,42 +67,55 @@ class MiniProgramQrcodeController extends DzqController
         $this->httpClient = new Client();
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
-        $type = $this->inPut('type');
-        if(! in_array($type, self::$qrcodeType)) {
-            $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR);
-        }
+        try {
+            $type = $this->inPut('type');
+            if(! in_array($type, self::$qrcodeType)) {
+                $this->outPut(ResponseCode::GEN_QRCODE_TYPE_ERROR);
+            }
 
-        //跳转路由选择
-        $path = self::$qrcodeTypeAndRouteMap[$type];
-        $actor = $this->user;
-        if ($type == 'pc_bind_mini' && empty($actor->id)) {
-            $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
-        }
-        if($actor && $actor->id) {
-            $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
-        } else {
-            $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type]);
-        }
-        // create token
-        $token->save();
+            //跳转路由选择
+            $path = self::$qrcodeTypeAndRouteMap[$type];
+            $actor = $this->user;
+            if ($type == 'pc_bind_mini' && empty($actor->id)) {
+                $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+            }
+            if($actor && $actor->id) {
+                $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
+            } else {
+                $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type]);
+            }
+            // create token
+            $token->save();
 
-        $sessionToken = $token->token;
-        //获取小程序全局token
-        $app = $this->miniProgram();
-        $optional['path'] = $path;
-        $wxqrcodeResponse = $app->app_code->getUnlimit($sessionToken, $optional);
-        if(is_array($wxqrcodeResponse) && isset($wxqrcodeResponse['errcode']) && isset($wxqrcodeResponse['errmsg'])) {
-            //todo 日志记录
-            $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR);
-        }
-        //图片二进制转base64
-        $data = [
-            'sessionToken' => $token->token,
-            'base64Img' => 'data:image/png;base64,' . base64_encode($wxqrcodeResponse->getBody()->getContents())
-        ];
+            $sessionToken = $token->token;
+            //获取小程序全局token
+            $app = $this->miniProgram();
+            $optional['path'] = $path;
+            $wxqrcodeResponse = $app->app_code->getUnlimit($sessionToken, $optional);
+            if(is_array($wxqrcodeResponse) && isset($wxqrcodeResponse['errcode']) && isset($wxqrcodeResponse['errmsg'])) {
+                //todo 日志记录
+                $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR);
+            }
+            //图片二进制转base64
+            $data = [
+                'sessionToken' => $token->token,
+                'base64Img' => 'data:image/png;base64,' . base64_encode($wxqrcodeResponse->getBody()->getContents())
+            ];
 
-        $this->outPut(ResponseCode::SUCCESS, '', $data);
+            $this->outPut(ResponseCode::SUCCESS, '', $data);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId
+                                  . '-二维码异常-' . '小程序二维码生成接口异常-MiniProgramQrcodeController： 入参：'
+                                  . 'type:'.$this->inPut('type') . ';userId:'. $this->user->id . ';异常：' .$e->getMessage()
+            );
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序二维码生成接口异常');
+        }
     }
 }

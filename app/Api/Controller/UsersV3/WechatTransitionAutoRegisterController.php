@@ -42,7 +42,6 @@ use Illuminate\Database\ConnectionInterface;
 class WechatTransitionAutoRegisterController extends AuthBaseController
 {
 
-
     protected $bus;
 
     protected $settings;
@@ -70,6 +69,7 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
         if(!(bool)$this->settings->get('is_need_transition')) {
             $this->outPut(ResponseCode::TRANSITION_NOT_OPEN);
         }
+        $type = intval($this->inPut('type'));
         //过度页开关打开需要把微信信息绑定至新用户，只在微信内有效
         $sessionToken = $this->inPut('sessionToken');
         if(! $sessionToken) {
@@ -80,63 +80,79 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
             //授权信息过期，重新授权
             $this->outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
         }
-        //获取授权后微信用户信息
-        $wxuser         = $token->payload;
-        $inviteCode     = $this->inPut('inviteCode');//邀请码非必须存在
 
         // 站点关闭注册
         if (!(bool)$this->settings->get('register_close')) {
             $this->outPut(ResponseCode::REGISTER_CLOSE);
         }
+
         $this->db->beginTransaction();
-        /** @var UserWechat $wechatUser */
-        $wechatUser = UserWechat::query()
-            ->where('id', $wxuser['user_wechat_id'])
-            ->lockForUpdate()
-            ->first();
-        if(! $wechatUser) {
+        try {
+            //获取授权后微信用户信息
+            $wxuser         = $token->payload;
+            $inviteCode     = $this->inPut('inviteCode');//邀请码非必须存在
+
+            /** @var UserWechat $wechatUser */
+            $wechatUser = UserWechat::query()
+                ->where('id', $wxuser['user_wechat_id'])
+                ->lockForUpdate()
+                ->first();
+
+    //        $wechatUser = UserWechat::query()->where('id',63)->first();
+
+            if(! $wechatUser) {
+                $this->db->rollBack();
+                //授权信息过期，重新授权
+                $this->outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
+            }
+            $data['code']               = $inviteCode;
+            $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
+            $data['nickname']           = Str::of($wechatUser->nickname)->substr(0, 15);
+            $data['register_reason']    = $type == 1 ? trans('user.register_by_wechat_miniprogram') : trans('user.register_by_wechat_h5');
+            $data['bind_type']          = AuthUtils::WECHAT;
+            $user = $this->bus->dispatch(
+                new AutoRegisterUser(new User(), $data)
+            );
+            $wechatUser->user_id = $user->id;
+            // 先设置关系，为了同步微信头像
+            $wechatUser->setRelation('user', $user);
+
+            $wechatUser->save();
+            $this->db->commit();
+            // 判断是否开启了注册审核
+    //        if (!(bool)$this->settings->get('register_validate')) {
+    //            // Tag 发送通知 (在注册绑定微信后 发送注册微信通知)
+    //            $user->setRelation('wechat', $wechatUser);
+    //            $user->notify(new System(RegisterWechatMessage::class, $user, ['send_type' => 'wechat']));
+    //        }
+            // 创建 token
+            $params = [
+                'username' => $wechatUser->user->username,
+                'password' => ''
+            ];
+
+            GenJwtToken::setUid($wechatUser->user->id);
+            $response = $this->bus->dispatch(
+                new GenJwtToken($params)
+            );
+
+            $accessToken = json_decode($response->getBody());
+
+            $result = $this->camelData(collect($accessToken));
+
+            $result = $this->addUserInfo($wechatUser->user, $result);
+
+            $this->outPut(ResponseCode::SUCCESS, '', $result);
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '微信过渡阶段自动注册用户接口异常-WechatTransitionAutoRegisterController：入参：'
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';type:'.$this->inPut('type')
+                                  .';inviteCode:'.$this->inPut('inviteCode')
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
             $this->db->rollBack();
-            //授权信息过期，重新授权
-            $this->outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
+            $this->outPut(ResponseCode::INTERNAL_ERROR,'微信过渡阶段自动注册用户接口异常');
         }
-        $data['code']               = $inviteCode;
-        $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
-        $data['nickname']           = Str::of($wechatUser->nickname)->substr(0, 15);
-        $data['register_reason']    = trans('user.register_by_wechat_h5');
-        $data['bind_type']          = AuthUtils::WECHAT;
-        $user = $this->bus->dispatch(
-            new AutoRegisterUser(new User(), $data)
-        );
-        $wechatUser->user_id = $user->id;
-        // 先设置关系，为了同步微信头像
-        $wechatUser->setRelation('user', $user);
-
-        $wechatUser->save();
-        $this->db->commit();
-        // 判断是否开启了注册审核
-        if (!(bool)$this->settings->get('register_validate')) {
-            // Tag 发送通知 (在注册绑定微信后 发送注册微信通知)
-            $user->setRelation('wechat', $wechatUser);
-            $user->notify(new System(RegisterWechatMessage::class, $user, ['send_type' => 'wechat']));
-        }
-        // 创建 token
-        $params = [
-            'username' => $wechatUser->user->username,
-            'password' => ''
-        ];
-
-        GenJwtToken::setUid($wechatUser->user->id);
-        $response = $this->bus->dispatch(
-            new GenJwtToken($params)
-        );
-
-        $accessToken = json_decode($response->getBody());
-
-        $result = $this->camelData(collect($accessToken));
-
-        $result = $this->addUserInfo($wechatUser->user, $result);
-
-        $this->outPut(ResponseCode::SUCCESS, '', $result);
 
     }
 }

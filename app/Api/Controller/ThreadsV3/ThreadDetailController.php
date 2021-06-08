@@ -45,7 +45,6 @@ class ThreadDetailController extends DzqController
     {
         $this->thread = Thread::query()
             ->where(['id' => $this->inPut('threadId')])
-            ->whereNull('deleted_at')
             ->first();
         return $userRepo->canViewThreadDetail($this->user, $this->thread);
     }

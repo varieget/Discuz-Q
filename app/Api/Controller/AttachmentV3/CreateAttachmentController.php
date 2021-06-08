@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\AttachmentV3;
 
+use App\Api\Serializer\AttachmentSerializer;
 use App\Commands\Attachment\AttachmentUploader;
 use App\Common\ResponseCode;
 use App\Events\Attachment\Saving;
@@ -137,7 +138,9 @@ class CreateAttachmentController extends DzqController
             @unlink($tmpFile);
             @unlink($tmpFileWithExt);
         }
-
-        return $this->outPut(ResponseCode::SUCCESS,'',$attachment);
+        $attachmentSerializer = $this->app->make(AttachmentSerializer::class);
+        $attachment = $attachmentSerializer->getDefaultAttributes($attachment);
+        $data = $this->camelData($attachment);
+        return $this->outPut(ResponseCode::SUCCESS,'',$data);
     }
 }

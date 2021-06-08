@@ -19,16 +19,15 @@
 namespace App\Api\Controller\RedPacketV3;
 
 use App\Common\ResponseCode;
-use App\Repositories\RedPacketRepository;
+use App\Models\RedPacket;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
 class ResourceRedPacketController extends DzqController
 {
-    public $redPacket;
-
-    public function __construct(RedPacketRepository $redPacket)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $this->redPacket = $redPacket;
+        return true;
     }
 
     public function main()
@@ -36,7 +35,7 @@ class ResourceRedPacketController extends DzqController
         $id = $this->inPut('id');
         if(empty($id))       return  $this->outPut(ResponseCode::INVALID_PARAMETER );
 
-        $build = $this->redPacket->findOrFail($id);
+        $build = RedPacket::query()->findOrFail($id);
         $data = $this->camelData($build);
 
         return $this->outPut(ResponseCode::SUCCESS, '', $data);

@@ -29,6 +29,7 @@ use Illuminate\Support\Str;
  * @property int $attachment_id
  * @property int $dialog_id
  * @property int $message_text
+ * @property int $read_status
  * @property Carbon $updated_at
  * @property Carbon $created_at
  * @package App\Models
@@ -67,7 +68,7 @@ class DialogMessage extends Model
     public function getMessageTextAttribute($value)
     {
         $value = json_decode(stripslashes($value));
-        $value['message_text'] = static::$formatter->unparse($value['message_text']);
+      //  $value['message_text'] = static::$formatter->unparse($value['message_text']);
         $value = json_encode($value);
 
         return $value;
@@ -153,7 +154,7 @@ class DialogMessage extends Model
         return $messageText;
     }
 
-    public static function build($user_id, $dialog_id, $attachment_id, $message_text)
+    public static function build($user_id, $dialog_id, $attachment_id, $message_text,$read_status)
     {
         $dialogMessage = new static();
 
@@ -161,6 +162,7 @@ class DialogMessage extends Model
         $dialogMessage->dialog_id     = $dialog_id;
         $dialogMessage->attachment_id = $attachment_id;
         $dialogMessage->message_text  = $message_text;
+        $dialogMessage->read_status     = $read_status;
 
         return $dialogMessage;
     }

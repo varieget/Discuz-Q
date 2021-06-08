@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 #帖子点赞打赏用户列表
+use App\Common\Utils;
 use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Models\PostUser;
@@ -83,7 +84,7 @@ class ThreadLikedUsersController extends DzqController
             ->orderBy('created_at','desc')
             ->get(['user_id','created_at','type'])
             ->map(function ($value) {
-                if ($value->type == Order::ORDER_TYPE_THREAD) {
+                if (in_array([Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT],$value->type)) {
                     $value->type = 2;
                 } else {
                     $value->type = 3;
@@ -105,48 +106,22 @@ class ThreadLikedUsersController extends DzqController
         $userArr = array_combine(array_column($user, 'id'), $user);
         $likeSort = $this->arraySort($postUserAndorder,'created_at','desc');
         foreach ($likeSort as $k=>$v) {
-            $likeSort[$k]['passed_at'] = $this->format_date(strtotime($v['created_at']));
+            $likeSort[$k]['passed_at'] =  Utils::diffTime($v['created_at']);
             $likeSort[$k]['nickname'] = $userArr[$v['user_id']]['nickname'];
             $likeSort[$k]['avatar'] = $userArr[$v['user_id']]['avatar'];
         }
 
-        $currentPage = $data['page'] >= 1 ? intval($data['page']) : 1;
-        $perPageMax = 50;
-        $perPage = $data['perPage'] >= 1 ? intval($data['perPage']) : 20;
-        $perPage > $perPageMax && $perPage = $perPageMax;
-        $count = count($likeSort);
-        $builder = $this->camelData(array_slice($likeSort, ($currentPage - 1) * $perPage, $perPage));
-        $url = $this->request->getUri();
-        $port = $url->getPort();
-        $port = $port == null ? '' : ':' . $port;
-        parse_str($url->getQuery(), $query);
-        $queryFirst = $queryNext = $queryPre = $query;
-        $queryFirst['page'] = 1;
-        $queryNext['page'] = $currentPage + 1;
-        $queryPre['page'] = $currentPage <= 1 ? 1 : $currentPage - 1;
+        $pageData = $this->specialPagination($data['page'],$data['perPage'],$likeSort);
 
-        $path = $url->getScheme() . '://' . $url->getHost() . $port . $url->getPath() . '?';
-
-        $retrue =  [
-            'pageData' => [
-                'allCount' => count($postUser)+count($order),
-                'likeCount' => count($postUser),
-                'rewardCount' => $thread['price'] > 0 ? 0 : count($order),
-                'raidCount' => $thread['price'] > 0 ? count($order) : 0,
-                'list' => $builder
-            ],
-            'currentPage' => $currentPage,
-            'perPage' => $perPage,
-            'firstPageUrl' => urldecode($path . http_build_query($queryFirst)),
-            'nextPageUrl' => urldecode($path . http_build_query($queryNext)),
-            'prePageUrl' => urldecode($path . http_build_query($queryPre)),
-            'pageLength' => count($builder),
-            'totalCount' => $count,
-            'totalPage' => $count % $perPage == 0 ? $count / $perPage : intval($count / $perPage) + 1
+        $pageData['pageData'] = [
+            'allCount' => count($postUser)+count($order),
+            'likeCount' => count($postUser),
+            'rewardCount' => $thread['price'] > 0 ? 0 : count($order),
+            'raidCount' => $thread['price'] > 0 ? count($order) : 0,
+            'list' => $this->camelData($pageData['pageData'])
         ];
 
-        $this->outPut(ResponseCode::SUCCESS, '', $retrue);
-        // TODO: Implement main() method.
+        $this->outPut(ResponseCode::SUCCESS, '', $pageData);
     }
 
     public function arraySort($arr, $keys, $type = 'asc') {
@@ -162,22 +137,4 @@ class ThreadLikedUsersController extends DzqController
         return $new_array;
     }
 
-    public function format_date($time){
-        $t=time()-$time;
-        $f=array(
-            '31536000'=>'年',
-            '2592000'=>'个月',
-            '604800'=>'星期',
-            '86400'=>'天',
-            '3600'=>'小时',
-            '60'=>'分钟',
-            '1'=>'秒'
-        );
-        foreach ($f as $k=>$v)    {
-            if (0 !=$c=floor($t/(int)$k)) {
-                return $c.$v;
-            }
-        }
-        return $f;
-    }
 }

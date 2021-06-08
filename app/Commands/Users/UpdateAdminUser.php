@@ -27,6 +27,7 @@ use App\Exceptions\TranslatorException;
 use App\Models\Group;
 use App\Models\GroupPaidUser;
 use App\Models\User;
+use App\Common\ResponseCode;
 use App\Models\UserActionLogs;
 use App\Models\AdminActionLog;
 use App\Models\UserSignInFields;
@@ -293,7 +294,7 @@ class UpdateAdminUser
         if ($user->pay_password) {
             // 验证新密码与原密码不能相同
             if ($user->checkWalletPayPassword($payPassword)) {
-                throw new TranslatorException('user_update_error', ['cannot_use_the_same_password']);
+                \Discuz\Common\Utils::outPut(ResponseCode::USER_UPDATE_ERROR);
             }
 
             $this->validator->setUser($user);
@@ -329,7 +330,7 @@ class UpdateAdminUser
         // 手机号是否已绑定
         if (! empty($mobile)) {
             if (User::query()->where('mobile', $mobile)->where('id', '<>', $user->id)->exists()) {
-                throw new Exception('mobile_is_already_bind');
+                \Discuz\Common\Utils::outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
             }
         }
 
@@ -492,7 +493,7 @@ class UpdateAdminUser
         }
 
         if (Str::of($signature)->length() > 140) {
-            throw new TranslatorException('user_signature_limit_error');
+            \Discuz\Common\Utils::outPut(ResponseCode::USER_SINGATURE_LINIT_ERROR);
         }
 
         $user->changeSignature($signature);
@@ -529,7 +530,7 @@ class UpdateAdminUser
         $this->censor->checkText($nickname);
 
         if ($this->censor->isMod) {
-            throw new TranslatorException(trans('user.user_nickname_censor_error'));
+            \Discuz\Common\Utils::outPut(ResponseCode::NICKNAME_CENSOR_NOT_PASSED);
         }
 
         // 过滤内容

@@ -41,7 +41,7 @@ class RedPackBusi extends TomBaseBusi
         $threadRedPacket = ThreadRedPacket::query()->where('thread_id', $this->threadId)->first();
         if (!empty($threadRedPacket)) {
             $thread = Thread::query()->where('id', $this->threadId)->first(['is_draft']);
-            if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'每个帖子只能发布一条悬赏');
+            if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'已发布的红包不可编辑');
         }
 
         if ($input['draft'] != Thread::IS_DRAFT) {

@@ -22,16 +22,15 @@ use App\Censor\Censor;
 use App\Models\Dialog;
 use App\Models\User;
 use App\Repositories\UserRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
+use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Bus\Dispatcher as DispatcherBus;
 use Illuminate\Support\Arr;
 
 class CreateDialog
 {
-    use AssertPermissionTrait;
     use EventsDispatchTrait;
 
     /**
@@ -60,19 +59,17 @@ class CreateDialog
     {
         $this->events = $events;
 
-        $this->assertCan($this->actor, 'dialog.create');
-
         $sender = $this->actor->id;
         $recipient = Arr::get($this->attributes, 'recipient_username');
 
         $recipientUser = $user->query()->where('username', $recipient)->firstOrFail();
 
         if ($sender == $recipientUser->id) {
-            throw new PermissionDeniedException();
+            throw new Exception('不能给自己发送私信');
         }
         //在黑名单中，不能创建会话
         if (in_array($sender, array_column($recipientUser->deny->toArray(), 'id'))) {
-            throw new PermissionDeniedException('user_deny');
+            throw new PermissionDeniedException('已被屏蔽，不能发起私信对话');
         }
 
         $dialogRes = $dialog::buildOrFetch($sender, $recipientUser->id);

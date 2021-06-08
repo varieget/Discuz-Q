@@ -24,7 +24,6 @@ use App\Models\Dialog;
 use App\Models\DialogMessage;
 use App\Models\User;
 use App\Repositories\DialogRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
 use EasyWeChat\Kernel\Exceptions\InvalidConfigException;
@@ -36,7 +35,6 @@ use Illuminate\Support\Arr;
 
 class CreateDialogMessage
 {
-    use AssertPermissionTrait;
     use EventsDispatchTrait;
 
     /**
@@ -75,8 +73,6 @@ class CreateDialogMessage
     {
         $this->events = $events;
 
-        $this->assertCan($this->actor, 'dialog.create');
-
         $dialog_id = Arr::get($this->attributes, 'dialog_id');
 
         $image_url = Arr::get($this->attributes, 'image_url', '');
@@ -97,8 +93,10 @@ class CreateDialogMessage
             throw new ModelNotFoundException();
         }
         if (in_array($this->actor->id, array_column($user->deny->toArray(), 'id'))) {
-            throw new PermissionDeniedException('user_deny');
+            throw new PermissionDeniedException('已被屏蔽，不能发起私信对话');
         }
+
+        $read_status = Arr::get($this->attributes, 'read_status',0);
 
         $attachment_id = Arr::get($this->attributes, 'attachment_id', 0);
 
@@ -119,7 +117,7 @@ class CreateDialogMessage
             'image_url'     => $image_url
         ];
 
-        $dialogMessage = DialogMessage::build($this->actor->id, $dialog_id, $attachment_id, $message);
+        $dialogMessage = DialogMessage::build($this->actor->id, $dialog_id, $attachment_id, $message,$read_status);
         $dialogMessageRes = $dialogMessage->save();
 
         if ($dialogMessageRes) {

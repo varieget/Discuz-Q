@@ -5,6 +5,7 @@ namespace App\Api\Controller\DialogV3;
 use App\Commands\Dialog\CreateDialog;
 use App\Common\ResponseCode;
 use App\Providers\DialogMessageServiceProvider;
+use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
@@ -29,16 +30,19 @@ class CreateDialogV2Controller extends DzqController
         $this->bus = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return $userRepo->canCreateDialog($this->user);
+    }
+
     public function main()
     {
-        $user = $this->user;
-        $data = array(
+        $actor = $this->user;
+        $data = [
             'message_text'=>$this->inPut('messageText'),
             'recipient_username'=>$this->inPut('recipientUsername'),
-        );
-        if(empty($data['message_text'])){
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
-        }
+        ];
+
         if(empty($data['recipient_username'])){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
@@ -51,20 +55,26 @@ class CreateDialogV2Controller extends DzqController
 
         try {
             $this->validation->make($data, [
-                'message_text' => 'required_without:messageText|max:450',
+                'message_text' => 'sometimes:messageText|max:450',
             ])->validate();
         } catch (ValidationException $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->validator->getMessageBag()->first());
         }
 
         try {
-            $this->bus->dispatch(
-                new CreateDialog($user, $data)
+          $res = $this->bus->dispatch(
+                new CreateDialog($actor, $data)
             );
         } catch (\Exception $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->getMessage());
         }
 
-        $this->outPut(ResponseCode::SUCCESS, '已发送');
+        $res = $res->toArray();
+       
+        $data = [
+            'dialogId' =>$res['id'],
+        ];
+
+        $this->outPut(ResponseCode::SUCCESS, '已发送', $data);
     }
 }

@@ -18,35 +18,74 @@
 
 namespace App\Api\Controller\UsersV3;
 
-use App\Commands\Users\GenJwtToken;
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Models\User;
+use App\Repositories\UserRepository;
+use App\Settings\SettingsRepository;
+use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Database\ConnectionInterface;
 
 class SmsBindController extends AuthBaseController
 {
-    protected $bus;
+    public $bus;
+    public $connection;
+    public $settings;
 
     public function __construct(
-        Dispatcher          $bus
+        Dispatcher          $bus,
+        ConnectionInterface $connection,
+        SettingsRepository  $settings
     ){
-        $this->bus      = $bus;
+        $this->bus          = $bus;
+        $this->connection   = $connection;
+        $this->settings     = $settings;
+    }
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
     }
 
     public function main()
     {
-        $mobileCode     = $this->getMobileCode('bind');
-        $sessionToken   = $this->inPut('sessionToken');
-        $token          = SessionToken::get($sessionToken);
-        $actor          = !empty($token->user) ? $token->user : $this->user;
-
-        // 判断手机号是否已经被绑定
-        if (!empty($actor->mobile)) {
-            $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+        $sms = (bool)$this->settings->get('qcloud_sms', 'qcloud');
+        if (!$sms) {
+            $this->outPut(ResponseCode::NONSUPPORT_MOBILE_REBIND);
         }
+        $this->connection->beginTransaction();
+        try {
+            $paramData = [
+                'mobile'        => $this->inPut('mobile'),
+                'code'          => $this->inPut('code'),
+                'sessionToken'  => $this->inPut('sessionToken')
+            ];
 
-        if ($actor->exists) {
+            $mobileCode     = $this->getMobileCode('bind');
+            $sessionToken   = $this->inPut('sessionToken');
+            $token          = SessionToken::get($sessionToken);
+            $actor          = !empty($token->user) ? $token->user : $this->user;
+
+            $actor = User::query()->lockForUpdate()->find($actor->id);
+
+            if (empty($actor) || $actor->isGuest()) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::UNAUTHORIZED);
+            }
+
+            if (!empty($actor->mobile)) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::BIND_ERROR);
+            }
+
+            $exists = User::query()->where('mobile', $mobileCode->mobile)->exists();
+            if ($exists) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::MOBILE_IS_ALREADY_BIND);
+            }
+
             $actor->changeMobile($mobileCode->mobile);
             $actor->save();
 
@@ -54,29 +93,25 @@ class SmsBindController extends AuthBaseController
 
             //用于用户名登录绑定手机号使用
             if (!empty($token->user)) {
-                if (empty($actor->username)) {
+                if (empty($token->user->username)) {
+                    $this->connection->rollback();
                     $this->outPut(ResponseCode::USERNAME_NOT_NULL);
                 }
-                //token生成
-                $params = [
-                    'username' => $actor->username,
-                    'password' => ''
-                ];
-                GenJwtToken::setUid($actor->id);
-                $response = $this->bus->dispatch(
-                    new GenJwtToken($params)
-                );
 
-                $accessToken = json_decode($response->getBody(), true);
+                $accessToken = $this->getAccessToken($token->user);
                 $result = $this->camelData(collect($accessToken));
-                $result = $this->addUserInfo($actor, $result);
-
+                $result = $this->addUserInfo($token->user, $result);
+                $this->connection->commit();
                 $this->outPut(ResponseCode::SUCCESS, '', $result);
             }
-
+            $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', []);
-        }
 
-        $this->outPut(ResponseCode::INVALID_PARAMETER);
+        } catch (Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号绑定接口异常-SmsBindController： 入参：'
+                                  . json_encode($paramData) . ';userId:' . $this->user->id . '；异常：' . $e->getMessage());
+            $this->connection->rollback();
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号绑定接口异常');
+        }
     }
 }

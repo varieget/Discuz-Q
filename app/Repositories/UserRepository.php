@@ -253,12 +253,14 @@ class UserRepository extends AbstractRepository
      * 免费查看付费帖子权限
      *
      * @param User $user
-     * @param null $categoryId
+     * @param array|Thread $thread
      * @return bool
      */
-    public function canFreeViewPosts(User $user, $categoryId = null)
+    public function canFreeViewPosts(User $user, $thread)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_FREE_VIEW_POSTS, $categoryId);
+        // 是作者自己，或者有对应权限
+        return ($user->id == $thread['user_id'])
+            || $this->checkCategoryPermission($user, PermissionKey::THREAD_FREE_VIEW_POSTS, $thread['category_id']);
     }
 
     /**
@@ -341,6 +343,12 @@ class UserRepository extends AbstractRepository
         if (!$thread) {
             return false;
         }
+
+        // 删除自己的草稿
+        if (Arr::get($thread, 'is_draft') && (Arr::get($thread, 'user_id') == $user->id)) {
+            return true;
+        }
+
         return ($user->id === $thread['user_id'] && $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE_OWN, $thread['category_id']))
             || $this->checkCategoryPermission($user, PermissionKey::THREAD_HIDE, $thread['category_id']);
     }
@@ -569,7 +577,7 @@ class UserRepository extends AbstractRepository
     }
 
 
-    public function canEeportUser(User $user)
+    public function canExportUser(User $user)
     {
         return $user->isAdmin();
     }
@@ -588,6 +596,12 @@ class UserRepository extends AbstractRepository
 
 
     public function canListUserScren(User $user)
+    {
+        return $user->isAdmin();
+    }
+
+
+    public function canUserStatus(User $user)
     {
         return $user->isAdmin();
     }

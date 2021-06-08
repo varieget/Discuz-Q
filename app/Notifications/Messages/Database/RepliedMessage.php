@@ -39,6 +39,16 @@ class RepliedMessage extends SimpleMessage
 
     public function render()
     {
+
+        $isFirst = false;
+        if($this->post->is_first){
+            $isFirst = true;
+        }elseif (!($this->post->is_first) && !($this->post->reply_post_id) && !($this->post->comment_post_id)){
+            $isFirst = true;
+        }else{
+            $isFirst = false;
+        }
+
         $build = [
             'user_id' => $this->post->user_id,
             'thread_id' => 0, // 必传
@@ -49,6 +59,7 @@ class RepliedMessage extends SimpleMessage
             'post_content' => '',
             'reply_post_id' => 0, // 根据该字段判断是否是楼中楼
             'post_created_at' => '',
+            'is_first'=>$isFirst
         ];
 
         $this->changeBuild($build);

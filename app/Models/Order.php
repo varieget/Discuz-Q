@@ -131,7 +131,7 @@ class Order extends DzqModel
     /**
      * 订单过期时间，单位分钟，订单过期后无法支付
      */
-    const ORDER_EXPIRE_TIME = 10;
+    const ORDER_EXPIRE_TIME = 15;
 
     /**
      * {@inheritdoc}
@@ -352,18 +352,11 @@ class Order extends DzqModel
         return $this->belongsTo(Group::class);
     }
 
-    public function calculateInviteScale()
-    {
-        $this->third_party_amount = $this->be_scale / 10 * $this->amount; // 邀请人分成金额
-        $this->master_amount = $this->amount - $this->third_party_amount; // 站长分成金额
-        return $this->third_party_amount; // 邀请人分成金额
-    }
-
     protected function clearCache()
     {
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_USERS, $this->thread_id);
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $this->user_id);
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $this->user_id);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $this->user_id);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $this->user_id);
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $this->thread_id);
     }
 }

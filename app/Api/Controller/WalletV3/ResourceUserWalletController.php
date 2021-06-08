@@ -19,18 +19,15 @@ namespace App\Api\Controller\WalletV3;
 
 use App\Common\ResponseCode;
 use App\Models\User;
+use App\Models\UserWallet;
 use App\Repositories\UserWalletRepository;
 use App\Settings\SettingsRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
 class ResourceUserWalletController extends DzqController
 {
-    use AssertPermissionTrait;
-
     public $wallet;
     public $setting;
 
@@ -67,7 +64,7 @@ class ResourceUserWalletController extends DzqController
         if(empty($groupData)){
             $this->outPut(ResponseCode::INVALID_PARAMETER, 'ID为'.$user_id.'用户不存在');
         }
-        $data = $this->wallet->findOrFail($user_id, $this->user);
+        $data = UserWallet::where('user_id', $user_id)->first();
         $data->cash_tax_ratio = $this->setting->get('cash_rate', 'cash', 0);
         $data = $this->camelData($data);
         return $this->outPut(ResponseCode::SUCCESS,'', $data);

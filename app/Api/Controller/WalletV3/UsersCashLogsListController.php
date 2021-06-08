@@ -19,6 +19,7 @@ namespace App\Api\Controller\WalletV3;
 
 use App\Common\ResponseCode;
 use App\Models\UserWalletCash;
+use App\Models\UserWechat;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
@@ -64,6 +65,15 @@ class UsersCashLogsListController extends DzqController
 
         $query->orderByDesc('user_wallet_cash.created_at');
         $usersWalletCashLogs = $this->pagination($currentPage, $perPage, $query);
+
+        $userIds = array_column($usersWalletCashLogs['pageData'], 'user_id');
+        $userWechatData = UserWechat::query()->whereIn('user_id', $userIds)->get()->toArray();
+        $userWechatData = array_column($userWechatData, null, 'user_id');
+
+        foreach ($usersWalletCashLogs['pageData'] as $key => $value) {
+            $usersWalletCashLogs['pageData'][$key]['wechat']['mp_openid'] = $userWechatData[$value['user_id']]['mp_openid'] ?? "";
+            $usersWalletCashLogs['pageData'][$key]['wechat']['min_openid'] = $userWechatData[$value['user_id']]['min_openid'] ?? "";
+        }
         $usersWalletCashLogs['pageData'] = $this->camelData($usersWalletCashLogs['pageData']) ?? [];
 
         return $this->outPut(ResponseCode::SUCCESS, '', $usersWalletCashLogs);

@@ -24,6 +24,7 @@ use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
+use App\Repositories\UserRepository;
 use App\User\Bind;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
@@ -59,17 +60,28 @@ class WechatMiniProgramBindController extends AuthBaseController
         $this->bus          = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
-        $param          = $this->getWechatMiniProgramParam();
-        $sessionToken   = $this->inPut('sessionToken');// PC扫码使用;
-        $token          = SessionToken::get($sessionToken);
-        $type           = $this->inPut('type');//用于区分sessionToken来源于pc还是h5
-        $actor          = !empty($token->user) ? $token->user : $this->user;
+        try {
+            $param          = $this->getWechatMiniProgramParam();
+            $sessionToken   = $this->inPut('sessionToken');// PC扫码使用;
+            $token          = SessionToken::get($sessionToken);
+            $type           = $this->inPut('type');//用于区分sessionToken来源于pc还是h5
+            $actor          = !empty($token->user) ? $token->user : $this->user;
+        } catch (Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序绑定参数获取接口异常-WechatMiniProgramLoginController： 入参：'
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';type:'.$this->inPut('type')
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序绑定参数获取接口异常');
+        }
 
-//        $actor = User::query()
-//            ->where('id', 2)
-//            ->first();
 
         if (empty($actor)) {
             $this->outPut(ResponseCode::NOT_FOUND_USER);
@@ -85,54 +97,55 @@ class WechatMiniProgramBindController extends AuthBaseController
                 $param['iv'],
                 $param['encryptedData']
             );
-        } catch (Exception $e) {
-            $this->db->rollback();
-            $this->outPut(ResponseCode::NET_ERROR,
-                          ResponseCode::$codeMap[ResponseCode::NET_ERROR],
-                          $e->getMessage()
-            );
-        }
 
-        if (!$wechatUser || !$wechatUser->user) {
-            if (!$wechatUser) {
-                $wechatUser = new UserWechat();
-            }
-
-//            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
-            // 登陆用户且没有绑定||换绑微信 添加微信绑定关系
-            $wechatUser->user_id = $actor->id;
-            $wechatUser->setRelation('user', $actor);
-            $wechatUser->save();
-
-            $this->updateUserBindType($actor,AuthUtils::WECHAT);
-
-            $this->db->commit();
-
-            // PC扫码使用
-            if (!empty($sessionToken) && $type == 'pc') {
-//                $this->bound->bindVoid($sessionToken, $wechatUser);
-                $accessToken = $this->getAccessToken($wechatUser->user);
-                $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
-            }
-
-            //用于用户名登录绑定微信使用
-            if (!empty($token->user) && $type == 'h5') {
-                if (empty($actor->username)) {
-                    $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+            if (!$wechatUser || !$wechatUser->user) {
+                if (!$wechatUser) {
+                    $wechatUser = new UserWechat();
                 }
-                //token生成
-                $accessToken = $this->getAccessToken($actor);
-                $result = $this->camelData(collect($accessToken));
-                $result = $this->addUserInfo($actor, $result);
 
-                $this->outPut(ResponseCode::SUCCESS, '', $result);
+    //            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
+                // 登陆用户且没有绑定||换绑微信 添加微信绑定关系
+                $wechatUser->user_id = $actor->id;
+                $wechatUser->setRelation('user', $actor);
+                $wechatUser->save();
+
+                $this->updateUserBindType($actor,AuthUtils::WECHAT);
+
+                $this->db->commit();
+
+                // PC扫码使用
+                if (!empty($sessionToken) && $type == 'pc') {
+    //                $this->bound->bindVoid($sessionToken, $wechatUser);
+                    $accessToken = $this->getAccessToken($wechatUser->user);
+                    $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
+                }
+
+                //用于用户名登录绑定微信使用
+                if (!empty($token->user) && $type == 'h5') {
+                    if (empty($actor->username)) {
+                        $this->outPut(ResponseCode::USERNAME_NOT_NULL);
+                    }
+                    //token生成
+                    $accessToken = $this->getAccessToken($actor);
+                    $result = $this->camelData(collect($accessToken));
+                    $result = $this->addUserInfo($actor, $result);
+
+                    $this->outPut(ResponseCode::SUCCESS, '', $result);
+                }
+
+                $this->outPut(ResponseCode::SUCCESS, '', []);
+
+            } else {
+                $this->db->rollBack();
+                $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
             }
-
-            $this->outPut(ResponseCode::SUCCESS, '', []);
-
-        } else {
+        } catch (Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序绑定接口异常-WechatMiniProgramBindController：入参：'
+                                  .';sessionToken:'.$this->inPut('sessionToken')
+                                  .';type:'.$this->inPut('type')
+                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
             $this->db->rollBack();
-            $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
+            $this->outPut(ResponseCode::INTERNAL_ERROR,'小程序绑定接口异常');
         }
     }
 }

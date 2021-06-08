@@ -22,6 +22,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use Discuz\Base\DzqCache;
 use App\Formatter\Formatter;
+use App\Notifications\Related;
 use App\Models\Category;
 use App\Models\MobileCode;
 use App\Models\Order;
@@ -41,7 +42,6 @@ use App\SmsMessages\SendCodeMessage;
 use Discuz\Qcloud\QcloudTrait;
 use Illuminate\Support\Arr;
 use App\Common\Utils;
-
 
 trait ThreadTrait
 {
@@ -69,6 +69,8 @@ trait ThreadTrait
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
             'isApproved' => $thread['is_approved'],
             'isStick' => $thread['is_sticky'],
+            'isDraft' => boolval($thread['is_draft']),
+            'isAnonymous' => $thread['is_anonymous'],
             'isFavorite' => $this->getFavoriteField($thread['id'], $loginUser),
             'price' => floatval($thread['price']),
             'attachmentPrice' => floatval($thread['attachment_price']),
@@ -77,6 +79,7 @@ trait ThreadTrait
             'isLike' => $this->isLike($loginUser, $post),
             'isReward' => $this->isReward($loginUser, $thread),
             'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
+            'updatedAt' => date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
             'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
@@ -89,7 +92,8 @@ trait ThreadTrait
                 'location' => $thread['location']
             ],
             'ability' => $this->getAbilityField($loginUser, $thread),
-            'content' => $contentField
+            'content' => $contentField,
+            'freewords' => $thread['free_words']
         ];
         if ($analysis) {
             $concatString = $thread['title'] . $post['content'];
@@ -118,7 +122,8 @@ trait ThreadTrait
             } else {
                 $mobileCode = MobileCode::make($realMobile, MobileCode::CODE_EXCEPTION, $type, $ip);
             }
-            $result = $this->smsSend($realMobile, new SendCodeMessage([
+            $result = $this->smsSend($realMobile, new SendCodeMessage(
+                [
                     'code' => $mobileCode->code,
                     'expire' => MobileCode::CODE_EXCEPTION]
             ));
@@ -168,18 +173,13 @@ trait ThreadTrait
     private function canFreeViewTom($user, $thread)
     {
         $repo = new UserRepository();
-        $canFreeViewThreadDetail = $repo->canFreeViewPosts($user, $thread['category_id']);
-        if ($canFreeViewThreadDetail || $user->id == $thread['user_id']) {
-            return true;
-        } else {
-            return false;
-        }
+        return $repo->canFreeViewPosts($user, $thread);
     }
 
     private function getFavoriteField($threadId, $loginUser)
     {
         $userId = $loginUser->id;
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_THREAD_USERS, $userId, $threadId, function () use ($userId, $threadId) {
+        return DzqCache::exists(CacheKey::LIST_THREADS_V3_THREAD_USERS . $userId, $threadId, function () use ($userId, $threadId) {
             return ThreadUser::query()->where(['thread_id' => $threadId, 'user_id' => $userId])->exists();
         });
     }
@@ -212,7 +212,7 @@ trait ThreadTrait
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
             'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
-            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread['category_id'])
+            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread)
         ];
     }
 
@@ -226,10 +226,10 @@ trait ThreadTrait
         $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
-        } else if ($payType != Thread::PAY_FREE && $canFreeViewTom) {
+        } elseif ($payType != Thread::PAY_FREE && $canFreeViewTom) {
             $paid = true;
         } else {
-            $paid = DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
+            $paid = DzqCache::exists(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId, $threadId, function () use ($userId, $threadId) {
                 return Order::query()
                     ->where([
                         'thread_id' => $threadId,
@@ -287,70 +287,63 @@ trait ThreadTrait
                 $content['text'] = $post['content'];
                 $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
             } else {
-                $freeWords = $thread['free_words'];
-                if (empty($freeWords)) {
+                $text = '';
+                if ($payType == Thread::PAY_ATTACH) {
                     $text = $post['content'];
-                } else {
-                    $text = strip_tags($post['content']);
-                    $freeLength = mb_strlen($text) * $freeWords;
-                    $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
-                    $text = "<t><p>" . $text . "</p></t>";
+                } else if($payType == Thread::PAY_THREAD) {
+                    $freeWords = $thread['free_words'];
+                    if (floatval($freeWords) > 0) {
+                        $text = strip_tags($post['content']);
+                        $freeLength = mb_strlen($text) * $freeWords;
+                        $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+                    }
                 }
                 $content['text'] = $text;
                 // 如果有红包，则只显示红包
                 if (isset($tomInput[TomConfig::TOM_REDPACK])) {
                     $content['indexes'] = $this->tomDispatcher(
                         [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]],
-                        $this->SELECT_FUNC, $thread['id'], null, $canViewTom
+                        $this->SELECT_FUNC,
+                        $thread['id'],
+                        null,
+                        $canViewTom
                     );
                 }
             }
         }
-        if (!empty($content['text']) && $thread['type'] != Thread::TYPE_OF_ALL) {
-//            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
-            $content['text'] = app()->make(Formatter::class)->render($content['text']);
-
-            //针对老数据，需要做特殊处理
-            $old_thread_type = [
-                Thread::TYPE_OF_LONG,
-                Thread::TYPE_OF_VIDEO,
-                Thread::TYPE_OF_IMAGE,
-                Thread::TYPE_OF_AUDIO,
-                Thread::TYPE_OF_QUESTION,
-                Thread::TYPE_OF_GOODS
-            ];
-            if (in_array($thread['type'], $old_thread_type)) {
-                $xml = $post['content'];
-                // 针对 type为1的老数据，存在图文混排的混排的情况，需要特殊处理
-                $tom_image_key = $body = '';
-                if (!empty($content['indexes'])) {
-                    foreach ($content['indexes'] as $key => $val) {
-                        if ($val['tomId'] == TomConfig::TOM_IMAGE) {
-                            $body = $val['body'];
-                            $tom_image_key = $key;
-                        }
+        $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+        //考虑到升级V3，帖子的type 都要转为 99，所以针对 type 为 99 的也需要处理图文混排
+        if (!empty($content['text'])) {
+            $xml = $content['text'];
+            $tom_image_key = $body = '';
+            if (!empty($content['indexes'])) {
+                foreach ($content['indexes'] as $key => $val) {
+                    if ($val['tomId'] == TomConfig::TOM_IMAGE) {
+                        $body = $val['body'];
+                        $tom_image_key = $key;
                     }
                 }
-                if ($thread['type'] == Thread::TYPE_OF_LONG && !empty($body)) {
-                    //url
-                    $attachments_body = $body;
-                    $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
-                    // 替换插入内容中的图片 URL
-                    $xml = \s9e\TextFormatter\Utils::replaceAttributes($xml, 'IMG', function ($attributes) use ($attachments) {
-                        if (isset($attributes['title']) && isset($attachments[$attributes['title']])) {
-                            $attributes['src'] = $attachments[$attributes['title']];
-                        }
-                        return $attributes;
-                    });
-
-                    //针对图文混排的情况，这里要去掉外部图片展示
-                    if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
-                }
-                $content['text'] = app()->make(Formatter::class)->render($xml);
             }
-        } else {
-            $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
+            if (!empty($body)) {
+                $attachments_body = $body;
+                $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
+                $xml = preg_replace_callback(
+                    '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
+                    function ($m) use ($attachments) {
+                        if (!empty($m)) {
+                            $id = trim($m[3], '"');
+                            return 'img src="' . $attachments[$id] . '" alt="' . $m[2] . '" title="' . $id . '"';
+                        }
+                    },
+                    $xml
+                );
+                //针对图文混排的情况，这里要去掉外部图片展示
+//                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
+                $content['text'] = $xml;
+            }
         }
+
+
         return $content;
     }
 
@@ -434,7 +427,7 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $threadId = $thread['id'];
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS, $userId, $threadId, function () use ($userId, $threadId) {
+        return DzqCache::exists(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $userId, $threadId, function () use ($userId, $threadId) {
             return Order::query()->where(['user_id' => $userId, 'type' => Order::ORDER_TYPE_REWARD, 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])->exists();
         });
     }
@@ -446,7 +439,7 @@ trait ThreadTrait
         }
         $userId = $loginUser->id;
         $postId = $post['id'];
-        return DzqCache::exists2(CacheKey::LIST_THREADS_V3_POST_LIKED, $userId, $postId, function () use ($userId, $postId) {
+        return DzqCache::exists(CacheKey::LIST_THREADS_V3_POST_LIKED . $userId, $postId, function () use ($userId, $postId) {
             return PostUser::query()->where('post_id', $postId)->where('user_id', $userId)->exists();
         });
     }
@@ -458,8 +451,13 @@ trait ThreadTrait
         $userId = $this->user->id;
         foreach ($topics as $topicItem) {
             $topicName = str_replace('#', '', $topicItem);
+
             $topic = Topic::query()->where('content', $topicName)->first();
             if (empty($topic)) {
+                //话题名称长度超过20就不创建了
+                if (mb_strlen($topicName) > 20) {
+                    throw new \Exception('创建话题长度不能超过20个字符');
+                }
                 $topic = new Topic();
                 $topic->user_id = $userId;
                 $topic->content = $topicName;
@@ -474,6 +472,49 @@ trait ThreadTrait
         }
     }
 
+    //发帖@用户发送通知消息
+    private function sendRelated($thread, $post)
+    {
+        //如果是草稿或需要审核 不发送消息
+        if ($thread->is_draft == Thread::IS_DRAFT || $thread->is_approved == Thread::UNAPPROVED || empty($post->parsedContent)) {
+            return;
+        }
+
+        preg_match_all('/@.+? /', $post->parsedContent, $newsNameArr);
+
+        $newsNameArr = array_reduce($newsNameArr, 'array_merge', array());
+
+        if (empty($newsNameArr)) {
+            return;
+        }
+
+        $newsNameArr2 = [];
+        foreach ($newsNameArr as $v) {
+            $string = trim(substr($v, 1));
+            if ($this->user->nickname != $string) {
+                $newsNameArr2[] = $string;
+            }
+        }
+
+        $users = User::query()->whereIn('nickname', $newsNameArr2)->get();
+
+        if (empty($users)) {
+            return;
+        }
+
+        $post->mentionUsers()->sync(array_column($users->toArray(), 'id'));
+
+        $users->load('deny');
+        $actor = $this->user;
+        $users->filter(function ($user) use ($post) {
+            //把作者拉黑的用户不发通知
+            return !in_array($post->user_id, array_column($user->deny->toArray(), 'id'));
+        })->each(function (User $user) use ($post, $actor) {
+            // Tag 发送通知
+            $user->notify(new Related($actor, $post));
+        });
+    }
+
     /*
      * @desc 前端新编辑器只能上传完整url的emoji
      * 后端需要将其解析出代号进行存储
@@ -481,7 +522,7 @@ trait ThreadTrait
      */
     private function optimizeEmoji($text)
     {
-        $text = '<r>' . $text . '</r>';
+//        $text = '<r>' . $text . '</r>';
         preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
         $searches = $m1[0];
         $replaces = [];
@@ -515,4 +556,41 @@ trait ThreadTrait
             ->first();
     }
 
+    private function renderTopic($text)
+    {
+        preg_match_all('/#.+?#/', $text, $topic);
+        if (empty($topic)) {
+            return $text;
+        }
+        $topic = $topic[0];
+        $topic = str_replace('#', '', $topic);
+        $topics = Topic::query()->select('id', 'content')->whereIn('content', $topic)->get()->map(function ($item) {
+            $item['content'] = '#' . $item['content'] . '#';
+            $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
+            return $item;
+        })->toArray();
+        foreach ($topics as $val) {
+            $text = preg_replace("/{$val['content']}/", $val['html'], $text, 1);
+        }
+        return $text;
+    }
+
+    private function renderCall($text)
+    {
+        preg_match_all('/@.+? /', $text, $call);
+        if (empty($call)) {
+            return $text;
+        }
+        $call = $call[0];
+        $call = str_replace(['@', ' '], '', $call);
+        $ats = User::query()->select('id', 'username')->whereIn('username', $call)->get()->map(function ($item) {
+            $item['username'] = '@' . $item['username'];
+            $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
+            return $item;
+        })->toArray();
+        foreach ($ats as $val) {
+            $text = preg_replace("/{$val['username']}/", "{$val['html']}", $text, 1);
+        }
+        return $text;
+    }
 }

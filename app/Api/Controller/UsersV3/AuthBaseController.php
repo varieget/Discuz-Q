@@ -30,9 +30,11 @@ use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
+use Discuz\Wechat\EasyWechatTrait;
 
 abstract class AuthBaseController extends DzqController
 {
+    use EasyWechatTrait;
     /**
      * 获取扫码后token登录信息数据
      * @return SessionToken
@@ -205,28 +207,23 @@ abstract class AuthBaseController extends DzqController
         return $result;
     }
 
-    public function getMiniWechatUser($app, $jsCode, $iv, $encryptedData, $user = null){
-//        $wechatUser = UserWechat::query()->where('id', 42)->first();
-//        return $wechatUser;
+    public function getMiniWechatUser($jsCode, $iv, $encryptedData, $user = null){
+
+        $app = $this->miniProgram();
         //获取小程序登陆session key
         $authSession = $app->auth->session($jsCode);
         if (isset($authSession['errcode']) && $authSession['errcode'] != 0) {
             $this->outPut(ResponseCode::NET_ERROR,
                           ResponseCode::$codeMap[ResponseCode::NET_ERROR],
                           ['errmsg' => $authSession['errmsg'], 'errcode' => $authSession['errcode']]);
-//            throw new SocialiteException($authSession['errmsg'], $authSession['errcode']);
         }
         $decryptedData = $app->encryptor->decryptData(
             Arr::get($authSession, 'session_key'),
             $iv,
             $encryptedData
         );
-
-//        $unionid        = Arr::get($decryptedData, 'unionId') ?: Arr::get($authSession, 'unionid', '');
-//        $openid         = Arr::get($decryptedData, 'openId') ?: Arr::get($authSession, 'openid');
-
-        $unionid = Arr::get($authSession, 'unionid', '');
-        $openid  = Arr::get($authSession, 'openid');
+        $unionid        = Arr::get($decryptedData, 'unionId') ?: Arr::get($authSession, 'unionid', '');
+        $openid         = Arr::get($decryptedData, 'openId') ?: Arr::get($authSession, 'openid');
 
         //获取小程序用户信息
         /** @var UserWechat $wechatUser */
@@ -250,7 +247,6 @@ abstract class AuthBaseController extends DzqController
         $wechatUser->unionid    = $unionid;
         $wechatUser->min_openid = $openid;
         $wechatUser->nickname   = $decryptedData['nickName'];
-//        $wechatUser->nickname   = 'VinceLee';
         $wechatUser->city       = $decryptedData['city'];
         $wechatUser->province   = $decryptedData['province'];
         $wechatUser->country    = $decryptedData['country'];
@@ -284,6 +280,30 @@ abstract class AuthBaseController extends DzqController
             new GenJwtToken($params)
         );
         return json_decode($response->getBody(),true);
+    }
+
+    //用户名、密码同时存在时获取token
+    public function genJwtToken($data){
+        if (empty($data['username']) || empty($data['password'])) {
+            return $this->outPut(ResponseCode::WECHAT_INVALID_ARGUMENT_EXCEPTION);
+        }
+        $bus = app(Dispatcher::class);
+        try {
+            $response = $bus->dispatch(
+                new GenJwtToken($data)
+            );
+            return $response;
+        } catch (\Exception $e) {
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户名: "' . $data['username'] . '" 登录出错： ' . $e->getMessage());
+            if (empty($e->getMessage())) {
+                return $this->outPut(ResponseCode::USERNAME_OR_PASSWORD_ERROR);
+            }
+            if ((int)$e->getMessage() > 0) {
+                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录失败，您还可以尝试'.(int)$e->getMessage().'次');
+            } else {
+                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录次数超出限制');
+            }
+        }
     }
 
 }

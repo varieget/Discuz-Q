@@ -20,35 +20,41 @@ namespace App\Api\Controller\DialogV3;
 
 use App\Models\DialogMessage;
 use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 
 class UpdateUnreadStatusController extends DzqController
 {
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
+    }
+
     public function main()
     {
+        $actor = $this->user;
 
-        $data = $this->inPut('data');
-        if(empty($data)) {
-            return $this->outPut(ResponseCode::NET_ERROR);
+        $dialogId = $this->inPut('dialogId');
+
+        if(empty($dialogId)) {
+            return $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
-        foreach ($data as $key => $value) {
-            try{
-                $this->dzqValidate($value, [
-                    'id'       => 'required|int|min:1',
-                    'readStatus'   => 'required|int|in:1'
-                ]);
+        $dialogList = DialogMessage::query()
+            ->where('dialog_id', $dialogId)
+            ->where('user_id','!=',$actor->id)
+            ->get(['id','read_status']);
 
-                $dialog = DialogMessage::query()->findOrFail($value['id']);
-                $dialog->read_status = $value['readStatus'];
-                $dialog->save();
-               // dump($dialog);die;
-            } catch (\Exception $e) {
-                 $this->outPut(ResponseCode::INTERNAL_ERROR, '修改出错', [$e->getMessage(), $value]);
-            }
+        foreach ($dialogList as $value) {
+            $value->read_status = 1;
+            $value->save();
         }
 
-        return $this->outPut(ResponseCode::SUCCESS,'','');
+        return $this->outPut(ResponseCode::SUCCESS,'');
     }
 
 }

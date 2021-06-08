@@ -22,13 +22,9 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\User;
 use App\Models\Finance;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\PermissionDeniedException;
 
 class FirstStatistics
 {
-    use AssertPermissionTrait;
-
     protected $actor;
     protected $type;
     protected $createdAtBegin;
@@ -53,13 +49,8 @@ class FirstStatistics
         return call_user_func([$this, '__invoke']);
     }
 
-    /**
-     * @return mixed
-     * @throws PermissionDeniedException
-     */
     public function __invoke()
     {
-        $this->assertCan($this->actor, 'viewSiteInfo');
         $beginTime = $this->getBeginTime();
         $endTime = $this->getEndTime();
 
@@ -171,14 +162,12 @@ class FirstStatistics
     }
 
     public function toMonth($data,$monthArr){
-        //dump($monthArr);
         $tdData = $data->toArray();
-        //dump($tdData);
+
         $month = [];
         $months = [];
         foreach ($tdData as $k=>$value){
             $da = explode('/',$value['date']);
-            //dump($da);
             if(substr($da[1],0,1) == '0'){
                 $n = substr($da[1],1,1);
             }else{
@@ -189,8 +178,7 @@ class FirstStatistics
 
             $months["$da[0]$n"]=$value['count'];
         }
-        //dump($month);
-        //dump($months);
+
         $newData = [];
         foreach ($monthArr as $item=> $val){
             if(in_array($val,$month)){

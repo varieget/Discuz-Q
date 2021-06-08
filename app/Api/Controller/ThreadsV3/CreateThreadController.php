@@ -107,15 +107,21 @@ class CreateThreadController extends DzqController
         $content = $this->inPut('content');
 
         if (!empty($content['text'])) {
+            //处理emoji表情
             $content['text'] = $this->optimizeEmoji($content['text']);
+            //处理@
+            $content['text'] = $this->renderCall($content['text']);
+            //处理 #
+            $content['text'] = $this->renderTopic($content['text']);
         }
-
         //插入thread数据
         $thread = $this->saveThread($content);
         //插入post数据
         $post = $this->savePost($thread, $content);
         //插入话题
         $this->saveTopic($thread, $content);
+        //发帖@用户
+        $this->sendRelated($thread, $post);
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
         //更新帖子条数
@@ -123,6 +129,7 @@ class CreateThreadController extends DzqController
 
         return $this->getResult($thread, $post, $tomJsons);
     }
+
 
     private function saveThread(&$content)
     {
@@ -143,15 +150,21 @@ class CreateThreadController extends DzqController
         }
 
         $this->isDraft = $isDraft;
+        if (mb_strlen($title) > 100) $this->outPut(ResponseCode::INVALID_PARAMETER, '标题字数不能大于100');
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
 //        empty($title) && $title = Post::autoGenerateTitle($content['text']);//不自动生成title
+
+        if (!empty($title) && mb_strlen($title) >= Thread::TITLE_LENGTH) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '标题不能超过' . Thread::TITLE_LENGTH . '字');
+        }
+
         $dataThread = [
             'user_id' => $userId,
             'category_id' => $categoryId,
             'title' => $title,
             'post_count' => 1,
-            'type'=>Thread::TYPE_OF_ALL
+            'type' => Thread::TYPE_OF_ALL
         ];
         $price = floatval($price);
         $attachmentPrice = floatval($attachmentPrice);
@@ -189,7 +202,7 @@ class CreateThreadController extends DzqController
             $this->user->save();
             Category::refreshThreadCountV3($categoryId);
         }
-
+        $thread = Thread::find($thread->id);
         return $thread;
     }
 
@@ -288,10 +301,6 @@ class CreateThreadController extends DzqController
 
     public function clearCache($user)
     {
-        DzqCache::delKey(CacheKey::CATEGORIES);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        CacheKey::delListCache();
     }
 }

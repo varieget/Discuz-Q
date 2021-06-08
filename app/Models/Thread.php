@@ -130,6 +130,7 @@ class Thread extends DzqModel
      * 通知内容展示长度(字)
      */
     const CONTENT_LENGTH = 80;
+    const TITLE_LENGTH = 100;
 
     const  SORT_BY_THREAD = 1;//帖子创建时间排序
     const  SORT_BY_POST = 2;//评论创建时间排序
@@ -154,6 +155,14 @@ class Thread extends DzqModel
     const PAY_FREE = 0;
     const PAY_THREAD = 1;
     const PAY_ATTACH = 2;
+
+    /**
+     * 订单标题展示长度
+     */
+    const ORDER_TITLE_LENGTH = 20;
+    const ORDER_TITLE_END_WITH = '...';
+
+
     /**
      * {@inheritdoc}
      */
@@ -271,7 +280,7 @@ class Thread extends DzqModel
     {
         $special = app(SpecialCharServer::class);
 
-        if ($this->type == 1) {
+        if ($this->type == Thread::TYPE_OF_ALL && $this->title) {
             $firstPost = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
             $firstPost = $special->purify($firstPost);
         } else {
@@ -283,6 +292,9 @@ class Thread extends DzqModel
             } else {
                 $firstPost = $this->firstPost->formatContent();
             }
+        }
+        if(is_object($firstPost)){
+            $firstPost = (string)$firstPost;
         }
 
         return $firstPost;
@@ -810,13 +822,7 @@ class Thread extends DzqModel
     public function getReplaceString($linkString)
     {
         preg_match_all('/:[a-z]+:/i', $linkString, $m1);
-        preg_match_all('/@.+? /', $linkString, $m2);
-        preg_match_all('/#.+?#/', $linkString, $m3);
         $m1 = array_unique($m1[0]);
-        $m2 = array_unique($m2[0]);
-        $m3 = array_unique($m3[0]);
-        $m2 = str_replace(['@', ' '], '', $m2);
-        $m3 = str_replace('#', '', $m3);
         $search = [];
         $replace = [];
         $emojisList = Emoji::getEmojis();
@@ -832,6 +838,23 @@ class Thread extends DzqModel
                 ];
             }
         }
+        foreach ($emojis as $emoji) {
+            $search[] = $emoji['code'];
+            $replace[] = $emoji['html'];
+        }
+        foreach ($m1 as $item) {
+            if (!in_array($item, $search)) {
+                $search[] = $item;
+                $replace[] = $item;
+            }
+        }
+        /* 正则只处理表情，@ # 在数据迁移时完成，这里不在匹配
+        preg_match_all('/@.+? /', $linkString, $m2);
+        preg_match_all('/#.+?#/', $linkString, $m3);
+        $m2 = array_unique($m2[0]);
+        $m3 = array_unique($m3[0]);
+        $m2 = str_replace(['@', ' '], '', $m2);
+        $m3 = str_replace('#', '', $m3);
         $ats = User::query()->select('id', 'username')->whereIn('username', $m2)->get()->map(function ($item) {
             $item['username'] = '@' . $item['username'];
             $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
@@ -842,10 +865,6 @@ class Thread extends DzqModel
             $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
             return $item;
         })->toArray();
-        foreach ($emojis as $emoji) {
-            $search[] = $emoji['code'];
-            $replace[] = $emoji['html'];
-        }
         foreach ($ats as $at) {
             $search[] = $at['username'];
             $replace[] = $at['html'];
@@ -854,12 +873,7 @@ class Thread extends DzqModel
             $search[] = $topic['content'];
             $replace[] = $topic['html'];
         }
-        foreach ($m1 as $item) {
-            if (!in_array($item, $search)) {
-                $search[] = $item;
-                $replace[] = $item;
-            }
-        }
+
         foreach ($m2 as $item) {
             $item = '@' . $item;
             if (!in_array($item, $search)) {
@@ -874,19 +888,24 @@ class Thread extends DzqModel
                 $replace[] = $item;
             }
         }
+        */
+
         return [$search, $replace];
     }
 
     public function getSearchString($linkString)
     {
         preg_match_all('/:[a-z]+:/i', $linkString, $m1);
+        $m1 = array_unique($m1[0]);
+        /* 正则只处理表情，@ # 在数据迁移时完成，这里不在匹配
         preg_match_all('/@.+? /', $linkString, $m2);
         preg_match_all('/#.+?#/', $linkString, $m3);
-        $m1 = array_unique($m1[0]);
         $m2 = array_unique($m2[0]);
         $m3 = array_unique($m3[0]);
         $m2 = str_replace([' '], '', $m2);
         return array_merge(array_values($m1), array_values($m2), array_values($m3));
+        */
+        return array_values($m1);
     }
 
     public function getReplaceStringV3($linkString)
@@ -919,7 +938,6 @@ class Thread extends DzqModel
             ->where([
                 'id' => $threadId,
             ])
-            ->whereNull('deleted_at')
             ->first();
         $toArray && $ret = $ret->toArray();
         return $ret;

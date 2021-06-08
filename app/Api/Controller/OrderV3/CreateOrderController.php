@@ -2,9 +2,7 @@
 
 namespace App\Api\Controller\OrderV3;
 
-use App\Commands\Order\CreateOrder;
 use App\Common\ResponseCode;
-use App\Common\Utils;
 use App\Repositories\UserRepository;
 use Exception;
 use App\Models\Group;
@@ -13,14 +11,11 @@ use App\Models\OrderChildren;
 use App\Models\Thread;
 use App\Models\PayNotify;
 use App\Settings\SettingsRepository;
-use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class CreateOrderController extends DzqController
 {
-    use AssertPermissionTrait;
-
     protected $settings;
 
     public function __construct(SettingsRepository $settings)
@@ -73,7 +68,6 @@ class CreateOrderController extends DzqController
 
         $orderType = $data['type'];
         $order_zero_amount_allowed = false; //是否允许金额为0
-        $thirdPartyId = 0;
 
         switch ($orderType) {
             // 注册订单
@@ -81,14 +75,9 @@ class CreateOrderController extends DzqController
                 $payeeId = Order::REGISTER_PAYEE_ID;
                 $amount = sprintf('%.2f', (float) $this->settings->get('site_price'));
 
-                // 查询是否有上级邀请 -> 邀请付费加入分成
-                $inviteData = $this->user->isInviteUser($this->user->id);
-                if ($inviteData) {
-                    $thirdPartyId = $inviteData['user_id'] ?? 0;
-                    $userGroup = $this->user->groups->toArray();
-                    if ($userGroup[0]['id']) {
-                        $be_scale = $this->user->getInviteScale($userGroup[0]['id']);
-                    }
+                // 查询是否有上级邀请 -> 注册分成
+                if ($this->user->isAllowScale(Order::ORDER_TYPE_REGISTER)) {
+                    $be_scale = $this->user->userDistribution->be_scale;
                 }
                 break;
 
@@ -253,7 +242,7 @@ class CreateOrderController extends DzqController
             case Order::ORDER_TYPE_RENEW:
                 $payeeId = Order::REGISTER_PAYEE_ID;
                 $amount = sprintf('%.2f', (float) $this->settings->get('site_price'));
-                
+
                 break;
 
             // 红包支出
@@ -277,7 +266,7 @@ class CreateOrderController extends DzqController
                 $amount = sprintf('%.2f', $data['amount']); // 设置红包+悬赏价格
                 $payeeId = 0;
                 break;
-            
+
             default:
                 $this->info('参数type枚举错误,传参枚举type:({$orderType}),用户id:{$this->user->id}');
                 throw new Exception(trans('order.order_type_error'));

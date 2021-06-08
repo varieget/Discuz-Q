@@ -5,6 +5,8 @@ namespace App\Api\Controller\DialogV3;
 use App\Commands\Dialog\DeleteDialog;
 use App\Common\ResponseCode;
 use App\Models\Dialog;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
@@ -20,13 +22,21 @@ class DeleteDialogV2Controller extends DzqController
         $this->bus = $bus;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException();
+        }
+        return true;
+    }
+
     public function main()
     {
         $user = $this->user;
         $id = $this->inPut('id');
         $dialogData = Dialog::query()->where("id",$id)->first();
         if(empty($dialogData)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '');
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
         try {
