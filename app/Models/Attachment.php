@@ -78,6 +78,14 @@ class Attachment extends DzqModel
 
     const YES_REMOTE = 1;
     const NO_REMOTE = 0;
+
+
+    const ORIENTATION_THREE = 3;
+
+    const ORIENTATION_SIX = 6;
+
+    const ORIENTATION_EIGHT = 8;
+
     /**
      * {@inheritdoc}
      */
