@@ -35,6 +35,19 @@ class CreateAdminSignInController extends DzqController
         return true;
     }
 
+    //兼容老版本斜杠入参
+    public function enumerate(){
+        return [
+            'name' => 'name',
+            'type' => 'type',
+            'fieldsExt' => 'fields_ext',
+            'fieldsDesc' => 'fields_desc',
+            'sort'=>'sort',
+            'status'=> 'status',
+            'required' => 'required'
+        ];
+    }
+
     public function main()
     {
         $dataArr = $this->request->getParsedBody()->get('data');
@@ -50,7 +63,7 @@ class CreateAdminSignInController extends DzqController
                 $adminSignIn = new AdminSignInFields();
             }
             foreach ($attribute as $key => $value) {
-                in_array($key, ['name', 'type', 'fields_ext', 'fields_desc', 'sort', 'status','required']) && $adminSignIn[$key] = $value;
+                in_array($key, array_keys($this->enumerate())) && $adminSignIn[$this->enumerate()[$key]] = $value;
             }
             $adminSignIn->save() && $retureArr[] = $adminSignIn;
         }
