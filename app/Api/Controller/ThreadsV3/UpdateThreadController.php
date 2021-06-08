@@ -164,7 +164,7 @@ class UpdateThreadController extends DzqController
         }
 
         // 如果更新为非草稿状态，则要判断是否已付费
-        if (($thread->is_draft == Thread::BOOL_NO) && $this->getPendingOrderInfo($thread)) {
+        if (($thread->is_draft == Thread::IS_NOT_DRAFT) && $this->getPendingOrderInfo($thread)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '订单未支付，无法发布');
         }
 

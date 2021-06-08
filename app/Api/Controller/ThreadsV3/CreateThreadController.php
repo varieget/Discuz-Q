@@ -38,7 +38,7 @@ class CreateThreadController extends DzqController
 {
     use ThreadTrait;
 
-    private $isDraft = false;
+    private $isDraft = 0;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -146,10 +146,10 @@ class CreateThreadController extends DzqController
 
         // 帖子是否需要支付，如果需要支付，则强制发布为草稿
         if ($this->needPay($content['indexes'] ?? [])) {
-            $isDraft = true;
+            $isDraft = 1;
         }
 
-        $this->isDraft = $isDraft;
+        if(!empty($isDraft))    $this->isDraft = $isDraft;
         if (mb_strlen($title) > 100) $this->outPut(ResponseCode::INVALID_PARAMETER, '标题字数不能大于100');
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
@@ -192,7 +192,7 @@ class CreateThreadController extends DzqController
         } else {
             $dataThread['is_approved'] = Thread::BOOL_YES;
         }
-        $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
+        $dataThread['is_draft'] = $this->isDraft;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
 
         $thread->setRawAttributes($dataThread);
@@ -245,6 +245,16 @@ class CreateThreadController extends DzqController
     private function saveTom($thread, $content, $post)
     {
         $indexes = $content['indexes'];
+        //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
+        $tomTypes = array_keys($indexes);
+        foreach ($tomTypes as $tomType) {
+            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
+            if (constant($tomService.'::NEED_PAY') && $indexes[$tomType]['body']['draft'] != 1 ) {
+//                $indexes[$tomType]['body']['draft'] = 1;
+                throw new \Exception('红包/悬赏红包状态应为草稿', ResponseCode::INVALID_PARAMETER);
+            }
+        }
+
         $attrs = [];
         $tomJsons = $this->tomDispatcher($indexes, $this->CREATE_FUNC, $thread['id'], $post['id']);
         $tags = [];

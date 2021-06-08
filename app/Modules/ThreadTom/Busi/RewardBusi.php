@@ -43,7 +43,7 @@ class RewardBusi extends TomBaseBusi
             if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'已发布的悬赏不可编辑');
         }
 
-        if ($input['draft'] != Thread::IS_DRAFT) {
+        if ($input['draft'] == Thread::IS_DRAFT) {
 
             $order = Order::query()
                 ->where('order_sn',$input['orderSn'])
