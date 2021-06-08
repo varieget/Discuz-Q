@@ -250,8 +250,8 @@ class CreateThreadController extends DzqController
         foreach ($tomTypes as $tomType) {
             $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
             if (constant($tomService.'::NEED_PAY') && $indexes[$tomType]['body']['draft'] != 1 ) {
-//                $indexes[$tomType]['body']['draft'] = 1;
-                throw new \Exception('红包/悬赏红包状态应为草稿', ResponseCode::INVALID_PARAMETER);
+                $indexes[$tomType]['body']['draft'] = 1;
+//                throw new \Exception('红包/悬赏红包状态应为草稿', ResponseCode::INVALID_PARAMETER);
             }
         }
 
