@@ -37,14 +37,17 @@ class RewardBusi extends TomBaseBusi
         }
 
         $threadReward = ThreadReward::query()->where('thread_id', $this->threadId)->first();
-
+        /*
         if (!empty($threadReward)) {
             $thread = Thread::query()->where('id', $this->threadId)->first(['is_draft']);
             if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'已发布的悬赏不可编辑');
         }
+        */
 
         if ($input['draft'] == Thread::IS_DRAFT) {
-
+            if(empty($input['orderSn'])){
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '红包缺少orderSn');
+            }
             $order = Order::query()
                 ->where('order_sn',$input['orderSn'])
                 ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
