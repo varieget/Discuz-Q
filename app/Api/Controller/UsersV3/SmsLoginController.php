@@ -44,7 +44,7 @@ class SmsLoginController extends AuthBaseController
         SettingsRepository  $settings,
         Events              $events,
         ConnectionInterface $connection
-    ){
+    ) {
         $this->bus          = $bus;
         $this->settings     = $settings;
         $this->events       = $events;
@@ -80,7 +80,7 @@ class SmsLoginController extends AuthBaseController
                     $this->outPut(ResponseCode::REGISTER_CLOSE);
                 }
 
-                $exits = User::query()->where('mobile',$mobileCode->mobile)->lockForUpdate()->exists();
+                $exits = User::query()->where('mobile', $mobileCode->mobile)->lockForUpdate()->exists();
                 if ($exits) {
                     $this->connection->rollback();
                     $this->outPut(ResponseCode::TRY_LOGIN_AGAIN);
@@ -96,11 +96,11 @@ class SmsLoginController extends AuthBaseController
                 );
                 $mobileCode->setRelation('user', $user);
 
-                $this->updateUserBindType($mobileCode->user,AuthUtils::PHONE);
+                $this->updateUserBindType($mobileCode->user, AuthUtils::PHONE);
             }
 
             //手机号登录需要填写扩展字段审核的场景
-            if($mobileCode->user->status != User::STATUS_MOD){
+            if ($mobileCode->user->status != User::STATUS_MOD) {
                 $this->events->dispatch(
                     new Logind($mobileCode->user)
                 );
@@ -112,27 +112,28 @@ class SmsLoginController extends AuthBaseController
 
             $result = $this->addUserInfo($mobileCode->user, $result);
 
-            if($type == 'mobilebrowser_sms_login') {
+            if ($type == 'mobilebrowser_sms_login') {
                 $wechat     = (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount');
                 $miniWechat = (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram');
                 $sms        = (bool)$this->settings->get('qcloud_sms', 'qcloud');
                 //短信，微信，小程序均未开启
-                if(! $sms && !$wechat && !$miniWechat ) {
+                if (! $sms && !$wechat && !$miniWechat) {
                     $this->connection->commit();
                     $this->outPut(ResponseCode::SUCCESS, '', $result);
                 }
 
                 //手机浏览器登录，需要做绑定前准备
-                $token = SessionToken::generate(SessionToken::WECHAT_MOBILE_BIND,
-                                                $accessToken ,
-                                                $mobileCode->user->id
+                $token = SessionToken::generate(
+                    SessionToken::WECHAT_MOBILE_BIND,
+                    $accessToken,
+                    $mobileCode->user->id
                 );
 
                 $token->save();
-                if($wechat || $miniWechat) { //开了微信，
+                if ($wechat || $miniWechat) { //开了微信，
                     //未绑定微信
                     $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($mobileCode->user->bind_type);
-                    if(!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
+                    if (!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
                         //返回昵称，用于前端绑定微信时展示
                         $nickname = !empty($mobileCode->user->nickname) ? $mobileCode->user->nickname : $mobileCode->user->mobile;
                         $data = [
@@ -151,7 +152,7 @@ class SmsLoginController extends AuthBaseController
             app('errorLog')->info('requestId：' . $this->requestId . '-' . '" 注册/登录接口异常-SmsLoginController： 入参：'
                                   . json_encode($paramData) . ';用户id：' . $this->user->id . ';异常：' . $e->getMessage());
             $this->connection->rollback();
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号注册/登录接口异常',);
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号注册/登录接口异常');
         }
     }
 }
