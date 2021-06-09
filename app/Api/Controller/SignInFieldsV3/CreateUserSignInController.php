@@ -17,6 +17,7 @@
 
 namespace App\Api\Controller\SignInFieldsV3;
 
+use App\Api\Controller\UsersV3\AuthBaseController;
 use App\Api\Serializer\UserSignInSerializer;
 use App\Commands\SignInFields\CreateUserSignIn;
 use App\Common\ResponseCode;
@@ -35,7 +36,7 @@ use Discuz\Auth\AssertPermissionTrait;
 use App\Models\Setting;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
-class CreateUserSignInController extends DzqController
+class CreateUserSignInController extends AuthBaseController
 {
     private $bus;
     protected $validation;
