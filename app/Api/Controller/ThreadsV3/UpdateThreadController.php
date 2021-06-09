@@ -131,7 +131,7 @@ class UpdateThreadController extends DzqController
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
 
-        !empty($title) && $thread->title = $title;
+        $thread->title = $title;
         !empty($categoryId) && $thread->category_id = $categoryId;
         if (!empty($position)) {
             $thread->longitude = $position['longitude'] ?? 0;
