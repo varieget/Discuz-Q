@@ -71,7 +71,7 @@ trait TomTrait
                 if (in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
                     $tomId = strval($tomJson['tomId']);
                     $op = $tomJson['operation'];
-                    $body = $tomJson['body'];
+                    $body = $tomJson['body'] ?? false;
                     if (isset($config[$tomId])) {
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
