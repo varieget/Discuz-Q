@@ -252,9 +252,8 @@ class CreateThreadController extends DzqController
             if (constant($tomService.'::NEED_PAY') && $indexes[$tomType]['body']['draft'] != 1 ) {
                 $indexes[$tomType]['body']['draft'] = 1;
                 if(empty($indexes[$tomType]['body']['orderSn'])){
-                    throw new \Exception('红包/悬赏红包取少订单号', ResponseCode::INVALID_PARAMETER);
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包取少订单号');
                 }
-//                throw new \Exception('红包/悬赏红包状态应为草稿', ResponseCode::INVALID_PARAMETER);
             }
         }
 

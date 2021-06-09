@@ -200,14 +200,13 @@ class UpdateThreadController extends DzqController
             $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
             if(constant($tomService.'::NEED_PAY')){
                 if($this->inPut('draft') == 0){        //如果修改帖子的时候，增加了红包资料的话，那么必须要先走草稿，然后走订单，再走发布（或者简单点理解为：增加了新的红包的帖子状态，只能通过支付回调来修改帖子状态）
-                    throw new \Exception('红包/悬赏红包应先存为草稿', ResponseCode::INVALID_PARAMETER);
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包应先存为草稿');
                 }
                 if ($content['indexes'][$tomType]['body']['draft'] != 1 ) {
-//                $content['indexes'][$tomType]['body']['draft'] = 1;
-                    throw new \Exception('红包/悬赏红包状态应为草稿', ResponseCode::INVALID_PARAMETER);
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包状态应为草稿');
                 }
                 if(empty($content['indexes'][$tomType]['body']['orderSn'])){
-                    throw new \Exception('红包/悬赏红包取少订单号', ResponseCode::INVALID_PARAMETER);
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包取少订单号');
                 }
             }
         }
