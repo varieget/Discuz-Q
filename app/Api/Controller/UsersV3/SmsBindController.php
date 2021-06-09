@@ -72,12 +72,12 @@ class SmsBindController extends AuthBaseController
 
             if (empty($actor) || $actor->isGuest()) {
                 $this->connection->rollback();
-                $this->outPut(ResponseCode::UNAUTHORIZED);
+                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
             }
 
             if (!empty($actor->mobile)) {
                 $this->connection->rollback();
-                $this->outPut(ResponseCode::BIND_ERROR);
+                $this->outPut(ResponseCode::BIND_ERROR,'用户已绑定了手机号');
             }
 
             $exists = User::query()->where('mobile', $mobileCode->mobile)->exists();

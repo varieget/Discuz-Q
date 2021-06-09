@@ -128,6 +128,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
 
                     $data['code']               = $inviteCode;
                     $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
+                    $data['nickname']           = Str::of($wechatUser->nickname)->substr(0, 15);
                     $data['register_reason']    = trans('user.register_by_wechat_miniprogram');
                     $user = $this->bus->dispatch(
                         new AutoRegisterUser($this->user, $data)

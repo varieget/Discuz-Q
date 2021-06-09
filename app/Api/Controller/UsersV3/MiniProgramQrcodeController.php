@@ -84,7 +84,7 @@ class MiniProgramQrcodeController extends DzqController
             $path = self::$qrcodeTypeAndRouteMap[$type];
             $actor = $this->user;
             if ($type == 'pc_bind_mini' && empty($actor->id)) {
-                $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
             }
             if($actor && $actor->id) {
                 $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);

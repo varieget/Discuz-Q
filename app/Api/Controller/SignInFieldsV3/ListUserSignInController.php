@@ -17,6 +17,7 @@
 
 namespace App\Api\Controller\SignInFieldsV3;
 
+use App\Api\Controller\UsersV3\AuthBaseController;
 use App\Api\Serializer\UserSignInSerializer;
 use App\Common\ResponseCode;
 use App\Models\UserSignInFields;
@@ -28,7 +29,7 @@ use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
 
-class ListUserSignInController extends DzqController
+class ListUserSignInController extends AuthBaseController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
