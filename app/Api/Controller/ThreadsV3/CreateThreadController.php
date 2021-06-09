@@ -21,6 +21,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
+use App\Models\Order;
 use App\Models\Permission;
 use App\Models\Post;
 use App\Models\Thread;
@@ -31,12 +32,13 @@ use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
 class CreateThreadController extends DzqController
 {
     use ThreadTrait;
 
-    private $isDraft = false;
+    private $isDraft = 0;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -141,7 +143,13 @@ class CreateThreadController extends DzqController
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
-        $this->isDraft = $isDraft;
+
+        // 帖子是否需要支付，如果需要支付，则强制发布为草稿
+        if ($this->needPay($content['indexes'] ?? [])) {
+            $isDraft = 1;
+        }
+
+        if(!empty($isDraft))    $this->isDraft = $isDraft;
         if (mb_strlen($title) > 100) $this->outPut(ResponseCode::INVALID_PARAMETER, '标题字数不能大于100');
         if (empty($content)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 content 参数');
         if (empty($categoryId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少 categoryId 参数');
@@ -184,8 +192,9 @@ class CreateThreadController extends DzqController
         } else {
             $dataThread['is_approved'] = Thread::BOOL_YES;
         }
-        $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
+        $dataThread['is_draft'] = $this->isDraft;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
+
         $thread->setRawAttributes($dataThread);
         $thread->save();
         if (!$isApproved && !$isDraft) {
@@ -236,6 +245,20 @@ class CreateThreadController extends DzqController
     private function saveTom($thread, $content, $post)
     {
         $indexes = $content['indexes'];
+        //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
+        $tomTypes = array_keys($indexes);
+        foreach ($tomTypes as $tomType) {
+            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
+            if(constant($tomService.'::NEED_PAY')){
+                if(empty($indexes[$tomType]['body']['orderSn'])){
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包取少订单号');
+                }
+                if ($indexes[$tomType]['body']['draft'] != 1 ) {
+                    $indexes[$tomType]['body']['draft'] = 1;
+                }
+            }
+        }
+
         $attrs = [];
         $tomJsons = $this->tomDispatcher($indexes, $this->CREATE_FUNC, $thread['id'], $post['id']);
         $tags = [];
@@ -267,7 +290,15 @@ class CreateThreadController extends DzqController
     {
         $user = $this->user;
         $group = Group::getGroup($user->id);
-        return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
+        $result = $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
+        if (
+            $this->needPay($tomJsons)
+            && ($order = $this->getPendingOrderInfo($thread))
+            && ($order->status == Order::ORDER_STATUS_PENDING)
+        ) {
+            $result['orderInfo'] = $this->camelData($order);
+        }
+        return $result;
     }
 
     private function limitCreateThread()

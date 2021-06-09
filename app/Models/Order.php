@@ -25,6 +25,7 @@ use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Database\ScopeVisibilityTrait;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -56,6 +57,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property User $user
  * @property User $payee
  * @property User $thirdParty
+ * @method static \Illuminate\Database\Eloquent\Builder|self query()
  * @package App\Models
  */
 class Order extends DzqModel
@@ -129,9 +131,9 @@ class Order extends DzqModel
     const PAYMENT_TYPE_WALLET = 20;//钱包支付
 
     /**
-     * 订单过期时间，单位分钟，订单过期后无法支付
+     * 订单过期时间，单位分钟，订单过期后无法支付，这里取微信支付的最大过期时间：90 天
      */
-    const ORDER_EXPIRE_TIME = 15;
+    const ORDER_EXPIRE_TIME = 90 * 24 * 60;
 
     /**
      * {@inheritdoc}
