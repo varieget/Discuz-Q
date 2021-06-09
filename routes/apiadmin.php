@@ -91,5 +91,5 @@ $route->get('/recommend.topics', 'recommend.topics', ApiController\Recommend\Rec
 $route->get('/checkQcloud', 'checkQcloud',  ApiController\CheckQcloudV3Controller::class);
 
 //邀请朋友生成code
-$route->get('/invite.link.create','invite.link.create',ApiController\InviteV3\CreateInviteLinkAdminController::class);
+$route->get('/adminInvite.link.create','invite.link.create',ApiController\InviteV3\CreateInviteLinkAdminController::class);
 
