@@ -31,7 +31,6 @@ use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
-use Illuminate\Database\ConnectionInterface;
 
 class ThreadListController extends DzqController
 {
@@ -45,6 +44,7 @@ class ThreadListController extends DzqController
     private $preloadCount = 0;
     private $categoryIds = [];
 
+    private $viewHotList = false;
     protected $settings;
 
 
@@ -58,9 +58,11 @@ class ThreadListController extends DzqController
         $filter = $this->inPut('filter') ?: [];
         $categoryIds = $filter['categoryids'] ?? [];
         $complex = $filter['complex'] ?? null;
+        $this->viewHotList();
 
         $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
-        if (!$this->isUnPaid()) {
+
+        if (!$this->viewHotList) {
             if (!$this->categoryIds && empty($complex)) {
                 throw new PermissionDeniedException('没有浏览权限');
             }
@@ -68,14 +70,19 @@ class ThreadListController extends DzqController
         return true;
     }
 
-    private function isUnPaid()
+    private function viewHotList()
     {
         $groups = $this->user->groups->toArray();
         $group = current($groups);
-        if (!empty($group) && $group['id'] == Group::UNPAID) {
-            return true;
+        $paid = boolval($this->inPut('pay'));
+        if (!empty($group)) {
+            if (($group['id'] == Group::UNPAID || $group['id'] == Group::GUEST_ID) && $paid) {
+                $this->viewHotList = true;
+                return;
+            }
         }
-        return false;
+        $this->viewHotList = false;
+        return;
     }
 
 
@@ -87,7 +94,7 @@ class ThreadListController extends DzqController
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
         $page <= 0 && $page = 1;
-        if ($this->isUnPaid()) {
+        if ($this->viewHotList) {
             $page = 1;
             $sequence = 0;
             $perPage = 10;
@@ -134,7 +141,7 @@ class ThreadListController extends DzqController
         $cacheKey = $this->cacheKey($filter);
         $filterKey = $this->filterKey($perPage, $filter, $withLoginUser);
         //初始化exist数据
-        if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
+        if (($this->preload || $page == 1) && !$this->viewHotList) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
                 $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
                 $this->initDzqGlobalData($threads);
@@ -159,7 +166,7 @@ class ThreadListController extends DzqController
         $threadsBuilder = $this->buildSequenceThreads($filter);
         $cacheKey = CacheKey::LIST_THREADS_V3_SEQUENCE;
         $filterKey = $this->filterKey($perPage, $filter);
-        if ($this->preload || $page == 1) {//第一页检查是否需要初始化缓存
+        if (($this->preload || $page == 1) && !$this->viewHotList) {//第一页检查是否需要初始化缓存
             $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
                 $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
                 $this->initDzqGlobalData($threads);
