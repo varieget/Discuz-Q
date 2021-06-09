@@ -64,6 +64,24 @@ class LocalImageHandler
             storage_path('app/' . $uploader->getFullPath())
         );
 
+        $exif = $image->exif();
+        $log = app('log');
+        $log->info("imageInfo exif_data：",$exif);
+
+        if(!empty($exif['Orientation'])) {
+            switch($exif['Orientation']) {
+                case Attachment::ORIENTATION_EIGHT:
+                    $image->rotate(90)->save();
+                    break;
+                case Attachment::ORIENTATION_THREE:
+                    $image->rotate(180)->save();
+                    break;
+                case Attachment::ORIENTATION_SIX:
+                    $image->rotate(-90)->save();
+                    break;
+            }
+        }
+
         // 缩略图及高斯模糊图存储路径
         $thumbPath = Str::replaceLast($image->filename, $image->filename . '_thumb', $image->basePath());
         $blurPath = Str::replaceLast($image->filename, md5($image->filename) . '_blur', $image->basePath());
