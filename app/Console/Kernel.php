@@ -27,6 +27,7 @@ use App\Console\Commands\QueryWechatOrderConmmand;
 use App\Console\Commands\QuestionClearCommand;
 use App\Console\Commands\ThreadRewardExpireCommand;
 use App\Console\Commands\RedPacketExpireCommand;
+use App\Console\Commands\TranscodeVideoCommand;
 use Discuz\Console\Kernel as ConsoleKernel;
 use Illuminate\Console\Scheduling\Schedule;
 
@@ -41,7 +42,8 @@ class Kernel extends ConsoleKernel
         QuestionClearCommand::class,
         ThreadRewardExpireCommand::class,
         RedPacketExpireCommand::class,
-        AbnormalOrderDealCommand::class
+        AbnormalOrderDealCommand::class,
+        TranscodeVideoCommand::class
     ];
 
     /**
@@ -58,6 +60,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('reward:expire')->everyMinute()->withoutOverlapping();
         $schedule->command('redPacket:expire')->everyMinute()->withoutOverlapping();
         $schedule->command('abnormalOrder:clear')->everyMinute()->withoutOverlapping();
+        $schedule->command('transcode:update')->everyMinute()->withoutOverlapping();
 
         // 维护清理
         $schedule->command('clear:attachment')->daily();
