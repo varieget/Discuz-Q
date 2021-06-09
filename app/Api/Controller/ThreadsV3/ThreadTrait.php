@@ -299,10 +299,13 @@ trait ThreadTrait
                     }
                 }
                 $content['text'] = $text;
-                // 如果有红包，则只显示红包
-                if (isset($tomInput[TomConfig::TOM_REDPACK])) {
+                //如果有红包和图片，则只显示红包和图片
+                $tomConfig = [];
+                isset($tomInput[TomConfig::TOM_REDPACK]) && $tomConfig += [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]];
+                isset($tomInput[TomConfig::TOM_IMAGE]) && $tomConfig += [TomConfig::TOM_IMAGE => $tomInput[TomConfig::TOM_IMAGE]];
+                if (!empty($tomConfig)) {
                     $content['indexes'] = $this->tomDispatcher(
-                        [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]],
+                        $tomConfig,
                         $this->SELECT_FUNC,
                         $thread['id'],
                         null,
@@ -537,12 +540,9 @@ trait ThreadTrait
 
     private function optimizeTopics($text)
     {
-        preg_match_all('/#.+?#/', $text, $m1);
-        $topics = $m1[0];
+        preg_match_all('/<span[^\>]*>#(.+?)#<\/span>/', $text, $m1);
+        $topics = $m1[1];
         $topics = array_values($topics);
-        array_walk($topics, function (&$item) {
-            $item = str_replace('#', '', $item);
-        });
         return $topics;
     }
 

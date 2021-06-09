@@ -211,6 +211,17 @@ class GroupPermissionListController extends DzqController
             }
         }
 
+        //如果是管理员返回所有权限
+        if ($this->user->isAdmin()) {
+            foreach ($allPermissons as $key=>$val) {
+                if (is_array($val)) {
+                    foreach ($val as $k=>$v){
+                        $allPermissons[$key][$k] = true;
+                    }
+                }
+            }
+        }
+
         return $allPermissons;
     }
 }

@@ -131,7 +131,7 @@ class UpdateThreadController extends DzqController
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
 
-        !empty($title) && $thread->title = $title;
+        $thread->title = $title;
         !empty($categoryId) && $thread->category_id = $categoryId;
         if (!empty($position)) {
             $thread->longitude = $position['longitude'] ?? 0;
@@ -188,19 +188,13 @@ class UpdateThreadController extends DzqController
         $tags = [];
         $tomJsons = $this->tomDispatcher($content, null, $thread->id, $post->id);
         if (!empty($content['text'])) {
-            $tags[] = [
-                'thread_id' => $thread['id'],
-                'tag' => TomConfig::TOM_TEXT,
-            ];
+            $tags[] = ['thread_id' => $thread['id'], 'tag' => TomConfig::TOM_TEXT];
         }
         foreach ($tomJsons as $key => $value) {
             $tomId = $value['tomId'];
             $operation = $value['operation'];
             $body = $value['body'];
-            $tags[] = [
-                'thread_id' => $threadId,
-                'tag' => $value['tomId']
-            ];
+            $operation != $this->DELETE_FUNC && $tags[] = ['thread_id' => $threadId, 'tag' => $value['tomId']];
             switch ($operation) {
                 case $this->CREATE_FUNC:
                     ThreadTom::query()->insert([
@@ -225,8 +219,27 @@ class UpdateThreadController extends DzqController
                     $this->outPut(ResponseCode::UNKNOWN_ERROR, 'operation ' . $operation . ' not exist.');
             }
         }
+        $this->delRedundancyPlugins($threadId, $tomJsons);
         $this->saveThreadTag($threadId, $tags);
         return $tomJsons;
+    }
+
+    //删除掉前端未提交的的插件和标签数据
+    private function delRedundancyPlugins($threadId, $tomJsons)
+    {
+        $tomList = ThreadTom::query()
+            ->select('tom_type', 'key')
+            ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get();
+        $keys = [];
+        foreach ($tomList as $item) {
+            if (empty($tomJsons[$item['key']])) {
+                $keys[] = $item['key'];
+            }
+        }
+        ThreadTom::query()
+            ->select('tom_type', 'key')
+            ->where(['thread_id' => $threadId])
+            ->whereIn('key', $keys)->delete();
     }
 
     private function saveThreadTag($threadId, $tags)

@@ -210,6 +210,11 @@ class ListNotificationV2Controller extends DzqController
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($replyPostContent);
             $result['replyPostContent'] = str_replace($searches, $replaces, $replyPostContent);
         }
+        if(!empty($result['content'])) {
+            $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['content']);
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
+            $result['content'] = str_replace($searches, $replaces, $content);
+        }
 
         // 默认必须要有的字段
         if (!array_key_exists('reply_post_id', $result)) {

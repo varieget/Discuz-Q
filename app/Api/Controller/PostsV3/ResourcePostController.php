@@ -19,10 +19,12 @@ namespace App\Api\Controller\PostsV3;
 
 
 use App\Api\Controller\ThreadsV3\ThreadHelper;
+use App\Api\Serializer\PostSerializer;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\CommentPostSerializer;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
+use App\Models\UserWalletLog;
 use App\Models\GroupUser;
 use App\Models\Post;
 use App\Models\User;
@@ -38,6 +40,13 @@ class ResourcePostController extends DzqController
         'likedUsers:id,username,avatar',
         'images'
     ];
+
+    protected $postSerializer;
+
+    public function __construct( PostSerializer $postSerializer ) {
+        $this->postSerializer = $postSerializer;
+    }
+
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -78,7 +87,8 @@ class ResourcePostController extends DzqController
 
         $data = $coment_post_serialize->getDefaultAttributes($comment_post, $this->user);
 
-
+        $data['rewards'] = floatval(sprintf('%.2f', $comment_post->getPostReward(UserWalletLog::TYPE_INCOME_THREAD_REWARD)));
+        $data['redPacketAmount'] = $this->postSerializer->getPostRedPacketAmount($comment_post->id, $comment_post->thread_id, $comment_post->user_id);
         $data['canLike'] = app(UserRepository::class)->canLikePosts($this->user);
         $data['images'] = [];
         $data['likeUsers'] = $comment_post->likedUsers;
