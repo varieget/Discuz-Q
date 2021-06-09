@@ -540,12 +540,9 @@ trait ThreadTrait
 
     private function optimizeTopics($text)
     {
-        preg_match_all('/#.+?#/', $text, $m1);
-        $topics = $m1[0];
+        preg_match_all('/<span[^\>]*>#(.+?)#<\/span>/', $text, $m1);
+        $topics = $m1[1];
         $topics = array_values($topics);
-        array_walk($topics, function (&$item) {
-            $item = str_replace('#', '', $item);
-        });
         return $topics;
     }
 
