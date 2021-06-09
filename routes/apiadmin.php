@@ -89,3 +89,7 @@ $route->get('/recommend.topics', 'recommend.topics', ApiController\Recommend\Rec
 
 // 判断是否已配置腾讯云  CheckQcloudController
 $route->get('/checkQcloud', 'checkQcloud',  ApiController\CheckQcloudV3Controller::class);
+
+//邀请朋友生成code
+$route->get('/adminInvite.link.create','invite.link.create',ApiController\InviteV3\CreateInviteLinkAdminController::class);
+
