@@ -27,6 +27,7 @@ use App\Models\ThreadRedPacket;
 
 class RedPackBusi extends TomBaseBusi
 {
+    public const NEED_PAY = 1;
 
     public function create()
     {
@@ -37,14 +38,18 @@ class RedPackBusi extends TomBaseBusi
             if ($input['price']*100 <  $input['number']) $this->outPut(ResponseCode::INVALID_PARAMETER,'红包金额不够分');
         }
 
+        /*
         $threadRedPacket = ThreadRedPacket::query()->where('thread_id', $this->threadId)->first();
         if (!empty($threadRedPacket)) {
             $thread = Thread::query()->where('id', $this->threadId)->first(['is_draft']);
             if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'已发布的红包不可编辑');
         }
+        */
 
-        if ($input['draft'] != Thread::IS_DRAFT) {
-
+        if ($input['draft'] == Thread::IS_DRAFT) {
+            if(empty($input['orderSn'])){
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '红包缺少orderSn');
+            }
             $order = Order::query()
                 ->where('order_sn',$input['orderSn'])
                 ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
@@ -55,12 +60,11 @@ class RedPackBusi extends TomBaseBusi
             } else {
                 if ($order->type == Order::ORDER_TYPE_REDPACKET && $input['price']*$input['number'] != $order['amount']) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误');
             }
-
             if (empty($order) ||
                 !empty($order['thread_id']) ||
                 ($order->type == Order::ORDER_TYPE_REDPACKET && !empty($order['thread_id'])) ||
                 $order['user_id'] != $this->user['id'] ||
-                $order['status'] != Order::ORDER_STATUS_PAID ||
+                $order['status'] != Order::ORDER_STATUS_PENDING ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
@@ -72,11 +76,10 @@ class RedPackBusi extends TomBaseBusi
                     ->first();
                 if (empty($orderChildrenInfo) ||
                     $orderChildrenInfo->amount != $input['price'] ||
-                    $orderChildrenInfo->status != Order::ORDER_STATUS_PAID) {
+                    $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER);
                 }
             }
-
             $order->thread_id = $this->threadId;
             $order->save();
             if ($order->type == Order::ORDER_TYPE_MERGE) {
