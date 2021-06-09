@@ -98,13 +98,15 @@ class RedPackBusi extends TomBaseBusi
             $threadRedPacket->updated_at = date('Y-m-d H:i:s');
         }
 
+        //定额红包计算
+        $price = $input['rule'] == 0 ? $input['price']*$input['number'] : $input['price'];
         $threadRedPacket->thread_id = $this->threadId;
         $threadRedPacket->post_id = $this->postId;
         $threadRedPacket->rule = $input['rule'];
         $threadRedPacket->condition = $input['condition'];
         $threadRedPacket->likenum = $input['likenum'];
-        $threadRedPacket->money = $input['price'];
-        $threadRedPacket->remain_money = $input['price'];
+        $threadRedPacket->money = $price;
+        $threadRedPacket->remain_money = $price;
         $threadRedPacket->number = $input['number'];
         $threadRedPacket->remain_number = $input['number'];
         $threadRedPacket->status = RedPacket::RED_PACKET_STATUS_VALID;

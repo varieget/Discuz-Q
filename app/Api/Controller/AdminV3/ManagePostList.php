@@ -196,9 +196,9 @@ class ManagePostList extends DzqController
             ];
 
             $v['id'] = $v['post_id'];
-            $pageData[$k]['cotent'] = [
+            $pageData[$k]['content'] = [
                 'text' => $v['content'],
-                'indexs' => $v->images->map(function (Attachment $image) {
+                'indexes' => $v->images->map(function (Attachment $image) {
                     return $this->attachmentSerializer->getDefaultAttributes($image);
                 }),
             ];

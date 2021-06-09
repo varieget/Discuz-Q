@@ -79,8 +79,8 @@ class ManageThemeList extends DzqController
                 'threads.*'
             );
 
-        //是否审核
-        $query->where('threads.is_approved', $isApproved);
+        //是否审核and是否草稿
+        $query->where(['threads.is_approved' => $isApproved, 'threads.is_draft' => Thread::IS_NOT_DRAFT]);
 
         //浏览次数
         if ($viewCountGt !== '') {
@@ -225,15 +225,27 @@ class ManageThemeList extends DzqController
                 ->toArray();
         }
 
-        //获取最后回复用户id
         $post = Post::query()
             ->whereIn('thread_id',$threadsIds)
-            ->where('posts.is_first',Post::FIRST_NO)
             ->leftJoin('users','posts.user_id','=','users.id')
-            ->orderBy('posts.created_at','desc')
-            ->get(['users.nickname','posts.user_id','posts.thread_id','posts.created_at'])
-            ->pluck(null,'thread_id')
+            ->orderBy('posts.created_at','asc')
+            ->get(['users.nickname','posts.user_id','posts.thread_id','posts.created_at','posts.content','posts.is_first'])
             ->toArray();
+
+        /*
+         * $content 主题内容
+         * $lastPostedUser 最后回复用户
+         */
+        $content = [];
+        $lastPostedUser = [];
+        foreach ($post as $k=>$v) {
+            if ( $v['is_first'] == 1 ) {
+                $content[$v['thread_id']] = $post[$k];
+            }
+            if ( $v['is_first'] == 0 ) {
+                $lastPostedUser[$v['thread_id']] = $post[$k];
+            }
+        }
 
         //参数归类
         foreach ($pageData as $k => $v) {
@@ -250,9 +262,9 @@ class ManageThemeList extends DzqController
             ];
 
             $pageData[$k]['lastPostedUser'] = [
-                'lastNickname' => $post[$v['threadId']]['nickname'],
-                'userId' => $post[$v['threadId']]['user_id'],
-                'createdAt' => date('Y-m-d H:i:s',strtotime($post[$v['threadId']]['created_at'])),
+                'lastNickname' => $lastPostedUser[$v['threadId']]['nickname'],
+                'userId' => $lastPostedUser[$v['threadId']]['user_id'],
+                'createdAt' => date('Y-m-d H:i:s',strtotime($lastPostedUser[$v['threadId']]['created_at'])),
             ];
 
             $pageData[$k]['deletedUserArr'] = [
@@ -260,6 +272,8 @@ class ManageThemeList extends DzqController
                 'deletedAt' => date('Y-m-d H:i:s',strtotime($snapArr[$v['threadId']]['deleted_at'])),
                 'deletedUserId' => $snapArr[$v['threadId']]['deleted_user_id']
             ];
+
+            $pageData[$k]['content']['text'] = $content[$v['threadId']]['content'];
         }
 
          $pagination['pageData'] = $pageData;
