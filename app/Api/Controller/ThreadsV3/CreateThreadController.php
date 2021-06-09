@@ -249,10 +249,12 @@ class CreateThreadController extends DzqController
         $tomTypes = array_keys($indexes);
         foreach ($tomTypes as $tomType) {
             $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
-            if (constant($tomService.'::NEED_PAY') && $indexes[$tomType]['body']['draft'] != 1 ) {
-                $indexes[$tomType]['body']['draft'] = 1;
+            if(constant($tomService.'::NEED_PAY')){
                 if(empty($indexes[$tomType]['body']['orderSn'])){
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包取少订单号');
+                }
+                if ($indexes[$tomType]['body']['draft'] != 1 ) {
+                    $indexes[$tomType]['body']['draft'] = 1;
                 }
             }
         }
