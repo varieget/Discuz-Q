@@ -244,7 +244,7 @@ class CreateThreadController extends DzqController
 
     private function saveTom($thread, $content, $post)
     {
-        $indexes = $content['indexes'];
+        $indexes = $content['indexes'] ?? [];
         //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
         $tomTypes = array_keys($indexes);
         foreach ($tomTypes as $tomType) {
