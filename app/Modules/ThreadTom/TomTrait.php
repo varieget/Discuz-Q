@@ -54,7 +54,7 @@ trait TomTrait
         if (isset($tomContent['indexes'])) {
             $indexes = $tomContent['indexes'];
         } else {
-            $indexes = [];
+            $indexes = $tomContent;
         }
         if (empty($indexes)) return $tomJsons;
         $tomList = [];
