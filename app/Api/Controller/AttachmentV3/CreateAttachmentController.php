@@ -107,7 +107,7 @@ class CreateAttachmentController extends DzqController
             );
 
             // 上传
-            $this->uploader->upload($file, $actor);
+            $this->uploader->upload($file, $type);
 
             $this->events->dispatch(
                 new Uploaded($actor, $this->uploader)
