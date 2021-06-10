@@ -27,14 +27,11 @@ use App\Exceptions\NoUserException;
 use App\Models\SessionToken;
 use App\Models\User;
 use App\Models\UserWechat;
-use App\Notifications\Messages\Wechat\RegisterWechatMessage;
-use App\Notifications\System;
 use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use App\User\Bound;
 use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\ConnectionInterface;
@@ -88,6 +85,10 @@ class WechatH5LoginController extends AuthBaseController
         } catch (Exception $e) {
             app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5登录获取wx用户接口异常-WechatH5LoginController： ' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录获取wx用户接口异常');
+        }
+
+        if ($this->requestLock($wxuser->getId())) {
+            $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
         }
 
         //过渡开关打开
