@@ -138,7 +138,7 @@ class WechatTransitionBindSmsController extends AuthBaseController
                                   .';userId:'.$this->user->id
                                   . ';异常：' . $e->getMessage());
             $this->connection->rollback();
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '过渡阶段微信绑定手机号接口异常',);
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '过渡阶段微信绑定手机号接口异常');
         }
     }
 }
