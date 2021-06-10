@@ -24,6 +24,7 @@ use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Models\ThreadReward;
 use App\Models\ThreadTom;
+use Carbon\Carbon;
 
 class RewardBusi extends TomBaseBusi
 {
@@ -105,6 +106,62 @@ class RewardBusi extends TomBaseBusi
         $threadReward->content = $input['content'];
 
         return $this->jsonReturn($threadReward);
+    }
+
+    public function update()
+    {
+        $input = $this->verification();
+        //先删除原订单，这里的删除暂定为：将原订单中的 thread_id 置 0，让原订单成为僵死订单
+        $old_order = Order::query()->where('thread_id', $this->threadId)->first();
+        if(empty($old_order)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '该帖有问题，原订单不存在');
+        }
+        //如果传过来的 orderSn 变更的话，就说明红包变了，那么就与原 order 脱离关系，关联新 order
+        if($old_order->order_sn != $input['orderSn']){
+            //规定时间内，含有红包的帖子不能频繁修改
+            if($old_order->created_at > Carbon::now()->subMinutes(self::RED_LIMIT_TIME) ){
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '系统处理中，请稍后再试……');
+            }
+            $old_order->thread_id = 0;
+            $res = $old_order->save();
+            if($res === false){
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '清除原订单帖子id失败');
+            }
+            // 将原 orderChildrenInfo 的 thread_id 置 0
+            if ($old_order->type == Order::ORDER_TYPE_MERGE) {
+                $orderChildrenInfo = OrderChildren::query()
+                    ->where('order_sn', $input['orderSn'])
+                    ->where('type', Order::ORDER_TYPE_QUESTION_REWARD)
+                    ->first();
+                if (empty($orderChildrenInfo) || $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER);
+                }
+                $orderChildrenInfo->thread_id = 0;
+                $res = $orderChildrenInfo->save();
+                if($res === false){
+                    $this->outPut(ResponseCode::INTERNAL_ERROR, '清除原子订单帖子id失败');
+                }
+            }
+            // 将原 threadReward 中 thread_id 、post_id 置 0
+            $threadReward = ThreadReward::query()->where('thread_id', $this->threadId)->first();
+            if(empty($threadReward)){
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '原悬赏帖数据不存在');
+            }
+            $threadReward->thread_id = 0;
+            $threadReward->post_id = 0;
+            $res = $threadReward->save();
+            if($res === false){
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '修改原悬赏帖数据出错');
+            }
+            //删除原tom类型
+            $res = $this->delete();
+            if($res === false){
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '删除原悬赏出错');
+            }
+            return self::create();
+        }else{
+            return $this->jsonReturn([]);
+        }
     }
 
     public function select()
