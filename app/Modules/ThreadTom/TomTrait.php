@@ -66,7 +66,7 @@ trait TomTrait
             });
         }
         foreach ($indexes as $key => $tomJson) {
-            $this->setOperation($operation, $key, $tomJson, $tomList);
+            $this->setOperation($threadId, $operation, $key, $tomJson, $tomList);
             $this->busiPermission($this->user, $tomJson);
             if (isset($tomJson['tomId']) && isset($tomJson['operation'])) {
                 if (in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
@@ -94,13 +94,14 @@ trait TomTrait
 
     /**
      * @desc 识别当前的操作类型
+     * @param $threadId
      * @param $operation
      * @param $key
      * @param $tomJson
      * @param $tomList
      * @return mixed
      */
-    private function setOperation($operation, $key, &$tomJson, $tomList)
+    private function setOperation($threadId, $operation, $key, &$tomJson, $tomList)
     {
         !empty($operation) && $tomJson['operation'] = $operation;
         if (!isset($tomJson['operation'])) {
