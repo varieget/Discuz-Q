@@ -54,7 +54,11 @@ trait TomTrait
         if (isset($tomContent['indexes'])) {
             $indexes = $tomContent['indexes'];
         } else {
-            $indexes = $tomContent;
+            if (isset($tomContent['text'])) {
+                $indexes = [];
+            } else {
+                $indexes = $tomContent;
+            }
         }
         if (empty($indexes)) return $tomJsons;
         $tomList = [];
@@ -66,7 +70,7 @@ trait TomTrait
             });
         }
         foreach ($indexes as $key => $tomJson) {
-            $this->setOperation($threadId,$operation, $key, $tomJson, $tomList);
+            $this->setOperation($threadId, $operation, $key, $tomJson, $tomList);
             $this->busiPermission($this->user, $tomJson);
             if (isset($tomJson['tomId']) && isset($tomJson['operation'])) {
                 if (in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
@@ -101,7 +105,7 @@ trait TomTrait
      * @param $tomList
      * @return mixed
      */
-    private function setOperation($threadId,$operation, $key, &$tomJson, $tomList)
+    private function setOperation($threadId, $operation, $key, &$tomJson, $tomList)
     {
         !empty($operation) && $tomJson['operation'] = $operation;
         if (!isset($tomJson['operation'])) {
@@ -251,8 +255,8 @@ trait TomTrait
     {
         $tomTypes = array_keys($tomJsons);
         foreach ($tomTypes as $tomType) {
-            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
-            if (constant($tomService.'::NEED_PAY')) {
+            $tomService = Arr::get(TomConfig::$map, $tomType . '.service');
+            if (constant($tomService . '::NEED_PAY')) {
                 return true;
             }
         }
