@@ -45,7 +45,7 @@ class ThreadHelper
                     ->from('post_user as b')
                     ->where('b.post_id', 'a.post_id')
                     ->where('b.created_at', '>', 'a.created_at');
-            }, '<', 2)
+            }, '<', 10)
             ->orderByDesc('a.post_id')
             ->get()->each(function (&$item) use ($postIdThreadId) {
                 $item['thread_id'] = $postIdThreadId[$item['post_id']] ?? null;
@@ -63,7 +63,7 @@ class ThreadHelper
                     ->from('orders as b')
                     ->where('b.thread_id', 'a.thread_id')
                     ->where('b.created_at', '>', 'a.created_at');
-            }, '<', 2)
+            }, '<', 10)
             ->orderByDesc('a.thread_id')
             ->get()->toArray();
 
@@ -75,18 +75,20 @@ class ThreadHelper
             return strtotime($a['created_at']) < strtotime($b['created_at']);
         });
         $likedUsersInfo = [];
-        $maxDisplay = 3;
+        $maxDisplay = 11;
         foreach ($mLikedUsers as $item) {
             $threadId = $item['thread_id'];
             if (empty($likedUsersInfo[$threadId]) || count($likedUsersInfo[$threadId]) < $maxDisplay) {
                 $user = $users[$item['user_id']] ?? null;
-                $likedUsersInfo[$item['thread_id']][] = [
-                    'userId' => $item['user_id'],
-                    'avatar' => $user->avatar,
-                    'nickname' => $user->nickname,
-                    'type' => !empty($item['type']) ? 1 : 2,
-                    'createdAt' => strtotime($item['created_at'])
-                ];
+                if (!empty($user)) {
+                    $likedUsersInfo[$item['thread_id']][] = [
+                        'userId' => $item['user_id'],
+                        'avatar' => $user->avatar,
+                        'nickname' => $user->nickname,
+                        'type' => !empty($item['type']) ? 1 : 2,
+                        'createdAt' => strtotime($item['created_at'])
+                    ];
+                }
             }
         }
         $likedUsersInfo = self::appendDefaultEmpty($threadIds, $likedUsersInfo, []);

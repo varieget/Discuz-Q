@@ -31,7 +31,8 @@ class ThreadCommendController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $userRepo->canViewThreads($this->user);
+        return true;
+//        return $userRepo->canViewThreads($this->user);
     }
 
     public function main()

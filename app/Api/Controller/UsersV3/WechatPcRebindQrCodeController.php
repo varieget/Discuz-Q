@@ -27,7 +27,7 @@ use Endroid\QrCode\QrCode;
 use GuzzleHttp\Client;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
-class WechatPcRebindQrCodeController extends DzqController
+class WechatPcRebindQrCodeController extends AuthBaseController
 {
     use EasyWechatTrait;
 
@@ -53,7 +53,7 @@ class WechatPcRebindQrCodeController extends DzqController
         try {
             $actor = $this->user;
             if (empty($actor->id)) {
-                $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
             }
 
             $miniWechat = (bool)$this->settingsRepository->get('miniprogram_close', 'wx_miniprogram');

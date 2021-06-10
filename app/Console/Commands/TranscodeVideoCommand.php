@@ -19,15 +19,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Thread;
-use App\Models\ThreadReward;
-use App\Models\Post;
 use App\Models\ThreadVideo;
-use App\Models\User;
-use App\Models\UserWallet;
-use App\Models\UserWalletLog;
-use App\Models\Order;
-use App\Models\OrderChildren;
-use App\Repositories\ThreadRewardRepository;
 use App\Repositories\ThreadVideoRepository;
 use App\Settings\SettingsRepository;
 use Discuz\Console\AbstractCommand;

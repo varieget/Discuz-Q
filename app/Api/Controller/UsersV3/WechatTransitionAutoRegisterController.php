@@ -73,7 +73,7 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
         //过度页开关打开需要把微信信息绑定至新用户，只在微信内有效
         $sessionToken = $this->inPut('sessionToken');
         if(! $sessionToken) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
+            $this->outPut(ResponseCode::INVALID_PARAMETER,'sessionToken不能为空');
         }
         $token = SessionToken::get($sessionToken);
         if(! $token) {

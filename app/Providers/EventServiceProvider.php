@@ -71,7 +71,7 @@ class EventServiceProvider extends BaseEventServiceProvider
         ],
         RegisteredCheck::class => [
             BanLogin::class,
-            ValidateLogin::class,
+//            ValidateLogin::class,
             ChangeLastActived::class
         ],
         // 登录后事件监听
