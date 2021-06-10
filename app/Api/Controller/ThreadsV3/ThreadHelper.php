@@ -80,13 +80,15 @@ class ThreadHelper
             $threadId = $item['thread_id'];
             if (empty($likedUsersInfo[$threadId]) || count($likedUsersInfo[$threadId]) < $maxDisplay) {
                 $user = $users[$item['user_id']] ?? null;
-                $likedUsersInfo[$item['thread_id']][] = [
-                    'userId' => $item['user_id'],
-                    'avatar' => $user->avatar,
-                    'nickname' => $user->nickname,
-                    'type' => !empty($item['type']) ? 1 : 2,
-                    'createdAt' => strtotime($item['created_at'])
-                ];
+                if (!empty($user)) {
+                    $likedUsersInfo[$item['thread_id']][] = [
+                        'userId' => $item['user_id'],
+                        'avatar' => $user->avatar,
+                        'nickname' => $user->nickname,
+                        'type' => !empty($item['type']) ? 1 : 2,
+                        'createdAt' => strtotime($item['created_at'])
+                    ];
+                }
             }
         }
         $likedUsersInfo = self::appendDefaultEmpty($threadIds, $likedUsersInfo, []);
