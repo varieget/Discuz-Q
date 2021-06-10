@@ -130,7 +130,9 @@ class Thread extends DzqModel
      * 通知内容展示长度(字)
      */
     const CONTENT_LENGTH = 80;
+    const CONTENT_WITHOUT_LENGTH = 0;
     const TITLE_LENGTH = 100;
+
 
     const  SORT_BY_THREAD = 1;//帖子创建时间排序
     const  SORT_BY_POST = 2;//评论创建时间排序
@@ -283,6 +285,8 @@ class Thread extends DzqModel
         if ($this->type == Thread::TYPE_OF_ALL && $this->title) {
             $firstPost = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
             $firstPost = $special->purify($firstPost);
+        }elseif ($this->type == Thread::TYPE_OF_ALL && !($this->title)) {
+            $firstPost = "";
         } else {
             // 不是长文没有标题则使用首帖内容
             $this->firstPost->content = $substr ? Str::of($this->firstPost->content)->substr(0, $substr) : $this->firstPost->content;
@@ -296,7 +300,6 @@ class Thread extends DzqModel
         if(is_object($firstPost)){
             $firstPost = (string)$firstPost;
         }
-
         return $firstPost;
     }
 

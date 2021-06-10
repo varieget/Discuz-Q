@@ -290,7 +290,7 @@ trait ThreadTrait
                 $text = '';
                 if ($payType == Thread::PAY_ATTACH) {
                     $text = $post['content'];
-                } else if($payType == Thread::PAY_THREAD) {
+                } else if ($payType == Thread::PAY_THREAD) {
                     $freeWords = $thread['free_words'];
                     if (floatval($freeWords) > 0) {
                         $text = strip_tags($post['content']);
@@ -299,10 +299,13 @@ trait ThreadTrait
                     }
                 }
                 $content['text'] = $text;
-                // 如果有红包，则只显示红包
-                if (isset($tomInput[TomConfig::TOM_REDPACK])) {
+                //如果有红包和图片，则只显示红包和图片
+                $tomConfig = [];
+                isset($tomInput[TomConfig::TOM_REDPACK]) && $tomConfig += [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]];
+                isset($tomInput[TomConfig::TOM_IMAGE]) && $tomConfig += [TomConfig::TOM_IMAGE => $tomInput[TomConfig::TOM_IMAGE]];
+                if (!empty($tomConfig)) {
                     $content['indexes'] = $this->tomDispatcher(
-                        [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]],
+                        $tomConfig,
                         $this->SELECT_FUNC,
                         $thread['id'],
                         null,
@@ -456,7 +459,7 @@ trait ThreadTrait
             if (empty($topic)) {
                 //话题名称长度超过20就不创建了
                 if (mb_strlen($topicName) > 20) {
-                    throw new \Exception('创建话题长度不能超过20个字符');
+                    \Discuz\Common\Utils::outPut(ResponseCode::INVALID_PARAMETER, '创建话题长度不能超过20个字符');
                 }
                 $topic = new Topic();
                 $topic->user_id = $userId;

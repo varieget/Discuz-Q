@@ -24,6 +24,8 @@ use Discuz\Base\DzqController;
 
 class ListCategoriesController extends DzqController
 {
+    private $userRepo;
+
     public function __construct(UserRepository $userRepo)
     {
         $this->userRepo = $userRepo;

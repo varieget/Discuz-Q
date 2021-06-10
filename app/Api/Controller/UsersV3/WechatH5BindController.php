@@ -80,7 +80,11 @@ class WechatH5BindController extends AuthBaseController
 
 
         if (empty($actor)) {
-            $this->outPut(ResponseCode::NOT_FOUND_USER);
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+
+        if ($actor->isGuest()) {
+            $this->outPut(ResponseCode::UNAUTHORIZED);
         }
 
         $this->db->beginTransaction();

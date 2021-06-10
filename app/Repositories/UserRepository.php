@@ -471,6 +471,12 @@ class UserRepository extends AbstractRepository
         return $user->hasPermission(PermissionKey::CREATE_INVITE_USER_SCALE);
     }
 
+
+    public function canCreateInviteAdminUserScale(User $user)
+    {
+        return $user->isAdmin();
+    }
+
     /**
      * 下单权限
      *

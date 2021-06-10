@@ -48,9 +48,14 @@ class CreateInviteLinkController extends DzqController
 
             return $this->outPut(ResponseCode::SUCCESS, '', $result);
         }
-
+        
         $group = Group::query()->where('default', 1)->first();
         $groupId = $group->id;
+
+        $inviteGroup = $this->inPut('group');
+        if ($inviteGroup) {
+            $groupId = $inviteGroup;
+        }
 
         $invite = new Invite();
         $invite->group_id = $groupId;

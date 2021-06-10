@@ -79,12 +79,16 @@ class WechatMiniProgramRebindController extends AuthBaseController
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序参数换绑接口异常');
         }
 
-        if (empty($actor) || $actor->isGuest() || is_null($actor->wechat)) {
-            $this->outPut(ResponseCode::NOT_FOUND_USER);
+        if (empty($actor)) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+
+        if ($actor->isGuest()) {
+            $this->outPut(ResponseCode::UNAUTHORIZED);
         }
 
         if (is_null($actor->wechat)) {
-            $this->outPut(ResponseCode::PC_REBIND_ERROR);
+            $this->outPut(ResponseCode::PC_REBIND_ERROR,'用户需先绑定微信才可进行换绑');
         }
 
         // 绑定小程序

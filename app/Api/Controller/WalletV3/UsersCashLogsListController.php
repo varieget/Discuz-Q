@@ -52,7 +52,8 @@ class UsersCashLogsListController extends DzqController
         }
 
         if (isset($filter['cashSn']) && !empty($filter['cashSn'])) {
-            $query->where('user_wallet_cash.cash_sn', $filter['cashSn']);
+            $cashSn = (int) $filter['cashSn'];
+            $query->where('user_wallet_cash.cash_sn', $cashSn);
         }
 
         if (isset($filter['startTime']) && !empty($filter['startTime'])) {
@@ -71,6 +72,7 @@ class UsersCashLogsListController extends DzqController
         $userWechatData = array_column($userWechatData, null, 'user_id');
 
         foreach ($usersWalletCashLogs['pageData'] as $key => $value) {
+            $usersWalletCashLogs['pageData'][$key]['cash_sn'] = (string) $value['cash_sn'];
             $usersWalletCashLogs['pageData'][$key]['wechat']['mp_openid'] = $userWechatData[$value['user_id']]['mp_openid'] ?? "";
             $usersWalletCashLogs['pageData'][$key]['wechat']['min_openid'] = $userWechatData[$value['user_id']]['min_openid'] ?? "";
         }

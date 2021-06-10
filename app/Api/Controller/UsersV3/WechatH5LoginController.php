@@ -121,6 +121,7 @@ class WechatH5LoginController extends AuthBaseController
 
                     $data['code']               = $inviteCode;
                     $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
+                    $data['nickname']           = Str::of($wechatUser->nickname)->substr(0, 15);
                     $data['register_reason']    = trans('user.register_by_wechat_h5');
                     $user = $this->bus->dispatch(
                         new AutoRegisterUser($this->request->getAttribute('actor'), $data)

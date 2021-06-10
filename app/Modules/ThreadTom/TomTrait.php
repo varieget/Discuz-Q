@@ -54,7 +54,11 @@ trait TomTrait
         if (isset($tomContent['indexes'])) {
             $indexes = $tomContent['indexes'];
         } else {
-            $indexes = $tomContent;
+            if (isset($tomContent['text'])) {
+                $indexes = [];
+            } else {
+                $indexes = $tomContent;
+            }
         }
         if (empty($indexes)) return $tomJsons;
         $tomList = [];
@@ -72,7 +76,7 @@ trait TomTrait
                 if (in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
                     $tomId = strval($tomJson['tomId']);
                     $op = $tomJson['operation'];
-                    $body = $tomJson['body'];
+                    $body = $tomJson['body'] ?? false;
                     if (isset($config[$tomId])) {
                         try {
                             $service = new \ReflectionClass($config[$tomId]['service']);
@@ -251,8 +255,8 @@ trait TomTrait
     {
         $tomTypes = array_keys($tomJsons);
         foreach ($tomTypes as $tomType) {
-            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
-            if (constant($tomService.'::NEED_PAY')) {
+            $tomService = Arr::get(TomConfig::$map, $tomType . '.service');
+            if (constant($tomService . '::NEED_PAY')) {
                 return true;
             }
         }

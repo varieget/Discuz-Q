@@ -53,21 +53,7 @@ class OrientateImage
     {
         // 帖子图片自适应旋转
         if ((int) Arr::get($this->data, 'type') === Attachment::TYPE_OF_IMAGE && extension_loaded('exif')) {
-            $exif = exif_read_data($event->file);
-            //$this->image->make($event->file)->orientate()->save();
-            if(!empty($exif['Orientation'])) {
-                switch($exif['Orientation']) {
-                    case Attachment::ORIENTATION_EIGHT:
-                        $this->image->make($event->file)->rotate(90)->save();
-                        break;
-                    case Attachment::ORIENTATION_THREE:
-                        $this->image->make($event->file)->rotate(180)->save();
-                        break;
-                    case Attachment::ORIENTATION_SIX:
-                        $this->image->make($event->file)->rotate(-90)->save();
-                        break;
-                }
-            }
+            $this->image->make($event->file)->orientate()->save();
         }
     }
 }

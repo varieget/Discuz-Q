@@ -35,6 +35,7 @@ class ResponseCode
     const JUMP_TO_HOME_INDEX = -3004;
     const SITE_CLOSED = -3005;
     const JUMP_TO_PAY_SITE = -3006;
+    const JUMP_TO_SIGIN_FIELDS = -3007;
 
     const INVALID_PARAMETER = -4001;
     const UNAUTHORIZED = -4002;
@@ -73,7 +74,7 @@ class ResponseCode
     const NEED_BIND_USER_OR_CREATE_USER = -7016;
 
     const REGISTER_DECRYPT_CODE_FAILED = -7014;
-    const NOT_AUTHENTICATED = -7015;
+    const NOT_AUTHENTICATED = -7015; //未用到
     const PC_REBIND_ERROR = -7017;
 
     const MOBILE_IS_ALREADY_BIND = -7031;
@@ -138,6 +139,7 @@ class ResponseCode
         self::JUMP_TO_HOME_INDEX => '跳转到首页',
         self::JUMP_TO_REGISTER => '跳转到注册页',
         self::JUMP_TO_PAY_SITE => '跳转到站点付费页',
+        self::JUMP_TO_SIGIN_FIELDS => '跳转到扩展字段页',
         self::SUCCESS => '接口调用成功',
         self::INVALID_PARAMETER => '参数错误',
         self::UNAUTHORIZED => '没有权限',
@@ -193,7 +195,7 @@ class ResponseCode
         self::SMS_CODE_ERROR => '验证码错误',
         self::SMS_CODE_EXPIRE => '验证码已过期',
         self::USERNAME_NOT_NULL => '用户名不能为空',
-        self::USER_LOGIN_STATUS_NOT_NULL => '用户登录态不能为空',
+        self::USER_LOGIN_STATUS_NOT_NULL => '用户登录态不能为空', // 已去除
         self::NONSUPPORT_WECHAT_REBIND => '该网站暂不支持微信换绑功能',
         self::NONSUPPORT_MOBILE_BIND => '该网站暂不支持手机绑定功能',
         self::NONSUPPORT_MOBILE_REBIND => '该网站暂不支持手机换绑功能',
@@ -212,7 +214,7 @@ class ResponseCode
         self::NICKNAME_CENSOR_NOT_PASSED => '昵称未通过敏感词校验',
         self::NOT_FOLLOW_YOURSELE => '不能关注自己',
         self::NOT_FOLLOW_USER => '关注用户不存在',
-        self::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION => '已被对方拉黑',
+        self::HAS_BEEN_BLOCKED_BY_THE_OPPOSITION => '根据对方的设置，您无法进行该操作',
         self::USERNAME_OR_PASSWORD_ERROR => '用户名或密码错误',
         self::LOGIN_FAILED => '登录失败',
         self::NOT_REBIND_SELF_MOBILE => '不能换绑自己的手机号',
@@ -221,8 +223,8 @@ class ResponseCode
         self::YOU_BLOCKED_HIM => '你已拉黑对方',
         self::USERNAME_NOT_ALLOW_HAS_SPACE => '用户名不允许包含空格',
         self::PASSWORD_NOT_ALLOW_HAS_SPACE => '密码不允许包含空格',
-        self::USER_NEED_SIGNIN_FIELDS => '用户需填写扩展字段',
-        self::USER_IN_REVIEW => '用户审核中',
+        self::USER_NEED_SIGNIN_FIELDS => '用户需填写扩展字段', // 已去除
+        self::USER_IN_REVIEW => '用户审核中', // 已去除
         self::PAY_JOIN_SITE => '请付费加入站点',
         self::TRY_LOGIN_AGAIN => '当前注册人数过多，请稍后登录',
     ];

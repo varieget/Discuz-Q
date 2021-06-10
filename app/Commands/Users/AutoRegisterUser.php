@@ -73,6 +73,8 @@ class AutoRegisterUser
             $this->data['username'] = $username;
         }
 
+        $this->data['nickname'] = $censor->checkText(Arr::get($this->data, 'nickname'), 'nickname');
+
         // 审核模式，设置注册为审核状态
         if ($settings->get('register_validate')) {
             $this->data['register_reason'] = $this->data['register_reason'] ?: trans('user.register_by_auto');
@@ -84,7 +86,6 @@ class AutoRegisterUser
             $this->data['expired_at'] = Carbon::now();
         }
 
-        $this->data['nickname'] = $this->data['username'];
         $this->data['bind_type'] = !empty($this->data['bind_type']) ? $this->data['bind_type'] : 0;
         $user = User::register(Arr::only($this->data, [
             'username', 'nickname', 'password', 'bind_type',

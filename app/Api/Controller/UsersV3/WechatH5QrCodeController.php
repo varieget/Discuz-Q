@@ -110,7 +110,7 @@ class WechatH5QrCodeController extends AuthBaseController
                     $userId = $this->getCookie('dzq_user_id');
                     $actor = User::query()->where('id', (int)$userId)->first();
                     if (empty($actor)) {
-                        $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+                        $this->outPut(ResponseCode::JUMP_TO_LOGIN);
                     }
                 }
 

@@ -103,6 +103,8 @@ class Post extends DzqModel
      */
     const NOTICE_LENGTH = 80;
 
+    const NOTICE_WITHOUT_LENGTH = 0;
+
     const UNAPPROVED = 0;
 
     const APPROVED = 1;
@@ -346,13 +348,13 @@ class Post extends DzqModel
              */
 
             if ($this->thread->type === Thread::TYPE_OF_ALL) {
-                $firstContent = $this->thread->getContentByType(self::NOTICE_LENGTH, $parse);
+                $firstContent = $this->thread->getContentByType(self::NOTICE_WITHOUT_LENGTH, $parse);
             } else {
                 // 如果是首帖 firstContent === content 内容一样
                 if ($this->is_first) {
                     $firstContent = $content;
                 } else {
-                    $firstContent = $this->thread->getContentByType(self::NOTICE_LENGTH, $parse);
+                    $firstContent = $this->thread->getContentByType(self::NOTICE_WITHOUT_LENGTH, $parse);
                 }
             }
             if(is_object($firstContent)){
@@ -362,8 +364,7 @@ class Post extends DzqModel
 
 
         $build['content'] = $content;
-        $build['first_content'] = $firstContent ?? $special->purify($this->thread->getContentByType(Thread::CONTENT_LENGTH, $parse));
-
+        $build['first_content'] = $firstContent ?? $special->purify($this->thread->getContentByType(Thread::CONTENT_WITHOUT_LENGTH, $parse));
         return $build;
     }
 
