@@ -39,10 +39,8 @@ class SmsVerifyController extends AuthBaseController
 
             $this->outPut(ResponseCode::NOT_FOUND_USER);
         } catch (\Exception $e) {
-            $this->errorLog($e->getMessage(), '手机号验证接口异常', [
-                'mobile'    => $this->inPut('mobile'),
-                'code'      => $this->inPut('code')
-            ]);
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号验证接口异常-SmsVerifyController： 入参：手机号：'.
+                                  $this->inPut('mobile') . ';code:'. $this->inPut('code') . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号验证接口异常');
         }
     }

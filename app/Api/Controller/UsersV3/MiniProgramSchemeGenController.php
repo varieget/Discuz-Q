@@ -51,9 +51,9 @@ class MiniProgramSchemeGenController extends AuthBaseController
             $globalAccessToken = $app->access_token->getToken(true);
             if(! isset($globalAccessToken['access_token'])) {
                 //todo 记录错误日志
-                $this->errorLog('', '小程序SchemeGen接口异常', [
-                    'globalAccessToken' => $globalAccessToken
-                ]);
+                app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . '小程序SchemeGen接口异常-MiniProgramSchemeGenController： '
+                                      . ';globalAccessToken:'. json_encode($globalAccessToken)
+                                      . ';userId:'. $this->user->id);
                 return $this->outPut(ResponseCode::MINI_PROGRAM_GET_ACCESS_TOKEN_ERROR);
             }
             $miniProgramScheme = $this->manage->getMiniProgramSchemeRefresh($globalAccessToken['access_token']);
@@ -64,9 +64,8 @@ class MiniProgramSchemeGenController extends AuthBaseController
             $data['openLink'] = $miniProgramScheme;
             $this->outPut(ResponseCode::SUCCESS, '', $data);
         } catch (\Exception $e) {
-            $this->errorLog('', '小程序SchemeGen接口异常', [
-                'globalAccessToken' => $globalAccessToken
-            ]);
+            app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . '小程序SchemeGen接口异常-MiniProgramSchemeGenController： '
+                                  . ';userId:'. $this->user->id . ';异常：' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序SchemeGen接口异常');
         }
     }

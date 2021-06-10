@@ -52,7 +52,9 @@ class ListUserSignInController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
         } catch (\Exception $e) {
-            $this->errorLog($e->getMessage(), '扩展字段查询接口异常');
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '扩展字段查询接口异常-ListUserSignInController：入参：'
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '扩展字段查询接口异常');
         }
     }

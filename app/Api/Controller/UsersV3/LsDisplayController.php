@@ -58,7 +58,7 @@ class LsDisplayController extends DzqController
 
             return $this->outPut(ResponseCode::SUCCESS, '',['status' => $status]);
         } catch (\Exception $e) {
-            $this->errorLog($e->getMessage(), '用户名密码入口是否展示接口异常');
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户名密码入口是否展示接口异常-LsDisplayController： ' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名密码入口是否展示接口异常');
         }
     }

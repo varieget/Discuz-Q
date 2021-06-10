@@ -25,7 +25,7 @@ use App\Settings\SettingsRepository;
 use Discuz\Wechat\EasyWechatTrait;
 use GuzzleHttp\Client;
 
-class MiniProgramQrcodeController extends AuthBaseController
+class MiniProgramQrcodeController extends DzqController
 {
     use EasyWechatTrait;
 
@@ -111,9 +111,10 @@ class MiniProgramQrcodeController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $data);
         } catch (\Exception $e) {
-            $this->errorLog($e->getMessage(), '小程序二维码生成接口异常', [
-                'type' => $this->inPut('type')
-            ]);
+            app('errorLog')->info('requestId：' . $this->requestId
+                                  . '-二维码异常-' . '小程序二维码生成接口异常-MiniProgramQrcodeController： 入参：'
+                                  . 'type:'.$this->inPut('type') . ';userId:'. $this->user->id . ';异常：' .$e->getMessage()
+            );
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序二维码生成接口异常');
         }
     }

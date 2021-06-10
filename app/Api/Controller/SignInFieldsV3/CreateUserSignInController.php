@@ -84,7 +84,10 @@ class CreateUserSignInController extends AuthBaseController
             $result = $this->userSaveUserSignInFields($actor->id,$data);
             $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
         } catch (\Exception $e) {
-            $this->errorLog($e->getMessage(), '创建扩展字段接口异常', $data);
+            app('errorLog')->info('requestId：' . $this->requestId . '-' . '创建扩展字段接口异常-CreateUserSignInController：入参：'
+                                  .';data:'.json_encode($data)
+                                  .';userId:'.$this->user->id
+                                  . ';异常：' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '创建扩展字段接口异常');
         }
     }

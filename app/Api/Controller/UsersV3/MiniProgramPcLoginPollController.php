@@ -57,9 +57,8 @@ class MiniProgramPcLoginPollController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            $this->errorLog($e->getMessage(), 'pc端小程序登录轮询接口异常', [
-                'sessionToken' => $this->inPut('sessionToken')
-            ]);
+            app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . 'pc端小程序登录轮询接口异常-MiniProgramPcLoginPollController：入参：'
+                                  . 'sessionToken:'.$this->inPut('sessionToken') . ';userId:'. $this->user->id . ';异常：' . $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc端小程序登录轮询接口异常');
         }
     }

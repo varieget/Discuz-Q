@@ -102,9 +102,10 @@ class WechatPcRebindQrCodeController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $data);
         } catch (\Exception $e) {
-            $this->errorLog($e->getMessage(), 'pc换绑二维码生成接口异常', [
-                'redirectUri' => $this->inPut('redirectUri')
-            ]);
+            app('errorLog')->info('requestId：' . $this->requestId
+                                  . '-二维码异常-' . 'pc换绑二维码生成接口异常-WechatPcRebindQrCodeController：入参：'
+                                  . '用户id:'.$this->user->id. 'redirectUri:'. $this->inPut('redirectUri') . '异常：' .$e->getMessage()
+            );
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc换绑二维码生成接口异常');
         }
     }
