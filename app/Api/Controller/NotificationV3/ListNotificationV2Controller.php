@@ -75,6 +75,7 @@ class ListNotificationV2Controller extends DzqController
                     $item->user_name = $user->username;
                     $item->user_avatar = $user->avatar;
                     $item->realname = $user->realname;
+                    $item->nickname = $user->nickname;
                 }
                 // 判断是否是楼中楼，查询用户名
                 if (Arr::has($item->data, 'reply_post_user_id') && Arr::get($item->data, 'reply_post_user_id') != 0) {
@@ -232,6 +233,7 @@ class ListNotificationV2Controller extends DzqController
         $result = array_merge($result, [
             'username' => $data->user_name ?: '',
             'userAvatar' => $data->user_avatar ?: '',
+            'nickname' => $data->nickname ?: '',
             'isReal' => $this->getIsReal($data->realname),
             'threadUsername' => $data->thread_username ?: '',
             'threadUserGroups' => $data->thread_user_groups ?: '',

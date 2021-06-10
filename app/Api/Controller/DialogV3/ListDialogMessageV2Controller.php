@@ -76,7 +76,7 @@ class ListDialogMessageV2Controller extends DzqController
     {
         $query = $this->dialogMessage->query()
             ->with([
-                'user:id,username,avatar',
+                'user:id,username,avatar,avatar_at',
             ]);
 
         $query->select('dialog_message.*');
@@ -112,6 +112,13 @@ class ListDialogMessageV2Controller extends DzqController
 
         $pageData = $this->pagination($page, $perPage, $query, false);
         $pageData['pageData'] = $pageData['pageData']->map(function (DialogMessage $i) {
+
+            $user = [
+                'id'=>$i->user->id,
+                'avatar'=>$i->user->avatar,
+                'username'=>$i->user->username,
+            ];
+
             return [
                 'id' => $i->id,
                 'userId' => $i->user_id,
@@ -123,7 +130,7 @@ class ListDialogMessageV2Controller extends DzqController
                 'imageUrl' => $i->getImageUrlMessageText(),
                 'updatedAt' => optional($i->updated_at)->format('Y-m-d H:i:s'),
                 'createdAt' => optional($i->created_at)->format('Y-m-d H:i:s'),
-                'user' => $i->user,
+                'user' => $user,
             ];
         });
 
