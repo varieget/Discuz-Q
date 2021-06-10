@@ -327,9 +327,11 @@ abstract class AuthBaseController extends DzqController
     {
         $apiPath = $this->request->getUri()->getPath();
         $cacheKey = CacheKey::WECHAT_FILE_LOCK . md5(serialize([$apiPath, $openId]));
-        $w = app('cache')->put($cacheKey, $openId, 10);
-        if ($w) {
-            return true;
+        $openId = app('cache')->get($cacheKey, $openId);
+        if(!$openId){
+            if (app('cache')->put($cacheKey, $openId, 10)) {
+                return true;
+            }
         }
         $this->info('request_lock_limit:', ['openId' => $openId, 'api' => $apiPath]);
         return false;
