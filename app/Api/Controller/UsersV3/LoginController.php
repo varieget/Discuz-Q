@@ -124,8 +124,7 @@ class LoginController extends AuthBaseController
             }
             $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-登录异常-'. '" 登录接口异常-LoginController： 入参：'
-                                  . json_encode($paramData) . '用户id: "' . $this->user->id. ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), '用户名登录接口异常', $paramData);
             $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名登录接口异常');
         }
 

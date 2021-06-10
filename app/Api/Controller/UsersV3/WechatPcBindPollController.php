@@ -43,8 +43,9 @@ class WechatPcBindPollController extends AuthBaseController
 
             $this->outPut(ResponseCode::PC_BIND_ERROR);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . 'pc、H5轮询绑定接口异常-WechatPcBindPollController： 入参：'
-                                  . 'sessionToken:'.$this->inPut('sessionToken') . ';userId:'. $this->user->id . ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), 'pc、H5轮询绑定接口异常', [
+                'sessionToken' => $this->inPut('sessionToken')
+            ]);
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc、H5轮询绑定接口异常');
         }
     }

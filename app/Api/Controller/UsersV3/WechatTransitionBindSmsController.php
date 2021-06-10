@@ -130,15 +130,14 @@ class WechatTransitionBindSmsController extends AuthBaseController
             $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '过渡阶段微信绑定手机号接口异常-WechatTransitionBindSmsController：入参：'
-                                  .';mobile:'.$this->inPut('mobile')
-                                  .';code:'.$this->inPut('code')
-                                  .';sessionToken:'.$this->inPut('sessionToken')
-                                  .';inviteCode:'.$this->inPut('inviteCode')
-                                  .';userId:'.$this->user->id
-                                  . ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), '过渡阶段微信绑定手机号接口异常', [
+                'mobile'        => $this->inPut('mobile'),
+                'code'          => $this->inPut('code'),
+                'sessionToken'  => $this->inPut('sessionToken'),
+                'inviteCode'    => $this->inPut('inviteCode')
+            ]);
             $this->connection->rollback();
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '过渡阶段微信绑定手机号接口异常',);
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '过渡阶段微信绑定手机号接口异常');
         }
     }
 }

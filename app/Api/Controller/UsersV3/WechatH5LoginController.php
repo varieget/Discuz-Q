@@ -86,7 +86,7 @@ class WechatH5LoginController extends AuthBaseController
             $sessionToken   = $this->inPut('sessionToken');//PC扫码使用，非必须存在
             $actor          = $this->user;
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5登录获取wx用户接口异常-WechatH5LoginController： ' . $e->getMessage());
+            $this->errorLog($e->getMessage(), 'H5登录获取wx用户接口异常');
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录获取wx用户接口异常');
         }
 
@@ -157,12 +157,12 @@ class WechatH5LoginController extends AuthBaseController
             }
 
             if (empty($wechatUser) || empty($wechatUser->user)) {
-                app('errorLog')->info('requestId：' . $this->requestId . '-' . '$wechatUser或者$wechatUser->user用户不能为空-WechatH5LoginController');
+                $this->errorLog('', '微信用户不能为空，$wechatUser或者$wechatUser->user用户不能为空');
                 $this->outPut(ResponseCode::INVALID_PARAMETER,'微信用户不能为空');
             }
 
             if (empty($wechatUser->user->username)) {
-                app('errorLog')->info('requestId：' . $this->requestId . '-' . '$wechatUser->user->username不能为空-WechatH5LoginController');
+                $this->errorLog('', '微信所绑定的用户名为空，$wechatUser->user->username不能为空');
                 $this->outPut(ResponseCode::USERNAME_NOT_NULL,'微信所绑定的用户名为空');
             }
             // 创建 token
@@ -208,10 +208,11 @@ class WechatH5LoginController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', $result);
 
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5登录接口异常-WechatH5LoginController： 入参：'
-                                  .'mp_openid:' . $wxuser->getId() .'inviteCode:'.$this->inPut('inviteCode')
-                                  .'sessionToken:'.$this->inPut('sessionToken')
-                                  .'userId:'.$this->user->id . ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), 'H5登录接口异常', [
+                'mp_openid'     => $wxuser->getId(),
+                'inviteCode'    => $this->inPut('inviteCode'),
+                'sessionToken'  => $this->inPut('sessionToken')
+            ]);
             $this->db->rollBack();
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录接口异常');
         }
@@ -330,10 +331,11 @@ class WechatH5LoginController extends AuthBaseController
             $this->db->commit();
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5过渡阶段登录异常-WechatH5LoginController： '
-                                  .'mp_openid:' . $wxuser->getId() .'inviteCode:'.$this->inPut('inviteCode')
-                                  .'sessionToken:'.$this->inPut('sessionToken')
-                                  .'userId:'.$this->user->id . ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), 'H5过渡阶段登录异常', [
+                'mp_openid'     => $wxuser->getId(),
+                'inviteCode'    => $this->inPut('inviteCode'),
+                'sessionToken'  => $this->inPut('sessionToken')
+            ]);
             $this->db->rollBack();
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5过渡阶段登录异常');
         }

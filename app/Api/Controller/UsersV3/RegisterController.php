@@ -154,8 +154,7 @@ class RegisterController extends AuthBaseController
                                  $this->camelData($this->addUserInfo($user, $accessToken))
             );
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '" 注册接口异常-RegisterController： 入参：'
-                                  . json_encode($data) . '用户id：'. $this->user->id .';异常：'. $e->getMessage());
+            $this->errorLog($e->getMessage(), '用户名注册接口异常', $data);
             $this->connection->rollback();
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册接口异常');
         }
