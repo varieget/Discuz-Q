@@ -34,7 +34,6 @@ class RedPackBusi extends TomBaseBusi
     public function create()
     {
         $input = $this->verification();
-
         //判断随机金额红布够不够分
         if ($input['rule'] == 1) {
             if ($input['price']*100 <  $input['number']) $this->outPut(ResponseCode::INVALID_PARAMETER,'红包金额不够分');
@@ -70,7 +69,6 @@ class RedPackBusi extends TomBaseBusi
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
-
             if ($order->type == Order::ORDER_TYPE_MERGE) {
                 $orderChildrenInfo = OrderChildren::query()
                     ->where('order_sn', $input['orderSn'])
@@ -123,7 +121,7 @@ class RedPackBusi extends TomBaseBusi
     {
         $input = $this->verification();
         //先删除原订单，这里的删除暂定为：将原订单中的 thread_id 置 0，让原订单成为僵死订单
-        $old_order = Order::query()->where('order_id', $this->threadId)->first();
+        $old_order = Order::query()->where('thread_id', $this->threadId)->first();
         if(empty($old_order)){
             $this->outPut(ResponseCode::INVALID_PARAMETER, '该帖有问题，原订单不存在');
         }
@@ -170,7 +168,9 @@ class RedPackBusi extends TomBaseBusi
             if($res === false){
                 $this->outPut(ResponseCode::INTERNAL_ERROR, '删除原红包出错');
             }
-            self::create();
+            return self::create();
+        }else{
+            return $this->jsonReturn([]);
         }
     }
 
