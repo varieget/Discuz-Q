@@ -62,7 +62,7 @@ class LikedMessage extends SimpleMessage
      */
     public function changeBuild(&$build)
     {
-        $result = $this->post->getSummaryContent(Post::NOTICE_LENGTH);
+        $result = $this->post->getSummaryContent(Post::NOTICE_WITHOUT_LENGTH);
 
         /**
          * 判断是否是楼中楼的回复
@@ -91,7 +91,11 @@ class LikedMessage extends SimpleMessage
         // 主题数据
         $build['thread_id'] = $this->post->thread->id;
         $build['thread_username'] = $this->post->thread->user->username;
-        $build['thread_title'] = $firstContent ?? $result['first_content'];
+        if($this->post->is_first){
+            $build['thread_title'] = $firstContent ?? $result['first_content'];
+        }else{
+            $build['thread_title'] = "";
+        }
         $build['thread_created_at'] = $this->post->thread->formatDate('created_at');
     }
 }
