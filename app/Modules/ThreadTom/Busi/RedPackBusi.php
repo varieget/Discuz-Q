@@ -39,18 +39,7 @@ class RedPackBusi extends TomBaseBusi
             if ($input['price']*100 <  $input['number']) $this->outPut(ResponseCode::INVALID_PARAMETER,'红包金额不够分');
         }
 
-        /*
-        $threadRedPacket = ThreadRedPacket::query()->where('thread_id', $this->threadId)->first();
-        if (!empty($threadRedPacket)) {
-            $thread = Thread::query()->where('id', $this->threadId)->first(['is_draft']);
-            if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'已发布的红包不可编辑');
-        }
-        */
-
-        if ($input['draft'] == Thread::IS_DRAFT) {
-            if(empty($input['orderSn'])){
-                $this->outPut(ResponseCode::INVALID_PARAMETER, '红包缺少orderSn');
-            }
+        if (!empty($input['orderSn'])) {
             $order = Order::query()
                 ->where('order_sn',$input['orderSn'])
                 ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
@@ -120,13 +109,26 @@ class RedPackBusi extends TomBaseBusi
     public function update()
     {
         $input = $this->verification();
-        //先删除原订单，这里的删除暂定为：将原订单中的 thread_id 置 0，让原订单成为僵死订单
         $old_order = Order::query()->where('thread_id', $this->threadId)->first();
-        if(empty($old_order)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '该帖有问题，原订单不存在');
+        if(empty($input['orderSn']) && !empty($old_order)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '该贴已有订单，缺少 orderSn');
         }
-        //如果传过来的 orderSn 变更的话，就说明红包变了，那么就与原 order 脱离关系，关联新 order
-        if($old_order->order_sn != $input['orderSn']){
+        $threadRedPacket = ThreadRedPacket::query()->where('thread_id', $this->threadId)->first();
+        if(empty($threadRedPacket)){
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '原红包帖数据不存在');
+        }
+        //如果该帖具有老订单了，并且本次请求的orderSn 与老订单的 order_sn 相同的话，则取出老 $threadRedPacket 返回就好了
+        if($old_order->order_sn && $old_order->order_sn == $input['orderSn'] ){
+            return $this->jsonReturn($threadRedPacket);
+        }
+        if(!empty($input['orderSn'])){
+            $order = Order::query()->where('order_sn', $input['orderSn'])->first();
+            if(empty($order)){
+                $this->outPut(ResponseCode::INTERNAL_ERROR, 'orderSn不正确');
+            }
+        }
+        //在已绑定 order 的情况下，如果再传 了 orderSn 过来，则需要处理 老订单，将老订单与该帖 脱离关系
+        if(!empty($old_order) && !empty($input['orderSn']) && $old_order->order_sn != $input['orderSn']){
             //规定时间内，含有红包的帖子不能频繁修改
             if($old_order->created_at > Carbon::now()->subMinutes(self::RED_LIMIT_TIME) ){
                 $this->outPut(ResponseCode::INTERNAL_ERROR, '系统处理中，请稍后再试……');
@@ -151,27 +153,15 @@ class RedPackBusi extends TomBaseBusi
                     $this->outPut(ResponseCode::INTERNAL_ERROR, '清除原子订单帖子id失败');
                 }
             }
-            // 将原 threadRedPacket 中 thread_id 、post_id 置 0
-            $threadRedPacket = ThreadRedPacket::query()->where('thread_id', $this->threadId)->first();
-            if(empty($threadRedPacket)){
-                $this->outPut(ResponseCode::INTERNAL_ERROR, '原红包帖数据不存在');
-            }
-            $threadRedPacket->thread_id = 0;
-            $threadRedPacket->post_id = 0;
-            $res = $threadRedPacket->save();
-            if($res === false){
-                $this->outPut(ResponseCode::INTERNAL_ERROR, '修改原红包帖数据出错');
-            }
-
-            //删除原tom类型
-            $res = $this->delete();
-            if($res === false){
-                $this->outPut(ResponseCode::INTERNAL_ERROR, '删除原红包出错');
-            }
-            return self::create();
-        }else{
-            return $this->jsonReturn([]);
         }
+        // 将原 threadRedPacket 中 thread_id 、post_id 置 0
+        $threadRedPacket->thread_id = 0;
+        $threadRedPacket->post_id = 0;
+        $res = $threadRedPacket->save();
+        if($res === false){
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '修改原红包帖数据出错');
+        }
+        return self::create();
     }
 
     public function select()

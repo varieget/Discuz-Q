@@ -145,8 +145,8 @@ class CreateThreadController extends DzqController
         $isDraft = $this->inPut('draft');
 
         // 帖子是否需要支付，如果需要支付，则强制发布为草稿
-        if ($this->needPay($content['indexes'] ?? [])) {
-            $isDraft = 1;
+        if ($this->needPay($content['indexes'] ?? []) && !empty($isDraft) ) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '包含红包/悬赏的帖子必须存为草稿');
         }
 
         if(!empty($isDraft))    $this->isDraft = $isDraft;
@@ -249,13 +249,8 @@ class CreateThreadController extends DzqController
         $tomTypes = array_keys($indexes);
         foreach ($tomTypes as $tomType) {
             $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
-            if(constant($tomService.'::NEED_PAY')){
-                if(empty($indexes[$tomType]['body']['orderSn'])){
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包取少订单号');
-                }
-                if ($indexes[$tomType]['body']['draft'] != 1 ) {
-                    $indexes[$tomType]['body']['draft'] = 1;
-                }
+            if(constant($tomService.'::NEED_PAY') && $indexes[$tomType]['body']['draft'] != 1 ){
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '包含红包/悬赏红包必须存为草稿');
             }
         }
 
