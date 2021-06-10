@@ -90,10 +90,10 @@ class WechatMiniProgramLoginController extends AuthBaseController
             $this->miniUser     = $user;
             $inviteCode         = $this->inPut('inviteCode');
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序参数获取接口异常-WechatMiniProgramLoginController： '
-                                  .';inviteCode:'.$this->inPut('inviteCode')
-                                  .';sessionToken:'.$this->inPut('sessionToken')
-                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), '小程序参数获取接口异常', [
+                'inviteCode'    => $this->inPut('inviteCode'),
+                'sessionToken'  => $this->inPut('sessionToken')
+            ]);
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序参数获取接口异常');
         }
         //过渡开关打开
@@ -205,7 +205,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
             $result = $this->addUserInfo($wechatUser->user, $result);
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序登录接口异常-WechatMiniProgramLoginController： ' . $e->getMessage());
+            $this->errorLog($e->getMessage(), '小程序登录接口异常');
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR,'小程序登录接口异常');
         }
@@ -272,7 +272,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '小程序登录接口异常-WechatMiniProgramLoginController： ' . $e->getMessage());
+            $this->errorLog($e->getMessage(), '小程序登录接口异常');
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR,'小程序登录接口异常');
         }

@@ -64,7 +64,7 @@ class WechatH5RebindController extends AuthBaseController
             $token          = SessionToken::get($sessionToken);
             $actor          = !empty($token->user) ? $token->user : $this->user;
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5换绑获取wx用户接口异常-WechatH5RebindController： ' . $e->getMessage());
+            $this->errorLog($e->getMessage(), 'H5换绑获取wx用户接口异常');
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5换绑获取wx用户接口异常');
         }
 
@@ -118,9 +118,9 @@ class WechatH5RebindController extends AuthBaseController
                 $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
             }
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5换绑接口异常-WechatH5BindController： '
-                                  .';sessionToken:'.$this->inPut('sessionToken')
-                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), '用户名登录接口异常', [
+                'sessionToken' => $this->inPut('sessionToken')
+            ]);
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR,'H5换绑接口异常');
         }

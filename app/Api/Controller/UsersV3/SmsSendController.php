@@ -166,8 +166,7 @@ class SmsSendController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', ['interval' => self::CODE_INTERVAL]);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号发送接口异常-SmsSendController： 入参：'
-                                  . json_encode($paramData) . ';用户id:'.$this->user->id.';异常:'. $e->getMessage());
+            $this->errorLog($e->getMessage(), '用户名登录接口异常', $paramData);
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号发送接口异常');
         }
     }

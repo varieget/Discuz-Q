@@ -58,10 +58,9 @@ class NicknameSettingController extends AuthBaseController
 
             return $this->outPut(ResponseCode::SUCCESS);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '昵称设置接口异常-SmsVerifyController： 入参：'
-                                  .';nickname:'.$this->inPut('nickname')
-                                  .';userId:'.$this->user->id
-                                  . ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), '昵称设置接口异常', [
+                'nickname' => $this->inPut('nickname')
+            ]);
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '昵称设置接口异常');
         }
     }

@@ -149,10 +149,9 @@ class SmsLoginController extends AuthBaseController
             $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '" 注册/登录接口异常-SmsLoginController： 入参：'
-                                  . json_encode($paramData) . ';用户id：' . $this->user->id . ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), '手机号注册-登录接口异常', $paramData);
             $this->connection->rollback();
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号注册/登录接口异常');
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号注册-登录接口异常');
         }
     }
 }

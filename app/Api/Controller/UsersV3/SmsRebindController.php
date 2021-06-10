@@ -91,8 +91,10 @@ class SmsRebindController extends AuthBaseController
             $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', []);
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号换绑接口异常-SmsRebindController： 入参：'
-                                  .'mobile:'.$this->inPut('mobile').';code:'.$this->inPut('code') . ';用户id：'. $this->user->id . ';异常：' . $e->getMessage());
+            $this->errorLog($e->getMessage(), '手机号换绑接口异常', [
+                'mobile'  => $this->inPut('mobile'),
+                'code'    => $this->inPut('code')
+            ]);
             $this->connection->rollback();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号换绑接口异常');
         }
