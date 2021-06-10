@@ -327,7 +327,7 @@ abstract class AuthBaseController extends DzqController
     {
         $apiPath = $this->request->getUri()->getPath();
         $cacheKey = CacheKey::WECHAT_FILE_LOCK . md5(serialize([$apiPath, $openId]));
-        $openId = app('cache')->get($cacheKey, $openId);
+        $openId = app('cache')->get($cacheKey);
         if(!$openId){
             if (app('cache')->put($cacheKey, $openId, 10)) {
                 return true;
