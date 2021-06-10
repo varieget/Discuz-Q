@@ -23,6 +23,9 @@ use Discuz\Base\DzqCache;
 class CacheKey
 {
 
+    //微信相关重复登录加锁
+    const WECHAT_FILE_LOCK = 'wechat_file_lock:';
+
     const APP_CACHE = 'APP_CACHE';//容器全局变量
 
     //记录首页各个分类的数据缓存
