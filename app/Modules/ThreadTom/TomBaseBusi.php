@@ -36,7 +36,6 @@ abstract class TomBaseBusi
      * 是否需要支付
      */
     public const NEED_PAY = 0;
-    public const RED_LIMIT_TIME = 2;        //含有红包/悬赏的帖子修改间隔时间范围
 
     public $tomId = null;
     public $operation = null;
