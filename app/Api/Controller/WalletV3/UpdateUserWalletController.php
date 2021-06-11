@@ -65,11 +65,6 @@ class UpdateUserWalletController extends DzqController
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '用户不存在');
         }
 
-        if (empty($data['userId'])) {
-            $log->error("缺少用户Id参数 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
-        }
-
         $datas = $this->bus->dispatch(
             new UpdateUserWallet($data['userId'], $actor, $data)
         );
