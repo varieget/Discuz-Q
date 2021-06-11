@@ -147,6 +147,10 @@ class DialogMessage extends Model
         $message_text = json_decode(stripslashes($message_text_old));
         if (!empty($message_text)) {
             $messageText = $message_text->image_url;
+            if($messageText){
+                list($width, $height) = getimagesize($messageText);
+                $messageText = $messageText."?width=".$width."&height=".$height;
+            }
         } else {
             $messageText = '';
         }
