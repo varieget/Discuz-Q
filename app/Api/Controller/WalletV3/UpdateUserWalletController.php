@@ -20,6 +20,7 @@ namespace App\Api\Controller\WalletV3;
 
 use App\Commands\Wallet\UpdateUserWallet;
 use App\Common\ResponseCode;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -54,11 +55,14 @@ class UpdateUserWalletController extends DzqController
         $log->info("requestId：{$this->requestId} ,修改钱包入参,data:".json_encode($data));
 
         if (intval($data['operateAmount']) > 10000) {
+            $log->error("操作金额小于10000 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
             $this->outPut(ResponseCode::UNAUTHORIZED, '操作金额小于10000');
         }
 
-        if (empty($data['userId'])) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        $user = User::query()->where('id', $data['userId'])->first();
+        if (empty($user)) {
+            $log->error("用户不存在 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '用户不存在');
         }
 
         $datas = $this->bus->dispatch(
