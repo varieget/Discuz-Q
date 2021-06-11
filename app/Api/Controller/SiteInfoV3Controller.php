@@ -85,8 +85,9 @@ class SiteInfoV3Controller extends DzqController
             ->whereNull('deleted_at')->whereNotNull('user_id')->where('is_first', false)->count();
 
         // 待审核提申请现数
-        $unapprovedMoneys = UserWalletCash::where('cash_status', UserWalletCash::STATUS_REVIEW)->count();
-
+        $unapprovedMoneys = UserWalletCash::where('cash_status', UserWalletCash::STATUS_REVIEW)
+                          ->join('users', 'user_wallet_cash.user_id', '=', 'users.id')
+                          ->count();
 
         $data = [
             'url' => $siteUrl,

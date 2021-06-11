@@ -19,21 +19,19 @@ namespace App\Modules\ThreadTom\Busi;
 
 use App\Common\ResponseCode;
 use App\Models\Thread;
-use App\Models\ThreadTom;
 use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\RedPacket;
 use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Models\ThreadRedPacket;
-use Carbon\Carbon;
 
 class RedPackBusi extends TomBaseBusi
 {
-    public const NEED_PAY = 1;
 
     public function create()
     {
         $input = $this->verification();
+
         //判断随机金额红布够不够分
         if ($input['rule'] == 1) {
             if ($input['price']*100 <  $input['number']) $this->outPut(ResponseCode::INVALID_PARAMETER,'红包金额不够分');
@@ -50,14 +48,16 @@ class RedPackBusi extends TomBaseBusi
             } else {
                 if ($order->type == Order::ORDER_TYPE_REDPACKET && $input['price']*$input['number'] != $order['amount']) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误');
             }
+
             if (empty($order) ||
                 !empty($order['thread_id']) ||
                 ($order->type == Order::ORDER_TYPE_REDPACKET && !empty($order['thread_id'])) ||
                 $order['user_id'] != $this->user['id'] ||
-                $order['status'] != Order::ORDER_STATUS_PENDING ||
+                $order['status'] != Order::ORDER_STATUS_PAID ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
+
             if ($order->type == Order::ORDER_TYPE_MERGE) {
                 $orderChildrenInfo = OrderChildren::query()
                     ->where('order_sn', $input['orderSn'])
@@ -65,10 +65,11 @@ class RedPackBusi extends TomBaseBusi
                     ->first();
                 if (empty($orderChildrenInfo) ||
                     $orderChildrenInfo->amount != $input['price'] ||
-                    $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
+                    $orderChildrenInfo->status != Order::ORDER_STATUS_PAID) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER);
                 }
             }
+
             $order->thread_id = $this->threadId;
             $order->save();
             if ($order->type == Order::ORDER_TYPE_MERGE) {

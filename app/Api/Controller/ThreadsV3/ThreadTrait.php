@@ -546,16 +546,6 @@ trait ThreadTrait
         return $topics;
     }
 
-    private function getPendingOrderInfo($thread)
-    {
-        return Order::query()
-            ->where('thread_id', $thread['id'])
-            ->where('status', Order::ORDER_STATUS_PENDING)
-            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
-            ->select(['payment_sn', 'order_sn', 'amount', 'type', 'id', 'status'])
-            ->first();
-    }
-
     private function renderTopic($text)
     {
         preg_match_all('/#.+?#/', $text, $topic);

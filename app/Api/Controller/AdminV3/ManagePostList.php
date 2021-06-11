@@ -206,7 +206,6 @@ class ManagePostList extends DzqController
             unset(
                 $pageData[$k]['id'],
                 $pageData[$k]['images'],
-                $pageData[$k]['content'],
                 $pageData[$k]['deleted_nickname'],
                 $pageData[$k]['deleted_at'],
                 $pageData[$k]['deleted_user_id']

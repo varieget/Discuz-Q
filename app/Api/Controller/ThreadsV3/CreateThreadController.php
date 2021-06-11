@@ -21,7 +21,6 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
-use App\Models\Order;
 use App\Models\Permission;
 use App\Models\Post;
 use App\Models\Thread;
@@ -32,13 +31,12 @@ use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
 
 class CreateThreadController extends DzqController
 {
     use ThreadTrait;
 
-    private $isDraft = 0;
+    private $isDraft = false;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -192,9 +190,8 @@ class CreateThreadController extends DzqController
         } else {
             $dataThread['is_approved'] = Thread::BOOL_YES;
         }
-        $dataThread['is_draft'] = $this->isDraft;
+        $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
-
         $thread->setRawAttributes($dataThread);
         $thread->save();
         if (!$isApproved && !$isDraft) {
@@ -285,15 +282,7 @@ class CreateThreadController extends DzqController
     {
         $user = $this->user;
         $group = Group::getGroup($user->id);
-        $result = $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
-        if (
-            $this->needPay($tomJsons)
-            && ($order = $this->getPendingOrderInfo($thread))
-            && ($order->status == Order::ORDER_STATUS_PENDING)
-        ) {
-            $result['orderInfo'] = $this->camelData($order);
-        }
-        return $result;
+        return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
 
     private function limitCreateThread()

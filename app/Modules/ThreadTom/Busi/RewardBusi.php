@@ -24,12 +24,9 @@ use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Models\ThreadReward;
 use App\Models\ThreadTom;
-use Carbon\Carbon;
 
 class RewardBusi extends TomBaseBusi
 {
-    public const NEED_PAY = 1;
-
     public function create()
     {
         $input = $this->verification();
@@ -38,12 +35,11 @@ class RewardBusi extends TomBaseBusi
         }
 
         $threadReward = ThreadReward::query()->where('thread_id', $this->threadId)->first();
-        /*
+
         if (!empty($threadReward)) {
             $thread = Thread::query()->where('id', $this->threadId)->first(['is_draft']);
             if ($thread->is_draft == Thread::IS_NOT_DRAFT) $this->outPut(ResponseCode::INVALID_PARAMETER,'已发布的悬赏不可编辑');
         }
-        */
 
         if (!empty($input['orderSn'])) {
             $order = Order::query()
@@ -53,7 +49,7 @@ class RewardBusi extends TomBaseBusi
             if (empty($order) ||
                 ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id'])) ||
                 $order['user_id'] != $this->user['id'] ||
-                $order['status'] != Order::ORDER_STATUS_PENDING ||
+                $order['status'] != Order::ORDER_STATUS_PAID ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())||
                 ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
@@ -66,7 +62,7 @@ class RewardBusi extends TomBaseBusi
                     ->first();
                 if (empty($orderChildrenInfo) ||
                     $orderChildrenInfo->amount != $input['price'] ||
-                    $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
+                    $orderChildrenInfo->status != Order::ORDER_STATUS_PAID) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER);
                 }
             }
