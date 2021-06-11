@@ -52,10 +52,10 @@ class RewardBusi extends TomBaseBusi
             if (empty($order) ||
                 ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id'])) ||
                 $order['user_id'] != $this->user['id'] ||
-                $order['status'] != Order::ORDER_STATUS_PAID ||
+                $order['status'] != Order::ORDER_STATUS_PENDING ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())||
                 ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER, '订单不存在或订单有问题');
+                $this->outPut(ResponseCode::RESOURCE_EXPIRED, '订单已过期或异常，请重新创建订单');
             }
 
             if ($order->type == Order::ORDER_TYPE_MERGE) {
@@ -65,8 +65,8 @@ class RewardBusi extends TomBaseBusi
                     ->first();
                 if (empty($orderChildrenInfo) ||
                     $orderChildrenInfo->amount != $input['price'] ||
-                    $orderChildrenInfo->status != Order::ORDER_STATUS_PAID) {
-                    $this->outPut(ResponseCode::INVALID_PARAMETER);
+                    $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
+                    $this->outPut(ResponseCode::RESOURCE_EXPIRED,'子订单异常');
                 }
             }
 
@@ -143,7 +143,7 @@ class RewardBusi extends TomBaseBusi
                     ->where('type', Order::ORDER_TYPE_QUESTION_REWARD)
                     ->first();
                 if (empty($orderChildrenInfo) || $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
-                    $this->outPut(ResponseCode::INVALID_PARAMETER);
+                    $this->outPut(ResponseCode::RESOURCE_EXPIRED, '子订单异常');
                 }
                 $orderChildrenInfo->thread_id = 0;
                 $res = $orderChildrenInfo->save();

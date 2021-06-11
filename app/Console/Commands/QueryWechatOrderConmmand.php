@@ -42,7 +42,8 @@ class QueryWechatOrderConmmand extends AbstractCommand
 
     protected $events;
 
-    protected $expireTime = 15;         //查询15分钟之前未完成的订单
+    protected $expireEndTime = 24;           //订单过期开始时间
+    protected $expireStartTime = 48;         //订单过期结束时间
 
 
     public function __construct(Application $app, SettingsRepository $setting, ConnectionInterface $connection, Dispatcher $events)
@@ -75,8 +76,8 @@ class QueryWechatOrderConmmand extends AbstractCommand
     {
         //查询已经过期的订单
         $query_orders = Order::where('status', Order::ORDER_STATUS_PENDING)
-            ->where('created_at', '<', Carbon::now()->subMinutes($this->expireTime))
-            ->where('created_at', '>', Carbon::now()->subHours(24))
+            ->where('created_at', '<', Carbon::now()->subHours($this->expireEndTime))
+            ->where('created_at', '>', Carbon::now()->subHours($this->expireStartTime))
             ->limit(500)
             ->get();
         if ($query_orders->count()) {
@@ -114,7 +115,7 @@ class QueryWechatOrderConmmand extends AbstractCommand
                             );
                         }
                         $this->connection->commit();
-                    } catch (Exception $e) {
+                    } catch (\Exception $e) {
                         //回滚事务
                         $this->connection->rollback();
                         $log = app('payLog');

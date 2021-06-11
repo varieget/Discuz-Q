@@ -46,6 +46,7 @@ class ResponseCode
     const VALIDATE_REJECT = -4007;
     const VALIDATE_IGNORE = -4008;
     const USER_BAN = -4009;
+    const RESOURCE_EXPIRED = -4010;
 
     const NET_ERROR = -5001;
     const INTERNAL_ERROR = -5002;
@@ -227,5 +228,6 @@ class ResponseCode
         self::USER_IN_REVIEW => '用户审核中', // 已去除
         self::PAY_JOIN_SITE => '请付费加入站点',
         self::TRY_LOGIN_AGAIN => '当前注册人数过多，请稍后登录',
+        self::RESOURCE_EXPIRED => '资源已过期'
     ];
 }
