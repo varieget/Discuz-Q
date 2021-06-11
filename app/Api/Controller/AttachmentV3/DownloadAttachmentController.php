@@ -62,11 +62,13 @@ class DownloadAttachmentController extends DzqController
             ->first();
 
         if (empty($share) || strtotime($share->expired_at) < time()) {
+            app('log')->info("requestId：{$this->requestId},分享记录不存在，时间已过期");
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
         $attachment = Attachment::query()->where('id', $data['attachmentsId'])->first();
         if (empty($attachment)){
+            app('log')->info("requestId：{$this->requestId},附件不存在");
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
@@ -87,6 +89,7 @@ class DownloadAttachmentController extends DzqController
         $filePath = $url;
         //以只读方式打开文件，并强制使用二进制模式
         $fileHandle = fopen($filePath,"rb");
+        app('log')->info("requestId：{$this->requestId},fileHandle:{$fileHandle},url:{$url}");
         if ( !empty($fileHandle) ) {
             ob_clean();//清除一下缓冲区
             //获得文件名称
@@ -111,6 +114,7 @@ class DownloadAttachmentController extends DzqController
             }
             //关闭文件流
             fclose($fileHandle);
+            exit();
         }
 
         $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
