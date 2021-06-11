@@ -161,8 +161,11 @@ class UpdateThreadController extends DzqController
             }
             $thread->is_draft = Thread::BOOL_NO;
         }
-
-        !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
+        if ($isAnonymous) {
+            $thread->is_anonymous = Thread::BOOL_YES;
+        } else {
+            $thread->is_anonymous = Thread::BOOL_NO;
+        }
         $thread->save();
         if (!$isApproved && !$isDraft) {
             $this->user->refreshThreadCount();

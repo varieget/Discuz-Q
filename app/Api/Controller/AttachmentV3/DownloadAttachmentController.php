@@ -62,11 +62,13 @@ class DownloadAttachmentController extends DzqController
             ->first();
 
         if (empty($share) || strtotime($share->expired_at) < time()) {
+            app('log')->info("requestId：{$this->requestId},分享记录不存在，时间已过期");
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
         $attachment = Attachment::query()->where('id', $data['attachmentsId'])->first();
         if (empty($attachment)){
+            app('log')->info("requestId：{$this->requestId},附件不存在");
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
@@ -83,11 +85,11 @@ class DownloadAttachmentController extends DzqController
             'updated_at' => Carbon::now()
         ]);
 
-        //文件的类型
-        header('Content-type: application/octstream');
-        //下载显示的名字
-        header('Content-Disposition: attachment; filename='.$attachment->file_name);
-        readfile("$url");
-        exit();
+        header("Content-type:application/octet-stream");
+        $origin_name = basename($attachment->file_name);
+        header("Content-Disposition:attachment;filename = " . $origin_name);
+        header("Accept-ranges:bytes");
+        header("Accept-length:" . $attachment->file_size);
+        readfile($url);
     }
 }

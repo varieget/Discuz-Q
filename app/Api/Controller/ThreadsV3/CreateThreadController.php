@@ -160,6 +160,17 @@ class CreateThreadController extends DzqController
         ];
         $price = floatval($price);
         $attachmentPrice = floatval($attachmentPrice);
+        $limitMoney = 10000;
+        if ($price > 0 && $attachmentPrice > 0) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '只可选择一种付费类型');
+        }
+        if ($price != round($price, 2) || $attachmentPrice != round($attachmentPrice, 2)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '价格设置小数点后不得超过2位');
+        }
+        if ($price > $limitMoney || $attachmentPrice > $limitMoney) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '价格设置不能超过10000');
+        }
+
         $freeWords = floatval($freeWords);
         if ($price > 0 || $attachmentPrice > 0) {
             $price > 0 && $dataThread['price'] = $price;
