@@ -50,13 +50,16 @@ class UpdateUserWalletController extends DzqController
             'walletStatus' => $this->inPut('walletStatus'),
             'operateReason' => $this->inPut('operateReason'),
         ];
+
+        $log->info("requestId：{$this->requestId} ,修改钱包入参,data:".json_encode($data));
+
         if (intval($data['operateAmount']) > 10000) {
+            $log->error("操作金额小于10000 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data['operateAmount']);
             $this->outPut(ResponseCode::UNAUTHORIZED, '操作金额小于10000');
         }
-        $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
 
         if (empty($data['userId'])) {
-            $log->error("INVALID_PARAMETER requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
+            $log->error("缺少用户Id参数 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data['userId']);
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
