@@ -55,6 +55,28 @@ class TopicListController extends DzqController
         $topics = $this->filterTopics($filter, $currentPage, $perPage);
         $topicsList = $topics['pageData'];
         $topicIds = array_column($topicsList, 'id');
+
+        $TopicThreadArray = ThreadTopic::join('threads', 'threads.id', 'thread_topic.thread_id')
+            ->whereIn('thread_topic.topic_id', $topicIds)
+            ->where('threads.is_approved', Thread::APPROVED)
+            ->where('threads.is_draft', Thread::IS_NOT_DRAFT)
+            ->whereNull('threads.deleted_at')
+            ->get(['thread_id','topic_id','view_count'])
+            ->toArray();
+        $newTopicThreadArray = [];
+        foreach ($TopicThreadArray as $key => $value) {
+            $newTopicThreadArray[$value['topic_id']][] = $value;
+        }
+        $TopicThread = [];
+        foreach ($newTopicThreadArray as $key=>$value){
+            $TopicThread[$key]['thread_count'] = count($value);
+            $view_count = 0;
+            foreach ($value as $k=>$v){
+                $view_count +=$v['view_count'];
+            }
+            $TopicThread[$key]['view_count'] = $view_count;
+        }
+
         $userIds = array_column($topicsList, 'user_id');
         $userDatas = User::instance()->getUsers($userIds);
         $userDatas = array_column($userDatas, null, 'id');
@@ -87,8 +109,8 @@ class TopicListController extends DzqController
                 'userId' => $topic['user_id'],
                 'username' => $userDatas[$topic['user_id']]['username'] ?? '',
                 'content' => $topic['content'],
-                'viewCount' => $topic['view_count'],
-                'threadCount' => $topic['thread_count'],
+                'viewCount' => !empty($TopicThread[$topicId]['view_count']) ? $TopicThread[$topicId]['view_count'] : 0,
+                'threadCount' => !empty($TopicThread[$topicId]['thread_count']) ? $TopicThread[$topicId]['thread_count'] : 0,
                 'recommended' => (bool) $topic['recommended'],
                 'recommendedAt' => $topic['recommended_at'] ?? '',
                 'threads' => $thread
