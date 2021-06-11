@@ -220,7 +220,7 @@ class ResponseCode
         self::NOT_REBIND_SELF_MOBILE => '不能换绑自己的手机号',
         self::ORIGINAL_USER_MOBILE_VERIFY_ERROR => '原有手机号验证码处理失败',
         self::PASSWORD_ILLEGALITY => '密码输入非法',
-        self::YOU_BLOCKED_HIM => '你已拉黑对方',
+        self::YOU_BLOCKED_HIM => '根据你的设置，您无法进行该操作',
         self::USERNAME_NOT_ALLOW_HAS_SPACE => '用户名不允许包含空格',
         self::PASSWORD_NOT_ALLOW_HAS_SPACE => '密码不允许包含空格',
         self::USER_NEED_SIGNIN_FIELDS => '用户需填写扩展字段', // 已去除

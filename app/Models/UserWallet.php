@@ -136,7 +136,7 @@ class UserWallet extends Model
      * @param int $value 可用金额
      */
     public function setAvailableAmountAttribute($value){
-        $this->attributes['available_amount'] = (int) $value;
+        $this->attributes['available_amount'] = sprintf('%.2f',$value);
         $cache = app('cache');
         $cache->put('user_wallet_'.$this->attributes['user_id'], serialize($this->attributes), 5 * 60);
     }
@@ -146,7 +146,7 @@ class UserWallet extends Model
      * @param int $value 冻结金额
      */
     public function setFreezeAmountAttribute($value){
-        $this->attributes['freeze_amount'] = (int) $value;
+        $this->attributes['freeze_amount'] = sprintf('%.2f',$value);
         $cache = app('cache');
         $cache->put('user_wallet_'.$this->attributes['user_id'], serialize($this->attributes), 5 * 60);
     }
