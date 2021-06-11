@@ -24,9 +24,11 @@ use App\Models\RedPacket;
 use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Models\ThreadRedPacket;
+use Carbon\Carbon;
 
 class RedPackBusi extends TomBaseBusi
 {
+    const NEED_PAY = true;
 
     public function create()
     {
@@ -55,7 +57,7 @@ class RedPackBusi extends TomBaseBusi
                 $order['user_id'] != $this->user['id'] ||
                 $order['status'] != Order::ORDER_STATUS_PAID ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER);
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '订单不存在或订单有问题');
             }
 
             if ($order->type == Order::ORDER_TYPE_MERGE) {

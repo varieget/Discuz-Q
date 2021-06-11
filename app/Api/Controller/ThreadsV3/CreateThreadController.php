@@ -31,6 +31,7 @@ use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
 class CreateThreadController extends DzqController
 {

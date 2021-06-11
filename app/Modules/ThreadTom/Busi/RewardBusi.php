@@ -24,9 +24,12 @@ use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Models\ThreadReward;
 use App\Models\ThreadTom;
+use Carbon\Carbon;
 
 class RewardBusi extends TomBaseBusi
 {
+    const NEED_PAY = true;
+
     public function create()
     {
         $input = $this->verification();
@@ -52,7 +55,7 @@ class RewardBusi extends TomBaseBusi
                 $order['status'] != Order::ORDER_STATUS_PAID ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())||
                 ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER);
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '订单不存在或订单有问题');
             }
 
             if ($order->type == Order::ORDER_TYPE_MERGE) {

@@ -25,6 +25,7 @@ use App\Models\Permission;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Common\Utils;
+use Illuminate\Support\Arr;
 
 trait TomTrait
 {

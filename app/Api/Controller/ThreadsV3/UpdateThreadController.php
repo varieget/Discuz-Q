@@ -32,6 +32,7 @@ use App\Notifications\System;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
 class UpdateThreadController extends DzqController
 {
