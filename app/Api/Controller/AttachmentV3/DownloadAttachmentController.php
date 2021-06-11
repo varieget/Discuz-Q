@@ -85,38 +85,21 @@ class DownloadAttachmentController extends DzqController
             'updated_at' => Carbon::now()
         ]);
 
-        //文件完整路径（这里将真实的文件存放在temp目录下）
-        $filePath = $url;
-        //以只读方式打开文件，并强制使用二进制模式
-        $fileHandle = fopen($filePath,"rb");
-        app('log')->info("requestId：{$this->requestId},fileHandle:{$fileHandle},url:{$url}");
-        if ( !empty($fileHandle) ) {
-            ob_clean();//清除一下缓冲区
-            //获得文件名称
-            $filename = basename(urldecode($attachment->file_name));
-            //将utf8编码转换成gbk编码，否则，文件中文名称的文件无法打开
-            $filePath = iconv('UTF-8','gbk',$filePath);
-            /**
-             * 这里应该加上安全验证之类的代码，例如：检测请求来源、验证UA标识等等
-             */
-            //文件类型是二进制流。设置为utf8编码（支持中文文件名称）
-            header('Content-type:application/octet-stream; charset=utf-8');
-            header("Content-Transfer-Encoding: binary");
-            header("Accept-Ranges: bytes");
-            //文件大小
-            header("Content-Length: ".filesize($filePath));
-            //触发浏览器文件下载功能
-            header('Content-Disposition:attachment;filename="'.urlencode($filename).'"');
-            //循环读取文件内容，并输出
-            while(!feof($fileHandle)) {
-                //从文件指针 handle 读取最多 length 个字节（每次输出10k）
-                echo fread($fileHandle, 10240);
-            }
-            //关闭文件流
-            fclose($fileHandle);
-            exit();
+        //声明浏览器输出的是字节流
+        header('Content-Type: application/octet-stream');
+        //声明浏览器返回大小是按字节进行计算
+        header('Accept-Ranges:bytes');
+        //告诉浏览器文件的总大小
+        $fileSize = filesize($url);//坑 filesize 如果超过2G 低版本php会返回负数
+        header('Content-Length:' . $fileSize); //注意是'Content-Length:' 非Accept-Length
+        //声明下载文件的名称
+        header('Content-Disposition:attachment;filename=' . basename($attachment->file_name));//声明作为附件处理和下载后文件的名称
+        //获取文件内容
+        $handle = fopen($url, 'rb');//二进制文件用‘rb’模式读取
+        while (!feof($handle) ) { //循环到文件末尾 规定每次读取（向浏览器输出为$readBuffer设置的字节数）
+            echo fread($handle, 10240);
         }
-
-        $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        fclose($handle);//关闭文件句柄
+        exit;
     }
 }
