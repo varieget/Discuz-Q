@@ -205,9 +205,6 @@ class UpdateThreadController extends DzqController
                 if ($content['indexes'][$tomType]['body']['draft'] != 1 ) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包状态应为草稿');
                 }
-                if(empty($content['indexes'][$tomType]['body']['orderSn'])){
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包取少订单号');
-                }
             }
         }
 
