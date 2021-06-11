@@ -35,7 +35,15 @@ class ListUserSignInController extends AuthBaseController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            app('log')->info(
+                '[infoParam:]'
+                . '[requestId:]' . $this->requestId
+                . ';[requestIP:]' . ip($this->request->getServerParams())
+                . ';[requestTarget:]' . $this->request->getRequestTarget()
+                . ';[remake:]' . '没有访问扩展字段的权限'
+                . ';[user:]' . json_encode($actor)
+            );
+            throw new PermissionDeniedException('没有访问扩展字段的权限');
         }
         return true;
     }
