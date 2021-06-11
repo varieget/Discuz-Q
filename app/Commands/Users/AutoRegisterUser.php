@@ -86,6 +86,11 @@ class AutoRegisterUser
             $this->data['expired_at'] = Carbon::now();
         }
 
+        //扩展字段
+        if ($settings->get('open_ext_fields')) {
+            $this->data['status'] = User::STATUS_NEED_FIELDS;
+        }
+
         $this->data['bind_type'] = !empty($this->data['bind_type']) ? $this->data['bind_type'] : 0;
         $user = User::register(Arr::only($this->data, [
             'username', 'nickname', 'password', 'bind_type',
