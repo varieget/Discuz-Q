@@ -21,6 +21,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
+use App\Models\Order;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
@@ -155,18 +156,20 @@ class UpdateThreadController extends DzqController
         }
 
         if ($isDraft) {
-            $thread->is_draft = Thread::BOOL_YES;
+            $thread->is_draft = Thread::IS_DRAFT;
         } else {
             if ($thread->is_draft) {
                 $thread->created_at = date('Y-m-d H:i:m', time());
             }
-            $thread->is_draft = Thread::BOOL_NO;
+            $thread->is_draft = Thread::IS_NOT_DRAFT;
         }
-        if ($isAnonymous) {
-            $thread->is_anonymous = Thread::BOOL_YES;
-        } else {
-            $thread->is_anonymous = Thread::BOOL_NO;
+
+        // 如果更新为非草稿状态，则要判断是否已付费
+        if (($thread->is_draft == Thread::IS_NOT_DRAFT) && $this->getPendingOrderInfo($thread)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '订单未支付，无法发布');
         }
+
+        !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
         $thread->save();
         if (!$isApproved && !$isDraft) {
             $this->user->refreshThreadCount();
@@ -190,6 +193,7 @@ class UpdateThreadController extends DzqController
     {
         $threadId = $thread->id;
         $tags = [];
+
         //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
         $tomTypes = array_keys($content['indexes']);
         foreach ($tomTypes as $tomType) {
@@ -200,6 +204,9 @@ class UpdateThreadController extends DzqController
                 }
                 if ($content['indexes'][$tomType]['body']['draft'] != 1 ) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包状态应为草稿');
+                }
+                if(empty($content['indexes'][$tomType]['body']['orderSn'])){
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包取少订单号');
                 }
             }
         }
@@ -283,3 +290,4 @@ class UpdateThreadController extends DzqController
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
     }
 }
+

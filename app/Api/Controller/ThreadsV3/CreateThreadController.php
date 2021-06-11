@@ -144,7 +144,7 @@ class CreateThreadController extends DzqController
         $isDraft = $this->inPut('draft');
 
         // 帖子是否需要支付，如果需要支付，则强制发布为草稿
-        if ($this->needPay($content['indexes'] ?? []) && !empty($isDraft) ) {
+        if ($this->needPay($content['indexes'] ?? []) && empty($isDraft) ) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '包含红包/悬赏的帖子必须存为草稿');
         }
 
