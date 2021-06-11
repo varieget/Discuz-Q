@@ -158,23 +158,17 @@ class CreateThreadController extends DzqController
             'post_count' => 1,
             'type' => Thread::TYPE_OF_ALL
         ];
-
+        $price = floatval($price);
+        $attachmentPrice = floatval($attachmentPrice);
+        $limitMoney = 10000;
         if ($price > 0 && $attachmentPrice > 0) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '只可选择一种付费类型');
         }
-        if (($price > 0 && strstr($price, '.')) || 
-            ($attachmentPrice > 0 && strstr($attachmentPrice, '.'))) {
-                $pricePointDigits = strlen(substr(floatval($price), strrpos(floatval($price), ".") + 1));
-                $attachmentPricePointDigits = strlen(substr(floatval($attachmentPrice), strrpos(floatval($attachmentPrice), ".") + 1));
-                if ($pricePointDigits > 2 || $attachmentPricePointDigits > 2) {
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '价格设置小数点后不得超过2位');
-            }
+        if ($price != round($price, 2) || $attachmentPrice != round($attachmentPrice, 2)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '价格设置小数点后不得超过2位');
         }
-
-        $price = floatval($price);
-        $attachmentPrice = floatval($attachmentPrice);
-        if (($price > 0 && $price > 10000) || ($attachmentPrice > 0 && $attachmentPrice > 10000)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '价格设置不能超过10000元');
+        if ($price > $limitMoney || $attachmentPrice > $limitMoney) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '价格设置不能超过10000');
         }
 
         $freeWords = floatval($freeWords);
