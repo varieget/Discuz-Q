@@ -52,7 +52,7 @@ class DownloadAttachmentController extends DzqController
             'attachmentsId' => $this->inPut('attachmentsId')
         ];
 
-        $this->dzqValidate($data,[
+        $this->dzqValidate($data, [
             'sign' => 'required',
             'attachmentsId' => 'required|int',
         ]);
@@ -67,7 +67,7 @@ class DownloadAttachmentController extends DzqController
         }
 
         $attachment = Attachment::query()->where('id', $data['attachmentsId'])->first();
-        if (empty($attachment)){
+        if (empty($attachment)) {
             app('log')->info("requestId：{$this->requestId},附件不存在");
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
@@ -90,6 +90,7 @@ class DownloadAttachmentController extends DzqController
         header("Content-Disposition:attachment;filename = " . $origin_name);
         header("Accept-ranges:bytes");
         header("Accept-length:" . $attachment->file_size);
-        readfile($url);
+        readfile($url, false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
+        exit;
     }
 }
