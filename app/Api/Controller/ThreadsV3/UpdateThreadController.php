@@ -22,8 +22,11 @@ use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
 use App\Models\Order;
+use App\Models\OrderChildren;
 use App\Models\Post;
 use App\Models\Thread;
+use App\Models\ThreadRedPacket;
+use App\Models\ThreadReward;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\User;
@@ -235,6 +238,10 @@ class UpdateThreadController extends DzqController
                     ThreadTom::query()
                         ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'status' => ThreadTom::STATUS_ACTIVE])
                         ->update(['status' => ThreadTom::STATUS_DELETE]);
+                    $isDeleteRedOrder = $isDeleteRewardOrder = false;
+                    if($tomId == TomConfig::TOM_REDPACK)        $isDeleteRedOrder = true;
+                    if($tomId == TomConfig::TOM_REWARD)        $isDeleteRewardOrder = true;
+                    $this->delRedRelations($threadId, $isDeleteRedOrder, $isDeleteRewardOrder);
                     break;
                 case $this->UPDATE_FUNC:
                     ThreadTom::query()
@@ -257,15 +264,20 @@ class UpdateThreadController extends DzqController
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get();
         $keys = [];
+        $isDeleteRedOrder = $isDeleteRewardOrder = false;
         foreach ($tomList as $item) {
             if (empty($tomJsons[$item['key']])) {
                 $keys[] = $item['key'];
+                if($item['tom_type'] == TomConfig::TOM_REDPACK)     $isDeleteRedOrder = true;
+                if($item['tom_type'] == TomConfig::TOM_REWARD)     $isDeleteRewardOrder = true;
             }
         }
         ThreadTom::query()
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId])
             ->whereIn('key', $keys)->delete();
+
+        $this->delRedRelations($threadId, $isDeleteRedOrder, $isDeleteRewardOrder);
     }
 
     private function saveThreadTag($threadId, $tags)
