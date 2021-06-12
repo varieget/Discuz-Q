@@ -19,6 +19,7 @@
 namespace App\Console\Commands;
 
 use App\Events\Order\Updated;
+use App\Models\OrderChildren;
 use App\Settings\SettingsRepository;
 use App\Trade\Config\GatewayConfig;
 use App\Trade\QueryTrade;
@@ -126,6 +127,12 @@ class QueryWechatOrderConmmand extends AbstractCommand
                     //设置订单已过期
                     $order->status = Order::ORDER_STATUS_EXPIRED;
                     $order->save();
+                    //查询、修改该订单对应的子订单状态
+                    $res = OrderChildren::query()->where('order_sn', $order->order_sn)->update(['status' => Order::ORDER_STATUS_EXPIRED]);
+                    if($res === false){
+                        $log = app('log');
+                        $log->info("订单order_sn：{$order->order_sn} ，更新子订单出错");
+                    }
                 }
             }
         }

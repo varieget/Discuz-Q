@@ -163,13 +163,17 @@ class UpdateThreadController extends DzqController
             }
             $thread->is_draft = Thread::IS_NOT_DRAFT;
         }
-
-        // 如果更新为非草稿状态，则要判断是否已付费
-        if (($thread->is_draft == Thread::IS_NOT_DRAFT) && $this->getPendingOrderInfo($thread)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '订单未支付，无法发布');
+        if($isAnonymous){
+            $thread->is_anonymous = Thread::BOOL_YES;
+        }else{
+            $thread->is_anonymous = Thread::BOOL_NO;
         }
 
-        !empty($isAnonymous) && $thread->is_anonymous = Thread::BOOL_YES;
+        // 下面判断条件为：后期开放 -- 包含红包的帖子，在已发布的情况下，也允许修改
+//        if ($this->needPay($content['indexes']) && ($thread->is_draft == Thread::IS_NOT_DRAFT) && $this->getPendingOrderInfo($thread)) {
+//            $this->outPut(ResponseCode::INVALID_PARAMETER, '订单未支付，无法发布');
+//        }
+
         $thread->save();
         if (!$isApproved && !$isDraft) {
             $this->user->refreshThreadCount();
@@ -202,7 +206,7 @@ class UpdateThreadController extends DzqController
                 if($this->inPut('draft') == 0){        //如果修改帖子的时候，增加了红包资料的话，那么必须要先走草稿，然后走订单，再走发布（或者简单点理解为：增加了新的红包的帖子状态，只能通过支付回调来修改帖子状态）
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包应先存为草稿');
                 }
-                if ($content['indexes'][$tomType]['body']['draft'] != 1 ) {
+                if ($content['indexes'][$tomType]['body']['draft'] == 0 ) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包状态应为草稿');
                 }
             }

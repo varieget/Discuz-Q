@@ -68,10 +68,10 @@ class ThreadDetailController extends DzqController
         $thread->increment('view_count');
         $tomInputIndexes = $this->getTomContent($thread);
         $result = $this->packThreadDetail($user, $group, $thread, $post, $tomInputIndexes['tomContent'], true, $tomInputIndexes['tags']);
+        $result['orderInfo'] = [];
         if (
             $this->needPay($tomInputIndexes['tomContent'])
-            && ($order = $this->getPendingOrderInfo($thread))
-            && ($order->staus == Order::ORDER_STATUS_PENDING)
+            && ($order = $this->getOrderInfo($thread))
         ) {
             $result['orderInfo'] = $this->camelData($order);
         }

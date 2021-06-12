@@ -556,6 +556,20 @@ trait ThreadTrait
             ->first();
     }
 
+    /**
+     * 获取红包/悬赏/混合支付对应的订单，一对一
+     * @param $thread
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Model|object|null
+     */
+    private function getOrderInfo($thread)
+    {
+        return Order::query()
+            ->where('thread_id', $thread['id'])
+            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
+            ->select(['payment_sn', 'order_sn', 'amount', 'type', 'id', 'status'])
+            ->first();
+    }
+
     private function renderTopic($text)
     {
         preg_match_all('/#.+?#/', $text, $topic);
