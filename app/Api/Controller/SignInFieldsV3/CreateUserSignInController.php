@@ -134,7 +134,7 @@ class CreateUserSignInController extends AuthBaseController
                 'fields_desc'   => !empty($attribute['fieldsDesc']) ? $attribute['fieldsDesc'] : '',
                 'sort'          => !empty($attribute['sort']) ? $attribute['sort'] : 0,
                 'status'        => UserSignInFields::STATUS_AUDIT,
-                'required'      => !empty($attribute['required']) ? $attribute['required'] : ''
+                'required'      => !empty($attribute['required']) ? $attribute['required'] : 0
             ];
             $userSignIn->setRawAttributes($rawData);
             $userSignIn->save();
