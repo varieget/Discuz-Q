@@ -188,3 +188,6 @@ $route->get('/attachment.download', '/attachment.download', ApiController\Attach
 
 //生成jssdk签名
 $route->get('/offiaccount/jssdk', 'offiaccount.jssdk', ApiController\WechatV3\OffIAccountJSSDKController::class);
+
+$route->get('/thread.test', 'thread.test', ApiController\ThreadsV3\TestController::class);
+
