@@ -175,7 +175,7 @@ class UpdateAdminUser
         // 修改注册原因
         $this->changeRegisterReason($user, $attributes, $validate);
 
-        $this->validator->valid($validate);
+        //$this->validator->valid($validate);
 
         $user->save();
 
@@ -354,7 +354,8 @@ class UpdateAdminUser
         $user->changeStatus($status);
 
         // 审核备注
-        $logMsg = Arr::get($attributes, 'refuse_message', '');
+        $logMsg = Arr::get($attributes, 'rejectReason', '');
+
         // 审核后系统通知事件
         $this->events->dispatch(new ChangeUserStatus($user, $logMsg));
         $this->setRefuseMessage($user,$logMsg);
