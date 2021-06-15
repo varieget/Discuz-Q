@@ -55,7 +55,10 @@ class UpdateUsersStatusController extends DzqController
             $id = Arr::get($data, 'id');
             $requestData = [];
 
-            $requestData['id'] = $data['id'];
+            if(!empty($data['id'])){
+                $requestData['id'] = $data['id'];
+            }
+            
             $requestData['status'] = $data['status'];
 
             if(!empty($data['rejectReason'])){
