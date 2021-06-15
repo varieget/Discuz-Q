@@ -42,7 +42,6 @@ class RedPackBusi extends TomBaseBusi
         if(!empty($res['data'])){
             return $this->jsonReturn($res['data']);
         }
-
         $thread = Thread::query()->find($this->threadId);
         if(empty($thread->is_draft)){       //已发布的帖子，不允许在增加红包tom
             $this->outPut(ResponseCode::INVALID_PARAMETER, '已发布的帖子不允许增加红包');
@@ -51,7 +50,6 @@ class RedPackBusi extends TomBaseBusi
         if ($input['rule'] == 1) {
             if ($input['price']*100 <  $input['number']) $this->outPut(ResponseCode::INVALID_PARAMETER,'红包金额不够分');
         }
-
         if (!empty($input['orderSn'])) {
             $order = Order::query()
                 ->where('order_sn',$input['orderSn'])
@@ -69,8 +67,9 @@ class RedPackBusi extends TomBaseBusi
                 !in_array($order->type, [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_MERGE]) ||
                 $order['user_id'] != $this->user['id'] ||
                 $order['status'] != Order::ORDER_STATUS_PENDING ||
-                ($order->type == Order::ORDER_TYPE_REDPACKET && $order->amount != $input['price'])
-                (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())) {
+                ($order->type == Order::ORDER_TYPE_REDPACKET && $order->amount != $input['price']) ||
+                (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())
+            ) {
                 $this->outPut(ResponseCode::RESOURCE_EXPIRED, '订单已过期或异常，请重新创建订单');
             }
 
