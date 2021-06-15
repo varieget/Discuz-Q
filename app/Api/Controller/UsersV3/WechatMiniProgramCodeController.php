@@ -86,7 +86,7 @@ class WechatMiniProgramCodeController implements RequestHandlerInterface
                 ],
             ]);
         } catch (\Exception $e) {
-            app('errorLog')->info('生成小程序二维码接口异常-SmsLoginController： 入参：'
+            app('errorLog')->info('生成小程序二维码接口异常-WechatMiniProgramCodeController： 入参：'
                 . json_encode($paramData) . ';用户id：' . $request->getAttribute('actor')->id . ';异常：' . $e->getMessage());
             throw new Exception('生成小程序二维码接口异常');
         }
