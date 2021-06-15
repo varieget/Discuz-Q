@@ -277,6 +277,11 @@ class UpdateThreadController extends DzqController
     //删除掉前端未提交的的插件和标签数据
     private function delRedundancyPlugins($threadId, $tomJsons)
     {
+        $order = $this->getRedOrderInfo($threadId);
+        if($order && $order->status == Order::ORDER_STATUS_PAID){
+            return;
+        }
+
         $tomList = ThreadTom::query()
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get();
@@ -289,10 +294,7 @@ class UpdateThreadController extends DzqController
                 if($item['tom_type'] == TomConfig::TOM_REWARD)     $isDeleteRewardOrder = true;
             }
         }
-        $order = $this->getRedOrderInfo($threadId);
-        if($order && $order->status == Order::ORDER_STATUS_PAID && $isDeleteRedOrder && $isDeleteRewardOrder){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '已发布的帖子，不可修改/删除原 红包/悬赏 内容');
-        }
+
         ThreadTom::query()
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId])
