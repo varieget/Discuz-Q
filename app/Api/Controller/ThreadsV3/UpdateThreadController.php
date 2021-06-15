@@ -21,8 +21,12 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
+use App\Models\Order;
+use App\Models\OrderChildren;
 use App\Models\Post;
 use App\Models\Thread;
+use App\Models\ThreadRedPacket;
+use App\Models\ThreadReward;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\User;
@@ -32,6 +36,7 @@ use App\Notifications\System;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
 class UpdateThreadController extends DzqController
 {
@@ -154,18 +159,24 @@ class UpdateThreadController extends DzqController
         }
 
         if ($isDraft) {
-            $thread->is_draft = Thread::BOOL_YES;
+            $thread->is_draft = Thread::IS_DRAFT;
         } else {
             if ($thread->is_draft) {
                 $thread->created_at = date('Y-m-d H:i:m', time());
             }
-            $thread->is_draft = Thread::BOOL_NO;
+            $thread->is_draft = Thread::IS_NOT_DRAFT;
         }
-        if ($isAnonymous) {
+        if($isAnonymous){
             $thread->is_anonymous = Thread::BOOL_YES;
-        } else {
+        }else{
             $thread->is_anonymous = Thread::BOOL_NO;
         }
+
+        // 下面判断条件为：后期开放 -- 包含红包的帖子，在已发布的情况下，也允许修改
+//        if ($this->needPay($content['indexes']) && ($thread->is_draft == Thread::IS_NOT_DRAFT) && $this->getPendingOrderInfo($thread)) {
+//            $this->outPut(ResponseCode::INVALID_PARAMETER, '订单未支付，无法发布');
+//        }
+
         $thread->save();
         if (!$isApproved && !$isDraft) {
             $this->user->refreshThreadCount();
@@ -189,6 +200,21 @@ class UpdateThreadController extends DzqController
     {
         $threadId = $thread->id;
         $tags = [];
+
+        //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
+        $tomTypes = array_keys($content['indexes']);
+        foreach ($tomTypes as $tomType) {
+            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
+            if(constant($tomService.'::NEED_PAY')){
+                if($this->inPut('draft') == 0){        //如果修改帖子的时候，增加了红包资料的话，那么必须要先走草稿，然后走订单，再走发布（或者简单点理解为：增加了新的红包的帖子状态，只能通过支付回调来修改帖子状态）
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包应先存为草稿');
+                }
+                if ($content['indexes'][$tomType]['body']['draft'] == 0 ) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包状态应为草稿');
+                }
+            }
+        }
+
         $tomJsons = $this->tomDispatcher($content, null, $thread->id, $post->id);
         if (!empty($content['text'])) {
             $tags[] = ['thread_id' => $thread['id'], 'tag' => TomConfig::TOM_TEXT];
@@ -212,6 +238,10 @@ class UpdateThreadController extends DzqController
                     ThreadTom::query()
                         ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'status' => ThreadTom::STATUS_ACTIVE])
                         ->update(['status' => ThreadTom::STATUS_DELETE]);
+                    $isDeleteRedOrder = $isDeleteRewardOrder = false;
+                    if($tomId == TomConfig::TOM_REDPACK)        $isDeleteRedOrder = true;
+                    if($tomId == TomConfig::TOM_REWARD)        $isDeleteRewardOrder = true;
+                    $this->delRedRelations($threadId, $isDeleteRedOrder, $isDeleteRewardOrder);
                     break;
                 case $this->UPDATE_FUNC:
                     ThreadTom::query()
@@ -234,15 +264,20 @@ class UpdateThreadController extends DzqController
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get();
         $keys = [];
+        $isDeleteRedOrder = $isDeleteRewardOrder = false;
         foreach ($tomList as $item) {
             if (empty($tomJsons[$item['key']])) {
                 $keys[] = $item['key'];
+                if($item['tom_type'] == TomConfig::TOM_REDPACK)     $isDeleteRedOrder = true;
+                if($item['tom_type'] == TomConfig::TOM_REWARD)     $isDeleteRewardOrder = true;
             }
         }
         ThreadTom::query()
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId])
             ->whereIn('key', $keys)->delete();
+
+        $this->delRedRelations($threadId, $isDeleteRedOrder, $isDeleteRewardOrder);
     }
 
     private function saveThreadTag($threadId, $tags)
@@ -268,3 +303,4 @@ class UpdateThreadController extends DzqController
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);
     }
 }
+

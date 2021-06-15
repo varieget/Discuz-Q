@@ -20,6 +20,7 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Group;
+use App\Models\Order;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTom;
@@ -67,6 +68,14 @@ class ThreadDetailController extends DzqController
         $thread->increment('view_count');
         $tomInputIndexes = $this->getTomContent($thread);
         $result = $this->packThreadDetail($user, $group, $thread, $post, $tomInputIndexes['tomContent'], true, $tomInputIndexes['tags']);
+        $result['orderInfo'] = [];
+        if (
+            $this->needPay($tomInputIndexes['tomContent'])
+            && ($order = $this->getOrderInfo($thread))
+        ) {
+            $result['orderInfo'] = $this->camelData($order);
+        }
+
         $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 

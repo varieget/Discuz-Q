@@ -19,12 +19,17 @@ namespace App\Modules\ThreadTom;
 
 
 use App\Common\CacheKey;
+use App\Models\Order;
+use App\Models\OrderChildren;
+use App\Models\ThreadRedPacket;
+use App\Models\ThreadReward;
 use Discuz\Base\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Permission;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Common\Utils;
+use Illuminate\Support\Arr;
 
 trait TomTrait
 {
@@ -260,5 +265,35 @@ trait TomTrait
             }
         }
         return false;
+    }
+
+
+    /**
+     * @param $threadId
+     * @param bool $isDeleteRedOrder        删除红包相关数据
+     * @param bool $isDeleteRewardOrder     删除悬赏相关数据
+     */
+    public function delRedRelations($threadId, $isDeleteRedOrder = false, $isDeleteRewardOrder = false){
+        //将对应的 order、orderChildren、threadRedPacket、threadReward 与 原帖 脱离关系
+        $order = Order::query()->where('thread_id', $threadId)
+            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
+            ->first();
+        if($order){
+            if($isDeleteRedOrder){      //删除之前的order、orderChildren、$threadRedPacket
+                Order::query()->where('thread_id', $threadId)->update(['thread_id' => 0]);
+                if($order->type == Order::ORDER_TYPE_MERGE){
+                    OrderChildren::query()->where(['order_sn' => $order->order_sn, 'thread_id' => $threadId])->update(['thread_id' => 0]);
+                }
+                ThreadRedPacket::query()->where(['thread_id' => $threadId])->update(['thread_id' => 0, 'post_id' => 0]);
+            }
+            if($isDeleteRewardOrder){
+                Order::query()->where('thread_id', $threadId)->update(['thread_id' => 0]);
+                if($order->type == Order::ORDER_TYPE_MERGE){
+                    OrderChildren::query()->where(['order_sn' => $order->order_sn, 'thread_id' => $threadId])->update(['thread_id' => 0]);
+                }
+                ThreadReward::query()->where(['thread_id' => $threadId])->update(['thread_id' => 0, 'post_id' => 0]);
+            }
+        }
+
     }
 }
