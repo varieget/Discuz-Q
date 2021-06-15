@@ -37,7 +37,7 @@ use App\Modules\ThreadTom\TomConfig;
 
 trait ThreadListTrait
 {
-    private function getFullThreadData($threads)
+    private function getFullThreadData($threads, $isList = false)
     {
         $userIds = array_unique(array_column($threads, 'user_id'));
         $groupUsers = $this->getGroupUserInfo($userIds);
@@ -75,7 +75,14 @@ trait ThreadListTrait
         list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($concatString);
         foreach ($result as &$item) {
             $item['title'] = str_replace($searches, $replaces, $item['title']);
-            $item['content']['text'] = str_replace($searches, $replaces, $item['content']['text']);
+            $text = str_replace($searches, $replaces, $item['content']['text']);
+            if ($isList) {
+                $maxText = 5000;
+                if (mb_strlen($text) > $maxText) {
+                    $text = mb_substr($text, 0, $maxText) . '...';
+                }
+            }
+            $item['content']['text'] = $text;
         }
         return $result;
     }

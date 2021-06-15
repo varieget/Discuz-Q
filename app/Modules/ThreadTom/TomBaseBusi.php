@@ -18,6 +18,7 @@
 namespace App\Modules\ThreadTom;
 
 use App\Common\ResponseCode;
+use App\Models\Order;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Common\Utils;
@@ -32,6 +33,10 @@ use Illuminate\Support\Str;
  */
 abstract class TomBaseBusi
 {
+    const RED_LIMIT_TIME = 2;           //红包帖创建时间间隔
+    const NEED_PAY = false;
+
+
     public $tomId = null;
     public $operation = null;
     public $body = [];
@@ -136,4 +141,13 @@ abstract class TomBaseBusi
         ThreadTom::deleteTom($this->threadId, $this->tomId, $this->key);
         return $this->jsonReturn(false);
     }
+
+    public function getRedOrderInfo($threadId){
+        return Order::query()
+            ->where('thread_id', $threadId)
+            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
+            ->select(['payment_sn', 'order_sn', 'amount', 'type', 'id', 'status'])
+            ->first();
+    }
+
 }

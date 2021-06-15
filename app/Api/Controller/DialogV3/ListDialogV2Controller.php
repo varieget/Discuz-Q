@@ -44,8 +44,8 @@ class ListDialogV2Controller extends DzqController
     {
         $query = Dialog::query()
             ->with([
-                'sender:id,username,avatar,nickname',
-                'recipient:id,username,avatar,nickname',
+                'sender:id,username,avatar,avatar_at,nickname',
+                'recipient:id,username,avatar,avatar_at,nickname',
                 'dialogMessage',
             ]);
         $tablePrefix = config('database.connections.mysql.prefix');
@@ -102,6 +102,20 @@ class ListDialogV2Controller extends DzqController
                 }
 
             }
+
+            $sendUser = [
+                'id'=>$i->sender->id,
+                'avatar'=>$i->sender->avatar,
+                'username'=>$i->sender->username,
+                'nickname'=>$i->sender->nickname
+            ];
+            $recipientUser = [
+                'id'=>$i->recipient->id,
+                'avatar'=>$i->recipient->avatar,
+                'username'=>$i->recipient->username,
+                'nickname'=>$i->recipient->nickname
+            ];
+
             $msg = $i->dialogMessage;
             $msg = $msg
                 ? [
@@ -127,8 +141,8 @@ class ListDialogV2Controller extends DzqController
                 'recipientReadAt' => optional($i->recipient_read_at)->format('Y-m-d H:i:s'),
                 'updatedAt' => optional($i->updated_at)->format('Y-m-d H:i:s'),
                 'createdAt' => optional($i->created_at)->format('Y-m-d H:i:s'),
-                'sender' => $i->sender,
-                'recipient' => $i->recipient,
+                'sender' => $sendUser,
+                'recipient' => $recipientUser,
                 'dialogMessage' => $msg,
 
             ];

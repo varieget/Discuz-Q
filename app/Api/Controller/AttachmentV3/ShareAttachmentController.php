@@ -66,7 +66,7 @@ class ShareAttachmentController extends DzqController
             ->where('created_at', '>=', Carbon::now()->modify('-1 minutes'))
             ->count('attachments_id');
 
-        if ($count >= 2) $this->outPut(ResponseCode::NET_ERROR,'请求太快，请稍后重试');
+        if ($count >= 2) $this->outPut(ResponseCode::NET_ERROR,'操作太快，请稍后再试');
 
         $thread = Thread::query()
             ->from('threads as th')

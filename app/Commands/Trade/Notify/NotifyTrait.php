@@ -22,6 +22,7 @@ use App\Events\Group\PaidGroup;
 use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Models\PayNotify;
+use App\Models\Thread;
 use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
@@ -61,7 +62,7 @@ trait NotifyTrait
             switch ($this->orderInfo->type) {
                 case Order::ORDER_TYPE_REGISTER:
                     // 上级分成
-                    $bossAmount = $this->orderInfo->calculateAuthorAmount();                
+                    $bossAmount = $this->orderInfo->calculateAuthorAmount();
                     // 是否创建上级金额分成
                     $this->isCreateBossAmount($bossAmount);
                     $this->orderInfo->save();
@@ -81,7 +82,7 @@ trait NotifyTrait
                     } else {
                         // 未设置或设置错误时站长分成为0，被打赏人检测是否有上级然后分成
                         $bossAmount = $this->orderInfo->calculateAuthorAmount();
-                    }                                       
+                    }
 
                     // 是否创建上级金额分成
                     $this->isCreateBossAmount($bossAmount);
@@ -192,17 +193,16 @@ trait NotifyTrait
 
                 // 红包支出
                 case Order::ORDER_TYPE_REDPACKET:
-                    $this->orderInfo->save();
-                    return $this->orderInfo;
-
                 // 悬赏支出
                 case Order::ORDER_TYPE_QUESTION_REWARD:
                     $this->orderInfo->save();
+                    Thread::query()->where('id', $this->orderInfo->thread_id)->update(['is_draft' => 0]);
                     return $this->orderInfo;
 
                 // 合并订单支出
                 case Order::ORDER_TYPE_MERGE:
                     $this->orderInfo->save();
+                    Thread::query()->where('id', $this->orderInfo->thread_id)->update(['is_draft' => 0]);
                     $orderChildrenInfo = OrderChildren::query()->where('status', Order::ORDER_STATUS_PENDING)->where('order_sn', $this->orderInfo->order_sn)->get();
                     $orderData = $this->orderInfo;
                      $orderChildrenInfo->map(function ($orderChildren) use($orderData) {
@@ -306,8 +306,8 @@ trait NotifyTrait
                 $user_wallet->available_amount = $user_wallet->available_amount + $bossAmount;
                 $user_wallet->save();
 
-                $this->orderInfo->third_party_id = $parentUserId; 
-                $this->orderInfo->third_party_amount = $bossAmount; 
+                $this->orderInfo->third_party_id = $parentUserId;
+                $this->orderInfo->third_party_amount = $bossAmount;
 
                 // 添加分成钱包明细
                 $scaleOrderDetail = $this->orderByDetailType(true);
