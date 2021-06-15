@@ -110,7 +110,7 @@ class ThreadListController extends DzqController
         $threadIds = $threads['pageData'];
         //缓存中获取最新的threads
         $pageData = $this->getThreads($threadIds);
-        $threads['pageData'] = $this->getFullThreadData($pageData);
+        $threads['pageData'] = $this->getFullThreadData($pageData,true);
 //        $this->info('query_sql_log', app(ConnectionInterface::class)->getQueryLog());
 //        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
