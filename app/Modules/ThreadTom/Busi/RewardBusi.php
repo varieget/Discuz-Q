@@ -33,6 +33,16 @@ class RewardBusi extends TomBaseBusi
     public function create()
     {
         $input = $this->verification();
+        // 如果有对应的已支付订单，则直接找出之前的  $threadReward  返回，不走后面的逻辑
+        $res = self::orderPaidJudge($input);
+        if($res['code'] != ResponseCode::SUCCESS){
+            $this->outPut($res['code'], $res['msg']);
+        }
+        if(!empty($res['data'])){
+            return $this->jsonReturn($res['data']);
+        }
+
+
         if(strtotime($input['expiredAt']) < time()+24*60*60){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
@@ -48,12 +58,14 @@ class RewardBusi extends TomBaseBusi
                 $this->outPut(ResponseCode::INTERNAL_ERROR, '订单不存在');
             }
 
-            if (!empty($order['thread_id']) ||
+            if (
+                ( $order->type == Order::ORDER_TYPE_QUESTION_REWARD && !empty($order['thread_id']) ) ||
                 !in_array($order->type, [Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE]) ||
                 $order['user_id'] != $this->user['id'] ||
                 $order['status'] != Order::ORDER_STATUS_PENDING ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())||
-                ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])) {
+                ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])
+            ) {
                 $this->outPut(ResponseCode::RESOURCE_EXPIRED, '订单已过期或异常，请重新创建订单');
             }
 
@@ -98,6 +110,14 @@ class RewardBusi extends TomBaseBusi
     public function update()
     {
         $input = $this->verification();
+        // 如果有对应的已支付订单，则直接找出之前的  $threadReward  返回，不走后面的逻辑
+        $res = self::orderPaidJudge($input);
+        if($res['code'] != ResponseCode::SUCCESS){
+            $this->outPut($res['code'], $res['msg']);
+        }
+        if(!empty($res['data'])){
+            return $this->jsonReturn($res['data']);
+        }
         $threadReward = ThreadReward::query()->where(['thread_id' => $this->threadId, 'post_id' => $this->postId])->first();
         if(empty($threadReward)){
             $this->outPut(ResponseCode::INTERNAL_ERROR, '原悬赏帖数据不存在');
@@ -174,7 +194,7 @@ class RewardBusi extends TomBaseBusi
             'type' => $this->getParams('type'),
             'expiredAt' => $this->getParams('expiredAt'),
             'content' => $this->getParams('content'),
-            'draft' => $this->getParams('draft')
+//            'draft' => $this->getParams('draft')
         ];
         $rules = [
             'price' => 'required|numeric|min:0.1|max:1000000',
@@ -183,10 +203,45 @@ class RewardBusi extends TomBaseBusi
             'content' => 'max:1000',
         ];
 
-        $input['draft'] != Thread::IS_DRAFT ? $rules['orderSn'] = 'required|numeric' : '';
+//        $input['draft'] != Thread::IS_DRAFT ? $rules['orderSn'] = 'required|numeric' : '';
 
         $this->dzqValidate($input, $rules);
 
         return $input;
+    }
+
+    public function orderPaidJudge($input){
+        if($order = self::getRedOrderInfo($this->threadId)){
+            if($order->status == Order::ORDER_STATUS_PAID){
+                $threadReward = ThreadReward::query()->where(['thread_id' => $this->threadId, 'post_id' => $this->postId])->first();
+                if($threadReward){
+                    if(
+                        $threadReward->type != $input['type'] ||
+                        $threadReward->user_id != $this->user['id'] ||
+                        $threadReward->money != $input['price']
+                    ){
+                        return  [
+                            'code'  =>  ResponseCode::INVALID_PARAMETER,
+                            'msg'   =>  '已发布的悬赏不可修改'
+                        ];
+                    }
+                    return  [
+                        'code'  =>  ResponseCode::SUCCESS,
+                        'msg'   =>  '',
+                        'data'  =>  $threadReward
+                    ];
+                }else{
+                    return  [
+                        'code'  =>  ResponseCode::INTERNAL_ERROR,
+                        'msg'   =>  '原悬赏帖数据有误，缺少悬赏数据'
+                    ];
+                }
+            }
+        }
+        return  [
+            'code'  =>  ResponseCode::SUCCESS,
+            'msg'   =>  '',
+            'data'  =>  ''
+        ];
     }
 }

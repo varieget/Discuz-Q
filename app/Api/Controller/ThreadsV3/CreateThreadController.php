@@ -254,14 +254,6 @@ class CreateThreadController extends DzqController
     private function saveTom($thread, $content, $post)
     {
         $indexes = $content['indexes'] ?? [];
-        //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
-        $tomTypes = array_keys($indexes);
-        foreach ($tomTypes as $tomType) {
-            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
-            if(constant($tomService.'::NEED_PAY') && $indexes[$tomType]['body']['draft'] != 1 ){
-                $this->outPut(ResponseCode::INVALID_PARAMETER, '包含红包/悬赏红包必须存为草稿');
-            }
-        }
 
         $attrs = [];
         $tomJsons = $this->tomDispatcher($indexes, $this->CREATE_FUNC, $thread['id'], $post['id']);
