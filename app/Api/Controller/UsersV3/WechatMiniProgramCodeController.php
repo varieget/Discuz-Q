@@ -75,9 +75,6 @@ class WechatMiniProgramCodeController extends DzqController
         if(!(bool)$this->settings->get('miniprogram_app_id', 'wx_miniprogram') || !(bool)$this->settings->get('miniprogram_app_secret', 'wx_miniprogram')){
             $this->outPut(ResponseCode::INVALID_PARAMETER, '请先配置小程序参数');
         }
-        if(!(bool)$this->settings->get('miniprogram_close', 'wx_miniprogram')){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '请先开启小程序配置');
-        }
 
         try {
             $app = $this->miniProgram();
@@ -96,8 +93,13 @@ class WechatMiniProgramCodeController extends DzqController
         }
         $response = $response->withoutHeader('Content-disposition');
         $filename = $response->save(storage_path('app/public/miniprogram'));
-        $serverParams = $this->request->getServerParams();
-        $url = $serverParams['REQUEST_SCHEME']."://".$serverParams['SERVER_NAME'].":".$serverParams['SERVER_PORT']."/storage/miniprogram/".$filename;
+
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $port = $port == null ? '' : ':' . $port;
+        $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
+
+        $url = $path."/storage/miniprogram/".$filename;
         return $this->outPut(ResponseCode::SUCCESS,'',$url);
     }
 }
