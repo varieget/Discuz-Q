@@ -148,7 +148,15 @@ class UpdateThreadController extends DzqController
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '订单未支付，无法发布');
                 }
             }else{
-                $this->outPut(ResponseCode::INVALID_PARAMETER, '包含 红包/悬赏 帖，需要创建对应的订单');
+                // 已发布的没有 “红包/悬赏” 的帖子，不允许重新编辑时，增加 “红包/悬赏” 属性
+                if($thread->is_draft == 0){
+                    $tags = ThreadTag::query()->where('thread_id', $thread->id)->pluck('tag')->toArray();
+                    $intersect_tags = array_intersect([ThreadTag::RED_PACKET, ThreadTag::REWARD], $tags);
+                    if(empty($intersect_tags)){
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '已发布的帖子，不允许添加 红包/悬赏');
+                    }
+                }
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '包含红包/悬赏帖，需要创建对应的订单');
             }
 
         }
