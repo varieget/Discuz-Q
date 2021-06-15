@@ -18,25 +18,22 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Commands\Users\UpdateAdminUser;
 use App\Common\ResponseCode;
-use App\Events\Users\ChangeUserStatus;
-use App\Models\AdminActionLog;
-use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Support\Arr;
 
 class UpdateUsersStatusController extends DzqController
 {
 
     protected $bus;
 
-    public function __construct(Dispatcher $bus, Dispatcher $events,User $actor)
+    public function __construct(Dispatcher $bus)
     {
         $this->bus = $bus;
-        $this->events = $events;
-        $this->actor = $actor;
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -49,52 +46,46 @@ class UpdateUsersStatusController extends DzqController
 
     public function main()
     {
-        $user = $this->user;
-        $data = $this->inPut('data');
+        $log = app('adminLog');
+        $actor = $this->user;
+        $statusData = $this->inPut('data');
+        $list = collect();
 
-        foreach ($data as $value) {
-            try {
-                $user = User::query()->findOrFail($value['id']);
-                $user->status  = $value['status'];
-                $user->reject_reason  = $value['rejectReason'];
-
-                $user->save();
-                $resultData[] = [
-                    'id'=>$value['id'],
-                    'status'=>$value['status'],
-                    'reject_reason'=>$value['rejectReason'],
-                ];
-            } catch (\Exception $e) {
-                $this->outPut(ResponseCode::DB_ERROR, '审核失败');
-                $this->info('审核失败：' . $e->getMessage());
+        foreach ($statusData as $data) {
+            $id = Arr::get($data, 'id');
+            $requestData = [];
+            if(!empty($data['id'])){
+                $requestData['id'] = $data['id'];
+            }
+            if(!empty($data['status'])){
+                $requestData['status'] = $data['status'];
+            }
+            if(!empty($data['rejectReason'])){
+                $requestData['rejectReason'] = $data['rejectReason'];
             }
 
-            $status_desc = array(
-                '0' => '正常',
-                '1' => '禁用',
-                '2' => '审核中',
-                '3' => '审核拒绝',
-                '4' => '审核忽略'
-            );
-
-            AdminActionLog::createAdminActionLog(
-                $user->id,
-                '更改了用户【'. $user->username .'】的用户状态为【'. $status_desc[$value['status']] .'】'
-            );
-
+            try {
+                $item = $this->bus->dispatch(
+                    new UpdateAdminUser($id, $requestData, $actor)
+                );
+            } catch (\Exception $e) {
+                $log->error('requestId：' . $this->requestId . '-' . '用户审核：入参：'
+                    .';data:'.json_encode($requestData)
+                    . ';异常：' . $e->getMessage());
+                return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户审核接口异常');
+            }
+            $list->push($item);
         }
 
-        return $this->outPut(ResponseCode::SUCCESS,'', []);
-    }
-
-
-    //记录拒绝原因
-    private function setRefuseMessage(User &$user,$refuseMessage){
-        if ($user->status == User::STATUS_REFUSE) {
-            $user->reject_reason = $refuseMessage;
-            $user->save();
+        $data = [];
+        foreach ($list as $lists) {
+            $data [] = [
+                'id' => $lists['id'],
+                'status' => $lists['status'],
+                'rejectReason' => $lists['reject_reason'],
+            ];
         }
+
+        return $this->outPut(ResponseCode::SUCCESS,'', $data);
     }
-
-
 }
