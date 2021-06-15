@@ -18,19 +18,19 @@
 
 namespace App\Api\Controller\UsersV3;
 
+use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
+use Discuz\Base\DzqController;
 use Discuz\Wechat\EasyWechatTrait;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-use Exception;
+
 /**
  * 微信小程序 - 小程序码
  *
  * @package App\Api\Controller\Wechat
  */
-class WechatMiniProgramCodeController implements RequestHandlerInterface
+class WechatMiniProgramCodeController extends DzqController
 {
     use EasyWechatTrait;
 
@@ -44,22 +44,26 @@ class WechatMiniProgramCodeController implements RequestHandlerInterface
         $this->settings = $settingsRepository;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
-     */
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $data = $request->getQueryParams();
-
-        $path = Arr::get($data, 'path', '');
-        $width = Arr::get($data, 'width', '');
-        $colorR = Arr::get($data, 'r', '');
-        $colorG = Arr::get($data, 'g', '');
-        $colorB = Arr::get($data, 'b', '');
-        if(empty($path)){
-            throw new Exception('参数不能为空');
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN,'');
         }
+        return true;
+    }
+
+    public function main()
+    {
+
+        $path = $this->inPut("path");
+        $width = $this->inPut("width");
+        $colorR = $this->inPut("r");
+        $colorG = $this->inPut("g");
+        $colorB = $this->inPut("b");
+        if(empty($path)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
+
         $paramData = [
             'path'=>$path,
             'width'=>$width,
@@ -69,10 +73,10 @@ class WechatMiniProgramCodeController implements RequestHandlerInterface
         ];
 
         if(!(bool)$this->settings->get('miniprogram_app_id', 'wx_miniprogram') || !(bool)$this->settings->get('miniprogram_app_secret', 'wx_miniprogram')){
-            throw new Exception('请先配置小程序参数');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '请先配置小程序参数');
         }
         if(!(bool)$this->settings->get('miniprogram_close', 'wx_miniprogram')){
-            throw new Exception('请先开启小程序配置');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '请先开启小程序配置');
         }
 
         try {
@@ -86,11 +90,14 @@ class WechatMiniProgramCodeController implements RequestHandlerInterface
                 ],
             ]);
         } catch (\Exception $e) {
-            app('errorLog')->info('生成小程序二维码接口异常-WechatMiniProgramCodeController： 入参：'
-                . json_encode($paramData) . ';用户id：' . $request->getAttribute('actor')->id . ';异常：' . $e->getMessage());
-            throw new Exception('生成小程序二维码接口异常');
+            app('errorLog')->info('requestId：' . $this->requestId . '-'.'生成小程序二维码接口异常-WechatMiniProgramCodeController： 入参：'
+                . json_encode($paramData) . ';用户id：' . $this->user->id . ';异常：' . $e->getMessage());
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '生成小程序二维码接口异常');
         }
         $response = $response->withoutHeader('Content-disposition');
-        return $response;
+        $filename = $response->save(storage_path('app/public/miniprogram'));
+        $serverParams = $this->request->getServerParams();
+        $url = $serverParams['REQUEST_SCHEME']."://".$serverParams['SERVER_NAME'].":".$serverParams['SERVER_PORT']."/storage/miniprogram/".$filename;
+        return $this->outPut(ResponseCode::SUCCESS,'',$url);
     }
 }
