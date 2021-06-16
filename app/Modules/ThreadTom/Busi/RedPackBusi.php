@@ -18,6 +18,7 @@
 namespace App\Modules\ThreadTom\Busi;
 
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\RedPacket;
@@ -57,9 +58,9 @@ class RedPackBusi extends TomBaseBusi
 
             //判断红包金额
             if ($input['rule'] == 1) {
-                if ($order->type == Order::ORDER_TYPE_REDPACKET && $order['amount'] != $input['price']) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误');
+                if ($order->type == Order::ORDER_TYPE_REDPACKET && Utils::compareMath($order['amount'], $input['price']) ) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误');
             } else {
-                if ($order->type == Order::ORDER_TYPE_REDPACKET && $input['price']*$input['number'] != $order['amount']) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误');
+                if ($order->type == Order::ORDER_TYPE_REDPACKET && Utils::compareMath($input['price']*$input['number'], $order['amount'])) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误', []);
             }
 
             if (
@@ -67,7 +68,6 @@ class RedPackBusi extends TomBaseBusi
                 !in_array($order->type, [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_MERGE]) ||
                 $order['user_id'] != $this->user['id'] ||
                 $order['status'] != Order::ORDER_STATUS_PENDING ||
-                ($order->type == Order::ORDER_TYPE_REDPACKET && $order->amount != $input['price']) ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())
             ) {
                 $this->outPut(ResponseCode::RESOURCE_EXPIRED, '订单已过期或异常，请重新创建订单');
@@ -79,7 +79,7 @@ class RedPackBusi extends TomBaseBusi
                     ->where('type', Order::ORDER_TYPE_REDPACKET)
                     ->first();
                 if (empty($orderChildrenInfo) ||
-                    $orderChildrenInfo->amount != $input['price'] ||
+                    ( $input['rule'] == 1 ? Utils::compareMath($orderChildrenInfo->amount, $input['price']) : Utils::compareMath($input['price']*$input['number'], $orderChildrenInfo->amount) ) ||
                     $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
                     $this->outPut(ResponseCode::RESOURCE_EXPIRED, '子订单异常');
                 }
@@ -233,7 +233,7 @@ class RedPackBusi extends TomBaseBusi
                         $threadRedPacket->rule != $input['rule'] ||
                         $threadRedPacket->condition != $input['condition'] ||
                         $threadRedPacket->likenum != $input['likenum'] ||
-                        $threadRedPacket->money != ($input['rule'] == 0 ? $input['price']*$input['number'] : $input['price']) ||
+                        Utils::compareMath($threadRedPacket->money, ($input['rule'] == 0 ? $input['price']*$input['number'] : $input['price'])) ||
                         $threadRedPacket->number != $input['number']
                     ){
                         return  [

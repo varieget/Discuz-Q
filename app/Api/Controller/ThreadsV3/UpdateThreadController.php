@@ -239,7 +239,7 @@ class UpdateThreadController extends DzqController
             }
         }
         */
-
+        $order = $this->getOrderInfo($thread);
         $tomJsons = $this->tomDispatcher($content, null, $thread->id, $post->id);
         if (!empty($content['text'])) {
             $tags[] = ['thread_id' => $thread['id'], 'tag' => TomConfig::TOM_TEXT];
@@ -264,8 +264,10 @@ class UpdateThreadController extends DzqController
                         ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'status' => ThreadTom::STATUS_ACTIVE])
                         ->update(['status' => ThreadTom::STATUS_DELETE]);
                     $isDeleteRedOrder = $isDeleteRewardOrder = false;
-                    if($tomId == TomConfig::TOM_REDPACK)        $isDeleteRedOrder = true;
-                    if($tomId == TomConfig::TOM_REWARD)        $isDeleteRewardOrder = true;
+                    if(empty($order) || $order->status != Order::ORDER_STATUS_PAID){
+                        if($tomId == TomConfig::TOM_REDPACK)        $isDeleteRedOrder = true;
+                        if($tomId == TomConfig::TOM_REWARD)        $isDeleteRewardOrder = true;
+                    }
                     $this->delRedRelations($threadId, $isDeleteRedOrder, $isDeleteRewardOrder);
                     break;
                 case $this->UPDATE_FUNC:
@@ -286,10 +288,6 @@ class UpdateThreadController extends DzqController
     private function delRedundancyPlugins($threadId, $tomJsons)
     {
         $order = $this->getRedOrderInfo($threadId);
-        if($order && $order->status == Order::ORDER_STATUS_PAID){
-            return;
-        }
-
         $tomList = ThreadTom::query()
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get();
@@ -297,9 +295,13 @@ class UpdateThreadController extends DzqController
         $isDeleteRedOrder = $isDeleteRewardOrder = false;
         foreach ($tomList as $item) {
             if (empty($tomJsons[$item['key']])) {
-                $keys[] = $item['key'];
-                if($item['tom_type'] == TomConfig::TOM_REDPACK)     $isDeleteRedOrder = true;
-                if($item['tom_type'] == TomConfig::TOM_REWARD)     $isDeleteRewardOrder = true;
+                if(in_array($item['tom_type'], [TomConfig::TOM_REDPACK, TomConfig::TOM_REWARD]) &&
+                    (empty($order) || $order->status != Order::ORDER_STATUS_PAID)
+                ){
+                    $keys[] = $item['key'];
+                    if($item['tom_type'] == TomConfig::TOM_REDPACK)     $isDeleteRedOrder = true;
+                    if($item['tom_type'] == TomConfig::TOM_REWARD)     $isDeleteRewardOrder = true;
+                }
             }
         }
 
