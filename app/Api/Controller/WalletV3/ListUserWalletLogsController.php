@@ -24,7 +24,6 @@ use App\Models\User;
 use App\Models\UserWalletLog;
 use App\Repositories\UserRepository;
 use App\Repositories\UserWalletLogsRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -82,7 +81,7 @@ class ListUserWalletLogsController extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }

@@ -18,7 +18,6 @@
 
 namespace App\Commands\Trade;
 
-use App\Exceptions\TradeErrorException;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\UserWalletFailLogs;
@@ -106,7 +105,6 @@ class PayOrder
      * @param UserWalletFailLogsRepository $userWalletFailLogs
      * @return Order
      * @throws PermissionDeniedException
-     * @throws TradeErrorException
      * @throws ValidationException
      * @throws BindingResolutionException
      * @throws Exception
@@ -249,7 +247,6 @@ class PayOrder
      * 获取支付参数
      * @param array $order_info
      * @return array  $order_info 支付参数数组
-     * @throws TradeErrorException
      * @throws BindingResolutionException
      */
     public function paymentParams($order_info)

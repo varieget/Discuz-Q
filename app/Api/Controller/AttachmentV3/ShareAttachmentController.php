@@ -26,7 +26,6 @@ use App\Models\AttachmentShare;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
-use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
@@ -43,7 +42,7 @@ class ShareAttachmentController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {
-            throw new NotAuthenticatedException();
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }
