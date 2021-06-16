@@ -173,7 +173,7 @@ class AttachmentSerializer extends AbstractSerializer
             } else {
                 if ($model->is_remote) {
                     //改为前端取分辨率大小
-                    $attributes['thumbUrl'] = $url . (strpos($url, '?') === false ? '?' : '&');
+                    $attributes['thumbUrl'] = $url;
 //                    $attributes['thumbUrl'] = $url . (strpos($url, '?') === false ? '?' : '&')
 //                        . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
                 } else {
