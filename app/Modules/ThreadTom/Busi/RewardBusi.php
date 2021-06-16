@@ -98,8 +98,8 @@ class RewardBusi extends TomBaseBusi
         $threadReward->type = $input['type'];
         $threadReward->user_id = $this->user['id'];
         $threadReward->answer_id = 0; // 目前没有指定人问答
-        $threadReward->money = $input['price'];
-        $threadReward->remain_money = $input['price'];
+        $threadReward->money = round($input['price'], 2);
+        $threadReward->remain_money = round($input['price'], 2);
         $threadReward->expired_at = date('Y-m-d H:i:s', strtotime($input['expiredAt']));
         $threadReward->save();
 
