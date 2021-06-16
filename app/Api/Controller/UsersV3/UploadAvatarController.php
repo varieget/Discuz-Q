@@ -22,7 +22,6 @@ use App\Commands\Users\UploadAvatar;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -50,7 +49,7 @@ class UploadAvatarController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {
-            throw new NotAuthenticatedException();
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }

@@ -6,7 +6,6 @@ use App\Models\Post;
 use App\Models\Report;
 use App\Models\Thread;
 use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 
 class CreateReportsController extends DzqController
@@ -14,7 +13,7 @@ class CreateReportsController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {
-            throw new NotAuthenticatedException();
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }

@@ -23,7 +23,6 @@ use App\Models\SessionToken;
 use App\Models\UserWalletFailLogs;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
-use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 use Illuminate\Validation\Factory as Validator;
 
@@ -42,7 +41,7 @@ class ResetPayPasswordController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {
-            throw new NotAuthenticatedException();
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }

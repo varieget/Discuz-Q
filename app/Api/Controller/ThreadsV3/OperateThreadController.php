@@ -53,7 +53,7 @@ class OperateThreadController extends DzqController
         $isDeleted = $this->inPut('isDeleted');
 
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
 
         if (
