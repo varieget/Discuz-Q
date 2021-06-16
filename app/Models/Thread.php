@@ -303,6 +303,17 @@ class Thread extends DzqModel
         return $firstPost;
     }
 
+    public function getRewardedContent($substr, $parse = false){
+        $this->firstPost->content = $substr ? Str::of($this->firstPost->content)->substr(0, $substr) : $this->firstPost->content;
+        if ($parse) {
+            // 原文
+            $firstPost = $this->firstPost->content;
+        } else {
+            $firstPost = $this->firstPost->formatContent();
+        }
+        return $firstPost;
+    }
+
     /**
      * Get the last three posts of the thread.
      *
