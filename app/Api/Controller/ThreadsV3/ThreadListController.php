@@ -112,7 +112,6 @@ class ThreadListController extends DzqController
         $pageData = $this->getThreads($threadIds);
         $threads['pageData'] = $this->getFullThreadData($pageData, true);
 //        $this->info('query_sql_log', app(\Illuminate\Database\ConnectionInterface::class)->getQueryLog());
-//        $this->closeQueryLog();
         $this->outPut(0, '', $threads);
     }
 
@@ -154,14 +153,13 @@ class ThreadListController extends DzqController
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
         if ($this->preload) {
-//            sleep(2);
-//            $this->info('loadPageThreads0', [$cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage, $this->request->getHeaders()]);
             $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         } else {
             $threads = $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
             if (!$this->viewHotList) {
                 $success = $this->preloadData($page);
                 if (!$success) {
+                    $this->info('pre_load_data_error',$filter);
                     $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
                 }
             }
@@ -200,8 +198,8 @@ class ThreadListController extends DzqController
         if ($page != 1) {
             return true;
         }
+        $host = '127.0.0.1';//本机部署
         $url = $this->request->getUri();
-        $host = $url->getHost();
         $port = $url->getPort();
         $path = $url->getPath();
         $query = $url->getQuery();
@@ -219,12 +217,16 @@ class ThreadListController extends DzqController
         $errstr = '';
         $timeout = 5;
         $fp = @fsockopen($host, $port, $errno, $errstr, $timeout);
+        if (!$fp) {
+            return false;
+        }
         $headers = "GET " . $getPath . " HTTP/1.1\r\n";
         $headers .= "host: " . $host . "\r\n";
         !empty($authorization[0]) && $headers .= "authorization: " . $authorization[0] . "\r\n";
         $headers .= "content-type: application/json;charset=utf-8\r\n";
         $headers .= "connection: close\r\n\r\n";
         $result = @fwrite($fp, $headers);
+        usleep(1000);//防止用户没有配置client abort
         fclose($fp);
         return $result;
     }
