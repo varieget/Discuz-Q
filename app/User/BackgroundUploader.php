@@ -19,6 +19,7 @@
 namespace App\User;
 
 use App\Censor\Censor;
+use App\Common\ResponseCode;
 use App\Exceptions\UploadException;
 use App\Models\User;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -73,7 +74,7 @@ class BackgroundUploader
         $this->censor->checkImage($image->dirname .'/'. $image->basename);
 
         if ($this->censor->isMod) {
-            throw new UploadException();
+            \Discuz\Common\Utils::outPut(ResponseCode::NOT_ALLOW_CENSOR_IMAGE);
         }
 
         $backgroundPath = $this->getBackgroundPath($user);

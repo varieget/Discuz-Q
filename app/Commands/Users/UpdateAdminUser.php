@@ -211,7 +211,7 @@ class UpdateAdminUser
         $this->censor->checkText($username, 'username');
 
         if ($this->censor->isMod) {
-            throw new TranslatorException('user_username_censor_error');
+            throw new TranslatorException(trans('user.user_username_censor_error'));
         }
 
         // 过滤内容

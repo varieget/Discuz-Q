@@ -18,6 +18,7 @@
 
 namespace App\Commands\Wallet;
 
+use App\Common\ResponseCode;
 use App\Exceptions\WalletException;
 use App\Models\User;
 use App\Models\UserWallet;
@@ -73,12 +74,12 @@ class UpdateUserWallet
         $wallet_status  = Arr::get($this->data, 'walletStatus');
         if (!is_null($operate_type)) {
             if (!in_array($operate_type, [UserWallet::OPERATE_INCREASE, UserWallet::OPERATE_DECREASE])) {
-                throw new WalletException('operate_type_error');
+                throw new WalletException(trans('wallet.operate_type_error'));
             }
         }
 
         if (!is_null($wallet_status) && !in_array($wallet_status, [UserWallet::WALLET_STATUS_NORMAL, UserWallet::WALLET_STATUS_FROZEN])) {
-            throw new WalletException('wallet_status_error');
+            throw new WalletException(trans('wallet.wallet_status_error'));
         }
         //操作金额
         $change_available_amount = sprintf('%.2f', floatval($operate_amount));
@@ -98,7 +99,7 @@ class UpdateUserWallet
                     break;
                 case UserWallet::OPERATE_DECREASE: //减少
                     if ($user_wallet->available_amount - $operate_amount < 0) {
-                        throw new Exception('available_amount_error');
+                        throw new Exception(trans('wallet.available_amount_error'));
                     }
                     if (!strlen($operate_reason)) {
                         $operate_reason = app('translator')->get('wallet.expend_artificial');
@@ -164,7 +165,7 @@ class UpdateUserWallet
         } catch (Exception $e) {
             //回滚事务
             $db->rollback();
-            throw new WalletException($e->getMessage(), 500);
+            \Discuz\Common\Utils::outPut(ResponseCode::NOT_ALLOW_CENSOR_IMAGE);
         }
     }
 }
