@@ -110,9 +110,8 @@ class ThreadListController extends DzqController
         $threadIds = $threads['pageData'];
         //缓存中获取最新的threads
         $pageData = $this->getThreads($threadIds);
-        $threads['pageData'] = $this->getFullThreadData($pageData,true);
-//        $this->info('query_sql_log', app(ConnectionInterface::class)->getQueryLog());
-//        $this->closeQueryLog();
+        $threads['pageData'] = $this->getFullThreadData($pageData, true);
+//        $this->info('query_sql_log', app(\Illuminate\Database\ConnectionInterface::class)->getQueryLog());
         $this->outPut(0, '', $threads);
     }
 
@@ -140,25 +139,7 @@ class ThreadListController extends DzqController
         $threadsBuilder = $this->buildFilterThreads($filter, $withLoginUser);
         $cacheKey = $this->cacheKey($filter);
         $filterKey = $this->filterKey($perPage, $filter, $withLoginUser);
-        //初始化exist数据
-        if (($this->preload || $page == 1) && !$this->viewHotList) {//第一页检查是否需要初始化缓存
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
-                $this->initDzqGlobalData($threads);
-                array_walk($threads, function (&$v) {
-                    $v['pageData'] = array_column($v['pageData'], 'id');
-                });
-                return $threads;
-            }, true);
-            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
-        } else {//其他页从缓存取，取不到就重数据库取并写入缓存
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
-                $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
-                $threads['pageData'] = array_column($threads['pageData'], 'id');
-                return $threads;
-            });
-        }
-        return $threads;
+        return $this->loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
     }
 
     function getSequenceThreads($filter, $page, $perPage)
@@ -166,26 +147,89 @@ class ThreadListController extends DzqController
         $threadsBuilder = $this->buildSequenceThreads($filter);
         $cacheKey = CacheKey::LIST_THREADS_V3_SEQUENCE;
         $filterKey = $this->filterKey($perPage, $filter);
-        if (($this->preload || $page == 1) && !$this->viewHotList) {//第一页检查是否需要初始化缓存
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
-                $this->initDzqGlobalData($threads);
-                array_walk($threads, function (&$v) {
-                    $v['pageData'] = array_column($v['pageData'], 'id');
-                });
-                return $threads;
-            }, true);
-            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
+        return $this->loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+    }
+
+    private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
+    {
+        if ($this->preload) {
+            $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         } else {
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
-                $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
-                $threads['pageData'] = array_column($threads['pageData'], 'id');
-                return $threads;
-            });
+            $threads = $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+            if (!$this->viewHotList) {
+                $success = $this->preloadData($page);
+                if (!$success) {
+                    $this->info('pre_load_data_error',$filter);
+                    $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+                }
+            }
         }
         return $threads;
     }
 
+    private function loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
+    {
+        if ($page != 1) {
+            return false;
+        }
+        $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
+            $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
+            $this->initDzqGlobalData($threads);
+            array_walk($threads, function (&$v) {
+                $v['pageData'] = array_column($v['pageData'], 'id');
+            });
+            return $threads;
+        }, true);
+        $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
+        return $threads;
+    }
+
+    private function loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
+    {
+        return DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
+            $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
+            $threads['pageData'] = array_column($threads['pageData'], 'id');
+            return $threads;
+        });
+    }
+
+    private function preloadData($page)
+    {
+        if ($page != 1) {
+            return true;
+        }
+        $host = '127.0.0.1';//本机部署
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $path = $url->getPath();
+        $query = $url->getQuery();
+        $scheme = strtolower($url->getScheme());
+        $getPath = $path . '?' . urldecode($query) . '&preload=1';
+        if ($port == null) {
+            if ($scheme == 'https') {
+                $port = '443';
+            } else {
+                $port = '80';
+            }
+        }
+        $authorization = $this->request->getHeader('authorization');
+        $errno = 0;
+        $errstr = '';
+        $timeout = 5;
+        $fp = @fsockopen($host, $port, $errno, $errstr, $timeout);
+        if (!$fp) {
+            return false;
+        }
+        $headers = "GET " . $getPath . " HTTP/1.1\r\n";
+        $headers .= "host: " . $host . "\r\n";
+        !empty($authorization[0]) && $headers .= "authorization: " . $authorization[0] . "\r\n";
+        $headers .= "content-type: application/json;charset=utf-8\r\n";
+        $headers .= "connection: close\r\n\r\n";
+        $result = @fwrite($fp, $headers);
+        usleep(1000);//防止用户没有配置client abort
+        fclose($fp);
+        return $result;
+    }
 
     /**
      * @desc 普通筛选SQL
