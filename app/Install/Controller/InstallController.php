@@ -165,6 +165,10 @@ class InstallController implements RequestHandlerInterface
                 throw new RangeException('MySQL version too low. You need at least MySQL 5.6.');
             }
         }
+        //判断数据库名，数据库名称不能以数字开头
+        $mysqlDatabase = Arr::get($input, 'mysqlDatabase', '');
+        if(empty($mysqlDatabase))       throw new Exception('数据库名称不能为空');
+        if(is_numeric(mb_substr($mysqlDatabase, 0, 1)))         throw new Exception('数据库名称不能以数字开头');
 
         $pdo->query('CREATE DATABASE IF NOT EXISTS '.Arr::get($input, 'mysqlDatabase').' DEFAULT CHARACTER SET = `utf8mb4` DEFAULT COLLATE = `utf8mb4_unicode_ci`')->execute();
 
