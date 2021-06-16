@@ -159,7 +159,7 @@ class ThreadListController extends DzqController
             if (!$this->viewHotList) {
                 $success = $this->preloadData($page);
                 if (!$success) {
-                    $this->info('pre_load_data_error',$filter);
+                    $this->info('pre_load_data_error', $filter);
                     $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
                 }
             }
@@ -198,33 +198,34 @@ class ThreadListController extends DzqController
         if ($page != 1) {
             return true;
         }
-        $host = '127.0.0.1';//本机部署
         $url = $this->request->getUri();
         $port = $url->getPort();
         $path = $url->getPath();
         $query = $url->getQuery();
         $scheme = strtolower($url->getScheme());
+        $scheme == 'https' ? $host = $url->getHost() : $host = '127.0.0.1';
         $getPath = $path . '?' . urldecode($query) . '&preload=1';
         if ($port == null) {
-            if ($scheme == 'https') {
-                $port = '443';
-            } else {
-                $port = '80';
-            }
+            $scheme == 'https' ? $port = 443 : $port = 80;
         }
         $authorization = $this->request->getHeader('authorization');
-        $errno = 0;
-        $errstr = '';
         $timeout = 5;
-        $fp = @fsockopen($host, $port, $errno, $errstr, $timeout);
+        if ($scheme == 'https') {
+            $contextOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]];
+            $fp = stream_socket_client("ssl://{$host}:{$port}",
+                $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT,
+                stream_context_create($contextOptions));
+        } else {
+            $fp = @fsockopen($host, $port, $errno, $errstr, $timeout);
+        }
         if (!$fp) {
             return false;
         }
         $headers = "GET " . $getPath . " HTTP/1.1\r\n";
-        $headers .= "host: " . $host . "\r\n";
-        !empty($authorization[0]) && $headers .= "authorization: " . $authorization[0] . "\r\n";
-        $headers .= "content-type: application/json;charset=utf-8\r\n";
-        $headers .= "connection: close\r\n\r\n";
+        $headers .= "Host: " . $host . "\r\n";
+        !empty($authorization[0]) && $headers .= "Authorization: " . $authorization[0] . "\r\n";
+        $headers .= "Content-Type: application/json;charset=utf-8\r\n";
+        $headers .= "Connection: close\r\n\r\n";
         $result = @fwrite($fp, $headers);
         usleep(1000);//防止用户没有配置client abort
         fclose($fp);
@@ -394,8 +395,8 @@ class ThreadListController extends DzqController
                     $groupIds = [];
                 }
                 if ($key == 'topic_ids') {
-                     $query->whereIn('topic.topic_id', $topicIds);
-                     $topicIds = [];
+                    $query->whereIn('topic.topic_id', $topicIds);
+                    $topicIds = [];
                 }
                 if ($key == 'user_ids') {
                     $query->whereIn('threads.user_id', $userIds);
