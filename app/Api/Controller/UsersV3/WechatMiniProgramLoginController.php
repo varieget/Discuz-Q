@@ -139,7 +139,6 @@ class WechatMiniProgramLoginController extends AuthBaseController
                     $wechatUser->save();
 
                     $this->updateUserBindType($user,AuthUtils::WECHAT);
-                    $this->db->commit();
 
                     // 判断是否开启了注册审核
     //                if (!(bool)$this->settings->get('register_validate')) {
@@ -155,7 +154,6 @@ class WechatMiniProgramLoginController extends AuthBaseController
                         $wechatUser->save();
 
                         $this->updateUserBindType($user,AuthUtils::WECHAT);
-                        $this->db->commit();
                     }
                 }
             } else {
@@ -168,13 +166,13 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 // 登陆用户和微信绑定相同，更新微信信息
     //            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $wechatUser->user));
                 $wechatUser->save();
-                $this->db->commit();
             }
 
             if (empty($wechatUser) || empty($wechatUser->user)) {
+                $this->db->rollBack();
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
-
+            $this->db->commit();
             //创建 token
             $params = [
                 'username' => $wechatUser->user->username,
@@ -240,12 +238,12 @@ class WechatMiniProgramLoginController extends AuthBaseController
     //            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), new User()));
                 $wechatUser->save();//微信信息写入user_wechats
                 $userWechatId = $wechatUser->id ? $wechatUser->id : $userWechatId;
-                $this->db->commit();
                 //生成sessionToken,并把user_wechats 信息写入session_token
                 $token = SessionToken::generate(SessionToken::WECHAT_TRANSITION_LOGIN, ['user_wechat_id' => $userWechatId], null, 1800);
                 $token->save();
                 $sessionToken = $token->token;
 
+                $this->db->commit();
                 //把token返回用户绑定用户使用
                 $this->outPut(ResponseCode::NEED_BIND_USER_OR_CREATE_USER, '', ['sessionToken' => $sessionToken, 'nickname' => $wechatUser->nickname]);
             }
