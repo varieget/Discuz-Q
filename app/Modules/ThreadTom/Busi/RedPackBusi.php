@@ -102,8 +102,8 @@ class RedPackBusi extends TomBaseBusi
         $threadRedPacket->rule = $input['rule'];
         $threadRedPacket->condition = $input['condition'];
         $threadRedPacket->likenum = $input['likenum'];
-        $threadRedPacket->money = $price;
-        $threadRedPacket->remain_money = $price;
+        $threadRedPacket->money = round($price, 2);
+        $threadRedPacket->remain_money = round($price, 2);
         $threadRedPacket->number = $input['number'];
         $threadRedPacket->remain_number = $input['number'];
         $threadRedPacket->status = RedPacket::RED_PACKET_STATUS_VALID;
