@@ -135,6 +135,32 @@ class UpdateThreadController extends DzqController
         $position = $this->inPut('position');
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
+        //如果原帖是已发布的情况下，update 不允许在将帖子状态存为草稿
+        if($thread->is_draft == Thread::IS_NOT_DRAFT && !empty($isDraft)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '该帖已发布，不允许再存为草稿');
+        }
+
+        // 包含 红包 的帖子在已发布的情况下，再次编辑；条件：存在对应的 order 为 已支付的情况
+        if ($this->needPay($content['indexes']) && $isDraft == Thread::IS_NOT_DRAFT) {
+            $order = $this->getOrderInfo($thread);
+            if($order){
+                if($order->status != Order::ORDER_STATUS_PAID){
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '订单未支付，无法发布');
+                }
+            }else{
+                // 已发布的没有 “红包/悬赏” 的帖子，不允许重新编辑时，增加 “红包/悬赏” 属性
+                if($thread->is_draft == 0){
+                    $tags = ThreadTag::query()->where('thread_id', $thread->id)->pluck('tag')->toArray();
+                    $intersect_tags = array_intersect([ThreadTag::RED_PACKET, ThreadTag::REWARD], $tags);
+                    if(empty($intersect_tags)){
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '已发布的帖子，不允许添加 红包/悬赏');
+                    }
+                }
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '包含红包/悬赏帖，需要创建对应的订单');
+            }
+
+        }
+
 
         $thread->title = $title;
         !empty($categoryId) && $thread->category_id = $categoryId;
@@ -172,10 +198,6 @@ class UpdateThreadController extends DzqController
             $thread->is_anonymous = Thread::BOOL_NO;
         }
 
-        // 下面判断条件为：后期开放 -- 包含红包的帖子，在已发布的情况下，也允许修改
-//        if ($this->needPay($content['indexes']) && ($thread->is_draft == Thread::IS_NOT_DRAFT) && $this->getPendingOrderInfo($thread)) {
-//            $this->outPut(ResponseCode::INVALID_PARAMETER, '订单未支付，无法发布');
-//        }
 
         $thread->save();
         if (!$isApproved && !$isDraft) {
@@ -200,21 +222,24 @@ class UpdateThreadController extends DzqController
     {
         $threadId = $thread->id;
         $tags = [];
-
-        //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
-        $tomTypes = array_keys($content['indexes']);
-        foreach ($tomTypes as $tomType) {
-            $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
-            if(constant($tomService.'::NEED_PAY')){
-                if($this->inPut('draft') == 0){        //如果修改帖子的时候，增加了红包资料的话，那么必须要先走草稿，然后走订单，再走发布（或者简单点理解为：增加了新的红包的帖子状态，只能通过支付回调来修改帖子状态）
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包应先存为草稿');
-                }
-                if ($content['indexes'][$tomType]['body']['draft'] == 0 ) {
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包状态应为草稿');
+        /* 允许红包帖在已发布情况下再次编辑，相当于允许 包含 红包 的帖子，draft 为 0
+        if(!empty($content['indexes'])){
+            //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
+            $tomTypes = array_keys($content['indexes']);
+            foreach ($tomTypes as $tomType) {
+                $tomService = Arr::get(TomConfig::$map, $tomType.'.service');
+                if(constant($tomService.'::NEED_PAY')){
+                    if($this->inPut('draft') == 0){        //如果修改帖子的时候，增加了红包资料的话，那么必须要先走草稿，然后走订单，再走发布（或者简单点理解为：增加了新的红包的帖子状态，只能通过支付回调来修改帖子状态）
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包应先存为草稿');
+                    }
+                    if ($content['indexes'][$tomType]['body']['draft'] == 0 ) {
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '红包/悬赏红包状态应为草稿');
+                    }
                 }
             }
         }
-
+        */
+        $order = $this->getOrderInfo($thread);
         $tomJsons = $this->tomDispatcher($content, null, $thread->id, $post->id);
         if (!empty($content['text'])) {
             $tags[] = ['thread_id' => $thread['id'], 'tag' => TomConfig::TOM_TEXT];
@@ -239,8 +264,10 @@ class UpdateThreadController extends DzqController
                         ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'status' => ThreadTom::STATUS_ACTIVE])
                         ->update(['status' => ThreadTom::STATUS_DELETE]);
                     $isDeleteRedOrder = $isDeleteRewardOrder = false;
-                    if($tomId == TomConfig::TOM_REDPACK)        $isDeleteRedOrder = true;
-                    if($tomId == TomConfig::TOM_REWARD)        $isDeleteRewardOrder = true;
+                    if(empty($order) || $order->status != Order::ORDER_STATUS_PAID){
+                        if($tomId == TomConfig::TOM_REDPACK)        $isDeleteRedOrder = true;
+                        if($tomId == TomConfig::TOM_REWARD)        $isDeleteRewardOrder = true;
+                    }
                     $this->delRedRelations($threadId, $isDeleteRedOrder, $isDeleteRewardOrder);
                     break;
                 case $this->UPDATE_FUNC:
@@ -260,6 +287,7 @@ class UpdateThreadController extends DzqController
     //删除掉前端未提交的的插件和标签数据
     private function delRedundancyPlugins($threadId, $tomJsons)
     {
+        $order = $this->getRedOrderInfo($threadId);
         $tomList = ThreadTom::query()
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get();
@@ -267,11 +295,16 @@ class UpdateThreadController extends DzqController
         $isDeleteRedOrder = $isDeleteRewardOrder = false;
         foreach ($tomList as $item) {
             if (empty($tomJsons[$item['key']])) {
-                $keys[] = $item['key'];
-                if($item['tom_type'] == TomConfig::TOM_REDPACK)     $isDeleteRedOrder = true;
-                if($item['tom_type'] == TomConfig::TOM_REWARD)     $isDeleteRewardOrder = true;
+                if(in_array($item['tom_type'], [TomConfig::TOM_REDPACK, TomConfig::TOM_REWARD]) &&
+                    (empty($order) || $order->status != Order::ORDER_STATUS_PAID)
+                ){
+                    $keys[] = $item['key'];
+                    if($item['tom_type'] == TomConfig::TOM_REDPACK)     $isDeleteRedOrder = true;
+                    if($item['tom_type'] == TomConfig::TOM_REWARD)     $isDeleteRewardOrder = true;
+                }
             }
         }
+
         ThreadTom::query()
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId])

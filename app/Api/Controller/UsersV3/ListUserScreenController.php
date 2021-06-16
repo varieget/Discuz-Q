@@ -48,7 +48,7 @@ class ListUserScreenController extends DzqController
 
         if (Arr::has($filter, 'username') && Arr::get($filter, 'username') !== '') {
             $username = $filter['username'];
-            $query->where('users.username', 'like', '%' . $username . '%');
+            $query->where('users.username', $username);
         }
 
         if (Arr::has($filter, 'nickname') && Arr::get($filter, 'nickname') !== '') {

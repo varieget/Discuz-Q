@@ -257,6 +257,7 @@ trait TomTrait
      */
     private function needPay($tomJsons)
     {
+        if(empty($tomJsons))        return false;
         $tomTypes = array_keys($tomJsons);
         foreach ($tomTypes as $tomType) {
             $tomService = Arr::get(TomConfig::$map, $tomType . '.service');
@@ -275,10 +276,8 @@ trait TomTrait
      */
     public function delRedRelations($threadId, $isDeleteRedOrder = false, $isDeleteRewardOrder = false){
         //将对应的 order、orderChildren、threadRedPacket、threadReward 与 原帖 脱离关系
-        $order = Order::query()->where('thread_id', $threadId)
-            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
-            ->first();
-        if($order){
+        $order = self::getRedOrderInfo($threadId);
+        if(empty($order) || $order->staus != Order::ORDER_STATUS_PAID){         //订单未支付的情况下才删除数据
             if($isDeleteRedOrder){      //删除之前的order、orderChildren、$threadRedPacket
                 Order::query()->where('thread_id', $threadId)->update(['thread_id' => 0]);
                 if($order->type == Order::ORDER_TYPE_MERGE){
@@ -294,6 +293,11 @@ trait TomTrait
                 ThreadReward::query()->where(['thread_id' => $threadId])->update(['thread_id' => 0, 'post_id' => 0]);
             }
         }
+    }
 
+    public function getRedOrderInfo($threadId){
+        return  Order::query()->where('thread_id', $threadId)
+            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
+            ->first();
     }
 }

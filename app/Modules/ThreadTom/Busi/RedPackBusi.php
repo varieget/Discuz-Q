@@ -18,6 +18,7 @@
 namespace App\Modules\ThreadTom\Busi;
 
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\RedPacket;
@@ -34,6 +35,14 @@ class RedPackBusi extends TomBaseBusi
     public function create()
     {
         $input = $this->verification();
+        // 如果有对应的已支付订单，则直接找出之前的  thread_red_packet  返回，不走后面的逻辑
+        $res = self::orderPaidJudge($input);
+        if($res['code'] != ResponseCode::SUCCESS){
+            $this->outPut($res['code'], $res['msg']);
+        }
+        if(!empty($res['data'])){
+            return $this->jsonReturn($res['data']);
+        }
         $thread = Thread::query()->find($this->threadId);
         if(empty($thread->is_draft)){       //已发布的帖子，不允许在增加红包tom
             $this->outPut(ResponseCode::INVALID_PARAMETER, '已发布的帖子不允许增加红包');
@@ -42,7 +51,6 @@ class RedPackBusi extends TomBaseBusi
         if ($input['rule'] == 1) {
             if ($input['price']*100 <  $input['number']) $this->outPut(ResponseCode::INVALID_PARAMETER,'红包金额不够分');
         }
-
         if (!empty($input['orderSn'])) {
             $order = Order::query()
                 ->where('order_sn',$input['orderSn'])
@@ -50,16 +58,18 @@ class RedPackBusi extends TomBaseBusi
 
             //判断红包金额
             if ($input['rule'] == 1) {
-                if ($order->type == Order::ORDER_TYPE_REDPACKET && $order['amount'] != $input['price']) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误');
+                if ($order->type == Order::ORDER_TYPE_REDPACKET && Utils::compareMath($order['amount'], $input['price']) ) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误');
             } else {
-                if ($order->type == Order::ORDER_TYPE_REDPACKET && $input['price']*$input['number'] != $order['amount']) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误');
+                if ($order->type == Order::ORDER_TYPE_REDPACKET && Utils::compareMath($input['price']*$input['number'], $order['amount'])) $this->outPut(ResponseCode::INVALID_PARAMETER,'订单金额错误', []);
             }
 
-            if (!empty($order['thread_id']) ||
+            if (
+                ( $order->type == Order::ORDER_TYPE_REDPACKET && !empty($order['thread_id']) ) ||
                 !in_array($order->type, [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_MERGE]) ||
                 $order['user_id'] != $this->user['id'] ||
                 $order['status'] != Order::ORDER_STATUS_PENDING ||
-                (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())) {
+                (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())
+            ) {
                 $this->outPut(ResponseCode::RESOURCE_EXPIRED, '订单已过期或异常，请重新创建订单');
             }
 
@@ -69,7 +79,7 @@ class RedPackBusi extends TomBaseBusi
                     ->where('type', Order::ORDER_TYPE_REDPACKET)
                     ->first();
                 if (empty($orderChildrenInfo) ||
-                    $orderChildrenInfo->amount != $input['price'] ||
+                    ( $input['rule'] == 1 ? Utils::compareMath($orderChildrenInfo->amount, $input['price']) : Utils::compareMath($input['price']*$input['number'], $orderChildrenInfo->amount) ) ||
                     $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
                     $this->outPut(ResponseCode::RESOURCE_EXPIRED, '子订单异常');
                 }
@@ -107,6 +117,15 @@ class RedPackBusi extends TomBaseBusi
     public function update()
     {
         $input = $this->verification();
+        // 如果有对应的已支付订单，则直接找出之前的  thread_red_packet  返回，不走后面的逻辑
+        $res = self::orderPaidJudge($input);
+        if($res['code'] != ResponseCode::SUCCESS){
+            $this->outPut($res['code'], $res['msg']);
+        }
+        if(!empty($res['data'])){
+            return $this->jsonReturn($res['data']);
+        }
+
         $threadRedPacket = ThreadRedPacket::query()->where('thread_id', $this->threadId)->first();
         if(empty($threadRedPacket)){
             $this->outPut(ResponseCode::INTERNAL_ERROR, '原红包帖数据不存在');
@@ -187,7 +206,7 @@ class RedPackBusi extends TomBaseBusi
             'orderSn' => $this->getParams('orderSn'),
             'price' => $this->getParams('price'),
             'content' => $this->getParams('content'),
-            'draft' => $this->getParams('draft')
+//            'draft' => $this->getParams('draft')
         ];
         $rules = [
             'condition' => 'required|integer|in:0,1',
@@ -198,10 +217,47 @@ class RedPackBusi extends TomBaseBusi
             'content' => 'max:1000',
         ];
 
-        $input['draft'] != Thread::IS_DRAFT ? $rules['orderSn'] = 'required|numeric' : '';
+//        $input['draft'] != Thread::IS_DRAFT ? $rules['orderSn'] = 'required|numeric' : '';
 
         $this->dzqValidate($input, $rules);
 
         return $input;
+    }
+
+    public function orderPaidJudge($input){
+        if($order = self::getRedOrderInfo($this->threadId)){
+            if($order->status == Order::ORDER_STATUS_PAID){
+                $threadRedPacket = ThreadRedPacket::query()->where(['thread_id' => $this->threadId, 'post_id' => $this->postId])->first();
+                if($threadRedPacket){
+                    if(
+                        $threadRedPacket->rule != $input['rule'] ||
+                        $threadRedPacket->condition != $input['condition'] ||
+                        $threadRedPacket->likenum != $input['likenum'] ||
+                        Utils::compareMath($threadRedPacket->money, ($input['rule'] == 0 ? $input['price']*$input['number'] : $input['price'])) ||
+                        $threadRedPacket->number != $input['number']
+                    ){
+                        return  [
+                            'code'  =>  ResponseCode::INVALID_PARAMETER,
+                            'msg'   =>  '已发布的红包不可修改'
+                        ];
+                    }
+                    return  [
+                        'code'  =>  ResponseCode::SUCCESS,
+                        'msg'   =>  '',
+                        'data'  =>  $threadRedPacket
+                    ];
+                }else{
+                    return  [
+                        'code'  =>  ResponseCode::INTERNAL_ERROR,
+                        'msg'   =>  '原红包帖数据有误，缺少红包数据'
+                    ];
+                }
+            }
+        }
+        return  [
+            'code'  =>  ResponseCode::SUCCESS,
+            'msg'   =>  '',
+            'data'  =>  ''
+        ];
     }
 }

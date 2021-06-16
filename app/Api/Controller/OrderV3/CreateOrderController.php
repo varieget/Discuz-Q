@@ -3,6 +3,7 @@
 namespace App\Api\Controller\OrderV3;
 
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Repositories\UserRepository;
 use Exception;
 use App\Models\Group;
@@ -50,7 +51,7 @@ class CreateOrderController extends DzqController
 
         if ($data['type'] == Order::ORDER_TYPE_MERGE) {
             $totalAmount = $data['red_amount'] + $data['reward_amount'];
-            if ($totalAmount !== $data['amount']) {
+            if (Utils::compareMath($totalAmount, $data['amount'])) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '订单金额错误！', '');
             }
         }

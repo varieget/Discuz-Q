@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Tobscure\JsonApi\Parameters;
+use App\Api\Controller\ThreadsV3\ThreadHelper;
 
 class ListUserWalletLogsController extends DzqController
 {
@@ -114,9 +115,9 @@ class ListUserWalletLogsController extends DzqController
                 ->map(function (UserWalletLog $log) {
                     if ($log->order && $log->order->thread) {
                         if ($log->order->thread->title) {
-                            $title = Str::limit($log->order->thread->title, 40);
+                            $title = Str::limit($log->order->thread->title);
                         } else {
-                            $title = Str::limit($log->order->thread->firstPost->content, 40);
+                            $title = Str::limit($log->order->thread->firstPost->content);
                             $title = str_replace("\n", '', $title);
                         }
 
@@ -216,11 +217,15 @@ class ListUserWalletLogsController extends DzqController
 
     public function filterData($data){
         foreach ($data['pageData'] as $key => $val) {
-
-            if (!empty($val['order']['thread']['title'])) {
-                $title = mb_substr($val['order']['thread']['title'],0,$this->titleLength);
-            } elseif (!empty($val['order']['thread']['firstPost']['content'])) {
-                $title = mb_substr(strip_tags($val['order']['thread']['firstPost']['content']),0,$this->titleLength);
+            
+            if(!empty($val['order']['thread']['title'])) {
+                $title = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $val['order']['thread']['title']);
+                list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($title);
+                $title = str_replace($searches, $replaces, $title);
+            }elseif (!empty($val['order']['thread']['firstPost']['content'])) {
+                $title = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $val['order']['thread']['firstPost']['content']);
+                list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($title);
+                $title = str_replace($searches, $replaces, $title);
             } else {
                 $title = '';
             }
