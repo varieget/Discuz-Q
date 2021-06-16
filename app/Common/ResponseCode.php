@@ -123,6 +123,7 @@ class ResponseCode
     const USERNAME_NOT_ALLOW_HAS_SPACE = -7073;
     const TRY_LOGIN_AGAIN = -7074;
     const NOT_ALLOW_CENSOR_IMAGE = -7075;
+    const CATEGORY_NOT_FOUNF = -7076;
 
 
     const NEED_BIND_WECHAT = -8000;
@@ -230,7 +231,8 @@ class ResponseCode
         self::PAY_JOIN_SITE => '请付费加入站点',
         self::TRY_LOGIN_AGAIN => '当前注册人数过多，请稍后登录',
         self::RESOURCE_EXPIRED => '资源已过期',
-        self::NOT_ALLOW_CENSOR_IMAGE => '不允许上传敏感图'
+        self::NOT_ALLOW_CENSOR_IMAGE => '不允许上传敏感图',
+        self::CATEGORY_NOT_FOUNF =>"分类不存在"
 
     ];
 }
