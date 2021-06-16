@@ -373,47 +373,71 @@ class ThreadListController extends DzqController
         !empty($sequence['block_user_ids']) && $blockUserIds = explode(',', $sequence['block_user_ids']);
         !empty($sequence['block_topic_ids']) && $blockTopicIds = explode(',', $sequence['block_topic_ids']);
         !empty($sequence['block_thread_ids']) && $blockThreadIds = explode(',', $sequence['block_thread_ids']);
-        $threads = $this->getBaseThreadsBuilder();
-        if (!empty($categoryIds)) {
-            $threads = $threads->whereIn('th.category_id', $categoryIds);
-        }
+
+        $query = Thread::query();
+        $query->leftJoin('group_user as g1', 'g1.user_id', '=', 'threads.user_id');
+        $query->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'threads.id');
+
         if (!empty($types)) {
-            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
+            $query->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'threads.id')
                 ->whereIn('tag.tag', $types);
         }
+
+        if (!empty($categoryIds)) {
+            $query->whereIn('threads.category_id', $categoryIds);
+        }
+
+        foreach ($sequence as $key => $value) {
+            if (!empty($value)) {
+                if ($key == 'group_ids') {
+                    $query->whereIn('g1.group_id', $groupIds);
+                    $groupIds = [];
+                }
+                if ($key == 'topic_ids') {
+                     $query->whereIn('topic.topic_id', $topicIds);
+                     $topicIds = [];
+                }
+                if ($key == 'user_ids') {
+                    $query->whereIn('threads.user_id', $userIds);
+                    $userIds = [];
+                }
+                if ($key == 'thread_ids') {
+                    $query->whereIn('threads.id', $threadIds);
+                    $threadIds = [];
+                }
+                break;
+            }
+        }
+
         if (!empty($groupIds)) {
-            $threads = $threads
-                ->leftJoin('group_user as g1', 'g1.user_id', '=', 'th.user_id')
-                ->whereIn('g1.group_id', $groupIds);
+            $query->orWhereIn('g1.group_id', $groupIds);
         }
         if (!empty($topicIds)) {
-            $threads = $threads
-                ->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'th.id')
-                ->whereIn('topic.topic_id', $topicIds);
+            $query->orWhereIn('topic.topic_id', $topicIds);
         }
         if (!empty($userIds)) {
-            $threads = $threads->whereIn('th.user_id', $userIds);
+            $query->orWhereIn('threads.user_id', $userIds);
         }
         if (!empty($threadIds)) {
-            $threads = $threads->whereIn('th.id', $threadIds);
+            $query->orWhereIn('threads.id', $threadIds);
         }
         if (!empty($blockUserIds)) {
-            $threads->whereNotExists(function ($query) use ($blockUserIds) {
-                $query->whereIn('th.user_id', $blockUserIds);
-            });
+            $query->whereNotIn('threads.user_id', $blockUserIds);
         }
         if (!empty($blockThreadIds)) {
-            $threads->whereNotExists(function ($query) use ($blockThreadIds) {
-                $query->whereIn('th.id', $blockThreadIds);
-            });
+            $query->whereNotIn('threads.id', $blockThreadIds);
         }
         if (!empty($blockTopicIds)) {
-            $threads->whereNotExists(function ($query) use ($blockTopicIds) {
-                $query->whereIn('topic.topic_id', $blockTopicIds);
-            });
+            $query->whereNotIn('topic.topic_id', $blockTopicIds);
         }
-        $threads = $threads->orderByDesc('th.created_at');
-        return $threads;
+        $query->where('threads.is_approved', Thread::BOOL_YES);
+        $query->where('threads.is_draft', Thread::BOOL_NO);
+        $query->where('threads.is_sticky', Thread::BOOL_NO);
+        $query->where('threads.is_display', Thread::BOOL_YES);
+        $query->whereNull('threads.deleted_at');
+        $query->whereNotNull('threads.user_id');
+        $query->orderBy('threads.created_at', 'desc');
+        return $query;
     }
 
     private function getBaseThreadsBuilder($isDraft = Thread::BOOL_NO)
