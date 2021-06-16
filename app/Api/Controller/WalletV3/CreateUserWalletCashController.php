@@ -47,7 +47,7 @@ class CreateUserWalletCashController extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         if (!$userRepo->canCreateCash($actor)) {
             throw new PermissionDeniedException('没有提现权限');

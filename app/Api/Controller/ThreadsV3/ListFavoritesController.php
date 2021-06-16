@@ -6,7 +6,6 @@ use App\Common\ResponseCode;
 use App\Models\Thread;
 use App\Models\User;
 use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class ListFavoritesController extends DzqController
@@ -15,7 +14,7 @@ class ListFavoritesController extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }

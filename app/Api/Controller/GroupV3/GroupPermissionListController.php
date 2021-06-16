@@ -22,7 +22,6 @@ use App\Models\Category;
 use App\Models\Permission;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 
 class GroupPermissionListController extends DzqController
@@ -30,7 +29,7 @@ class GroupPermissionListController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {
-            throw new NotAuthenticatedException;
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }
