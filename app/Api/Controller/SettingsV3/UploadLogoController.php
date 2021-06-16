@@ -25,6 +25,7 @@ use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Http\UrlGenerator;
 use Exception;
 use Illuminate\Contracts\Filesystem\Factory as FileFactory;
@@ -38,6 +39,7 @@ class UploadLogoController extends DzqController
     {
         DzqCache::delKey(CacheKey::SETTINGS);
     }
+    protected $settings;
 
     /**
      * @var Factory
@@ -72,11 +74,12 @@ class UploadLogoController extends DzqController
      * @param FileFactory $filesystem
      * @param UrlGenerator $url
      */
-    public function __construct(Factory $validator, FileFactory $filesystem, UrlGenerator $url)
+    public function __construct(Factory $validator, FileFactory $filesystem, UrlGenerator $url,SettingsRepository $settings)
     {
         $this->validator = $validator;
         $this->filesystem = $filesystem;
         $this->url = $url;
+        $this->settings = $settings;
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -134,7 +137,7 @@ class UploadLogoController extends DzqController
             return $this->outPut(ResponseCode::INVALID_PARAMETER,'',$e);
         }
 
-        Setting::modifyValue($type, $fileName, $type === 'watermark_image' ? 'watermark' : 'default');
+        $this->settings->set($type, $fileName, $type === 'watermark_image' ? 'watermark' : 'default');
 
         return $this->outPut(ResponseCode::SUCCESS,'', [
             'key' => 'logo',
