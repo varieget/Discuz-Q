@@ -24,7 +24,6 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Repositories\UserWalletCashRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -65,7 +64,7 @@ class ListUserWalletCashController extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }

@@ -156,8 +156,8 @@ class AttachmentSerializer extends AbstractSerializer
             'isRemote' => $model->is_remote,
             'isApproved' => $model->is_approved,
             'url' => $url,
-            'blurUrl'=>$blurUrl,
-            'thumbUrl'=>$thumbUrl,
+            'blurUrl' => $blurUrl,
+            'thumbUrl' => $thumbUrl,
             'attachment' => $model->attachment,
             'extension' => Str::afterLast($model->attachment, '.'),
             'fileName' => $model->file_name,
@@ -172,8 +172,10 @@ class AttachmentSerializer extends AbstractSerializer
                 $attributes['thumbUrl'] = $url;
             } else {
                 if ($model->is_remote) {
-                    $attributes['thumbUrl'] = $url . (strpos($url, '?') === false ? '?' : '&')
-                        . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
+                    //改为前端取分辨率大小
+                    $attributes['thumbUrl'] = $url;
+//                    $attributes['thumbUrl'] = $url . (strpos($url, '?') === false ? '?' : '&')
+//                        . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
                 } else {
                     // 缩略图不存在时使用原图
                     $attributes['thumbUrl'] = $this->filesystem->disk('attachment')->exists($model->thumb_path)

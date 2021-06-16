@@ -31,12 +31,22 @@ class TestController extends DzqController
 
     public function main()
     {
+        $a = $this->inPut('a');
+        $b = $this->inPut('b');
         $t1 = DISCUZ_START;
         $t2 = microtime(true);
+        $this->info('TestController',[
+            $t1,
+            $t2,
+            $t2 - $t1,
+            $this->user->toArray(),
+            $a,$b
+        ]);
         $this->outPut(ResponseCode::SUCCESS, '', [
             $t1,
             $t2,
-            $t2 - $t1
+            $t2 - $t1,
+            '随着经济社会的持续发展，高速公路建设、管养、运营等领域，也不断注入新的发展理念，从“生态高速”到“智慧高速”，再到“平安高速”，沈海高速打造了一道又一道靓丽风景线，为沿线地区高质量发展赋能增效。（沙芳如）'
         ]);
     }
 }

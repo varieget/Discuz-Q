@@ -86,31 +86,43 @@ class RegisterController extends AuthBaseController
             'captcha_rand_str'      => $this->inPut('captchaRandStr'),
         ];
 
-        $this->dzqValidate($data, [
-            'username' => 'required',
-            'password' => 'required',
-            'nickname' => 'required',
-        ]);
+        try {
+            $this->dzqValidate($data, [
+                'username' => 'required',
+                'password' => 'required',
+                'nickname' => 'required',
+            ]);
 
-        // 注册验证码(无感模式不走验证码，开启也不走)
-        $captcha = '';  // 默认为空将不走验证
-        if ((bool)$this->settings->get('register_captcha') &&
-            (bool)$this->settings->get('qcloud_captcha', 'qcloud') &&
-            ($this->settings->get('register_type', 'default') != 2)) {
-            $captcha = [
-                Arr::get($data, 'captcha_ticket', ''),
-                Arr::get($data, 'captcha_rand_str', ''),
-                Arr::get($data, 'register_ip', ''),
-            ];
-        }
+            // 注册验证码(无感模式不走验证码，开启也不走)
+            $captcha = '';  // 默认为空将不走验证
+            if ((bool)$this->settings->get('register_captcha') &&
+                (bool)$this->settings->get('qcloud_captcha', 'qcloud') &&
+                ($this->settings->get('register_type', 'default') != 2)) {
+                $captcha = [
+                    Arr::get($data, 'captcha_ticket', ''),
+                    Arr::get($data, 'captcha_rand_str', ''),
+                    Arr::get($data, 'register_ip', ''),
+                ];
+            }
 
-        // 密码为空的时候，不验证密码，允许创建密码为空的用户(但无法登录，只能用其它方法登录)
-        $attrs_to_validate = array_merge($data, compact('password', 'password_confirmation', 'captcha'));
-        if ($data['password'] === '') {
-            unset($attrs_to_validate['password']);
+            // 密码为空的时候，不验证密码，允许创建密码为空的用户(但无法登录，只能用其它方法登录)
+            $attrs_to_validate = array_merge($data, compact('password', 'password_confirmation', 'captcha'));
+            if ($data['password'] === '') {
+                unset($attrs_to_validate['password']);
+            }
+            unset($attrs_to_validate['register_reason']);
+            try {
+                $this->userValidator->valid($attrs_to_validate);
+            } catch (\Exception $e) {
+                $validate_error = $e->validator->errors()->first();
+                $error_message = !empty($validate_error) ? $validate_error : $e->getMessage();
+                $this->outPut(ResponseCode::INVALID_PARAMETER, $error_message);
+            }
+        } catch (\Exception $e) {
+            app('errorLog')->info('用户名注册接口异常:'.$e->getMessage().json_encode($data));
+//            $this->errorLog($e->getMessage(), '用户名注册接口异常', $data);
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册接口异常');
         }
-        unset($attrs_to_validate['register_reason']);
-        $this->userValidator->valid($attrs_to_validate);
 
         $this->connection->beginTransaction();
         try {

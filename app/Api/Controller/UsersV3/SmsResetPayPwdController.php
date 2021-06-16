@@ -22,7 +22,6 @@ use App\Common\ResponseCode;
 use App\Models\UserWalletFailLogs;
 use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
-use Discuz\Auth\Exception\PermissionDeniedException;
 
 class SmsResetPayPwdController extends AuthBaseController
 {
@@ -36,7 +35,7 @@ class SmsResetPayPwdController extends AuthBaseController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }

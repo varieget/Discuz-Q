@@ -156,4 +156,13 @@ class Utils
         })->slice(0, 10);
         $logger->info('in: '.$method.':'.PHP_EOL.json_encode($trace));
     }
+
+    /**
+     * 由于浮点数的原因，取整比较两个数。这里暂时不用 bc 模块，用bc需要php安置对应模块
+     * @param $leftM
+     * @param $rightM
+     */
+    public static function compareMath($leftM, $rightM){
+        return  intval($leftM * 100) != intval($rightM * 100);
+    }
 }

@@ -22,7 +22,6 @@ use App\Common\ResponseCode;
 use App\Events\DenyUsers\Saved;
 use App\Models\DenyUser;
 use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
@@ -46,7 +45,7 @@ class CreateDenyUserController extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }

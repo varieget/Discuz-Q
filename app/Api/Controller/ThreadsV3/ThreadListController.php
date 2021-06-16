@@ -110,9 +110,8 @@ class ThreadListController extends DzqController
         $threadIds = $threads['pageData'];
         //缓存中获取最新的threads
         $pageData = $this->getThreads($threadIds);
-        $threads['pageData'] = $this->getFullThreadData($pageData,true);
-//        $this->info('query_sql_log', app(ConnectionInterface::class)->getQueryLog());
-//        $this->closeQueryLog();
+        $threads['pageData'] = $this->getFullThreadData($pageData, true);
+//        $this->info('query_sql_log', app(\Illuminate\Database\ConnectionInterface::class)->getQueryLog());
         $this->outPut(0, '', $threads);
     }
 
@@ -140,25 +139,7 @@ class ThreadListController extends DzqController
         $threadsBuilder = $this->buildFilterThreads($filter, $withLoginUser);
         $cacheKey = $this->cacheKey($filter);
         $filterKey = $this->filterKey($perPage, $filter, $withLoginUser);
-        //初始化exist数据
-        if (($this->preload || $page == 1) && !$this->viewHotList) {//第一页检查是否需要初始化缓存
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
-                $this->initDzqGlobalData($threads);
-                array_walk($threads, function (&$v) {
-                    $v['pageData'] = array_column($v['pageData'], 'id');
-                });
-                return $threads;
-            }, true);
-            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
-        } else {//其他页从缓存取，取不到就重数据库取并写入缓存
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
-                $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
-                $threads['pageData'] = array_column($threads['pageData'], 'id');
-                return $threads;
-            });
-        }
-        return $threads;
+        return $this->loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
     }
 
     function getSequenceThreads($filter, $page, $perPage)
@@ -166,26 +147,90 @@ class ThreadListController extends DzqController
         $threadsBuilder = $this->buildSequenceThreads($filter);
         $cacheKey = CacheKey::LIST_THREADS_V3_SEQUENCE;
         $filterKey = $this->filterKey($perPage, $filter);
-        if (($this->preload || $page == 1) && !$this->viewHotList) {//第一页检查是否需要初始化缓存
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-                $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
-                $this->initDzqGlobalData($threads);
-                array_walk($threads, function (&$v) {
-                    $v['pageData'] = array_column($v['pageData'], 'id');
-                });
-                return $threads;
-            }, true);
-            $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
+        return $this->loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+    }
+
+    private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
+    {
+        if ($this->preload) {
+            $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         } else {
-            $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
-                $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
-                $threads['pageData'] = array_column($threads['pageData'], 'id');
-                return $threads;
-            });
+            $threads = $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+            if (!$this->viewHotList) {
+                $success = $this->preloadData($page);
+                if (!$success) {
+                    $this->info('pre_load_data_error', $filter);
+                    $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+                }
+            }
         }
         return $threads;
     }
 
+    private function loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
+    {
+        if ($page != 1) {
+            return false;
+        }
+        $threads = DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
+            $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
+            $this->initDzqGlobalData($threads);
+            array_walk($threads, function (&$v) {
+                $v['pageData'] = array_column($v['pageData'], 'id');
+            });
+            return $threads;
+        }, true);
+        $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
+        return $threads;
+    }
+
+    private function loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
+    {
+        return DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
+            $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
+            $threads['pageData'] = array_column($threads['pageData'], 'id');
+            return $threads;
+        });
+    }
+
+    private function preloadData($page)
+    {
+        if ($page != 1) {
+            return true;
+        }
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $path = $url->getPath();
+        $query = $url->getQuery();
+        $scheme = strtolower($url->getScheme());
+        $scheme == 'https' ? $host = $url->getHost() : $host = '127.0.0.1';
+        $getPath = $path . '?' . urldecode($query) . '&preload=1';
+        if ($port == null) {
+            $scheme == 'https' ? $port = 443 : $port = 80;
+        }
+        $authorization = $this->request->getHeader('authorization');
+        $timeout = 5;
+        if ($scheme == 'https') {
+            $contextOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]];
+            $fp = stream_socket_client("ssl://{$host}:{$port}",
+                $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT,
+                stream_context_create($contextOptions));
+        } else {
+            $fp = @fsockopen($host, $port, $errno, $errstr, $timeout);
+        }
+        if (!$fp) {
+            return false;
+        }
+        $headers = "GET " . $getPath . " HTTP/1.1\r\n";
+        $headers .= "Host: " . $host . "\r\n";
+        !empty($authorization[0]) && $headers .= "Authorization: " . $authorization[0] . "\r\n";
+        $headers .= "Content-Type: application/json;charset=utf-8\r\n";
+        $headers .= "Connection: close\r\n\r\n";
+        $result = @fwrite($fp, $headers);
+        usleep(1000);//防止用户没有配置client abort
+        fclose($fp);
+        return $result;
+    }
 
     /**
      * @desc 普通筛选SQL
@@ -329,47 +374,71 @@ class ThreadListController extends DzqController
         !empty($sequence['block_user_ids']) && $blockUserIds = explode(',', $sequence['block_user_ids']);
         !empty($sequence['block_topic_ids']) && $blockTopicIds = explode(',', $sequence['block_topic_ids']);
         !empty($sequence['block_thread_ids']) && $blockThreadIds = explode(',', $sequence['block_thread_ids']);
-        $threads = $this->getBaseThreadsBuilder();
-        if (!empty($categoryIds)) {
-            $threads = $threads->whereIn('th.category_id', $categoryIds);
-        }
+
+        $query = Thread::query();
+        $query->leftJoin('group_user as g1', 'g1.user_id', '=', 'threads.user_id');
+        $query->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'threads.id');
+
         if (!empty($types)) {
-            $threads = $threads->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
+            $query->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'threads.id')
                 ->whereIn('tag.tag', $types);
         }
+
+        if (!empty($categoryIds)) {
+            $query->whereIn('threads.category_id', $categoryIds);
+        }
+
+        foreach ($sequence as $key => $value) {
+            if (!empty($value)) {
+                if ($key == 'group_ids') {
+                    $query->whereIn('g1.group_id', $groupIds);
+                    $groupIds = [];
+                }
+                if ($key == 'topic_ids') {
+                    $query->whereIn('topic.topic_id', $topicIds);
+                    $topicIds = [];
+                }
+                if ($key == 'user_ids') {
+                    $query->whereIn('threads.user_id', $userIds);
+                    $userIds = [];
+                }
+                if ($key == 'thread_ids') {
+                    $query->whereIn('threads.id', $threadIds);
+                    $threadIds = [];
+                }
+                break;
+            }
+        }
+
         if (!empty($groupIds)) {
-            $threads = $threads
-                ->leftJoin('group_user as g1', 'g1.user_id', '=', 'th.user_id')
-                ->whereIn('g1.group_id', $groupIds);
+            $query->orWhereIn('g1.group_id', $groupIds);
         }
         if (!empty($topicIds)) {
-            $threads = $threads
-                ->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'th.id')
-                ->whereIn('topic.topic_id', $topicIds);
+            $query->orWhereIn('topic.topic_id', $topicIds);
         }
         if (!empty($userIds)) {
-            $threads = $threads->whereIn('th.user_id', $userIds);
+            $query->orWhereIn('threads.user_id', $userIds);
         }
         if (!empty($threadIds)) {
-            $threads = $threads->whereIn('th.id', $threadIds);
+            $query->orWhereIn('threads.id', $threadIds);
         }
         if (!empty($blockUserIds)) {
-            $threads->whereNotExists(function ($query) use ($blockUserIds) {
-                $query->whereIn('th.user_id', $blockUserIds);
-            });
+            $query->whereNotIn('threads.user_id', $blockUserIds);
         }
         if (!empty($blockThreadIds)) {
-            $threads->whereNotExists(function ($query) use ($blockThreadIds) {
-                $query->whereIn('th.id', $blockThreadIds);
-            });
+            $query->whereNotIn('threads.id', $blockThreadIds);
         }
         if (!empty($blockTopicIds)) {
-            $threads->whereNotExists(function ($query) use ($blockTopicIds) {
-                $query->whereIn('topic.topic_id', $blockTopicIds);
-            });
+            $query->whereNotIn('topic.topic_id', $blockTopicIds);
         }
-        $threads = $threads->orderByDesc('th.created_at');
-        return $threads;
+        $query->where('threads.is_approved', Thread::BOOL_YES);
+        $query->where('threads.is_draft', Thread::BOOL_NO);
+        $query->where('threads.is_sticky', Thread::BOOL_NO);
+        $query->where('threads.is_display', Thread::BOOL_YES);
+        $query->whereNull('threads.deleted_at');
+        $query->whereNotNull('threads.user_id');
+        $query->orderBy('threads.created_at', 'desc');
+        return $query;
     }
 
     private function getBaseThreadsBuilder($isDraft = Thread::BOOL_NO)

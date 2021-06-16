@@ -18,6 +18,7 @@
 namespace App\Modules\ThreadTom\Busi;
 
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Models\Thread;
 use App\Modules\ThreadTom\TomBaseBusi;
 use App\Models\Order;
@@ -64,7 +65,7 @@ class RewardBusi extends TomBaseBusi
                 $order['user_id'] != $this->user['id'] ||
                 $order['status'] != Order::ORDER_STATUS_PENDING ||
                 (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())||
-                ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && $order->amount != $input['price'])
+                ($order->type == Order::ORDER_TYPE_QUESTION_REWARD && Utils::compareMath($order->amount, $input['price']) )
             ) {
                 $this->outPut(ResponseCode::RESOURCE_EXPIRED, '订单已过期或异常，请重新创建订单');
             }
@@ -75,7 +76,7 @@ class RewardBusi extends TomBaseBusi
                     ->where('type', Order::ORDER_TYPE_QUESTION_REWARD)
                     ->first();
                 if (empty($orderChildrenInfo) ||
-                    $orderChildrenInfo->amount != $input['price'] ||
+                    Utils::compareMath($orderChildrenInfo->amount, $input['price']) ||
                     $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
                     $this->outPut(ResponseCode::RESOURCE_EXPIRED,'子订单异常');
                 }
@@ -97,8 +98,8 @@ class RewardBusi extends TomBaseBusi
         $threadReward->type = $input['type'];
         $threadReward->user_id = $this->user['id'];
         $threadReward->answer_id = 0; // 目前没有指定人问答
-        $threadReward->money = $input['price'];
-        $threadReward->remain_money = $input['price'];
+        $threadReward->money = round($input['price'], 2);
+        $threadReward->remain_money = round($input['price'], 2);
         $threadReward->expired_at = date('Y-m-d H:i:s', strtotime($input['expiredAt']));
         $threadReward->save();
 
@@ -218,7 +219,7 @@ class RewardBusi extends TomBaseBusi
                     if(
                         $threadReward->type != $input['type'] ||
                         $threadReward->user_id != $this->user['id'] ||
-                        $threadReward->money != $input['price']
+                        Utils::compareMath($threadReward->money, $input['price'])
                     ){
                         return  [
                             'code'  =>  ResponseCode::INVALID_PARAMETER,
