@@ -211,7 +211,9 @@ class ThreadListController extends DzqController
         }
         $authorization = $this->request->getHeader('authorization');
         $timeout = 5;
-        !fsockopen($host, $port) && $host = '127.0.0.1';
+        $t = fsockopen($host, $port);
+        !$t && $host = '127.0.0.1';
+        fclose($t);
         if ($scheme == 'https') {
             $contextOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]];
             $fp = stream_socket_client("ssl://{$host}:{$port}",
