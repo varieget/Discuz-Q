@@ -39,7 +39,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 30;//预加载的页数
+    const PRELOAD_PAGES = 10;//预加载的页数
 
     private $preloadCount = 0;
     private $categoryIds = [];
@@ -152,20 +152,22 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-//        $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-        if ($this->preload) {
-            $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-        } else {
-            $threads = $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-            if (!$this->viewHotList) {
-                $success = $this->preloadData($page);
-                if (!$success) {
-                    $this->info('pre_load_data_error', $filter);
-                    $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-                }
-            }
+        if($page == 1 && !$this->viewHotList){
+            $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         }
-        return $threads;
+        //        if ($this->preload) {
+//            $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+//        } else {
+//            $threads = $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+//            if (!$this->viewHotList) {
+//                $success = $this->preloadData($page);
+//                if (!$success) {
+//                    $this->info('pre_load_data_error', $filter);
+//                    $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+//                }
+//            }
+//        }
+        return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
     }
 
     private function loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
