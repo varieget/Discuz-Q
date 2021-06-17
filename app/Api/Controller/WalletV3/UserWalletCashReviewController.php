@@ -20,7 +20,6 @@ namespace App\Api\Controller\WalletV3;
 
 use App\Common\ResponseCode;
 use App\Events\Wallet\Cash;
-use App\Exceptions\WalletException;
 use App\Models\UserWallet;
 use App\Models\UserWalletCash;
 use App\Models\UserWalletLog;
@@ -61,10 +60,6 @@ class UserWalletCashReviewController extends DzqController
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     * @throws WalletException
-     */
     public function main()
     {
         $this->ip_address = ip($this->request->getServerParams());
@@ -103,7 +98,7 @@ class UserWalletCashReviewController extends DzqController
                 if (empty($cash_record) || $cash_record->cash_status != UserWalletCash::STATUS_REVIEW) {
                     $db->rollBack();
                     $log->error("只允许修改未审核的数据 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                    return $status_result[$id] = 'failure';
+                    return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                 }
                 $cash_record->cash_status = $cash_status;
                 if ($cash_status == UserWalletCash::STATUS_REVIEW_FAILED) {
@@ -121,7 +116,7 @@ class UserWalletCashReviewController extends DzqController
                         if($res === false){
                             $db->rollBack();
                             $log->error("修改用户冻结金额、可用金额出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                            return $status_result[$id] = 'failure';
+                            return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                         }
                         //冻结变动金额，为负数数
                         $change_freeze_amount = -$cash_apply_amount;
@@ -139,7 +134,7 @@ class UserWalletCashReviewController extends DzqController
                         if(!$res){
                             $db->rollBack();
                             $log->error("添加钱包明细 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                            return $status_result[$id] = 'failure';
+                            return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                         }
                         $cash_record->remark = Arr::get($this->data, 'remark', '');
                         $cash_record->refunds_status = UserWalletCash::REFUNDS_STATUS_YES;
@@ -147,7 +142,7 @@ class UserWalletCashReviewController extends DzqController
                         if($res === false){
                             $db->rollBack();
                             $log->error("修改提现记录状态出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                            return $status_result[$id] = 'failure';
+                            return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                         }
                         $db->commit();
                         return $status_result[$id] = 'success';
@@ -155,7 +150,7 @@ class UserWalletCashReviewController extends DzqController
                         //回滚事务
                         $db->rollback();
                         $log->error("审核出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
-                        return $status_result[$id] = 'failure';
+                        return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                     }
                 }
 
@@ -166,7 +161,7 @@ class UserWalletCashReviewController extends DzqController
                         if (!file_exists(storage_path().'/cert/apiclient_cert.pem') || !file_exists(storage_path().'/cert/apiclient_key.pem')) {
                             $db->rollBack();
                             $log->error("检查证书失败 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                            return $status_result[$id] = 'pem_notexist';
+                            return $this->outPut(ResponseCode::INTERNAL_ERROR, '证书不存在，请先上传证书！');
                         }
                         $cash_record->cash_type = UserWalletCash::TRANSFER_TYPE_MCH;
                         $cash_record->cash_status = UserWalletCash::STATUS_IN_PAYMENT;
@@ -174,7 +169,7 @@ class UserWalletCashReviewController extends DzqController
                         if($res === false){
                             $db->rollBack();
                             $log->error("修改提现记录出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                            return $status_result[$id] = 'failure';
+                            return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                         }
                         //触发提现钩子事件
                         $this->events->dispatch(
@@ -186,7 +181,7 @@ class UserWalletCashReviewController extends DzqController
                     }catch (\Exception $e){
                         $db->rollBack();
                         $log->error("审核出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
-                        return $status_result[$id] = 'failure';
+                        return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                     }
                 }else{          //没有开通企业打款，直接扣款
                     try {
@@ -197,7 +192,7 @@ class UserWalletCashReviewController extends DzqController
                         if($res === false){
                             $db->rollBack();
                             $log->error("修改提现记录出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                            return $status_result[$id] = 'failure';
+                            return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                         }
                         //获取用户钱包
                         $user_wallet = UserWallet::lockForUpdate()->find($cash_record->user_id);
@@ -207,7 +202,7 @@ class UserWalletCashReviewController extends DzqController
                         if($res === false){
                             $db->rollBack();
                             $log->error("修改用户冻结金额、可用金额出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                            return $status_result[$id] = 'failure';
+                            return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                         }
                         //冻结变动金额，为负数
                         $change_freeze_amount = -$cash_record->cash_apply_amount;
@@ -223,7 +218,7 @@ class UserWalletCashReviewController extends DzqController
                         if($res === false){
                             $db->rollBack();
                             $log->error("添加钱包明细出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                            return $status_result[$id] = 'failure';
+                            return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                         }
                         $db->commit();
                         $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
@@ -231,10 +226,11 @@ class UserWalletCashReviewController extends DzqController
                     }catch (\Exception $e){
                         $db->rollBack();
                         $log->error("审核出错 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", [$log_data, $e->getTraceAsString()]);
-                        return $status_result[$id] = 'failure';
+                        return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                     }
                 }
             });
-        return $this->outPut(ResponseCode::SUCCESS,'',$status_result);
+
+        return $this->outPut(ResponseCode::SUCCESS, '', $status_result);
     }
 }
