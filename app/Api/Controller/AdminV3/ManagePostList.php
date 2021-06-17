@@ -82,8 +82,6 @@ class ManagePostList extends DzqController
             )
             ->where('posts.is_first',false);
 
-        $query->where('posts.is_approved', $isApproved);
-
         $query->leftJoin('threads', 'posts.thread_id', '=', 'threads.id');
 
         // 回收站
@@ -94,7 +92,8 @@ class ManagePostList extends DzqController
                 ->leftJoin('users as users1', 'users1.id','=','posts.deleted_user_id');
         } elseif ($isDeleted == 'no') {
             // 不看回收站帖子
-            $query->whereNull('posts.deleted_at');
+            $query->where('posts.is_approved', $isApproved)
+                ->whereNull('posts.deleted_at');
         }
 
         //用户昵称筛选
@@ -185,13 +184,15 @@ class ManagePostList extends DzqController
                 $pageData[$k]['deleted_nickname'] = '';
             }
 
+            $pageData[$k]['updatedAt'] = date('Y-m-d H:i:s',strtotime($pageData[$k]['updated_at']));
+
             $pageData[$k]['lastDeletedLog'] = [
                 'message' => $userActionLogs[$v['post_id']]
             ];
 
             $pageData[$k]['deletedUserArr'] = [
               'deletedNickname' => $pageData[$k]['deleted_nickname'],
-              'deletedAt' => $pageData[$k]['deleted_at'],
+              'deletedAt' => date('Y-m-d H:i:s',strtotime($pageData[$k]['deleted_at'])),
               'deletedUserId' => $pageData[$k]['deleted_user_id'],
             ];
 
