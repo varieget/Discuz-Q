@@ -70,6 +70,13 @@ class ForumSettingSerializerV2 extends AbstractSerializer
         $port = $this->request->getUri()->getPort();
         $siteUrl = $this->request->getUri()->getScheme() . '://' . $this->request->getUri()->getHost().(in_array($port, [80, 443, null]) ? '' : ':'.$port);
 
+        $site_skin = (int)$this->settingcache->getSiteSkin();
+        if($site_skin == 1){
+            $favicon = $favicon ?: app(UrlGenerator::class)->to('/favicon.ico');
+        }else{
+            $favicon = $favicon ?: app(UrlGenerator::class)->to('/favicon.png');
+        }
+
         $editGroupPermission = $this->userRepo->canEditGroup($actor);
 
         $attributes = [

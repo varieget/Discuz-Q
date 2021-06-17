@@ -39,7 +39,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 30;//预加载的页数
+    const PRELOAD_PAGES = 10;//预加载的页数
 
     private $preloadCount = 0;
     private $categoryIds = [];
@@ -152,19 +152,22 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        if ($this->preload) {
-            $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-        } else {
-            $threads = $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-            if (!$this->viewHotList) {
-                $success = $this->preloadData($page);
-                if (!$success) {
-                    $this->info('pre_load_data_error', $filter);
-                    $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-                }
-            }
+        if($page == 1 && !$this->viewHotList){
+            $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         }
-        return $threads;
+        //        if ($this->preload) {
+//            $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+//        } else {
+//            $threads = $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+//            if (!$this->viewHotList) {
+//                $success = $this->preloadData($page);
+//                if (!$success) {
+//                    $this->info('pre_load_data_error', $filter);
+//                    $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+//                }
+//            }
+//        }
+        return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
     }
 
     private function loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
@@ -203,13 +206,16 @@ class ThreadListController extends DzqController
         $path = $url->getPath();
         $query = $url->getQuery();
         $scheme = strtolower($url->getScheme());
-        $scheme == 'https' ? $host = $url->getHost() : $host = '127.0.0.1';
+        $host = $url->getHost();
         $getPath = $path . '?' . urldecode($query) . '&preload=1';
         if ($port == null) {
             $scheme == 'https' ? $port = 443 : $port = 80;
         }
         $authorization = $this->request->getHeader('authorization');
         $timeout = 5;
+        $t = @fsockopen($host, $port);
+        !$t && $host = '127.0.0.1';
+        @fclose($t);
         if ($scheme == 'https') {
             $contextOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]];
             $fp = stream_socket_client("ssl://{$host}:{$port}",
@@ -228,7 +234,7 @@ class ThreadListController extends DzqController
         $headers .= "Connection: close\r\n\r\n";
         $result = @fwrite($fp, $headers);
         usleep(1000);//防止用户没有配置client abort
-        fclose($fp);
+        @fclose($fp);
         return $result;
     }
 

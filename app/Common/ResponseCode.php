@@ -47,6 +47,7 @@ class ResponseCode
     const VALIDATE_IGNORE = -4008;
     const USER_BAN = -4009;
     const RESOURCE_EXPIRED = -4010;
+    const INVALID_TOKEN = -4011;
 
     const NET_ERROR = -5001;
     const INTERNAL_ERROR = -5002;
@@ -232,7 +233,8 @@ class ResponseCode
         self::TRY_LOGIN_AGAIN => '当前注册人数过多，请稍后登录',
         self::RESOURCE_EXPIRED => '资源已过期',
         self::NOT_ALLOW_CENSOR_IMAGE => '不允许上传敏感图',
-        self::CATEGORY_NOT_FOUNF =>"分类不存在"
+        self::CATEGORY_NOT_FOUNF =>"分类不存在",
+        self::INVALID_TOKEN => '无效token'
 
     ];
 }

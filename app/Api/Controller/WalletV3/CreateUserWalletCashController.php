@@ -74,12 +74,16 @@ class CreateUserWalletCashController extends DzqController
         $cash_sum_limit = (float)Arr::get($cash_setting, 'cash_sum_limit', 5000);//每日总提现额
         $cash_max_sum = (float)Arr::get($cash_setting, 'cash_max_sum', 5000);//每次最大金额
         $cash_min_sum = (float)Arr::get($cash_setting, 'cash_min_sum', 0);//每次最小金额
-        $this->dzqValidate([
-            'cashApplyAmount'   =>  $cashApplyAmount
-        ],
-        [
-            'cashApplyAmount'   =>  "required|numeric|min:{$cash_min_sum}|max:{$cash_max_sum}"
-        ]);
+
+        if (empty($cashApplyAmount) || !is_numeric($cashApplyAmount)) {
+            return $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入正确的提现金额！');
+        }
+        if ($cashApplyAmount < $cash_min_sum) {
+            return $this->outPut(ResponseCode::INVALID_PARAMETER, '单次提现金额不得少于' . $cash_min_sum . '元');
+        }
+        if ($cashApplyAmount > $cash_max_sum) {
+            return $this->outPut(ResponseCode::INVALID_PARAMETER, '单次提现金额不得多于' . $cash_max_sum . '元');
+        }
 
         if ($cash_interval_time != 0) {
             $time_before = Carbon::now()->addDays(-$cash_interval_time);

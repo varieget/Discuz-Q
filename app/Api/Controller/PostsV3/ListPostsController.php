@@ -91,7 +91,7 @@ class ListPostsController extends DzqController
         Post::setStateUser($this->user);
         $query = Post::query()
             ->with([
-                'thread:id,type',
+                'thread:id,type,category_id',
                 'user:id,username,nickname,avatar,realname',
                 'user.groups:id,name,is_display',
                 'images',
@@ -142,7 +142,7 @@ class ListPostsController extends DzqController
 
         $allLastThreeComments = Post::query()
             ->with([
-                'thread:id,type',
+                'thread:id,type,category_id',
                 'user:id,nickname,avatar,realname',
                 'commentUser:id,nickname,avatar,realname',
                 'replyUser:id,nickname,avatar,realname',
