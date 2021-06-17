@@ -45,6 +45,7 @@ class ListUserScreenController extends DzqController
         $query = User::query();
         $query->select('users.id AS userId', 'users.expired_at','users.nickname','users.mobile', 'users.username', 'users.avatar', 'users.thread_count', 'users.status', 'users.created_at', 'users.updated_at', 'group_id','expiration_time');
         $query->join('group_user', 'users.id', '=', 'group_user.user_id');
+        $query->orderBy('created_at');
 
         if (Arr::has($filter, 'username') && Arr::get($filter, 'username') !== '') {
             $username = $filter['username'];

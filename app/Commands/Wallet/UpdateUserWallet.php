@@ -165,7 +165,7 @@ class UpdateUserWallet
         } catch (Exception $e) {
             //回滚事务
             $db->rollback();
-            \Discuz\Common\Utils::outPut(ResponseCode::NOT_ALLOW_CENSOR_IMAGE);
+            \Discuz\Common\Utils::outPut(ResponseCode::INTERNAL_ERROR, $e->getMessage());
         }
     }
 }

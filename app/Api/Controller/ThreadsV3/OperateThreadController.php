@@ -65,7 +65,7 @@ class OperateThreadController extends DzqController
 
         if (
             (!empty($isEssence) || $isEssence === 0 || is_bool($isEssence))
-            && !$userRepo->canEssenceThread($actor)
+            && !$userRepo->canFavoriteThread($actor)
         ) {
             throw new PermissionDeniedException('没有加精权限');
         }
