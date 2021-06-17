@@ -152,6 +152,7 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
+//        $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         if ($this->preload) {
             $threads = $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         } else {
@@ -203,13 +204,14 @@ class ThreadListController extends DzqController
         $path = $url->getPath();
         $query = $url->getQuery();
         $scheme = strtolower($url->getScheme());
-        $scheme == 'https' ? $host = $url->getHost() : $host = '127.0.0.1';
+        $host = $url->getHost();
         $getPath = $path . '?' . urldecode($query) . '&preload=1';
         if ($port == null) {
             $scheme == 'https' ? $port = 443 : $port = 80;
         }
         $authorization = $this->request->getHeader('authorization');
         $timeout = 5;
+        !fsockopen($host, $port) && $host = '127.0.0.1';
         if ($scheme == 'https') {
             $contextOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]];
             $fp = stream_socket_client("ssl://{$host}:{$port}",
