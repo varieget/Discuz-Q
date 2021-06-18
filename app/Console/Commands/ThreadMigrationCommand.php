@@ -42,7 +42,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Facade;
-use s9e\TextFormatter\Configurator\RendererGenerators\PHP\BranchOutputOptimizer;
 
 /**
  * thread 迁移脚本，迁移数据库  thread_tag、thread_tom，其中帖子中图文混排中的图片情况先不管，只考虑单独添加的图片/附件
