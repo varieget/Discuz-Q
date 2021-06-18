@@ -834,7 +834,7 @@ class ThreadMigrationCommand extends AbstractCommand
             ->where('p.is_first', 1)
             ->offset($start_page * self::LIMIT)
             ->limit(self::LIMIT)
-            ->get(['t.id','t.created_at','t.deleted_at','t.updated_at','p.id as post_id']);
+            ->get(['t.id','t.created_at','t.deleted_at','t.updated_at','t.user_id','p.id as post_id']);
     }
 
     //获取商品数据
