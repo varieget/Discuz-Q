@@ -25,7 +25,7 @@ class DeleteDialogV2Controller extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {
-            throw new NotAuthenticatedException();
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN,'');
         }
         return true;
     }

@@ -48,12 +48,12 @@ class UpdatePostController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {
-            return false;
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN,'');
         }
 
         $post = Post::query()->where(['id' => $this->inPut('pid')])->first();
         if (!$post) {
-            return false;
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
         $data = $this->inPut('data', []);

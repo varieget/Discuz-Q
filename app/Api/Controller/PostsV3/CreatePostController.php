@@ -80,6 +80,9 @@ class CreatePostController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN,'');
+        }
         $thread = Thread::query()
             ->where([
                 'id' => $this->inPut('id'),
@@ -89,7 +92,7 @@ class CreatePostController extends DzqController
             ->whereNull('deleted_at')
             ->first();
         if (!$thread) {
-            return false;
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
         return $userRepo->canReplyThread($this->user, $thread->category_id);
     }

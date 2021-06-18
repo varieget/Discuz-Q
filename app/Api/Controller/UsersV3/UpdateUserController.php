@@ -41,9 +41,13 @@ class UpdateUserController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN,'');
+        }
+
         $user = User::query()->where('id', $this->inPut('id'))->first();
         if (!$user) {
-            throw new NotFoundResourceException();
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
         $isSelf = $this->user->id == $user->id;
 
