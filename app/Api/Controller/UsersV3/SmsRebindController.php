@@ -24,6 +24,7 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Discuz\Auth\Exception\NotAuthenticatedException;
+use Discuz\Base\DzqLog;
 use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\ConnectionInterface;
@@ -91,8 +92,10 @@ class SmsRebindController extends AuthBaseController
             $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', []);
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号换绑接口异常-SmsRebindController： 入参：'
-                                  .'mobile:'.$this->inPut('mobile').';code:'.$this->inPut('code') . ';用户id：'. $this->user->id . ';异常：' . $e->getMessage());
+            DzqLog::error('手机号换绑接口异常', [
+                'mobile'  => $this->inPut('mobile'),
+                'code'    => $this->inPut('code')
+            ], $e->getMessage());
             $this->connection->rollback();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号换绑接口异常');
         }

@@ -25,6 +25,7 @@ use App\Events\Users\RegisteredCheck;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
+use Discuz\Base\DzqLog;
 use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -119,8 +120,7 @@ class RegisterController extends AuthBaseController
                 $this->outPut(ResponseCode::INVALID_PARAMETER, $error_message);
             }
         } catch (\Exception $e) {
-            app('errorLog')->info('用户名注册接口异常:'.$e->getMessage().json_encode($data));
-//            $this->errorLog($e->getMessage(), '用户名注册接口异常', $data);
+            DzqLog::error('用户名注册接口异常', $data, $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册接口异常');
         }
 
@@ -166,8 +166,7 @@ class RegisterController extends AuthBaseController
                                  $this->camelData($this->addUserInfo($user, $accessToken))
             );
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '" 注册接口异常-RegisterController： 入参：'
-                                  . json_encode($data) . '用户id：'. $this->user->id .';异常：'. $e->getMessage());
+            DzqLog::error('用户名注册接口异常', $data, $e->getMessage());
             $this->connection->rollback();
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册接口异常');
         }

@@ -22,6 +22,7 @@ use App\Models\SessionToken;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use App\Settings\SettingsRepository;
+use Discuz\Base\DzqLog;
 use Discuz\Wechat\EasyWechatTrait;
 use Endroid\QrCode\QrCode;
 use GuzzleHttp\Client;
@@ -102,10 +103,9 @@ class WechatPcRebindQrCodeController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $data);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId
-                                  . '-二维码异常-' . 'pc换绑二维码生成接口异常-WechatPcRebindQrCodeController：入参：'
-                                  . '用户id:'.$this->user->id. 'redirectUri:'. $this->inPut('redirectUri') . '异常：' .$e->getMessage()
-            );
+            DzqLog::error('pc换绑二维码生成接口异常', [
+                'redirectUri' => $this->inPut('redirectUri')
+            ], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc换绑二维码生成接口异常');
         }
     }

@@ -21,6 +21,7 @@ use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 
 class MiniProgramPcLoginPollController extends AuthBaseController
 {
@@ -57,8 +58,9 @@ class MiniProgramPcLoginPollController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . 'pc端小程序登录轮询接口异常-MiniProgramPcLoginPollController：入参：'
-                                  . 'sessionToken:'.$this->inPut('sessionToken') . ';userId:'. $this->user->id . ';异常：' . $e->getMessage());
+            DzqLog::error('pc端小程序登录轮询接口异常', [
+                'sessionToken' => $this->inPut('sessionToken')
+            ], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc端小程序登录轮询接口异常');
         }
     }
