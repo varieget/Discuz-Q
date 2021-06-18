@@ -14,7 +14,7 @@ class DeleteNotificationV2Controller extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN,'');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }

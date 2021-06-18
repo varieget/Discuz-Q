@@ -34,7 +34,7 @@ class ResourceGroupsController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN,'');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }
@@ -44,7 +44,7 @@ class ResourceGroupsController extends DzqController
         $id = $this->inPut('id');
 
         if(!$id){
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,'');
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
         $include = $this->inPut('include');
