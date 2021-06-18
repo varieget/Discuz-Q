@@ -83,6 +83,12 @@ class CreatePostController extends DzqController
         if ($this->user->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
+        if ($this->user->status == User::STATUS_NEED_FIELDS) {
+            $this->outPut(ResponseCode::JUMP_TO_SIGIN_FIELDS);
+        }
+        if ($this->user->status == User::STATUS_MOD) {
+            $this->outPut(ResponseCode::JUMP_TO_AUDIT);
+        }
         $thread = Thread::query()
             ->where([
                 'id' => $this->inPut('id'),

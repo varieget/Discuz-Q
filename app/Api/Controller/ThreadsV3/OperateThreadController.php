@@ -21,6 +21,7 @@ use App\Commands\Thread\EditThread;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Thread;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -54,6 +55,12 @@ class OperateThreadController extends DzqController
 
         if ($actor->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        if ($actor->status == User::STATUS_NEED_FIELDS) {
+            $this->outPut(ResponseCode::JUMP_TO_SIGIN_FIELDS);
+        }
+        if ($actor->status == User::STATUS_MOD) {
+            $this->outPut(ResponseCode::JUMP_TO_AUDIT);
         }
 
         if (
