@@ -84,7 +84,7 @@ class WechatH5LoginController extends AuthBaseController
             $sessionToken   = $this->inPut('sessionToken');//PC扫码使用，非必须存在
             $actor          = $this->user;
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5登录获取wx用户接口异常-WechatH5LoginController： ' . $e->getMessage());
+            DzqLog::error('H5登录获取wx用户接口异常', [], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录获取wx用户接口异常');
         }
 
