@@ -149,10 +149,8 @@ class DialogMessage extends Model
         if (!empty($message_text)) {
             $messageText = $message_text->image_url;
             if($messageText){
-                $image = (new ImageManager())->make($messageText);
-                $width = $image->getWidth();
-                $height = $image->getHeight();
-                $messageText = $messageText."?width=".$width."&height=".$height;
+                $img = getimagesize($messageText);
+                $messageText = $messageText."?width=".$img[0]."&height=".$img[1];
             }
         } else {
             $messageText = '';
