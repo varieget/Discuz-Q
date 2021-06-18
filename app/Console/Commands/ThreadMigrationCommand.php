@@ -744,9 +744,13 @@ class ThreadMigrationCommand extends AbstractCommand
     //获取老数据 threads 、posts
     public function getOldData($page, $limit){
         $data = [];
-        $threadIds = Thread::query()->where('type','!=', self::V3_TYPE)->offset(($page - 1)*$limit)->limit($limit)->pluck('id')->toArray();
+        $threadIds = Thread::query()->where('type','!=', self::V3_TYPE)
+            ->offset(($page - 1)*$limit)->limit($limit)->pluck('id')->toArray();
         if(empty($threadIds))   return $data;
-        $posts = Post::query()->whereIn('thread_id', $threadIds)->get(['id', 'content', 'thread_id']);
+        $posts = Post::query()->whereIn('thread_id', $threadIds)
+            ->where('user_id', '!=', 0)
+            ->whereNotNull('user_id')
+            ->get(['id', 'content', 'thread_id']);
         foreach ($posts as $val){
             $data[$val->thread_id][] = [
                 'post_id'   =>  $val->id,
