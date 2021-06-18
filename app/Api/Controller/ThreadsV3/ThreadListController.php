@@ -91,7 +91,7 @@ class ThreadListController extends DzqController
     {
         $filter = $this->inPut('filter');
         $page = intval($this->inPut('page'));
-        $perPage = $this->inPut('perPage');
+        $perPage = intval($this->inPut('perPage'));
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
         $page <= 0 && $page = 1;
@@ -153,7 +153,7 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        if($page == 1 && !$this->viewHotList){
+        if ($page == 1 && !$this->viewHotList) {
             $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         }
         //        if ($this->preload) {
@@ -303,7 +303,7 @@ class ThreadListController extends DzqController
                         ->orderByDesc('order.updated_at');
                     break;
                 case Thread::MY_OR_HIS_THREAD:
-                    if(!empty($filter['toUserId'])){
+                    if (!empty($filter['toUserId'])) {
                         $threads = $threads->where('th.is_anonymous', Thread::IS_NOT_ANONYMOUS);
                     }
 
