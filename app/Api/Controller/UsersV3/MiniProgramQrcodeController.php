@@ -44,8 +44,8 @@ class MiniProgramQrcodeController extends AuthBaseController
      */
     //todo 对接前端时更换路由
     static $qrcodeTypeAndRouteMap = [
-        'pc_login_mini'              => '/subPages/user/wx-authorization/index',
-        'pc_bind_mini'               => '/subPages/user/wx-auth/index',
+        'pc_login_mini'              => 'subPages/user/wx-authorization/index',
+        'pc_bind_mini'               => 'subPages/user/wx-auth/index',
     ];
     /**
      * 二维码生成类型与token标识映射
