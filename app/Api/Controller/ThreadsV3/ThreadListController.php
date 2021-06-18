@@ -61,13 +61,13 @@ class ThreadListController extends DzqController
         $complex = $filter['complex'] ?? null;
         $this->viewHotList();
 
-        if ($this->user->isGuest()) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
-        }
-
         $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
 
         if (!$this->viewHotList) {
+            if ($this->user->isGuest() && !$this->categoryIds) {
+                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+            }
+
             if (!$this->categoryIds && empty($complex)) {
                 throw new PermissionDeniedException('没有浏览权限');
             }
