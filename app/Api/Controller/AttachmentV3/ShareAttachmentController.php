@@ -113,8 +113,8 @@ class ShareAttachmentController extends DzqController
     public function sign($data)
     {
         $stringArr = openssl_random_pseudo_bytes(16);
-        $stringArr[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0100
-        $stringArr[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
+        $stringArr[6] = chr(ord($stringArr[6]) & 0x0f | 0x40); // set version to 0100
+        $stringArr[8] = chr(ord($stringArr[8]) & 0x3f | 0x80); // set bits 6-7 to 10
         $string =  vsprintf('%s%s%s%s%s%s%s%s',
             str_split(bin2hex($stringArr), 4));
         return md5($string.$data['threadId'].$data['attachmentsId']);
