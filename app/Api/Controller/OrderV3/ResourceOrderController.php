@@ -27,7 +27,7 @@ class ResourceOrderController extends DzqController
                     ])
             ->first();
         if(empty($order)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '');
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
         $order = [
             'id' => $order->id,
