@@ -386,17 +386,17 @@ class ThreadListController extends DzqController
         !empty($sequence['block_topic_ids']) && $blockTopicIds = explode(',', $sequence['block_topic_ids']);
         !empty($sequence['block_thread_ids']) && $blockThreadIds = explode(',', $sequence['block_thread_ids']);
 
-        $query = Thread::query();
-        $query->leftJoin('group_user as g1', 'g1.user_id', '=', 'threads.user_id');
-        $query->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'threads.id');
+        $query = $this->getBaseThreadsBuilder();
+        $query->leftJoin('group_user as g1', 'g1.user_id', '=', 'th.user_id');
+        $query->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'th.id');
 
         if (!empty($types)) {
-            $query->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'threads.id')
+            $query->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
                 ->whereIn('tag.tag', $types);
         }
 
         if (!empty($categoryIds)) {
-            $query->whereIn('threads.category_id', $categoryIds);
+            $query->whereIn('th.category_id', $categoryIds);
         }
 
         foreach ($sequence as $key => $value) {
@@ -410,11 +410,11 @@ class ThreadListController extends DzqController
                     $topicIds = [];
                 }
                 if ($key == 'user_ids') {
-                    $query->whereIn('threads.user_id', $userIds);
+                    $query->whereIn('th.user_id', $userIds);
                     $userIds = [];
                 }
                 if ($key == 'thread_ids') {
-                    $query->whereIn('threads.id', $threadIds);
+                    $query->whereIn('th.id', $threadIds);
                     $threadIds = [];
                 }
                 break;
@@ -428,27 +428,27 @@ class ThreadListController extends DzqController
             $query->orWhereIn('topic.topic_id', $topicIds);
         }
         if (!empty($userIds)) {
-            $query->orWhereIn('threads.user_id', $userIds);
+            $query->orWhereIn('th.user_id', $userIds);
         }
         if (!empty($threadIds)) {
-            $query->orWhereIn('threads.id', $threadIds);
+            $query->orWhereIn('th.id', $threadIds);
         }
         if (!empty($blockUserIds)) {
-            $query->whereNotIn('threads.user_id', $blockUserIds);
+            $query->whereNotIn('th.user_id', $blockUserIds);
         }
         if (!empty($blockThreadIds)) {
-            $query->whereNotIn('threads.id', $blockThreadIds);
+            $query->whereNotIn('th.id', $blockThreadIds);
         }
         if (!empty($blockTopicIds)) {
             $query->whereNotIn('topic.topic_id', $blockTopicIds);
         }
-        $query->where('threads.is_approved', Thread::BOOL_YES);
-        $query->where('threads.is_draft', Thread::BOOL_NO);
-        $query->where('threads.is_sticky', Thread::BOOL_NO);
-        $query->where('threads.is_display', Thread::BOOL_YES);
-        $query->whereNull('threads.deleted_at');
-        $query->whereNotNull('threads.user_id');
-        $query->orderBy('threads.created_at', 'desc');
+//        $query->where('threads.is_approved', Thread::BOOL_YES);
+//        $query->where('threads.is_draft', Thread::BOOL_NO);
+//        $query->where('threads.is_sticky', Thread::BOOL_NO);
+//        $query->where('threads.is_display', Thread::BOOL_YES);
+//        $query->whereNull('th.deleted_at');
+        $query->whereNotNull('th.user_id');
+        $query->orderBy('th.created_at', 'desc');
         return $query;
     }
 
