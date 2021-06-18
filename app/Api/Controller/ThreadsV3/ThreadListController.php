@@ -39,7 +39,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 10;//预加载的页数
+    const PRELOAD_PAGES = 20;//预加载的页数
 
     private $preloadCount = 0;
     private $categoryIds = [];
@@ -100,7 +100,7 @@ class ThreadListController extends DzqController
             $perPage = 10;
             $filter = ['sort' => Thread::SORT_BY_HOT];
         }
-//        $this->openQueryLog();
+        $this->openQueryLog();
         $this->preloadCount = self::PRELOAD_PAGES * $perPage;
         if (empty($sequence)) {
             $threads = $this->getFilterThreads($filter, $page, $perPage);
@@ -111,7 +111,7 @@ class ThreadListController extends DzqController
         //缓存中获取最新的threads
         $pageData = $this->getThreads($threadIds);
         $threads['pageData'] = $this->getFullThreadData($pageData, true);
-//        $this->info('query_sql_log', app(\Illuminate\Database\ConnectionInterface::class)->getQueryLog());
+        $this->info('query_sql_log', app(\Illuminate\Database\ConnectionInterface::class)->getQueryLog());
         $this->outPut(0, '', $threads);
     }
 
@@ -183,7 +183,7 @@ class ThreadListController extends DzqController
             });
             return $threads;
         }, true);
-        $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
+//        $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
         return $threads;
     }
 

@@ -39,6 +39,7 @@ trait ThreadListTrait
 {
     private function getFullThreadData($threads, $isList = false)
     {
+        $loginUserId = $this->user->id;
         $userIds = array_unique(array_column($threads, 'user_id'));
         $groupUsers = $this->getGroupUserInfo($userIds);
         $users = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
@@ -48,7 +49,7 @@ trait ThreadListTrait
         $posts = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_POSTS, $threadIds, function ($threadIds) {
             return Post::instance()->getPosts($threadIds);
         }, 'thread_id');
-
+        $postIds = array_column($posts, 'id');
         $toms = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TOMS, $threadIds, function ($threadIds) {
             return ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
         }, 'thread_id', true);
@@ -60,6 +61,7 @@ trait ThreadListTrait
         $inPutToms = $this->buildIPutToms($toms);
         $result = [];
         $concatString = '';
+        $loginUserData = $this->getLoginUserData($loginUserId, $threadIds, $postIds);
         foreach ($threads as $thread) {
             $threadId = $thread['id'];
             $userId = $thread['user_id'];
@@ -70,7 +72,7 @@ trait ThreadListTrait
             $threadTags = [];
             isset($tags[$threadId]) && $threadTags = $tags[$threadId];
             $concatString .= ($thread['title'] . $post['content']);
-            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags);
+            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags, $loginUserData);
         }
         list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($concatString);
         foreach ($result as &$item) {
@@ -87,19 +89,50 @@ trait ThreadListTrait
         return $result;
     }
 
+    private function getLoginUserData($loginUserId, $threadIds, $postIds)
+    {
+        //付费订单
+        $payOrders = [];
+        //打赏订单
+        $rewardOrders = [];
+        Order::query()
+            ->whereIn('thread_id', $threadIds)
+            ->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT, Order::ORDER_TYPE_REWARD])
+            ->where([
+                'user_id' => $loginUserId,
+                'status' => Order::ORDER_STATUS_PAID
+            ])->get()->each(function ($item) use (&$rewardOrders, &$payOrders) {
+                $item = $item->toArray();
+                if ($item['type'] == Order::ORDER_TYPE_REWARD) {
+                    $rewardOrders[$item['thread_id']] = $item;
+                } else {
+                    $payOrders[$item['thread_id']] = $item;
+                }
+            });
+        //我的点赞
+        $postUsers = PostUser::query()->whereIn('post_id', $postIds)->where('user_id', $loginUserId)->get()->keyBy('post_id')->toArray();
+        //我的收藏
+        $threadUsers = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $loginUserId)->get()->keyBy('thread_id')->toArray();
+        return [
+            ThreadHelper::EXIST_PAY_ORDERS => $payOrders,
+            ThreadHelper::EXIST_REWARD_ORDERS => $rewardOrders,
+            ThreadHelper::EXIST_POST_USERS => $postUsers,
+            ThreadHelper::EXIST_THREAD_USERS => $threadUsers
+        ];
+    }
+
     private function setGlobalCache()
     {
-        $loginUserId = $this->user->id;
         $cache = [
             CacheKey::LIST_THREADS_V3_POST_USERS => DzqCache::get(CacheKey::LIST_THREADS_V3_POST_USERS),
             CacheKey::LIST_THREADS_V3_ATTACHMENT => DzqCache::get(CacheKey::LIST_THREADS_V3_ATTACHMENT),
             CacheKey::LIST_THREADS_V3_THREADS => DzqCache::get(CacheKey::LIST_THREADS_V3_THREADS),
             CacheKey::LIST_THREADS_V3_VIDEO => DzqCache::get(CacheKey::LIST_THREADS_V3_VIDEO),
 
-            CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $loginUserId),
-            CacheKey::LIST_THREADS_V3_THREAD_USERS . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_THREAD_USERS . $loginUserId),
-            CacheKey::LIST_THREADS_V3_POST_LIKED . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_POST_LIKED . $loginUserId),
-            CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $loginUserId)
+//            CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $loginUserId),
+//            CacheKey::LIST_THREADS_V3_THREAD_USERS . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_THREAD_USERS . $loginUserId),
+//            CacheKey::LIST_THREADS_V3_POST_LIKED . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_POST_LIKED . $loginUserId),
+//            CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $loginUserId)
         ];
         app()->instance(CacheKey::APP_CACHE, $cache);
     }
