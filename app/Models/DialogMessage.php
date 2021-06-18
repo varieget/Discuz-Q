@@ -22,6 +22,7 @@ use App\Formatter\DialogMessageFormatter;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
 
 /**
  * @property int $id
@@ -148,7 +149,9 @@ class DialogMessage extends Model
         if (!empty($message_text)) {
             $messageText = $message_text->image_url;
             if($messageText){
-                list($width, $height) = getimagesize($messageText);
+                $image = (new ImageManager())->make($messageText);
+                $width = $image->getWidth();
+                $height = $image->getHeight();
                 $messageText = $messageText."?width=".$width."&height=".$height;
             }
         } else {
