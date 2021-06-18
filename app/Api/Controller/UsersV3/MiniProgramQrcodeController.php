@@ -46,7 +46,7 @@ class MiniProgramQrcodeController extends AuthBaseController
     //todo 对接前端时更换路由
     static $qrcodeTypeAndRouteMap = [
         'pc_login_mini'              => 'subPages/user/wx-authorization/index',
-        'pc_bind_mini'               => 'subPages/user/wx-auth/index',
+        'pc_bind_mini'               => 'subPages/user/wx-bind/index',
     ];
     /**
      * 二维码生成类型与token标识映射
@@ -104,7 +104,7 @@ class MiniProgramQrcodeController extends AuthBaseController
             $sessionToken = $token->token;
             //获取小程序全局token
             $app = $this->miniProgram();
-            $optional['path'] = $path;
+            $optional['page'] = $path;
             $wxqrcodeResponse = $app->app_code->getUnlimit($sessionToken, $optional);
             if(is_array($wxqrcodeResponse) && isset($wxqrcodeResponse['errcode']) && isset($wxqrcodeResponse['errmsg'])) {
                 //todo 日志记录
