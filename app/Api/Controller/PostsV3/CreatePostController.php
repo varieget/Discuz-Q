@@ -169,6 +169,10 @@ class CreatePostController extends DzqController
             }
         }
 
+        if (empty($content) && empty($attachments)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少必传参数');
+        }
+
         $requestData['attributes'] = $data;
         $ip = ip($this->request->getServerParams());
         $port = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
