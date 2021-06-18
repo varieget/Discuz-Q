@@ -303,6 +303,10 @@ class ThreadListController extends DzqController
                         ->orderByDesc('order.updated_at');
                     break;
                 case Thread::MY_OR_HIS_THREAD:
+                    if(!empty($filter['toUserId'])){
+                        $threads = $threads->where('th.is_anonymous', Thread::IS_NOT_ANONYMOUS);
+                    }
+
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
                     $threads = $threads->where('user_id', $userId)
                         ->orderByDesc('th.id');
