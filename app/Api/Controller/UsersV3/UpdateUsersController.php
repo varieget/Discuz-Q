@@ -26,6 +26,7 @@ use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Support\Arr;
 
 class UpdateUsersController extends DzqController
 {
@@ -68,7 +69,7 @@ class UpdateUsersController extends DzqController
         $payPassword = $this->inPut('payPassword');
         $payPasswordConfirmation = $this->inPut('payPasswordConfirmation');
         $payPasswordToken = $this->inPut('payPasswordToken');
-        $signature = $this->inPut('signature');
+
         $registerReason = $this->inPut('registerReason');
 
         $requestData = [];
@@ -94,7 +95,10 @@ class UpdateUsersController extends DzqController
             $requestData['pay_password_token'] = $payPasswordToken;
         }
 
-        $requestData['signature'] = $signature;
+        $getRequestData = json_decode(file_get_contents("php://input"), TRUE);
+        if (Arr::has($getRequestData, 'signature')){
+            $requestData['signature'] = $this->inPut('signature');
+        }
 
         if (!empty($registerReason)) {
             $requestData['register_reason'] = $registerReason;
