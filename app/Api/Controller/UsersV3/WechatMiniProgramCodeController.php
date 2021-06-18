@@ -23,6 +23,7 @@ use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 use Discuz\Wechat\EasyWechatTrait;
 
 /**
@@ -87,8 +88,7 @@ class WechatMiniProgramCodeController extends DzqController
                 ],
             ]);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-'.'生成小程序二维码接口异常-WechatMiniProgramCodeController： 入参：'
-                . json_encode($paramData) . ';用户id：' . $this->user->id . ';异常：' . $e->getMessage());
+            DzqLog::error('生成小程序二维码接口异常', $paramData, $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '生成小程序二维码接口异常');
         }
         $response = $response->withoutHeader('Content-disposition');

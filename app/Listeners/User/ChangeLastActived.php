@@ -21,6 +21,7 @@ namespace App\Listeners\User;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Models\UserLoginFailLog;
+use Discuz\Base\DzqLog;
 use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Foundation\Application;
@@ -76,7 +77,7 @@ class ChangeLastActived
             //清除用户登录失败次数
             UserLoginFailLog::reSetFailCountByUserId($user->id);
         } catch (\Exception $e){
-            app('errorLog')->info('改变用户登录状态出错：' . $e->getMessage());
+            DzqLog::error('改变用户登录状态出错', [], $e->getMessage());
             Utils::outPut(ResponseCode::INTERNAL_ERROR, '改变用户登录状态失败');
         }
 

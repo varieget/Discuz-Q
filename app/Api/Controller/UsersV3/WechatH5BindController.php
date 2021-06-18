@@ -27,6 +27,7 @@ use App\Models\UserWechat;
 use App\Repositories\UserRepository;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Base\DzqLog;
 use Discuz\Contracts\Socialite\Factory;
 use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -71,10 +72,10 @@ class WechatH5BindController extends AuthBaseController
             $type           = $this->inPut('type');//用于区分sessionToken来源于pc还是h5
             $actor          = !empty($token->user) ? $token->user : $this->user;
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5绑定获取wx用户接口异常-WechatH5BindController： '
-                                  .'sessionToken:'.$this->inPut('sessionToken')
-                                  .';type:'.$this->inPut('type')
-                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
+            DzqLog::error('H5绑定获取wx用户接口异常', [
+                'sessionToken'  => $this->inPut('sessionToken'),
+                'type'          => $this->inPut('type')
+            ], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5绑定获取wx用户接口异常');
         }
 
@@ -143,12 +144,12 @@ class WechatH5BindController extends AuthBaseController
                 $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
             }
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5绑定接口异常-WechatH5BindController： '
-                                  .'mp_openid:' . $wxuser->getId()
-                                  .';inviteCode:'.$this->inPut('inviteCode')
-                                  .';sessionToken:'.$this->inPut('sessionToken')
-                                  .';type:'.$this->inPut('type')
-                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
+            DzqLog::error('H5绑定接口异常', [
+                'mp_openid'     => $wxuser->getId(),
+                'inviteCode'    => $this->inPut('inviteCode'),
+                'sessionToken'  => $this->inPut('sessionToken'),
+                'type'          => $this->inPut('type')
+            ], $e->getMessage());
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR,'H5绑定接口异常');
         }
