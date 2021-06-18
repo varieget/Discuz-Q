@@ -23,6 +23,7 @@ use App\Models\SessionToken;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 use Endroid\QrCode\QrCode;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Discuz\Auth\AssertPermissionTrait;
@@ -147,10 +148,7 @@ class WechatH5QrCodeController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $data);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId
-                                  . '-二维码异常-' . 'h5二维码生成接口异常-WechatH5QrCodeController： 入参：'
-                                  . json_encode($this->paramData) . '异常：' .$e->getMessage()
-            );
+            DzqLog::error('h5二维码生成接口异常', $this->paramData, $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'h5二维码生成接口异常');
         }
 

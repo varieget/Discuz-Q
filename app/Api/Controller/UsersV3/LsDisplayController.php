@@ -26,6 +26,7 @@ use App\Models\UserQq;
 use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 
 class LsDisplayController extends DzqController
 {
@@ -58,7 +59,7 @@ class LsDisplayController extends DzqController
 
             return $this->outPut(ResponseCode::SUCCESS, '',['status' => $status]);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户名密码入口是否展示接口异常-LsDisplayController： ' . $e->getMessage());
+            DzqLog::error('用户名密码入口是否展示接口异常', [], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名密码入口是否展示接口异常');
         }
     }

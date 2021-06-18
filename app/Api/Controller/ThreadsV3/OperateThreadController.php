@@ -21,6 +21,7 @@ use App\Commands\Thread\EditThread;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Thread;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -55,6 +56,12 @@ class OperateThreadController extends DzqController
         if ($actor->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
+        if ($actor->status == User::STATUS_NEED_FIELDS) {
+            $this->outPut(ResponseCode::JUMP_TO_SIGIN_FIELDS);
+        }
+        if ($actor->status == User::STATUS_MOD) {
+            $this->outPut(ResponseCode::JUMP_TO_AUDIT);
+        }
 
         if (
             (!empty($isSticky) || $isSticky === 0 || is_bool($isSticky))
@@ -65,7 +72,7 @@ class OperateThreadController extends DzqController
 
         if (
             (!empty($isEssence) || $isEssence === 0 || is_bool($isEssence))
-            && !$userRepo->canEssenceThread($actor)
+            && !$userRepo->canFavoriteThread($actor)
         ) {
             throw new PermissionDeniedException('没有加精权限');
         }

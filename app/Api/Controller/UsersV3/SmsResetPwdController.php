@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
+use Discuz\Base\DzqLog;
 
 class SmsResetPwdController extends AuthBaseController
 {
@@ -64,8 +65,10 @@ class SmsResetPwdController extends AuthBaseController
 
             $this->outPut(ResponseCode::NET_ERROR);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号重置密码接口异常-SmsResetPwdController： 入参：'
-                                  .'mobile:'.$this->inPut('mobile').';code:'.$this->inPut('code') . ';用户id：'. $this->user->id . ';异常：' . $e->getMessage());
+            DzqLog::error('手机号重置密码接口异常', [
+                'mobile'    => $this->inPut('mobile'),
+                'code'      => $this->inPut('code'),
+            ], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号重置密码接口异常');
         }
     }

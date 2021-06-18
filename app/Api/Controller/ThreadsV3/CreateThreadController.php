@@ -26,6 +26,7 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
+use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -43,6 +44,16 @@ class CreateThreadController extends DzqController
     {
         $categoryId = $this->inPut('categoryId');
         $user = $this->user;
+
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        if ($this->user->status == User::STATUS_NEED_FIELDS) {
+            $this->outPut(ResponseCode::JUMP_TO_SIGIN_FIELDS);
+        }
+        if ($this->user->status == User::STATUS_MOD) {
+            $this->outPut(ResponseCode::JUMP_TO_AUDIT);
+        }
 
         if (!$userRepo->canCreateThread($user, $categoryId)) {
             throw new PermissionDeniedException('没有发帖权限');

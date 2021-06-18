@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\UserWalletLog;
 use App\Providers\PostServiceProvider;
 use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Database\Eloquent\Builder;
@@ -58,7 +59,7 @@ class ListPostsController extends DzqController
             ->whereNull('deleted_at')
             ->first();
         if (!$thread) {
-            throw new NotFoundResourceException();
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
         return $userRepo->canViewThreadDetail($this->user, $thread);
@@ -91,7 +92,7 @@ class ListPostsController extends DzqController
         Post::setStateUser($this->user);
         $query = Post::query()
             ->with([
-                'thread:id,type',
+                'thread:id,type,category_id',
                 'user:id,username,nickname,avatar,realname',
                 'user.groups:id,name,is_display',
                 'images',
@@ -142,7 +143,7 @@ class ListPostsController extends DzqController
 
         $allLastThreeComments = Post::query()
             ->with([
-                'thread:id,type',
+                'thread:id,type,category_id',
                 'user:id,nickname,avatar,realname',
                 'commentUser:id,nickname,avatar,realname',
                 'replyUser:id,nickname,avatar,realname',
@@ -216,7 +217,7 @@ class ListPostsController extends DzqController
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
             $data['content'] = str_replace($searches, $replaces, $content);
         }
-        
+
         if ($post->deleted_at) {
             $data['isDeleted'] = true;
             $data['deletedAt'] = $post->deleted_at->format('Y-m-d H:i:s');

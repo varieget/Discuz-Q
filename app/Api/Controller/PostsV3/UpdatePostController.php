@@ -24,6 +24,7 @@ use App\Common\ResponseCode;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadUser;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
@@ -48,12 +49,18 @@ class UpdatePostController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {
-            return false;
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        if ($this->user->status == User::STATUS_NEED_FIELDS) {
+            $this->outPut(ResponseCode::JUMP_TO_SIGIN_FIELDS);
+        }
+        if ($this->user->status == User::STATUS_MOD) {
+            $this->outPut(ResponseCode::JUMP_TO_AUDIT);
         }
 
         $post = Post::query()->where(['id' => $this->inPut('pid')])->first();
         if (!$post) {
-            return false;
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
         $data = $this->inPut('data', []);

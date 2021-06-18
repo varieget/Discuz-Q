@@ -26,6 +26,7 @@ use App\Events\Users\Logind;
 use App\Models\SessionToken;
 use App\Models\User;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqLog;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
@@ -149,10 +150,9 @@ class SmsLoginController extends AuthBaseController
             $this->connection->commit();
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '" 注册/登录接口异常-SmsLoginController： 入参：'
-                                  . json_encode($paramData) . ';用户id：' . $this->user->id . ';异常：' . $e->getMessage());
+            DzqLog::error('手机号注册-登录接口异常', $paramData, $e->getMessage());
             $this->connection->rollback();
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号注册/登录接口异常');
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号注册-登录接口异常');
         }
     }
 }

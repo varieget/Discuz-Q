@@ -23,6 +23,7 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 use Discuz\Foundation\EventsDispatchTrait;
 use Discuz\Auth\AssertPermissionTrait;
 
@@ -67,8 +68,9 @@ class CheckController extends DzqController
 
             return $this->outPut(ResponseCode::SUCCESS);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '用户昵称检测接口异常-CheckController： 入参：username:'
-                                  . $this->inPut('username') . ';异常:' . $e->getMessage());
+            DzqLog::error('用户名登录接口异常', [
+                'username' => $this->inPut('username')
+            ], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户昵称检测接口异常');
         }
     }

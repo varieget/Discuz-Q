@@ -29,6 +29,7 @@ use App\Models\UserWechat;
 use App\Notifications\Messages\Wechat\RegisterWechatMessage;
 use App\Notifications\System;
 use App\Validators\UserValidator;
+use Discuz\Base\DzqLog;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use App\Settings\SettingsRepository;
@@ -144,12 +145,11 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '微信过渡阶段自动注册用户接口异常-WechatTransitionAutoRegisterController：入参：'
-                                  .';sessionToken:'.$this->inPut('sessionToken')
-                                  .';type:'.$this->inPut('type')
-                                  .';inviteCode:'.$this->inPut('inviteCode')
-                                  .';userId:'.$this->user->id
-                                  . ';异常：' . $e->getMessage());
+            DzqLog::error('微信过渡阶段自动注册用户接口异常', [
+                'sessionToken'  => $this->inPut('sessionToken'),
+                'type'          => $this->inPut('type'),
+                'inviteCode'    => $this->inPut('inviteCode'),
+            ], $e->getMessage());
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR,'微信过渡阶段自动注册用户接口异常');
         }

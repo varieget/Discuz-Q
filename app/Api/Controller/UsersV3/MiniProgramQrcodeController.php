@@ -19,13 +19,15 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use App\Settings\SettingsRepository;
+use Discuz\Base\DzqLog;
 use Discuz\Wechat\EasyWechatTrait;
 use GuzzleHttp\Client;
 
-class MiniProgramQrcodeController extends DzqController
+class MiniProgramQrcodeController extends AuthBaseController
 {
     use EasyWechatTrait;
 
@@ -43,8 +45,8 @@ class MiniProgramQrcodeController extends DzqController
      */
     //todo 对接前端时更换路由
     static $qrcodeTypeAndRouteMap = [
-        'pc_login_mini'              => '/pages/user/pc-login',
-        'pc_bind_mini'               => '/pages/user/pc-relation',
+        'pc_login_mini'              => 'subPages/user/wx-authorization/index',
+        'pc_bind_mini'               => 'subPages/user/wx-auth/index',
     ];
     /**
      * 二维码生成类型与token标识映射
@@ -83,9 +85,14 @@ class MiniProgramQrcodeController extends DzqController
             //跳转路由选择
             $path = self::$qrcodeTypeAndRouteMap[$type];
             $actor = $this->user;
-            if ($type == 'pc_bind_mini' && empty($actor->id)) {
-                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+            if ($type == 'pc_bind_mini') {
+                $userId = $this->getCookie('dzq_user_id');
+                $actor = User::query()->where('id', (int)$userId)->first();
+                if (empty($actor)) {
+                    $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+                }
             }
+
             if($actor && $actor->id) {
                 $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
             } else {
@@ -111,10 +118,9 @@ class MiniProgramQrcodeController extends DzqController
 
             $this->outPut(ResponseCode::SUCCESS, '', $data);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId
-                                  . '-二维码异常-' . '小程序二维码生成接口异常-MiniProgramQrcodeController： 入参：'
-                                  . 'type:'.$this->inPut('type') . ';userId:'. $this->user->id . ';异常：' .$e->getMessage()
-            );
+            DzqLog::error('小程序二维码生成接口异常', [
+                'type' => $this->inPut('type')
+            ], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '小程序二维码生成接口异常');
         }
     }

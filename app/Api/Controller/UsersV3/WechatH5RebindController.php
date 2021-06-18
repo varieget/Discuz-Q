@@ -25,6 +25,7 @@ use App\Models\UserWechat;
 use App\Repositories\UserRepository;
 use App\User\Bound;
 use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Base\DzqLog;
 use Discuz\Contracts\Socialite\Factory;
 use Exception;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
@@ -64,7 +65,7 @@ class WechatH5RebindController extends AuthBaseController
             $token          = SessionToken::get($sessionToken);
             $actor          = !empty($token->user) ? $token->user : $this->user;
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5换绑获取wx用户接口异常-WechatH5RebindController： ' . $e->getMessage());
+            DzqLog::error('H5换绑获取wx用户接口异常', [], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5换绑获取wx用户接口异常');
         }
 
@@ -118,9 +119,9 @@ class WechatH5RebindController extends AuthBaseController
                 $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
             }
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . 'H5换绑接口异常-WechatH5BindController： '
-                                  .';sessionToken:'.$this->inPut('sessionToken')
-                                  .';userId:'.$this->user->id . ';异常：' . $e->getMessage());
+            DzqLog::error('用户名登录接口异常', [
+                'sessionToken' => $this->inPut('sessionToken')
+            ], $e->getMessage());
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR,'H5换绑接口异常');
         }

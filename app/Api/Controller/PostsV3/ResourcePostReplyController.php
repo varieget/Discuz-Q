@@ -39,9 +39,13 @@ class ResourcePostReplyController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+
         $post = Post::find($this->inPut('pid'));
         if (!$post) {
-            return false;
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
         return $userRepo->canViewThreadDetail($this->user, $post->thread);
     }

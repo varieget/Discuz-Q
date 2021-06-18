@@ -95,7 +95,8 @@ class AdminTopicListController extends DzqController
 
         if ($username = trim(Arr::get($filter, 'username'))) {
             $query->join('users', 'users.id', '=', 'topics.user_id')
-                ->where('users.username', 'like', '%' . $username . '%');
+                ->where('users.username', 'like', '%' . $username . '%')
+                ->selectRaw("topics.*,users.id as uid");
         }
 
         if ($content = trim(Arr::get($filter, 'content'))) {

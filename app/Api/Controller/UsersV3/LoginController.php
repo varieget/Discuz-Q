@@ -27,6 +27,8 @@ use App\Events\Users\TransitionBind;
 use App\Models\SessionToken;
 use App\Passport\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqLog;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Validation\Factory as Validator;
@@ -124,8 +126,7 @@ class LoginController extends AuthBaseController
             }
             $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-登录异常-'. '" 登录接口异常-LoginController： 入参：'
-                                  . json_encode($paramData) . '用户id: "' . $this->user->id. ';异常：' . $e->getMessage());
+            DzqLog::error('用户名登录接口异常', $paramData, $e->getMessage());
             $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名登录接口异常');
         }
 

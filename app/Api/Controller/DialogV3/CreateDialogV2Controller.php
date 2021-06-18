@@ -32,6 +32,9 @@ class CreateDialogV2Controller extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
         return $userRepo->canCreateDialog($this->user);
     }
 
@@ -70,7 +73,7 @@ class CreateDialogV2Controller extends DzqController
         }
 
         $res = $res->toArray();
-       
+
         $data = [
             'dialogId' =>$res['id'],
         ];

@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
+use App\Common\ResponseCode;
 use App\Models\DenyUser;
 use App\Models\Group;
 use Discuz\Base\DzqCache;
@@ -64,7 +65,7 @@ class ThreadListController extends DzqController
 
         if (!$this->viewHotList) {
             if (!$this->categoryIds && empty($complex)) {
-                throw new PermissionDeniedException('没有浏览权限');
+                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
             }
         }
         return true;
@@ -302,6 +303,10 @@ class ThreadListController extends DzqController
                         ->orderByDesc('order.updated_at');
                     break;
                 case Thread::MY_OR_HIS_THREAD:
+                    if(!empty($filter['toUserId'])){
+                        $threads = $threads->where('th.is_anonymous', Thread::IS_NOT_ANONYMOUS);
+                    }
+
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
                     $threads = $threads->where('user_id', $userId)
                         ->orderByDesc('th.id');

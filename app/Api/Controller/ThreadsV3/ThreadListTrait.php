@@ -304,7 +304,7 @@ trait ThreadListTrait
         foreach ($threads as $thread) {
             $threadId = $thread['id'];
             $post = $posts[$threadId] ?? '';
-            $linkString .= ($thread['title'] . !empty($post['content']) ? $post['content'] : '');
+            $linkString .= ($thread['title'] . (!empty($post) ? $post['content'] : ''));
         }
         $sReplaces = Thread::instance()->getReplaceStringV3($linkString);
         DzqCache::hMSet(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $sReplaces);

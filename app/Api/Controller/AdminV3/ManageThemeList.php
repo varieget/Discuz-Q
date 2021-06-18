@@ -80,7 +80,7 @@ class ManageThemeList extends DzqController
             );
 
         //是否审核and是否草稿
-        $query->where(['threads.is_approved' => $isApproved, 'threads.is_draft' => Thread::IS_NOT_DRAFT]);
+        $query->where('threads.is_draft', Thread::IS_NOT_DRAFT);
 
         //浏览次数
         if ($viewCountGt !== '') {
@@ -141,7 +141,8 @@ class ManageThemeList extends DzqController
                 ->leftJoin('users as users1', 'users1.id','=','threads.deleted_user_id');
         } elseif ($isDeleted == 'no') {
             // 不看回收站帖子
-            $query->whereNull('threads.deleted_at');
+            $query->where('threads.is_approved', $isApproved)
+                ->whereNull('threads.deleted_at');
         }
 
         //类型筛选

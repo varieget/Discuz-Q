@@ -24,6 +24,7 @@ use App\Models\SessionToken;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
+use Discuz\Base\DzqLog;
 use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Database\ConnectionInterface;
@@ -108,8 +109,7 @@ class SmsBindController extends AuthBaseController
             $this->outPut(ResponseCode::SUCCESS, '', []);
 
         } catch (Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号绑定接口异常-SmsBindController： 入参：'
-                                  . json_encode($paramData) . ';userId:' . $this->user->id . '；异常：' . $e->getMessage());
+            DzqLog::error('用户名登录接口异常', $paramData, $e->getMessage());
             $this->connection->rollback();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号绑定接口异常');
         }
