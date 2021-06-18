@@ -48,7 +48,7 @@ class UpdateAdminController extends DzqController
         $id = $this->inPut('id');
 
         if(empty($id)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'');
+            $this->outPut(ResponseCode::INVALID_PARAMETER,'用户id不能为空');
         }
         $username = $this->inPut('username');
         $nickname = $this->inPut('nickname');
@@ -58,12 +58,16 @@ class UpdateAdminController extends DzqController
         $status = $this->inPut('status');
         $expire_at = $this->inPut('expiredAt');
         $groupId = $this->inPut('groupId');
-        $refuseMessage = $this->inPut('refuseMessage');
 
         $requestData = [];
         if(!empty($username)){
             $requestData['username'] = $username;
         }
+
+        if (!empty($nickname)) {
+            $requestData['nickname'] = $nickname;
+        }
+
         if(!empty($password)){
             $requestData['password'] = $password;
         }
@@ -72,6 +76,7 @@ class UpdateAdminController extends DzqController
         }
 
         $requestData['mobile'] = $mobile;
+        $requestData['status'] = $status;
 
         if(!empty($expire_at)){
             $requestData['expired_at'] = $expire_at;
@@ -79,15 +84,6 @@ class UpdateAdminController extends DzqController
         if(!empty($groupId)){
             $requestData['groupId'] = $groupId;
         }
-        if(!empty($refuseMessage)){
-            $requestData['refuse_message'] = $refuseMessage;
-        }
-
-        if (!empty($nickname)) {
-            $requestData['nickname'] = $nickname;
-        }
-
-        $requestData['status'] = $status;
 
         $this->dzqValidate($requestData, [
             'username'=> 'required|max:15',
