@@ -141,6 +141,7 @@ class ListUserFollowController extends DzqController
 
         $type = (int) Arr::get($filter, 'type', 1);
         $username = Arr::get($filter, 'userName');
+        $ncikname = Arr::get($filter, 'nickName');
         if ($user_id = (int)Arr::get($filter, 'userId')) {
             $user = User::query()->findOrFail($user_id);
         }
@@ -165,6 +166,13 @@ class ListUserFollowController extends DzqController
                 $query->join('users', 'users.id', '=', 'user_follow.'.$join_field)
                     ->where(function ($query) use ($username) {
                         $query->where('users.username', 'like', "%{$username}%");
+                    });
+            }
+
+            if ($ncikname) {
+                $query->join('users', 'users.id', '=', 'user_follow.'.$join_field)
+                    ->where(function ($query) use ($ncikname) {
+                        $query->where('users.nickname', 'like', "%{$ncikname}%");
                     });
             }
 
@@ -233,7 +241,7 @@ class ListUserFollowController extends DzqController
             'pid' => $user['id'],
             'userName' => $user['username'],
             'avatar' => $user['avatar'],
-            'nickname' => $user['nickname'],
+            'nickName' => $user['nickname'],
         ];
     }
 
