@@ -512,9 +512,9 @@ trait ThreadTrait
             return;
         }
 
-        preg_match_all('/@.+? /', $post->parsedContent, $newsNameArr);
+        preg_match_all('/<span.*>(.*)<\/span>/isU', $post->parsedContent, $newsNameArr);
 
-        $newsNameArr = array_reduce($newsNameArr, 'array_merge', array());
+        $newsNameArr = $newsNameArr[1];
 
         if (empty($newsNameArr)) {
             return;
@@ -528,7 +528,7 @@ trait ThreadTrait
             }
         }
 
-        $users = User::query()->whereIn('nickname', $newsNameArr2)->get();
+        $users = User::query()->whereIn('username', $newsNameArr2)->get();
 
         if (empty($users)) {
             return;
