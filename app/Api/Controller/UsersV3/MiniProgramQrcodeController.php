@@ -19,6 +19,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use App\Settings\SettingsRepository;
@@ -44,8 +45,8 @@ class MiniProgramQrcodeController extends AuthBaseController
      */
     //todo 对接前端时更换路由
     static $qrcodeTypeAndRouteMap = [
-        'pc_login_mini'              => '/subPages/user/wx-authorization/index',
-        'pc_bind_mini'               => '/subPages/user/wx-auth/index',
+        'pc_login_mini'              => 'subPages/user/wx-authorization/index',
+        'pc_bind_mini'               => 'subPages/user/wx-auth/index',
     ];
     /**
      * 二维码生成类型与token标识映射
@@ -84,9 +85,14 @@ class MiniProgramQrcodeController extends AuthBaseController
             //跳转路由选择
             $path = self::$qrcodeTypeAndRouteMap[$type];
             $actor = $this->user;
-            if ($type == 'pc_bind_mini' && empty($actor->id)) {
-                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+            if ($type == 'pc_bind_mini') {
+                $userId = $this->getCookie('dzq_user_id');
+                $actor = User::query()->where('id', (int)$userId)->first();
+                if (empty($actor)) {
+                    $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+                }
             }
+
             if($actor && $actor->id) {
                 $token = SessionToken::generate(self::$qrcodeTypeAndIdentifierMap[$type], null, $actor->id);
             } else {
