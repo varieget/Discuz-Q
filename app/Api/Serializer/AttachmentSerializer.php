@@ -182,6 +182,7 @@ class AttachmentSerializer extends AbstractSerializer
                         ? Str::replaceLast('.', '_thumb.', $url)
                         : $url;
                 }
+                strtolower(substr($url, -3, 3)) == 'gif' && $attributes['thumbUrl'] = $url;
             }
         } elseif ($model->type == Attachment::TYPE_OF_ANSWER) {
             $attributes['thumbUrl'] = $url;
