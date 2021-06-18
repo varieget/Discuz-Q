@@ -96,7 +96,6 @@ class WechatMiniProgramBindController extends AuthBaseController
         try {
             $app = $this->miniProgram();
             $wechatUser = $this->getMiniWechatUser(
-                $app,
                 $param['jsCode'],
                 $param['iv'],
                 $param['encryptedData']
