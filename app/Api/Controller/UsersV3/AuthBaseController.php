@@ -230,7 +230,16 @@ abstract class AuthBaseController extends DzqController
         if(empty($openid)){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'openid不能为空');
         }
-
+        if (! empty($unionid)) {
+            if (!$this->requestLock($unionid)) {
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
+            }
+        }
+        if (! empty($openid)) {
+            if (!$this->requestLock($openid)) {
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
+            }
+        }
         //获取小程序用户信息
         /** @var UserWechat $wechatUser */
         $wechatUser = UserWechat::query()
