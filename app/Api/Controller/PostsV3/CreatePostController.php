@@ -134,9 +134,6 @@ class CreatePostController extends DzqController
         $data['content'] = $this->renderTopic($data['content']);
 
         $content = $data['content'];
-        if (empty($data['content'])) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
-        }
 
         if (empty($data['replyId'])) {
             unset($data['replyId']);

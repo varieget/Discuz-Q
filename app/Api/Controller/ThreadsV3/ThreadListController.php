@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
+use App\Common\ResponseCode;
 use App\Models\DenyUser;
 use App\Models\Group;
 use Discuz\Base\DzqCache;
@@ -64,7 +65,7 @@ class ThreadListController extends DzqController
 
         if (!$this->viewHotList) {
             if (!$this->categoryIds && empty($complex)) {
-                throw new PermissionDeniedException('没有浏览权限');
+                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
             }
         }
         return true;
