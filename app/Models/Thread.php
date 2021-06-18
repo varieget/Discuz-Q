@@ -150,6 +150,8 @@ class Thread extends DzqModel
 
     const IS_DRAFT = 1;
 
+    const IS_ANONYMOUS = 1;
+    const IS_NOT_ANONYMOUS = 0;
 
     const BOOL_YES = 1;
     const BOOL_NO = 0;
