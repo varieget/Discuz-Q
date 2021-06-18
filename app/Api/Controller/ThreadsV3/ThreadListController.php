@@ -442,12 +442,7 @@ class ThreadListController extends DzqController
         if (!empty($blockTopicIds)) {
             $query->whereNotIn('topic.topic_id', $blockTopicIds);
         }
-//        $query->where('threads.is_approved', Thread::BOOL_YES);
-//        $query->where('threads.is_draft', Thread::BOOL_NO);
-//        $query->where('threads.is_sticky', Thread::BOOL_NO);
-//        $query->where('threads.is_display', Thread::BOOL_YES);
-//        $query->whereNull('th.deleted_at');
-        $query->whereNotNull('th.user_id');
+
         $query->orderBy('th.created_at', 'desc');
         return $query;
     }
