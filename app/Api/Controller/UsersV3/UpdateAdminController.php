@@ -48,37 +48,35 @@ class UpdateAdminController extends DzqController
         $id = $this->inPut('id');
 
         if(empty($id)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'');
+            $this->outPut(ResponseCode::INVALID_PARAMETER,'用户id不能为空');
         }
         $username = $this->inPut('username');
         $nickname = $this->inPut('nickname');
         $password = $this->inPut('password');
         $newPassword = $this->inPut('newPassword');
-        $passwordConfirmation = $this->inPut('passwordConfirmation');
         $mobile = $this->inPut('mobile');
         $status = $this->inPut('status');
         $expire_at = $this->inPut('expiredAt');
         $groupId = $this->inPut('groupId');
-        $refuseMessage = $this->inPut('refuseMessage');
-
-        $registerReason = $this->inPut('registerReason');
-
 
         $requestData = [];
         if(!empty($username)){
             $requestData['username'] = $username;
         }
+
+        if (!empty($nickname)) {
+            $requestData['nickname'] = $nickname;
+        }
+
         if(!empty($password)){
             $requestData['password'] = $password;
         }
         if(!empty($newPassword)){
             $requestData['newPassword'] = $newPassword;
         }
-        if(!empty($passwordConfirmation)){
-            $requestData['password_confirmation'] = $passwordConfirmation;
-        }
 
         $requestData['mobile'] = $mobile;
+        $requestData['status'] = $status;
 
         if(!empty($expire_at)){
             $requestData['expired_at'] = $expire_at;
@@ -86,18 +84,11 @@ class UpdateAdminController extends DzqController
         if(!empty($groupId)){
             $requestData['groupId'] = $groupId;
         }
-        if(!empty($refuseMessage)){
-            $requestData['refuse_message'] = $refuseMessage;
-        }
 
-        if(!empty($registerReason)){
-            $requestData['registerReason'] = $registerReason;
-        }
-        if (!empty($nickname)) {
-            $requestData['nickname'] = $nickname;
-        }
-
-        $requestData['status'] = $status;
+        $this->dzqValidate($requestData, [
+            'username'=> 'required|max:15',
+            'newPassword'=> 'max:50|min:6'
+        ]);
 
         $result = $this->bus->dispatch(
             new UpdateAdminUser(
@@ -113,7 +104,6 @@ class UpdateAdminController extends DzqController
         $returnData['nickname'] = $data['nickname'];
         $returnData['mobile'] = $data['mobile'];
         $returnData['status'] = $data['status'];
-        $returnData['registerReason'] = $data['registerReason'];
         $returnData['avatar'] = $data['avatar'];
         $returnData['expiredAt'] = $data['expiredAt'];
         $returnData['registerIp'] = $data['registerIp'];
@@ -121,15 +111,6 @@ class UpdateAdminController extends DzqController
         $returnData['lastLoginIp'] = $data['lastLoginIp'];
         $returnData['loginAt'] = $data['loginAt'];
 
-        if($data['background']){
-            $url = $this->request->getUri();
-            $port = $url->getPort();
-            $port = $port == null ? '' : ':' . $port;
-            $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
-            $returnData['background'] = $path."storage/app/".$data['background'];
-        }else{
-            $returnData['background'] = "";
-        }
         return $this->outPut(ResponseCode::SUCCESS,'', $returnData);
     }
 }
