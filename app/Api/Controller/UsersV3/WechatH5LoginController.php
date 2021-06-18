@@ -88,9 +88,17 @@ class WechatH5LoginController extends AuthBaseController
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录获取wx用户接口异常');
         }
 
-        if (!$this->requestLock($wxuser->getId())) {
-            $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
+        if (! empty($wxuser->getId())) {
+            if (!$this->requestLock($wxuser->getId())) {
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
+            }
         }
+        if (! empty(Arr::get($wxuser->getRaw(), 'unionid'))) {
+            if (!$this->requestLock(Arr::get($wxuser->getRaw(), 'unionid'))) {
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
+            }
+        }
+
 
         //过渡开关打开
         if((bool)$this->settings->get('is_need_transition') && empty($sessionToken)) {
