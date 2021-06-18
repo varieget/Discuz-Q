@@ -113,25 +113,39 @@ class ThreadMigrationCommand extends AbstractCommand
             try {
                 switch ($type){
                     case Thread::TYPE_OF_TEXT:
+                        $this->info('文字start');
                         self::migrateText();
+                        $this->info('文字end');
                         break;
                     case Thread::TYPE_OF_LONG:
+                        $this->info('长文start');
                         self::migrateLong();
+                        $this->info('长文end');
                         break;
                     case Thread::TYPE_OF_VIDEO:
+                        $this->info('视频start');
                         self::migrateVideo();
+                        $this->info('视频end');
                         break;
                     case Thread::TYPE_OF_IMAGE:
+                        $this->info('图片start');
                         self::migrateImage();
+                        $this->info('图片end');
                         break;
                     case Thread::TYPE_OF_AUDIO:
+                        $this->info('音频start');
                         self::migrateAudio();
+                        $this->info('音频end');
                         break;
                     case Thread::TYPE_OF_QUESTION:
+                        $this->info('问答start');
                         self::migrateQuestion();
+                        $this->info('问答end');
                         break;
                     case Thread::TYPE_OF_GOODS:
+                        $this->info('商品start');
                         self::migrateGoods();
+                        $this->info('商品end');
                         break;
                 }
             }catch (\Exception $e){
@@ -191,7 +205,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateText(){
         $start_page = 0;
-        while (!empty($list = self::getThreadText($start_page))){
+        while (!empty($list = self::getThreadText($start_page)) && !empty($list->toArray())){
             foreach ($list as $val){
                 //如果数据已经存在则跳过
                 $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::TEXT])->first();
@@ -249,7 +263,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateLong(){
         $start_page = 0;
-        while (!empty($list = self::getThreadLong($start_page))){
+        while (!empty($list = self::getThreadLong($start_page)) && !empty($list->toArray())){
             foreach ($list as $val){
                 //如果数据已经存在则跳过
                 $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::TEXT])->first();
@@ -362,7 +376,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateVideo(){
         $start_page = 0;
-        while (!empty($list = self::getThreadVideo($start_page))){
+        while (!empty($list = self::getThreadVideo($start_page)) && !empty($list->toArray())){
             foreach ($list as $val){
                 //如果数据已经存在则跳过
                 $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::VIDEO])->first();
@@ -401,7 +415,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateImage(){
         $start_page = 0;
-        while(!empty($list = self::getThreadImage($start_page))){
+        while(!empty($list = self::getThreadImage($start_page)) && !empty($list->toArray())){
             foreach ($list as $val){
                 //如果数据已经存在则跳过
                 $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::IMAGE])->first();
@@ -437,7 +451,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateAudio(){
         $start_page = 0;
-        while (!empty($list = self::getThreadAudio($start_page))){
+        while (!empty($list = self::getThreadAudio($start_page)) && !empty($list->toArray())){
             foreach ($list as $val){
                 //如果数据已经存在则跳过
                 $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::VOICE])->first();
@@ -476,7 +490,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateQuestion(){
         $start_page = 0;
-        while(!empty($list = self::getThreadQuestion($start_page))){
+        while(!empty($list = self::getThreadQuestion($start_page)) && !empty($list->toArray())){
             foreach ($list as $val){
                 //如果数据已经存在则跳过
                 $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::REWARD])->first();
@@ -569,7 +583,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateGoods(){
         $start_page = 0;
-        while (!empty($list = self::getThreadGoods($start_page))){
+        while (!empty($list = self::getThreadGoods($start_page)) && !empty($list->toArray())){
             foreach ($list as $val){
                 //如果数据已经存在则跳过
                 $isset_thread = ThreadTag::where(['thread_id' => $val->id, 'tag' => ThreadTag::GOODS])->first();
