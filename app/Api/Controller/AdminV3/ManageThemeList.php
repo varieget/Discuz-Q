@@ -185,19 +185,6 @@ class ManageThemeList extends DzqController
         //分页
         $pagination = $this->pagination($page, $perPage, $query);
 
-        // 高亮敏感词
-        if ($highlight == 'yes') {
-            $stopWord = StopWord::query()->where('ugc',StopWord::MOD)->get(['find'])->toArray();
-            $replace = array_column($stopWord, 'find');
-
-            foreach ($pagination['pageData'] as $key=>$val){
-                foreach ($replace as $v){
-                    $val['title']  = str_replace($v,'<span class="highlight">' . $v . '</span>',$val['title']);
-                }
-                $pagination['pageData'][$key]['title'] = $val['title'];
-            }
-        }
-
         $snapArr = array_column($pagination['pageData'],null,'id');
 
         $pagination['pageData'] = $this->getFullThreadData($pagination['pageData']);
@@ -208,6 +195,13 @@ class ManageThemeList extends DzqController
     public function paramHandle($snapArr, $pagination)
     {
         $isDeleted = $this->inPut('isDeleted');
+        $highlight = $this->inPut('highlight');  //是否显示敏感词
+
+        $replace = [];
+        if ($highlight == 'yes') {
+            $stopWord = StopWord::query()->where('ugc',StopWord::MOD)->get(['find'])->toArray();
+            $replace = array_column($stopWord, 'find');
+        }
 
         $pageData = $pagination['pageData'];
 
@@ -274,10 +268,16 @@ class ManageThemeList extends DzqController
                 'deletedUserId' => $snapArr[$v['threadId']]['deleted_user_id']
             ];
 
+            if (!empty($replace)){
+                foreach ($replace as $val){
+                    $content[$v['threadId']]['content'] = str_replace($val,'<span class="highlight">' . $val . '</span>',$content[$v['threadId']]['content']);
+                }
+                $pageData[$k]['content']['text'] = $content[$v['threadId']]['content'];
+            }
             $pageData[$k]['content']['text'] = $content[$v['threadId']]['content'];
         }
 
-         $pagination['pageData'] = $pageData;
+        $pagination['pageData'] = $pageData;
 
         return $pagination;
     }
