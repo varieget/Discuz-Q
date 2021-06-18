@@ -45,7 +45,7 @@ class ResourceUserWalletController extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
         return true;
     }
@@ -56,7 +56,7 @@ class ResourceUserWalletController extends DzqController
         $actor = $this->user;
         $user_id = $actor->id;
         if(!$user_id){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'');
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
         $query = User::query();

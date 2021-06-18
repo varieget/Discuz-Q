@@ -21,6 +21,7 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Traits\RequestContainerTrait;
+use Discuz\Base\DzqLog;
 use Discuz\Contracts\Socialite\Factory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -48,7 +49,9 @@ class WechatH5OauthController implements RequestHandlerInterface
             $this->socialite->setRequest($request);
             return $this->socialite->driver($this->type)->redirect();
         } catch (\Exception $e) {
-            app('errorLog')->info('H5授权接口异常-WechatH5OauthController： 入参：' . json_encode($request) . '异常:' . $e->getMessage());
+            DzqLog::error('H5授权接口异常', [
+                'request'   =>  $request
+            ], $e->getMessage());
             \Discuz\Common\Utils::outPut(ResponseCode::INTERNAL_ERROR, 'H5授权接口异常');
         }
     }

@@ -123,7 +123,6 @@ $route->get('/posts.reply', 'posts.reply', ApiController\PostsV3\ResourcePostRep
 //用户
 $route->post('/users/real', 'users.real', ApiController\UsersV3\RealUserController::class);
 $route->get('/wallet/user', 'wallet.wallet', ApiController\WalletV3\ResourceUserWalletController::class);
-$route->post('/users/update', 'users.update', ApiController\UsersV3\UpdateUserController::class);
 
 /*
 |--------------------------------------------------------------------------

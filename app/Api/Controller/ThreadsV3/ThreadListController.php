@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
+use App\Common\ResponseCode;
 use App\Models\DenyUser;
 use App\Models\Group;
 use Discuz\Base\DzqCache;
@@ -39,7 +40,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 10;//预加载的页数
+    const PRELOAD_PAGES = 20;//预加载的页数
 
     private $preloadCount = 0;
     private $categoryIds = [];
@@ -64,7 +65,7 @@ class ThreadListController extends DzqController
 
         if (!$this->viewHotList) {
             if (!$this->categoryIds && empty($complex)) {
-                throw new PermissionDeniedException('没有浏览权限');
+                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
             }
         }
         return true;
@@ -90,7 +91,7 @@ class ThreadListController extends DzqController
     {
         $filter = $this->inPut('filter');
         $page = intval($this->inPut('page'));
-        $perPage = $this->inPut('perPage');
+        $perPage = intval($this->inPut('perPage'));
         $sequence = $this->inPut('sequence');//默认首页
         $this->preload = boolval($this->inPut('preload'));//预加载前100页数据
         $page <= 0 && $page = 1;
@@ -152,7 +153,7 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        if($page == 1 && !$this->viewHotList){
+        if ($page == 1 && !$this->viewHotList) {
             $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         }
         //        if ($this->preload) {
@@ -183,7 +184,7 @@ class ThreadListController extends DzqController
             });
             return $threads;
         }, true);
-        $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
+//        $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
         return $threads;
     }
 
@@ -302,6 +303,10 @@ class ThreadListController extends DzqController
                         ->orderByDesc('order.updated_at');
                     break;
                 case Thread::MY_OR_HIS_THREAD:
+                    if (!empty($filter['toUserId'])) {
+                        $threads = $threads->where('th.is_anonymous', Thread::IS_NOT_ANONYMOUS);
+                    }
+
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
                     $threads = $threads->where('user_id', $userId)
                         ->orderByDesc('th.id');
@@ -381,17 +386,17 @@ class ThreadListController extends DzqController
         !empty($sequence['block_topic_ids']) && $blockTopicIds = explode(',', $sequence['block_topic_ids']);
         !empty($sequence['block_thread_ids']) && $blockThreadIds = explode(',', $sequence['block_thread_ids']);
 
-        $query = Thread::query();
-        $query->leftJoin('group_user as g1', 'g1.user_id', '=', 'threads.user_id');
-        $query->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'threads.id');
+        $query = $this->getBaseThreadsBuilder();
+        $query->leftJoin('group_user as g1', 'g1.user_id', '=', 'th.user_id');
+        $query->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'th.id');
 
         if (!empty($types)) {
-            $query->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'threads.id')
+            $query->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
                 ->whereIn('tag.tag', $types);
         }
 
         if (!empty($categoryIds)) {
-            $query->whereIn('threads.category_id', $categoryIds);
+            $query->whereIn('th.category_id', $categoryIds);
         }
 
         foreach ($sequence as $key => $value) {
@@ -405,11 +410,11 @@ class ThreadListController extends DzqController
                     $topicIds = [];
                 }
                 if ($key == 'user_ids') {
-                    $query->whereIn('threads.user_id', $userIds);
+                    $query->whereIn('th.user_id', $userIds);
                     $userIds = [];
                 }
                 if ($key == 'thread_ids') {
-                    $query->whereIn('threads.id', $threadIds);
+                    $query->whereIn('th.id', $threadIds);
                     $threadIds = [];
                 }
                 break;
@@ -423,27 +428,22 @@ class ThreadListController extends DzqController
             $query->orWhereIn('topic.topic_id', $topicIds);
         }
         if (!empty($userIds)) {
-            $query->orWhereIn('threads.user_id', $userIds);
+            $query->orWhereIn('th.user_id', $userIds);
         }
         if (!empty($threadIds)) {
-            $query->orWhereIn('threads.id', $threadIds);
+            $query->orWhereIn('th.id', $threadIds);
         }
         if (!empty($blockUserIds)) {
-            $query->whereNotIn('threads.user_id', $blockUserIds);
+            $query->whereNotIn('th.user_id', $blockUserIds);
         }
         if (!empty($blockThreadIds)) {
-            $query->whereNotIn('threads.id', $blockThreadIds);
+            $query->whereNotIn('th.id', $blockThreadIds);
         }
         if (!empty($blockTopicIds)) {
             $query->whereNotIn('topic.topic_id', $blockTopicIds);
         }
-        $query->where('threads.is_approved', Thread::BOOL_YES);
-        $query->where('threads.is_draft', Thread::BOOL_NO);
-        $query->where('threads.is_sticky', Thread::BOOL_NO);
-        $query->where('threads.is_display', Thread::BOOL_YES);
-        $query->whereNull('threads.deleted_at');
-        $query->whereNotNull('threads.user_id');
-        $query->orderBy('threads.created_at', 'desc');
+
+        $query->orderBy('th.created_at', 'desc');
         return $query;
     }
 

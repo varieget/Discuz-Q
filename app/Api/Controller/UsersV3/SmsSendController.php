@@ -24,6 +24,7 @@ use App\Repositories\MobileCodeRepository;
 use App\Repositories\UserRepository;
 use App\Rules\Captcha;
 use App\SmsMessages\SendCodeMessage;
+use Discuz\Base\DzqLog;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Qcloud\QcloudTrait;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
@@ -166,8 +167,7 @@ class SmsSendController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', ['interval' => self::CODE_INTERVAL]);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-' . '手机号发送接口异常-SmsSendController： 入参：'
-                                  . json_encode($paramData) . ';用户id:'.$this->user->id.';异常:'. $e->getMessage());
+            DzqLog::error('用户名登录接口异常', $paramData, $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号发送接口异常');
         }
     }

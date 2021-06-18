@@ -80,6 +80,15 @@ class CreatePostController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        if ($this->user->status == User::STATUS_NEED_FIELDS) {
+            $this->outPut(ResponseCode::JUMP_TO_SIGIN_FIELDS);
+        }
+        if ($this->user->status == User::STATUS_MOD) {
+            $this->outPut(ResponseCode::JUMP_TO_AUDIT);
+        }
         $thread = Thread::query()
             ->where([
                 'id' => $this->inPut('id'),
@@ -89,7 +98,7 @@ class CreatePostController extends DzqController
             ->whereNull('deleted_at')
             ->first();
         if (!$thread) {
-            return false;
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
         return $userRepo->canReplyThread($this->user, $thread->category_id);
     }
@@ -131,9 +140,6 @@ class CreatePostController extends DzqController
         $data['content'] = $this->renderTopic($data['content']);
 
         $content = $data['content'];
-        if (empty($data['content'])) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '内容不能为空');
-        }
 
         if (empty($data['replyId'])) {
             unset($data['replyId']);
@@ -161,6 +167,10 @@ class CreatePostController extends DzqController
                 $requestData['relationships']['attachments']['data'][$k]['id'] = (string)$val['id'];
                 $requestData['relationships']['attachments']['data'][$k]['type'] = $val['type'];
             }
+        }
+
+        if (empty($content) && empty($attachments)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少必传参数');
         }
 
         $requestData['attributes'] = $data;

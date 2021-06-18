@@ -248,10 +248,6 @@ class CreatePost
             new Saving($post, $this->actor, $this->data)
         );
 
-        if (!$isDraft = Arr::get($this->data, 'attributes.is_draft')) {
-            $validator->valid($post->getAttributes());
-        }
-
         $post->save();
 
         //这里判断是否为红包贴，如果是红包贴则限制用户回帖时间

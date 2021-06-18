@@ -27,6 +27,13 @@ use Discuz\Base\DzqCache;
 
 class ThreadHelper
 {
+
+    //exist批量查询
+    const EXIST_PAY_ORDERS = 'payOrders';
+    const EXIST_REWARD_ORDERS = 'rewardOrders';
+    const EXIST_POST_USERS = 'postUsers';
+    const EXIST_THREAD_USERS = 'threadUsers';
+
     public static function getThreadLikedDetail($threadIds, $postIds, $posts, $isArray = true)
     {
         if (!$isArray) {

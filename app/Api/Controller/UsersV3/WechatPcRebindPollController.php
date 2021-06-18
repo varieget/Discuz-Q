@@ -21,6 +21,7 @@ use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 
 class WechatPcRebindPollController extends AuthBaseController
 {
@@ -41,8 +42,9 @@ class WechatPcRebindPollController extends AuthBaseController
 
             $this->outPut(ResponseCode::PC_REBIND_ERROR);
         } catch (\Exception $e) {
-            app('errorLog')->info('requestId：' . $this->requestId . '-二维码异常-' . 'PC端H5换绑接口异常-WechatPcRebindPollController： 入参：'
-                                  . 'sessionToken:'.$this->inPut('sessionToken') . ';userId:'. $this->user->id . ';异常：' . $e->getMessage());
+            DzqLog::error('PC端H5换绑接口异常', [
+                'sessionToken' => $this->inPut('sessionToken')
+            ], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'PC端H5换绑接口异常');
         }
     }
