@@ -40,7 +40,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
 
     private $preload = false;
-    const PRELOAD_PAGES = 10;//预加载的页数
+    const PRELOAD_PAGES = 20;//预加载的页数
 
     private $preloadCount = 0;
     private $categoryIds = [];
@@ -184,7 +184,7 @@ class ThreadListController extends DzqController
             });
             return $threads;
         }, true);
-        $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
+//        $this->initDzqUserData($this->user->id, $cacheKey, $filterKey, $this->preloadCount);
         return $threads;
     }
 
