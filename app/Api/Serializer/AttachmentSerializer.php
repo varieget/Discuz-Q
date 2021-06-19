@@ -179,6 +179,8 @@ class AttachmentSerializer extends AbstractSerializer
             'filePath' => $model->file_path,
             'fileSize' => (int)$model->file_size,
             'fileType' => $model->file_type,
+            'fileWidth' => $model->file_width,
+            'fileHeight' => $model->file_height,
         ];
 
         // 图片缩略图地址
