@@ -216,6 +216,7 @@ class ThreadMigrationCommand extends AbstractCommand
         }catch (\Exception $e){
             $this->db->rollBack();
             $this->info($e->getMessage());
+            app('log')->info('处理posts的content，数据库出错', [$e->getMessage()]);
         }
         app('log')->info('帖子内容 posts 的 content 修改完成');
     }
