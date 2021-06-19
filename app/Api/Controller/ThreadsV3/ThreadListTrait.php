@@ -80,9 +80,10 @@ trait ThreadListTrait
             $text = str_replace($searches, $replaces, $item['content']['text']);
             if ($isList) {
                 $maxText = 5000;
-                if (mb_strlen($text) > $maxText) {
-                    $text = mb_substr($text, 0, $maxText) . '...';
-                }
+                //todo 等待前端解决表情导致文字内容过长的问题
+//                if (mb_strlen($text) > $maxText) {
+//                    $text = mb_substr($text, 0, $maxText) . '...';
+//                }
             }
             $item['content']['text'] = $text;
         }
