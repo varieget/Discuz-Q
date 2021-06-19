@@ -176,6 +176,7 @@ class ThreadMigrationCommand extends AbstractCommand
         try {
             while (!empty($data)){
                 app('log')->info('修改posts中content数据start，开始次数：'.$i);
+                $i ++;
                 foreach ($data as $key => $val){
                     $this->db->beginTransaction();
                     foreach ($val as $vi){
