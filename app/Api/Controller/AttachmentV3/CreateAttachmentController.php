@@ -85,6 +85,7 @@ class CreateAttachmentController extends DzqController
         $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
         $tmpFileWithExt = $tmpFile . ($ext ? ".$ext" : '');
         // 上传临时目录之前验证
+
         $this->validator->valid([
             'type' => $type,
             'file' => $file,
@@ -113,6 +114,12 @@ class CreateAttachmentController extends DzqController
                 new Uploaded($actor, $this->uploader)
             );
 
+            $width = 0;
+            $height = 0;
+            if(in_array($type,[1,4,5])){
+                list($width, $height) = getimagesize($tmpFileWithExt);
+            }
+
             $attachment = Attachment::build(
                 $actor->id,
                 $type,
@@ -124,7 +131,9 @@ class CreateAttachmentController extends DzqController
                 $this->uploader->isRemote(),
                 Attachment::APPROVED,
                 $ipAddress,
-                $order
+                $order,
+                $width,
+                $height
             );
 
             $this->events->dispatch(
