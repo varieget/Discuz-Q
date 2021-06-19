@@ -114,38 +114,52 @@ class ThreadMigrationCommand extends AbstractCommand
                 switch ($type){
                     case Thread::TYPE_OF_TEXT:
                         $this->info('文字start');
+                        app('log')->info('文字start');
                         self::migrateText();
                         $this->info('文字end');
+                        app('log')->info('文字end');
                         break;
                     case Thread::TYPE_OF_LONG:
                         $this->info('长文start');
+                        app('log')->info('长文start');
                         self::migrateLong();
                         $this->info('长文end');
+                        app('log')->info('长文end');
                         break;
                     case Thread::TYPE_OF_VIDEO:
                         $this->info('视频start');
+                        app('log')->info('视频start');
                         self::migrateVideo();
                         $this->info('视频end');
+                        app('log')->info('视频end');
                         break;
                     case Thread::TYPE_OF_IMAGE:
                         $this->info('图片start');
+                        app('log')->info('图片start');
                         self::migrateImage();
                         $this->info('图片end');
+                        app('log')->info('图片end');
                         break;
                     case Thread::TYPE_OF_AUDIO:
                         $this->info('音频start');
+                        app('log')->info('音频start');
                         self::migrateAudio();
                         $this->info('音频end');
+                        app('log')->info('音频end');
                         break;
                     case Thread::TYPE_OF_QUESTION:
                         $this->info('问答start');
+                        app('log')->info('问答start');
                         self::migrateQuestion();
                         $this->info('问答end');
+                        app('log')->info('问答end');
                         break;
                     case Thread::TYPE_OF_GOODS:
                         $this->info('商品start');
+                        app('log')->info('商品start');
                         self::migrateGoods();
                         $this->info('商品end');
+                        app('log')->info('商品end');
                         break;
                 }
             }catch (\Exception $e){
@@ -156,9 +170,12 @@ class ThreadMigrationCommand extends AbstractCommand
         //v3数据迁移之后，下面的操作会比较刺激 -- 修改 posts 中的 content 字段数据
         $page = 1;
         $limit = 500;
-        $data = self::getOldData($page, $limit);
+        app('log')->info('修改posts中content数据start');
+        $data = self::getOldData($limit);
+        $i = 0;
         try {
             while (!empty($data)){
+                app('log')->info('修改posts中content数据start，开始次数：'.$i);
                 foreach ($data as $key => $val){
                     $this->db->beginTransaction();
                     foreach ($val as $vi){
@@ -192,7 +209,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $this->db->commit();
                 }
                 $page += 1;
-                $data = self::getOldData($page, $limit);
+                $data = self::getOldData($limit);
             }
             app('log')->info('data完成', [$data]);
         }catch (\Exception $e){
@@ -756,10 +773,10 @@ class ThreadMigrationCommand extends AbstractCommand
     }
 
     //获取老数据 threads 、posts
-    public function getOldData($page, $limit){
+    public function getOldData($limit){
         $data = [];
         $threadIds = Thread::query()->where('type','!=', self::V3_TYPE)
-            ->offset(($page - 1)*$limit)->limit($limit)->pluck('id')->toArray();
+            ->limit($limit)->pluck('id')->toArray();
         if(empty($threadIds))   return $data;
         $posts = Post::query()->whereIn('thread_id', $threadIds)
             ->where('user_id', '!=', 0)
