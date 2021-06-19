@@ -27,8 +27,6 @@ use Illuminate\Contracts\Filesystem\Factory as Filesystem;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Support\Str;
 use Tobscure\JsonApi\Relationship;
-use Psr\Http\Message\ServerRequestInterface;
-
 
 class AttachmentSerializer extends AbstractSerializer
 {
@@ -54,19 +52,16 @@ class AttachmentSerializer extends AbstractSerializer
      */
     protected $url;
 
-    protected $request;
-
     /**
      * @param Filesystem $filesystem
      * @param SettingsRepository $settings
      * @param UrlGenerator $url
      */
-    public function __construct(Filesystem $filesystem, SettingsRepository $settings, UrlGenerator $url,ServerRequestInterface $request)
+    public function __construct(Filesystem $filesystem, SettingsRepository $settings, UrlGenerator $url)
     {
         $this->filesystem = $filesystem;
         $this->settings = $settings;
         $this->url = $url;
-        $this->request = $request;
     }
 
 
@@ -87,13 +82,6 @@ class AttachmentSerializer extends AbstractSerializer
             $url = $this->filesystem->disk('attachment')->url($model->full_path);
         }
 
-        //更新历史图片宽高
-//        if("GET" === $this->request->getMethod() && in_array($model->type,[1,4,5]) && ($model->file_width == 0 || $model->file_height == 0)){
-//            list($width, $height) = getimagesize($url);
-//            $model->file_width = $width;
-//            $model->file_height = $height;
-//            $model->save();
-//        }
 
         $attributes = [
             'id' => $model->id,

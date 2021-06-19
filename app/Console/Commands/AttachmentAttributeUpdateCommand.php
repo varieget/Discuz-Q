@@ -18,13 +18,9 @@
 
 namespace App\Console\Commands;
 
-use App\Api\Serializer\AttachmentSerializer;
 use App\Models\Attachment;
-use Carbon\Carbon;
 use Discuz\Console\AbstractCommand;
 use Discuz\Contracts\Setting\SettingsRepository;
-use Discuz\Foundation\Application;
-use Illuminate\Contracts\Filesystem\Factory as Filesystem;
 
 class AttachmentAttributeUpdateCommand extends AbstractCommand
 {
@@ -41,16 +37,11 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
      */
     protected $description = '更新附件历史图片宽高';
 
-    protected $attachmentSerializer;
-
     protected $app;
 
-    public function __construct(string $name = null,Application $app,AttachmentSerializer $attachmentSerializer,Filesystem $filesystem, SettingsRepository $settings) {
+    public function __construct(string $name = null, SettingsRepository $settings) {
         parent::__construct($name);
-        $this->attachmentSerializer = $attachmentSerializer;
-        $this->filesystem = $filesystem;
         $this->settings = $settings;
-        $this->app = $app;
     }
 
     /**
