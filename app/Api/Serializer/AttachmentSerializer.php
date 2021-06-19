@@ -27,6 +27,8 @@ use Illuminate\Contracts\Filesystem\Factory as Filesystem;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Support\Str;
 use Tobscure\JsonApi\Relationship;
+use Psr\Http\Message\ServerRequestInterface;
+
 
 class AttachmentSerializer extends AbstractSerializer
 {
@@ -52,17 +54,21 @@ class AttachmentSerializer extends AbstractSerializer
      */
     protected $url;
 
+    protected $request;
+
     /**
      * @param Filesystem $filesystem
      * @param SettingsRepository $settings
      * @param UrlGenerator $url
      */
-    public function __construct(Filesystem $filesystem, SettingsRepository $settings, UrlGenerator $url)
+    public function __construct(Filesystem $filesystem, SettingsRepository $settings, UrlGenerator $url,ServerRequestInterface $request)
     {
         $this->filesystem = $filesystem;
         $this->settings = $settings;
         $this->url = $url;
+        $this->request = $request;
     }
+
 
     /**
      * {@inheritdoc}
@@ -73,7 +79,6 @@ class AttachmentSerializer extends AbstractSerializer
     {
         if ($user) $this->actor = $user;
         $this->paidContent($model);
-
         if ($model->is_remote) {
             $url = $this->settings->get('qcloud_cos_sign_url', 'qcloud', true)
                 ? $this->filesystem->disk('attachment_cos')->temporaryUrl($model->full_path, Carbon::now()->addDay())
@@ -81,6 +86,14 @@ class AttachmentSerializer extends AbstractSerializer
         } else {
             $url = $this->filesystem->disk('attachment')->url($model->full_path);
         }
+
+        //更新历史图片宽高
+//        if("GET" === $this->request->getMethod() && in_array($model->type,[1,4,5]) && ($model->file_width == 0 || $model->file_height == 0)){
+//            list($width, $height) = getimagesize($url);
+//            $model->file_width = $width;
+//            $model->file_height = $height;
+//            $model->save();
+//        }
 
         $attributes = [
             'id' => $model->id,
@@ -96,6 +109,8 @@ class AttachmentSerializer extends AbstractSerializer
             'filePath' => $model->file_path,
             'fileSize' => (int)$model->file_size,
             'fileType' => $model->file_type,
+            'fileWidth' => $model->file_width,
+            'fileHeight' => $model->file_height,
         ];
 
         // 图片缩略图地址

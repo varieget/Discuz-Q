@@ -134,7 +134,9 @@ class Attachment extends DzqModel
         $isRemote,
         $isApproved,
         $ip,
-        $order = 0
+        $order = 0,
+        $width,
+        $height
     )
     {
         $attachment = new static;
@@ -151,6 +153,9 @@ class Attachment extends DzqModel
         $attachment->file_size = $size;
         $attachment->file_type = $mime;
         $attachment->ip = $ip;
+        $attachment->file_width = $width;
+        $attachment->file_height = $height;
+
 
         $attachment->raise(new Created($attachment));
 
