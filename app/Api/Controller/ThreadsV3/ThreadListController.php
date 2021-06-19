@@ -350,6 +350,7 @@ class ThreadListController extends DzqController
         //关注
         if ($attention == 1 && !empty($this->user)) {
             $threads->leftJoin('user_follow as follow', 'follow.to_user_id', '=', 'th.user_id')
+                ->where('th.is_anonymous',Thread::BOOL_NO)
                 ->where('follow.from_user_id', $this->user->id);
             $withLoginUser = true;
         }
