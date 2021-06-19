@@ -726,13 +726,13 @@ class ThreadMigrationCommand extends AbstractCommand
         $searches = $m1[0];
         $replaces = [];
         foreach ($searches as $key => $search) {
-            preg_match('/:[a-z]+?:/i', $search, $m2);
+            preg_match('/alt="(.*?)"/i', $search, $m2);
             if(empty($m2[0])){      //没有匹配上
                 unset($searches[$key]);
                 continue;
             }
-            $emoji = $m2[0];
-            $replaces[] = $emoji;
+            $emoji = preg_replace('/alt="(.*?)"/', '$1', $m2[0]);
+            $replaces[] = ':'.$emoji.':';
         }
         $text = str_replace($searches, $replaces, $text);
         return $text;
