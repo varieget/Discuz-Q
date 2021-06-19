@@ -46,6 +46,9 @@ class ThreadDetailController extends DzqController
         $this->thread = Thread::query()
             ->where(['id' => $this->inPut('threadId')])
             ->first();
+        if (empty($this->thread)) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
         return $userRepo->canViewThreadDetail($this->user, $this->thread);
     }
 
