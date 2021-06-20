@@ -644,7 +644,7 @@ class ThreadMigrationCommand extends AbstractCommand
                         'type'      =>  $post_goods->type,
                         'status'    =>  $post_goods->status,
                         'readyContent'  =>  $post_goods->ready_content,
-                        'detailCcontent'    =>  $post_goods->detail_content,
+                        'detailContent' =>  $post_goods->detail_content,
                         'createdAt'     =>  $post_goods->created_at,
                         'updatedAt'     =>  $post_goods->updated_at,
                     ];
