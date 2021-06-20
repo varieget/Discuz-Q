@@ -266,7 +266,7 @@ class ThreadMigrationCommand extends AbstractCommand
                         'content'   =>  '红包帖'
                     ];
                     $value = json_encode($value);
-                    $res = self::insertThreadTom($val, ThreadTag::RED_PACKET, '$0', $value);
+                    $res = self::insertThreadTom($val, ThreadTag::RED_PACKET, ThreadTag::RED_PACKET, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('long attachment insert: thread_tom red_packet error. thread data is : '.json_encode($val->toArray()));
@@ -337,7 +337,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $docIds = $attachments->pluck('id')->toArray();
                     $count ++;
                     $value = json_encode(['docIds' => $docIds]);
-                    $res = self::insertThreadTom($val, ThreadTag::DOC, $key, $value);
+                    $res = self::insertThreadTom($val, ThreadTag::DOC, ThreadTag::DOC, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('long attachment insert: thread_tom doc error. thread data is : '.json_encode($val->toArray()));
@@ -350,7 +350,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $docIds = $attachments_image->pluck('id')->toArray();
                     $count ++;
                     $value = json_encode(['imageIds' => $docIds]);
-                    $res = self::insertThreadTom($val, ThreadTag::IMAGE, $key, $value);
+                    $res = self::insertThreadTom($val, ThreadTag::IMAGE, ThreadTag::IMAGE, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('long attachment insert: thread_tom images error. thread data is : '.json_encode($val->toArray()));
@@ -377,7 +377,7 @@ class ThreadMigrationCommand extends AbstractCommand
                         'content'   =>  '红包帖'
                     ];
                     $value = json_encode($value);
-                    $res = self::insertThreadTom($val, ThreadTag::RED_PACKET, $key, $value);
+                    $res = self::insertThreadTom($val, ThreadTag::RED_PACKET, ThreadTag::RED_PACKET, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('long attachment insert: thread_tom red_packet error. thread data is : '.json_encode($val->toArray()));
@@ -419,7 +419,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $key = '$0';
                     $videoId = $thread_video->id;
                     $value = json_encode(['videoId' => $videoId]);
-                    $res = self::insertThreadTom($val, ThreadTag::VIDEO, $key, $value);
+                    $res = self::insertThreadTom($val, ThreadTag::VIDEO, ThreadTag::VIDEO, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('video attachment insert: thread_tom video error. thread data is : '.json_encode($val->toArray()));
@@ -455,7 +455,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $key = '$0';
                     $imageIds = $attachments->pluck('id')->toArray();
                     $value = json_encode(['imageIds' => $imageIds]);
-                    $res = self::insertThreadTom($val, ThreadTag::IMAGE, $key, $value);
+                    $res = self::insertThreadTom($val, ThreadTag::IMAGE, ThreadTag::IMAGE, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('image insert: thread_tom error. thread data is : '.json_encode($val->toArray()));
@@ -494,7 +494,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $key = '$0';
                     $videoId = $thread_video->id;
                     $value = json_encode(['audioId' => $videoId]);
-                    $res = self::insertThreadTom($val, ThreadTag::VOICE, $key, $value);
+                    $res = self::insertThreadTom($val, ThreadTag::VOICE, ThreadTag::VOICE, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('audio attachment insert: thread_tom audio error. thread data is : '.json_encode($val->toArray()));
@@ -577,7 +577,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     'content'       =>  null
                 ];
                 $value = json_encode($body);
-                $res = self::insertThreadTom($val, ThreadTag::REWARD, $key, $value);
+                $res = self::insertThreadTom($val, ThreadTag::REWARD, ThreadTag::REWARD, $value);
                 if(!$res){
                     $this->db->rollBack();
                     $this->error('question insert: thread_tom goods error. thread data is : '.json_encode($val->toArray()));
@@ -587,7 +587,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $key = '$'.$count;
                     $imageIds = $attachments->pluck('id')->toArray();
                     $value = json_encode(['imageIds' => $imageIds]);
-                    $res = self::insertThreadTom($val, ThreadTag::IMAGE, $key, $value);
+                    $res = self::insertThreadTom($val, ThreadTag::IMAGE, ThreadTag::IMAGE, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('question insert: thread_tom attachment error. thread data is : '.json_encode($val->toArray()));
@@ -649,7 +649,7 @@ class ThreadMigrationCommand extends AbstractCommand
                         'updatedAt'     =>  $post_goods->updated_at,
                     ];
                     $value = json_encode($body);
-                    $res = self::insertThreadTom($val, ThreadTag::GOODS, $key, $value);
+                    $res = self::insertThreadTom($val, ThreadTag::GOODS, ThreadTag::GOODS, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('goods insert: thread_tom goods error. thread data is : '.json_encode($val->toArray()));
@@ -660,7 +660,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $key = '$'.$count;
                     $imageIds = $attachments->pluck('id')->toArray();
                     $value = json_encode(['imageIds' => $imageIds]);
-                    $res = self::insertThreadTom($val, ThreadTag::IMAGE, $key, $value);
+                    $res = self::insertThreadTom($val, ThreadTag::IMAGE, ThreadTag::IMAGE, $value);
                     if(!$res){
                         $this->db->rollBack();
                         $this->error('goods insert: thread_tom attachment error. thread data is : '.json_encode($val->toArray()));
