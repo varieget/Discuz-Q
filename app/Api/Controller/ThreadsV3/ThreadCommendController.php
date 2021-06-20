@@ -52,6 +52,7 @@ class ThreadCommendController extends DzqController
             ->where('is_essence', 1)
             ->where('is_draft', 0)
             ->whereNull('deleted_at')
+            ->whereNotNull('user_id')
             ->inRandomOrder()
             ->take($perPage)
             ->get();
