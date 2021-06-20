@@ -71,7 +71,7 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
                             $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
                         }
                         $url = $remoteServer."/".$image->full_path;
-                        $jsonData = file_get_contents($url."?imageInfo");
+                        $jsonData = file_get_contents($url,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
                         $ArrData = json_decode($jsonData,true);
                         $width = (int)$ArrData['width'];
                         $height = (int)$ArrData['height'];
