@@ -21,6 +21,7 @@ namespace App\Console\Commands;
 use App\Models\Attachment;
 use Discuz\Console\AbstractCommand;
 use Discuz\Contracts\Setting\SettingsRepository;
+use Intervention\Image\ImageManager;
 
 class AttachmentAttributeUpdateCommand extends AbstractCommand
 {
@@ -29,19 +30,18 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
      */
     protected $signature = 'attachment:update';
 
-    protected $filesystem;
-
     protected $settings;
+
+    public $image;
     /**
      * {@inheritdoc}
      */
     protected $description = '更新附件历史图片宽高';
 
-    protected $app;
-
-    public function __construct(string $name = null, SettingsRepository $settings) {
+    public function __construct(string $name = null, SettingsRepository $settings,ImageManager $image) {
         parent::__construct($name);
         $this->settings = $settings;
+        $this->image = $image;
     }
 
     /**
@@ -71,21 +71,30 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
                             $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
                         }
                         $url = $remoteServer."/".$image->full_path;
-                    } else {
-                        $url = $this->request->getUri();
-                        $port = $url->getPort();
-                        $port = $port == null ? '' : ':' . $port;
-                        $path = $url->getScheme() . '://' . $url->getHost() . $port;
-                        $url = $path."/".$image->full_path;
-                    }
-                    $pathInfo = pathinfo($url);
-                    $allExt = ['jpeg','jpg','gif','png','swf','swc','psd','tiff','bmp','iff'];
-                    if(in_array($pathInfo['extension'],$allExt)){
-                        list($width, $height) = getimagesize($url);
+                        $jsonData = file_get_contents($url."?imageInfo");
+                        $ArrData = json_decode($jsonData,true);
+                        $width = (int)$ArrData['width'];
+                        $height = (int)$ArrData['height'];
                         $image->file_width = $width;
                         $image->file_height = $height;
-                        $image->save();
-                        $log->info("附件图片更新成功 attachmentId：{$image->id}，fileWidth：{$image->file_width}，fileHeight：{$image->file_height}");
+                        if($image->save()){
+                            $log->info("附件图片更新成功 attachmentId：{$image->id}，fileWidth：{$image->file_width}，fileHeight：{$image->file_height}");
+                        }else{
+                            $log->info("附件图片更新失败 attachmentId：{$image->id}，oldFileWidth：{$width}，oldFileHeight：{$height}");
+                        }
+                    } else {
+                        $imageManage = $this->image->make(
+                            storage_path('app/' . $image->full_path)
+                        );
+                        $width = (int) $imageManage->width();
+                        $height = (int) $imageManage->height();
+                        $image->file_width = $width;
+                        $image->file_height = $height;
+                        if($image->save()){
+                            $log->info("附件图片更新成功 attachmentId：{$image->id}，fileWidth：{$image->file_width}，fileHeight：{$image->file_height}");
+                        }else{
+                            $log->info("附件图片更新失败 attachmentId：{$image->id}，oldFileWidth：{$width}，oldFileHeight：{$height}");
+                        }
                     }
                 });
             }
