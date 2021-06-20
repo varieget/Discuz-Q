@@ -131,6 +131,7 @@ class CashTransfer
         //企业付款
         TransferTrade::transfer($event->transfer_type, $config, $data);
         $response = TransferTrade::getTransferRespone();
+        $this->log->info("微信企业付款请求响应，提现记录id：".$event->cash_record->id,[$response]);
         if (TransferTrade::getTransferStatus()) {
             $data_result = [
                 'trade_time' => Carbon::parse($response['payment_time'])->format('Y-m-d H:i:s'),//交易时间

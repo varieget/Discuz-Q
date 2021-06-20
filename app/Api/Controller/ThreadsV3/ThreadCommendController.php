@@ -18,21 +18,30 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
+use App\Models\Category;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
 class ThreadCommendController extends DzqController
 {
     use ThreadTrait;
 
+    private $categoryIds = [];
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        $filter = $this->inPut('filter') ?: [];
+        $categoryIds = $filter['categoryids'] ?? [];
+        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
+        if (!$this->categoryIds) {
+                throw new PermissionDeniedException('没有浏览权限');
+        }
         return true;
-//        return $userRepo->canViewThreads($this->user);
     }
 
     public function main()

@@ -64,6 +64,7 @@ class AttachmentSerializer extends AbstractSerializer
         $this->url = $url;
     }
 
+
     /**
      * {@inheritdoc}
      *
@@ -73,7 +74,6 @@ class AttachmentSerializer extends AbstractSerializer
     {
         if ($user) $this->actor = $user;
         $this->paidContent($model);
-
         if ($model->is_remote) {
             $url = $this->settings->get('qcloud_cos_sign_url', 'qcloud', true)
                 ? $this->filesystem->disk('attachment_cos')->temporaryUrl($model->full_path, Carbon::now()->addDay())
@@ -81,6 +81,7 @@ class AttachmentSerializer extends AbstractSerializer
         } else {
             $url = $this->filesystem->disk('attachment')->url($model->full_path);
         }
+
 
         $attributes = [
             'id' => $model->id,
@@ -96,6 +97,8 @@ class AttachmentSerializer extends AbstractSerializer
             'filePath' => $model->file_path,
             'fileSize' => (int)$model->file_size,
             'fileType' => $model->file_type,
+            'fileWidth' => $model->file_width,
+            'fileHeight' => $model->file_height,
         ];
 
         // 图片缩略图地址
@@ -164,6 +167,8 @@ class AttachmentSerializer extends AbstractSerializer
             'filePath' => $model->file_path,
             'fileSize' => (int)$model->file_size,
             'fileType' => $model->file_type,
+            'fileWidth' => $model->file_width,
+            'fileHeight' => $model->file_height,
         ];
 
         // 图片缩略图地址
