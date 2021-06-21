@@ -55,19 +55,21 @@ class UnreadNotificationController extends DzqController
         /** @var User $user */
         $user = User::query()->findOrFail($actor->id);
 
-        $dQuery = Dialog::query()
-            ->where('sender_user_id',$actor->id)
-            ->orWhere('recipient_user_id',$actor->id)
-            ->get('id')->toArray();
-        $dialogIds = array_column($dQuery, 'id');
-
-        $dMQuery = DialogMessage::query()
-            ->whereIn('dialog_id', $dialogIds)
+        $MQuery = DialogMessage::query()
+            ->leftJoin(
+                'dialog',
+                'dialog.id',
+                '=',
+                'dialog_message.dialog_id'
+            )->where(function ($query) use ($actor) {
+                $query->where('dialog.sender_user_id', $actor->id);
+                $query->orWhere('dialog.recipient_user_id', $actor->id);
+            })
             ->where('user_id','!=',$actor->id)
             ->where('read_status',0)
             ->count();
 
-        $data['dialogNotifications'] = $dMQuery;
+        $data['dialogNotifications'] = $MQuery;
 
         $data['unreadNotifications'] = $user->getUnreadNotificationCount();
         $data['typeUnreadNotifications'] = $user->getUnreadTypesNotificationCount();
