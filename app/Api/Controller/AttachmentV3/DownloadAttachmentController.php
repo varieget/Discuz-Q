@@ -86,7 +86,7 @@ class DownloadAttachmentController extends DzqController
         ]);
 
         header("Content-type:application/octet-stream");
-        $origin_name = basename($attachment->file_name);
+        $origin_name = iconv('utf-8','gb2312',"$attachment->file_name");
         header("Content-Disposition:attachment;filename = " . $origin_name);
         header("Accept-ranges:bytes");
         header("Accept-length:" . $attachment->file_size);

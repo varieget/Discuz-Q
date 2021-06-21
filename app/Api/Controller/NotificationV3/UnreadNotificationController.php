@@ -19,6 +19,8 @@ namespace App\Api\Controller\NotificationV3;
 
 
 use App\Common\ResponseCode;
+use App\Models\Dialog;
+use App\Models\DialogMessage;
 use App\Models\User;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
@@ -52,6 +54,23 @@ class UnreadNotificationController extends DzqController
         $actor = $this->user;
         /** @var User $user */
         $user = User::query()->findOrFail($actor->id);
+
+        $MQuery = DialogMessage::query()
+            ->leftJoin(
+                'dialog',
+                'dialog.id',
+                '=',
+                'dialog_message.dialog_id'
+            )->where(function ($query) use ($actor) {
+                $query->where('dialog.sender_user_id', $actor->id);
+                $query->orWhere('dialog.recipient_user_id', $actor->id);
+            })
+            ->where('user_id','!=',$actor->id)
+            ->where('read_status',0)
+            ->count();
+
+        $data['dialogNotifications'] = $MQuery;
+
         $data['unreadNotifications'] = $user->getUnreadNotificationCount();
         $data['typeUnreadNotifications'] = $user->getUnreadTypesNotificationCount();
 

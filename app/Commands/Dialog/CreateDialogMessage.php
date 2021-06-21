@@ -104,11 +104,11 @@ class CreateDialogMessage
             $attachment = Attachment::query()
                     ->where('user_id', $this->actor->id)
                     ->where('type_id', 0)
-                    ->where('type', Attachment::TYPE_OF_DIALOG_MESSAGE)
+                    ->where('type', Attachment::TYPE_OF_IMAGE)
                     ->where('id', $attachment_id)
                     ->first();
             if (!$attachment) {
-                throw new Exception('attachments_error');
+                throw new TranslatorException(trans('user.attachment_not_exist'));
             }
         }
 
