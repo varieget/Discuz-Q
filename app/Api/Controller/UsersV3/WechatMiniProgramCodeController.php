@@ -55,8 +55,8 @@ class WechatMiniProgramCodeController extends DzqController
 
     public function main()
     {
-
-        $path = $this->inPut("path");
+        $pathEncode = $this->inPut("path");
+        $path = urldecode($pathEncode);
         $width = $this->inPut("width");
         $colorR = $this->inPut("r");
         $colorG = $this->inPut("g");
