@@ -142,15 +142,19 @@ class DialogMessage extends Model
         return $messageText;
     }
 
-    public function getImageUrlMessageText()
+    public function getImageUrlMessageText($attachmentId = null)
     {
         $message_text_old = $this->attributes['message_text'] ?: '';
         $message_text = json_decode(stripslashes($message_text_old));
         if (!empty($message_text)) {
             $messageText = $message_text->image_url;
             if($messageText){
-                $img = @getimagesize($messageText);
-                $messageText = $messageText."?width=".$img[0]."&height=".$img[1];
+                if(!empty($attachmentId)) {
+                   $attachmentRecord = Attachment::query()->where('id', $attachmentId)->first(["file_width", "file_height"])->toArray();
+                   if(!empty($attachmentRecord['file_width']) && !empty($attachmentRecord['file_height'])){
+                       $messageText = $messageText."?width=".$attachmentRecord['file_width']."&"."height=".$attachmentRecord['file_height'];
+                   }
+                }
             }
         } else {
             $messageText = '';

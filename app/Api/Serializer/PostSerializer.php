@@ -72,22 +72,19 @@ class PostSerializer extends BasicPostSerializer
         if (empty($thread)) {
             throw new Exception(trans('post.thread_id_not_null'));
         }
+
         $redPacketTom = ThreadTom::query()->where('thread_id',$thread_id)
                           ->where('tom_type',106)
                             ->first();
-        if ($redPacketTom) {
-            $change_type = [UserWalletLog::TYPE_INCOME_TEXT, UserWalletLog::TYPE_INCOME_LONG, UserWalletLog::TYPE_REDPACKET_INCOME];
-        } else {
-            $change_type = 0;
-        }
-        $redPacketAmount = UserWalletLog::query()
-                            ->whereIn('change_type', $change_type)
-                            ->where([   'thread_id'     => $thread_id,
-                                        'post_id'       => $post_id,
-                                        'user_id'       => $user_id
-                                    ])
-                            ->sum('change_available_amount');
 
-        return empty($redPacketAmount) ? 0 : $redPacketAmount;
+        $redPacketAmount = 0;
+        if ($redPacketTom) {
+            $redPacketAmount = UserWalletLog::query()
+                ->whereIn('change_type', [UserWalletLog::TYPE_INCOME_TEXT, UserWalletLog::TYPE_INCOME_LONG, UserWalletLog::TYPE_REDPACKET_INCOME])
+                ->where(['thread_id' => $thread_id, 'post_id'=> $post_id, 'user_id' => $user_id])
+                ->sum('change_available_amount');
+        }
+
+        return $redPacketAmount;
     }
 }
