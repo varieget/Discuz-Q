@@ -127,7 +127,7 @@ class ListDialogMessageV2Controller extends DzqController
                 'summary' => $i->summary,
                 'messageText' => $i->getMessageText(),
                 'messageTextHtml' => $i->formatMessageText(),
-                'imageUrl' => $i->getImageUrlMessageText(),
+                'imageUrl' => $i->getImageUrlMessageText($i->attachment_id),
                 'updatedAt' => optional($i->updated_at)->format('Y-m-d H:i:s'),
                 'createdAt' => optional($i->created_at)->format('Y-m-d H:i:s'),
                 'user' => $user,
