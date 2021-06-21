@@ -105,6 +105,7 @@ class WechatTransitionBindSmsController extends AuthBaseController
                 $mobileCode->setRelation('user', $user);
 
                 $this->updateUserBindType($mobileCode->user,AuthUtils::PHONE);
+                $this->updateUserBindType($mobileCode->user,AuthUtils::WECHAT);
             }
 
             //手机用户绑定微信操作
