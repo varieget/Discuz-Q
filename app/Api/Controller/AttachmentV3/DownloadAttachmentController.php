@@ -86,11 +86,23 @@ class DownloadAttachmentController extends DzqController
         ]);
 
         header("Content-type:application/octet-stream");
-        $origin_name = iconv('utf-8','gb2312',"$attachment->file_name");
-        header("Content-Disposition:attachment;filename = " . $origin_name);
+        $origin_name = $this->characet($attachment->file_name);
+        header("Content-Disposition:attachment;filename = " . basename($origin_name));
         header("Accept-ranges:bytes");
         header("Accept-length:" . $attachment->file_size);
         readfile($url, false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
         exit;
+    }
+
+    //所有编码转UTF-8
+    public function characet($data){
+        if( !empty($data) ){
+            $fileType = mb_detect_encoding($data , array('UTF-8','GBK','LATIN1','BIG5')) ;
+            app('log')->info("requestId：{$this->requestId},文件:{$data},文件编码:".$fileType);
+            if( $fileType != 'UTF-8'){
+                $data = mb_convert_encoding($data ,'utf-8' , $fileType);
+            }
+        }
+        return $data;
     }
 }
