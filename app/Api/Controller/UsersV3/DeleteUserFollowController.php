@@ -21,7 +21,10 @@ class DeleteUserFollowController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return !$this->user->isGuest();
+        if ($this->user->isGuest()){
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return true;
     }
 
     public function main(){
