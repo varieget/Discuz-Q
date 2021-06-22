@@ -37,7 +37,7 @@ class ThreadStickController extends DzqController
     public function main()
     {
         $categoryIds = $this->inPut('categoryIds');
-        $threads = Thread::query()->select(['id', 'category_id', 'title','updated_at'])->orderByDesc('updated_at');
+        $threads = Thread::query()->select(['id', 'category_id', 'title', 'updated_at'])->orderByDesc('updated_at');
         if (!empty($categoryIds)) {
             if (!is_array($categoryIds)) {
                 $categoryIds = [$categoryIds];
@@ -45,21 +45,24 @@ class ThreadStickController extends DzqController
         }
 
         $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
-        if(!$isMiniProgramVideoOn){
+        if (!$isMiniProgramVideoOn) {
             $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
         }
         $permissions = Permission::getUserPermissions($this->user);
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         if (!$categoryIds) {
             $this->outPut(ResponseCode::SUCCESS, '', []);
-        }else{
+        } else {
             $threads = $threads->whereIn('category_id', $categoryIds);
         }
 
         $threads = $threads
-            ->where('is_sticky', 1)
+            ->where('is_sticky', Thread::BOOL_YES)
             ->whereNull('deleted_at')
             ->whereNotNull("user_id")
+            ->where('is_draft', Thread::BOOL_NO)
+            ->where('is_display', Thread::BOOL_YES)
+            ->where('is_approved', Thread::BOOL_YES)
             ->get();
         $threadIds = $threads->pluck('id')->toArray();
         $posts = Post::query()
@@ -82,7 +85,7 @@ class ThreadStickController extends DzqController
                 'threadId' => $thread['id'],
                 'categoryId' => $thread['category_id'],
                 'title' => $title,
-                'updatedAt'=>date('Y-m-d H:i:s',strtotime($thread['updated_at'])),
+                'updatedAt' => date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
                 'canViewPosts' => $this->canViewPosts($thread, $permissions)
             ];
         }
