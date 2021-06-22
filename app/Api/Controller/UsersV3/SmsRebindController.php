@@ -81,7 +81,8 @@ class SmsRebindController extends AuthBaseController
                 ->where('state', 1)
                 ->where('updated_at', '<', Carbon::now()->addMinutes(10))
                 ->delete();
-            if ($result != 1) {
+
+            if ($result < 1) {
                 $this->connection->rollback();
                 $this->outPut(ResponseCode::ORIGINAL_USER_MOBILE_VERIFY_ERROR, '', []);
             }
