@@ -38,7 +38,10 @@ class CreateUserFollowController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return !$this->user->isGuest() && $userRepo->canFollowUser($this->user);
+        if ($this->user->isGuest()){
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return $userRepo->canFollowUser($this->user);
     }
 
     public function main(){
