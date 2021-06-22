@@ -156,9 +156,7 @@ class UpdateClientUser
 
         // 修改用户签名
         $this->changeSignature($user, $canEdit, $isSelf, $attributes);
-
-        $this->validator->valid($validate);
-
+        //$this->validator->valid($validate);
         $user->save();
 
         $this->dispatchEventsFor($user, $this->actor);
@@ -264,22 +262,6 @@ class UpdateClientUser
         }
 
         if ($isSelf) {
-            // 小程序注册的账号密码为空，不验证原密码
-            if ($user->password) {
-                // 验证原密码
-                if (! $user->checkPassword(Arr::get($attributes, 'password'))) {
-                    throw new TranslatorException(trans('user.not_match_used_password'));
-                }
-
-                // 验证新密码与原密码不能相同
-                if ($user->checkPassword($newPassword)) {
-                    throw new TranslatorException(trans('user.cannot_use_the_same_password'));
-                }
-            }
-
-            $this->validator->setUser($user);
-
-            $validate['password_confirmation'] = Arr::get($attributes, 'password_confirmation');
             $user->changePassword($newPassword);
         }
         $validate['password'] = $newPassword;
@@ -304,14 +286,6 @@ class UpdateClientUser
 
         // 当原支付密码为空时，视为初始化支付密码，不需要验证 pay_password_token
         // 当原支付密码不为空时，则需验证 pay_password_token
-        if ($user->pay_password) {
-            // 验证新密码与原密码不能相同
-            if ($user->checkWalletPayPassword($payPassword)) {
-                throw new TranslatorException(trans('user.cannot_use_the_same_password'));
-            }
-            $this->validator->setUser($user);
-            $validate['pay_password_token'] = Arr::get($attributes, 'pay_password_token');
-        }
 
         $user->changePayPassword($payPassword);
 

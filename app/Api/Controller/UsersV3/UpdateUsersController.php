@@ -38,6 +38,8 @@ class UpdateUsersController extends DzqController
 
     protected $bus;
     protected $settings;
+    protected $passwordLength = 6;
+    protected $passwordStrength = [];
 
     public function __construct(Dispatcher $bus, SettingsRepository $settings)
     {
@@ -75,24 +77,58 @@ class UpdateUsersController extends DzqController
         $requestData = [];
         if (!empty($username)) {
             $requestData['username'] = $username;
+            $checkUsername['username'] = $username;
+            $this->dzqValidate($checkUsername, [
+                'username' => [
+                    'required',
+                    'max:15',
+                    'unique:users',
+                    function ($attribute, $value, $fail) {
+                        if ($value === '匿名用户') {
+                            $fail('无效的用户名。');
+                        }
+                    },
+                ]
+            ]);
         }
         if (!empty($password)) {
             $requestData['password'] = $password;
+            if (! $this->user->checkPassword($password)) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER,'原密码不匹配');
+            }
         }
         if (!empty($newPassword)) {
             $requestData['newPassword'] = $newPassword;
+            // 验证新密码与原密码不能相同
+            if ($this->user->checkPassword($newPassword)) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER,'新密码与原密码不能相同');
+            }
         }
         if (!empty($passwordConfirmation)) {
             $requestData['password_confirmation'] = $passwordConfirmation;
+            $checkPassword['password'] = $newPassword;
+            $checkPassword['password_confirmation'] = $passwordConfirmation;
+            $this->dzqValidate($checkPassword, [
+                'password' => $this->getPasswordRules(),
+            ]);
         }
         if (!empty($payPassword)) {
             $requestData['payPassword'] = $payPassword;
         }
         if (!empty($payPasswordConfirmation)) {
             $requestData['pay_password_confirmation'] = $payPasswordConfirmation;
+            $checkPayPassword['pay_password'] = $payPassword;
+            $checkPayPassword['pay_password_confirmation'] = $payPasswordConfirmation;
+            $this->dzqValidate($checkPayPassword, [
+                'pay_password' => 'bail|sometimes|required|confirmed|digits:6',
+            ]);
         }
         if (!empty($payPasswordToken)) {
             $requestData['pay_password_token'] = $payPasswordToken;
+            $checkPayPasswordToken['pay_password_token'] = $payPasswordToken;
+            $this->dzqValidate($checkPayPasswordToken, [
+                'pay_password_token' => 'sometimes|required|session_token:reset_pay_password,'.$this->user->id,
+            ]);
         }
 
         $getRequestData = json_decode(file_get_contents("php://input"), TRUE);
@@ -106,7 +142,6 @@ class UpdateUsersController extends DzqController
         if (!empty($nickname)) {
             $requestData['nickname'] = $nickname;
         }
-
 
         $result = $this->bus->dispatch(
             new UpdateClientUser(
@@ -135,6 +170,71 @@ class UpdateUsersController extends DzqController
 
         return $this->outPut(ResponseCode::SUCCESS, '', $returnData);
     }
+
+    protected function getPasswordRules()
+    {
+        $passwordLength = $this->getPasswordLength();
+        $rules = [
+            'required',
+            'max:50',
+            'min:' . $passwordLength,
+            'confirmed'
+        ];
+
+
+        // 密码强度
+        if ($this->getPasswordStrength()) {
+            collect($this->getPasswordStrength())->each(function ($regex) use (&$rules) {
+                $rules[] = 'regex:' . self::optionalPasswordStrengthRegex[$regex]['pattern'];
+            });
+        }
+
+        return $rules;
+    }
+
+    protected function getPasswordLength(){
+        $settings = $this->settings;
+
+        // 获取后台设置的密码长度
+        $settingsPasswordLength = (int) $settings->get('password_length');
+
+        // 获取后台设置的密码强度
+        $settingsPasswordStrength = explode(',', trim($settings->get('password_strength'), ','));
+
+        // 后台设置的长度大于默认长度时，使用后台设置的长度
+        $this->passwordLength = $settingsPasswordLength > $this->passwordLength
+            ? $settingsPasswordLength
+            : $this->passwordLength;
+
+        // 使用后台设置的密码强度
+        return $this->passwordLength;
+    }
+
+    protected function getPasswordStrength(){
+        $settings = $this->settings;
+        // 获取后台设置的密码强度
+        $settingsPasswordStrength = explode(',', trim($settings->get('password_strength'), ','));
+        return $settingsPasswordStrength ?: $this->passwordStrength;
+    }
+
+    const optionalPasswordStrengthRegex = [
+        [
+            'name' => '数字',
+            'pattern' => '/\d+/',
+        ],
+        [
+            'name' => '小写字母',
+            'pattern' => '/[a-z]+/',
+        ],
+        [
+            'name' => '符号',
+            'pattern' => '/[^a-zA-Z0-9]+/',
+        ],
+        [
+            'name' => '大写字母',
+            'pattern' => '/[A-Z]+/',
+        ],
+    ];
 
     protected function getBackground($background)
     {
