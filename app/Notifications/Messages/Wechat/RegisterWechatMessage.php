@@ -45,7 +45,8 @@ class RegisterWechatMessage extends SimpleMessage
 
     public function template()
     {
-        return ['content' => $this->getWechatContent()];
+        return $this->getWechatContent();
+//        return ['content' => $this->getWechatContent()];
     }
 
     protected function titleReplaceVars()

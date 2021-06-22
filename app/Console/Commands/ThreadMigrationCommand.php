@@ -42,6 +42,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Facade;
+use function Clue\StreamFilter\fun;
 
 /**
  * thread 迁移脚本，迁移数据库  thread_tag、thread_tom，其中帖子中图文混排中的图片情况先不管，只考虑单独添加的图片/附件
@@ -517,7 +518,7 @@ class ThreadMigrationCommand extends AbstractCommand
                 $this->db->beginTransaction();
                 //找出帖子对应的 attachment图片 + question + thread_rewards
                 $attachments = Attachment::query()->where('type_id',$val->post_id)->where('type', Attachment::TYPE_OF_IMAGE)->orderBy('order')->get();
-                $question = Question::where('thread_id', $val->id)->first();
+//                $question = Question::where('thread_id', $val->id)->first();
                 $thread_reward = ThreadReward::where(['thread_id' => $val->id, 'post_id' => $val->post_id])->first();
                 //先插入 thread_tag
                 $res = self::insertThreadTag($val, ThreadTag::REWARD);
@@ -539,6 +540,7 @@ class ThreadMigrationCommand extends AbstractCommand
                 $q_price = $remain_money = 0;
                 $answer_id = 0;
                 $q_expired_at = $q_created_at = $q_updated_at = '';
+                /*
                 if($question && !empty($question->toArray())){
                     $q_type = !empty($question->be_user_id) ? 1 : 0;
                     $answer_id = 0;
@@ -547,6 +549,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $q_created_at = $question->created_at;
                     $q_updated_at = $question->updated_at;
                 }
+                */
 //            $q_orderSn = "";
                 if($thread_reward && !empty($thread_reward->toArray())){
                     $q_type = $thread_reward->type;
@@ -847,10 +850,13 @@ class ThreadMigrationCommand extends AbstractCommand
 
     //获取问题数据
     public function getThreadQuestion($start_page){
+        //这里只处理悬赏帖了
+        $thread_reward_ids = ThreadReward::query()->where('type', 0)->pluck('thread_id')->toArray();
         return  $this->db->table('threads as t')
             ->join('posts as p','t.id','=','p.thread_id')
             ->where('t.type', Thread::TYPE_OF_QUESTION)
             ->where('p.is_first', 1)
+            ->whereIn('t.id', $thread_reward_ids)
             ->offset($start_page * self::LIMIT)
             ->limit(self::LIMIT)
             ->get(['t.id','t.created_at','t.deleted_at','t.updated_at','t.user_id','p.id as post_id']);
