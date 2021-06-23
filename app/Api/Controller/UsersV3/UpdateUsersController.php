@@ -167,6 +167,7 @@ class UpdateUsersController extends DzqController
         if (!empty($data['background'])) {
             $returnData['background'] = $this->getBackground($data['background']);
         }
+        $returnData['signature'] = $data['signature'];
 
         return $this->outPut(ResponseCode::SUCCESS, '', $returnData);
     }
