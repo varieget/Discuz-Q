@@ -52,7 +52,7 @@ class ThreadHelper
                     ->from('post_user as b')
                     ->where('b.post_id', 'a.post_id')
                     ->where('b.created_at', '>', 'a.created_at');
-            }, '<', 10)
+            }, '<', 20)
             ->orderByDesc('a.post_id')
             ->get()->each(function (&$item) use ($postIdThreadId) {
                 $item['thread_id'] = $postIdThreadId[$item['post_id']] ?? null;
@@ -70,7 +70,7 @@ class ThreadHelper
                     ->from('orders as b')
                     ->where('b.thread_id', 'a.thread_id')
                     ->where('b.created_at', '>', 'a.created_at');
-            }, '<', 10)
+            }, '<', 20)
             ->orderByDesc('a.thread_id')
             ->get()->toArray();
 
@@ -87,7 +87,8 @@ class ThreadHelper
             $threadId = $item['thread_id'];
             if (empty($likedUsersInfo[$threadId]) || count($likedUsersInfo[$threadId]) < $maxDisplay) {
                 $user = $users[$item['user_id']] ?? null;
-                if (!empty($user)) {
+                $unique = in_array($item['user_id'], array_column($likedUsersInfo[$threadId],'userId'));
+                if (!empty($user) && empty($unique)) {
                     $likedUsersInfo[$item['thread_id']][] = [
                         'userId' => $item['user_id'],
                         'avatar' => $user->avatar,
