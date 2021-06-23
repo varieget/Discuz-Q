@@ -55,7 +55,7 @@ trait ThreadTrait
         $loginUser = $this->user;
         $this->loginUserData = $loginUserData;
         $userField = $this->getUserInfoField($loginUser, $user, $thread);
-        $groupField = $this->getGroupInfoField($group);
+        $groupField = $this->getGroupInfoField($loginUser, $group, $thread);
         $likeRewardField = $this->getLikeRewardField($thread, $post);//列表页传参
         $payType = $this->threadPayStatus($loginUser, $thread, $paid);
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
@@ -364,10 +364,13 @@ trait ThreadTrait
         return $content;
     }
 
-    private function getGroupInfoField($group)
+    private function getGroupInfoField($loginUser, $group, $thread)
     {
         $groupResult = null;
         if (!empty($group) && $group['groups']['is_display']) {
+            if ( $thread['is_anonymous'] == Thread::IS_ANONYMOUS && $loginUser['id'] != $thread['user_id'] ){
+                return $groupResult;
+            }
             $groupResult = [
                 'groupId' => $group['group_id'],
                 'groupName' => $group['groups']['name'],
