@@ -63,10 +63,10 @@ class UpdateThreadController extends DzqController
         $threadId = $this->inPut('threadId');
         $thread = $this->thread;
         $post = Post::getOneActivePost($threadId);
-        $oldContent = $post->content;
         if (empty($post)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
+        $oldContent = $post->content;
         $result = $this->updateThread($thread, $post);
 
         if (
