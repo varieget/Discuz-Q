@@ -106,9 +106,11 @@ class ThreadLikedUsersController extends DzqController
         $userArr = array_combine(array_column($user, 'id'), $user);
         $likeSort = $this->arraySort($postUserAndorder,'created_at','desc');
         foreach ($likeSort as $k=>$v) {
-            $likeSort[$k]['passed_at'] =  Utils::diffTime($v['created_at']);
-            $likeSort[$k]['nickname'] = $userArr[$v['user_id']]['nickname'];
-            $likeSort[$k]['avatar'] = $userArr[$v['user_id']]['avatar'];
+            if (!empty($v['user_id'])) {
+                $likeSort[$k]['passed_at'] = Utils::diffTime($v['created_at']);
+                $likeSort[$k]['nickname'] = $userArr[$v['user_id']]['nickname'];
+                $likeSort[$k]['avatar'] = $userArr[$v['user_id']]['avatar'];
+            }
         }
 
         $pageData = $this->specialPagination($data['page'],$data['perPage'],$likeSort);
