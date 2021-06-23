@@ -154,7 +154,7 @@ class RedPackBusi extends TomBaseBusi
         if($old_order && $old_order->order_sn != $input['orderSn']){
             //规定时间内，含有红包的帖子不能频繁修改
             if($old_order->created_at > Carbon::now()->subMinutes(self::RED_LIMIT_TIME) ){
-                $this->outPut(ResponseCode::INTERNAL_ERROR, '系统处理中，请稍后再试……');
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '系统处理中，请等待1分钟之后再发布......');
             }
             $old_order->thread_id = 0;
             $res = $old_order->save();
