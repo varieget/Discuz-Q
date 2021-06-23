@@ -102,20 +102,24 @@ class ListDialogV2Controller extends DzqController
                 }
 
             }
-
-            $sendUser = [
-                'id'=>$i->sender->id,
-                'avatar'=> !empty($i->sender->avatar) ? $i->sender->avatar : "",
-                'username'=>$i->sender->username,
-                'nickname'=>$i->sender->nickname
-            ];
-            $recipientUser = [
-                'id'=>$i->recipient->id,
-                'avatar'=>!empty($i->recipient->avatar) ? $i->recipient->avatar: "",
-                'username'=>$i->recipient->username,
-                'nickname'=>$i->recipient->nickname
-            ];
-
+            $sendUser = null;
+            $recipientUser = null;
+            if (!empty($i->sender)) {
+                $sendUser = [
+                    'id' => $i->sender->id,
+                    'avatar' => !empty($i->sender->avatar) ? $i->sender->avatar : "",
+                    'username' => $i->sender->username,
+                    'nickname' => $i->sender->nickname
+                ];
+            }
+            if (!empty($i->recipient)) {
+                $recipientUser = [
+                    'id' => $i->recipient->id,
+                    'avatar' => !empty($i->recipient->avatar) ? $i->recipient->avatar : "",
+                    'username' => $i->recipient->username,
+                    'nickname' => $i->recipient->nickname
+                ];
+            }
             $msg = $i->dialogMessage;
             $msg = $msg
                 ? [
