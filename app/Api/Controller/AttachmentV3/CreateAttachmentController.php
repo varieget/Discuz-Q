@@ -122,10 +122,11 @@ class CreateAttachmentController extends DzqController
                 true
             );
 
-            $this->events->dispatch(
-                new Uploading($actor, $file)
-            );
-
+            if(strtolower($ext) != 'gif'){
+                $this->events->dispatch(
+                    new Uploading($actor, $file)
+                );
+            }
             // 上传
             $this->uploader->upload($file, $type);
 
