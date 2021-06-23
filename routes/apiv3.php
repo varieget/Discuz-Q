@@ -114,7 +114,7 @@ $route->get('/order.detail', 'orders.resource.v2', ApiController\OrderV3\Resourc
 $route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\TradeV3\Notify\WechatNotifyController::class);
 $route->post('/trade/pay/order', 'trade.pay.order', ApiController\TradeV3\PayOrderController::class);
 $route->get('/categories', 'categories', ApiController\CategoryV3\ListCategoriesController::class);
-$route->get('/categories.createthread', '/categories.createthread', ApiController\CategoryV3\ListCategoriesCreateThreadController::class);
+$route->get('/categories.thread', '/categories.thread', ApiController\CategoryV3\ListCategoriesThreadController::class);
 $route->get('/posts', 'posts', ApiController\PostsV3\ListPostsController::class);
 $route->post('/posts.update', 'posts.update', ApiController\PostsV3\UpdatePostController::class);
 $route->post('/posts', 'posts', ApiController\PostsV3\CreatePostController::class);
