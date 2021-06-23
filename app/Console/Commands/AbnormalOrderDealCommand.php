@@ -87,8 +87,9 @@ class AbnormalOrderDealCommand extends AbstractCommand
         $query->where('status', Order::ORDER_STATUS_PAID);
         $query->where('amount', '>', 0);
         $query->whereIn('type', $orderType);
-        $query->whereNull('thread_id');
-        $query->orWhere('thread_id', 0);
+        $query->where(function ($query){
+            $query->whereNull('thread_id')->orWhere('thread_id', 0);
+        });
         $order = $query->get();
 
         $bar = $this->createProgressBar(count($order));
