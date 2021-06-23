@@ -25,9 +25,11 @@ use App\Events\Attachment\Saving;
 use App\Events\Attachment\Uploaded;
 use App\Events\Attachment\Uploading;
 use App\Models\Attachment;
+use App\Models\Group;
 use App\Repositories\UserRepository;
 use App\Validators\AttachmentValidator;
 use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 use Discuz\Foundation\EventsDispatchTrait;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
@@ -66,6 +68,23 @@ class CreateAttachmentController extends DzqController
         // 不在这里面，则通过，后续会有 type 表单验证
         if (!isset($typeMethodMap[$type])) {
             return true;
+        }
+
+        //开启付费站点，新用户注册时会被加入到待付费组，导致填写补充信息上传图片附件提示无权限
+        try {
+            if (!empty($groupId = $this->user->getRelations()['groups'][0]->getAttribute('id')) && $groupId == Group::UNPAID) {
+                $group = Group::query()->where('id', Group::MEMBER_ID)->get();
+                if (!empty($group)){
+                    $this->user->setRelation('groups', $group);
+                }
+            }
+        } catch (\Exception $e) {
+            DzqLog::error('create_attachment',[
+                'user'      => $this->user,
+                'groupId'   => $groupId,
+                'group'     => $group
+            ]);
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '附件上传失败');
         }
 
         return call_user_func_array($typeMethodMap[$type], [$this->user]);
