@@ -85,7 +85,7 @@ class WechatH5BindController extends AuthBaseController
         }
 
         if ($actor->isGuest()) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
+            $this->outPut(ResponseCode::UNAUTHORIZED,'访客无权限绑定公众号');
         }
 
         $this->db->beginTransaction();

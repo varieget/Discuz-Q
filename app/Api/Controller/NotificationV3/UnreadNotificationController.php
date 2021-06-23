@@ -44,7 +44,7 @@ class UnreadNotificationController extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            throw new PermissionDeniedException('访客没有权限更新未读消息');
         }
         return true;
     }

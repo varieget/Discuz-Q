@@ -84,7 +84,7 @@ class WechatMiniProgramRebindController extends AuthBaseController
         }
 
         if ($actor->isGuest()) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
+            $this->outPut(ResponseCode::UNAUTHORIZED,'访客无权限换绑小程序');
         }
 
         if (is_null($actor->wechat)) {

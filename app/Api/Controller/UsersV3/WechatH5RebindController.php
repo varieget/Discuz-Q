@@ -74,7 +74,7 @@ class WechatH5RebindController extends AuthBaseController
         }
 
         if ($actor->isGuest()) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
+            $this->outPut(ResponseCode::UNAUTHORIZED,'访客无权限换绑公众号');
         }
 
         if (is_null($actor->wechat)) {
