@@ -37,20 +37,19 @@ use Carbon\Carbon;
 use Discuz\Console\AbstractCommand;
 use Discuz\Foundation\Application;
 use Discuz\Qcloud\QcloudTrait;
-use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Facade;
-use function Clue\StreamFilter\fun;
-
+use Illuminate\Database\ConnectionInterface;
+use Illuminate\Support\Facades\Schema;
 /**
  * thread 迁移脚本，迁移数据库  thread_tag、thread_tom，其中帖子中图文混排中的图片情况先不管，只考虑单独添加的图片/附件
  */
-
 class ThreadMigrationCommand extends AbstractCommand
 {
+
 
     protected $signature = 'thread:migration';
 
@@ -187,11 +186,11 @@ class ThreadMigrationCommand extends AbstractCommand
         app('log')->info('迁移红包帖 thread_tom end');
         //迁移图片
         app('log')->info('迁移图片帖 thread_tom start');
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select posts.thread_id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"imageIds\":[\', group_concat(attachments.id order by attachments.order), \']}\') as value from attachments inner join posts on attachments.type_id = posts.id inner join threads on posts.thread_id = threads.id where posts.is_first = 1 and attachments.type in (1,4,5) and posts.thread_id not in (select thread_id from thread_tom where tom_type = ? )  group by posts.thread_id'), [ThreadTag::IMAGE,ThreadTag::IMAGE, ThreadTag::IMAGE]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select posts.thread_id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"imageIds\":[\', group_concat(attachments.id order by attachments.order,attachments.id), \']}\') as value from attachments inner join posts on attachments.type_id = posts.id inner join threads on posts.thread_id = threads.id where posts.is_first = 1 and attachments.type in (1,4,5) and posts.thread_id not in (select thread_id from thread_tom where tom_type = ? )  group by posts.thread_id'), [ThreadTag::IMAGE,ThreadTag::IMAGE, ThreadTag::IMAGE]);
         app('log')->info('迁移图片帖 thread_tom end');
         //迁移附件
         app('log')->info('迁移附件帖 thread_tom start');
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select posts.thread_id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"docIds\":[\', group_concat(attachments.id order by attachments.order), \']}\') as value from attachments inner join posts on attachments.type_id = posts.id inner join threads on posts.thread_id = threads.id where posts.is_first = 1 and attachments.type = 0 and posts.thread_id not in (select thread_id from thread_tom where tom_type = ? ) group by posts.thread_id'), [ThreadTag::DOC,ThreadTag::DOC, ThreadTag::DOC]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select posts.thread_id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"docIds\":[\', group_concat(attachments.id order by attachments.order,attachments.id), \']}\') as value from attachments inner join posts on attachments.type_id = posts.id inner join threads on posts.thread_id = threads.id where posts.is_first = 1 and attachments.type = 0 and posts.thread_id not in (select thread_id from thread_tom where tom_type = ? ) group by posts.thread_id'), [ThreadTag::DOC,ThreadTag::DOC, ThreadTag::DOC]);
         app('log')->info('迁移附件帖 thread_tom end');
 
         //迁移视频
