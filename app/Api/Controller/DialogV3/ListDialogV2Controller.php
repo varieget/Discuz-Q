@@ -105,13 +105,13 @@ class ListDialogV2Controller extends DzqController
 
             $sendUser = [
                 'id'=>$i->sender->id,
-                'avatar'=>$i->sender->avatar,
+                'avatar'=> !empty($i->sender->avatar) ? $i->sender->avatar : "",
                 'username'=>$i->sender->username,
                 'nickname'=>$i->sender->nickname
             ];
             $recipientUser = [
                 'id'=>$i->recipient->id,
-                'avatar'=>$i->recipient->avatar,
+                'avatar'=>!empty($i->recipient->avatar) ? $i->recipient->avatar: "",
                 'username'=>$i->recipient->username,
                 'nickname'=>$i->recipient->nickname
             ];
