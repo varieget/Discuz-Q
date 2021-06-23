@@ -332,6 +332,30 @@ class UserRepository extends AbstractRepository
     }
 
     /**
+     * 编辑前台帖子权限(自己)
+     *
+     * @param User $user
+     * @param $categoryId
+     * @return bool
+     */
+    public function canEditMyThread(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_OWN, $categoryId);
+    }
+
+     /**
+     * 编辑前台帖子权限(自己+他人)
+     *
+     * @param User $user
+     * @param $categoryId
+     * @return bool
+     */
+    public function canEditOthersThread(User $user, $categoryId = null)
+    {
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT, $categoryId);
+    }
+
+    /**
      * 前台删除帖子权限
      *
      * @param User $user
