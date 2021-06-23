@@ -33,7 +33,7 @@ use Illuminate\Support\Str;
  */
 abstract class TomBaseBusi
 {
-    const RED_LIMIT_TIME = 2;           //红包帖创建时间间隔
+    const RED_LIMIT_TIME = 1;           //红包帖创建时间间隔
     const NEED_PAY = false;
 
 
