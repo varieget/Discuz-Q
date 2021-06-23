@@ -67,11 +67,11 @@ class LikedSmsMessage extends SimpleMessage
          * @parem $post_content 帖子内容
          */
         $this->setTemplateData([
-            '{$user_id}'      => $this->actor->id,
-            '{$user_name}'    => $this->actor->username,
-            '{$thread_id}'    => $this->post->thread->id,
-            '{$thread_title}' => $this->strWords($threadTitle),
-            '{$post_content}' => $this->strWords($this->post->content),
+            '{$userId}'      => $this->actor->id,
+            '{$userName}'    => $this->actor->username,
+            '{$threadId}'    => $this->post->thread->id,
+            '{$threadTitle}' => $this->strWords($threadTitle),
+            '{$postContent}' => $this->strWords($this->post->content),
         ]);
 
         // build data
