@@ -182,17 +182,18 @@ class CreateAttachmentController extends DzqController
             $message_text = addslashes(json_encode($message_text));
             $updateDialogMessageResult = DialogMessage::query()
                 ->where('id', $dialogMessageId)
-                ->update(['attachment_id' => $data['id'], 'message_text' => $message_text, 'status' => 1]);
+                ->update(['attachment_id' => $data['id'], 'message_text' => $message_text, 'status' => DialogMessage::NORMAL_MESSAGE]);
             if (!$updateDialogMessageResult) {
                 return $this->outPut(ResponseCode::INTERNAL_ERROR, '私信图片更新失败!');
             } else {
                 $dialogMessage = DialogMessage::query()->where('id', $dialogMessageId)->first();
                 $dialog = Dialog::query()->where('id', $dialogMessage->dialog_id)->first();
                 $lastDialogMessage = DialogMessage::query()->where('id', $dialog->dialog_message_id)->first();
-                if ($lastDialogMessage->created_at < $dialogMessage->created_at) {
+                if ($dialog->dialog_message_id == 0 || 
+                   (isset($lastDialogMessage['created_at']) && ($lastDialogMessage['created_at'] < $dialogMessage['created_at']))) {
                     $updateDialogResult = Dialog::query()
-                            ->where('id', $dialogMessage->dialog_id)
-                            ->update(['dialog_message_id' => $dialogMessage->id]);
+                        ->where('id', $dialogMessage->dialog_id)
+                        ->update(['dialog_message_id' => $dialogMessage->id]);
                     if (!$updateDialogResult) {
                         return $this->outPut(ResponseCode::INTERNAL_ERROR, '最新对话更新失败!');
                     }

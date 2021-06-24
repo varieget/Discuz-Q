@@ -5,6 +5,7 @@ namespace App\Api\Controller\DialogV3;
 use App\Commands\Dialog\CreateDialogMessage;
 use App\Common\ResponseCode;
 use App\Common\Utils;
+use App\Models\DialogMessage;
 use App\Providers\DialogMessageServiceProvider;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -62,10 +63,10 @@ class CreateDialogMessageV2Controller extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '发送内容不能为空！');
         }
 
-        if ($data['isImage'] || (!$data['isImage'] && empty($data['messageText']) && empty($data['attachmentId']))) {
-            $data['status'] = 0;
+        if ($data['isImage']) {
+            $data['status'] = DialogMessage::EMPTY_MESSAGE;
         } else {
-            $data['status'] = 1;
+            $data['status'] = DialogMessage::NORMAL_MESSAGE;
         }
 
         try {

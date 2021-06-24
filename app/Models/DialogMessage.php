@@ -41,6 +41,10 @@ class DialogMessage extends Model
 
     const SUMMARY_END_WITH = '...';
 
+    const NORMAL_MESSAGE = 1;
+
+    const EMPTY_MESSAGE = 0;
+
     /**
      * {@inheritdoc}
      */

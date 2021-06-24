@@ -100,7 +100,7 @@ class CreateDialogMessage
 
         $attachment_id = Arr::get($this->attributes, 'attachment_id', 0);
 
-        $status = Arr::get($this->attributes, 'status', 1);
+        $status = Arr::get($this->attributes, 'status', DialogMessage::NORMAL_MESSAGE);
 
         if ($attachment_id) {
             $attachment = Attachment::query()
