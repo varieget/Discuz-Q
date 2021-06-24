@@ -67,6 +67,7 @@ class UnreadNotificationController extends DzqController
             })
             ->where('user_id','!=',$actor->id)
             ->where('read_status',0)
+            ->where('status', DialogMessage::NORMAL_MESSAGE)
             ->count();
 
         $data['dialogNotifications'] = $MQuery;

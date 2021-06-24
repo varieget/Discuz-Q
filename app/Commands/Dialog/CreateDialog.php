@@ -20,6 +20,7 @@ namespace App\Commands\Dialog;
 
 use App\Censor\Censor;
 use App\Models\Dialog;
+use App\Models\DialogMessage;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -75,13 +76,11 @@ class CreateDialog
         $dialogRes = $dialog::buildOrFetch($sender, $recipientUser->id);
 
         //创建会话时如传入消息内容，则创建消息
-        $messageText = Arr::get($this->attributes, 'message_text', null);
-        $attachmentId = Arr::get($this->attributes, 'attachment_id', 0);
         $isImage = Arr::get($this->attributes, 'isImage', false);
-        if ($isImage || (!$isImage && empty($messageText) && empty($attachmentId))) {
-            $this->attributes['status'] = 0;
+        if ($isImage) {
+            $this->attributes['status'] = DialogMessage::EMPTY_MESSAGE;
         } else {
-            $this->attributes['status'] = 1;
+            $this->attributes['status'] = DialogMessage::NORMAL_MESSAGE;
         }
         $this->attributes['dialog_id'] = $dialogRes->id;
         $dialogMessageRes = $bus->dispatchNow(

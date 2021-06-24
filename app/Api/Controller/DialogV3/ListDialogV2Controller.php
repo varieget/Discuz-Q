@@ -58,6 +58,7 @@ class ListDialogV2Controller extends DzqController
                 '=',
                 'dialog_message.dialog_id'
             )
+            ->where('dialog_message_id', '>', 0)
             ->where(function ($query) use ($tablePrefix, $user) {
                 $query->where('dialog.sender_user_id', $user->id)
                     ->whereRaw("{$tablePrefix}dialog_message.`created_at` > IFNULL({$tablePrefix}dialog.`sender_deleted_at`, 0 )");
@@ -84,7 +85,7 @@ class ListDialogV2Controller extends DzqController
             $dMQuery = DialogMessage::query()
                 ->whereIn('dialog_id', $dialogIds)
                 ->where('user_id','!=',$actor->id)
-                ->where('status', 1)
+                ->where('status', DialogMessage::NORMAL_MESSAGE)
                 ->get()->toArray();
 
             $newList = [];
