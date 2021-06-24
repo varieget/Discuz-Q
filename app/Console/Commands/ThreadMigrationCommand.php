@@ -55,9 +55,21 @@ class ThreadMigrationCommand extends AbstractCommand
 
     protected $description = '帖子内容数据库迁移';
 
+    // 数据迁移涉及到的表 start
+    protected $threads;
+    protected $thread_tag;
+    protected $posts;
+    protected $thread_tom;
+    protected $thread_red_packets;
+    protected $attachments;
+    protected $thread_video;
+    //end
+
     protected $app;
 
     protected $db;
+
+    protected $db_pre;
 
     protected $old_type;
 
@@ -113,8 +125,6 @@ class ThreadMigrationCommand extends AbstractCommand
      */
     public function __construct(Application $app)
     {
-
-
         parent::__construct();
         $this->app = $app;
         $this->db = app('db');
@@ -139,8 +149,17 @@ class ThreadMigrationCommand extends AbstractCommand
             ThreadVideo::TYPE_OF_VIDEO  =>  ThreadTag::VIDEO,
             ThreadVideo::TYPE_OF_AUDIO  =>  ThreadTag::VOICE
         ];
+        $database = $this->app->config('database');
+        $this->db_pre = $database['prefix'];
 
-
+        //该脚本会操作到的相关表
+        $this->threads = $this->db_pre. (new Thread())->getTable();
+        $this->thread_tag = $this->db_pre. (new ThreadTag())->getTable();
+        $this->posts = $this->db_pre. (new Post())->getTable();
+        $this->thread_tom = $this->db_pre. (new ThreadTom())->getTable();
+        $this->thread_red_packets = $this->db_pre. (new ThreadRedPacket())->getTable();
+        $this->attachments = $this->db_pre. (new Attachment())->getTable();
+        $this->thread_video = $this->db_pre. (new ThreadVideo())->getTable();
 
     }
 
@@ -159,25 +178,26 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function handle()
     {
-        app('log')->info('开始数据迁移start');
+        app('log')->info('开始帖子数据迁移start');
+        $this->info('开始帖子数据迁移start');
 
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('DROP TABLE IF EXISTS post_content_temp'));
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('DROP TABLE IF EXISTS posts_dst'));
 
         //迁移tag数据信息
         app('log')->info('迁移 thread_tag start');
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM threads where type = ? AND id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::TEXT, Thread::TYPE_OF_TEXT, ThreadTag::TEXT]);
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM threads where type = ? AND id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::TEXT, Thread::TYPE_OF_LONG, ThreadTag::TEXT]);
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM threads where type = ? AND id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::VIDEO, Thread::TYPE_OF_VIDEO, ThreadTag::VIDEO]);
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM threads where type = ? AND id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::IMAGE, Thread::TYPE_OF_IMAGE, ThreadTag::IMAGE]);
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM threads where type = ? AND id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::VOICE, Thread::TYPE_OF_AUDIO, ThreadTag::VOICE]);
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM threads where type = ? AND id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::REWARD, Thread::TYPE_OF_QUESTION, ThreadTag::REWARD]);
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM threads where type = ? AND id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::GOODS, Thread::TYPE_OF_GOODS, ThreadTag::GOODS]);
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) SELECT thread_id,?,created_at,updated_at FROM thread_red_packets WHERE thread_id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::RED_PACKET, ThreadTag::RED_PACKET]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM {$this->threads} where type = ? AND id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::TEXT, Thread::TYPE_OF_TEXT, ThreadTag::TEXT]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM {$this->threads} where type = ? AND id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::TEXT, Thread::TYPE_OF_LONG, ThreadTag::TEXT]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM {$this->threads} where type = ? AND id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::VIDEO, Thread::TYPE_OF_VIDEO, ThreadTag::VIDEO]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM {$this->threads} where type = ? AND id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::IMAGE, Thread::TYPE_OF_IMAGE, ThreadTag::IMAGE]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM {$this->threads} where type = ? AND id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::VOICE, Thread::TYPE_OF_AUDIO, ThreadTag::VOICE]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM {$this->threads} where type = ? AND id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::REWARD, Thread::TYPE_OF_QUESTION, ThreadTag::REWARD]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM {$this->threads} where type = ? AND id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::GOODS, Thread::TYPE_OF_GOODS, ThreadTag::GOODS]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT thread_id,?,created_at,updated_at FROM {$this->thread_red_packets} WHERE thread_id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::RED_PACKET, ThreadTag::RED_PACKET]);
 
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) select distinct posts.thread_id,?, posts.created_at,posts.updated_at from attachments inner join posts on attachments.type_id = posts.id where posts.is_first = 1 and attachments.type= ? and  posts.thread_id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::DOC, Attachment::TYPE_OF_FILE, ThreadTag::DOC]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) select distinct posts.thread_id,?, posts.created_at,posts.updated_at from {$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type= ? and  {$this->posts}.thread_id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::DOC, Attachment::TYPE_OF_FILE, ThreadTag::DOC]);
 
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tag (thread_id, tag, created_at, updated_at) select distinct posts.thread_id,?, posts.created_at,posts.updated_at from (attachments inner join posts on attachments.type_id = posts.id) inner join threads on posts.thread_id = threads.id where posts.is_first = 1 and attachments.type in (1,4,5) and threads.type <> ? and posts.thread_id NOT IN (SELECT thread_id FROM thread_tag WHERE tag = ?)'), [ThreadTag::IMAGE, Thread::TYPE_OF_IMAGE, ThreadTag::IMAGE]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) select distinct posts.thread_id,?, posts.created_at,posts.updated_at from ({$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id) inner join {$this->threads} on {$this->posts}.thread_id = {$this->threads}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type in (1,4,5) and {$this->threads}.type <> ? and {$this->posts}.thread_id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::IMAGE, Thread::TYPE_OF_IMAGE, ThreadTag::IMAGE]);
         app('log')->info('迁移 thread_tag end');
 
         //迁移红包
@@ -186,11 +206,15 @@ class ThreadMigrationCommand extends AbstractCommand
         app('log')->info('迁移红包帖 thread_tom end');
         //迁移图片
         app('log')->info('迁移图片帖 thread_tom start');
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select posts.thread_id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"imageIds\":[\', group_concat(attachments.id order by attachments.order,attachments.id), \']}\') as value from attachments inner join posts on attachments.type_id = posts.id inner join threads on posts.thread_id = threads.id where posts.is_first = 1 and attachments.type in (1,4,5) and posts.thread_id not in (select thread_id from thread_tom where tom_type = ? )  group by posts.thread_id'), [ThreadTag::IMAGE,ThreadTag::IMAGE, ThreadTag::IMAGE]);
+        $imageStringStart = '\'{\"imageIds\":[\'';
+        $imageStringEnd = '\']}\'';
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->posts}.thread_id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$imageStringStart}, group_concat({$this->attachments}.id order by {$this->attachments}.order,{$this->attachments}.id), {$imageStringEnd}) as value from {$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id inner join {$this->threads} on {$this->posts}.thread_id = {$this->threads}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type in (1,4,5) and {$this->posts}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ? )  group by {$this->posts}.thread_id"), [ThreadTag::IMAGE,ThreadTag::IMAGE, ThreadTag::IMAGE]);
         app('log')->info('迁移图片帖 thread_tom end');
         //迁移附件
         app('log')->info('迁移附件帖 thread_tom start');
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select posts.thread_id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"docIds\":[\', group_concat(attachments.id order by attachments.order,attachments.id), \']}\') as value from attachments inner join posts on attachments.type_id = posts.id inner join threads on posts.thread_id = threads.id where posts.is_first = 1 and attachments.type = 0 and posts.thread_id not in (select thread_id from thread_tom where tom_type = ? ) group by posts.thread_id'), [ThreadTag::DOC,ThreadTag::DOC, ThreadTag::DOC]);
+        $docStringStart = '\'{\"docIds\":[\'';
+        $docStringEnd = '\']}\'';
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->posts}.thread_id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$docStringStart}, group_concat({$this->attachments}.id order by {$this->attachments}.order,{$this->attachments}.id), {$docStringEnd}) as value from {$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id inner join {$this->threads} on {$this->posts}.thread_id = {$this->threads}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type = 0 and {$this->posts}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ? ) group by {$this->posts}.thread_id"), [ThreadTag::DOC,ThreadTag::DOC, ThreadTag::DOC]);
         app('log')->info('迁移附件帖 thread_tom end');
 
         //迁移视频
@@ -259,7 +283,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $this->info('修改 threads 中 type 出错');
                     break;
                 }
-                app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw(self::AGG_SQL));
+                app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw(self::addSql()));
                 $this->db->commit();
 
                 unset($thread_array);
@@ -274,9 +298,11 @@ class ThreadMigrationCommand extends AbstractCommand
             app('log')->info('处理posts的content，数据库出错', [$e->getMessage()]);
             return;
         }
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('rename TABLE posts to posts_bakv2'));
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('rename TABLE posts_dst to posts'));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("rename TABLE {$this->posts} to posts_bakv2"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("rename TABLE posts_dst to {$this->posts}"));
         app('log')->info('帖子内容 posts 的 content 修改完成');
+        app('log')->info('开始帖子数据迁移end');
+        $this->info('开始帖子数据迁移end');
     }
 
 
@@ -325,20 +351,23 @@ class ThreadMigrationCommand extends AbstractCommand
     }
 
     public function migrateVideo(){
-
         //先刷新已经转码的
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select threads.id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"videoId\":[\',thread_video.id, \']}\') from thread_video inner join threads on thread_video.thread_id = threads.id where thread_video.type = 0 and thread_video.status = 1 and threads.is_draft = 0 and thread_video.thread_id not in (select thread_id from thread_tom where tom_type = ?)'), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
+        $videoStringStart = '\'{\"videoId\":[\'';
+        $videoStringEnd = '\']}\'';
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$videoStringStart},{$this->thread_video}.id, {$videoStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 0 and {$this->thread_video}.status = 1 and {$this->threads}.is_draft = 0 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?)"), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
 
         //刷新未转码的
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select threads.id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"videoId\":[\',MAX(thread_video.id), \']}\') from thread_video inner join threads on thread_video.thread_id = threads.id where thread_video.type = 0 and thread_video.status = 0 and threads.is_draft = 1 and thread_video.thread_id not in (select thread_id from thread_tom where tom_type = ?) group by thread_video.thread_id'), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$videoStringStart},MAX({$this->thread_video}.id), {$videoStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 0 and {$this->thread_video}.status = 0 and {$this->threads}.is_draft = 1 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?) group by {$this->thread_video}.thread_id"), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
     }
 
     public function migrateAudio(){
         //先刷新已经转码的
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select threads.id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"audioId\":[\',thread_video.id, \']}\') from thread_video inner join threads on thread_video.thread_id = threads.id where thread_video.type = 1 and thread_video.status = 1 and threads.is_draft = 0 and thread_video.thread_id not in (select thread_id from thread_tom where tom_type = ?)'), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
+        $audioStringStart = '\'{\"audioId\":[\'';
+        $audioStringEnd = '\']}\'';
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$audioStringStart},{$this->thread_video}.id, {$audioStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 1 and {$this->thread_video}.status = 1 and {$this->threads}.is_draft = 0 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?)"), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
 
         //刷新未转码的
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('INSERT INTO thread_tom (thread_id,tom_type,thread_tom.key,thread_tom.status,created_at,updated_at,thread_tom.value) select threads.id,?,?,IF(threads.deleted_at, -1, 0),threads.created_at,threads.updated_at,concat(\'{\"audioId\":[\',MAX(thread_video.id), \']}\') from thread_video inner join threads on thread_video.thread_id = threads.id where thread_video.type = 1 and thread_video.status = 0 and threads.is_draft = 1 and thread_video.thread_id not in (select thread_id from thread_tom where tom_type = ?) group by thread_video.thread_id'), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$audioStringStart},MAX({$this->thread_video}.id), {$audioStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 1 and {$this->thread_video}.status = 0 and {$this->threads}.is_draft = 1 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?) group by {$this->thread_video}.thread_id"), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
     }
 
     public function migrateQuestion(){
@@ -602,6 +631,11 @@ class ThreadMigrationCommand extends AbstractCommand
             ->offset($start_page * self::LIMIT)
             ->limit(self::LIMIT)
             ->get(['t.id','t.created_at','t.deleted_at','t.updated_at','p.id as post_id', 'g.id as gid', 'g.platform_id', 'g.title', 'g.price', 'g.image_path', 'g.type', 'g.status', 'g.ready_content', 'g.detail_content', 'g.created_at as gcreated_at', 'g.updated_at as gupdated_at', 'g.user_id']);
+    }
+
+    //add_sql
+    public function addSql(){
+        return "INSERT INTO `posts_dst` (`id`,`user_id`,`thread_id`,`reply_post_id`,`reply_user_id`,`comment_post_id`,`comment_user_id`,`content`,`ip`,`port`,`reply_count`,`like_count`,`created_at`,`updated_at`,`deleted_at`,`deleted_user_id`,`is_first`, `is_comment`, `is_approved`) select {$this->posts}.`id`,{$this->posts}.`user_id`,{$this->posts}.`thread_id`,{$this->posts}.`reply_post_id`,{$this->posts}.`reply_user_id`,{$this->posts}.`comment_post_id`,{$this->posts}.`comment_user_id`,`post_content_temp`.`content`,{$this->posts}.`ip`,{$this->posts}.`port`,{$this->posts}.`reply_count`,{$this->posts}.`like_count`,{$this->posts}.`created_at`,{$this->posts}.`updated_at`,{$this->posts}.`deleted_at`,{$this->posts}.`deleted_user_id`,{$this->posts}.`is_first`, {$this->posts}.`is_comment`, {$this->posts}.`is_approved` from post_content_temp inner join {$this->posts} on post_content_temp.id = {$this->posts}.id WHERE post_content_temp.id NOT IN (SELECT id FROM posts_dst)";
     }
 
 }
