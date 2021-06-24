@@ -52,20 +52,31 @@ class CreateDialogMessageV2Controller extends DzqController
                 'dialogId' => 'required|int',
                 'messageText' => 'sometimes|max:450',
                 'attachmentId' => 'sometimes|int',
+                'isImage' => 'required|bool'
             ])->validate();
         } catch (ValidationException $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->validator->getMessageBag()->first());
         }
 
+        if (!$data['isImage'] && empty($data['messageText']) && empty($data['attachmentId'])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '发送内容不能为空！');
+        }
+
+        if ($data['isImage'] || (!$data['isImage'] && empty($data['messageText']) && empty($data['attachmentId']))) {
+            $data['status'] = 0;
+        } else {
+            $data['status'] = 1;
+        }
+
         try {
             $data = Utils::arrayKeysToSnake($data);
-            $this->bus->dispatch(
+            $dialogMessage = $this->bus->dispatch(
                 new CreateDialogMessage($user, $data)
             );
         } catch (\Exception $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->getMessage());
         }
 
-        $this->outPut(ResponseCode::SUCCESS, '已发送');
+        $this->outPut(ResponseCode::SUCCESS, '已发送', ['dialogMessageId' => $dialogMessage->id]);
     }
 }
