@@ -75,13 +75,19 @@ class CreateDialog
         $dialogRes = $dialog::buildOrFetch($sender, $recipientUser->id);
 
         //创建会话时如传入消息内容，则创建消息
-        $message_text = Arr::get($this->attributes, 'message_text', null);
-        if ($message_text) {
-            $this->attributes['dialog_id'] = $dialogRes->id;
-            $bus->dispatchNow(
-                new CreateDialogMessage($this->actor, $this->attributes)
-            );
+        $messageText = Arr::get($this->attributes, 'message_text', null);
+        $attachmentId = Arr::get($this->attributes, 'attachment_id', 0);
+        $isImage = Arr::get($this->attributes, 'isImage', false);
+        if ($isImage || (!$isImage && empty($messageText) && empty($attachmentId))) {
+            $this->attributes['status'] = 0;
+        } else {
+            $this->attributes['status'] = 1;
         }
-        return $dialogRes;
+        $this->attributes['dialog_id'] = $dialogRes->id;
+        $dialogMessageRes = $bus->dispatchNow(
+            new CreateDialogMessage($this->actor, $this->attributes)
+        );
+
+        return ['dialogId' => $dialogRes->id, 'dialogMessageId' => $dialogMessageRes->id];
     }
 }

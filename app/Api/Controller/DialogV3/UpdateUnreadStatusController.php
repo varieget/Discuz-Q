@@ -47,6 +47,7 @@ class UpdateUnreadStatusController extends DzqController
         $dialogList = DialogMessage::query()
             ->where('dialog_id', $dialogId)
             ->where('user_id','!=',$actor->id)
+            ->where('status', 1)
             ->get(['id','read_status']);
 
         foreach ($dialogList as $value) {

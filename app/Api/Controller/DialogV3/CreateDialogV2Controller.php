@@ -44,6 +44,7 @@ class CreateDialogV2Controller extends DzqController
         $data = [
             'message_text'=>$this->inPut('messageText'),
             'recipient_username'=>$this->inPut('recipientUsername'),
+            'isImage'=>$this->inPut('isImage'),
         ];
 
         if(empty($data['recipient_username'])){
@@ -58,10 +59,16 @@ class CreateDialogV2Controller extends DzqController
 
         try {
             $this->validation->make($data, [
-                'message_text' => 'sometimes:messageText|max:450',
+                'message_text'  => 'sometimes:messageText|max:450',
+                'attachment_id' => 'sometimes|int',
+                'isImage' => 'required|bool'
             ])->validate();
         } catch (ValidationException $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->validator->getMessageBag()->first());
+        }
+
+        if (!$data['isImage'] && empty($data['message_text']) && empty($data['attachment_id'])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '发送内容不能为空！');
         }
 
         try {
@@ -72,10 +79,9 @@ class CreateDialogV2Controller extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->getMessage());
         }
 
-        $res = $res->toArray();
-
         $data = [
-            'dialogId' =>$res['id'],
+            'dialogId' => $res['dialogId'],
+            'dialogMessageId' => $res['dialogMessageId']
         ];
 
         $this->outPut(ResponseCode::SUCCESS, '已发送', $data);

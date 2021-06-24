@@ -84,6 +84,7 @@ class ListDialogV2Controller extends DzqController
             $dMQuery = DialogMessage::query()
                 ->whereIn('dialog_id', $dialogIds)
                 ->where('user_id','!=',$actor->id)
+                ->where('status', 1)
                 ->get()->toArray();
 
             $newList = [];
@@ -120,6 +121,7 @@ class ListDialogV2Controller extends DzqController
                     'nickname' => $i->recipient->nickname
                 ];
             }
+
             $msg = $i->dialogMessage;
             $msg = $msg
                 ? [
@@ -136,6 +138,7 @@ class ListDialogV2Controller extends DzqController
                     'createdAt' => optional($msg->created_at)->format('Y-m-d H:i:s'),
                 ]
                 : null;
+
             return [
                 'id' => $i->id,
                 'dialogMessageId' => $i->dialog_message_id ?: 0,
@@ -147,8 +150,7 @@ class ListDialogV2Controller extends DzqController
                 'createdAt' => optional($i->created_at)->format('Y-m-d H:i:s'),
                 'sender' => $sendUser,
                 'recipient' => $recipientUser,
-                'dialogMessage' => $msg,
-
+                'dialogMessage' => $msg
             ];
         });
 

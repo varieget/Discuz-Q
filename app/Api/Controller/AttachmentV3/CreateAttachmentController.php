@@ -25,6 +25,8 @@ use App\Events\Attachment\Saving;
 use App\Events\Attachment\Uploaded;
 use App\Events\Attachment\Uploading;
 use App\Models\Attachment;
+use App\Models\Dialog;
+use App\Models\DialogMessage;
 use App\Models\Group;
 use App\Repositories\UserRepository;
 use App\Validators\AttachmentValidator;
@@ -96,6 +98,7 @@ class CreateAttachmentController extends DzqController
         $file = Arr::get($this->request->getUploadedFiles(), 'file');
         $name = Arr::get($this->request->getParsedBody(), 'name', '');
         $type = (int) Arr::get($this->request->getParsedBody(), 'type', 0);
+        $dialogMessageId = (int) Arr::get($this->request->getParsedBody(), 'dialogMessageId', 0);
         $order = (int) Arr::get($this->request->getParsedBody(), 'order', 0);
         $ipAddress = ip($this->request->getServerParams());
         ini_set('memory_limit',-1);
@@ -103,8 +106,8 @@ class CreateAttachmentController extends DzqController
         $ext = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
         $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
         $tmpFileWithExt = $tmpFile . ($ext ? ".$ext" : '');
-        // 上传临时目录之前验证
 
+        // 上传临时目录之前验证
         $this->validator->valid([
             'type' => $type,
             'file' => $file,
@@ -170,6 +173,33 @@ class CreateAttachmentController extends DzqController
         $attachmentSerializer = $this->app->make(AttachmentSerializer::class);
         $attachment = $attachmentSerializer->getDefaultAttributes($attachment);
         $data = $this->camelData($attachment);
-        return $this->outPut(ResponseCode::SUCCESS,'',$data);
+
+        if (!empty($dialogMessageId)) {
+            $message_text = [
+                'message_text'  => null,
+                'image_url'     => $data['url']
+            ];
+            $message_text = addslashes(json_encode($message_text));
+            $updateDialogMessageResult = DialogMessage::query()
+                ->where('id', $dialogMessageId)
+                ->update(['attachment_id' => $data['id'], 'message_text' => $message_text, 'status' => 1]);
+            if (!$updateDialogMessageResult) {
+                return $this->outPut(ResponseCode::INTERNAL_ERROR, '私信图片更新失败!');
+            } else {
+                $dialogMessage = DialogMessage::query()->where('id', $dialogMessageId)->first();
+                $dialog = Dialog::query()->where('id', $dialogMessage->dialog_id)->first();
+                $lastDialogMessage = DialogMessage::query()->where('id', $dialog->dialog_message_id)->first();
+                if ($lastDialogMessage->created_at < $dialogMessage->created_at) {
+                    $updateDialogResult = Dialog::query()
+                            ->where('id', $dialogMessage->dialog_id)
+                            ->update(['dialog_message_id' => $dialogMessage->id]);
+                    if (!$updateDialogResult) {
+                        return $this->outPut(ResponseCode::INTERNAL_ERROR, '最新对话更新失败!');
+                    }
+                }
+            }
+        }
+
+        return $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }
