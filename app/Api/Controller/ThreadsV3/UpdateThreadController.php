@@ -295,13 +295,13 @@ class UpdateThreadController extends DzqController
         $isDeleteRedOrder = $isDeleteRewardOrder = false;
         foreach ($tomList as $item) {
             if (empty($tomJsons[$item['key']])) {
-                if(in_array($item['tom_type'], [TomConfig::TOM_REDPACK, TomConfig::TOM_REWARD]) &&
+                if (in_array($item['tom_type'], [TomConfig::TOM_REDPACK, TomConfig::TOM_REWARD]) &&
                     (empty($order) || $order->status != Order::ORDER_STATUS_PAID)
-                ){
-                    $keys[] = $item['key'];
-                    if($item['tom_type'] == TomConfig::TOM_REDPACK)     $isDeleteRedOrder = true;
-                    if($item['tom_type'] == TomConfig::TOM_REWARD)     $isDeleteRewardOrder = true;
+                ) {
+                    if ($item['tom_type'] == TomConfig::TOM_REDPACK) $isDeleteRedOrder = true;
+                    if ($item['tom_type'] == TomConfig::TOM_REWARD) $isDeleteRewardOrder = true;
                 }
+                $keys[] = $item['key'];
             }
         }
 
