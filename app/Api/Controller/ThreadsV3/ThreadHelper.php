@@ -87,7 +87,11 @@ class ThreadHelper
             $threadId = $item['thread_id'];
             if (empty($likedUsersInfo[$threadId]) || count($likedUsersInfo[$threadId]) < $maxDisplay) {
                 $user = $users[$item['user_id']] ?? null;
-                $unique = in_array($item['user_id'], array_column($likedUsersInfo[$threadId],'userId'));
+                $userIds = [];
+                if (!empty($likedUsersInfo[$threadId])) {
+                    $userIds = array_column($likedUsersInfo[$threadId], 'userId');
+                }
+                $unique = in_array($item['user_id'], $userIds);
                 if (!empty($user) && empty($unique)) {
                     $likedUsersInfo[$item['thread_id']][] = [
                         'userId' => $item['user_id'],
