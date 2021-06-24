@@ -63,6 +63,9 @@ class ThreadMigrationCommand extends AbstractCommand
     protected $thread_red_packets;
     protected $attachments;
     protected $thread_video;
+    protected $users;
+    protected $post_content_temp;
+    protected $posts_dst;
     //end
 
     protected $app;
@@ -160,7 +163,9 @@ class ThreadMigrationCommand extends AbstractCommand
         $this->thread_red_packets = $this->db_pre. (new ThreadRedPacket())->getTable();
         $this->attachments = $this->db_pre. (new Attachment())->getTable();
         $this->thread_video = $this->db_pre. (new ThreadVideo())->getTable();
-
+        $this->users = $this->db_pre. (new User())->getTable();
+        $this->post_content_temp = $this->db_pre. 'post_content_temp';
+        $this->posts_dst = $this->db_pre. 'posts_dst';
     }
 
     protected function mysql_escape($fieldValue)
@@ -181,8 +186,8 @@ class ThreadMigrationCommand extends AbstractCommand
         app('log')->info('开始帖子数据迁移start');
         $this->info('开始帖子数据迁移start');
 
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('DROP TABLE IF EXISTS post_content_temp'));
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw('DROP TABLE IF EXISTS posts_dst'));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("DROP TABLE IF EXISTS {$this->post_content_temp}"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("DROP TABLE IF EXISTS {$this->posts_dst}"));
 
         //迁移tag数据信息
         app('log')->info('迁移 thread_tag start');
@@ -195,9 +200,9 @@ class ThreadMigrationCommand extends AbstractCommand
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT id,?,created_at,updated_at FROM {$this->threads} where type = ? AND id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::GOODS, Thread::TYPE_OF_GOODS, ThreadTag::GOODS]);
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) SELECT thread_id,?,created_at,updated_at FROM {$this->thread_red_packets} WHERE thread_id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::RED_PACKET, ThreadTag::RED_PACKET]);
 
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) select distinct posts.thread_id,?, posts.created_at,posts.updated_at from {$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type= ? and  {$this->posts}.thread_id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::DOC, Attachment::TYPE_OF_FILE, ThreadTag::DOC]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) select distinct {$this->posts}.thread_id,?, {$this->posts}.created_at,{$this->posts}.updated_at from {$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type= ? and  {$this->posts}.thread_id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::DOC, Attachment::TYPE_OF_FILE, ThreadTag::DOC]);
 
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) select distinct posts.thread_id,?, posts.created_at,posts.updated_at from ({$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id) inner join {$this->threads} on {$this->posts}.thread_id = {$this->threads}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type in (1,4,5) and {$this->threads}.type <> ? and {$this->posts}.thread_id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::IMAGE, Thread::TYPE_OF_IMAGE, ThreadTag::IMAGE]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tag} (thread_id, tag, created_at, updated_at) select distinct {$this->posts}.thread_id,?, {$this->posts}.created_at,{$this->posts}.updated_at from ({$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id) inner join {$this->threads} on {$this->posts}.thread_id = {$this->threads}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type in (1,4,5) and {$this->threads}.type <> ? and {$this->posts}.thread_id NOT IN (SELECT thread_id FROM {$this->thread_tag} WHERE tag = ?)"), [ThreadTag::IMAGE, Thread::TYPE_OF_IMAGE, ThreadTag::IMAGE]);
         app('log')->info('迁移 thread_tag end');
 
         //迁移红包
@@ -240,10 +245,10 @@ class ThreadMigrationCommand extends AbstractCommand
         app('log')->info('数据迁移end');
 
         // 创建 post_content_temp 临时表 id、 content
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw(self::TEMP_SQL));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw(self::tempSql()));
         //app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw(self::BAK_SQL));
         // 创建 posts_dst 临时表 ，复制一份 posts 表
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw(self::POST_SQL));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw(self::postSql()));
         //v3数据迁移之后，下面的操作会比较刺激 -- 修改 posts 中的 content 字段数据
         $page = 1;
         $limit = 500;
@@ -299,7 +304,7 @@ class ThreadMigrationCommand extends AbstractCommand
             return;
         }
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("rename TABLE {$this->posts} to posts_bakv2"));
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("rename TABLE posts_dst to {$this->posts}"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("rename TABLE {$this->posts_dst} to {$this->posts}"));
         app('log')->info('帖子内容 posts 的 content 修改完成');
         app('log')->info('开始帖子数据迁移end');
         $this->info('开始帖子数据迁移end');
@@ -635,7 +640,48 @@ class ThreadMigrationCommand extends AbstractCommand
 
     //add_sql
     public function addSql(){
-        return "INSERT INTO `posts_dst` (`id`,`user_id`,`thread_id`,`reply_post_id`,`reply_user_id`,`comment_post_id`,`comment_user_id`,`content`,`ip`,`port`,`reply_count`,`like_count`,`created_at`,`updated_at`,`deleted_at`,`deleted_user_id`,`is_first`, `is_comment`, `is_approved`) select {$this->posts}.`id`,{$this->posts}.`user_id`,{$this->posts}.`thread_id`,{$this->posts}.`reply_post_id`,{$this->posts}.`reply_user_id`,{$this->posts}.`comment_post_id`,{$this->posts}.`comment_user_id`,`post_content_temp`.`content`,{$this->posts}.`ip`,{$this->posts}.`port`,{$this->posts}.`reply_count`,{$this->posts}.`like_count`,{$this->posts}.`created_at`,{$this->posts}.`updated_at`,{$this->posts}.`deleted_at`,{$this->posts}.`deleted_user_id`,{$this->posts}.`is_first`, {$this->posts}.`is_comment`, {$this->posts}.`is_approved` from post_content_temp inner join {$this->posts} on post_content_temp.id = {$this->posts}.id WHERE post_content_temp.id NOT IN (SELECT id FROM posts_dst)";
+        return "INSERT INTO {$this->posts_dst} (`id`,`user_id`,`thread_id`,`reply_post_id`,`reply_user_id`,`comment_post_id`,`comment_user_id`,`content`,`ip`,`port`,`reply_count`,`like_count`,`created_at`,`updated_at`,`deleted_at`,`deleted_user_id`,`is_first`, `is_comment`, `is_approved`) select {$this->posts}.`id`,{$this->posts}.`user_id`,{$this->posts}.`thread_id`,{$this->posts}.`reply_post_id`,{$this->posts}.`reply_user_id`,{$this->posts}.`comment_post_id`,{$this->posts}.`comment_user_id`,{$this->post_content_temp}.`content`,{$this->posts}.`ip`,{$this->posts}.`port`,{$this->posts}.`reply_count`,{$this->posts}.`like_count`,{$this->posts}.`created_at`,{$this->posts}.`updated_at`,{$this->posts}.`deleted_at`,{$this->posts}.`deleted_user_id`,{$this->posts}.`is_first`, {$this->posts}.`is_comment`, {$this->posts}.`is_approved` from {$this->post_content_temp} inner join {$this->posts} on {$this->post_content_temp}.id = {$this->posts}.id WHERE {$this->post_content_temp}.id NOT IN (SELECT id FROM {$this->posts_dst})";
+    }
+
+    //posts_sql
+    public function postSql(){
+        return  "CREATE TABLE {$this->posts_dst} (
+                  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '回复 id',
+                  `user_id` bigint(20) unsigned DEFAULT NULL COMMENT '发表用户 id',
+                  `thread_id` bigint(20) unsigned DEFAULT NULL COMMENT '关联主题 id',
+                  `reply_post_id` bigint(20) unsigned DEFAULT NULL COMMENT '回复 id',
+                  `reply_user_id` bigint(20) unsigned DEFAULT NULL COMMENT '回复用户 id',
+                  `comment_post_id` bigint(20) unsigned DEFAULT NULL COMMENT '评论回复 id',
+                  `comment_user_id` bigint(20) unsigned DEFAULT NULL COMMENT '评论回复用户 id',
+                  `content` mediumtext COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '内容',
+                  `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'ip 地址',
+                  `port` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '端口',
+                  `reply_count` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '关联回复数',
+                  `like_count` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '喜欢数',
+                  `created_at` datetime NOT NULL COMMENT '创建时间',
+                  `updated_at` datetime NOT NULL COMMENT '更新时间',
+                  `deleted_at` datetime DEFAULT NULL COMMENT '删除时间',
+                  `deleted_user_id` bigint(20) unsigned DEFAULT NULL COMMENT '删除用户 id',
+                  `is_first` tinyint(3) unsigned NOT NULL DEFAULT 0 COMMENT '是否首个回复',
+                  `is_comment` tinyint(3) unsigned NOT NULL DEFAULT 0 COMMENT '是否是回复回帖的内容',
+                  `is_approved` tinyint(3) unsigned NOT NULL DEFAULT 1 COMMENT '是否合法',
+                  PRIMARY KEY (`id`),
+                  KEY `posts_temp_thread_id_index` (`thread_id`) USING BTREE,
+                  KEY `posts_temp_user_id_foreign` (`user_id`),
+                  KEY `posts_temp_deleted_user_id_foreign` (`deleted_user_id`),
+                  KEY `posts_temp_reply_post_id` (`reply_post_id`) USING BTREE,
+                  KEY `posts_temp_reply_post_id_index` (`reply_post_id`),
+                  CONSTRAINT `posts_temp_deleted_user_id_foreign` FOREIGN KEY (`deleted_user_id`) REFERENCES {$this->users} (`id`) ON DELETE SET NULL,
+                  CONSTRAINT `posts_temp_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES {$this->users} (`id`) ON DELETE SET NULL
+                ) ENGINE=InnoDB AUTO_INCREMENT=101821 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+    }
+
+    //temp_sql
+    public function tempSql(){
+        return  "CREATE TABLE {$this->post_content_temp} (
+                  `id` bigint(20) unsigned NOT NULL,
+                  `content` mediumtext COLLATE utf8mb4_unicode_ci DEFAULT NULL
+                  ) ENGINE=InnoDB AUTO_INCREMENT=101821 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     }
 
 }
