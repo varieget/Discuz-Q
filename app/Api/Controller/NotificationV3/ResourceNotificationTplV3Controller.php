@@ -55,7 +55,16 @@ class ResourceNotificationTplV3Controller extends DzqController
             });
         }
 
+        $res = $this->getDefaultAttributes($data);
+        $arr = [];
+        foreach ($res as $k => $v) {
+            $arr[$k] = $v['templateVariables'];
+        }
+        $res = $this->camelData($this->getDefaultAttributes($data));
+        foreach ($res as $k => &$v) {
+            $v['templateVariables'] = $arr[$k];
+        }
 
-        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($this->getDefaultAttributes($data)));
+        $this->outPut(ResponseCode::SUCCESS, '', $res);
     }
 }
