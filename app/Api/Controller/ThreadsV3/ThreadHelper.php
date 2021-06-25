@@ -50,7 +50,7 @@ class ThreadHelper
             ->select(['a.post_id', 'a.user_id', 'a.created_at'])
             ->from('post_user as a')
             ->whereIn('post_id', $postIds)
-            ->where(function ($query) {
+            ->where(function ($query) use ($db_pre) {
                 $query->selectRaw('count(0)')
                     ->from('post_user as b')
                     ->where('b.post_id', $db_pre.'a.post_id')
@@ -68,7 +68,7 @@ class ThreadHelper
             ->whereIn('thread_id', $threadIds)
             ->whereIn('a.type', [Order::ORDER_TYPE_REWARD, Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
             ->where('status', Order::ORDER_STATUS_PAID)
-            ->where(function ($query) {
+            ->where(function ($query) use ($db_pre) {
                 $query->selectRaw('count(0)')
                     ->from('orders as b')
                     ->where('b.thread_id', $db_pre.'a.thread_id')
