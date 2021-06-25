@@ -51,8 +51,9 @@ class CreateDialogMessageV2Controller extends DzqController
         try {
             $this->validation->make($data, [
                 'dialogId' => 'required|int',
-                'messageText' => 'sometimes|max:450',
-                'attachmentId' => 'sometimes|int',
+                'messageText'  => 'sometimes|max:450',
+                'imageUrl'     => 'required_with:attachmentId|string',
+                'attachmentId' => 'required_with:imageUrl|int|min:1',
                 'isImage' => 'required|bool'
             ])->validate();
         } catch (ValidationException $e) {
@@ -63,10 +64,11 @@ class CreateDialogMessageV2Controller extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '发送内容不能为空！');
         }
 
-        if ($data['isImage']) {
-            $data['status'] = DialogMessage::EMPTY_MESSAGE;
-        } else {
+        if (!empty($data['messageText']) || 
+           (!empty($data['attachmentId']) && !empty($data['imageUrl']))) {
             $data['status'] = DialogMessage::NORMAL_MESSAGE;
+        } else {
+            $data['status'] = DialogMessage::EMPTY_MESSAGE;
         }
 
         try {

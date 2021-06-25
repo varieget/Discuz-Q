@@ -110,7 +110,7 @@ class CreateDialogMessage
                     ->where('id', $attachment_id)
                     ->first();
             if (!$attachment) {
-                throw new TranslatorException(trans('user.attachment_not_exist'));
+                throw new Exception(trans('user.attachment_not_exist'));
             }
         }
 
