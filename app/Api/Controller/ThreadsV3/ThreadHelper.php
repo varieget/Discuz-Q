@@ -42,7 +42,10 @@ class ThreadHelper
         }
 
         $database = app()->config('database');
-        $db_pre = '`'.$database['prefix'];
+        $db_pre = $database['prefix'];
+        
+        $table_a = $db_pre.'a';
+        $table_b = $db_pre.'b';
         
         //查询点赞人数
         $postIdThreadId = array_column($posts, 'thread_id', 'id');
@@ -50,11 +53,11 @@ class ThreadHelper
             ->select(['a.post_id', 'a.user_id', 'a.created_at'])
             ->from('post_user as a')
             ->whereIn('post_id', $postIds)
-            ->where(function ($query) use ($db_pre) {
+            ->where(function ($query) use ($table_a, $table_b) {
                 $query->selectRaw('count(0)')
                     ->from('post_user as b')
-                    ->where('b.post_id', $db_pre.'a`.`post_id`')
-                    ->where('b.created_at', '>', $db_pre.'a`.`created_at`');
+                    ->whereRaw("`{$table_b}`.`post_id` = `{$table_a}`.`post_id`")
+                    ->whereRaw("`{$table_b}`.`created_at` > `{$table_a}`.`created_at`");
             }, '<', 20)
             ->orderByDesc('a.post_id')
             ->get()->each(function (&$item) use ($postIdThreadId) {
@@ -68,11 +71,11 @@ class ThreadHelper
             ->whereIn('thread_id', $threadIds)
             ->whereIn('a.type', [Order::ORDER_TYPE_REWARD, Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
             ->where('status', Order::ORDER_STATUS_PAID)
-            ->where(function ($query) use ($db_pre) {
+            ->where(function ($query) use ($table_a, $table_b) {
                 $query->selectRaw('count(0)')
                     ->from('orders as b')
-                    ->where('b.thread_id', $db_pre.'a`.`thread_id`')
-                    ->where('b.created_at', '>', $db_pre.'a`.`created_at`');
+                    ->whereRaw("`{$table_b}`.`post_id` = `{$table_a}`.`post_id`")
+                    ->whereRaw("`{$table_b}`.`created_at` > `{$table_a}`.`created_at`");
             }, '<', 20)
             ->orderByDesc('a.thread_id')
             ->get()->toArray();
