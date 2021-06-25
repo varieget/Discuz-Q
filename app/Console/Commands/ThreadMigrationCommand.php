@@ -23,6 +23,8 @@ use App\Models\Attachment;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\PostGoods;
+use App\Models\PostMod;
+use App\Models\PostUser;
 use App\Models\Question;
 use App\Models\Thread;
 use App\Models\ThreadRedPacket;
@@ -66,6 +68,9 @@ class ThreadMigrationCommand extends AbstractCommand
     protected $users;
     protected $post_content_temp;
     protected $posts_dst;
+    protected $post_mentions_user;
+    protected $post_mod;
+    protected $post_user;
     //end
 
     protected $app;
@@ -91,6 +96,10 @@ class ThreadMigrationCommand extends AbstractCommand
 
     const AGG_SQL = 'INSERT INTO `posts_dst` (`id`,`user_id`,`thread_id`,`reply_post_id`,`reply_user_id`,`comment_post_id`,`comment_user_id`,`content`,`ip`,`port`,`reply_count`,`like_count`,`created_at`,`updated_at`,`deleted_at`,`deleted_user_id`,`is_first`, `is_comment`, `is_approved`) select `posts`.`id`,`posts`.`user_id`,`posts`.`thread_id`,`posts`.`reply_post_id`,`posts`.`reply_user_id`,`posts`.`comment_post_id`,`posts`.`comment_user_id`,`post_content_temp`.`content`,`posts`.`ip`,`posts`.`port`,`posts`.`reply_count`,`posts`.`like_count`,`posts`.`created_at`,`posts`.`updated_at`,`posts`.`deleted_at`,`posts`.`deleted_user_id`,`posts`.`is_first`, `posts`.`is_comment`, `posts`.`is_approved` from post_content_temp inner join posts on post_content_temp.id = posts.id WHERE post_content_temp.id NOT IN (SELECT id FROM posts_dst)';
 
+    //与 posts 表有外键关联的需要注意：post_mentions_user --> post_mentions_user_post_id_foreign  --> posts (id)
+    // post_mod --> post_mod_post_id_foreign --> posts (id)
+    // post_user --> post_user_post_id_foreign --> posts (id)
+    //
     const POST_SQL = 'CREATE TABLE `posts_dst` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT \'回复 id\',
   `user_id` bigint(20) unsigned DEFAULT NULL COMMENT \'发表用户 id\',
@@ -166,6 +175,9 @@ class ThreadMigrationCommand extends AbstractCommand
         $this->users = $this->db_pre. (new User())->getTable();
         $this->post_content_temp = $this->db_pre. 'post_content_temp';
         $this->posts_dst = $this->db_pre. 'posts_dst';
+        $this->post_mentions_user = $this->db_pre. 'post_mentions_user';
+        $this->post_mod = $this->db_pre. (new PostMod())->getTable();
+        $this->post_user = $this->db_pre. (new PostUser())->getTable();
     }
 
     protected function mysql_escape($fieldValue)
@@ -307,6 +319,22 @@ class ThreadMigrationCommand extends AbstractCommand
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("rename TABLE {$this->posts_dst} to {$this->posts}"));
         app('log')->info('帖子内容 posts 的 content 修改完成');
         app('log')->info('开始帖子数据迁移end');
+        //与 posts 表有外键关联的需要注意：post_mentions_user --> post_mentions_user_post_id_foreign(post_id)  --> posts (id)
+        // post_mod --> post_mod_post_id_foreign(post_id) --> posts (id)
+        // post_user --> post_user_post_id_foreign(post_id) --> posts (id)
+        // 1、先删除对应的外键
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mentions_user} drop foreign key post_mentions_user_post_id_foreign"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mod} drop foreign key post_mod_post_id_foreign"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_user} drop foreign key post_user_post_id_foreign"));
+        // 2、由于 更新后的posts表过滤了很多脏数据  post，所以 post_mentions_user、post_mod、post_user 这三个表删除相关脏数据
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("delete from {$this->post_mentions_user} where post_id not in ( select id from {$this->posts} )"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("delete from {$this->post_mod} where post_id not in ( select id from {$this->posts} )"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("delete from {$this->post_user} where post_id not in ( select id from {$this->posts} )"));
+        // 3、添加对应的外键
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mentions_user} add constraint post_mentions_user_post_id_foreign foreign key(`post_id`) references {$this->posts}(`id`)"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mod} add constraint post_mod_post_id_foreign foreign key(post_id) references {$this->posts}(id)"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_user} add constraint post_user_post_id_foreign foreign key(post_id) references {$this->posts}(id)"));
+        app('log')->info('更新 posts 相关外键成功');
         $this->info('开始帖子数据迁移end');
     }
 
