@@ -46,6 +46,8 @@ class Topic extends Model
 
     const SORT_BY_THREADCOUNT = 2; // 按内容数排序
 
+    const TOPIC_BY_RECOMMENDED = 1; // 推荐话题
+
     /**
      * {@inheritdoc}
      */

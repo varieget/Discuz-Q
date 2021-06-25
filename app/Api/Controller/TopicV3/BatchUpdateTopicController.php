@@ -36,9 +36,9 @@ class BatchUpdateTopicController extends DzqController
                 continue;
             }
 
-            if ($isRecommended || $isRecommended==0) {
+            if ($isRecommended || $isRecommended == 0) {
                 $topic->recommended = (bool)$isRecommended ? 1 : 0;
-                $topic->recommended_at = date('Y-m-d H:m:s', time());
+                $topic->recommended_at = date('Y-m-d H:i:s', time());
             }
             if($topic->recommended == 1){
                 $action_desc = '推荐话题【'. $topic->content .'】';
