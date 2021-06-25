@@ -199,24 +199,24 @@ class ListNotificationV2Controller extends DzqController
         if(!empty($result['postContent'])){
             $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['postContent']);
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
-            $result['postContent'] = str_replace($searches, $replaces, $content);
+            $result['postContent'] = Str::substr(strip_tags(str_replace($searches, $replaces, $content)),0,Thread::NOTICE_CONTENT_LENGTH);
         }
 
         if(!empty($result['threadTitle'])) {
             $threadTitle = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['threadTitle']);
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($threadTitle);
-            $result['threadTitle'] = str_replace($searches, $replaces, $threadTitle);
+            $result['threadTitle'] = Str::substr(strip_tags(str_replace($searches, $replaces, $threadTitle)),0,Thread::NOTICE_CONTENT_LENGTH);
         }
 
         if(!empty($result['replyPostContent'])) {
             $replyPostContent = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['replyPostContent']);
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($replyPostContent);
-            $result['replyPostContent'] = str_replace($searches, $replaces, $replyPostContent);
+            $result['replyPostContent'] = Str::substr(strip_tags(str_replace($searches, $replaces, $replyPostContent)),0,Thread::NOTICE_CONTENT_LENGTH);
         }
         if(!empty($result['content'])) {
             $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['content']);
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
-            $result['content'] = str_replace($searches, $replaces, $content);
+            $result['content'] = Str::substr(strip_tags(str_replace($searches, $replaces, $content)),0,Thread::NOTICE_CONTENT_LENGTH);
         }
 
         // 默认必须要有的字段
