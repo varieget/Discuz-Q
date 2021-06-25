@@ -141,6 +141,7 @@ class UpdateThreadController extends DzqController
         }
 
         // 包含 红包 的帖子在已发布的情况下，再次编辑；条件：存在对应的 order 为 已支付的情况
+        empty($content['indexes']) && $content['indexes'] = [];
         if ($this->needPay($content['indexes']) && $isDraft == Thread::IS_NOT_DRAFT) {
             $order = $this->getOrderInfo($thread);
             if($order){
