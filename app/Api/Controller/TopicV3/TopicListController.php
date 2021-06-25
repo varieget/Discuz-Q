@@ -125,37 +125,8 @@ class TopicListController extends DzqController
     {
         $query = Topic::query();
 
-        if ($username = trim(Arr::get($filter, 'username'))) {
-            $query->join('users', 'users.id', '=', 'topics.user_id')
-                ->where('users.username', 'like', '%' . $username . '%');
-        }
-
         if ($content = trim(Arr::get($filter, 'content'))) {
             $query->where('topics.content', 'like', '%' . $content . '%');
-        }
-
-        if ($createdAtBegin = Arr::get($filter, 'createdAtBegin')) {
-            $query->where('topics.created_at', '>=', $createdAtBegin);
-        }
-
-        if ($createdAtEnd = Arr::get($filter, 'createdAtEnd')) {
-            $query->where('topics.created_at', '<=', $createdAtEnd);
-        }
-
-        if ($threadCountBegin = Arr::get($filter, 'threadCountBegin')) {
-            $query->where('topics.thread_count', '>=', $threadCountBegin);
-        }
-
-        if ($threadCountEnd = Arr::get($filter, 'threadCountEnd')) {
-            $query->where('topics.thread_count', '<=', $threadCountEnd);
-        }
-
-        if ($viewCountBegin = Arr::get($filter, 'viewCountBegin')) {
-            $query->where('topics.view_count', '>=', $viewCountBegin);
-        }
-
-        if ($viewCountEnd = Arr::get($filter, 'viewCountEnd')) {
-            $query->where('topics.view_count', '<=', $viewCountEnd);
         }
 
         if (Arr::has($filter, 'recommended') && Arr::get($filter, 'recommended') != '') {
@@ -171,6 +142,8 @@ class TopicListController extends DzqController
             $query->orderByDesc('topics.view_count');
         } elseif (Arr::has($filter, 'sortBy') && Arr::get($filter, 'sortBy') == Topic::SORT_BY_THREADCOUNT) {
             $query->orderByDesc('topics.thread_count');
+        } elseif(Arr::has($filter, 'recommended') && Arr::get($filter, 'recommended') == Topic::TOPIC_BY_RECOMMENDED) {
+            $query->orderByDesc('topics.recommended_at');
         } else{
             $query->orderByDesc('topics.created_at');
         }
