@@ -108,7 +108,7 @@ class ListDialogMessageV2Controller extends DzqController
             );
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('dialog_message.id', 'desc');
 
         $pageData = $this->messagePagination($page, $perPage, $query, false);
         $pageData['pageData'] = $pageData['pageData']->map(function (DialogMessage $i) {
