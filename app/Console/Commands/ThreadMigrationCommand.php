@@ -323,17 +323,17 @@ class ThreadMigrationCommand extends AbstractCommand
         // post_mod --> post_mod_post_id_foreign(post_id) --> posts (id)
         // post_user --> post_user_post_id_foreign(post_id) --> posts (id)
         // 1、先删除对应的外键
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mentions_user} drop foreign key post_mentions_user_post_id_foreign"));
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mod} drop foreign key post_mod_post_id_foreign"));
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_user} drop foreign key post_user_post_id_foreign"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mentions_user} drop foreign key {$this->db_pre}post_mentions_user_post_id_foreign"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mod} drop foreign key {$this->db_pre}post_mod_post_id_foreign"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_user} drop foreign key {$this->db_pre}post_user_post_id_foreign"));
         // 2、由于 更新后的posts表过滤了很多脏数据  post，所以 post_mentions_user、post_mod、post_user 这三个表删除相关脏数据
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("delete from {$this->post_mentions_user} where post_id not in ( select id from {$this->posts} )"));
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("delete from {$this->post_mod} where post_id not in ( select id from {$this->posts} )"));
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("delete from {$this->post_user} where post_id not in ( select id from {$this->posts} )"));
         // 3、添加对应的外键
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mentions_user} add constraint post_mentions_user_post_id_foreign foreign key(`post_id`) references {$this->posts}(`id`)"));
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mod} add constraint post_mod_post_id_foreign foreign key(post_id) references {$this->posts}(id)"));
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_user} add constraint post_user_post_id_foreign foreign key(post_id) references {$this->posts}(id)"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mentions_user} add constraint {$this->db_pre}post_mentions_user_post_id_foreign foreign key(`post_id`) references {$this->posts}(`id`)"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mod} add constraint {$this->db_pre}post_mod_post_id_foreign foreign key(post_id) references {$this->posts}(id)"));
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_user} add constraint {$this->db_pre}post_user_post_id_foreign foreign key(post_id) references {$this->posts}(id)"));
         app('log')->info('更新 posts 相关外键成功');
 
 
@@ -701,8 +701,8 @@ class ThreadMigrationCommand extends AbstractCommand
                   KEY `posts_temp_deleted_user_id_foreign` (`deleted_user_id`),
                   KEY `posts_temp_reply_post_id` (`reply_post_id`) USING BTREE,
                   KEY `posts_temp_reply_post_id_index` (`reply_post_id`),
-                  CONSTRAINT `posts_temp_deleted_user_id_foreign` FOREIGN KEY (`deleted_user_id`) REFERENCES {$this->users} (`id`) ON DELETE SET NULL,
-                  CONSTRAINT `posts_temp_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES {$this->users} (`id`) ON DELETE SET NULL
+                  CONSTRAINT `{$this->db_pre}posts_temp_deleted_user_id_foreign` FOREIGN KEY (`deleted_user_id`) REFERENCES {$this->users} (`id`) ON DELETE SET NULL,
+                  CONSTRAINT `{$this->db_pre}posts_temp_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES {$this->users} (`id`) ON DELETE SET NULL
                 ) ENGINE=InnoDB AUTO_INCREMENT=101821 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     }
 
