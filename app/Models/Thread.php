@@ -132,6 +132,7 @@ class Thread extends DzqModel
     const CONTENT_LENGTH = 80;
     const CONTENT_WITHOUT_LENGTH = 0;
     const TITLE_LENGTH = 100;
+    const NOTICE_CONTENT_LENGTH = 100;
 
 
     const  SORT_BY_THREAD = 1;//帖子创建时间排序

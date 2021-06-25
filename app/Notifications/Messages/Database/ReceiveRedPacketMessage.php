@@ -133,7 +133,7 @@ class ReceiveRedPacketMessage extends SimpleMessage
         $content = '';
 
         if (! is_null($this->order)) {
-            $content = $this->order->thread->getContentByType(Thread::CONTENT_LENGTH);
+            $content = $this->order->thread->getRewardedContent(Thread::CONTENT_WITHOUT_LENGTH);
         }
 
         $this->initData['content'] = $content;
