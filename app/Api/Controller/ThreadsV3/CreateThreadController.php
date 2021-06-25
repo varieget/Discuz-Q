@@ -121,15 +121,13 @@ class CreateThreadController extends DzqController
             $content['text'] = $this->optimizeEmoji($content['text']);
             //处理@
             $content['text'] = $this->renderCall($content['text']);
-            //处理 #
-            $content['text'] = $this->renderTopic($content['text']);
         }
         //插入thread数据
         $thread = $this->saveThread($content);
+        //插入话题
+        $content = $this->saveTopic($thread, $content);
         //插入post数据
         $post = $this->savePost($thread, $content);
-        //插入话题
-        $this->saveTopic($thread, $content);
         //发帖@用户
         $this->sendRelated($thread, $post);
         //插入tom数据
