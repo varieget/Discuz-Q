@@ -76,11 +76,11 @@ class CreateDialog
         $dialogRes = $dialog::buildOrFetch($sender, $recipientUser->id);
 
         //创建会话时如传入消息内容，则创建消息
-        $isImage = Arr::get($this->attributes, 'isImage', false);
-        if ($isImage) {
-            $this->attributes['status'] = DialogMessage::EMPTY_MESSAGE;
-        } else {
+        if (!empty($this->attributes['message_text']) || 
+           (!empty($this->attributes['attachment_id']) && !empty($this->attributes['image_url']))) {
             $this->attributes['status'] = DialogMessage::NORMAL_MESSAGE;
+        } else {
+            $this->attributes['status'] = DialogMessage::EMPTY_MESSAGE;
         }
         $this->attributes['dialog_id'] = $dialogRes->id;
         $dialogMessageRes = $bus->dispatchNow(

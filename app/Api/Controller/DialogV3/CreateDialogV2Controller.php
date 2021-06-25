@@ -45,22 +45,19 @@ class CreateDialogV2Controller extends DzqController
             'message_text'=>$this->inPut('messageText'),
             'recipient_username'=>$this->inPut('recipientUsername'),
             'isImage'=>$this->inPut('isImage'),
+            'image_url' => $this->inPut('imageUrl') ?? '',
+            'attachment_id' => $this->inPut('attachmentId') ?? 0
         ];
 
         if(empty($data['recipient_username'])){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
-        if(!empty($this->inPut('imageUrl'))){
-            $data['image_url'] = $this->inPut('imageUrl');
-        }
-        if(!empty($this->inPut('attachmentId'))){
-            $data['attachment_id'] = $this->inPut('attachmentId');
-        }
 
         try {
             $this->validation->make($data, [
                 'message_text'  => 'sometimes:messageText|max:450',
-                'attachment_id' => 'sometimes|int',
+                'image_url'     => 'required_with:attachment_id|string',
+                'attachment_id' => 'required_with:image_url|int|min:1',
                 'isImage' => 'required|bool'
             ])->validate();
         } catch (ValidationException $e) {

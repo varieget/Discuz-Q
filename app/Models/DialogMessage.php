@@ -178,7 +178,7 @@ class DialogMessage extends Model
 
         $dialogMessage->user_id       = $user_id;
         $dialogMessage->dialog_id     = $dialog_id;
-        $dialogMessage->attachment_id = $attachment_id;
+        $dialogMessage->attachment_id = $attachment_id ?: 0;
         $dialogMessage->message_text  = $message_text;
         $dialogMessage->read_status   = $read_status;
         $dialogMessage->status        = $status;
