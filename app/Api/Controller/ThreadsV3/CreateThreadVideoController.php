@@ -48,8 +48,8 @@ class CreateThreadVideoController extends DzqController
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         $user = $this->user;
-        if (!$userRepo->canCreateThread($user)) {
-            throw new PermissionDeniedException('没有发帖权限');
+        if ($this->user->isGuest()) {
+            throw new PermissionDeniedException('没有上传视频权限');
         }
         $type = $this->inPut('type');
         $type = ((int)$type) ?: ThreadVideo::TYPE_OF_VIDEO;

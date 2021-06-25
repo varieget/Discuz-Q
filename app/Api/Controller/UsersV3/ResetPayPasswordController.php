@@ -58,11 +58,10 @@ class ResetPayPasswordController extends DzqController
             ->count();
 
         if ($failCount > UserWalletFailLogs::TOPLIMIT) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, trans('pay_password_failures_times_toplimit'));
+            $this->outPut(ResponseCode::INVALID_PARAMETER,'您输入的密码错误次数已超限，请点击忘记密码找回或次日后重试');
         }
 
         $payPassword = $this->inPut('payPassword');
-
         $this->validator->make(compact('payPassword'), [
             'payPassword' => [
                 'bail',
@@ -73,11 +72,10 @@ class ResetPayPasswordController extends DzqController
                     if (! $actor->checkWalletPayPassword($value)) {
                         //记录钱包密码错误日志
                         UserWalletFailLogs::build(ip($request->getServerParams()), $actor->id);
-
                         if (UserWalletFailLogs::TOPLIMIT == $failCount) {
-                            $this->outPut(ResponseCode::INVALID_PARAMETER, trans('pay_password_failures_times_toplimit'));
+                            $this->outPut(ResponseCode::INVALID_PARAMETER,'您输入的密码错误次数已超限，请点击忘记密码找回或次日后重试');
                         } else {
-                            $fail(trans('trade.wallet_pay_password_error', ['value'=>UserWalletFailLogs::TOPLIMIT - $failCount]));
+                            $this->outPut(ResponseCode::INVALID_PARAMETER,'支付密码错误,今天还能重试'.(UserWalletFailLogs::TOPLIMIT - $failCount)."次");
                         }
                     }
                 }

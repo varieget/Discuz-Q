@@ -25,6 +25,7 @@ use App\Common\ResponseCode;
 use App\Models\Dialog;
 use App\Models\Group;
 use App\Models\GroupUser;
+use App\Models\Order;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserWechat;
@@ -77,10 +78,10 @@ class ProfileController extends DzqController
         // 付费模式是否过期
         $user->paid = ! in_array(Group::UNPAID, $this->user->groups->pluck('id')->toArray());
         if (!$this->user->isAdmin()) {
+            $order = Order::query()->where('type',Order::ORDER_TYPE_REGISTER)->where('status',Order::ORDER_STATUS_PAID)->first();
             //付费模式
             $siteMode = Setting::getValue('site_mode');
-            $siteExpire = Setting::getValue('site_expire');
-            if ($siteMode == 'pay' && !empty($siteExpire) && !empty($user->expired_at)) {
+            if ($siteMode == 'pay' && !empty($user->expired_at) && $order) {
                 $t1 = strtotime($user->expired_at);
                 $t2 = time();
                 $diffTime = abs($t1 - $t2);
@@ -88,6 +89,8 @@ class ProfileController extends DzqController
                     $user->paid = false;
                     //兜底逻辑,防止异常情况下判断错误
                 }
+            }else{
+                $user->paid = false;
             }
         }
         $key = array_search('dialog', $include);

@@ -41,6 +41,10 @@ class DialogMessage extends Model
 
     const SUMMARY_END_WITH = '...';
 
+    const NORMAL_MESSAGE = 1;
+
+    const EMPTY_MESSAGE = 0;
+
     /**
      * {@inheritdoc}
      */
@@ -152,8 +156,13 @@ class DialogMessage extends Model
                 if(!empty($attachmentId)) {
                    $attachmentRecord = Attachment::query()->where('id', $attachmentId)->first(["file_width", "file_height"])->toArray();
                    if(!empty($attachmentRecord['file_width']) && !empty($attachmentRecord['file_height'])){
-                       $messageText = $messageText."?width=".$attachmentRecord['file_width']."&"."height=".$attachmentRecord['file_height'];
-                   }
+                        $signUrl = strrchr($messageText, '?');
+                        if (strstr($signUrl, 'sign-time') && strstr($signUrl, 'signature')) {
+                            $messageText = $messageText."width=".$attachmentRecord['file_width']."&"."height=".$attachmentRecord['file_height'];
+                        } else {
+                            $messageText = $messageText."?width=".$attachmentRecord['file_width']."&"."height=".$attachmentRecord['file_height'];
+                        }
+                    }
                 }
             }
         } else {
@@ -163,7 +172,7 @@ class DialogMessage extends Model
         return $messageText;
     }
 
-    public static function build($user_id, $dialog_id, $attachment_id, $message_text,$read_status)
+    public static function build($user_id, $dialog_id, $attachment_id, $message_text,$read_status, $status)
     {
         $dialogMessage = new static();
 
@@ -171,7 +180,8 @@ class DialogMessage extends Model
         $dialogMessage->dialog_id     = $dialog_id;
         $dialogMessage->attachment_id = $attachment_id;
         $dialogMessage->message_text  = $message_text;
-        $dialogMessage->read_status     = $read_status;
+        $dialogMessage->read_status   = $read_status;
+        $dialogMessage->status        = $status;
 
         return $dialogMessage;
     }

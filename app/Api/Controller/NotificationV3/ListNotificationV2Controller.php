@@ -90,6 +90,8 @@ class ListNotificationV2Controller extends DzqController
                     // 获取主题作者用户组
                     if (!empty($threads->get($threadID))) {
                         $thread = $threads->get($threadID);
+                        $item->thread_user_nickname = $thread->user->nickname;
+                        $item->thread_user_avatar = $thread->user->avatar;
                         $item->thread_type = $thread->type;
                         $item->thread_is_approved = $thread->is_approved;
                         $item->thread_created_at = $thread->created_at;
@@ -239,6 +241,8 @@ class ListNotificationV2Controller extends DzqController
             'threadUserGroups' => $data->thread_user_groups ?: '',
             'threadCreatedAt' => optional($data->thread_created_at)->format('Y-m-d H:i:s'),
             'threadIsApproved' => $data->thread_is_approved ?: 0,
+            'threadUserNickname' => $data->thread_user_nickname ?: '',
+            'threadUserAvatar' => $data->thread_user_avatar ?: '',
         ]);
 
         // 判断是否要匿名

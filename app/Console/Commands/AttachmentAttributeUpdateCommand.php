@@ -62,12 +62,11 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
 
         $type = [Attachment::TYPE_OF_IMAGE,Attachment::TYPE_OF_DIALOG_MESSAGE,Attachment::TYPE_OF_ANSWER];
         $log = app('log');
-        $dateTime = date('Y-m-d H:i:s',strtotime("2021-06-21 12:00:00"));
         $attachments = Attachment::query()
             ->whereIn('type',$type)
             ->where('file_width',0)
             ->where('file_height',0)
-            ->where('updated_at','<',$dateTime)
+            ->whereRaw("SUBSTRING(LOWER(file_type),7) IN ('jpeg','gif','png','jpg')")
             ->limit(100)
             ->orderByDesc('id')
             ->get();
@@ -93,7 +92,6 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
                                 list($width, $height) = getimagesize(storage_path('tmp/').$temFileName.".".$extension);
                                 $image->file_width = (int) $width;
                                 $image->file_height = (int) $height;
-                                $image->updated_at = date('Y-m-d H:i:s',time());
                                 if($image->save()){
                                     $log->info("附件图片更新成功 attachmentId：{$image->id}，fileWidth：{$image->file_width}，fileHeight：{$image->file_height}");
                                 }else{
@@ -104,10 +102,6 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
                                 $log->info("附件图片更新失败 attachmentId：{$image->id}，只支持jpeg,jpg,png,gif格式");
                             }
                         }else{
-                            $image->file_width = 0;
-                            $image->file_height = 0;
-                            $image->updated_at = date('Y-m-d H:i:s',time());
-                            $image->save();
                             $log->info("附件图片不存在 attachmentId：{$image->id}");
                         }
                     } else {
@@ -118,7 +112,6 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
                                 list($width, $height) = getimagesize(storage_path('app/' . $image->full_path));
                                 $image->file_width = (int) $width;
                                 $image->file_height = (int) $height;
-                                $image->updated_at = date('Y-m-d H:i:s',time());
                                 if($image->save()){
                                     $log->info("附件图片更新成功 attachmentId：{$image->id}，fileWidth：{$image->file_width}，fileHeight：{$image->file_height}");
                                 }else{
@@ -128,10 +121,6 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
                                 $log->info("附件图片更新失败 attachmentId：{$image->id}，只支持jpeg,jpg,png,gif格式");
                             }
                         }else{
-                            $image->file_width = 0;
-                            $image->file_height = 0;
-                            $image->updated_at = date('Y-m-d H:i:s',time());
-                            $image->save();
                             $log->info("附件图片不存在 attachmentId：{$image->id}");
                         }
                     }

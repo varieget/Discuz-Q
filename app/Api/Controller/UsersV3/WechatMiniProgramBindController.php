@@ -88,7 +88,7 @@ class WechatMiniProgramBindController extends AuthBaseController
         }
 
         if ($actor->isGuest()) {
-            $this->outPut(ResponseCode::UNAUTHORIZED);
+            $this->outPut(ResponseCode::UNAUTHORIZED,'访客无权限绑定小程序');
         }
 
         // 绑定小程序

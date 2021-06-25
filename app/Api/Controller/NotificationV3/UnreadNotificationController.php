@@ -44,7 +44,7 @@ class UnreadNotificationController extends DzqController
     {
         $actor = $this->user;
         if ($actor->isGuest()) {
-            throw new PermissionDeniedException('没有权限');
+            throw new PermissionDeniedException('访客没有权限更新未读消息');
         }
         return true;
     }
@@ -67,6 +67,7 @@ class UnreadNotificationController extends DzqController
             })
             ->where('user_id','!=',$actor->id)
             ->where('read_status',0)
+            ->where('status', DialogMessage::NORMAL_MESSAGE)
             ->count();
 
         $data['dialogNotifications'] = $MQuery;

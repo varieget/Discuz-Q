@@ -37,7 +37,7 @@ class RedPacketExpireCommand extends AbstractCommand
 {
     protected $signature = 'redPacket:expire';
 
-    protected $description = '返还过期未回答的红包金额';
+    protected $description = '返还过期未领取完的红包金额';
 
     protected $expireTime = 24 * 60 * 60; //红包过期时间24小时
 
