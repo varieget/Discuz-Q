@@ -77,6 +77,7 @@ class WechatH5LoginController extends AuthBaseController
 
     public function main()
     {
+        $this->info('begin_wechat_h5_login_process');
             //获取授权后微信用户信息
         try {
             $wxuser         = $this->getWxuser();
@@ -85,7 +86,7 @@ class WechatH5LoginController extends AuthBaseController
             $actor          = $this->user;
         } catch (Exception $e) {
             DzqLog::error('H5登录获取wx用户接口异常', [], $e->getMessage());
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录获取wx用户接口异常');
+            $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录获取wx用户接口异常');
         }
 
         if (! empty($wxuser->getId())) {
@@ -98,8 +99,10 @@ class WechatH5LoginController extends AuthBaseController
                 $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
             }
         }
-
-
+        $this->info('whether_enter_transition_process', [
+            'is_need_transition'    =>  $this->settings->get('is_need_transition'),
+            'sessionToken'          =>  $sessionToken
+        ]);
         //过渡开关打开
         if((bool)$this->settings->get('is_need_transition') && empty($sessionToken)) {
             $this->transitionLoginLogicVoid($wxuser);
@@ -113,14 +116,28 @@ class WechatH5LoginController extends AuthBaseController
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();
+            $this->info('get_wxuser_with_openid_or_unionid', [
+                'input'      => [
+                    'mp_openid' => $wxuser->getId(),
+                    'unionid'   => Arr::get($wxuser->getRaw(), 'unionid'),
+                ],
+                'output'      => [
+                    'wechatUser'    => $wechatUser
+                ]
+            ]);
 
             if (!$wechatUser || !$wechatUser->user) {
                 // 更新微信用户信息
                 if (!$wechatUser) {
                     $wechatUser = new UserWechat();
+                    $this->info('new_user_wechat', [
+                        'wechatUser' =>  $wechatUser
+                    ]);
                 }
                 $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
-
+                $this->info('updated_wechat_user', [
+                    'wechatUser' =>  $wechatUser
+                ]);
                 // 自动注册
                 if ($actor->isGuest()) {
                     // 站点关闭注册
@@ -133,29 +150,49 @@ class WechatH5LoginController extends AuthBaseController
                     $data['username']           = Str::of($wechatUser->nickname)->substr(0, 15);
                     $data['nickname']           = Str::of($wechatUser->nickname)->substr(0, 15);
                     $data['register_reason']    = trans('user.register_by_wechat_h5');
+                    $this->info('ready_auto_register_user', [
+                        'actor' =>  $this->request->getAttribute('actor'),
+                        'data'  =>  $data
+                    ]);
                     $user = $this->bus->dispatch(
                         new AutoRegisterUser($this->request->getAttribute('actor'), $data)
                     );
+                    $this->info('registered_user', [
+                        'user' =>  $user
+                    ]);
                     $wechatUser->user_id = $user->id;
                     // 先设置关系，为了同步微信头像
                     $wechatUser->setRelation('user', $user);
                     $wechatUser->save();
                     $this->updateUserBindType($user,AuthUtils::WECHAT);
-                    $this->db->commit();
-
+                    $this->info('updated_wechat_user', [
+                        'user'          =>  $user,
+                        'wechatUser'    =>  $wechatUser
+                    ]);
                 } else {
                     if (!$actor->isGuest() && is_null($actor->wechat)) {
+                        $this->info('ready_bind_wechat_to_user', [
+                            'actor'         =>  $actor,
+                            'actor_wechat'  =>  $actor->wechat
+                        ]);
                         // 登陆用户且没有绑定||换绑微信 添加微信绑定关系
                         $wechatUser->user_id = $actor->id;
                         $wechatUser->setRelation('user', $actor);
                         $wechatUser->save();
                         $this->updateUserBindType($actor,AuthUtils::WECHAT);
-                        $this->db->commit();
+                        $this->info('bound_wechat_to_user', [
+                            'actor'         =>  $actor,
+                            'wechatUser'    =>  $wechatUser
+                        ]);
                     }
                 }
             } else {
                 // 登陆用户和微信绑定不同时，微信已绑定用户，抛出异常
                 if (!$actor->isGuest() && $actor->id != $wechatUser->user_id) {
+                    $this->info('wechat_user_has_been_bound', [
+                        'actor'         =>  $actor,
+                        'wechatUser'    =>  $wechatUser
+                    ]);
                     $this->db->rollBack();
                     $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
                 }
@@ -163,16 +200,24 @@ class WechatH5LoginController extends AuthBaseController
                 // 登陆用户和微信绑定相同，更新微信信息
                 $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $wechatUser->user));
                 $wechatUser->save();
-                $this->db->commit();
+                $this->info('updated_wechat_user', [
+                    'wechatUser'    =>  $wechatUser
+                ]);
             }
 
             if (empty($wechatUser) || empty($wechatUser->user)) {
-                DzqLog::error('微信用户不能为空，$wechatUser或者$wechatUser->user用户不能为空');
+                $this->db->rollBack();
+                DzqLog::error('wechat_user_is_not_null', [
+                    'wechatUser' => $wechatUser
+                ]);
                 $this->outPut(ResponseCode::INVALID_PARAMETER,'微信用户不能为空');
             }
 
             if (empty($wechatUser->user->username)) {
-                DzqLog::error('微信所绑定的用户名为空，$wechatUser->user->username不能为空');
+                $this->db->rollBack();
+                DzqLog::error('wechat_user_is_not_null', [
+                    'be_bind_user' => $wechatUser->user
+                ]);
                 $this->outPut(ResponseCode::USERNAME_NOT_NULL,'微信所绑定的用户名为空');
             }
             // 创建 token
@@ -194,21 +239,36 @@ class WechatH5LoginController extends AuthBaseController
             //微信扫码登录，待审核状态
             if ($response->getStatusCode() === 200) {
                 if($wechatUser->user->status != User::STATUS_MOD){
+                    $this->info('begin_logind',[
+                        'user'  =>  $wechatUser->user
+                    ]);
                     $this->events->dispatch(new Logind($wechatUser->user));
                 }
             }
 
             $accessToken = json_decode($response->getBody());
 
+            $this->info('generate_accessToken',[
+                'username' =>  $wechatUser->user->username,
+                'userId' =>  $wechatUser->user->id,
+                'accessToken' =>  $accessToken,
+            ]);
+
             // bound
             if ($sessionToken) {
+                $this->info('begin_pc_qrcode', ['sessionToken' => $sessionToken]);
                 if (empty($accessToken)) {
-                    return $this->outPut(ResponseCode::PC_QRCODE_TIME_FAIL);
+                    $this->outPut(ResponseCode::PC_QRCODE_TIME_FAIL);
                 }
 
                 $accessToken = $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
 
                 $this->updateUserBindType($wechatUser->user,AuthUtils::WECHAT);
+                $this->info('end_pc_qrcode',[
+                    'sessionToken'  =>  $sessionToken,
+                    'accessToken'   =>  $accessToken,
+                    'user'          =>  $wechatUser->user
+                ]);
             }
 
             $result = $this->camelData(collect($accessToken));
@@ -224,7 +284,7 @@ class WechatH5LoginController extends AuthBaseController
                 'sessionToken'  => $this->inPut('sessionToken')
             ], $e->getMessage());
             $this->db->rollBack();
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录接口异常');
+            $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5登录接口异常');
         }
 //        $this->error($wxuser, $actor, $wechatUser, null, $sessionToken);
     }
@@ -285,6 +345,7 @@ class WechatH5LoginController extends AuthBaseController
      */
     private function transitionLoginLogicVoid($wxuser)
     {
+        $this->info('begin_transition_process',['wxuser' => $wxuser]);
         $this->db->beginTransaction();
         try {
             /** @var UserWechat $wechatUser */
@@ -293,10 +354,21 @@ class WechatH5LoginController extends AuthBaseController
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();
-
+            $this->info('get_wxuser_with_openid_or_unionid', [
+                'input'      => [
+                    'mp_openid' => $wxuser->getId(),
+                    'unionid'   => Arr::get($wxuser->getRaw(), 'unionid'),
+                ],
+                'output'      => [
+                    'wechatUser'    => $wechatUser
+                ]
+            ]);
             // 微信信息不存在
             if(! $wechatUser) {
                 $wechatUser = new UserWechat();
+                $this->info('new_user_wechat',[
+                    'wechatUser' =>  $wechatUser
+                ]);
             }
             $userWechatId = $wechatUser ? $wechatUser->id : 0;
             if(is_null($wechatUser->user)) {
@@ -308,12 +380,17 @@ class WechatH5LoginController extends AuthBaseController
                 $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), new User()));
                 $wechatUser->save();//微信信息写入user_wechats
                 $userWechatId = $wechatUser->id ? $wechatUser->id : $userWechatId;
+                $this->info('updated_wechat_user',[
+                    'wechatUser' =>  $wechatUser
+                ]);
 
                 //生成sessionToken,并把user_wechats 信息写入session_token
                 $token = SessionToken::generate(SessionToken::WECHAT_TRANSITION_LOGIN, ['user_wechat_id' => $userWechatId], null, 1800);
                 $token->save();
                 $sessionToken = $token->token;
-
+                $this->info('generate_token',[
+                    'token' =>  $token
+                ]);
                 $this->db->commit();
                 //把token返回用户绑定用户使用
                 $this->outPut(ResponseCode::NEED_BIND_USER_OR_CREATE_USER, '', ['sessionToken' => $sessionToken, 'nickname' => $wechatUser->nickname]);
@@ -322,6 +399,9 @@ class WechatH5LoginController extends AuthBaseController
             // 登陆用户和微信绑定相同，更新微信信息
             $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $wechatUser->user));
             $wechatUser->save();
+            $this->info('updated_wechat_user',[
+                'wechatUser' =>  $wechatUser
+            ]);
 
             // 生成token
             $params = [
@@ -333,6 +413,12 @@ class WechatH5LoginController extends AuthBaseController
                 new GenJwtToken($params)
             );
             $accessToken = json_decode($response->getBody());
+
+            $this->info('generate_accessToken',[
+                'username' =>  $wechatUser->user->username,
+                'userId' =>  $wechatUser->user->id,
+                'accessToken' =>  $accessToken,
+            ]);
 
             $result = $this->camelData(collect($accessToken));
 
@@ -347,7 +433,7 @@ class WechatH5LoginController extends AuthBaseController
                 'sessionToken'  => $this->inPut('sessionToken')
             ], $e->getMessage());
             $this->db->rollBack();
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5过渡阶段登录异常');
+            $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5过渡阶段登录异常');
         }
     }
 }

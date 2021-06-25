@@ -19,6 +19,8 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\DenyUser;
+use App\Models\Order;
+use App\Models\Setting;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Models\Group;
@@ -49,7 +51,12 @@ class ListUserScreenController extends DzqController
 
         if (Arr::has($filter, 'username') && Arr::get($filter, 'username') !== '') {
             $username = $filter['username'];
-            $query->where('users.username', $username);
+            if(strpos($username,',') !== false){
+                $username = explode(',',$username);
+                $query->whereIn('users.username', $username);
+            }else{
+                $query->where('users.username', 'like','%'.$username.'%');
+            }
         }
 
         if (Arr::has($filter, 'nickname') && Arr::get($filter, 'nickname') !== '') {
@@ -112,9 +119,37 @@ class ListUserScreenController extends DzqController
             }
         }
 
-
-        $users = $this->pagination($currentPage, $perPage, $query);
+        $users = $this->pagination($currentPage, $perPage, $query,false);
         $userDatas = $users['pageData'];
+        $userDatasArr = $users['pageData']->toArray();
+        $userIds = array_column($userDatasArr, 'userId');
+        $ordersRegisterPaid = Order::query()->whereIn('user_id',$userIds)
+                                ->where('type',Order::ORDER_TYPE_REGISTER)
+                                ->where('status',Order::ORDER_STATUS_PAID)
+                                ->distinct(true)
+                                ->get()
+                                ->keyBy('user_id')
+                                ->toArray();
+        $userDatas = $userDatas->map(function (User $user) use ($ordersRegisterPaid){
+            $user->paid = true;
+            if (!($user->group_id == Group::ADMINISTRATOR_ID)) {
+                $siteMode = Setting::getValue('site_mode');
+                //过期时间非空，有付费订单
+                if (!empty($user->expired_at) && !empty($ordersRegisterPaid[$user->userId])) {
+                    $t1 = strtotime($user->expired_at);
+                    $t2 = time();
+                    $diffTime = abs($t1 - $t2);
+                    if ($diffTime >= 3600 && $t1 < $t2) {
+                        $user->paid = false;
+                        //兜底逻辑,防止异常情况下判断错误
+                    }
+                }else{
+                    $user->paid = false;
+                }
+            }
+            return $user;
+        });
+        $userDatas = $userDatas->toArray();
 
         $groupIds = array_column($userDatas, 'group_id');
 
@@ -137,6 +172,7 @@ class ListUserScreenController extends DzqController
                 'groupName' => $userGroupDatas[$value['group_id']]['name'] ?? '',
                 'expirationTime' =>$value['expiration_time'],
                 'extFields' =>  UserSignInFields::instance()->getUserSignInFields($value['userId']),
+                'paid'=>$value['paid']
             ];
         }
 

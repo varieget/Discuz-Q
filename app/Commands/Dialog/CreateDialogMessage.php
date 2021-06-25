@@ -100,6 +100,8 @@ class CreateDialogMessage
 
         $attachment_id = Arr::get($this->attributes, 'attachment_id', 0);
 
+        $status = Arr::get($this->attributes, 'status', DialogMessage::NORMAL_MESSAGE);
+
         if ($attachment_id) {
             $attachment = Attachment::query()
                     ->where('user_id', $this->actor->id)
@@ -108,7 +110,7 @@ class CreateDialogMessage
                     ->where('id', $attachment_id)
                     ->first();
             if (!$attachment) {
-                throw new TranslatorException(trans('user.attachment_not_exist'));
+                throw new Exception(trans('user.attachment_not_exist'));
             }
         }
 
@@ -117,7 +119,7 @@ class CreateDialogMessage
             'image_url'     => $image_url
         ];
 
-        $dialogMessage = DialogMessage::build($this->actor->id, $dialog_id, $attachment_id, $message,$read_status);
+        $dialogMessage = DialogMessage::build($this->actor->id, $dialog_id, $attachment_id, $message, $read_status, $status);
         $dialogMessageRes = $dialogMessage->save();
 
         if ($dialogMessageRes) {
@@ -127,7 +129,9 @@ class CreateDialogMessage
             } else {
                 $dialogRes->sender_read_at = null;
             }
-            $dialogRes->dialog_message_id = $dialogMessage->id;
+            if ($status == 1) {
+                $dialogRes->dialog_message_id = $dialogMessage->id;
+            }
 
             $dialogRes->save();
         }

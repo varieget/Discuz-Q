@@ -67,6 +67,18 @@ class ListUserFollowController extends DzqController
                 ->get()->toArray();
             $userFollow = array_column($userFollow, null, 'to_user_id');
 
+            $tempFromUserId = [];
+            $tempToUserId = [];
+            foreach ($userFollowList as $k=>$v){
+                if(in_array($v['from_user_id'],$tempFromUserId) && in_array($v['to_user_id'],$tempToUserId)){
+                    unset($userFollowList[$k]);
+                }else{
+                    $tempFromUserId[] = $v['from_user_id'];
+                    $tempToUserId[] = $v['to_user_id'];
+                }
+            }
+
+            
             if ($type==1){
                 foreach ($userFollowList as $key => $value) {
                     $userFollowList[$key]['isFollow']       = false;

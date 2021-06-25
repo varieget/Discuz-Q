@@ -90,6 +90,8 @@ class ListNotificationV2Controller extends DzqController
                     // 获取主题作者用户组
                     if (!empty($threads->get($threadID))) {
                         $thread = $threads->get($threadID);
+                        $item->thread_user_nickname = $thread->user->nickname;
+                        $item->thread_user_avatar = $thread->user->avatar;
                         $item->thread_type = $thread->type;
                         $item->thread_is_approved = $thread->is_approved;
                         $item->thread_created_at = $thread->created_at;
@@ -197,24 +199,24 @@ class ListNotificationV2Controller extends DzqController
         if(!empty($result['postContent'])){
             $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['postContent']);
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
-            $result['postContent'] = str_replace($searches, $replaces, $content);
+            $result['postContent'] = Str::substr(strip_tags(str_replace($searches, $replaces, $content)),0,Thread::NOTICE_CONTENT_LENGTH);
         }
 
         if(!empty($result['threadTitle'])) {
             $threadTitle = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['threadTitle']);
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($threadTitle);
-            $result['threadTitle'] = str_replace($searches, $replaces, $threadTitle);
+            $result['threadTitle'] = Str::substr(strip_tags(str_replace($searches, $replaces, $threadTitle)),0,Thread::NOTICE_CONTENT_LENGTH);
         }
 
         if(!empty($result['replyPostContent'])) {
             $replyPostContent = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['replyPostContent']);
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($replyPostContent);
-            $result['replyPostContent'] = str_replace($searches, $replaces, $replyPostContent);
+            $result['replyPostContent'] = Str::substr(strip_tags(str_replace($searches, $replaces, $replyPostContent)),0,Thread::NOTICE_CONTENT_LENGTH);
         }
         if(!empty($result['content'])) {
             $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['content']);
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
-            $result['content'] = str_replace($searches, $replaces, $content);
+            $result['content'] = Str::substr(strip_tags(str_replace($searches, $replaces, $content)),0,Thread::NOTICE_CONTENT_LENGTH);
         }
 
         // 默认必须要有的字段
@@ -239,6 +241,8 @@ class ListNotificationV2Controller extends DzqController
             'threadUserGroups' => $data->thread_user_groups ?: '',
             'threadCreatedAt' => optional($data->thread_created_at)->format('Y-m-d H:i:s'),
             'threadIsApproved' => $data->thread_is_approved ?: 0,
+            'threadUserNickname' => $data->thread_user_nickname ?: '',
+            'threadUserAvatar' => $data->thread_user_avatar ?: '',
         ]);
 
         // 判断是否要匿名

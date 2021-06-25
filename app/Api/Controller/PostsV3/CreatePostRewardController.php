@@ -148,7 +148,7 @@ class CreatePostRewardController extends DzqController
         if(!empty($postRewardLog)){
             $rewardTotal = array_sum(array_column($postRewardLog, 'change_available_amount'));
         }
-        $trueRemainMoney = $threadRewardOrder['amount'] - $rewardTotal;
+        $trueRemainMoney = floatval(sprintf('%.2f', $threadRewardOrder['amount'] - $rewardTotal));
         if($trueRemainMoney < $rewards){
             return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_reward_not_sufficient_funds'));
         }

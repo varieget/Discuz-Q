@@ -28,6 +28,7 @@ use App\Common\ResponseCode;
 use App\Models\Permission;
 use App\Models\ThreadTom;
 use App\Models\User;
+use Discuz\Base\DzqLog;
 use Discuz\Common\Utils;
 use Illuminate\Support\Arr;
 
@@ -261,8 +262,10 @@ trait TomTrait
         $tomTypes = array_keys($tomJsons);
         foreach ($tomTypes as $tomType) {
             $tomService = Arr::get(TomConfig::$map, $tomType . '.service');
-            if (constant($tomService . '::NEED_PAY')) {
+            if (class_exists($tomService) && constant($tomService . '::NEED_PAY')) {
                 return true;
+            }else{
+                DzqLog::info('service_not_exist', [$tomService, $tomJsons, $tomTypes]);
             }
         }
         return false;

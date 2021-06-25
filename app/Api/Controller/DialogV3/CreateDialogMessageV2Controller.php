@@ -5,6 +5,7 @@ namespace App\Api\Controller\DialogV3;
 use App\Commands\Dialog\CreateDialogMessage;
 use App\Common\ResponseCode;
 use App\Common\Utils;
+use App\Models\DialogMessage;
 use App\Providers\DialogMessageServiceProvider;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -50,22 +51,35 @@ class CreateDialogMessageV2Controller extends DzqController
         try {
             $this->validation->make($data, [
                 'dialogId' => 'required|int',
-                'messageText' => 'sometimes|max:450',
-                'attachmentId' => 'sometimes|int',
+                'messageText'  => 'sometimes|max:450',
+                'imageUrl'     => 'required_with:attachmentId|string',
+                'attachmentId' => 'required_with:imageUrl|int|min:1',
+                'isImage' => 'required|bool'
             ])->validate();
         } catch (ValidationException $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->validator->getMessageBag()->first());
         }
 
+        if (!$data['isImage'] && empty($data['messageText']) && empty($data['attachmentId'])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '发送内容不能为空！');
+        }
+
+        if (!empty($data['messageText']) || 
+           (!empty($data['attachmentId']) && !empty($data['imageUrl']))) {
+            $data['status'] = DialogMessage::NORMAL_MESSAGE;
+        } else {
+            $data['status'] = DialogMessage::EMPTY_MESSAGE;
+        }
+
         try {
             $data = Utils::arrayKeysToSnake($data);
-            $this->bus->dispatch(
+            $dialogMessage = $this->bus->dispatch(
                 new CreateDialogMessage($user, $data)
             );
         } catch (\Exception $e) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, $e->getMessage());
         }
 
-        $this->outPut(ResponseCode::SUCCESS, '已发送');
+        $this->outPut(ResponseCode::SUCCESS, '已发送', ['dialogMessageId' => $dialogMessage->id]);
     }
 }

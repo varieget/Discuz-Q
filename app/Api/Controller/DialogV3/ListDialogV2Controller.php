@@ -58,6 +58,7 @@ class ListDialogV2Controller extends DzqController
                 '=',
                 'dialog_message.dialog_id'
             )
+            ->where('dialog_message_id', '>', 0)
             ->where(function ($query) use ($tablePrefix, $user) {
                 $query->where('dialog.sender_user_id', $user->id)
                     ->whereRaw("{$tablePrefix}dialog_message.`created_at` > IFNULL({$tablePrefix}dialog.`sender_deleted_at`, 0 )");
@@ -84,6 +85,7 @@ class ListDialogV2Controller extends DzqController
             $dMQuery = DialogMessage::query()
                 ->whereIn('dialog_id', $dialogIds)
                 ->where('user_id','!=',$actor->id)
+                ->where('status', DialogMessage::NORMAL_MESSAGE)
                 ->get()->toArray();
 
             $newList = [];
@@ -102,19 +104,24 @@ class ListDialogV2Controller extends DzqController
                 }
 
             }
-
-            $sendUser = [
-                'id'=>$i->sender->id,
-                'avatar'=>$i->sender->avatar,
-                'username'=>$i->sender->username,
-                'nickname'=>$i->sender->nickname
-            ];
-            $recipientUser = [
-                'id'=>$i->recipient->id,
-                'avatar'=>$i->recipient->avatar,
-                'username'=>$i->recipient->username,
-                'nickname'=>$i->recipient->nickname
-            ];
+            $sendUser = null;
+            $recipientUser = null;
+            if (!empty($i->sender)) {
+                $sendUser = [
+                    'id' => $i->sender->id,
+                    'avatar' => !empty($i->sender->avatar) ? $i->sender->avatar : "",
+                    'username' => $i->sender->username,
+                    'nickname' => $i->sender->nickname
+                ];
+            }
+            if (!empty($i->recipient)) {
+                $recipientUser = [
+                    'id' => $i->recipient->id,
+                    'avatar' => !empty($i->recipient->avatar) ? $i->recipient->avatar : "",
+                    'username' => $i->recipient->username,
+                    'nickname' => $i->recipient->nickname
+                ];
+            }
 
             $msg = $i->dialogMessage;
             $msg = $msg
@@ -132,6 +139,7 @@ class ListDialogV2Controller extends DzqController
                     'createdAt' => optional($msg->created_at)->format('Y-m-d H:i:s'),
                 ]
                 : null;
+
             return [
                 'id' => $i->id,
                 'dialogMessageId' => $i->dialog_message_id ?: 0,
@@ -143,8 +151,7 @@ class ListDialogV2Controller extends DzqController
                 'createdAt' => optional($i->created_at)->format('Y-m-d H:i:s'),
                 'sender' => $sendUser,
                 'recipient' => $recipientUser,
-                'dialogMessage' => $msg,
-
+                'dialogMessage' => $msg
             ];
         });
 

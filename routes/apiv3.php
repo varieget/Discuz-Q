@@ -17,8 +17,8 @@
 use App\Api\Controller as ApiController;
 
 //删除用户和微信用户接口，上线前需去除
-$route->post('/user/delete', 'user.delete', ApiController\UsersV3\DeleteUserController::class);
-$route->post('/user/delete/wechat', 'user.delete.wechat', ApiController\UsersV3\UnbindWechatController::class);
+//$route->post('/user/delete', 'user.delete', ApiController\UsersV3\DeleteUserController::class);
+//$route->post('/user/delete/wechat', 'user.delete.wechat', ApiController\UsersV3\UnbindWechatController::class);
 $route->get('/models', 'models.get', ApiController\UsersV3\GetModelsController::class);
 
 /*
@@ -114,7 +114,7 @@ $route->get('/order.detail', 'orders.resource.v2', ApiController\OrderV3\Resourc
 $route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\TradeV3\Notify\WechatNotifyController::class);
 $route->post('/trade/pay/order', 'trade.pay.order', ApiController\TradeV3\PayOrderController::class);
 $route->get('/categories', 'categories', ApiController\CategoryV3\ListCategoriesController::class);
-$route->get('/categories.createthread', '/categories.createthread', ApiController\CategoryV3\ListCategoriesCreateThreadController::class);
+$route->get('/categories.thread', '/categories.thread', ApiController\CategoryV3\ListCategoriesThreadController::class);
 $route->get('/posts', 'posts', ApiController\PostsV3\ListPostsController::class);
 $route->post('/posts.update', 'posts.update', ApiController\PostsV3\UpdatePostController::class);
 $route->post('/posts', 'posts', ApiController\PostsV3\CreatePostController::class);
@@ -193,3 +193,4 @@ $route->get('/offiaccount/jssdk', 'offiaccount.jssdk', ApiController\WechatV3\Of
 
 $route->get('/thread.test', 'thread.test', ApiController\ThreadsV3\TestController::class);
 
+$route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);

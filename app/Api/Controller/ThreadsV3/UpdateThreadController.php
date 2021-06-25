@@ -63,10 +63,10 @@ class UpdateThreadController extends DzqController
         $threadId = $this->inPut('threadId');
         $thread = $this->thread;
         $post = Post::getOneActivePost($threadId);
-        $oldContent = $post->content;
         if (empty($post)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
+        $oldContent = $post->content;
         $result = $this->updateThread($thread, $post);
 
         if (
@@ -141,6 +141,7 @@ class UpdateThreadController extends DzqController
         }
 
         // 包含 红包 的帖子在已发布的情况下，再次编辑；条件：存在对应的 order 为 已支付的情况
+        empty($content['indexes']) && $content['indexes'] = [];
         if ($this->needPay($content['indexes']) && $isDraft == Thread::IS_NOT_DRAFT) {
             $order = $this->getOrderInfo($thread);
             if($order){
@@ -295,13 +296,13 @@ class UpdateThreadController extends DzqController
         $isDeleteRedOrder = $isDeleteRewardOrder = false;
         foreach ($tomList as $item) {
             if (empty($tomJsons[$item['key']])) {
-                if(in_array($item['tom_type'], [TomConfig::TOM_REDPACK, TomConfig::TOM_REWARD]) &&
+                if (in_array($item['tom_type'], [TomConfig::TOM_REDPACK, TomConfig::TOM_REWARD]) &&
                     (empty($order) || $order->status != Order::ORDER_STATUS_PAID)
-                ){
-                    $keys[] = $item['key'];
-                    if($item['tom_type'] == TomConfig::TOM_REDPACK)     $isDeleteRedOrder = true;
-                    if($item['tom_type'] == TomConfig::TOM_REWARD)     $isDeleteRewardOrder = true;
+                ) {
+                    if ($item['tom_type'] == TomConfig::TOM_REDPACK) $isDeleteRedOrder = true;
+                    if ($item['tom_type'] == TomConfig::TOM_REWARD) $isDeleteRewardOrder = true;
                 }
+                $keys[] = $item['key'];
             }
         }
 

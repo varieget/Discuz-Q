@@ -25,9 +25,13 @@ use App\Events\Attachment\Saving;
 use App\Events\Attachment\Uploaded;
 use App\Events\Attachment\Uploading;
 use App\Models\Attachment;
+use App\Models\Dialog;
+use App\Models\DialogMessage;
+use App\Models\Group;
 use App\Repositories\UserRepository;
 use App\Validators\AttachmentValidator;
 use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 use Discuz\Foundation\EventsDispatchTrait;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
@@ -68,6 +72,23 @@ class CreateAttachmentController extends DzqController
             return true;
         }
 
+        //开启付费站点，新用户注册时会被加入到待付费组，导致填写补充信息上传图片附件提示无权限
+        try {
+            if (!empty($groupId = $this->user->getRelations()['groups'][0]->getAttribute('id')) && $groupId == Group::UNPAID) {
+                $group = Group::query()->where('id', Group::MEMBER_ID)->get();
+                if (!empty($group)){
+                    $this->user->setRelation('groups', $group);
+                }
+            }
+        } catch (\Exception $e) {
+            DzqLog::error('create_attachment',[
+                'user'      => $this->user,
+                'groupId'   => $groupId,
+                'group'     => $group
+            ]);
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, '附件上传失败');
+        }
+
         return call_user_func_array($typeMethodMap[$type], [$this->user]);
     }
 
@@ -77,6 +98,7 @@ class CreateAttachmentController extends DzqController
         $file = Arr::get($this->request->getUploadedFiles(), 'file');
         $name = Arr::get($this->request->getParsedBody(), 'name', '');
         $type = (int) Arr::get($this->request->getParsedBody(), 'type', 0);
+        $dialogMessageId = (int) Arr::get($this->request->getParsedBody(), 'dialogMessageId', 0);
         $order = (int) Arr::get($this->request->getParsedBody(), 'order', 0);
         $ipAddress = ip($this->request->getServerParams());
         ini_set('memory_limit',-1);
@@ -84,8 +106,8 @@ class CreateAttachmentController extends DzqController
         $ext = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
         $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
         $tmpFileWithExt = $tmpFile . ($ext ? ".$ext" : '');
-        // 上传临时目录之前验证
 
+        // 上传临时目录之前验证
         $this->validator->valid([
             'type' => $type,
             'file' => $file,
@@ -103,10 +125,11 @@ class CreateAttachmentController extends DzqController
                 true
             );
 
-            $this->events->dispatch(
-                new Uploading($actor, $file)
-            );
-
+            if(strtolower($ext) != 'gif'){
+                $this->events->dispatch(
+                    new Uploading($actor, $file)
+                );
+            }
             // 上传
             $this->uploader->upload($file, $type);
 
@@ -150,6 +173,34 @@ class CreateAttachmentController extends DzqController
         $attachmentSerializer = $this->app->make(AttachmentSerializer::class);
         $attachment = $attachmentSerializer->getDefaultAttributes($attachment);
         $data = $this->camelData($attachment);
-        return $this->outPut(ResponseCode::SUCCESS,'',$data);
+
+        if (!empty($dialogMessageId)) {
+            $message_text = [
+                'message_text'  => null,
+                'image_url'     => $data['url']
+            ];
+            $message_text = addslashes(json_encode($message_text));
+            $updateDialogMessageResult = DialogMessage::query()
+                ->where('id', $dialogMessageId)
+                ->update(['attachment_id' => $data['id'], 'message_text' => $message_text, 'status' => DialogMessage::NORMAL_MESSAGE]);
+            if (!$updateDialogMessageResult) {
+                return $this->outPut(ResponseCode::INTERNAL_ERROR, '私信图片更新失败!');
+            } else {
+                $dialogMessage = DialogMessage::query()->where('id', $dialogMessageId)->first();
+                $dialog = Dialog::query()->where('id', $dialogMessage->dialog_id)->first();
+                $lastDialogMessage = DialogMessage::query()->where('id', $dialog->dialog_message_id)->first();
+                if ($dialog->dialog_message_id == 0 || 
+                   (isset($lastDialogMessage['created_at']) && ($lastDialogMessage['created_at'] < $dialogMessage['created_at']))) {
+                    $updateDialogResult = Dialog::query()
+                        ->where('id', $dialogMessage->dialog_id)
+                        ->update(['dialog_message_id' => $dialogMessage->id]);
+                    if (!$updateDialogResult) {
+                        return $this->outPut(ResponseCode::INTERNAL_ERROR, '最新对话更新失败!');
+                    }
+                }
+            }
+        }
+
+        return $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }

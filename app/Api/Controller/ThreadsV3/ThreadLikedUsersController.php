@@ -84,7 +84,7 @@ class ThreadLikedUsersController extends DzqController
             ->orderBy('created_at','desc')
             ->get(['user_id','created_at','type'])
             ->map(function ($value) {
-                if (in_array([Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT],$value->type)) {
+                if (in_array($value->type, [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])) {
                     $value->type = 2;
                 } else {
                     $value->type = 3;
@@ -106,9 +106,11 @@ class ThreadLikedUsersController extends DzqController
         $userArr = array_combine(array_column($user, 'id'), $user);
         $likeSort = $this->arraySort($postUserAndorder,'created_at','desc');
         foreach ($likeSort as $k=>$v) {
-            $likeSort[$k]['passed_at'] =  Utils::diffTime($v['created_at']);
-            $likeSort[$k]['nickname'] = $userArr[$v['user_id']]['nickname'];
-            $likeSort[$k]['avatar'] = $userArr[$v['user_id']]['avatar'];
+            if (!empty($v['user_id']) && !empty($userArr[$v['user_id']])) {
+                $likeSort[$k]['passed_at'] = Utils::diffTime($v['created_at']);
+                $likeSort[$k]['nickname'] = $userArr[$v['user_id']]['nickname'];
+                $likeSort[$k]['avatar'] = $userArr[$v['user_id']]['avatar'];
+            }
         }
 
         $pageData = $this->specialPagination($data['page'],$data['perPage'],$likeSort);

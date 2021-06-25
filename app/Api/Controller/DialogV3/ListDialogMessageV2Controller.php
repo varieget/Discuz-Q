@@ -108,9 +108,9 @@ class ListDialogMessageV2Controller extends DzqController
             );
         }
 
-        $query->orderBy('created_at', 'desc');
+        $query->orderBy('dialog_message.id', 'desc');
 
-        $pageData = $this->pagination($page, $perPage, $query, false);
+        $pageData = $this->messagePagination($page, $perPage, $query, false);
         $pageData['pageData'] = $pageData['pageData']->map(function (DialogMessage $i) {
 
             $user = [
@@ -119,15 +119,19 @@ class ListDialogMessageV2Controller extends DzqController
                 'username'=>$i->user->username,
             ];
 
+            $imageUrl = $i->getImageUrlMessageText($i->attachment_id);
+            $messageText = $i->getMessageText();
+
             return [
                 'id' => $i->id,
                 'userId' => $i->user_id,
                 'dialogId' => $i->dialog_id,
                 'attachmentId' => $i->attachment_id,
                 'summary' => $i->summary,
-                'messageText' => $i->getMessageText(),
+                'messageText' => $messageText,
                 'messageTextHtml' => $i->formatMessageText(),
-                'imageUrl' => $i->getImageUrlMessageText($i->attachment_id),
+                'isImageLoading' => empty($messageText) && empty($imageUrl) ? true : false,
+                'imageUrl' => $imageUrl,
                 'updatedAt' => optional($i->updated_at)->format('Y-m-d H:i:s'),
                 'createdAt' => optional($i->created_at)->format('Y-m-d H:i:s'),
                 'user' => $user,
@@ -135,5 +139,45 @@ class ListDialogMessageV2Controller extends DzqController
         });
 
         return $pageData;
+    }
+
+    /*
+     * 私信分页数据支持200条
+     */
+    private function messagePagination($page, $perPage, \Illuminate\Database\Eloquent\Builder $builder, $toArray = true)
+    {
+        $page = $page >= 1 ? intval($page) : 1;
+        $perPageMax = 200;
+        $perPage = $perPage >= 1 ? intval($perPage) : 20;
+        $perPage > $perPageMax && $perPage = $perPageMax;
+        $count = $builder->count();
+        $builder = $builder->offset(($page - 1) * $perPage)->limit($perPage)->get();
+        $builder = $toArray ? $builder->toArray() : $builder;
+        $url = $this->request->getUri();
+        $port = $url->getPort();
+        $port = $port == null ? '' : ':' . $port;
+        parse_str($url->getQuery(), $query);
+        $queryFirst = $queryNext = $queryPre = $query;
+        $queryFirst['page'] = 1;
+        $queryNext['page'] = $page + 1;
+        $queryPre['page'] = $page <= 1 ? 1 : $page - 1;
+
+        $path = $url->getScheme() . '://' . $url->getHost() . $port . $url->getPath() . '?';
+        return [
+            'pageData' => $builder,
+            'currentPage' => $page,
+            'perPage' => $perPage,
+            'firstPageUrl' => $this->buildUrl($path, $queryFirst),
+            'nextPageUrl' => $this->buildUrl($path, $queryNext),
+            'prePageUrl' => $this->buildUrl($path, $queryPre),
+            'pageLength' => count($builder),
+            'totalCount' => $count,
+            'totalPage' => $count % $perPage == 0 ? $count / $perPage : intval($count / $perPage) + 1
+        ];
+    }
+
+    private function buildUrl($path, $query)
+    {
+        return urldecode($path . http_build_query($query));
     }
 }
