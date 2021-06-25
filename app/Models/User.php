@@ -608,7 +608,7 @@ class User extends DzqModel
      */
     public function refreshUserFollow()
     {
-        $this->follow_count = $this->userFollow()->count();
+        $this->follow_count = UserFollow::query()->where('from_user_id',$this->id)->groupBy("to_user_id")->get("to_user_id")->count();
         return $this;
     }
 
@@ -618,7 +618,7 @@ class User extends DzqModel
      */
     public function refreshUserFans()
     {
-        $this->fans_count = $this->userFans()->count();
+        $this->fans_count = UserFollow::query()->where('to_user_id',$this->id)->groupBy("from_user_id")->get("from_user_id")->count();
         return $this;
     }
 
