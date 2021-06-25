@@ -17,7 +17,6 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
 use App\Common\CacheKey;
 use App\Models\Order;
 use App\Models\PostUser;
@@ -41,6 +40,10 @@ class ThreadHelper
             $postIds = [$postIds];
             $posts = [$posts];
         }
+
+        $database = app()->config('database');
+        $db_pre = $database['prefix'];
+        
         //查询点赞人数
         $postIdThreadId = array_column($posts, 'thread_id', 'id');
         $v1 = PostUser::query()
@@ -50,8 +53,8 @@ class ThreadHelper
             ->where(function ($query) {
                 $query->selectRaw('count(0)')
                     ->from('post_user as b')
-                    ->where('b.post_id', 'a.post_id')
-                    ->where('b.created_at', '>', 'a.created_at');
+                    ->where('b.post_id', $db_pre.'a.post_id')
+                    ->where('b.created_at', '>', $db_pre.'a.created_at');
             }, '<', 20)
             ->orderByDesc('a.post_id')
             ->get()->each(function (&$item) use ($postIdThreadId) {
@@ -68,8 +71,8 @@ class ThreadHelper
             ->where(function ($query) {
                 $query->selectRaw('count(0)')
                     ->from('orders as b')
-                    ->where('b.thread_id', 'a.thread_id')
-                    ->where('b.created_at', '>', 'a.created_at');
+                    ->where('b.thread_id', $db_pre.'a.thread_id')
+                    ->where('b.created_at', '>', $db_pre.'a.created_at');
             }, '<', 20)
             ->orderByDesc('a.thread_id')
             ->get()->toArray();
