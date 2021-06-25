@@ -42,7 +42,7 @@ class ThreadHelper
         }
 
         $database = app()->config('database');
-        $db_pre = $database['prefix'];
+        $db_pre = '`'.$database['prefix'];
         
         //查询点赞人数
         $postIdThreadId = array_column($posts, 'thread_id', 'id');
@@ -53,8 +53,8 @@ class ThreadHelper
             ->where(function ($query) use ($db_pre) {
                 $query->selectRaw('count(0)')
                     ->from('post_user as b')
-                    ->where('b.post_id', $db_pre.'a.post_id')
-                    ->where('b.created_at', '>', $db_pre.'a.created_at');
+                    ->where('b.post_id', $db_pre.'`a.`post_id`')
+                    ->where('b.created_at', '>', $db_pre.'a`.`created_at`');
             }, '<', 20)
             ->orderByDesc('a.post_id')
             ->get()->each(function (&$item) use ($postIdThreadId) {
@@ -71,8 +71,8 @@ class ThreadHelper
             ->where(function ($query) use ($db_pre) {
                 $query->selectRaw('count(0)')
                     ->from('orders as b')
-                    ->where('b.thread_id', $db_pre.'a.thread_id')
-                    ->where('b.created_at', '>', $db_pre.'a.created_at');
+                    ->where('b.thread_id', $db_pre.'a`.`thread_id`')
+                    ->where('b.created_at', '>', $db_pre.'a`.`created_at`');
             }, '<', 20)
             ->orderByDesc('a.thread_id')
             ->get()->toArray();
