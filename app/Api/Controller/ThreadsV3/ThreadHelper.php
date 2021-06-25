@@ -74,7 +74,7 @@ class ThreadHelper
             ->where(function ($query) use ($table_a, $table_b) {
                 $query->selectRaw('count(0)')
                     ->from('orders as b')
-                    ->whereRaw("`{$table_b}`.`post_id` = `{$table_a}`.`post_id`")
+                    ->whereRaw("`{$table_b}`.`thread_id` = `{$table_a}`.`thread_id`")
                     ->whereRaw("`{$table_b}`.`created_at` > `{$table_a}`.`created_at`");
             }, '<', 20)
             ->orderByDesc('a.thread_id')
