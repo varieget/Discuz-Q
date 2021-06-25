@@ -145,6 +145,11 @@ class SettingsTableSeeder extends Seeder
                 'key' => 'api_freq',    // 允许发布商品帖
                 'value' => '{"get":{"freq":500,"forbidden":20},"post":{"freq":200,"forbidden":30}}',
                 'tag' => 'default',
+            ],
+            [
+                'key' => 'open_api_log',    // 是否开启接口层日志，0不开启，1开启
+                'value' => 1,
+                'tag' => 'default',
             ]
         ]);
     }
