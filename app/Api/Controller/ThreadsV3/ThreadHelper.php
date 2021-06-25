@@ -53,7 +53,7 @@ class ThreadHelper
             ->where(function ($query) use ($db_pre) {
                 $query->selectRaw('count(0)')
                     ->from('post_user as b')
-                    ->where('b.post_id', $db_pre.'`a.`post_id`')
+                    ->where('b.post_id', $db_pre.'a`.`post_id`')
                     ->where('b.created_at', '>', $db_pre.'a`.`created_at`');
             }, '<', 20)
             ->orderByDesc('a.post_id')
