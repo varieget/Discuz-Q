@@ -335,6 +335,8 @@ class ThreadMigrationCommand extends AbstractCommand
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_mod} add constraint post_mod_post_id_foreign foreign key(post_id) references {$this->posts}(id)"));
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("alter table {$this->post_user} add constraint post_user_post_id_foreign foreign key(post_id) references {$this->posts}(id)"));
         app('log')->info('更新 posts 相关外键成功');
+
+
         $this->info('开始帖子数据迁移end');
     }
 
@@ -385,8 +387,8 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateVideo(){
         //先刷新已经转码的
-        $videoStringStart = '\'{\"videoId\":[\'';
-        $videoStringEnd = '\']}\'';
+        $videoStringStart = '\'{\"videoId\":\'';
+        $videoStringEnd = '\'}\'';
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$videoStringStart},{$this->thread_video}.id, {$videoStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 0 and {$this->thread_video}.status = 1 and {$this->threads}.is_draft = 0 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?)"), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
 
         //刷新未转码的
@@ -395,8 +397,8 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateAudio(){
         //先刷新已经转码的
-        $audioStringStart = '\'{\"audioId\":[\'';
-        $audioStringEnd = '\']}\'';
+        $audioStringStart = '\'{\"audioId\":\'';
+        $audioStringEnd = '\'}\'';
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$audioStringStart},{$this->thread_video}.id, {$audioStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 1 and {$this->thread_video}.status = 1 and {$this->threads}.is_draft = 0 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?)"), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
 
         //刷新未转码的
