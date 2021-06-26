@@ -20,6 +20,7 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\UpdateAdminUser;
 use App\Common\ResponseCode;
+use App\Models\Setting;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -73,6 +74,7 @@ class UpdateAdminController extends DzqController
         }
         if(!empty($newPassword)){
             $requestData['newPassword'] = $newPassword;
+            $this->processPassword($newPassword);
         }
 
         $requestData['mobile'] = $mobile;
@@ -86,8 +88,7 @@ class UpdateAdminController extends DzqController
         }
 
         $this->dzqValidate($requestData, [
-            'username'=> 'required|max:15',
-            'newPassword'=> 'max:50|min:6'
+            'username'=> 'required|max:15'
         ]);
 
         $result = $this->bus->dispatch(
@@ -112,5 +113,50 @@ class UpdateAdminController extends DzqController
         $returnData['loginAt'] = $data['loginAt'];
 
         return $this->outPut(ResponseCode::SUCCESS,'', $returnData);
+    }
+
+    public function processPassword($newPassword)
+    {
+        $passwordLength = (int)$this->settings->get('password_length');
+        $psdLen = mb_strlen($newPassword);
+        $psdMinLen = $passwordLength > 6 ? $passwordLength : 6;
+        $pasMaxLen = 18;
+        if ($psdMinLen > $psdLen || $pasMaxLen < $psdLen) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, "密码长度必须小于{$psdMinLen},大于{$pasMaxLen}位");
+        }
+        $passwordStrength = trim($this->settings->get('password_strength'));
+        if (!empty($passwordStrength)){
+            $passwordStrength = explode(',',$passwordStrength);
+
+            foreach ($passwordStrength as $v) {
+                if ($v == Setting::DIGIEAL) {
+                    $digital = preg_match('/[0-9]/', $newPassword);
+                    if (empty($digital)) {
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '请在登录密码中填写数字');
+                    }
+                }
+
+                if ($v == Setting::LOWER_CASE_LETTERS) {
+                    $lowerCaseLetters = preg_match("/[a-z]/", $newPassword);
+                    if (empty($lowerCaseLetters)) {
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '请在登录密码中填写小写字母');
+                    }
+                }
+
+                if ($v == Setting::SYMBOL) {
+                    $uppercaseLetter = preg_match("/^[\u4e00-\u9fa5a-zA-z\d]+$/",$newPassword);
+                    if (!empty($uppercaseLetter)) {
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '请在登录密码中填写特殊符号');
+                    }
+                }
+
+                if ($v == Setting::UPPERCASE_LETTER) {
+                    $specialSymbol = preg_match("/[A-Z]/", $newPassword);
+                    if (empty($specialSymbol)) {
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '请在登录密码中填写大写字母');
+                    }
+                }
+            }
+        }
     }
 }

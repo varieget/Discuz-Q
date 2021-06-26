@@ -490,8 +490,8 @@ trait ThreadTrait
             $topic = Topic::query()->where('content', $topicName)->first();
             if (empty($topic)) {
                 //话题名称长度超过20就不创建了
-                if (mb_strlen($topicName) > 20) {
-                    \Discuz\Common\Utils::outPut(ResponseCode::INVALID_PARAMETER, '创建话题长度不能超过20个字符');
+                if (mb_strlen($topicName) > 18) {
+                    \Discuz\Common\Utils::outPut(ResponseCode::INVALID_PARAMETER, '创建话题长度不能超过18个字符');
                 }
                 $topic = new Topic();
                 $topic->user_id = $userId;
@@ -504,7 +504,12 @@ trait ThreadTrait
             $topicId = $topic->id;
             $attr = ['thread_id' => $threadId, 'topic_id' => $topicId];
             ThreadTopic::query()->where($attr)->firstOrCreate($attr);
+
+            $html = sprintf('<span id="topic" value="%s">#%s#</span>', $topic->id, $topic->content);
+            $content['text'] = str_replace($topicItem, $html,$content['text']);
+
         }
+        return $content;
     }
 
     //发帖@用户发送通知消息
@@ -572,8 +577,8 @@ trait ThreadTrait
 
     private function optimizeTopics($text)
     {
-        preg_match_all('/<span[^\>]*>#(.+?)#<\/span>/', $text, $m1);
-        $topics = $m1[1];
+        preg_match_all('/#.+?#/', $text, $m1);
+        $topics = $m1[0];
         $topics = array_values($topics);
         return $topics;
     }
