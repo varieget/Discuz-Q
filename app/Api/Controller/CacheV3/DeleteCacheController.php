@@ -39,7 +39,7 @@ class DeleteCacheController extends DzqController
         try {
             app('cache')->clear();
         } catch (\Exception $e) {
-             DzqLog::error('清空缓存接口异常', [], $e->getMessage());
+             DzqLog::error('cache_clear_failure', [$e->getMessage()]);
              return $this->outPut(ResponseCode::INTERNAL_ERROR, '清空缓存失败！');
         }
         return $this->outPut(ResponseCode::SUCCESS, '缓存清空完毕');
