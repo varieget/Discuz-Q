@@ -315,6 +315,7 @@ class ThreadMigrationCommand extends AbstractCommand
             app('log')->info('处理posts的content，数据库出错', [$e->getMessage()]);
             return;
         }
+        app('log')->info('post 数据转化至 post_dst 完成，开始切换表名');
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("rename TABLE {$this->posts} to posts_bakv2"));
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("rename TABLE {$this->posts_dst} to {$this->posts}"));
         app('log')->info('帖子内容 posts 的 content 修改完成');
@@ -701,6 +702,7 @@ class ThreadMigrationCommand extends AbstractCommand
                   KEY `posts_temp_deleted_user_id_foreign` (`deleted_user_id`),
                   KEY `posts_temp_reply_post_id` (`reply_post_id`) USING BTREE,
                   KEY `posts_temp_reply_post_id_index` (`reply_post_id`),
+                  UNIQUE KEY `post_id` (`id`),
                   CONSTRAINT `{$this->db_pre}posts_temp_deleted_user_id_foreign` FOREIGN KEY (`deleted_user_id`) REFERENCES {$this->users} (`id`) ON DELETE SET NULL,
                   CONSTRAINT `{$this->db_pre}posts_temp_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES {$this->users} (`id`) ON DELETE SET NULL
                 ) ENGINE=InnoDB AUTO_INCREMENT=101821 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
@@ -710,7 +712,8 @@ class ThreadMigrationCommand extends AbstractCommand
     public function tempSql(){
         return  "CREATE TABLE {$this->post_content_temp} (
                   `id` bigint(20) unsigned NOT NULL,
-                  `content` mediumtext COLLATE utf8mb4_unicode_ci DEFAULT NULL
+                  `content` mediumtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+                   UNIQUE KEY `post_id` (`id`)
                   ) ENGINE=InnoDB AUTO_INCREMENT=101821 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     }
 
