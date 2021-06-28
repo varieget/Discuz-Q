@@ -209,7 +209,9 @@ class UpdateThreadController extends DzqController
     private function savePost($post, $content)
     {
         [$ip, $port] = $this->getIpPort();
-        $post->content = $content['text'];
+        if (isset($content['text'])) {
+            $post->content = $content['text'];
+        }
         $post->ip = $ip;
         $post->port = $port;
         $post->is_first = Post::FIRST_YES;
