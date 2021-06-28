@@ -53,19 +53,19 @@ class PermissionTableSeeder extends Seeder
         PermissionKey::THREAD_ALLOW_ANONYMOUS       => [10],    // 允许匿名
         PermissionKey::DIALOG_CREATE                => [10],    // 发布私信
         'switch.'.PermissionKey::THREAD_REPLY       => [10],    // 回复主题
-        'category1.'.PermissionKey::THREAD_REPLY    => [10],    // 回复主题
+        PermissionKey::THREAD_REPLY                 => [10],    // 回复主题-全局
 
         //查看权限
-        'switch.'.PermissionKey::VIEW_THREADS           => [10,7],  // 查看主题列表
-        'category1.'.PermissionKey::VIEW_THREADS        => [10,7],  // 查看主题列表
-        'switch.'.PermissionKey::THREAD_VIEW_POSTS      => [10,7],  // 查看主题详情
-        'category1.'.PermissionKey::THREAD_VIEW_POSTS   => [10,7],  // 查看主题详情
+        'switch.'.PermissionKey::VIEW_THREADS       => [10,7],  // 查看主题列表
+        PermissionKey::VIEW_THREADS                 => [10,7],  // 查看主题列表-全局
+        'switch.'.PermissionKey::THREAD_VIEW_POSTS  => [10,7],  // 查看主题详情
+        PermissionKey::THREAD_VIEW_POSTS            => [10,7],  // 查看主题详情-全局
 
         //管理权限
         PermissionKey::THREAD_EDIT_OWN              => [10],    // 编辑自己的主题
-        'switch.'.PermissionKey::THREAD_EDIT_OWN    => [10],    // 编辑自己的主题
+        'switch.'.PermissionKey::THREAD_EDIT_OWN    => [10],    // 编辑自己的主题-全局
         PermissionKey::THREAD_HIDE_OWN              => [10],    // 删除自己的主题或回复
-        'switch.'.PermissionKey::THREAD_HIDE_OWN    => [10],    // 删除自己的主题或回复
+        'switch.'.PermissionKey::THREAD_HIDE_OWN    => [10],    // 删除自己的主题或回复-全局
 
     ];
 
