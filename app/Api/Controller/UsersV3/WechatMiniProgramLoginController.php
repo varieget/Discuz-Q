@@ -201,7 +201,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 'username' => $wechatUser->user->username,
                 'password' => ''
             ];
-
+            GenJwtToken::setUid($wechatUser->user->id);
             $response = $this->bus->dispatch(
                 new GenJwtToken($params)
             );
