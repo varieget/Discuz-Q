@@ -84,6 +84,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
 
     public function main()
     {
+        $this->info('begin_wechat_miniProgram_login_process');
         try {
             $this->miniParam    = $this->getWechatMiniProgramParam();
             $sessionToken       = $this->inPut('sessionToken');
@@ -111,11 +112,12 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 $this->miniParam['encryptedData'],
                 $user
             );
-
+            $this->info('get_user_wechat',['wechatUser' => $wechatUser]);
             if (!$wechatUser || !$wechatUser->user) {
                 // 更新微信用户信息
                 if (!$wechatUser) {
                     $wechatUser = new UserWechat();
+                    $this->info('new_user_wechat', ['wechatUser' =>  $wechatUser]);
                 }
     //            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
 
@@ -141,6 +143,16 @@ class WechatMiniProgramLoginController extends AuthBaseController
 
                     $this->updateUserBindType($user,AuthUtils::WECHAT);
 
+                    $this->info('auto_registered_and_updated', [
+                        'input'      => [
+                            'data'         => $data
+                        ],
+                        'output'      => [
+                            'user'         => $user,
+                            'wechatUser'   => $wechatUser
+                        ]
+                    ]);
+
                     // 判断是否开启了注册审核
     //                if (!(bool)$this->settings->get('register_validate')) {
     //                    // Tag 发送通知 (在注册绑定微信后 发送注册微信通知)
@@ -155,11 +167,19 @@ class WechatMiniProgramLoginController extends AuthBaseController
                         $wechatUser->save();
 
                         $this->updateUserBindType($user,AuthUtils::WECHAT);
+                        $this->info('bound_wechat_to_user', [
+                            'user'         =>  $user,
+                            'wechatUser'    =>  $wechatUser
+                        ]);
                     }
                 }
             } else {
                 // 登陆用户和微信绑定不同时，微信已绑定用户，抛出异常
                 if (!$user->isGuest() && $user->id != $wechatUser->user_id) {
+                    $this->info('wechat_user_has_been_bound', [
+                        'user'         =>  $user,
+                        'wechatUser'    =>  $wechatUser
+                    ]);
                     $this->db->rollBack();
                     $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
                 }
@@ -167,10 +187,12 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 // 登陆用户和微信绑定相同，更新微信信息
     //            $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $wechatUser->user));
                 $wechatUser->save();
+                $this->info('updated_wechat_user', ['wechatUser'    =>  $wechatUser]);
             }
 
             if (empty($wechatUser) || empty($wechatUser->user)) {
                 $this->db->rollBack();
+                DzqLog::error('wechat_user_is_not_null', ['wechatUser' => $wechatUser]);
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
             $this->db->commit();
@@ -187,17 +209,30 @@ class WechatMiniProgramLoginController extends AuthBaseController
             //小程序无感登录，待审核状态
             if ($response->getStatusCode() === 200) {
                 if($wechatUser->user->status!=User::STATUS_MOD){
+                    $this->info('begin_logind',['user'  =>  $wechatUser->user]);
                     $this->events->dispatch(new Logind($wechatUser->user));
                 }
             }
 
             $accessToken = json_decode($response->getBody());
 
+            $this->info('generate_accessToken',[
+                'username'      =>  $wechatUser->user->username,
+                'userId'        =>  $wechatUser->user->id,
+                'accessToken'   =>  $accessToken,
+            ]);
+
             // bound
             if ($sessionToken) {
+                $this->info('begin_pc_qrcode', ['sessionToken' => $sessionToken]);
                 $accessToken = $this->bound->pcLogin($sessionToken, (array)$accessToken, ['user_id' => $wechatUser->user->id]);
 
                 $this->updateUserBindType($wechatUser->user,AuthUtils::WECHAT);
+                $this->info('end_pc_qrcode',[
+                    'sessionToken'  =>  $sessionToken,
+                    'accessToken'   =>  $accessToken,
+                    'user'          =>  $wechatUser->user
+                ]);
             }
 
             $result = $this->camelData(collect($accessToken));
@@ -215,6 +250,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
      */
     private function transitionLoginLogicVoid()
     {
+        $this->info('begin_transition_process',['miniUser' => $this->miniUser]);
         $this->db->beginTransaction();
         try {
             /** @var UserWechat $wechatUser */
@@ -224,10 +260,11 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 $this->miniParam['encryptedData'],
                 $this->miniUser
             );
-
+            $this->info('get_user_wechat',['wechatUser' => $wechatUser]);
             // 微信信息不存在
             if(! $wechatUser) {
                 $wechatUser = new UserWechat();
+                $this->info('new_user_wechat', ['wechatUser' =>  $wechatUser]);
             }
             $userWechatId = $wechatUser ? $wechatUser->id : 0;
             if(is_null($wechatUser->user)) {
@@ -243,7 +280,15 @@ class WechatMiniProgramLoginController extends AuthBaseController
                 $token = SessionToken::generate(SessionToken::WECHAT_TRANSITION_LOGIN, ['user_wechat_id' => $userWechatId], null, 1800);
                 $token->save();
                 $sessionToken = $token->token;
-
+                $this->info('generate_token', [
+                    'input'      => [
+                        'scope'         => SessionToken::WECHAT_TRANSITION_LOGIN,
+                        'user_wechat'   => $wechatUser
+                    ],
+                    'output'      => [
+                        'token'         => $token
+                    ]
+                ]);
                 $this->db->commit();
                 //把token返回用户绑定用户使用
                 $this->outPut(ResponseCode::NEED_BIND_USER_OR_CREATE_USER, '', ['sessionToken' => $sessionToken, 'nickname' => $wechatUser->nickname]);
@@ -252,6 +297,7 @@ class WechatMiniProgramLoginController extends AuthBaseController
             // 登陆用户和微信绑定相同，更新微信信息
     //        $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $wechatUser->user));
             $wechatUser->save();
+            $this->info('updated_wechat_user',['wechatUser' =>  $wechatUser]);
             $this->db->commit();
 
             // 生成token
@@ -265,10 +311,14 @@ class WechatMiniProgramLoginController extends AuthBaseController
             );
             $accessToken = json_decode($response->getBody());
 
+            $this->info('generate_accessToken',[
+                'username'      =>  $wechatUser->user->username,
+                'userId'        =>  $wechatUser->user->id,
+                'accessToken'   =>  $accessToken
+            ]);
+
             $result = $this->camelData(collect($accessToken));
-
             $result = $this->addUserInfo($wechatUser->user, $result);
-
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (Exception $e) {
             DzqLog::error('小程序登录接口异常', [], $e->getMessage());

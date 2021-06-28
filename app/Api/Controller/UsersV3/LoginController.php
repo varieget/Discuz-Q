@@ -64,6 +64,7 @@ class LoginController extends AuthBaseController
 
     public function main()
     {
+        $this->info('begin_username_login_process');
         $paramData = [
             'username'      => $this->inPut('username'),
             'password'      => $this->inPut('password'),
@@ -91,6 +92,13 @@ class LoginController extends AuthBaseController
             $wechat = (bool)$this->setting->get('offiaccount_close', 'wx_offiaccount');
             $miniWechat = (bool)$this->setting->get('miniprogram_close', 'wx_miniprogram');
             $sms = (bool)$this->setting->get('qcloud_sms', 'qcloud');
+            $this->info('login_user', [
+                'user'          =>  $user,
+                'accessToken'   =>  $accessToken,
+                'sms'           =>  $sms,
+                'wechat'        =>  $wechat,
+                'miniWechat'    =>  $miniWechat
+            ]);
             //短信，微信，小程序均未开启
             if(! $sms && !$wechat && !$miniWechat ) {
                 $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
@@ -99,6 +107,10 @@ class LoginController extends AuthBaseController
             //过渡时期微信绑定用户名密码登录的用户
             $sessionToken = $this->inPut('sessionToken');
             if($sessionToken && strlen($sessionToken) != 0 && (bool)$this->setting->get('is_need_transition')) {
+                $this->info('begin_transition_process',[
+                    'user'          => $user,
+                    'sessionToken'  => $sessionToken
+                ]);
                 $this->events->dispatch(new TransitionBind($user, ['sessionToken' => $sessionToken]));
                 $this->outPut(ResponseCode::SUCCESS, '', $this->addUserInfo($user,$this->camelData($accessToken)));
             }
@@ -111,6 +123,11 @@ class LoginController extends AuthBaseController
                     'sessionToken'  => $token->token,
                     'nickname'      => $user->nickname
                 ];
+                $this->info('mobilebrowser_username_login',[
+                    'token' => $token,
+                    'data'  => $data,
+                    'user'  => $user
+                ]);
                 if($wechat || $miniWechat) { //开了微信，
                     //未绑定微信
                     $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
