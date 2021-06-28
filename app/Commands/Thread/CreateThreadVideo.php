@@ -106,7 +106,9 @@ class CreateThreadVideo
         $threadVideo->type = $this->type;
         $threadVideo->file_id = $fileId;
         $threadVideo->file_name = Arr::get($attributes, 'file_name', $threadVideo->file_name ?? '');
-        $threadVideo->media_url = Arr::get($attributes, 'media_url', $threadVideo->media_url ?? '');
+        $media_url = Arr::get($attributes, 'media_url', $threadVideo->media_url ?? '');
+        $media_url = !empty($media_url) ? (new ThreadVideo())->getMediaUrl(['media_url' => $media_url]) : '';
+        $threadVideo->media_url = $media_url;
         $threadVideo->cover_url = Arr::get($attributes, 'cover_url', $threadVideo->cover_url ?? '');
 
         // 视频转码中，音频无需转码
