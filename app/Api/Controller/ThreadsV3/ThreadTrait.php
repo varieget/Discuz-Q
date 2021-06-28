@@ -506,8 +506,9 @@ trait ThreadTrait
             ThreadTopic::query()->where($attr)->firstOrCreate($attr);
 
             $html = sprintf('<span id="topic" value="%s">#%s#</span>', $topic->id, $topic->content);
-            $content['text'] = str_replace($topicItem, $html,$content['text']);
-
+            if (!strpos($content['text'],$html)){
+                $content['text'] = str_replace($topicItem, $html,$content['text']);
+            }
         }
         return $content;
     }
