@@ -52,6 +52,7 @@ class SmsBindController extends AuthBaseController
 
     public function main()
     {
+        $this->info('begin_sms_bind_process');
         $sms = (bool)$this->settings->get('qcloud_sms', 'qcloud');
         if (!$sms) {
             $this->outPut(ResponseCode::NONSUPPORT_MOBILE_REBIND);
@@ -70,6 +71,16 @@ class SmsBindController extends AuthBaseController
             $actor          = !empty($token->user) ? $token->user : $this->user;
 
             $actor = User::query()->lockForUpdate()->find($actor->id);
+
+            $this->info('get_token_with_session_token', [
+                'input'      => [
+                    'sessionToken' => $sessionToken
+                ],
+                'output'      => [
+                    'token'    => $token,
+                    'actor'    => $actor
+                ]
+            ]);
 
             if (empty($actor) || $actor->isGuest()) {
                 $this->connection->rollback();

@@ -67,6 +67,7 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
     }
     public function main()
     {
+        $this->info('begin_wechat_transition_auto_register_process');
         if(!(bool)$this->settings->get('is_need_transition')) {
             $this->outPut(ResponseCode::TRANSITION_NOT_OPEN);
         }
@@ -77,6 +78,14 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
             $this->outPut(ResponseCode::INVALID_PARAMETER,'sessionToken不能为空');
         }
         $token = SessionToken::get($sessionToken);
+        $this->info('get_token_with_session_token', [
+            'input'      => [
+                'sessionToken' => $sessionToken
+            ],
+            'output'      => [
+                'token'    => $token
+            ]
+        ]);
         if(! $token) {
             //授权信息过期，重新授权
             $this->outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
@@ -98,7 +107,10 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
                 ->where('id', $wxuser['user_wechat_id'])
                 ->lockForUpdate()
                 ->first();
-
+            $this->info('get_wxuser_with_wechat_id', [
+                'wxuser' => $wxuser,
+                'wechatUser'   => $wechatUser
+            ]);
     //        $wechatUser = UserWechat::query()->where('id',63)->first();
 
             if(! $wechatUser) {
@@ -120,6 +132,11 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
 
             $wechatUser->save();
             $this->db->commit();
+            $this->info('updated_wechat_user_and_user', [
+                'wechatUser'    =>  $wechatUser,
+                'user'          =>  $user
+            ]);
+
             // 判断是否开启了注册审核
     //        if (!(bool)$this->settings->get('register_validate')) {
     //            // Tag 发送通知 (在注册绑定微信后 发送注册微信通知)
@@ -138,9 +155,12 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
             );
 
             $accessToken = json_decode($response->getBody());
-
+            $this->info('generate_accessToken',[
+                'username'      =>  $wechatUser->user->username,
+                'userId'        =>  $wechatUser->user->id,
+                'accessToken'   =>  $accessToken,
+            ]);
             $result = $this->camelData(collect($accessToken));
-
             $result = $this->addUserInfo($wechatUser->user, $result);
 
             $this->outPut(ResponseCode::SUCCESS, '', $result);
