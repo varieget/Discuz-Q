@@ -40,6 +40,7 @@ class PermissionTableSeeder extends Seeder
 
         // 内容发布权限
         PermissionKey::CREATE_THREAD                => [10],    // 发布帖子
+        'switch.'.PermissionKey::CREATE_THREAD      => [10],    // 发布帖子-全局
         PermissionKey::THREAD_INSERT_IMAGE          => [10,6],  // 插入图片
 //        PermissionKey::THREAD_INSERT_VIDEO          => [],    // 插入视频
 //        PermissionKey::THREAD_INSERT_AUDIO          => [],    // 插入语音
