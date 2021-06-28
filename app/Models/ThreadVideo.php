@@ -166,7 +166,7 @@ class ThreadVideo extends DzqModel
         ];
     }
 
-    private function getMediaUrl($video)
+    public function getMediaUrl($video)
     {
         $settings = app(SettingsRepository::class);
         $mediaUrl = $video['media_url'];
