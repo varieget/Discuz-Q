@@ -102,7 +102,7 @@ trait ThreadTrait
             $concatString = $thread['title'] . $post['content'];
             list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($concatString);
             $result['title'] = str_replace($searches, $replaces, $result['title']);
-            $result['content']['text'] = str_replace($searches, $replaces, $result['content']['text']);
+//            $result['content']['text'] = str_replace($searches, $replaces, $result['content']['text']);
         }
         return $result;
     }
