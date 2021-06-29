@@ -223,11 +223,18 @@ abstract class AuthBaseController extends DzqController
     }
 
     public function getMiniWechatUser($jsCode, $iv, $encryptedData, $user = null){
-
         $app = $this->miniProgram();
         //获取小程序登陆session key
         $authSession = $app->auth->session($jsCode);
         if (isset($authSession['errcode']) && $authSession['errcode'] != 0) {
+            DzqLog::error('获取小程序用户失败', [
+                'jsCode'        => $jsCode,
+                'iv'            => $iv,
+                'encryptedData' => $encryptedData
+            ], [
+                'errmsg'    => $authSession['errmsg'],
+                'errcode'   => $authSession['errcode']
+            ]);
             $this->outPut(ResponseCode::INTERNAL_ERROR,
                           '获取小程序用户失败',
                           ['errmsg' => $authSession['errmsg'], 'errcode' => $authSession['errcode']]);
@@ -237,6 +244,16 @@ abstract class AuthBaseController extends DzqController
             $iv,
             $encryptedData
         );
+        $this->info('get_decryptedData', [
+            'input'      => [
+                'session_key'   => Arr::get($authSession, 'session_key'),
+                'iv'            => $iv,
+                'encryptedData' => $encryptedData
+            ],
+            'output'      => [
+                'decryptedData' => $decryptedData
+            ]
+        ]);
         $unionid        = Arr::get($decryptedData, 'unionId') ?: Arr::get($authSession, 'unionid', '');
         $openid         = Arr::get($decryptedData, 'openId') ?: Arr::get($authSession, 'openid');
 
@@ -245,11 +262,13 @@ abstract class AuthBaseController extends DzqController
         }
         if (! empty($unionid)) {
             if (!$this->requestLock($unionid)) {
+                $this->info('unionid_be_locked', ['unionid' =>  $unionid]);
                 $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
             }
         }
         if (! empty($openid)) {
             if (!$this->requestLock($openid)) {
+                $this->info('openid_be_locked', ['openid' =>  $openid]);
                 $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
             }
         }
@@ -262,9 +281,22 @@ abstract class AuthBaseController extends DzqController
             ->orWhere('min_openid', $openid)
             ->lockForUpdate()
             ->first();
+        $this->info('get_wxuser_with_openid_or_unionid', [
+            'input'      => [
+                'min_openid'    => $openid,
+                'unionid'       => $unionid
+            ],
+            'output'      => [
+                'wechatUser'    => $wechatUser,
+                'user'          => $user
+            ]
+        ]);
 
         if (!$wechatUser || !$wechatUser->exists) {
             $wechatUser = UserWechat::build([]);
+            $this->info('new_user_wechat', [
+                'wechatUser' =>  $wechatUser
+            ]);
         }
 
         //解密获取数据，更新/插入wechatUser
@@ -281,6 +313,17 @@ abstract class AuthBaseController extends DzqController
         $wechatUser->sex        = $decryptedData['gender'];
         $wechatUser->headimgurl = $decryptedData['avatarUrl'];
         $wechatUser->save();
+        $this->info('updated_wechat_user', [
+            'input'      => [
+                'min_openid'    => $openid,
+                'unionid'       => $unionid,
+                'decryptedData' => $decryptedData
+            ],
+            'output'      => [
+                'wechatUser'    => $wechatUser,
+                'user'          => $user
+            ]
+        ]);
 
         return $wechatUser;
     }

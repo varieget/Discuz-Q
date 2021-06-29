@@ -327,7 +327,10 @@ class ThreadListController extends DzqController
                 ->addSelect('post.content')
                 ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
                 ->whereNull('post.deleted_at')
-                ->where('post.content', 'like', '%' . $search . '%');
+                ->where(function ($threads) use ($search) {
+                    $threads->where('th.title', 'like', '%' . $search . '%');
+                    $threads->orWhere('post.content', 'like', '%' . $search . '%');
+                });
         }
         if (!empty($sort)) {
             switch ($sort) {
@@ -458,7 +461,7 @@ class ThreadListController extends DzqController
             ->from('threads as th')
             ->whereNull('th.deleted_at')
             ->whereNotNull('th.user_id')
-            ->where('th.is_sticky', Thread::BOOL_NO)
+//            ->where('th.is_sticky', Thread::BOOL_NO)
             ->where('th.is_draft', $isDraft)
             ->where('th.is_display', Thread::BOOL_YES)
             ->where('th.is_approved', Thread::BOOL_YES);

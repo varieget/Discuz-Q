@@ -345,7 +345,7 @@ class UpdateAdminUser
      */
     protected function changeStatus(User $user, bool $isSelf, array $attributes)
     {
-        if ($isSelf || ! Arr::has($attributes, 'status')) {
+        if ($isSelf || ! Arr::has($attributes, 'status') || ($user->status == Arr::get($attributes, 'status'))) {
             return;
         }
 

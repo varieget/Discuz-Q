@@ -65,6 +65,7 @@ class WechatH5BindController extends AuthBaseController
 
     public function main()
     {
+        $this->info('begin_wechat_h5_bind_process');
         try {
             $wxuser         = $this->getWxuser();
             $sessionToken   = $this->inPut('sessionToken');
@@ -79,6 +80,15 @@ class WechatH5BindController extends AuthBaseController
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'H5绑定获取wx用户接口异常');
         }
 
+        $this->info('get_token_with_session_token', [
+            'input'      => [
+                'sessionToken' => $sessionToken
+            ],
+            'output'      => [
+                'token'    => $token,
+                'user'     => $actor
+            ]
+        ]);
 
         if (empty($actor)) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
@@ -96,10 +106,20 @@ class WechatH5BindController extends AuthBaseController
                 ->orWhere('unionid', Arr::get($wxuser->getRaw(), 'unionid'))
                 ->lockForUpdate()
                 ->first();
+            $this->info('get_wxuser_with_openid_or_unionid', [
+                'input'      => [
+                    'mp_openid' => $wxuser->getId(),
+                    'unionid'   => Arr::get($wxuser->getRaw(), 'unionid')
+                ],
+                'output'      => [
+                    'wechatUser'    => $wechatUser
+                ]
+            ]);
 
             if (!$wechatUser || !$wechatUser->user) {
                 if (!$wechatUser) {
                     $wechatUser = new UserWechat();
+                    $this->info('new_user_wechat', ['wechatUser' =>  $wechatUser]);
                 }
 
                 $wechatUser->setRawAttributes($this->fixData($wxuser->getRaw(), $actor));
@@ -113,6 +133,10 @@ class WechatH5BindController extends AuthBaseController
                     $actor->save();
                 }
                 $this->db->commit();
+                $this->info('updated_wechat_user_and_user', [
+                    'wechatUser'    =>  $wechatUser,
+                    'user'          =>  $actor
+                ]);
 
                 // PC扫码使用
                 if (!empty($sessionToken) && $type == 'pc') {
@@ -122,7 +146,11 @@ class WechatH5BindController extends AuthBaseController
                         'headimgurl'    =>  $wechatUser['headimgurl']
                     ];
                     $this->bound->bindVoid($sessionToken, $wechatUser, $accessToken);
-
+                    $this->info('pc_scan_qr_code_bind', [
+                        'sessionToken'  =>  $sessionToken,
+                        'wechatUser'    =>  $wechatUser,
+                        'accessToken'   =>  $accessToken
+                    ]);
                 }
 
                 //用于用户名登录绑定微信使用

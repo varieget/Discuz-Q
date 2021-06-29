@@ -66,6 +66,7 @@ class WechatTransitionBindSmsController extends AuthBaseController
 
     public function main()
     {
+        $this->info('begin_wechat_transition_bind_sms_process');
         //过渡开关未打开
         if(!(bool)$this->settings->get('is_need_transition')) {
             $this->outPut(ResponseCode::TRANSITION_NOT_OPEN);
@@ -81,6 +82,10 @@ class WechatTransitionBindSmsController extends AuthBaseController
     //        $mobileCode = MobileCode::query()->where('id',12)->first();
             $inviteCode = $this->inPut('inviteCode');
             $sessionToken = $this->inPut('sessionToken');
+            $this->info('get_mobile_code', [
+                'mobileCode'        =>  $mobileCode,
+                'mobileCodeUser'    =>  $mobileCode->user
+            ]);
 
             //register new user
             if (is_null($mobileCode->user)) {
@@ -105,11 +110,13 @@ class WechatTransitionBindSmsController extends AuthBaseController
                 $mobileCode->setRelation('user', $user);
 
                 $this->updateUserBindType($mobileCode->user,AuthUtils::PHONE);
-                $this->updateUserBindType($mobileCode->user,AuthUtils::WECHAT);
             }
 
             //手机用户绑定微信操作
             $this->events->dispatch(new TransitionBind($mobileCode->user, ['sessionToken' => $sessionToken]));
+            $this->info('updated_user', [
+                'user'    =>  $mobileCode->user
+            ]);
 
             //手机号登录需要填写扩展字段审核的场景
             if($mobileCode->user->status != User::STATUS_MOD){
@@ -122,11 +129,16 @@ class WechatTransitionBindSmsController extends AuthBaseController
                 'username' => $mobileCode->user->username,
                 'password' => ''
             ];
-
+            GenJwtToken::setUid($mobileCode->user->id);
             $response = $this->bus->dispatch(
                 new GenJwtToken($params)
             );
             $accessToken = json_decode($response->getBody(), true);
+            $this->info('generate_accessToken',[
+                'username'      =>  $mobileCode->user->username,
+                'userId'        =>  $mobileCode->user->id,
+                'accessToken'   =>  $accessToken,
+            ]);
             $result = $this->camelData(collect($accessToken));
             $result = $this->addUserInfo($mobileCode->user, $result);
             $this->connection->commit();

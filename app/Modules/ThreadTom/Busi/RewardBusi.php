@@ -134,7 +134,7 @@ class RewardBusi extends TomBaseBusi
 //        }
 
         //如果该帖具有老订单了，并且本次请求的orderSn 与老订单的 order_sn 相同的话，则取出老 $threadReward 返回就好了
-        if($old_order->order_sn && $old_order->order_sn == $input['orderSn'] ){
+        if($old_order && $old_order->order_sn && $old_order->order_sn == $input['orderSn'] ){
             return $this->jsonReturn($threadReward);
         }
         if(!empty($input['orderSn'])){

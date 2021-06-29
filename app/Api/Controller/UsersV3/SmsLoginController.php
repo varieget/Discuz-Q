@@ -59,6 +59,7 @@ class SmsLoginController extends AuthBaseController
 
     public function main()
     {
+        $this->info('begin_sms_login_register_process');
         $this->connection->beginTransaction();
         try {
             $type       = $this->inPut('type');
@@ -98,6 +99,15 @@ class SmsLoginController extends AuthBaseController
                 $mobileCode->setRelation('user', $user);
 
                 $this->updateUserBindType($mobileCode->user, AuthUtils::PHONE);
+                $this->info('auto_registered_and_updated', [
+                    'input'      => [
+                        'data'         => $data
+                    ],
+                    'output'      => [
+                        'user'         => $user,
+                        'mobileCode'   => $mobileCode
+                    ]
+                ]);
             }
 
             //手机号登录需要填写扩展字段审核的场景
@@ -109,8 +119,12 @@ class SmsLoginController extends AuthBaseController
 
             $accessToken = $this->getAccessToken($mobileCode->user);
 
-            $result = $this->camelData(collect($accessToken));
+            $this->info('generate_accessToken',[
+                'user'          =>  $mobileCode->user,
+                'accessToken'   =>  $accessToken
+            ]);
 
+            $result = $this->camelData(collect($accessToken));
             $result = $this->addUserInfo($mobileCode->user, $result);
 
             if ($type == 'mobilebrowser_sms_login') {
@@ -129,8 +143,11 @@ class SmsLoginController extends AuthBaseController
                     $accessToken,
                     $mobileCode->user->id
                 );
-
                 $token->save();
+                $this->info('generate_token', [
+                    'token' => $token,
+                    'user'  => $mobileCode->user
+                ]);
                 if ($wechat || $miniWechat) { //开了微信，
                     //未绑定微信
                     $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($mobileCode->user->bind_type);

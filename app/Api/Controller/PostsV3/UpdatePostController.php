@@ -22,6 +22,7 @@ use App\Commands\Post\EditPost;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Post;
+use App\Models\PostUser;
 use App\Models\Thread;
 use App\Models\ThreadUser;
 use App\Models\User;
@@ -100,6 +101,16 @@ class UpdatePostController extends DzqController
         if (!empty($data['attributes']['content'])) {
             $content = $data['attributes']['content'];
         }
+
+        if(PostUser::query()->where('post_id',$postId)->where('user_id',$actor->id)->first()){
+            $isLiked = true;
+        }else{
+            $isLiked = false;
+        }
+        if(isset($data['attributes']['isLiked'])){
+            $isLiked = $data['attributes']['isLiked'];
+        }
+
         $build = [
             'pid' => $postId,
             'threadId' => $threadId,
@@ -110,7 +121,7 @@ class UpdatePostController extends DzqController
             'isFirst' => $post['is_first'],
             'isApproved' => $post['is_approved'],
             'updatedAt' => optional($post['updated_at'])->format('Y-m-d H:i:s'),
-            'isLiked' => $data['attributes']['isLiked'],
+            'isLiked' => $isLiked,
             'canLike' => $this->user->can('like', $post),
             'canFavorite' => (bool)$this->user->can('favorite', $post),
             'isFavorite' => $isFavorite,

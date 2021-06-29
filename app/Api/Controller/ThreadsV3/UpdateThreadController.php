@@ -107,16 +107,14 @@ class UpdateThreadController extends DzqController
             $content['text'] = $this->optimizeEmoji($content['text']);
             //处理@
             $content['text'] = $this->renderCall($content['text']);
-            //处理 #
-            $content['text'] = $this->renderTopic($content['text']);
         }
 
         //更新thread数据
         $this->saveThread($thread, $content);
+        //插入话题
+        $content = $this->saveTopic($thread, $content);
         //更新post数据
         $this->savePost($post, $content);
-        //插入话题
-        $this->saveTopic($thread, $content);
         //发帖@用户
         $this->sendRelated($thread, $post);
         //更新tom数据
@@ -211,7 +209,9 @@ class UpdateThreadController extends DzqController
     private function savePost($post, $content)
     {
         [$ip, $port] = $this->getIpPort();
-        $post->content = $content['text'];
+        if (isset($content['text'])) {
+            $post->content = $content['text'];
+        }
         $post->ip = $ip;
         $post->port = $port;
         $post->is_first = Post::FIRST_YES;

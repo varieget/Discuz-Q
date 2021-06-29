@@ -166,13 +166,13 @@ class ThreadVideo extends DzqModel
         ];
     }
 
-    private function getMediaUrl($video)
+    public function getMediaUrl($video)
     {
         $settings = app(SettingsRepository::class);
         $mediaUrl = $video['media_url'];
         $urlKey = $settings->get('qcloud_vod_url_key', 'qcloud');
         $urlExpire = (int)$settings->get('qcloud_vod_url_expire', 'qcloud');
-        if ($urlKey && $urlExpire && !empty($mediaUrl)) {
+        if ($urlKey  && !empty($mediaUrl)) {
             $currentTime = Carbon::now()->timestamp;
             $dir = Str::beforeLast(parse_url($mediaUrl)['path'], '/') . '/';
             $t = dechex($currentTime + $urlExpire);

@@ -131,7 +131,7 @@ class SendNotifyOfWalletChanges
                 case UserWalletLog::TYPE_REDPACKET_INCOME:
 
                     $thread = Thread::query()->where('id', $data['thread_id'])->first();
-                    $order = $thread->ordersByType(Order::ORDER_TYPE_REDPACKET, false);
+                    $order = $thread->orders()->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_MERGE])->first();
                     $build = [
                         'message' => $order->thread->getContentByType(Thread::CONTENT_LENGTH, true),
                         'raw' => array_merge(Arr::only($order->toArray(), ['id', 'thread_id', 'type']), [

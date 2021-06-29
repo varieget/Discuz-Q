@@ -29,6 +29,7 @@ use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Tobscure\JsonApi\Relationship;
+use Psr\Http\Message\ServerRequestInterface;
 
 class UserV2Serializer extends AbstractSerializer
 {
@@ -46,15 +47,18 @@ class UserV2Serializer extends AbstractSerializer
 
     protected $settings;
 
+    protected $request;
+
     /**
      * @param Gate $gate
      * @param UserFollowRepository $userFollow
      */
-    public function __construct(Gate $gate, UserFollowRepository $userFollow,SettingsRepository $settings)
+    public function __construct(Gate $gate, UserFollowRepository $userFollow,SettingsRepository $settings,ServerRequestInterface $request)
     {
         $this->gate = $gate;
         $this->userFollow = $userFollow;
         $this->settings = $settings;
+        $this->request = $request;
     }
 
     /**
@@ -180,6 +184,16 @@ class UserV2Serializer extends AbstractSerializer
                 'canEditUsername' => $canEditUsername
             ];
         }
+
+        $serverParams = $this->request->getServerParams();
+        if (strpos($serverParams['REQUEST_URI'], 'backAdmin') !== false) {
+            $attributes += [
+                'createdAt' => optional($model->created_at)->format('Y-m-d H:i:s'),
+                'registerIp'        => $model->register_ip,
+                'lastLoginIp'       => $model->last_login_ip
+            ];
+        }
+
         return $attributes;
     }
 
