@@ -81,7 +81,7 @@ class PayOrderController extends DzqController
                 new PayOrder($orderSn, $this->user, $data)
             );
         } catch (\Exception $e) {
-            $this->info('订单支付失败,订单id:' . $orderSn);
+            $this->info('订单支付失败,订单id:' . $orderSn, [$e->getTraceAsString()]);
             $this->outPut(ResponseCode::INTERNAL_ERROR, $e->getMessage());
         }
 
