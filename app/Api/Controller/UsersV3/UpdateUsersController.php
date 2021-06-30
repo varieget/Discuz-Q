@@ -122,6 +122,11 @@ class UpdateUsersController extends DzqController
             $this->dzqValidate($checkPayPassword, [
                 'pay_password' => 'bail|sometimes|required|confirmed|digits:6',
             ]);
+            if ($this->user->pay_password) {
+                if ($this->user->checkWalletPayPassword($checkPayPassword['pay_password'])) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER,'新密码与原密码不能相同');
+                }
+            }
         }
         if (!empty($payPasswordToken)) {
             $requestData['pay_password_token'] = $payPasswordToken;
