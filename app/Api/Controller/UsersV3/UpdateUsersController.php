@@ -111,6 +111,20 @@ class UpdateUsersController extends DzqController
             $this->dzqValidate($checkPassword, [
                 'password' => $this->getPasswordRules(),
             ]);
+
+            //密码强度格式判断
+            if ($this->getPasswordStrength()) {
+                collect($this->getPasswordStrength())->each(function ($regex) use (&$passwordRules) {
+                    $passwordRules[] = self::optionalPasswordStrengthRegex[$regex]['pattern'];
+                });
+                foreach (self::optionalPasswordStrengthRegex as $k=>$val){
+                    if(in_array($val['pattern'],$passwordRules)){
+                        if(!preg_match($val['pattern'], $checkPassword['password'])){
+                            $this->outPut(ResponseCode::INVALID_PARAMETER,'密码格式不正确,必须包含'.$val['name']);
+                        }
+                    }
+                }
+            }
         }
         if (!empty($payPassword)) {
             $requestData['payPassword'] = $payPassword;
@@ -181,15 +195,6 @@ class UpdateUsersController extends DzqController
             'min:' . $passwordLength,
             'confirmed'
         ];
-
-
-        // 密码强度
-        if ($this->getPasswordStrength()) {
-            collect($this->getPasswordStrength())->each(function ($regex) use (&$rules) {
-                $rules[] = 'regex:' . self::optionalPasswordStrengthRegex[$regex]['pattern'];
-            });
-        }
-
         return $rules;
     }
 
