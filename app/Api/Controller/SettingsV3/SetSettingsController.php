@@ -138,7 +138,7 @@ class SetSettingsController extends DzqController
         $validator = $settings->pluck('value', 'key')->all();
         $this->validator->valid($validator);
 
-        $settings->each(function ($setting) {
+        $settings->transform(function ($setting) {
             $key = Arr::get($setting, 'key');
             $value = Arr::get($setting, 'value');
             $tag = Arr::get($setting, 'tag', 'default');
@@ -147,7 +147,12 @@ class SetSettingsController extends DzqController
                     $value = json_encode($value, 256);
                 }
             }
+            if ($key == 'password_length' && (int)$value < 6) {
+                $value = "6"; // 修改数据库值
+                Arr::set($setting, 'value', "6"); // 修改返回集合中的值
+            }
             $this->settings->set($key, $value, $tag);
+            return $setting;
         });
         $action_desc = "";
         if (!empty($settings['cash_cash_interval_time']['key'])) {
