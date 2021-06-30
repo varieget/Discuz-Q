@@ -129,7 +129,7 @@ class CreateThreadController extends DzqController
         //插入post数据
         $post = $this->savePost($thread, $content);
         //发帖@用户
-        $this->sendRelated($thread, $post);
+        $this->sendNews($thread, $post);
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
         //更新帖子条数

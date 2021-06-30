@@ -20,6 +20,7 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
+use App\Traits\PostNoticesTrait;
 use Discuz\Base\DzqCache;
 use App\Formatter\Formatter;
 use App\Notifications\Related;
@@ -47,6 +48,7 @@ trait ThreadTrait
 {
     use TomTrait;
     use QcloudTrait;
+    use PostNoticesTrait;
 
     private $loginUserData = [];
 
@@ -514,46 +516,13 @@ trait ThreadTrait
     }
 
     //发帖@用户发送通知消息
-    private function sendRelated($thread, $post)
+    private function sendNews($thread, $post)
     {
         //如果是草稿或需要审核 不发送消息
         if ($thread->is_draft == Thread::IS_DRAFT || $thread->is_approved == Thread::UNAPPROVED || empty($post->parsedContent)) {
             return;
         }
-
-        preg_match_all('/<span.*>(.*)<\/span>/isU', $post->parsedContent, $newsNameArr);
-
-        $newsNameArr = $newsNameArr[1];
-
-        if (empty($newsNameArr)) {
-            return;
-        }
-
-        $newsNameArr2 = [];
-        foreach ($newsNameArr as $v) {
-            $string = trim(substr($v, 1));
-            if ($this->user->nickname != $string) {
-                $newsNameArr2[] = $string;
-            }
-        }
-
-        $users = User::query()->whereIn('username', $newsNameArr2)->get();
-
-        if (empty($users)) {
-            return;
-        }
-
-        $post->mentionUsers()->sync(array_column($users->toArray(), 'id'));
-
-        $users->load('deny');
-        $actor = $this->user;
-        $users->filter(function ($user) use ($post) {
-            //把作者拉黑的用户不发通知
-            return !in_array($post->user_id, array_column($user->deny->toArray(), 'id'));
-        })->each(function (User $user) use ($post, $actor) {
-            // Tag 发送通知
-            $user->notify(new Related($actor, $post));
-        });
+        $this->sendRelated($post, $this->user);
     }
 
     /*
