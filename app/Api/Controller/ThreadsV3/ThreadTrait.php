@@ -564,7 +564,7 @@ trait ThreadTrait
     private function optimizeEmoji($text)
     {
 //        $text = '<r>' . $text . '</r>';
-        preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
+        preg_match_all('/<img((?![<|>]).)*?emoji\/qq((?![<|>]).)*?>/i', $text, $m1);
         $searches = $m1[0];
         $replaces = [];
         foreach ($searches as $search) {
