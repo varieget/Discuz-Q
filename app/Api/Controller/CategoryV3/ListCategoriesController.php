@@ -51,7 +51,7 @@ class ListCategoriesController extends DzqController
 
         foreach ($categories as $category) {
             $category['canCreateThread'] = $this->userRepo->canCreateThread($this->user, $category['pid']);
-            $category['searchIds'] = (int)$category['pid'];
+            $category['searchIds'] = [(int)$category['pid']];
 
             // 二级子类集合
             if ($category['parentid'] !== 0) {
