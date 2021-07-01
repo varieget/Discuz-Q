@@ -40,7 +40,15 @@ class ExportStopWordsController extends DzqController
     public function main()
     {
         // 使用 LazyCollection
-        $stopWords = StopWord::cursor()->map(function ($stopWord) {
+        $query = StopWord::query();
+        $keyword = $this->inPut('keyword');
+        if (!empty($keyword)) {
+            $query = $query
+                ->when($keyword, function ($query, $keyword) {
+                    return $query->where('find', 'like', "%$keyword%");
+                });
+        }
+        $stopWords = $query->get()->map(function ($stopWord) {
             if ($stopWord->ugc == '{REPLACE}' && $stopWord->username == 'REPLACE') {
                 $replacement = $stopWord->replacement;
             } else {
