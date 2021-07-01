@@ -106,9 +106,7 @@ class CreateThreadVideo
         $threadVideo->type = $this->type;
         $threadVideo->file_id = $fileId;
         $threadVideo->file_name = Arr::get($attributes, 'file_name', $threadVideo->file_name ?? '');
-        $media_url = Arr::get($attributes, 'media_url', $threadVideo->media_url ?? '');
-        $media_url = !empty($media_url) ? (new ThreadVideo())->getMediaUrl(['media_url' => $media_url]) : '';
-        $threadVideo->media_url = $media_url;
+        $threadVideo->media_url = Arr::get($attributes, 'media_url', $threadVideo->media_url ?? '');
         $threadVideo->cover_url = Arr::get($attributes, 'cover_url', $threadVideo->cover_url ?? '');
 
         // 视频转码中，音频无需转码
@@ -119,6 +117,9 @@ class CreateThreadVideo
         }
 
         $threadVideo->save();
+
+        //添加防盗链
+        $threadVideo->media_url = (new ThreadVideo())->getMediaUrl(['media_url' => $threadVideo->media_url]);
 
         if ($threadVideo->type === ThreadVideo::TYPE_OF_VIDEO && $this->thread->exists  && empty($this->thread->is_draft)) {
             // 发布文章时，转码
