@@ -125,7 +125,7 @@ class WechatMiniProgramRebindController extends AuthBaseController
                 $this->outPut(ResponseCode::SUCCESS, '', []);
             } else {
                 $this->db->rollBack();
-                $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
+                $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND, '微信号已绑定其他账户');
             }
         } catch (Exception $e) {
             DzqLog::error('小程序参数换绑接口异常', [
