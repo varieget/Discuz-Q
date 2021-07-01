@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
 use App\Notifications\ReceiveRedPacket;
+use Discuz\Base\DzqLog;
 use Discuz\Console\AbstractCommand;
 use Discuz\Foundation\Application;
 use Carbon\Carbon;
@@ -228,7 +229,7 @@ class RedPacketExpireCommand extends AbstractCommand
                 $item->save();
                 $this->connection->commit();
             } catch (Exception $e) {
-                $this->outDebugInfo($this->info .'处理失败' . $e->getMessage());
+                DzqLog::error('redPacket_expire_refund_failure', [], $e->getMessage());
                 $this->connection->rollback();
             }
 

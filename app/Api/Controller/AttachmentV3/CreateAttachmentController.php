@@ -33,6 +33,7 @@ use App\Validators\AttachmentValidator;
 use Discuz\Base\DzqController;
 use Discuz\Base\DzqLog;
 use Discuz\Foundation\EventsDispatchTrait;
+use Discuz\Wechat\EasyWechatTrait;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
 use Illuminate\Http\UploadedFile;
@@ -41,6 +42,8 @@ use Illuminate\Http\UploadedFile;
 class CreateAttachmentController extends DzqController
 {
     use EventsDispatchTrait;
+
+    use EasyWechatTrait;
 
     protected $events;
 
@@ -101,29 +104,61 @@ class CreateAttachmentController extends DzqController
         $dialogMessageId = (int) Arr::get($this->request->getParsedBody(), 'dialogMessageId', 0);
         $order = (int) Arr::get($this->request->getParsedBody(), 'order', 0);
         $ipAddress = ip($this->request->getServerParams());
+        $mediaId = Arr::get($this->request->getParsedBody(), 'mediaId', '');
+
         ini_set('memory_limit',-1);
 
-        $ext = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
-        $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
-        $tmpFileWithExt = $tmpFile . ($ext ? ".$ext" : '');
+        if (!empty($mediaId)) {
+            $app = $this->offiaccount();
+            $mediaFile = $app->media->get($mediaId);
+            if ($mediaFile instanceof \EasyWeChat\Kernel\Http\StreamResponse) {
+                $file = $mediaFile->save(storage_path('/tmp'));
+                $fileName = basename($file);
+                $ext = pathinfo($file, PATHINFO_EXTENSION);
+                $tmpFileWithExt = storage_path('/tmp') .'/' . $fileName;
+                $imageSize = getimagesize($tmpFileWithExt);
+                $fileType = $imageSize['mime'];
+                $fileSize = filesize($tmpFileWithExt);
+            }
+        } else {
+            $fileName = $file->getClientFilename();
+            $fileSize = $file->getSize();
+            $fileType = $file->getClientMediaType();
+            $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+            $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
+            $tmpFileWithExt = $tmpFile . ($ext ? ".$ext" : '');
+        }
 
-        // 上传临时目录之前验证
+        //上传临时目录之前验证
         $this->validator->valid([
             'type' => $type,
             'file' => $file,
-            'size' => $file->getSize(),
+            'size' => $fileSize,
             'ext' => strtolower($ext),
         ]);
-        $file->moveTo($tmpFileWithExt);
+        // 从微信下载的文件不需要再移动
+        if (!$mediaId)  {
+            $file->moveTo($tmpFileWithExt);
+        }
 
         try {
-            $file = new UploadedFile(
-                $tmpFileWithExt,
-                $file->getClientFilename(),
-                $file->getClientMediaType(),
-                $file->getError(),
-                true
-            );
+            if (!$mediaId)  {
+                $file = new UploadedFile(
+                    $tmpFileWithExt,
+                    $fileName,
+                    $fileType,
+                    $file->getError(),
+                    true
+                );
+            } else {
+                $file = new UploadedFile(
+                    $tmpFileWithExt,
+                    $fileName,
+                    $fileType,
+                    null,
+                    true
+                );
+            }
 
             if(strtolower($ext) != 'gif'){
                 $this->events->dispatch(
