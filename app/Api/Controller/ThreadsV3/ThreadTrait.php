@@ -486,6 +486,7 @@ trait ThreadTrait
         $threadId = $thread['id'];
         $topics = $this->optimizeTopics($content['text']);
         $userId = $this->user->id;
+        $topicIds = [];
         foreach ($topics as $topicItem) {
             $topicName = str_replace('#', '', $topicItem);
 
@@ -504,6 +505,7 @@ trait ThreadTrait
                 $topic->increment('thread_count');
             }
             $topicId = $topic->id;
+            $topicIds[] = $topicId;
             $attr = ['thread_id' => $threadId, 'topic_id' => $topicId];
             ThreadTopic::query()->where($attr)->firstOrCreate($attr);
 
@@ -512,6 +514,13 @@ trait ThreadTrait
                 $content['text'] = str_replace($topicItem, $html,$content['text']);
             }
         }
+
+        if (empty($topicIds)) {
+            ThreadTopic::query()->where('thread_id', $threadId)->delete();
+        } else {
+            ThreadTopic::query()->where('thread_id', $threadId)->whereNotIn('topic_id', $topicIds)->delete();
+        }
+
         return $content;
     }
 
