@@ -228,8 +228,7 @@ class UpdateClientUser
             return $validate;
         }
         // 敏感词校验
-        $this->censor->checkText($nickname);
-
+        $this->censor->checkText($nickname,'nickname');
         if ($this->censor->isMod) {
             throw new TranslatorException(trans('user.user_nickname_censor_error'));
         }
