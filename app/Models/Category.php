@@ -144,6 +144,7 @@ class Category extends DzqModel
             ->whereIn('category_id', $category_ids)
             ->whereNull('deleted_at')
             ->whereNotNull('user_id')
+            ->where('is_display', Thread::BOOL_YES)
             ->count();
 
         $categoryDetail = Category::query()->where('id', $this->id)->first();
@@ -156,6 +157,7 @@ class Category extends DzqModel
                 ->whereIn('category_id', $father_category_ids)
                 ->whereNull('deleted_at')
                 ->whereNotNull('user_id')
+                ->where('is_display', Thread::BOOL_YES)
                 ->count();
             $categoryFatherDetail->save();
         }
@@ -176,6 +178,7 @@ class Category extends DzqModel
             ->whereIn('category_id', $category_ids)
             ->whereNull('deleted_at')
             ->whereNotNull('user_id')
+            ->where('is_display', Thread::BOOL_YES)
             ->count();
         $categoryDetail->save();
         if ($categoryDetail->parentid !== 0) {
@@ -187,6 +190,7 @@ class Category extends DzqModel
                 ->whereIn('category_id', $father_category_ids)
                 ->whereNull('deleted_at')
                 ->whereNotNull('user_id')
+                ->where('is_display', Thread::BOOL_YES)
                 ->count();
             $categoryFatherDetail->save();
         }
