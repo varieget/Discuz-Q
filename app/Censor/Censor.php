@@ -132,7 +132,7 @@ class Censor
         }
 
         if ($this->isMod && ($type == 'signature' || $type == 'dialog')) {
-            throw new CensorNotPassedException('content_banned');
+            throw new CensorNotPassedException('内容含敏感词');
         }
 
         // Delete repeated words
@@ -203,7 +203,7 @@ class Censor
 
                             $this->isMod = true;
                         } elseif ($word->{$type} === StopWord::BANNED) {
-                            throw new CensorNotPassedException('content_banned');
+                            throw new CensorNotPassedException('内容含敏感词');
                         }
                     }
                 }

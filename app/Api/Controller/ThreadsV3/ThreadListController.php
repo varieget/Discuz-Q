@@ -307,9 +307,11 @@ class ThreadListController extends DzqController
                     break;
                 case Thread::MY_OR_HIS_THREAD:
                     if (!empty($filter['toUserId'])) {
+                        if ($filter['toUserId'] == $loginUserId) {
+                            $threads = $this->getBaseThreadsBuilder(Thread::BOOL_NO, false);
+                        }
                         $threads = $threads->where('th.is_anonymous', Thread::IS_NOT_ANONYMOUS);
                     }
-
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
                     $threads = $threads->where('user_id', $userId)
                         ->orderByDesc('th.id');
@@ -335,7 +337,7 @@ class ThreadListController extends DzqController
         if (!empty($sort)) {
             switch ($sort) {
                 case Thread::SORT_BY_THREAD://按照发帖时间排序
-                    $threads->orderByDesc('th.id');
+                    $threads->orderByDesc('th.created_at');
                     break;
                 case Thread::SORT_BY_POST://按照评论时间排序
                     $threads->orderByDesc('th.posted_at');
@@ -454,17 +456,19 @@ class ThreadListController extends DzqController
         return $query;
     }
 
-    private function getBaseThreadsBuilder($isDraft = Thread::BOOL_NO)
+    private function getBaseThreadsBuilder($isDraft = Thread::BOOL_NO,$filterApprove = true)
     {
-        return Thread::query()
+        $threads =  Thread::query()
             ->select('th.*')
             ->from('threads as th')
             ->whereNull('th.deleted_at')
             ->whereNotNull('th.user_id')
-//            ->where('th.is_sticky', Thread::BOOL_NO)
             ->where('th.is_draft', $isDraft)
-            ->where('th.is_display', Thread::BOOL_YES)
-            ->where('th.is_approved', Thread::BOOL_YES);
+            ->where('th.is_display', Thread::BOOL_YES);
+        if($filterApprove){
+            $threads->where('th.is_approved', Thread::BOOL_YES);
+        }
+        return $threads;
     }
 
     private function cacheKey($filter)

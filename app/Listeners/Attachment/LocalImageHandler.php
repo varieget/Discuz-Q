@@ -69,7 +69,7 @@ class LocalImageHandler
         // 缩略图及高斯模糊图存储路径
         $thumbPath = Str::replaceLast($image->filename, $image->filename . '_thumb', $image->basePath());
         $blurPath = Str::replaceLast($image->filename, md5($image->filename) . '_blur', $image->basePath());
-
+        $blurFilename = md5($image->filename);
         // 生成缩略图
         $image->resize(Attachment::FIX_WIDTH, Attachment::FIX_WIDTH, function ($constraint) {
             $constraint->aspectRatio();     // 保持纵横比
@@ -79,7 +79,7 @@ class LocalImageHandler
         $ext = $image->extension;
         if(in_array($ext,['jpeg','jpg','png','gif'])){
             $saveBlurPath = storage_path('app/' . $uploader->getPath());
-            $saveBlurName = md5($image->filename) . '_blur.'.$image->extension;
+            $saveBlurName = $blurFilename. '_blur.'.$image->extension;
             $this->images->gaussianBlur($image->basePath(),$saveBlurPath,$saveBlurName,3);
         }else{
             // 生成模糊图

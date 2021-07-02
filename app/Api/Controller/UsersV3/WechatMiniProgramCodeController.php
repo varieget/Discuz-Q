@@ -62,7 +62,7 @@ class WechatMiniProgramCodeController extends DzqController
         $colorG = $this->inPut("g");
         $colorB = $this->inPut("b");
         if(empty($path)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '跳转小程序路由路径不能为空');
         }
 
         $paramData = [

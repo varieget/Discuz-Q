@@ -78,7 +78,7 @@ class UploadBackgroundController extends DzqController
         $result = [
             'id' => $result->id,
             'username' => $result->username,
-            'backgroundUrl' => $result->background."?".time(),
+            'backgroundUrl' => $result->background,
             'updatedAt' => optional($result->updated_at)->format('Y-m-d H:i:s'),
             'createdAt' => optional($result->created_at)->format('Y-m-d H:i:s'),
         ];

@@ -150,6 +150,12 @@ class SmsSendController extends AuthBaseController
 
             $mobileCode = $this->mobileCodeRepository->getSmsCode($data['mobile'], $type);
 
+            // 验证码限频
+            if (! empty($mobileCode->updated_at) && strtotime($mobileCode->updated_at) > (time() - 60)) {
+                $second =  strtotime($mobileCode->updated_at) - time() + 60;
+                $this->outPut(ResponseCode::RESOURCE_EXIST, '请在'.$second.'秒后重新发送验证码');
+            }
+
             if (!is_null($mobileCode) && $mobileCode->exists) {
                 $mobileCode = $mobileCode->refrecode(self::CODE_EXCEPTION, $ip);
             } else {
