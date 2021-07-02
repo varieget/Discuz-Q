@@ -56,6 +56,10 @@ class Setting extends DzqModel
 
     public static $encrypt;
 
+    const DIGIEAL = 0; //密码类型必须有数字
+    const LOWER_CASE_LETTERS = 1; //密码类型必须有小写字母
+    const SYMBOL = 2; //密码类型必须有符号
+    const UPPERCASE_LETTER = 3; //密码类型必须有大写字母
     /**
      * 开启云服务有关联动选项
      * @var array
