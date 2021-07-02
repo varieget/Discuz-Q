@@ -81,4 +81,8 @@ return [
 
     // notice message
     'template_app_id_secret_not_found' => '模板ID、appID、secret 未找到',
+
+    // qcloud_captcha
+    'qcloud_captcha_app_id_cannot_be_empty' => '验证码 App Id 不能为空。',
+    'aqcloud_captcha_secret_key_cannot_be_empty' => '验证码 App Secret 不能为空。',
 ];
