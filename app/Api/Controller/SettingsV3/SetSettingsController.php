@@ -23,6 +23,7 @@ use App\Common\ResponseCode;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
 use App\Models\AdminActionLog;
+use App\Models\Setting;
 use App\Repositories\UserRepository;
 use App\Validators\SetSettingValidator;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -136,6 +137,13 @@ class SetSettingsController extends DzqController
          * @see SetSettingValidator
          */
         $validator = $settings->pluck('value', 'key')->all();
+        $keys = array_keys($validator);
+        $vals = array_values($validator);
+        if(!empty($keys[0]) && in_array($keys[0],Setting::$linkage) && !empty((int)$vals[0])){
+            if(!$this->settings->get('qcloud_close','qcloud')){
+                $this->outPut(ResponseCode::INVALID_PARAMETER,'请先开启云API');
+            }
+        }
         $this->validator->valid($validator);
 
         $settings->transform(function ($setting) {
