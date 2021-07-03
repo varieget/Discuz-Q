@@ -68,8 +68,10 @@ trait ThreadTrait
             'postId' => $post['id'],
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
+            'parentCategoryId' => $this->getParentCategory($thread['category_id'])['parentCategoryId'],
             'topicId' => $thread['topic_id'] ?? 0,
             'categoryName' => $this->getCategoryNameField($thread['category_id']),
+            'parentCategoryName' => $this->getParentCategory($thread['category_id'])['parentCategoryName'],
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
             'isApproved' => $thread['is_approved'],
@@ -197,6 +199,18 @@ trait ThreadTrait
         $categories = Category::getCategories();
         $categories = array_column($categories, null, 'id');
         return $categories[$categoryId]['name'] ?? null;
+    }
+
+    private function getParentCategory($categoryId)
+    {
+        $categories = Category::getCategories();
+        $categories = array_column($categories, null, 'id');
+        $parentCategoryId   = !empty($categories[$categoryId]['parentid']) ? $categories[$categoryId]['parentid'] : 0;
+        $parentCategoryName = ! empty($parentCategoryId) ? $categories[$parentCategoryId]['name'] : '';
+        return [
+            'parentCategoryId'      => $parentCategoryId,
+            'parentCategoryName'    => $parentCategoryName
+        ];
     }
 
     /**
