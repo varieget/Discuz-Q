@@ -18,6 +18,7 @@
 namespace App\Api\Controller\AdminV3;
 
 use App\Common\CacheKey;
+use App\Events\Post\Saved;
 use App\Models\AdminActionLog;
 use App\Models\Category;
 use App\Models\Post;
@@ -31,13 +32,16 @@ use App\Repositories\UserRepository;
 use App\Models\Thread;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;;
+use Discuz\Base\DzqController;
+use Discuz\Foundation\EventsDispatchTrait;
+use Illuminate\Contracts\Events\Dispatcher;
 
 class ManageSubmitReview extends DzqController
 {
 
     use ThreadNoticesTrait;
     use PostNoticesTrait;
+    use EventsDispatchTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -310,6 +314,8 @@ class ManageSubmitReview extends DzqController
         }
 
         $actor = User::query()->where('id',$post->user_id)->first();
+        //领取红包
+        $this->redPackets($post,$actor);
         $newsNameArr = $this->sendContentHandle($post, $actor);
         if (empty($newsNameArr)){
             return;
@@ -364,6 +370,33 @@ class ManageSubmitReview extends DzqController
             'ip' => ip($this->request->getServerParams()),
             'created_at' => Carbon::now()
         ];
+    }
+    //审核领取红包
+    public function redPackets($post,$actor){
+        $this->events = app()->make(Dispatcher::class);
+        $data = [
+            'type' => 'posts',
+            'relationships' => [
+                'thread' => [
+                    'data' => [
+                        'type' => 'threads',
+                        'id' => $post->thread_id
+                    ]
+                ]
+            ],
+            'attributes' => [
+                'content' => $post->parsedContent,
+                'isComment' => $post->is_comment,
+                'replyId' => $post->id,
+                'replyUserId' => $post->reply_post_id,
+                'commentUserId' => $post->comment_user_id
+            ]
+        ];
+        $post->raise(new Saved($post, $actor, $data));
+
+        // TODO: 通知相关用户，在给定的整个持续时间内，每位用户只能收到一个通知
+        // $this->notifications->onePerUser(function () use ($post, $actor) {
+        $this->dispatchEventsFor($post, $actor);
     }
 
 }
