@@ -45,7 +45,7 @@ class RewardBusi extends TomBaseBusi
 
 
         if(strtotime($input['expiredAt']) < time()+24*60*60){
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '悬赏时间应超过当前时间24小时');
         }
         $thread = Thread::query()->find($this->threadId);
         if(empty($thread->is_draft)){       //已发布的帖子，不允许在增加悬赏tom

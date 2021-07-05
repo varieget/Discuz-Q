@@ -116,7 +116,7 @@ class UpdateThreadController extends DzqController
         //更新post数据
         $this->savePost($post, $content);
         //发帖@用户
-        $this->sendRelated($thread, $post);
+        $this->sendNews($thread, $post);
         //更新tom数据
         $tomJsons = $this->saveThreadTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);

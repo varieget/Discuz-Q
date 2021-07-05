@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
 use App\Notifications\ReceiveRedPacket;
+use Discuz\Base\DzqLog;
 use Discuz\Console\AbstractCommand;
 use Discuz\Foundation\Application;
 use Carbon\Carbon;
@@ -211,8 +212,13 @@ class RedPacketExpireCommand extends AbstractCommand
                 if (empty($user)) {
                     app('log')->info('发送红包过期通知失败：红包帖(ID为' . $item->thread_id . ')，作者(ID为' . $item->user_id . ')。异常错误记录：作者信息不存在，无法发送通知');
                 } else {
+                    if (empty($order->thread)) {
+                        $message = '红包帖已过期且已被删除，返回剩余冻结金额';
+                    } else {
+                        $message = $order->thread->getContentByType(Thread::CONTENT_LENGTH, true);
+                    }
                     $build = [
-                        'message' => $order->thread->getContentByType(Thread::CONTENT_LENGTH, true),
+                        'message' => $message,
                         'raw' => array_merge(Arr::only($order->toArray(), ['id', 'thread_id', 'type']), [
                             'actor_username' => $user->username,   // 发送人姓名
                             'actual_amount' => $remainMoney,     // 获取作者实际金额
@@ -228,7 +234,7 @@ class RedPacketExpireCommand extends AbstractCommand
                 $item->save();
                 $this->connection->commit();
             } catch (Exception $e) {
-                $this->outDebugInfo($this->info .'处理失败' . $e->getMessage());
+                DzqLog::error('redPacket_expire_refund_failure', [], $e->getMessage());
                 $this->connection->rollback();
             }
 

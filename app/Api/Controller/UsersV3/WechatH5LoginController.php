@@ -190,7 +190,7 @@ class WechatH5LoginController extends AuthBaseController
                         'wechatUser'    =>  $wechatUser
                     ]);
                     $this->db->rollBack();
-                    $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
+                    $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND, '登录用户与微信所绑定用户不一致');
                 }
 
                 // 登陆用户和微信绑定相同，更新微信信息

@@ -18,10 +18,13 @@
 namespace App\Api\Controller\AdminV3;
 
 use App\Common\CacheKey;
+use App\Events\Post\Saved;
 use App\Models\AdminActionLog;
 use App\Models\Category;
 use App\Models\Post;
+use App\Models\User;
 use App\Models\UserActionLogs;
+use App\Notifications\Related;
 use App\Traits\ThreadNoticesTrait;
 use App\Traits\PostNoticesTrait;
 use App\Common\ResponseCode;
@@ -29,13 +32,16 @@ use App\Repositories\UserRepository;
 use App\Models\Thread;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;;
+use Discuz\Base\DzqController;
+use Discuz\Foundation\EventsDispatchTrait;
+use Illuminate\Contracts\Events\Dispatcher;
 
 class ManageSubmitReview extends DzqController
 {
 
     use ThreadNoticesTrait;
     use PostNoticesTrait;
+    use EventsDispatchTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -99,16 +105,19 @@ class ManageSubmitReview extends DzqController
             //审核主题
             if (empty($v->deleted_at) && in_array($arr[$v->id]['isApproved'], [1, 2]) && $v->is_approved != $arr[$v->id]['isApproved']) {
 
+                $v->is_approved = $arr[$v->id]['isApproved'];
+                $v->save();
+
                 if ($arr[$v->id]['isApproved'] == 1) {
                     $action_desc = $threadTitle.',通过审核';
                     //统计分类主题数+1
-                    Category::query()->where('id',$v->thread_id)->increment('thread_count');
+                    Category::refreshThreadCountV3($v->category_id);
+                    //发送@用户消息
+                    $threadIds[] = $v->id;
                 } else {
                     $action_desc = $threadTitle.',被忽略';
                 }
 
-                $v->is_approved = $arr[$v->id]['isApproved'];
-                $v->save();
 
                 $logArr[] = $this->logs('用户主题帖'. $action_desc);
                 //删除主题
@@ -129,7 +138,7 @@ class ManageSubmitReview extends DzqController
                         UserActionLogs::writeLog($user, $v, 'hide', $arr[$v->id]['message'] ?? '');
 
                         //统计分类主题数-1
-                        Category::query()->where('id',$v->category_id)->decrement('thread_count');
+                        Category::refreshThreadCountV3($v->category_id);
 
                         $logArr[] = $this->logs('软删除用户主题帖'. $threadTitle);
 
@@ -154,7 +163,7 @@ class ManageSubmitReview extends DzqController
                     UserActionLogs::writeLog($user, $v, 'restore', $arr[$v->id]['message'] ?? '');
 
                     //统计分类主题数+1
-                    Category::query()->where('id',$v->thread_id)->increment('thread_count');
+                    Category::refreshThreadCountV3($v->category_id);
 
                     $logArr[] = $this->logs('还原用户主题帖'. $threadTitle);
                 }
@@ -164,6 +173,10 @@ class ManageSubmitReview extends DzqController
         //处理真删除
         if (isset($deleteThreads)) {
             Thread::query()->whereIn('id',$deleteThreads)->delete();
+        }
+
+        if (isset($threadIds)) {
+            $this->threadsSendMiddleware($threadIds);
         }
 
         CacheKey::delListCache();
@@ -191,16 +204,20 @@ class ManageSubmitReview extends DzqController
             //审核回复
             if (empty($v->deleted_at) && in_array($arr[$v->id]['isApproved'], [1, 2]) && $v->is_approved != $arr[$v->id]['isApproved']) {
 
+                $v->is_approved = $arr[$v->id]['isApproved'];
+                $v->save();
+
                 if ($arr[$v->id]['isApproved']==1) {
                     $action_desc = $threadContent.',通过审核';
                     //统计帖子评论数+1
-                    Thread::query()->where('id',$v->thread_id)->increment('post_count');
+                    $v->thread->refreshPostCount();
+                    $v->thread->save();
+                    //发送@用户短信信息
+                    $this->postSendMiddleware($v);
+
                 } else {
                     $action_desc = $threadContent.',被忽略';
                 }
-
-                $v->is_approved = $arr[$v->id]['isApproved'];
-                $v->save();
 
                 $logArr[] = $this->logs('用户回复评论'. $action_desc);
 
@@ -222,7 +239,8 @@ class ManageSubmitReview extends DzqController
                         UserActionLogs::writeLog($user, $v, 'hide', $arr[$v->id]['message'] ?? '');
 
                         //统计帖子评论数-1
-                        Thread::query()->where('id',$v->thread_id)->decrement('post_count');
+                        $v->thread->refreshPostCount();
+                        $v->thread->save();
 
                         $logArr[] = $this->logs('软删除用户回复评论'. $threadContent);
                         //真删除
@@ -246,7 +264,8 @@ class ManageSubmitReview extends DzqController
                     UserActionLogs::writeLog($user, $v, 'restore', $arr[$v->id]['message'] ?? '');
 
                     //统计帖子评论数+1
-                    Thread::query()->where('id',$v->thread_id)->increment('post_count');
+                    $v->thread->refreshPostCount();
+                    $v->thread->save();
 
                     $logArr[] = $this->logs('还原用户回复评论'. $threadContent);
 
@@ -262,6 +281,88 @@ class ManageSubmitReview extends DzqController
         return $logArr;
     }
 
+    //发帖发帖@用户判断处理
+    public function threadsSendMiddleware($threadIds){
+        $posts = Post::query()
+            ->whereIn('thread_id',$threadIds)
+            ->where('is_first',true)
+            ->get();
+
+        foreach ($posts as $key=>$post) {
+            if (empty($post->parsedContent)) {
+                continue;
+            }
+
+            $actor = User::query()->where('id',$post->user_id)->first();
+            $newsNameArr = $this->sendContentHandle($post, $actor);
+            if (empty($newsNameArr)){
+                continue;
+            }
+
+            $users = User::query()->whereIn('username', $newsNameArr)->get();
+            if (empty($users)) {
+                continue;
+            }
+            $this->sendRelated($post, $actor, $users);
+        }
+    }
+
+    //评论发帖@用户判断处理
+    public function postSendMiddleware($post){
+        if (empty($post->parsedContent)) {
+            return;
+        }
+
+        $actor = User::query()->where('id',$post->user_id)->first();
+        //领取红包
+        $this->redPackets($post,$actor);
+        $newsNameArr = $this->sendContentHandle($post, $actor);
+        if (empty($newsNameArr)){
+            return;
+        }
+
+        $users = User::query()->whereIn('username', $newsNameArr)->get();
+        if (empty($users)) {
+            return;
+        }
+
+        $this->sendRelated($post, $actor, $users);
+    }
+
+    //发送@内容处理
+    private function sendContentHandle($post ,$actor){
+        preg_match_all('/<span.*>(.*)<\/span>/isU', $post->parsedContent, $newsNameArr);
+
+        $newsNameArr = $newsNameArr[1];
+        if (empty($newsNameArr)) {
+            return;
+        }
+
+        $newsNameArr2 = [];
+        foreach ($newsNameArr as $v) {
+            $string = trim(substr($v, 1));
+            if ($actor->nickname != $string) {
+                $newsNameArr2[] = $string;
+            }
+        }
+        return $newsNameArr2;
+    }
+
+    //发帖@用户发送通知消息
+    private function sendRelated($post, $actor, $users)
+    {
+        $post->mentionUsers()->sync(array_column($users->toArray(), 'id'));
+
+        $users->load('deny');
+        $users->filter(function ($user) use ($post) {
+            //把作者拉黑的用户不发通知
+            return !in_array($post->user_id, array_column($user->deny->toArray(), 'id'));
+        })->each(function (User $user) use ($post, $actor) {
+            // Tag 发送通知
+            $user->notify(new Related($actor, $post));
+        });
+    }
+
     public function logs($actionDesc){
         return [
             'user_id' => $this->user->id,
@@ -269,6 +370,33 @@ class ManageSubmitReview extends DzqController
             'ip' => ip($this->request->getServerParams()),
             'created_at' => Carbon::now()
         ];
+    }
+    //审核领取红包
+    public function redPackets($post,$actor){
+        $this->events = app()->make(Dispatcher::class);
+        $data = [
+            'type' => 'posts',
+            'relationships' => [
+                'thread' => [
+                    'data' => [
+                        'type' => 'threads',
+                        'id' => $post->thread_id
+                    ]
+                ]
+            ],
+            'attributes' => [
+                'content' => $post->parsedContent,
+                'isComment' => $post->is_comment,
+                'replyId' => $post->id,
+                'replyUserId' => $post->reply_post_id,
+                'commentUserId' => $post->comment_user_id
+            ]
+        ];
+        $post->raise(new Saved($post, $actor, $data));
+
+        // TODO: 通知相关用户，在给定的整个持续时间内，每位用户只能收到一个通知
+        // $this->notifications->onePerUser(function () use ($post, $actor) {
+        $this->dispatchEventsFor($post, $actor);
     }
 
 }

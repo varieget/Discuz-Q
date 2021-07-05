@@ -81,7 +81,7 @@ class TransitionBindListener
                 'user'      => $user,
                 'wechat'    => $user->wechat
             ], DzqLog::LOG_LOGIN);
-            \Discuz\Common\Utils::outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND);
+            \Discuz\Common\Utils::outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND, '用户已绑定微信不可再次绑定');
         }
         $sessionToken = SessionToken::get($event->data['sessionToken']);
         DzqLog::info('get_session_token', ['sessionToken' => $sessionToken], DzqLog::LOG_LOGIN);

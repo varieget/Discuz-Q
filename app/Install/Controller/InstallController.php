@@ -110,6 +110,8 @@ class InstallController implements RequestHandlerInterface
             $token = $this->installAutoLogin($input);
             //上报
             $this->cloudReport($input);
+            //写入当前版本号
+            self::save_current_version('.oldversion');
             //安装成功
             touch($this->app->storagePath().'/install.lock');
         } catch (Exception $e) {
@@ -304,5 +306,32 @@ class InstallController implements RequestHandlerInterface
     {
         $configFile = $this->app->basePath('config/config.php');
         file_exists($configFile) && unlink($configFile);
+    }
+
+    public function save_current_version($file_name)
+    {
+        $version = self::extract_version_from_source();
+        if ($version) {
+            file_put_contents(__DIR__ . '/../../../public/' . $file_name, $version);
+        }
+    }
+
+    public function extract_version_from_source()
+    {
+        $dir = __DIR__;
+        $appfile = $dir . "/../../../framework/src/Foundation/Application.php";
+        if (!file_exists($appfile)) {
+            $appfile = $dir . "/../../../vendor/discuz/core/src/Foundation/Application.php";
+            if (!file_exists($appfile)) {
+                return false;
+            }
+        }
+        $content = file_get_contents($appfile);
+        $match = NULL;
+        preg_match("/const VERSION = '(.*)';$/m", $content, $match);
+        if ($match) {
+            return $match[1];
+        }
+        return false;
     }
 }

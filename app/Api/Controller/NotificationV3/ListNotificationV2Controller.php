@@ -2,7 +2,6 @@
 
 namespace App\Api\Controller\NotificationV3;
 
-use App\Api\Controller\ThreadsV3\ThreadHelper;
 use App\Common\ResponseCode;
 use App\Common\Utils;
 use App\Models\Thread;
@@ -196,27 +195,19 @@ class ListNotificationV2Controller extends DzqController
             'createdAt' => optional($data->created_at)->format('Y-m-d H:i:s'),
         ], Utils::arrayKeysToCamel($data->data));
 
-        if(!empty($result['postContent'])){
-            $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['postContent']);
-            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
-            $result['postContent'] = Str::substr(strip_tags(str_replace($searches, $replaces, $content)),0,Thread::NOTICE_CONTENT_LENGTH);
+        if(!empty($result['postContent']) && mb_strlen($result['postContent']) > Thread::NOTICE_CONTENT_LENGTH){
+            $result['postContent'] = $this->getThreadTitleOrContent($result['postContent'], Thread::NOTICE_CONTENT_LENGTH);
         }
 
-        if(!empty($result['threadTitle'])) {
-            $threadTitle = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['threadTitle']);
-            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($threadTitle);
-            $result['threadTitle'] = Str::substr(strip_tags(str_replace($searches, $replaces, $threadTitle)),0,Thread::NOTICE_CONTENT_LENGTH);
+        if(!empty($result['threadTitle']) && mb_strlen($result['threadTitle']) > Thread::TITLE_LENGTH) {
+            $result['threadTitle'] = $this->getThreadTitleOrContent($result['threadTitle'], Thread::TITLE_LENGTH);
         }
 
-        if(!empty($result['replyPostContent'])) {
-            $replyPostContent = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['replyPostContent']);
-            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($replyPostContent);
-            $result['replyPostContent'] = Str::substr(strip_tags(str_replace($searches, $replaces, $replyPostContent)),0,Thread::NOTICE_CONTENT_LENGTH);
+        if(!empty($result['replyPostContent']) && mb_strlen($result['replyPostContent']) > Thread::NOTICE_CONTENT_LENGTH) {
+            $result['replyPostContent'] = $this->getThreadTitleOrContent($result['replyPostContent'], Thread::NOTICE_CONTENT_LENGTH);
         }
-        if(!empty($result['content'])) {
-            $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $result['content']);
-            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
-            $result['content'] = Str::substr(strip_tags(str_replace($searches, $replaces, $content)),0,Thread::NOTICE_CONTENT_LENGTH);
+        if(!empty($result['content']) && mb_strlen($result['content']) > Thread::NOTICE_CONTENT_LENGTH) {
+            $result['content'] = $this->getThreadTitleOrContent($result['content'], Thread::NOTICE_CONTENT_LENGTH);
         }
 
         // 默认必须要有的字段
@@ -269,5 +260,11 @@ class ListNotificationV2Controller extends DzqController
         } else {
             return false;
         }
+    }
+
+    private function getThreadTitleOrContent($titleOrContent, $length)
+    {
+        $titleOrContent = Str::substr(strip_tags($titleOrContent), 0, $length);
+        return $titleOrContent;
     }
 }

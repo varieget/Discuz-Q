@@ -130,7 +130,7 @@ class ResourcePostController extends DzqController
                 $data['commentPosts'][$k] = $coment_post_serialize->getDefaultAttributes($comment_post_collect[$k], $this->user);
                 $data['commentPosts'][$k]['user'] = $users[$value['user_id']];
                 $data['commentPosts'][$k]['replyUser'] = $replyUsers[$value['reply_user_id']];
-                $data['commentPosts'][$k]['commentUser'] = $commentUsers[$value['comment_user_id']];
+                $data['commentPosts'][$k]['commentUser'] = !empty($commentUsers[$value['comment_user_id']]) ? $commentUsers[$value['comment_user_id']]: null;
                 $data['commentPosts'][$k]['attachments'] = !empty($attachments[$value['id']]) ? $attachments[$value['id']] : null;
             }
         }

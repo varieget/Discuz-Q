@@ -18,6 +18,7 @@
 
 namespace App\Api\Serializer;
 
+use App\Common\AuthUtils;
 use App\Common\PermissionKey;
 use App\Common\SettingCache;
 use App\Models\User;
@@ -79,6 +80,18 @@ class ForumSettingSerializerV2 extends AbstractSerializer
 
         $editGroupPermission = $this->userRepo->canEditGroup($actor);
 
+        // 控制用户名密码入口是否展示
+        $registerType = $this->settings->get('register_type');
+        if($registerType == 0) {
+            $usernameLoginIsdisplay = true;
+        } else {
+            //存在未绑定任何第三方的信息用户，则展示用户名和密码登录
+            $usernameLoginIsdisplay = false;
+            if(User::query()->where('bind_type',AuthUtils::DEFAULT)->count('id') > 0){
+                $usernameLoginIsdisplay = true;
+            }
+        }
+
         $attributes = [
             // 站点设置
             'set_site' => [
@@ -107,7 +120,8 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'site_pay_group_close' => $this->settings->get('site_pay_group_close'), // 用户组购买开关
                 'site_minimum_amount' => $this->settings->get('site_minimum_amount'),
                 'site_open_sort' => $this->settings->get('site_open_sort') == "" ? 0 : (int)$this->settings->get('site_open_sort'),
-                'site_can_reward'     => (bool) $this->settings->get('site_can_reward')
+                'site_can_reward'     => (bool) $this->settings->get('site_can_reward'),
+                'usernameLoginIsdisplay' => $usernameLoginIsdisplay
             ],
 
             // 注册设置
@@ -116,7 +130,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'register_validate' => (bool)$this->settings->get('register_validate'),
                 'register_captcha' => (bool)$this->settings->get('register_captcha'),
                 'password_length' => (int)$this->settings->get('password_length'),
-                'password_strength' => empty($this->settings->get('password_strength')) ? [] : explode(',', $this->settings->get('password_strength')),
+                'password_strength' => $this->settings->get('password_strength') === '' ? [] : explode(',', $this->settings->get('password_strength')),
                 'register_type' => (int)$this->settings->get('register_type', 'default', 0),
                 'is_need_transition' => (bool)$this->settings->get('is_need_transition'),
             ],

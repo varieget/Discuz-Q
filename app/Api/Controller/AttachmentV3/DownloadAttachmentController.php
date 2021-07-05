@@ -84,10 +84,9 @@ class DownloadAttachmentController extends DzqController
             'download_count' => intval($share->download_count + 1),
             'updated_at' => Carbon::now()
         ]);
-
+        $origin_name = iconv("utf-8", "gb2312", $attachment->file_name);
         header("Content-type:application/octet-stream");
-        $origin_name = $this->characet($attachment->file_name);
-        header("Content-Disposition:attachment;filename = " . basename($origin_name));
+        header("Content-Disposition:attachment;filename = " . $origin_name);
         header("Accept-ranges:bytes");
         header("Accept-length:" . $attachment->file_size);
         readfile($url, false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));

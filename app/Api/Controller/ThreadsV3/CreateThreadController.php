@@ -75,6 +75,9 @@ class CreateThreadController extends DzqController
         ) {
             throw new PermissionDeniedException('没有插入【位置信息】权限');
         }
+        if ($userRepo->canCreateThreadNeedBindPhone($user)) {
+            throw new PermissionDeniedException('请先绑定手机号');
+        }
         //发帖前验证手机，验证码，实名
         $this->userVerify($user);
         return true;
@@ -129,7 +132,7 @@ class CreateThreadController extends DzqController
         //插入post数据
         $post = $this->savePost($thread, $content);
         //发帖@用户
-        $this->sendRelated($thread, $post);
+        $this->sendNews($thread, $post);
         //插入tom数据
         $tomJsons = $this->saveTom($thread, $content, $post);
         //更新帖子条数
