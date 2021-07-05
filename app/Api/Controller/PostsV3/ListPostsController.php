@@ -110,8 +110,7 @@ class ListPostsController extends DzqController
 
         $query->where('posts.is_first', false)
             ->whereNull('posts.deleted_at')
-            ->where('posts.is_comment', false)
-            ->where('posts.is_approved', Post::APPROVED);
+            ->where('posts.is_comment', false);
 
         if ($sort) {
             $field = ltrim(Str::snake($sort), '-');
@@ -119,9 +118,29 @@ class ListPostsController extends DzqController
         }
 
         // 主题
-        if ($threadId = Arr::get($filters, 'thread')) {
+        $threadId = Arr::get($filters, 'thread');
+        if ($threadId) {
             $query->where('posts.thread_id', $threadId);
         }
+
+        $user = $this->user;
+        //如果是审核状态只能自己看到
+        if (!$user->isAdmin()) {
+            //如果是游客
+            if ($user->isGuest()){
+                $query->where('posts.is_approved', Post::APPROVED_YES);
+            } else {
+                $notUser = Post::query()
+                    ->where('user_id','<>',$user->id)
+                    ->where('is_approved','<>', Post::APPROVED_YES)
+                    ->where(['is_first' => false , 'thread_id' => $threadId])
+                    ->get(['id'])
+                    ->pluck('id')
+                    ->toArray();
+                if ($notUser) $query->whereNotIn('posts.id',$notUser);
+            }
+        }
+
 
         $query->orderBy('created_at');
     }

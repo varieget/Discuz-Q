@@ -87,19 +87,20 @@ class WechatMiniProgramCodeController extends DzqController
                     'b' => $colorB,
                 ],
             ]);
+            $response = $response->withoutHeader('Content-disposition');
+
+            if(is_array($response) && isset($response['errcode']) && isset($response['errmsg'])) {
+                //todo 日志记录
+                $this->outPut(ResponseCode::MINI_PROGRAM_QR_CODE_ERROR);
+            }
+            //图片二进制转base64
+            $data = [
+                'base64Img' => 'data:image/png;base64,' . base64_encode($response->getBody()->getContents())
+            ];
+            return $this->outPut(ResponseCode::SUCCESS, '', $data);
         } catch (\Exception $e) {
             DzqLog::error('生成小程序二维码接口异常', $paramData, $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '生成小程序二维码接口异常');
         }
-        $response = $response->withoutHeader('Content-disposition');
-        $filename = $response->save(storage_path('app/public/miniprogram'));
-
-        $url = $this->request->getUri();
-        $port = $url->getPort();
-        $port = $port == null ? '' : ':' . $port;
-        $path = $url->getScheme() . '://' . $url->getHost() . $port . '/';
-
-        $url = $path."/storage/miniprogram/".$filename;
-        return $this->outPut(ResponseCode::SUCCESS,'',$url);
     }
 }

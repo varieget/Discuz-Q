@@ -102,6 +102,8 @@ class CacheKey
     const LIST_THREADS_V3_POST_LIKED = 'list_threads_v3_post_liked:';//是否点赞 user_id->post_id
     const LIST_THREADS_V3_THREAD_USERS = 'list_threads_v3_thread_users:';//是否收藏 user_id->thread_id
 
+    const MONITOR_SYSTEM_TASK = 'monitor_system_task:';//监听系统定时任务是否启动
+
     public static $fileStore = [
         self::LIST_THREADS_V3_POSTS => 20
     ];

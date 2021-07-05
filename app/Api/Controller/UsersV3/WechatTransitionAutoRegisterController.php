@@ -160,6 +160,8 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
                 'userId'        =>  $wechatUser->user->id,
                 'accessToken'   =>  $accessToken,
             ]);
+            //删除sessionToken
+            $token->delete();
             $result = $this->camelData(collect($accessToken));
             $result = $this->addUserInfo($wechatUser->user, $result);
 

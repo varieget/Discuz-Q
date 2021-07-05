@@ -630,9 +630,14 @@ class User extends DzqModel
     {
         $this->liked_count = $this->postUser()
             ->join('posts', 'post_user.post_id', '=', 'posts.id')
+            ->join('threads','posts.thread_id','=','threads.id')
             ->where('posts.is_first', true)
             ->where('posts.is_approved', Post::APPROVED)
             ->whereNull('posts.deleted_at')
+            ->whereNotNull('threads.user_id')
+            ->where('threads.is_display',Thread::BOOL_YES)
+            ->where('threads.is_sticky', Thread::BOOL_NO)
+            ->where('threads.is_draft', Thread::IS_NOT_DRAFT)
             ->count();
 
         return $this;
