@@ -261,6 +261,7 @@ class ThreadListController extends DzqController
             'complex' => 'integer|in:1,2,3,4,5'
         ]);
         $loginUserId = $this->user->id;
+        $administrator = $this->user->isAdmin();
         $essence = null;
         $types = [];
 //        $categoryids = [];
@@ -306,10 +307,9 @@ class ThreadListController extends DzqController
                         ->orderByDesc('order.updated_at');
                     break;
                 case Thread::MY_OR_HIS_THREAD:
-                    if (!empty($filter['toUserId'])) {
-                        if ($filter['toUserId'] == $loginUserId) {
-                            $threads = $this->getBaseThreadsBuilder(Thread::BOOL_NO, false);
-                        }
+                    if (empty($filter['toUserId']) || $filter['toUserId'] == $loginUserId || $administrator) {
+                        $threads = $this->getBaseThreadsBuilder(Thread::BOOL_NO, false);
+                    } else {
                         $threads = $threads->where('th.is_anonymous', Thread::IS_NOT_ANONYMOUS);
                     }
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
