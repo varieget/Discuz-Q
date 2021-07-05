@@ -595,7 +595,7 @@ trait ThreadTrait
     {
         return Order::query()
             ->where('thread_id', $thread['id'])
-            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
+            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_TEXT, Order::ORDER_TYPE_LONG, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
             ->select(['payment_sn', 'order_sn', 'amount', 'type', 'id', 'status'])
             ->first();
     }
