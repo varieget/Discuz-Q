@@ -27,6 +27,7 @@ use App\Models\Group;
 use App\Models\UserSignInFields;
 use Illuminate\Support\Arr;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Str;
 
 class ListUserScreenController extends DzqController
 {
@@ -51,11 +52,23 @@ class ListUserScreenController extends DzqController
 
         if (Arr::has($filter, 'username') && Arr::get($filter, 'username') !== '') {
             $username = $filter['username'];
+            // 用户名前后存在星号（*）则使用模糊查询
             if(strpos($username,',') !== false){
-                $username = explode(',',$username);
-                $query->whereIn('users.username', $username);
+                $usernames = explode(',',$username);
+                $query->whereIn('users.username', $usernames);
+                foreach ($usernames as $un){
+                    if (Str::startsWith($un, '*') || Str::endsWith($un, '*')) {
+                        $un = Str::replaceLast('*', '%', Str::replaceFirst('*', '%', $un));
+                        $query->orWhere('username', 'like', $un);
+                    }
+                }
             }else{
-                $query->where('users.username', 'like','%'.$username.'%');
+                if (Str::startsWith($username, '*') || Str::endsWith($username, '*')) {
+                    $username = Str::replaceLast('*', '%', Str::replaceFirst('*', '%', $username));
+                    $query->orWhere('username', 'like', $username);
+                }else{
+                    $query->where('users.username', 'like','%'.$username.'%');
+                }
             }
         }
 
