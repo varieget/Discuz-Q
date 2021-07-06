@@ -29,7 +29,7 @@ use Illuminate\Contracts\Filesystem\Factory;
 
 class DeleteLogoController extends DzqController
 {
-    public function clearCache($user)
+    public function suffixClearCache($user)
     {
         DzqCache::delKey(CacheKey::SETTINGS);
     }
