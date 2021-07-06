@@ -43,7 +43,7 @@ class PayOrderController extends DzqController
         return true;
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $user->id);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $user->id);

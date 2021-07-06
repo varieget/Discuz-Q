@@ -156,7 +156,7 @@ class OperateThreadController extends DzqController
 
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         $threadId = $this->inPut('id');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);

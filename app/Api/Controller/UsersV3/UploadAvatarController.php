@@ -28,7 +28,7 @@ use Illuminate\Contracts\Bus\Dispatcher;
 
 class UploadAvatarController extends DzqController
 {
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $user->id);
     }

@@ -48,7 +48,7 @@ class UploadBackgroundController extends DzqController
         $this->settings = $settings;
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $user->id);
     }

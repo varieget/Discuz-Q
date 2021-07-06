@@ -310,7 +310,7 @@ class CreateThreadController extends DzqController
         }
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         CacheKey::delListCache();
     }

@@ -35,7 +35,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class UploadLogoController extends DzqController
 {
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         DzqCache::delKey(CacheKey::SETTINGS);
     }

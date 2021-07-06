@@ -327,7 +327,7 @@ class UpdateThreadController extends DzqController
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         CacheKey::delListCache();
         $threadId = $this->inPut('threadId');
