@@ -71,10 +71,9 @@ class ListGroupsController extends DzqController
                         },
                     ]);
                 }
-                // 不返回游客用户组
-                return $query->where('id', '<>', Group::GUEST_ID);
-            });
-
+                return $query;
+            })
+            ->where('id', '<>', Group::GUEST_ID);
         $data = [];
         foreach ($groups->get() as $lists) {
             $data [] = [
