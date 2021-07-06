@@ -95,5 +95,5 @@ $route->get('/adminInvite.link.create','invite.link.create',ApiController\Invite
 $route->get('/stopWords/export', 'stopWords.export', ApiController\StopWordsV3\ExportStopWordsController::class);
 
 //监听定时任务
-$route->get('/monitor/system/task', 'stopWords.export', ApiController\System\MonitorSystemTaskController::class);
+$route->get('/monitor/system/task', 'monitor.system.task', ApiController\System\MonitorSystemTaskController::class);
 
