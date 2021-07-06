@@ -49,7 +49,7 @@ class WechatPcLoginPollController extends AuthBaseController
             $result = $this->addUserInfo($token->user, $result);
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            DzqLog::error('用户名登录接口异常', [
+            DzqLog::error('pc、H5轮询登录接口异常', [
                 'sessionToken' => $this->inPut('sessionToken')
             ], $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc、H5轮询登录接口异常');
