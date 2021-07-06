@@ -40,7 +40,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 class SetSettingsController extends DzqController
 {
-    public function prefixClearCache($user)
+    public function suffixClearCache($user)
     {
         DzqCache::delKey(CacheKey::SETTINGS);
     }

@@ -32,7 +32,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 
 class UpdateGroupPermissionController extends DzqController
 {
-    public function prefixClearCache($user)
+    public function suffixClearCache($user)
     {
         DzqCache::delKey(CacheKey::GROUP_PERMISSIONS);
     }
