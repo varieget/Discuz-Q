@@ -22,6 +22,8 @@ use App\Models\Attachment;
 use App\Models\StopWord;
 use App\Common\ResponseCode;
 use App\Common\Platform;
+use Discuz\Base\DzqLog;
+use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Base\DzqController;
 use Discuz\Foundation\Application;
@@ -132,6 +134,14 @@ class Censor
         }
 
         if ($this->isMod && ($type == 'signature' || $type == 'dialog')) {
+            $msg = app('translator')->has('validation.attributes.'.$type) ? trans('validation.attributes.'.$type).'内容含敏感词' : '内容含敏感词';
+            DzqLog::error('content_has_stop_word', [
+                'content'   => $content,
+                'type'      => $type,
+                'msg'       => $msg,
+                'wordMod'   => $this->wordMod
+            ]);
+            Utils::outPut(ResponseCode::NET_ERROR, $msg);
             throw new CensorNotPassedException('内容含敏感词');
         }
 
@@ -203,6 +213,14 @@ class Censor
 
                             $this->isMod = true;
                         } elseif ($word->{$type} === StopWord::BANNED) {
+                            $msg = app('translator')->has('validation.attributes.'.$type) ? trans('validation.attributes.'.$type).'内容含敏感词' : '内容含敏感词';
+                            DzqLog::error('content_has_stop_word', [
+                                'content'   => $content,
+                                'type'      => $type,
+                                'msg'       => $msg,
+                                'word'      => $word
+                            ]);
+                            Utils::outPut(ResponseCode::NET_ERROR, $msg);
                             throw new CensorNotPassedException('内容含敏感词');
                         }
                     }
