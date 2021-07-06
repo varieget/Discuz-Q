@@ -92,16 +92,4 @@ class DownloadAttachmentController extends DzqController
         readfile($url, false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
         exit;
     }
-
-    //所有编码转GBK
-    public function characet($data){
-        if( !empty($data) ){
-            $fileType = mb_detect_encoding($data , array('UTF-8','GBK','LATIN1','BIG5')) ;
-            app('log')->info("requestId：{$this->requestId},文件:{$data},文件编码:".$fileType);
-            if( $fileType != 'GBK'){
-                $data = mb_convert_encoding($data ,'GBK' , $fileType);
-            }
-        }
-        return $data;
-    }
 }

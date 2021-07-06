@@ -62,7 +62,7 @@ class DeleteTomController extends DzqController
         $this->outPut(ResponseCode::SUCCESS);
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         $threadId = $this->inPut('threadId');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);

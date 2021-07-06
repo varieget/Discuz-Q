@@ -22,6 +22,7 @@ use App\Commands\Users\GenJwtToken;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Models\User;
+use Discuz\Base\DzqLog;
 use Exception;
 use App\Passport\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -66,6 +67,7 @@ class AdminLoginController extends DzqController
                 new GenJwtToken($data)
             );
         } catch (Exception $e) {
+            DzqLog::error('admin_login_error', $data, $e->getMessage());
             if (empty($e->getMessage())) {
                 return $this->outPut(ResponseCode::USERNAME_OR_PASSWORD_ERROR);
             }

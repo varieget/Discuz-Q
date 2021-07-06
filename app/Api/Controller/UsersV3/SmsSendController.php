@@ -173,8 +173,19 @@ class SmsSendController extends AuthBaseController
 
             $this->outPut(ResponseCode::SUCCESS, '', ['interval' => self::CODE_INTERVAL]);
         } catch (\Exception $e) {
-            DzqLog::error('用户名登录接口异常', $paramData, $e->getMessage());
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号发送接口异常');
+            if (isset($e->getExceptions()['qcloud'])) {
+                $errCode = !empty($e->getExceptions()['qcloud']->getCode()) ? $e->getExceptions()['qcloud']->getCode() : 0000;
+                $errMsg = !empty($e->getExceptions()['qcloud']->getMessage()) ? $e->getExceptions()['qcloud']->getMessage() : '';
+                DzqLog::error('all_the_gateways_have_failed', [
+                    'mobile' => $this->inPut('mobile'),
+                    'errCode' => $errCode,
+                    'errMsg' => $errMsg,
+                    'getExceptions' => $e->getExceptions()
+                ], $e->getMessage());
+                $this->outPut(ResponseCode::NET_ERROR, '手机号日频率限制');
+            }
+            DzqLog::error('手机号发送接口异常', $paramData, $e->getMessage());
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号发送接口异常');
         }
     }
 }
