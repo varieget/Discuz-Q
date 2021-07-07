@@ -377,7 +377,7 @@ trait ThreadTrait
                 $content['text'] = $xml;
                 if(!empty($isset_attachment_ids)){
                     foreach ($content['indexes'][TomConfig::TOM_IMAGE]['body'] as $k => $v){
-                        if(in_array($v['id'], $isset_attachment_ids))       unset($content['indexes'][TomConfig::TOM_IMAGE]['body']);
+                        if(in_array($v['id'], $isset_attachment_ids))       unset($content['indexes'][TomConfig::TOM_IMAGE]['body'][$k]);
                     }
                 }
             }
