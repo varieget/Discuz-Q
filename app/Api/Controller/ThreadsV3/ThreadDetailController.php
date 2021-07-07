@@ -72,9 +72,6 @@ class ThreadDetailController extends DzqController
         $thread->increment('view_count');
         $tomInputIndexes = $this->getTomContent($thread);
         $result = $this->packThreadDetail($user, $group, $thread, $post, $tomInputIndexes['tomContent'], true, $tomInputIndexes['tags']);
-        if(strpos($result['content']['text'], '<img') !== false){         //如果内容含有图片，则不显示 indexs 中的 101 图片了
-            unset($result['content']['indexes'][TomConfig::TOM_IMAGE]);
-        }
 
         $result['orderInfo'] = [];
         if (
