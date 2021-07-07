@@ -25,7 +25,6 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
-use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
@@ -72,7 +71,6 @@ class ThreadDetailController extends DzqController
         $thread->increment('view_count');
         $tomInputIndexes = $this->getTomContent($thread);
         $result = $this->packThreadDetail($user, $group, $thread, $post, $tomInputIndexes['tomContent'], true, $tomInputIndexes['tags']);
-
         $result['orderInfo'] = [];
         if (
             $this->needPay($tomInputIndexes['tomContent'])
