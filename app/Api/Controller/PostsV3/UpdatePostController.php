@@ -71,11 +71,19 @@ class UpdatePostController extends DzqController
         if (isset($data['content']) || (isset($data['isApproved']) && $data['isApproved'] < 3)) {
             return $this->user->isAdmin();
         }
-        if (isset($attributes['isDeleted'])) {
+
+        if (isset($data['isDeleted'])) {
             return $userRepo->canHidePost($this->user, $post);
         }
 
-        return true;
+        if (isset($data['isLiked'])) {
+            if (!$post->thread) {
+                $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+            }
+            return $userRepo->canLikePosts($this->user) && ($userRepo->canViewThreads($this->user, $post->thread->category_id) || $userRepo->canViewThreadDetail($this->user, $thread));
+        }
+
+        return $userRepo->canViewThreads($this->user, $post->thread->category_id);
     }
 
     public function main()
