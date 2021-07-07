@@ -44,6 +44,36 @@ class ShareAttachmentController extends DzqController
         if ($this->user->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
+
+        $threadId =$this->inPut('threadId');
+        $user = $this->user;
+
+        $thread = Thread::query()
+            ->from('threads as th')
+            ->whereNull('th.deleted_at')
+            ->where(['th.id' => $threadId, 'th.is_draft' => Thread::BOOL_NO, 'th.is_approved' => Thread::BOOL_YES])
+            ->leftJoin('thread_tom as tt','tt.thread_id','=','th.id')
+            ->where(['tom_type' => TomConfig::TOM_DOC , 'status' => ThreadTom::STATUS_ACTIVE])
+            ->first(['th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'tt.value']);
+
+        if (!$thread) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
+
+        if (!$user->isAdmin() && $user->id !== $thread->user_id){
+            //是否付费
+            if ( $thread->price > 0 || $thread->attachment_price > 0 ) {
+                $isPay = Order::query()
+                    ->whereIn('type',[Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
+                    ->where([ 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])
+                    ->exists();
+                if (!$isPay) $this->outPut(ResponseCode::UNAUTHORIZED);
+            } else if (!$userRepo->canViewThreadDetail($user, $thread)) {
+                $this->outPut(ResponseCode::UNAUTHORIZED);
+            }
+        }
+
+        $this->thread = $thread;
         return true;
     }
 
@@ -66,29 +96,8 @@ class ShareAttachmentController extends DzqController
             ->count('attachments_id');
 
         if ($count >= 2) $this->outPut(ResponseCode::NET_ERROR,'操作太快，请稍后再试');
-
-        $thread = Thread::query()
-            ->from('threads as th')
-            ->whereNull('th.deleted_at')
-            ->where(['th.id' => $data['threadId'], 'th.is_draft' => Thread::BOOL_NO, 'th.is_approved' => Thread::BOOL_YES])
-            ->leftJoin('thread_tom as tt','tt.thread_id','=','th.id')
-            ->where(['tom_type' => TomConfig::TOM_DOC , 'status' => ThreadTom::STATUS_ACTIVE])
-            ->first(['th.user_id', 'th.price', 'th.attachment_price', 'tt.value']);
-
-        if (!$thread) {
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-        }
-
-        //是否付费
-        if (!$user->isAdmin() && $user->id !== $thread->user_id && ($thread->price > 0 || $thread->attachment_price > 0)) {
-            $isPay = Order::query()
-                ->whereIn('type',[Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
-                ->where([ 'thread_id' => $data['threadId'], 'status' => Order::ORDER_STATUS_PAID])
-                ->exists();
-            if (!$isPay) $this->outPut(ResponseCode::UNAUTHORIZED);
-        }
-
-        $docValue = json_decode($thread->value,true);
+        
+        $docValue = json_decode($this->thread->value,true);
 
         if (!isset($docValue['docIds']) || !is_array($docValue['docIds']) || !in_array($data['attachmentsId'], $docValue['docIds'])) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
