@@ -135,7 +135,7 @@ class UpdatePostController extends DzqController
         return $this->outPut(ResponseCode::NET_ERROR, '', []);
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         $postId = $this->inPut('pid');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_LIKED . $user->id, $postId);

@@ -61,7 +61,7 @@ class UpdateTomController extends DzqController
             $this->outPut(ResponseCode::DB_ERROR, $e->getMessage());
         }
     }
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         $threadId = $this->inPut('threadId');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_TOMS, $threadId);

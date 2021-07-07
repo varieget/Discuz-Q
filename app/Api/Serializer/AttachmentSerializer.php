@@ -120,6 +120,11 @@ class AttachmentSerializer extends AbstractSerializer
             $attributes['thumbUrl'] = $url;
         }
 
+        // gif缩略图无法播放，返回原图进行展示
+        if (in_array(strtolower($attributes['fileType']), array('gif', 'image/gif'))) {
+            $attributes['thumbUrl'] = $url;
+        }
+
         // 绑定首帖的附件，如果是付费或开启了预览，返回后端地址
 //        if (
 //            $model->type == Attachment::TYPE_OF_FILE &&

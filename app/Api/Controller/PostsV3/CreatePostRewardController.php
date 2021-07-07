@@ -43,7 +43,7 @@ class CreatePostRewardController extends DzqController
         $this->connection = $connection;
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         $threadId = $this->inPut('threadId');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $threadId);

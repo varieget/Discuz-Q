@@ -40,8 +40,8 @@ $route->get('/users/mobilebrowser/wechat/miniprogram.genscheme', 'pc.wechat.mini
 $route->post('/users/username.login', 'username.login', ApiController\UsersV3\LoginController::class);
 //注册
 $route->post('/users/username.register', 'username.register', ApiController\UsersV3\RegisterController::class);
-//控制用户名密码入口是否展示
-$route->get('/users/username.login.isdisplay', 'username.login.isdisplay', ApiController\UsersV3\LsDisplayController::class);
+//控制用户名密码入口是否展示 -> 已迁移至forum接口
+//$route->get('/users/username.login.isdisplay', 'username.login.isdisplay', ApiController\UsersV3\LsDisplayController::class);
 //用户昵称检测
 $route->post('/users/username.check', 'username.check', ApiController\UsersV3\CheckController::class);
 //手机号（不区分端）
