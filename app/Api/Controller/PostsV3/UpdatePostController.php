@@ -75,7 +75,7 @@ class UpdatePostController extends DzqController
             return $userRepo->canHidePost($this->user, $post);
         }
 
-        return true;
+        return $userRepo->canViewThreads($this->user, $post->thread->category_id);
     }
 
     public function main()
