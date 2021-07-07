@@ -373,9 +373,6 @@ trait ThreadTrait
                 //针对图文混排的情况，这里要去掉外部图片展示
 //                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
                 $content['text'] = $xml;
-                if(strpos($content['text'], '<img') !== false){         //如果内容含有图片，则不显示 indexs 中的 101 图片了
-                    unset($content['indexes'][TomConfig::TOM_IMAGE]);
-                }
             }
         }
 
