@@ -119,7 +119,7 @@ class WechatH5RebindController extends AuthBaseController
                 $this->outPut(ResponseCode::ACCOUNT_HAS_BEEN_BOUND, '微信号已绑定其他账户');
             }
         } catch (Exception $e) {
-            DzqLog::error('用户名登录接口异常', [
+            DzqLog::error('H5换绑接口异常', [
                 'sessionToken' => $this->inPut('sessionToken')
             ], $e->getMessage());
             $this->db->rollBack();
