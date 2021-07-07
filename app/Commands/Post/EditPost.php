@@ -90,7 +90,7 @@ class EditPost
     {
         $this->events = $events;
 
-        $post = $posts->findOrFail($this->postId, $this->actor);
+        $post = Post::query()->where('id', $this->postId)->firstOrFail();
 
         $attributes = Arr::get($this->data, 'attributes', []);
 
