@@ -386,8 +386,7 @@ class UserRepository extends AbstractRepository
      */
     public function canReplyThread(User $user, $categoryId)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::VIEW_THREADS, $categoryId)
-            && $this->checkCategoryPermission($user, PermissionKey::THREAD_REPLY, $categoryId);
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_REPLY, $categoryId);
     }
 
     public function canViewThreadDetail(User $user, $thread)
