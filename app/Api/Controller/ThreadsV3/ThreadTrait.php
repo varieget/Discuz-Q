@@ -633,7 +633,7 @@ trait ThreadTrait
             return $item;
         })->toArray();
         foreach ($ats as $val) {
-            $text = preg_replace("/{$val['username']}/", "{$val['html']}", $text, 1);
+            $text = str_replace($val['username'], $val['html'], $text);
         }
         return $text;
     }
