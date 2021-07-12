@@ -324,8 +324,10 @@ class Post extends DzqModel
             'content' => '',
             'first_content' => '',
         ];
+        if ($substr && mb_strlen($this->content) > $substr) {
+            $this->content = Str::substr(strip_tags($this->content), 0, $substr) . '...';
+        }
 
-        $this->content = $substr ? Str::of($this->content)->substr(0, $substr) : $this->content;
         if(is_object($this->content)){
             $this->content = (string)$this->content;
         }
