@@ -37,12 +37,12 @@ class viewCountController extends DzqController
         if (!$thread) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        $thread->view_count = intval($thread->view_count+1);
+
+        $viewCount = intval($thread->view_count+1);
+        $thread->view_count = $viewCount;
         $thread->save();
 
-        $thread->updated_at = date('Y-m-d H:i:s',strtotime($thread->updated_at));
-
-        $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($thread));
+        $this->outPut(ResponseCode::SUCCESS,'', ['viewCount' => $viewCount]);
     }
 
 }
