@@ -120,7 +120,7 @@ class RegisterController extends AuthBaseController
                 $this->outPut(ResponseCode::INVALID_PARAMETER, $error_message);
             }
         } catch (\Exception $e) {
-            DzqLog::error('用户名注册接口异常', $data, $e->getMessage());
+            DzqLog::error('username_register_api_error', $data, $e->getMessage());
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册接口异常');
         }
 
@@ -166,7 +166,7 @@ class RegisterController extends AuthBaseController
                                  $this->camelData($this->addUserInfo($user, $accessToken))
             );
         } catch (\Exception $e) {
-            DzqLog::error('用户名注册接口异常', $data, $e->getMessage());
+            DzqLog::error('username_register_api_error', $data, $e->getMessage());
             $this->connection->rollback();
             return $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册接口异常');
         }
