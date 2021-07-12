@@ -122,7 +122,7 @@ class UpdateAdminController extends DzqController
         $psdMinLen = $passwordLength > 6 ? $passwordLength : 6;
         $pasMaxLen = 18;
         if ($psdMinLen > $psdLen || $pasMaxLen < $psdLen) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, "密码长度必须小于{$psdMinLen},大于{$pasMaxLen}位");
+            $this->outPut(ResponseCode::INVALID_PARAMETER, "密码长度必须大于{$psdMinLen},小于{$pasMaxLen}位");
         }
         $passwordStrength = trim($this->settings->get('password_strength'));
         if (!empty($passwordStrength)){
