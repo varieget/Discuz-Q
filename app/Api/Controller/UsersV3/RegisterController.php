@@ -107,6 +107,8 @@ class RegisterController extends AuthBaseController
             }
 
             // 密码为空的时候，不验证密码，允许创建密码为空的用户(但无法登录，只能用其它方法登录)
+            $password = $data['password'];
+            $password_confirmation = $data['password_confirmation'];
             $attrs_to_validate = array_merge($data, compact('password', 'password_confirmation', 'captcha'));
             if ($data['password'] === '') {
                 unset($attrs_to_validate['password']);
