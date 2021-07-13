@@ -62,8 +62,10 @@ class UpdateThreadController extends DzqController
     {
         $threadId = $this->inPut('threadId');
         $thread = $this->thread;
-        $isDraft = !empty($thread->is_draft) ? Thread::BOOL_YES : Thread::BOOL_NO;
-        $post = Post::getOneActivePost($threadId, $isDraft);
+        $post = Post::query()
+            ->where(['thread_id' => $threadId, 'is_first' => Post::FIRST_YES])
+            ->whereNull('deleted_at')
+            ->first();
         if (empty($post)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '帖子详情不存在');
         }
