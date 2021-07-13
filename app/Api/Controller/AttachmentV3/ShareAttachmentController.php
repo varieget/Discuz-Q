@@ -51,12 +51,16 @@ class ShareAttachmentController extends DzqController
         $thread = Thread::query()
             ->from('threads as th')
             ->whereNull('th.deleted_at')
-            ->where(['th.id' => $threadId, 'th.is_draft' => Thread::BOOL_NO, 'th.is_approved' => Thread::BOOL_YES])
+            ->where('th.id', $threadId)
             ->leftJoin('thread_tom as tt','tt.thread_id','=','th.id')
             ->where(['tom_type' => TomConfig::TOM_DOC , 'status' => ThreadTom::STATUS_ACTIVE])
-            ->first(['th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'tt.value']);
+            ->first(['th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'th.is_draft', 'th.is_approved', 'tt.value']);
 
         if (!$thread) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
+        //如果帖子还在审核和草稿当中，只能当前用户下载
+        if ($user->id !== $thread->user_id && ($thread->is_draft == Thread::IS_DRAFT || $thread->is_approved !== Thread::IS_ANONYMOUS)){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
