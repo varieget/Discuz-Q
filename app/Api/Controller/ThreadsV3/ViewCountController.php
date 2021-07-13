@@ -22,7 +22,7 @@ use App\Models\Thread;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
-class viewCountController extends DzqController
+class ViewCountController extends DzqController
 {
 
     protected function checkRequestPermissions(UserRepository $userRepo)

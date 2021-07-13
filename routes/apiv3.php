@@ -195,4 +195,4 @@ $route->get('/thread.test', 'thread.test', ApiController\ThreadsV3\TestControlle
 
 $route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);
 
-$route->get('/view.count', 'view.count', ApiController\ThreadsV3\viewCountController::class);
+$route->get('/view.count', 'view.count', ApiController\ThreadsV3\ViewCountController::class);
