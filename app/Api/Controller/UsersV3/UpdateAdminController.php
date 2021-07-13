@@ -19,9 +19,11 @@
 namespace App\Api\Controller\UsersV3;
 
 use App\Commands\Users\UpdateAdminUser;
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Setting;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -47,7 +49,6 @@ class UpdateAdminController extends DzqController
     public function main()
     {
         $id = $this->inPut('id');
-
         if(empty($id)){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'用户id不能为空');
         }
@@ -113,6 +114,15 @@ class UpdateAdminController extends DzqController
         $returnData['loginAt'] = $data['loginAt'];
 
         return $this->outPut(ResponseCode::SUCCESS,'', $returnData);
+    }
+
+    public function prefixClearCache($user)
+    {
+        $id = $this->inPut('id');
+        if(empty($id)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER,'用户id不能为空');
+        }
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_GROUP_USER,$id);
     }
 
     public function processPassword($newPassword)
