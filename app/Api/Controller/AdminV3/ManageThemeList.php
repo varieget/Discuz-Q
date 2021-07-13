@@ -80,7 +80,7 @@ class ManageThemeList extends DzqController
             );
 
         //是否审核and是否草稿
-        $query->where('threads.is_draft', Thread::IS_NOT_DRAFT);
+        //$query->where('threads.is_draft', Thread::IS_NOT_DRAFT);
 
         //浏览次数
         if ($viewCountGt !== '') {
