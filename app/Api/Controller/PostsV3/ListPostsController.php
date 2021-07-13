@@ -176,15 +176,15 @@ class ListPostsController extends DzqController
             ->where('is_comment', true)
             ->where('is_approved', Post::APPROVED)
             ->orderBy('updated_at', 'desc')
-            ->get()
-            ->map(function (Post $post) {
-                $content = Str::of($post->content);
-                if ($content->length() > Post::SUMMARY_LENGTH) {
-                    $post->content = $content->substr(0, Post::SUMMARY_LENGTH)->finish(Post::SUMMARY_END_WITH);
-                }
-
-                return $post;
-            });
+            ->get();
+//            ->map(function (Post $post) {
+//                $content = Str::of($post->content);
+//                if ($content->length() > Post::SUMMARY_LENGTH) {
+//                    $post->content = $content->substr(0, Post::SUMMARY_LENGTH)->finish(Post::SUMMARY_END_WITH);
+//                }
+//
+//                return $post;
+//            });
 
         $posts = array_map(function ($post) use ($allLastThreeComments) {
             $post['lastThreeComments'] = $allLastThreeComments->where('reply_post_id', $post['id'])->take(3)->map(function ($post) {
