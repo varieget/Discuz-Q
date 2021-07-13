@@ -60,14 +60,19 @@ class ShareAttachmentController extends DzqController
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
+        //是否是管理员和自己的帖子
         if (!$user->isAdmin() && $user->id !== $thread->user_id){
-            //是否付费
+            //是否付费帖
             if ( $thread->price > 0 || $thread->attachment_price > 0 ) {
-                $isPay = Order::query()
-                    ->whereIn('type',[Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
-                    ->where([ 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])
-                    ->exists();
-                if (!$isPay) $this->outPut(ResponseCode::UNAUTHORIZED);
+                //免费查看付费帖权限
+                if (!$userRepo->canFreeViewPosts($user, $thread)) {
+                    $isPay = Order::query()
+                        ->whereIn('type',[Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
+                        ->where([ 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])
+                        ->exists();
+                    if (!$isPay) $this->outPut(ResponseCode::UNAUTHORIZED);
+                }
+                //是否有详情查看权限
             } else if (!$userRepo->canViewThreadDetail($user, $thread)) {
                 $this->outPut(ResponseCode::UNAUTHORIZED);
             }
