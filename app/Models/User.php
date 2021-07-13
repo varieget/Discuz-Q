@@ -537,12 +537,11 @@ class User extends DzqModel
         if (empty($value)) {
             return $value;
         }
-
+        $backUrl = str_replace($dir1.'/'.$dir2.'/'.$dir3.'/',$dir1.'/'.$dir2.'/'.$dir3.'/'.'original_',$value);
         if (strpos($value, '://') === false) {
-            $backUrl = str_replace($dir1.'/'.$dir2.'/'.$dir3.'/',$dir1.'/'.$dir2.'/'.$dir3.'/'.'original_',$value);
             return app(UrlGenerator::class)->to('/storage/background/' . $backUrl);
         }
-        $originalBackground = str_replace('cos://','',$value);
+        $originalBackground = str_replace('cos://','',$backUrl);
 
         /** @var SettingsRepository $settings */
         $settings = app(SettingsRepository::class);
