@@ -212,7 +212,7 @@ class UserV2Serializer extends AbstractSerializer
                 $originalAvatarUrl = $model->avatar;
             }
         }else{
-            $fileData = file_get_contents($originalAvatarUrl,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
+            $fileData = @file_get_contents($originalAvatarUrl,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
             if(!$fileData){
                 $originalAvatarUrl = $model->avatar;
             }
@@ -234,7 +234,7 @@ class UserV2Serializer extends AbstractSerializer
                 $originalBackGroundUrl = $model->background;
             }
         }else{
-            $fileData = file_get_contents($originalBackGroundUrl,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
+            $fileData = @file_get_contents($originalBackGroundUrl,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
             if(!$fileData){
                 $originalBackGroundUrl = $model->background;
             }
