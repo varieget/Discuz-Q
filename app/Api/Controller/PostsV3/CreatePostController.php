@@ -99,7 +99,7 @@ class CreatePostController extends DzqController
         if (!$thread) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        return $userRepo->canViewThreadDetail($this->user, $thread) && $userRepo->canReplyThread($this->user, $thread->category_id);
+        return $userRepo->canReplyThread($this->user, $thread->category_id);
     }
 
     public function prefixClearCache($user)
