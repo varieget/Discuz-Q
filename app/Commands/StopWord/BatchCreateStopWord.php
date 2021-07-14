@@ -158,7 +158,7 @@ class BatchCreateStopWord
                 $signature = $signature === StopWord::BANNED ? StopWord::BANNED : StopWord::IGNORE;
                 $dialog = $dialog === StopWord::BANNED ? StopWord::BANNED : StopWord::IGNORE;
 
-                if (! in_array($nickname, [StopWord::BANNED, StopWord::REPLACE])) {
+                if (! in_array($nickname, [StopWord::BANNED])) {
                     $nickname = StopWord::IGNORE;
                 }
 
