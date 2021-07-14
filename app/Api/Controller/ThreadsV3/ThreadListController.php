@@ -112,7 +112,7 @@ class ThreadListController extends DzqController
             $page = 1;
             $sequence = 0;
             $perPage = 10;
-            $filter['sort'] = Thread::SORT_BY_HOT;
+            $filter = ['sort' => Thread::SORT_BY_HOT];
         }
 //        $this->openQueryLog();
         $this->preloadCount = self::PRELOAD_PAGES * $perPage;
@@ -266,11 +266,9 @@ class ThreadListController extends DzqController
             'essence' => 'integer|in:0,1',
             'types' => 'array',
             'categoryids' => 'array',
-            'sort' => 'integer|in:1,2,3,4',
+            'sort' => 'integer|in:1,2,3',
             'attention' => 'integer|in:0,1',
-            'complex' => 'integer|in:1,2,3,4,5',
-            'site' => 'integer|in:0,1',
-            'removeThreadIds'=>'array'
+            'complex' => 'integer|in:1,2,3,4,5'
         ]);
         $loginUserId = $this->user->id;
         $administrator = $this->user->isAdmin();
@@ -289,8 +287,6 @@ class ThreadListController extends DzqController
         isset($filter['attention']) && $attention = $filter['attention'];
         isset($filter['search']) && $search = $filter['search'];
         isset($filter['complex']) && $complex = $filter['complex'];
-        isset($filter['site']) && $site = $filter['site'];
-        isset($filter['removeThreadIds']) && $removeThreadIds = $filter['removeThreadIds'];
 
         $categoryids = $this->categoryIds;
         $threads = $this->getBaseThreadsBuilder();
@@ -361,9 +357,6 @@ class ThreadListController extends DzqController
                     $threads->whereBetween('th.created_at', [Carbon::parse('-7 days'), Carbon::now()]);
                     $threads->orderByDesc('th.view_count');
                     break;
-                case Thread::SORT_BY_RENEW://按照更新时间排序
-                    $threads->orderByDesc('th.updated_at');
-                    break;
                 default:
                     $threads->orderByDesc('th.id');
                     break;
@@ -383,13 +376,6 @@ class ThreadListController extends DzqController
                 $threads = $threads->whereNotIn('th.user_id', $denyUserIds);
                 $withLoginUser = true;
             }
-        }
-
-        if(!empty($site)){
-            $threads = $threads->where('th.is_site', Thread::IS_SITE);
-        }
-        if(!empty($removeThreadIds)){
-            $threads = $threads->whereNotIn('th.id', $removeThreadIds);
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
         return $threads;
