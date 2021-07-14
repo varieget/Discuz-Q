@@ -250,11 +250,22 @@ class ListUserWalletLogsController extends DzqController
 //            UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN,       //		悬赏帖过期-悬赏帖剩余悬赏金额返回，121， 这里与 上面的 165 冲突，只需要取上面的 165 即可
             UserWalletLog::TYPE_QUESTION_RETURN_THAW,       //		问答返还解冻，9
             //悬赏解冻 end
+            //悬赏支出 start
+            UserWalletLog::TYPE_QUESTION_REWARD_EXPEND,     //悬赏采纳支出，164
+            //悬赏支出 end
+
             //红包冻结 start
             UserWalletLog::TYPE_TEXT_FREEZE,       //		文字帖红包冻结，101
             UserWalletLog::TYPE_LONG_FREEZE,       //		长文帖红包冻结，111
             UserWalletLog::TYPE_REDPACKET_FREEZE,       //		红包冻结，150
             //红包冻结 end
+            //红包支出 start
+            UserWalletLog::TYPE_EXPEND_TEXT,            // 文字帖红包支出, 100
+            UserWalletLog::TYPE_EXPEND_LONG,            // 长文帖红包支出, 110
+            UserWalletLog::TYPE_REDPACKET_EXPEND,            // 红包支出, 153
+            //红包支出 end
+
+
             //红包解冻 start
             UserWalletLog::TYPE_REDPACKET_REFUND,       //		红包退款，152
             UserWalletLog::TYPE_LONG_RETURN_THAW,       //		长文帖冻结返还，113
@@ -262,10 +273,10 @@ class ListUserWalletLogsController extends DzqController
             //红包解冻 end
             //提现 start
             UserWalletLog::TYPE_CASH_FREEZE,       //		提现冻结，10
-            //提现 end
-            //提现解冻 start
             UserWalletLog::TYPE_CASH_THAW,       //		提现解冻，提现失败，12
-            //提现解冻 end
+            UserWalletLog::TYPE_CASH_SUCCESS,       //		提现成功，11
+            //提现 end
+
             //合并订单（冻结） start  红包 + 悬赏
             UserWalletLog::TYPE_MERGE_FREEZE,       //		合并订单冻结，170
             //合并订单（冻结） end
@@ -359,6 +370,16 @@ class ListUserWalletLogsController extends DzqController
                     break;
                 case 'freeze':
                     $amount = $val['changeFreezeAmount'];
+                    switch ($val['changeType']){
+                        case in_array($val['changeType'], [UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_REDPACKET_EXPEND]):
+                            $val['changeDesc'] = '红包冻结';
+                            break;
+                        case UserWalletLog::TYPE_QUESTION_REWARD_EXPEND:
+                            $val['changeDesc'] = '悬赏冻结';
+                            break;
+                        default:
+                            break;
+                    }
                     break;
             }
 
