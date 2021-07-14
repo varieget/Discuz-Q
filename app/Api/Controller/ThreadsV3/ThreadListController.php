@@ -287,7 +287,7 @@ class ThreadListController extends DzqController
         if (!empty($complex)) {
             switch ($complex) {
                 case Thread::MY_DRAFT_THREAD:
-                    $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT)
+                    $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT,false)
                         ->where('th.user_id', $loginUserId)
                         ->orderByDesc('th.id');
                     $threads = $threads->join('posts as post', 'post.thread_id', '=', 'th.id');
