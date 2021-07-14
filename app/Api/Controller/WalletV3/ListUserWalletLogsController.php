@@ -137,7 +137,7 @@ class ListUserWalletLogsController extends DzqController
     {
         $query = $this->walletLogs->query();
         $this->applyFilters($query, $filter, $actor);
-
+//        print_r([$query->toSql(), $query->getBindings()]);die;
         // 求和变动可用金额
         $this->sumChangeAvailableAmount = number_format($query->sum('change_available_amount'), 2);
 
@@ -181,7 +181,7 @@ class ListUserWalletLogsController extends DzqController
             //悬赏退回 start
             UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN,          //悬赏帖过期-悬赏帖剩余悬赏金额返回，121
             UserWalletLog::TYPE_QUESTION_REWARD_REFUND,          //悬赏问答退款，162
-            UserWalletLog::TYPE_QUESTION_REWARD_FREEZE_RETURN,          //悬赏冻结返回，165
+//            UserWalletLog::TYPE_QUESTION_REWARD_FREEZE_RETURN,          //悬赏冻结返回，165  -- 只扣除了 冻结金额，但是没有增加可用余额
             //悬赏退回 end
             //付费收入 start
             UserWalletLog::TYPE_INCOME_ONLOOKER_REWARD,          //问答围观收入，36
@@ -221,10 +221,10 @@ class ListUserWalletLogsController extends DzqController
                 UserWalletLog::TYPE_EXPEND_ONLOOKER,          // 问答围观支出，82
                 UserWalletLog::TYPE_EXPEND_ATTACHMENT,          // 付费附件支出，52
                 //付费支出 end
-                //红包支出 start
-                UserWalletLog::TYPE_EXPEND_TEXT,          // 文字帖红包支出，100
-                UserWalletLog::TYPE_EXPEND_LONG,          // 长文帖红包支出，50
-                UserWalletLog::TYPE_REDPACKET_EXPEND,          // 红包支出，153
+                //红包支出 start            红包支出要取  change_freeze_amount  字段
+                UserWalletLog::TYPE_TEXT_FREEZE,          // 文字帖红包冻结，101
+                UserWalletLog::TYPE_LONG_FREEZE,          // 长文帖红包冻结，111
+                UserWalletLog::TYPE_REDPACKET_FREEZE,          // 红包冻结，150
                 //红包支出 end
                 //站点续费支出 start
                 UserWalletLog::TYPE_EXPEND_RENEW,       //		站点续费支出，71
@@ -247,7 +247,7 @@ class ListUserWalletLogsController extends DzqController
             //悬赏冻结 end
             //悬赏解冻 start
             UserWalletLog::TYPE_QUESTION_REWARD_FREEZE_RETURN,       //		悬赏冻结返回，165
-            UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN,       //		悬赏帖过期-悬赏帖剩余悬赏金额返回，121
+//            UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN,       //		悬赏帖过期-悬赏帖剩余悬赏金额返回，121， 这里与 上面的 165 冲突，只需要取上面的 165 即可
             UserWalletLog::TYPE_QUESTION_RETURN_THAW,       //		问答返还解冻，9
             //悬赏解冻 end
             //红包冻结 start
@@ -287,7 +287,7 @@ class ListUserWalletLogsController extends DzqController
         });
 
         if ($this->walletLogType == 'income') {
-            $query->where('change_available_amount', '>', 0)->where('change_type', $income_type);
+            $query->where('change_available_amount', '>', 0)->whereIn('change_type', $income_type);
         } elseif ($this->walletLogType == 'expend') {
             $query->whereIn('change_type', $expend_type);
         } elseif ($this->walletLogType == 'freeze') {
@@ -346,16 +346,19 @@ class ListUserWalletLogsController extends DzqController
 
             $amount = 0;
             switch ($this->walletLogType){
-                case in_array($this->walletLogType, ['income', 'freeze']):
+                case 'income':
                     $amount = $val['changeAvailableAmount'];
                     break;
                 case 'expend':
-                    //红包、悬赏支出
-                    if(in_array($val['changeType'], [UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_REDPACKET_EXPEND, UserWalletLog::TYPE_QUESTION_REWARD_EXPEND])){
+                    //红包支出
+                    if(in_array($val['changeType'], [UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_REDPACKET_EXPEND])){
                         $amount = $val['changeFreezeAmount'];
                     }else{
                         $amount = $val['changeAvailableAmount'];
                     }
+                    break;
+                case 'freeze':
+                    $amount = $val['changeFreezeAmount'];
                     break;
             }
 
