@@ -168,14 +168,11 @@ class DialogMessage extends Model
 //                   $attachmentRecord = Attachment::query()->where('id', $attachmentId)->first(["file_width", "file_height"])->toArray();
                    if(!empty($attachmentRecord->file_width) && !empty($attachmentRecord->file_height)){
                         if (strstr($messageText, $settings->get('qcloud_cos_bucket_name', 'qcloud'))) {
-                            /*
-                                if (substr($messageText, -1) == '&') {
-                                    $messageText = $messageText."width=".$attachmentRecord->file_width."&"."height=".$attachmentRecord->file_height;
-                                } else {
-                                    $messageText = $messageText."&width=".$attachmentRecord->file_width."&"."height=".$attachmentRecord->file_height;
-                                }
-                            */
-                            $messageText = $url."&width=".$attachmentRecord->file_width."&"."height=".$attachmentRecord->file_height;
+                            if($settings->get('qcloud_cos_sign_url', 'qcloud', true)){          //开启了签名
+                                $messageText = $url."&width=".$attachmentRecord->file_width."&"."height=".$attachmentRecord->file_height;
+                            }else{
+                                $messageText = $url."?width=".$attachmentRecord->file_width."&"."height=".$attachmentRecord->file_height;
+                            }
                         } else {
                             $messageText = $url."?width=".$attachmentRecord->file_width."&"."height=".$attachmentRecord->file_height;
                         }
