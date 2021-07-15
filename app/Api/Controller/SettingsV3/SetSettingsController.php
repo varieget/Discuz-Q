@@ -159,6 +159,12 @@ class SetSettingsController extends DzqController
                 $value = "6"; // 修改数据库值
                 Arr::set($setting, 'value', "6"); // 修改返回集合中的值
             }
+            if($key == 'site_expire'){
+                $value = intval($value);
+                if ($value > 1000000 || $value < 0) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER,'请输入正确的付费模式过期天数：0~1000000');
+                }
+            }
             $this->settings->set($key, $value, $tag);
             return $setting;
         });
