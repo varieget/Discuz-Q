@@ -107,7 +107,7 @@ class ResourcePostController extends DzqController
         $data['user'] = $this->getUserWithGroup($postUserId);
 
         //获取回复评论列表
-        if(intval($data['replyCount']) > 0){
+//        if(intval($data['replyCount']) > 0){
             $replyId = Post::query()
                 ->where('reply_post_id',$post_id)
                 ->whereNull("deleted_at")
@@ -129,7 +129,7 @@ class ResourcePostController extends DzqController
             //触发审核只有管理员和自己能看到
             $i = 0;
             foreach ($comment_post_collect as $k=>$value){
-                if ($value['is_approved'] == Post::APPROVED && $this->user->id != $value['user_id'] && !$this->user->isAdmin()) {
+                if ($value['is_approved'] != Post::APPROVED && $this->user->id != $value['user_id'] && !$this->user->isAdmin()) {
                     continue;
                 }
                 $comment_post_collect[$k]->loadMissing($include);
@@ -141,7 +141,7 @@ class ResourcePostController extends DzqController
                 $i++;
             }
 
-        }
+//        }
 //        $cache->put($cacheKey, serialize($data), 5*60);
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
     }
