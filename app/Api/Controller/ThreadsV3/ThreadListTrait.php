@@ -68,6 +68,9 @@ trait ThreadListTrait
             $user = empty($users[$userId]) ? false : $users[$userId];
             $groupUser = empty($groupUsers[$userId]) ? false : $groupUsers[$userId];
             $post = empty($posts[$threadId]) ? false : $posts[$threadId];
+            if ($post == false) {
+                continue;
+            }
             $tomInput = empty($inPutToms[$threadId]) ? false : $inPutToms[$threadId];
             $threadTags = [];
             isset($tags[$threadId]) && $threadTags = $tags[$threadId];
