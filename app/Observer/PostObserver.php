@@ -44,17 +44,17 @@ class PostObserver
      */
     public function created(Post $post)
     {
-        if ($post->is_first) {
-            if ($post->thread->is_approved === Thread::UNAPPROVED) {
-                $post->is_approved = $post->thread->is_approved;
-
-                $post->save();
-            } else {
-                $post->thread->is_approved = $post->is_approved;
-
-                $post->thread->save();
-            }
-        }
+//        if ($post->is_first) {
+//            if ($post->thread->is_approved === Thread::UNAPPROVED) {
+//                $post->is_approved = $post->thread->is_approved;
+//
+//                $post->save();
+//            } else {
+//                $post->thread->is_approved = $post->is_approved;
+//
+//                $post->thread->save();
+//            }
+//        }
 
         $this->refreshSitePostCount();
     }
