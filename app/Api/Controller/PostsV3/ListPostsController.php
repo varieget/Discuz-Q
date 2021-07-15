@@ -190,7 +190,7 @@ class ListPostsController extends DzqController
             $lastThreeComments = [];
             //触发审核只有管理员和自己能看到
             foreach ($twoPosts as $posts) {
-                if ($posts['is_approved'] == Post::APPROVED && $this->user->id != $posts['user_id'] && !$this->user->isAdmin()) {
+                if ($posts['is_approved'] != Post::APPROVED && $this->user->id != $posts['user_id'] && !$this->user->isAdmin()) {
                     continue;
                 }
                 $lastThreeComments[] =  $this->getPost($posts, false);
@@ -206,6 +206,17 @@ class ListPostsController extends DzqController
     {
 
         $userRepo = app(UserRepository::class);
+
+        if ($getRedPacketAmount && !$this->user->isGuest()) {
+            $auditCount = Post::query()
+                ->where('reply_post_id',$post['id'])
+                ->where('is_approved' , '<>' , Post::APPROVED);
+            if (!$this->user->isAdmin()) {
+                $auditCount->where('user_id',$this->user->id);
+            }
+            $auditCount = $auditCount->count();
+            $post['reply_count'] = intval($post['reply_count'] + $auditCount);
+        }
 
         $data = [
             'id' => $post['id'],
