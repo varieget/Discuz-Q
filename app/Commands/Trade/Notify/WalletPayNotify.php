@@ -75,8 +75,8 @@ class WalletPayNotify
             // 记录钱包变更明细
             switch ($this->data['type']) {
                 case Order::ORDER_TYPE_REGISTER:
-                    $change_type = UserWalletLog::TYPE_EXPEND_RENEW;
-                    $change_type_lang = 'wallet.expend_renew';
+                    $change_type = UserWalletLog::TYPE_EXPEND_REGISTER;
+                    $change_type_lang = 'wallet.expend_register';
                     break;
                 case Order::ORDER_TYPE_REWARD:
                     $change_type = UserWalletLog::TYPE_EXPEND_REWARD;
