@@ -1,7 +1,6 @@
 <?php
-
 /**
- * Copyright (C) 2020 Tencent Cloud.
+ * Copyright (C) 2021 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +15,16 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\UsersV3;
+namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
+use App\Models\Thread;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqLog;
+use Discuz\Base\DzqController;
 
-class SmsVerifyController extends AuthBaseController
+class ViewCountController extends DzqController
 {
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         return true;
@@ -31,20 +32,17 @@ class SmsVerifyController extends AuthBaseController
 
     public function main()
     {
-        try {
-            $mobileCode = $this->getMobileCode('verify');
-
-            if ($mobileCode->user->exists) {
-                $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($mobileCode->user));
-            }
-
-            $this->outPut(ResponseCode::NOT_FOUND_USER);
-        } catch (\Exception $e) {
-            DzqLog::error('sms_verify_api_error', [
-                'mobile'    => $this->inPut('mobile'),
-                'code'      => $this->inPut('code')
-            ], $e->getMessage());
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号验证接口异常');
+        $threadId = (int)$this->inPut('threadId');
+        $thread = Thread::query()->where('id',$threadId)->first(['id','view_count']);
+        if (!$thread) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
+
+        $viewCount = intval($thread->view_count+1);
+        $thread->view_count = $viewCount;
+        $thread->save();
+
+        $this->outPut(ResponseCode::SUCCESS,'', ['viewCount' => $viewCount]);
     }
+
 }
