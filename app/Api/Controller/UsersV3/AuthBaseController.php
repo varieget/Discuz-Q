@@ -227,7 +227,7 @@ abstract class AuthBaseController extends DzqController
         //获取小程序登陆session key
         $authSession = $app->auth->session($jsCode);
         if (isset($authSession['errcode']) && $authSession['errcode'] != 0) {
-            DzqLog::error('获取小程序用户失败', [
+            DzqLog::error('failed_to_get_mini_wechat_user', [
                 'jsCode'        => $jsCode,
                 'iv'            => $iv,
                 'encryptedData' => $encryptedData
@@ -365,14 +365,14 @@ abstract class AuthBaseController extends DzqController
             );
             return $response;
         } catch (\Exception $e) {
-            DzqLog::error('登录出错', $data, $e->getMessage());
+            DzqLog::error('login_error', $data, $e->getMessage());
             if (empty($e->getMessage())) {
                 return $this->outPut(ResponseCode::USERNAME_OR_PASSWORD_ERROR);
             }
             if ((int)$e->getMessage() > 0) {
                 return $this->outPut(ResponseCode::LOGIN_FAILED,'登录失败，您还可以尝试'.(int)$e->getMessage().'次');
             } else {
-                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录次数超出限制');
+                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录错误次数超出限制');
             }
         }
     }

@@ -35,7 +35,7 @@ class ThreadDetailController extends DzqController
 
     protected $thread;
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_THREADS, $this->inPut('threadId'));
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
@@ -49,7 +49,11 @@ class ThreadDetailController extends DzqController
         if (empty($this->thread)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        return $userRepo->canViewThreadDetail($this->user, $this->thread);
+        $hasPermission = $userRepo->canViewThreadDetail($this->user, $this->thread);
+        if (! $hasPermission && $this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return $hasPermission;
     }
 
     public function main()
@@ -68,7 +72,8 @@ class ThreadDetailController extends DzqController
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '用户不存在');
         }
         $group = Group::getGroup($user['id']);
-        $thread->increment('view_count');
+        //前端控制浏览数
+//        $thread->increment('view_count');
         $tomInputIndexes = $this->getTomContent($thread);
         $result = $this->packThreadDetail($user, $group, $thread, $post, $tomInputIndexes['tomContent'], true, $tomInputIndexes['tags']);
         $result['orderInfo'] = [];

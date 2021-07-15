@@ -48,7 +48,7 @@ class UploadBackgroundController extends DzqController
         $this->settings = $settings;
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $user->id);
     }
@@ -74,11 +74,12 @@ class UploadBackgroundController extends DzqController
         $result = $this->bus->dispatch(
             new UploadBackground($id, $file, $actor)
         );
-
+        $originalBackGround = $result->getOriginalBackGroundPath();
         $result = [
             'id' => $result->id,
             'username' => $result->username,
-            'backgroundUrl' => $result->background."?".time(),
+            'backgroundUrl' => $result->background,
+            'originalBackGroundUrl' => $originalBackGround,
             'updatedAt' => optional($result->updated_at)->format('Y-m-d H:i:s'),
             'createdAt' => optional($result->created_at)->format('Y-m-d H:i:s'),
         ];

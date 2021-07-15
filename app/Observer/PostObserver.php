@@ -66,7 +66,7 @@ class PostObserver
     {
         if ($post->wasChanged(['is_approved', 'deleted_at'])) {
             if ($post->is_first) {
-                $post->thread->is_approved = $post->is_approved;
+//                $post->thread->is_approved = $post->is_approved;
                 $post->thread->deleted_at = $post->deleted_at;
                 $post->thread->deleted_user_id = $post->deleted_user_id;
 

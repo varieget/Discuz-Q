@@ -92,4 +92,8 @@ $route->get('/checkQcloud', 'checkQcloud',  ApiController\CheckQcloudV3Controlle
 
 //邀请朋友生成code
 $route->get('/adminInvite.link.create','invite.link.create',ApiController\InviteV3\CreateInviteLinkAdminController::class);
+$route->get('/stopWords/export', 'stopWords.export', ApiController\StopWordsV3\ExportStopWordsController::class);
+
+//监听定时任务
+$route->get('/monitor/system/task', 'monitor.system.task', ApiController\System\MonitorSystemTaskController::class);
 

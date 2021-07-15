@@ -48,9 +48,15 @@ class SmsResetPwdController extends AuthBaseController
             ]);
 
             if ($mobileCode->user && isset($password)) {
-                $this->validator->valid([
-                    'password' => $password
-                ]);
+                try {
+                    $this->validator->valid([
+                        'password' => $password
+                    ]);
+                } catch (\Exception $e) {
+                    $validate_error = $e->validator->errors()->first();
+                    $error_message = !empty($validate_error) ? $validate_error : $e->getMessage();
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, $error_message);
+                }
 
                 // 验证新密码与原密码不能相同
                 if ($mobileCode->user->checkPassword($password)) {
@@ -65,7 +71,7 @@ class SmsResetPwdController extends AuthBaseController
 
             $this->outPut(ResponseCode::NET_ERROR);
         } catch (\Exception $e) {
-            DzqLog::error('手机号重置密码接口异常', [
+            DzqLog::error('sms_reset_pwd_api_error', [
                 'mobile'    => $this->inPut('mobile'),
                 'code'      => $this->inPut('code'),
             ], $e->getMessage());

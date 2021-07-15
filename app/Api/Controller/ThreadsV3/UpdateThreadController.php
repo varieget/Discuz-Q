@@ -51,7 +51,7 @@ class UpdateThreadController extends DzqController
             ->whereNull('deleted_at')
             ->first();
         if (!$this->thread) {
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '帖子不存在');
         }
         //编辑前验证手机，验证码，实名
         $this->userVerify($this->user);
@@ -62,9 +62,12 @@ class UpdateThreadController extends DzqController
     {
         $threadId = $this->inPut('threadId');
         $thread = $this->thread;
-        $post = Post::getOneActivePost($threadId);
+        $post = Post::query()
+            ->where(['thread_id' => $threadId, 'is_first' => Post::FIRST_YES])
+            ->whereNull('deleted_at')
+            ->first();
         if (empty($post)) {
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '帖子详情不存在');
         }
         $oldContent = $post->content;
         $result = $this->updateThread($thread, $post);
@@ -116,7 +119,7 @@ class UpdateThreadController extends DzqController
         //更新post数据
         $this->savePost($post, $content);
         //发帖@用户
-        $this->sendRelated($thread, $post);
+        $this->sendNews($thread, $post);
         //更新tom数据
         $tomJsons = $this->saveThreadTom($thread, $content, $post);
         return $this->getResult($thread, $post, $tomJsons);
@@ -327,7 +330,7 @@ class UpdateThreadController extends DzqController
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         CacheKey::delListCache();
         $threadId = $this->inPut('threadId');

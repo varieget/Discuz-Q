@@ -80,7 +80,7 @@ class ManageThemeList extends DzqController
             );
 
         //是否审核and是否草稿
-        $query->where('threads.is_draft', Thread::IS_NOT_DRAFT);
+        //$query->where('threads.is_draft', Thread::IS_NOT_DRAFT);
 
         //浏览次数
         if ($viewCountGt !== '') {
@@ -253,28 +253,28 @@ class ManageThemeList extends DzqController
             }
 
             $pageData[$k]['lastDeletedLog'] = [
-                'message' => $userActionLogs[$v['threadId']]
+                'message' => isset($userActionLogs[$v['threadId']]) ? $userActionLogs[$v['threadId']] : null
             ];
 
             $pageData[$k]['lastPostedUser'] = [
-                'lastNickname' => $lastPostedUser[$v['threadId']]['nickname'],
-                'userId' => $lastPostedUser[$v['threadId']]['user_id'],
-                'createdAt' => date('Y-m-d H:i:s',strtotime($lastPostedUser[$v['threadId']]['created_at'])),
+                'lastNickname' => isset($lastPostedUser[$v['threadId']]['nickname']) ? $lastPostedUser[$v['threadId']]['nickname'] : null,
+                'userId' => isset($lastPostedUser[$v['threadId']]['user_id']) ? $lastPostedUser[$v['threadId']]['user_id'] : null,
+                'createdAt' => isset($lastPostedUser[$v['threadId']]['created_at']) ? date('Y-m-d H:i:s',strtotime($lastPostedUser[$v['threadId']]['created_at'])) : null,
             ];
 
             $pageData[$k]['deletedUserArr'] = [
-                'deletedNickname' => $snapArr[$v['threadId']]['deleted_user'],
-                'deletedAt' => date('Y-m-d H:i:s',strtotime($snapArr[$v['threadId']]['deleted_at'])),
-                'deletedUserId' => $snapArr[$v['threadId']]['deleted_user_id']
+                'deletedNickname' => isset($snapArr[$v['threadId']]['deleted_user']) ? $snapArr[$v['threadId']]['deleted_user'] : null,
+                'deletedAt' => isset($snapArr[$v['threadId']]['deleted_at']) ? date('Y-m-d H:i:s',strtotime($snapArr[$v['threadId']]['deleted_at'])) : null,
+                'deletedUserId' => isset($snapArr[$v['threadId']]['deleted_user_id']) ? $snapArr[$v['threadId']]['deleted_user_id'] : null
             ];
 
             if (!empty($replace)){
                 foreach ($replace as $val){
                     $content[$v['threadId']]['content'] = str_replace($val,'<span class="highlight">' . $val . '</span>',$content[$v['threadId']]['content']);
                 }
-                $pageData[$k]['content']['text'] = $content[$v['threadId']]['content'];
+                $pageData[$k]['content']['text'] = isset($content[$v['threadId']]['content']) ? $content[$v['threadId']]['content'] : null;
             }
-            $pageData[$k]['content']['text'] = $content[$v['threadId']]['content'];
+            $pageData[$k]['content']['text'] = isset($content[$v['threadId']]['content']) ? $content[$v['threadId']]['content'] : null;
         }
 
         $pagination['pageData'] = $pageData;

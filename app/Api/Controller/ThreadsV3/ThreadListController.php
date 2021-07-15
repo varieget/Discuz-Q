@@ -59,6 +59,7 @@ class ThreadListController extends DzqController
         $filter = $this->inPut('filter') ?: [];
         $categoryIds = $filter['categoryids'] ?? [];
         $complex = $filter['complex'] ?? null;
+        $user = $this->user;
         $this->viewHotList();
 
         $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
@@ -67,8 +68,17 @@ class ThreadListController extends DzqController
 //            if ($this->user->isGuest() && !$this->categoryIds) {
 //                $this->outPut(ResponseCode::JUMP_TO_LOGIN);
 //            }
-            if (!$this->categoryIds && empty($complex)) {
-                throw new PermissionDeniedException('没有浏览权限');
+            if (!$this->categoryIds) {
+                if (empty($complex) ||
+                    $complex == Thread::MY_LIKE_THREAD ||
+                    $complex == Thread::MY_COLLECT_THREAD ||
+                    ($complex == Thread::MY_OR_HIS_THREAD && $user->id !== $filter['toUserId'])) {
+                    throw new PermissionDeniedException('没有浏览权限');
+                }
+            }
+            //去除购买帖子的分类控制
+            if ($complex == Thread::MY_BUY_THREAD) {
+                $this->categoryIds = array();
             }
         }
         return true;
@@ -102,7 +112,7 @@ class ThreadListController extends DzqController
             $page = 1;
             $sequence = 0;
             $perPage = 10;
-            $filter = ['sort' => Thread::SORT_BY_HOT];
+            $filter['sort'] = Thread::SORT_BY_HOT;
         }
 //        $this->openQueryLog();
         $this->preloadCount = self::PRELOAD_PAGES * $perPage;
@@ -256,11 +266,14 @@ class ThreadListController extends DzqController
             'essence' => 'integer|in:0,1',
             'types' => 'array',
             'categoryids' => 'array',
-            'sort' => 'integer|in:1,2,3',
+            'sort' => 'integer|in:1,2,3,4',
             'attention' => 'integer|in:0,1',
-            'complex' => 'integer|in:1,2,3,4,5'
+            'complex' => 'integer|in:1,2,3,4,5',
+            'site' => 'integer|in:0,1',
+            'removeThreadIds'=>'array'
         ]);
         $loginUserId = $this->user->id;
+        $administrator = $this->user->isAdmin();
         $essence = null;
         $types = [];
 //        $categoryids = [];
@@ -276,15 +289,18 @@ class ThreadListController extends DzqController
         isset($filter['attention']) && $attention = $filter['attention'];
         isset($filter['search']) && $search = $filter['search'];
         isset($filter['complex']) && $complex = $filter['complex'];
+        isset($filter['site']) && $site = $filter['site'];
+        isset($filter['removeThreadIds']) && $removeThreadIds = $filter['removeThreadIds'];
 
         $categoryids = $this->categoryIds;
         $threads = $this->getBaseThreadsBuilder();
         if (!empty($complex)) {
             switch ($complex) {
                 case Thread::MY_DRAFT_THREAD:
-                    $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT)
-                        ->where('user_id', $loginUserId)
+                    $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT,false)
+                        ->where('th.user_id', $loginUserId)
                         ->orderByDesc('th.id');
+                    $threads = $threads->join('posts as post', 'post.thread_id', '=', 'th.id');
                     break;
                 case Thread::MY_LIKE_THREAD:
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
@@ -306,10 +322,11 @@ class ThreadListController extends DzqController
                         ->orderByDesc('order.updated_at');
                     break;
                 case Thread::MY_OR_HIS_THREAD:
-                    if (!empty($filter['toUserId'])) {
+                    if (empty($filter['toUserId']) || $filter['toUserId'] == $loginUserId || $administrator) {
+                        $threads = $this->getBaseThreadsBuilder(Thread::BOOL_NO, false);
+                    } else {
                         $threads = $threads->where('th.is_anonymous', Thread::IS_NOT_ANONYMOUS);
                     }
-
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
                     $threads = $threads->where('user_id', $userId)
                         ->orderByDesc('th.id');
@@ -335,7 +352,7 @@ class ThreadListController extends DzqController
         if (!empty($sort)) {
             switch ($sort) {
                 case Thread::SORT_BY_THREAD://按照发帖时间排序
-                    $threads->orderByDesc('th.id');
+                    $threads->orderByDesc('th.created_at');
                     break;
                 case Thread::SORT_BY_POST://按照评论时间排序
                     $threads->orderByDesc('th.posted_at');
@@ -343,6 +360,9 @@ class ThreadListController extends DzqController
                 case Thread::SORT_BY_HOT://按照热度排序
                     $threads->whereBetween('th.created_at', [Carbon::parse('-7 days'), Carbon::now()]);
                     $threads->orderByDesc('th.view_count');
+                    break;
+                case Thread::SORT_BY_RENEW://按照更新时间排序
+                    $threads->orderByDesc('th.updated_at');
                     break;
                 default:
                     $threads->orderByDesc('th.id');
@@ -363,6 +383,13 @@ class ThreadListController extends DzqController
                 $threads = $threads->whereNotIn('th.user_id', $denyUserIds);
                 $withLoginUser = true;
             }
+        }
+
+        if(!empty($site)){
+            $threads = $threads->where('th.is_site', Thread::IS_SITE);
+        }
+        if(!empty($removeThreadIds)){
+            $threads = $threads->whereNotIn('th.id', $removeThreadIds);
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
         return $threads;
@@ -454,17 +481,19 @@ class ThreadListController extends DzqController
         return $query;
     }
 
-    private function getBaseThreadsBuilder($isDraft = Thread::BOOL_NO)
+    private function getBaseThreadsBuilder($isDraft = Thread::BOOL_NO,$filterApprove = true)
     {
-        return Thread::query()
+        $threads =  Thread::query()
             ->select('th.*')
             ->from('threads as th')
             ->whereNull('th.deleted_at')
             ->whereNotNull('th.user_id')
-//            ->where('th.is_sticky', Thread::BOOL_NO)
             ->where('th.is_draft', $isDraft)
-            ->where('th.is_display', Thread::BOOL_YES)
-            ->where('th.is_approved', Thread::BOOL_YES);
+            ->where('th.is_display', Thread::BOOL_YES);
+        if($filterApprove){
+            $threads->where('th.is_approved', Thread::BOOL_YES);
+        }
+        return $threads;
     }
 
     private function cacheKey($filter)

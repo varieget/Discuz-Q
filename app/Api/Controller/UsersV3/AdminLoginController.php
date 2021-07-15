@@ -22,6 +22,7 @@ use App\Commands\Users\GenJwtToken;
 use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Models\User;
+use Discuz\Base\DzqLog;
 use Exception;
 use App\Passport\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -66,13 +67,14 @@ class AdminLoginController extends DzqController
                 new GenJwtToken($data)
             );
         } catch (Exception $e) {
+            DzqLog::error('admin_login_error', $data, $e->getMessage());
             if (empty($e->getMessage())) {
                 return $this->outPut(ResponseCode::USERNAME_OR_PASSWORD_ERROR);
             }
             if ((int)$e->getMessage() > 0) {
                 return $this->outPut(ResponseCode::LOGIN_FAILED,'登录失败，您还可以尝试'.(int)$e->getMessage().'次');
             } else {
-                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录次数超出限制');
+                return $this->outPut(ResponseCode::LOGIN_FAILED,'登录错误次数超出限制');
             }
         }
 

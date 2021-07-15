@@ -26,6 +26,7 @@ use App\Models\UserWalletLog;
 use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Repositories\ThreadRewardRepository;
+use Discuz\Base\DzqLog;
 use Discuz\Console\AbstractCommand;
 use Discuz\Foundation\Application;
 use Carbon\Carbon;
@@ -208,7 +209,7 @@ class ThreadRewardExpireCommand extends AbstractCommand
                 // 发送通知
                 $user = User::query()->where('id', $order->user_id)->first();
                 if (empty($user)) {
-                    app('log')->info('发送悬赏过期通知失败：红包帖(ID为' . $item->thread_id . ')，作者(ID为' . $item->user_id . ')。异常错误记录：作者信息不存在，无法发送通知');
+                    app('log')->info('发送悬赏过期通知失败：悬赏帖(ID为' . $item->thread_id . ')，作者(ID为' . $item->user_id . ')。异常错误记录：作者信息不存在，无法发送通知');
                 } else {
                     app(ThreadRewardRepository::class)->returnThreadRewardNotify($item->thread_id, $item->user_id, $remainMoney, UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN);
                 }
@@ -217,7 +218,7 @@ class ThreadRewardExpireCommand extends AbstractCommand
                 $item->save();
                 $this->connection->commit();
             } catch (Exception $e) {
-                $this->outDebugInfo($this->info .'处理失败' . $e->getMessage());
+                DzqLog::error('threadReward_expire_refund_failure', [], $e->getMessage());
                 $this->connection->rollback();
             }
 

@@ -107,8 +107,10 @@ class AttachmentSerializer extends AbstractSerializer
                 $attributes['thumbUrl'] = $url;
             } else {
                 if ($model->is_remote) {
-                    $attributes['thumbUrl'] = $url . (strpos($url, '?') === false ? '?' : '&')
-                        . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
+                    //改为前端取分辨率大小
+                    $attributes['thumbUrl'] = $url;
+//                    $attributes['thumbUrl'] = $url . (strpos($url, '?') === false ? '?' : '&')
+//                        . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
                 } else {
                     // 缩略图不存在时使用原图
                     $attributes['thumbUrl'] = $this->filesystem->disk('attachment')->exists($model->thumb_path)
@@ -117,6 +119,11 @@ class AttachmentSerializer extends AbstractSerializer
                 }
             }
         } elseif ($model->type == Attachment::TYPE_OF_ANSWER) {
+            $attributes['thumbUrl'] = $url;
+        }
+
+        // gif缩略图无法播放，返回原图进行展示
+        if (in_array(strtolower($attributes['fileType']), array('gif', 'image/gif'))) {
             $attributes['thumbUrl'] = $url;
         }
 

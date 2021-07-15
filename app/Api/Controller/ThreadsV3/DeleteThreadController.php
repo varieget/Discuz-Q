@@ -66,7 +66,7 @@ class DeleteThreadController extends DzqController
         $this->outPut(ResponseCode::SUCCESS);
     }
 
-    public function clearCache($user)
+    public function prefixClearCache($user)
     {
         CacheKey::delListCache();
         $threadId = $this->inPut('threadId');

@@ -160,12 +160,14 @@ class WechatTransitionAutoRegisterController extends AuthBaseController
                 'userId'        =>  $wechatUser->user->id,
                 'accessToken'   =>  $accessToken,
             ]);
+            //删除sessionToken
+            $token->delete();
             $result = $this->camelData(collect($accessToken));
             $result = $this->addUserInfo($wechatUser->user, $result);
 
             $this->outPut(ResponseCode::SUCCESS, '', $result);
         } catch (\Exception $e) {
-            DzqLog::error('微信过渡阶段自动注册用户接口异常', [
+            DzqLog::error('wechat_transition_auto_register_api_error', [
                 'sessionToken'  => $this->inPut('sessionToken'),
                 'type'          => $this->inPut('type'),
                 'inviteCode'    => $this->inPut('inviteCode'),

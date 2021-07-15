@@ -66,8 +66,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('attachment:update')->everyFiveMinutes()->withoutOverlapping();
 
         // 维护清理
-        $schedule->command('clear:attachment')->daily();
-        $schedule->command('clear:video')->daily();
+//        $schedule->command('clear:attachment')->daily();
+//        $schedule->command('clear:video')->daily();
         $schedule->command('clear:question')->daily();
         $schedule->command('clear:thread_draft')->daily();
         $schedule->command('clear:session_token')->everyMinute();

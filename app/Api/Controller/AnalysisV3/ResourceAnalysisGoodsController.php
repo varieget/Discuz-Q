@@ -23,6 +23,7 @@ use App\Traits\PostGoodsTrait;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 use GuzzleHttp\Client;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Psr\Http\Message\ServerRequestInterface;
@@ -175,12 +176,20 @@ class ResourceAnalysisGoodsController extends DzqController
          */
         $sendType = PostGoods::setBySending($this->address);
         if ($sendType == 'Guzzle') {
-            $response = $this->httpClient->request('GET', $this->address, [
-                'allow_redirects' => [
-                    'max' => 100,
-                    'track_redirects' => true,
-                ],
-            ]);
+            try {
+                $response = $this->httpClient->request('GET', $this->address, [
+                    'allow_redirects' => [
+                        'max' => 100,
+                        'track_redirects' => true,
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                DzqLog::error('resource_analysis_goods_error', [
+                    'address' => $this->address
+                ], $e->getMessage());
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '获取商品信息失败');
+            }
+
             if ($response->getStatusCode() != 200) {
                 return $this->outPut(ResponseCode::NET_ERROR,trans('post.post_goods_http_client_fail'));
             }

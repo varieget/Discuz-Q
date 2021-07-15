@@ -20,6 +20,7 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
+use App\Traits\PostNoticesTrait;
 use Discuz\Base\DzqCache;
 use App\Formatter\Formatter;
 use App\Notifications\Related;
@@ -47,6 +48,7 @@ trait ThreadTrait
 {
     use TomTrait;
     use QcloudTrait;
+    use PostNoticesTrait;
 
     private $loginUserData = [];
 
@@ -66,8 +68,10 @@ trait ThreadTrait
             'postId' => $post['id'],
             'userId' => $thread['user_id'],
             'categoryId' => $thread['category_id'],
+            'parentCategoryId' => $this->getParentCategory($thread['category_id'])['parentCategoryId'],
             'topicId' => $thread['topic_id'] ?? 0,
             'categoryName' => $this->getCategoryNameField($thread['category_id']),
+            'parentCategoryName' => $this->getParentCategory($thread['category_id'])['parentCategoryName'],
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
             'isApproved' => $thread['is_approved'],
@@ -195,6 +199,18 @@ trait ThreadTrait
         $categories = Category::getCategories();
         $categories = array_column($categories, null, 'id');
         return $categories[$categoryId]['name'] ?? null;
+    }
+
+    private function getParentCategory($categoryId)
+    {
+        $categories = Category::getCategories();
+        $categories = array_column($categories, null, 'id');
+        $parentCategoryId   = !empty($categories[$categoryId]['parentid']) ? $categories[$categoryId]['parentid'] : 0;
+        $parentCategoryName = ! empty($parentCategoryId) ? $categories[$parentCategoryId]['name'] : '';
+        return [
+            'parentCategoryId'      => $parentCategoryId,
+            'parentCategoryName'    => $parentCategoryName
+        ];
     }
 
     /**
@@ -344,11 +360,13 @@ trait ThreadTrait
             if (!empty($body)) {
                 $attachments_body = $body;
                 $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
+                $isset_attachment_ids = [];
                 $xml = preg_replace_callback(
                     '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
-                    function ($m) use ($attachments) {
+                    function ($m) use ($attachments, &$isset_attachment_ids) {
                         if (!empty($m)) {
                             $id = trim($m[3], '"');
+                            $isset_attachment_ids[] = $id;
                             return 'img src="' . $attachments[$id] . '" alt="' . $m[2] . '" title="' . $id . '"';
                         }
                     },
@@ -357,6 +375,11 @@ trait ThreadTrait
                 //针对图文混排的情况，这里要去掉外部图片展示
 //                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
                 $content['text'] = $xml;
+                if(!empty($isset_attachment_ids) && isset($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
+                    foreach ($content['indexes'][TomConfig::TOM_IMAGE]['body'] as $k => $v){
+                        if(in_array($v['id'], $isset_attachment_ids))       unset($content['indexes'][TomConfig::TOM_IMAGE]['body'][$k]);
+                    }
+                }
             }
         }
 
@@ -484,6 +507,7 @@ trait ThreadTrait
         $threadId = $thread['id'];
         $topics = $this->optimizeTopics($content['text']);
         $userId = $this->user->id;
+        $topicIds = [];
         foreach ($topics as $topicItem) {
             $topicName = str_replace('#', '', $topicItem);
 
@@ -502,6 +526,7 @@ trait ThreadTrait
                 $topic->increment('thread_count');
             }
             $topicId = $topic->id;
+            $topicIds[] = $topicId;
             $attr = ['thread_id' => $threadId, 'topic_id' => $topicId];
             ThreadTopic::query()->where($attr)->firstOrCreate($attr);
 
@@ -510,50 +535,24 @@ trait ThreadTrait
                 $content['text'] = str_replace($topicItem, $html,$content['text']);
             }
         }
+
+        if (empty($topicIds)) {
+            ThreadTopic::query()->where('thread_id', $threadId)->delete();
+        } else {
+            ThreadTopic::query()->where('thread_id', $threadId)->whereNotIn('topic_id', $topicIds)->delete();
+        }
+
         return $content;
     }
 
     //发帖@用户发送通知消息
-    private function sendRelated($thread, $post)
+    private function sendNews($thread, $post)
     {
         //如果是草稿或需要审核 不发送消息
         if ($thread->is_draft == Thread::IS_DRAFT || $thread->is_approved == Thread::UNAPPROVED || empty($post->parsedContent)) {
             return;
         }
-
-        preg_match_all('/<span.*>(.*)<\/span>/isU', $post->parsedContent, $newsNameArr);
-
-        $newsNameArr = $newsNameArr[1];
-
-        if (empty($newsNameArr)) {
-            return;
-        }
-
-        $newsNameArr2 = [];
-        foreach ($newsNameArr as $v) {
-            $string = trim(substr($v, 1));
-            if ($this->user->nickname != $string) {
-                $newsNameArr2[] = $string;
-            }
-        }
-
-        $users = User::query()->whereIn('username', $newsNameArr2)->get();
-
-        if (empty($users)) {
-            return;
-        }
-
-        $post->mentionUsers()->sync(array_column($users->toArray(), 'id'));
-
-        $users->load('deny');
-        $actor = $this->user;
-        $users->filter(function ($user) use ($post) {
-            //把作者拉黑的用户不发通知
-            return !in_array($post->user_id, array_column($user->deny->toArray(), 'id'));
-        })->each(function (User $user) use ($post, $actor) {
-            // Tag 发送通知
-            $user->notify(new Related($actor, $post));
-        });
+        $this->sendRelated($post, $this->user);
     }
 
     /*
@@ -564,7 +563,7 @@ trait ThreadTrait
     private function optimizeEmoji($text)
     {
 //        $text = '<r>' . $text . '</r>';
-        preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
+        preg_match_all('/<img((?![<|>]).)*?emoji\/qq((?![<|>]).)*?>/i', $text, $m1);
         $searches = $m1[0];
         $replaces = [];
         foreach ($searches as $search) {
@@ -603,7 +602,7 @@ trait ThreadTrait
     {
         return Order::query()
             ->where('thread_id', $thread['id'])
-            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
+            ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_TEXT, Order::ORDER_TYPE_LONG, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
             ->select(['payment_sn', 'order_sn', 'amount', 'type', 'id', 'status'])
             ->first();
     }
@@ -641,7 +640,7 @@ trait ThreadTrait
             return $item;
         })->toArray();
         foreach ($ats as $val) {
-            $text = preg_replace("/{$val['username']}/", "{$val['html']}", $text, 1);
+            $text = str_replace($val['username'], $val['html'], $text);
         }
         return $text;
     }

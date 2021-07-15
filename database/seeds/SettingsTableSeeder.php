@@ -150,6 +150,21 @@ class SettingsTableSeeder extends Seeder
                 'key' => 'open_api_log',    // 是否开启接口层日志，0不开启，1开启
                 'value' => 0,
                 'tag' => 'default',
+            ],
+            [
+              'key' => 'password_length',    // 注册密码最小长度
+              'value' => 6,
+              'tag' => 'default',
+            ],
+            [
+              'key' => 'password_strength',    // 密码字符类型
+              'value' => '0',
+              'tag' => 'default',
+            ],
+            [
+              'key' => 'is_need_transition',    // 启用微信内落地页
+              'value' => 1,
+              'tag' => 'default',
             ]
         ]);
     }

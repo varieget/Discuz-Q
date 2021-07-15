@@ -16,35 +16,38 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\UsersV3;
+namespace App\Api\Controller\System;
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqLog;
+use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
+use Discuz\Base\DzqController;
 
-class SmsVerifyController extends AuthBaseController
+class MonitorSystemTaskController extends DzqController
 {
+    use AssertPermissionTrait;
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('没有权限');
+        }
         return true;
     }
 
     public function main()
     {
-        try {
-            $mobileCode = $this->getMobileCode('verify');
-
-            if ($mobileCode->user->exists) {
-                $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($mobileCode->user));
+        $get = DzqCache::get(CacheKey::MONITOR_SYSTEM_TASK);
+        $arr = ['status' => 0, 'list' => $get];
+        if (!empty($get)) {
+            $time = time()-strtotime($get[count($get)-1]['time']);
+            if ($time <= 60) {
+                $arr['status'] = 1;
             }
-
-            $this->outPut(ResponseCode::NOT_FOUND_USER);
-        } catch (\Exception $e) {
-            DzqLog::error('sms_verify_api_error', [
-                'mobile'    => $this->inPut('mobile'),
-                'code'      => $this->inPut('code')
-            ], $e->getMessage());
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, '手机号验证接口异常');
         }
+        return $this->outPut(ResponseCode::SUCCESS,'', $arr);
     }
 }

@@ -53,10 +53,12 @@ class AdminListCategoriesController extends DzqController
         $categoriesFather = [];
         $categoriesChild = [];
 
+        $sequenceCategories = [];
         $sequence = Sequence::query()->first();
-
-        $sequenceCategories = $sequence->category_ids;
-        $sequenceCategories = explode(",", $sequenceCategories);
+        if($sequence){
+            $sequenceCategories = $sequence->category_ids;
+            $sequenceCategories = explode(",", $sequenceCategories);
+        }
         foreach ($categories as $category) {
             $createThreadPermission = 'category' . $category['pid'] . '.createThread';
             // 全局或单个分类创建权限

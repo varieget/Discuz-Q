@@ -95,7 +95,9 @@ class ThreadHelper
                 $user = $users[$item['user_id']] ?? null;
                 $userIds = [];
                 if (!empty($likedUsersInfo[$threadId])) {
-                    $userIds = array_column($likedUsersInfo[$threadId], 'userId');
+                    if(is_array($likedUsersInfo[$threadId])){
+                        $userIds = array_column($likedUsersInfo[$threadId], 'userId');
+                    }
                 }
                 $unique = in_array($item['user_id'], $userIds);
                 if (!empty($user) && empty($unique)) {

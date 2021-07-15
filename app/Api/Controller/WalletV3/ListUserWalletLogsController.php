@@ -158,6 +158,30 @@ class ListUserWalletLogsController extends DzqController
         $log_end_time       = Arr::get($filter, 'endTime'); //变动时间范围：结束
         $log_source_user_id         = Arr::get($filter, 'sourceUserId');
         $log_change_type_exclude    = Arr::get($filter, 'changeTypeExclude');//排除变动类型
+        // 所有支出类型：
+        $expend_type = [
+            UserWalletLog::TYPE_EXPEND_ARTIFICIAL,       //		人工支出
+            UserWalletLog::TYPE_EXPEND_REWARD,           //			打赏支出
+            UserWalletLog::TYPE_EXPEND_THREAD,           //			付费主题支出
+            UserWalletLog::TYPE_EXPEND_RENEW,            //			站点续费支出
+            UserWalletLog::TYPE_EXPEND_QUESTION,         //		问答提问支出
+            UserWalletLog::TYPE_EXPEND_ONLOOKER,         //		问答围观支出
+            UserWalletLog::TYPE_EXPEND_TEXT,             //			文字贴红包支出
+            UserWalletLog::TYPE_EXPEND_LONG,             //			长文贴红包支出
+            UserWalletLog::TYPE_REDPACKET_EXPEND,        //		红包支出
+            UserWalletLog::TYPE_QUESTION_REWARD_EXPEND   //	悬赏采纳支出
+        ];
+        // 所有冻结类型：
+        $freeze_type = [
+            UserWalletLog::TYPE_QUESTION_FREEZE,       //		问答冻结
+            UserWalletLog::TYPE_CASH_FREEZE,       //		提现冻结
+            UserWalletLog::TYPE_TEXT_FREEZE,       //		文字帖红包冻结
+            UserWalletLog::TYPE_LONG_FREEZE,       //		长文帖红包冻结
+            UserWalletLog::TYPE_REDPACKET_FREEZE,       //		红包冻结
+            UserWalletLog::TYPE_QUESTION_REWARD_FREEZE,       //		悬赏问答冻结
+            UserWalletLog::TYPE_MERGE_FREEZE       //		合并订单冻结
+        ];
+
 
 //        $query->when($log_user, function ($query) use ($log_user) {
 //            $query->where('user_id', $log_user);
@@ -173,11 +197,10 @@ class ListUserWalletLogsController extends DzqController
         if ($this->walletLogType == 'income') {
             $query->where('change_available_amount', '>', 0);
         } elseif ($this->walletLogType == 'expend') {
-            $query->where('change_available_amount', '<', 0);
+            $query->whereIn('change_type', $expend_type);
         } elseif ($this->walletLogType == 'freeze') {
-            $query->where('change_freeze_amount', '<>', 0);
+            $query->whereIn('change_type', $freeze_type);
         }
-
         if (!empty($log_change_type)) {
             $query->when($log_change_type, function ($query) use ($log_change_type) {
                 $query->whereIn('change_type', $log_change_type);
@@ -192,7 +215,7 @@ class ListUserWalletLogsController extends DzqController
             $query->where('created_at', '>=', $log_start_time);
         });
         $query->when($log_end_time, function ($query) use ($log_end_time) {
-            $query->where('created_at', '<=', $log_end_time);
+            $query->where('created_at', '<=', $log_end_time.' 23:59:59');
         });
         $query->when($log_username, function ($query) use ($log_username) {
             $query->whereIn('user_wallet_logs.user_id',
@@ -216,7 +239,7 @@ class ListUserWalletLogsController extends DzqController
 
     public function filterData($data){
         foreach ($data['pageData'] as $key => $val) {
-            
+
             if(!empty($val['order']['thread']['title'])) {
                 $title = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $val['order']['thread']['title']);
                 list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($title);
@@ -229,11 +252,25 @@ class ListUserWalletLogsController extends DzqController
                 $title = '';
             }
 
+            $amount = 0;
+            switch ($this->walletLogType){
+                case in_array($this->walletLogType, ['income', 'freeze']):
+                    $amount = $val['changeAvailableAmount'];
+                    break;
+                case 'expend':
+                    //红包、悬赏支出
+                    if(in_array($val['changeType'], [UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_REDPACKET_EXPEND, UserWalletLog::TYPE_QUESTION_REWARD_EXPEND])){
+                        $amount = $val['changeFreezeAmount'];
+                    }else{
+                        $amount = $val['changeAvailableAmount'];
+                    }
+                    break;
+            }
+
             $pageData = [
                 'id'            =>  $val['id'],
                 'title'         =>  $title,
-                'amount'        =>  ($this->walletLogType == 'income' || $this->walletLogType == 'expend')
-                                        ? $val['changeAvailableAmount'] : $val['changeFreezeAmount'],
+                'amount'        =>  $amount,
                 'changeType'    =>  !empty($val['changeType']) ? $val['changeType'] : '',
                 'changeDesc'    =>  !empty($val['changeDesc']) ? $val['changeDesc'] : '',
                 'status'        =>  !empty($val['order']['status']) ? $val['order']['status'] : '',
