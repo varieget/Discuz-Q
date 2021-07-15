@@ -157,16 +157,12 @@ class DialogMessage extends Model
                 if(!empty($attachmentId)) {
                    $attachmentRecord = Attachment::query()->where('id', $attachmentId)->first(["file_width", "file_height"])->toArray();
                    if(!empty($attachmentRecord['file_width']) && !empty($attachmentRecord['file_height'])){
-                        $settings = app()->make(SettingsRepository::class);
-                        if (strstr($messageText, $settings->get('qcloud_cos_bucket_name', 'qcloud'))) {
-                                if (substr($messageText, -1) == '&') {
-                                    $messageText = $messageText."width=".$attachmentRecord['file_width']."&"."height=".$attachmentRecord['file_height'];
-                                } else {
-                                    $messageText = $messageText."&width=".$attachmentRecord['file_width']."&"."height=".$attachmentRecord['file_height'];
-                                }
-                        } else {
-                            $messageText = $messageText."?width=".$attachmentRecord['file_width']."&"."height=".$attachmentRecord['file_height'];
-                        }
+                       if (!strstr($messageText, '?')) {
+                           $messageText .= '?';
+                       } else {
+                           substr($messageText, -1) != '&' && $messageText .= '&';
+                       }
+                       $messageText.="width=".$attachmentRecord['file_width']."&"."height=".$attachmentRecord['file_height'];
                     }
                 }
             }
