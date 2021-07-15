@@ -28,6 +28,7 @@ use App\Repositories\UserRepository;
 use App\Validators\SetSettingValidator;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqCache;
+use Discuz\Base\DzqLog;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Qcloud\QcloudTrait;
 use Discuz\Base\DzqController;
@@ -144,7 +145,12 @@ class SetSettingsController extends DzqController
                 $this->outPut(ResponseCode::INVALID_PARAMETER,'请先开启云API');
             }
         }
-        $this->validator->valid($validator);
+        try {
+            $this->validator->valid($validator);
+        } catch (\Exception $e) {
+            DzqLog::error('invalid_parameter', ['validator' => $validator], $e->getMessage());
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '', $e->getMessage());
+        }
 
         $settings->transform(function ($setting) {
             $key = Arr::get($setting, 'key');
