@@ -248,7 +248,7 @@ abstract class AuthBaseController extends DzqController
                 'errcode'   => $authSession['errcode']
             ]);
             $this->outPut(ResponseCode::INTERNAL_ERROR,
-                          $authSession['errmsg'],
+                          '获取小程序用户失败',
                           ['errmsg' => $authSession['errmsg'], 'errcode' => $authSession['errcode']]);
         }
         $decryptedData = $app->encryptor->decryptData(
