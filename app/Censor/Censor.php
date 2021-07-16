@@ -46,7 +46,7 @@ class Censor
 
     /**
      * 是否合法（放入待审核）
-     *
+     * true：非法，false：合法
      * @var bool
      */
     public $isMod = false;
@@ -322,10 +322,17 @@ class Censor
                 $params['FileContent'] = base64_encode(file_get_contents($path));
             }
 
-            /** @see QcloudManage */
+            /**
+             * @property QcloudManage
+             * @see 图片内容安全文档 https://cloud.tencent.com/document/product/1125/53273
+             */
             $result = $this->app->make('qcloud')->service('ims')->ImageModeration($params);
 
-            if (Arr::get($result, 'Label') != 'Normal') {
+            /**
+             * Suggestion 腾讯云系统推荐的后续操作
+             * 返回值：Block：建议屏蔽，Review ：建议人工复审，Pass：建议通过
+             */
+            if (Arr::get($result, 'Suggestion') != 'Pass') {
                 $this->isMod = true;
             }
         } elseif ((bool) $this->setting->get('miniprogram_close', 'wx_miniprogram', false)) {
@@ -352,6 +359,10 @@ class Censor
             if (Arr::get($result, 'errcode', 0) !== 0) {
                 $this->isMod = true;
             }
+        }
+
+        if ($this->isMod == true) {
+            Utils::outPut(ResponseCode::NOT_ALLOW_CENSOR_IMAGE);
         }
     }
 
