@@ -128,7 +128,7 @@ class Censor
             $content = $this->miniProgramCheck($content);
         }
 
-        if ($this->isMod && ($type == 'signature' || $type == 'dialog')) {
+        if ($this->isMod && in_array($type, $this->allowTypes)) {
             $msg = app('translator')->has('validation.attributes.'.$type) ? trans('validation.attributes.'.$type).'内容含敏感词' : '内容含敏感词';
             DzqLog::error('content_has_stop_word', [
                 'content'   => $content,
@@ -241,18 +241,17 @@ class Censor
          * @property QcloudManage
          * @see 文本内容安全文档 https://cloud.tencent.com/document/product/1124/46976
          */
-        $result = $qcloud->service('cms')->TextModeration($content);
-
+        $result = $qcloud->service('tms')->TextModeration($content);
         $keyWords = Arr::get($result, 'Data.Keywords', []);
 
-        if (isset($result['Data']['DetailResult'])) {
+        if (isset($result['DetailResults'])) {
             /**
              * filter 筛选腾讯云敏感词类型范围
              * Normal：正常，Polity：涉政，Porn：色情，Illegal：违法，Abuse：谩骂，Terror：暴恐，Ad：广告，Custom：自定义关键词
              */
             $filter = ['Normal', 'Ad']; // Tag Setting 可以放入配置
-            $filtered = collect($result['Data']['DetailResult'])->filter(function ($item) use ($filter) {
-                if (in_array($item['EvilLabel'], $filter)) {
+            $filtered = collect($result['DetailResults'])->filter(function ($item) use ($filter) {
+                if (in_array($item['Label'], $filter)) {
                     $item = [];
                 }
                 return $item;
@@ -324,9 +323,9 @@ class Censor
             }
 
             /** @see QcloudManage */
-            $result = $this->app->make('qcloud')->service('cms')->ImageModeration($params);
+            $result = $this->app->make('qcloud')->service('ims')->ImageModeration($params);
 
-            if (Arr::get($result, 'Data.EvilType') != 100) {
+            if (Arr::get($result, 'Label') != 'Normal') {
                 $this->isMod = true;
             }
         } elseif ((bool) $this->setting->get('miniprogram_close', 'wx_miniprogram', false)) {
