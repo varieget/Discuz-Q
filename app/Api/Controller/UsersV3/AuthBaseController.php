@@ -63,6 +63,7 @@ abstract class AuthBaseController extends DzqController
 
     protected function getWxuser()
     {
+        $this->isOpenThirdLogin('offiaccount');
         $code           = $this->inPut('code');
         $sessionId      = $this->inPut('sessionId');
 
@@ -119,6 +120,7 @@ abstract class AuthBaseController extends DzqController
 
     public function getMobileCode($type): MobileCode
     {
+        $this->isOpenThirdLogin('sms');
         $mobile = $this->inPut('mobile');
         $code   = $this->inPut('code');
 
@@ -161,6 +163,7 @@ abstract class AuthBaseController extends DzqController
 
     public function getWechatMiniProgramParam()
     {
+        $this->isOpenThirdLogin('miniprogram');
         $data = [
             'jsCode'            => $this->inPut('jsCode'),
             'iv'                => $this->inPut('iv'),
@@ -225,7 +228,16 @@ abstract class AuthBaseController extends DzqController
     public function getMiniWechatUser($jsCode, $iv, $encryptedData, $user = null){
         $app = $this->miniProgram();
         //获取小程序登陆session key
-        $authSession = $app->auth->session($jsCode);
+        try {
+            $authSession = $app->auth->session($jsCode);
+        } catch (\Exception $e) {
+            DzqLog::error('code_get_user_error', [
+                'jsCode'        => $jsCode,
+                'iv'            => $iv,
+                'encryptedData' => $encryptedData
+            ], $e->getMessage());
+            $this->outPut(ResponseCode::INTERNAL_ERROR, 'code获取小程序用户失败');
+        }
         if (isset($authSession['errcode']) && $authSession['errcode'] != 0) {
             DzqLog::error('failed_to_get_mini_wechat_user', [
                 'jsCode'        => $jsCode,
@@ -410,5 +422,19 @@ abstract class AuthBaseController extends DzqController
         }
         $this->info('request_lock_limit:', ['openId' => $openId, 'api' => $apiPath]);
         return false;
+    }
+
+    public function isOpenThirdLogin($name = ''){
+        $loginType = [
+            'offiaccount'   => [(bool)$this->settings->get('offiaccount_close', 'wx_offiaccount'), '请先开启公众号'],
+            'miniprogram'   => [(bool)$this->settings->get('miniprogram_close', 'wx_miniprogram'), '请先开启小程序'],
+            'sms'           => [(bool)$this->settings->get('qcloud_sms', 'qcloud'), '请先开启短信'],
+        ];
+        if (empty($loginType[$name])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
+        if ($loginType[$name][0] == false) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, $loginType[$name][1]);
+        }
     }
 }
