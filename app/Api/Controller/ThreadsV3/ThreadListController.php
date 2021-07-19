@@ -276,7 +276,7 @@ class ThreadListController extends DzqController
             'attention' => 'integer|in:0,1',
             'complex' => 'integer|in:1,2,3,4,5',
             'site' => 'integer|in:0,1',
-            'repeatedIds'=>'array'
+            'removeThreadIds'=>'array'
         ]);
         $loginUserId = $this->user->id;
         $administrator = $this->user->isAdmin();
@@ -296,7 +296,8 @@ class ThreadListController extends DzqController
         isset($filter['search']) && $search = $filter['search'];
         isset($filter['complex']) && $complex = $filter['complex'];
         isset($filter['site']) && $site = $filter['site'];
-        isset($filter['repeatedIds']) && $repeatedIds = $filter['repeatedIds'];
+        isset($filter['removeThreadIds']) && $removeThreadIds = $filter['removeThreadIds'];
+
         $categoryids = $this->categoryIds;
         $threads = $this->getBaseThreadsBuilder();
         if (!empty($complex)) {
@@ -393,8 +394,8 @@ class ThreadListController extends DzqController
         if(!empty($site)){
             $threads = $threads->where('th.is_site', Thread::IS_SITE);
         }
-        if(!empty($repeatedIds)){
-            $threads = $threads->whereNotIn('th.id', $repeatedIds);
+        if(!empty($removeThreadIds)){
+            $threads = $threads->whereNotIn('th.id', $removeThreadIds);
         }
         !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
         return $threads;
