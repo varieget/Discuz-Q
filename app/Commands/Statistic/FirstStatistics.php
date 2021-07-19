@@ -59,10 +59,7 @@ class FirstStatistics
         $postData = $this->getPostDay($this->type, $this->createdAtBegin,$createdAtEnd);
         $activeUserData = $this->getActiveUser($this->type, $this->createdAtBegin,$createdAtEnd);
         $joinUserData = $this->getJoinUser($this->type, $this->createdAtBegin,$createdAtEnd);
-        $newThreadData = [];
-        $newPostData = [];
-        $newActiveUserData = [];
-        $newJoinUserData = [];
+
         if($this->type==Finance::TYPE_DAYS){
             $dateArr = $this->getDateFromRange($this->createdAtBegin,$this->createdAtEnd);
 
@@ -279,7 +276,6 @@ class FirstStatistics
         }
 
         if ($type != 1) {
-            $format = "";
             if ($type == 2) {
                 $format = '%Y/%u';
             } elseif ($type == 3) {
