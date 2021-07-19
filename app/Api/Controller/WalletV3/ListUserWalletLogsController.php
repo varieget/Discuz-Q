@@ -42,8 +42,6 @@ class ListUserWalletLogsController extends DzqController
     protected $sumChangeAvailableAmount;
     protected $walletLogType;
 
-    const TITLE_LENGTH = 5;
-
     public $include = [
         'user',
         'order',
@@ -109,107 +107,23 @@ class ListUserWalletLogsController extends DzqController
                             : $this->include;
 
         $walletLogs = $this->search($this->user, $filter, $sort, $page, $perPage);
-        $walletLogType = $this->walletLogType;
-        $walletLogs['pageData']->load('order.thread.firstPost')
-            ->map(function (UserWalletLog $log) use($walletLogType) {
-                /*
-                if ($log->order && $log->order->thread) {
-                    if ($log->order->thread->title) {
-                        $title = Str::limit($log->order->thread->title);
-                    } else {
-                        $title = Str::limit($log->order->thread->firstPost->content);
-                        $title = str_replace("\n", '', $title);
-                    }
-                $log->order->thread->title = strip_tags($title);
-                }
-                */
-                switch ($log->change_type){
-                    case UserWalletLog::TYPE_INCOME_REWARD:
-                        $log->title = Str::limit($log->order->user->nickname, self::TITLE_LENGTH).'打赏了你的主题';
-                        break;
-                    case UserWalletLog::TYPE_INCOME_SCALE_REWARD:
-                        $log->title = Str::limit($log->order->user->nickname, self::TITLE_LENGTH).'打赏了帖子';
-                        break;
-                    case UserWalletLog::TYPE_INCOME_ARTIFICIAL:
-                        $log->title = '管理员充值';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_INCOME_TEXT, UserWalletLog::TYPE_INCOME_LONG, UserWalletLog::TYPE_REDPACKET_INCOME]):
-                        $log->title = '领取了红包';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_TEXT_RETURN_THAW, UserWalletLog::TYPE_LONG_RETURN_THAW, UserWalletLog::TYPE_REDPACKET_REFUND]):
-                        $log->title = '红包过期退还';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_INCOME_THREAD_REWARD, UserWalletLog::TYPE_QUESTION_REWARD_INCOME, UserWalletLog::TYPE_INCOME_QUESTION_REWARD]):
-                        $log->title = '获取了赏金';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN, UserWalletLog::TYPE_QUESTION_REWARD_REFUND]):
-                        $log->title = '赏金被退回';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_INCOME_ONLOOKER_REWARD, UserWalletLog::TYPE_INCOME_THREAD, UserWalletLog::TYPE_INCOME_SCALE_THREAD, UserWalletLog::TYPE_INCOME_ATTACHMENT, UserWalletLog::TYPE_INCOME_SCALE_ATTACHMENT]):
-                        $log->title = Str::limit($log->order->user->nickname, self::TITLE_LENGTH).'支付了帖子';
-                        break;
-                    case UserWalletLog::TYPE_INCOME_SCALE_REGISTER:
-                        $log->title = Str::limit($log->order->user->nickname, self::TITLE_LENGTH).'注册了站点';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_TEXT_ABNORMAL_REFUND, UserWalletLog::TYPE_LONG_ABNORMAL_REFUND, UserWalletLog::TYPE_QUESTION_ABNORMAL_REFUND, UserWalletLog::TYPE_ABNORMAL_ORDER_REFUND]):
-                        $log->title = '异常订单退款';
-                        break;
-                    case UserWalletLog::TYPE_QUESTION_ORDER_ABNORMAL_REFUND:
-                        $log->title = '悬赏订单异常退款';
-                        break;
-                    case UserWalletLog::TYPE_REDPACKET_ORDER_ABNORMAL_REFUND:
-                        $log->title = '红包订单异常退款';
-                        break;
-                    case UserWalletLog::TYPE_CASH_THAW:
-                        $log->title = '提现金额已返还';
-                        break;
-                    case UserWalletLog::TYPE_EXPEND_REGISTER:
-                        $log->title = '注册站点';
-                        break;
-                    case UserWalletLog::TYPE_EXPEND_ARTIFICIAL:
-                        $log->title = '管理员扣除';
-                        break;
-                    case UserWalletLog::TYPE_QUESTION_REWARD_FREEZE:
-                        $log->title = '发出了悬赏';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_EXPEND_THREAD, UserWalletLog::TYPE_EXPEND_ONLOOKER, UserWalletLog::TYPE_EXPEND_ATTACHMENT]):
-                        $log->title = '付费查看了帖子';
-                        break;
-                    case $walletLogType == 'expend' && in_array($log->change_type, [UserWalletLog::TYPE_TEXT_FREEZE, UserWalletLog::TYPE_LONG_FREEZE, UserWalletLog::TYPE_REDPACKET_FREEZE]):
-                        $log->title = '发出了红包';
-                        break;
-                    case UserWalletLog::TYPE_EXPEND_RENEW:
-                        $log->title = '站点续费';
-                        break;
-                    case $walletLogType == 'expend' && UserWalletLog::TYPE_CASH_FREEZE:
-                        $log->title = '提现';
-                        break;
-                    case UserWalletLog::TYPE_EXPEND_REWARD:
-                        $log->title = '打赏了帖子';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_QUESTION_FREEZE, UserWalletLog::TYPE_QUESTION_REWARD_FREEZE]):
-                        $log->title = '悬赏冻结';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_QUESTION_REWARD_FREEZE_RETURN, UserWalletLog::TYPE_QUESTION_RETURN_THAW, UserWalletLog::TYPE_QUESTION_REWARD_EXPEND]):
-                        $log->title = '悬赏冻结返还';
-                        break;
-                    case $walletLogType == 'freeze' && in_array($log->change_type, [UserWalletLog::TYPE_TEXT_FREEZE, UserWalletLog::TYPE_LONG_FREEZE, UserWalletLog::TYPE_REDPACKET_FREEZE]):
-                        $log->title = '红包冻结';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_REDPACKET_REFUND, UserWalletLog::TYPE_LONG_RETURN_THAW, UserWalletLog::TYPE_TEXT_RETURN_THAW, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_REDPACKET_EXPEND]):
-                        $log->title = '红包解冻';
-                        break;
-                    case $walletLogType == 'freeze' && UserWalletLog::TYPE_CASH_FREEZE:
-                        $log->title = '提现';
-                        break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_CASH_SUCCESS, UserWalletLog::TYPE_CASH_THAW]):
-                        $log->title = '提现解冻';
-                        break;
-                    default:
-                        break;
-                }
 
-            });
+        // 主题标题
+        if (in_array('order.thread.firstPost', $include)) {
+            $walletLogs['pageData']->load('order.thread.firstPost')
+                ->map(function (UserWalletLog $log) {
+                    if ($log->order && $log->order->thread) {
+                        if ($log->order->thread->title) {
+                            $title = Str::limit($log->order->thread->title);
+                        } else {
+                            $title = Str::limit($log->order->thread->firstPost->content);
+                            $title = str_replace("\n", '', $title);
+                        }
+
+                        $log->order->thread->title = strip_tags($title);
+                    }
+                });
+        }
 
         $data = $this->camelData($walletLogs);
 
@@ -285,7 +199,7 @@ class ListUserWalletLogsController extends DzqController
             UserWalletLog::TYPE_QUESTION_ABNORMAL_REFUND,          //问答帖订单异常返现，124
             UserWalletLog::TYPE_ABNORMAL_ORDER_REFUND,          //异常订单退款，130
             UserWalletLog::TYPE_QUESTION_ORDER_ABNORMAL_REFUND,          //悬赏订单异常退款，163
-            UserWalletLog::TYPE_REDPACKET_ORDER_ABNORMAL_REFUND,          //红包订单异常退款，154
+            UserWalletLog::TYPE_MERGE_ORDER_ABNORMAL_REFUND,          //合并订单异常退款，172
             //异常退款 end
             //提现失败 start
             UserWalletLog::TYPE_CASH_THAW,          //提现解冻，提现失败，12
@@ -428,7 +342,7 @@ class ListUserWalletLogsController extends DzqController
 
     public function filterData($data){
         foreach ($data['pageData'] as $key => $val) {
-            /*
+
             if(!empty($val['order']['thread']['title'])) {
                 $title = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $val['order']['thread']['title']);
                 list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($title);
@@ -440,8 +354,6 @@ class ListUserWalletLogsController extends DzqController
             } else {
                 $title = '';
             }
-            */
-
 
             $amount = 0;
             switch ($this->walletLogType){
@@ -460,10 +372,10 @@ class ListUserWalletLogsController extends DzqController
                     $amount = $val['changeFreezeAmount'];
                     switch ($val['changeType']){
                         case in_array($val['changeType'], [UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_REDPACKET_EXPEND]):
-                            $val['changeDesc'] = '红包解冻';
+                            $val['changeDesc'] = '红包冻结';
                             break;
                         case UserWalletLog::TYPE_QUESTION_REWARD_EXPEND:
-                            $val['changeDesc'] = '悬赏解冻';
+                            $val['changeDesc'] = '悬赏冻结';
                             break;
                         default:
                             break;
@@ -473,7 +385,7 @@ class ListUserWalletLogsController extends DzqController
 
             $pageData = [
                 'id'            =>  $val['id'],
-                'title'         =>  $val['title'],
+                'title'         =>  $title,
                 'amount'        =>  $amount,
                 'changeType'    =>  !empty($val['changeType']) ? $val['changeType'] : '',
                 'changeDesc'    =>  !empty($val['changeDesc']) ? $val['changeDesc'] : '',
