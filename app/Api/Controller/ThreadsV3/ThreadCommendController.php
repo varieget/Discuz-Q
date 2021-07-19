@@ -91,12 +91,10 @@ class ThreadCommendController extends DzqController
                 'viewCount'=>$thread['view_count']
             ];
         }
-        /*
         [$search, $replace] = Thread::instance()->getReplaceString($linkString);
         foreach ($data as &$item) {
             $item['title'] = str_replace($search, $replace, $item['title']);
         }
-        */
         $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }
