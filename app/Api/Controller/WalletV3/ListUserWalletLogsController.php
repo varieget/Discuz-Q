@@ -155,10 +155,10 @@ class ListUserWalletLogsController extends DzqController
                         $log->title = '异常订单退款';
                         break;
                     case UserWalletLog::TYPE_QUESTION_ORDER_ABNORMAL_REFUND:
-                        $log->title = '悬赏订单异常退款';
+                        $log->title = '悬赏异常退款';
                         break;
                     case UserWalletLog::TYPE_REDPACKET_ORDER_ABNORMAL_REFUND:
-                        $log->title = '红包订单异常退款';
+                        $log->title = '红包异常退款';
                         break;
                     case UserWalletLog::TYPE_CASH_THAW:
                         $log->title = '提现金额已返还';
