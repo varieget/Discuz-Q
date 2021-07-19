@@ -134,7 +134,6 @@ class ListUserWalletCashController extends DzqController
 
     public function filterData($data){
         foreach ($data['pageData'] as $key => $val) {
-            if(empty($val['cash_type']))    $val['tradeNo'] = '线下打款';
             $pageData = [
                 'tradeNo'           =>  !empty($val['tradeNo']) ? $val['tradeNo'] : 0,
                 'remark'            =>  !empty($val['remark']) ? $val['remark'] : '',

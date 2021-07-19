@@ -26,7 +26,6 @@ use App\Models\UserWalletLog;
 use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use App\Trade\Config\GatewayConfig;
-use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -189,7 +188,6 @@ class UserWalletCashReviewController extends DzqController
                         $cash_record->cash_type = UserWalletCash::TRANSFER_TYPE_MANUAL;
                         $cash_record->remark = Arr::get($this->data, 'remark', '');
                         $cash_record->cash_status = UserWalletCash::STATUS_PAID;//已打款
-                        $cash_record->trade_time = Carbon::now();
                         $res = $cash_record->save();
                         if($res === false){
                             $db->rollBack();
