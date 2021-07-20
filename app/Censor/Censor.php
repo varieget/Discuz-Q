@@ -128,7 +128,7 @@ class Censor
             $content = $this->miniProgramCheck($content);
         }
 
-        if ($this->isMod && in_array($type, $this->allowTypes)) {
+        if ($this->isMod && in_array($type, ['username','signature','dialog','nickname'])) {
             $msg = app('translator')->has('validation.attributes.'.$type) ? trans('validation.attributes.'.$type).'内容含敏感词' : '内容含敏感词';
             DzqLog::error('content_has_stop_word', [
                 'content'   => $content,
