@@ -181,7 +181,7 @@ class ListUserWalletLogsController extends DzqController
                     case UserWalletLog::TYPE_EXPEND_RENEW:
                         $log->title = '站点续费';
                         break;
-                    case $walletLogType == 'expend' && UserWalletLog::TYPE_CASH_FREEZE:
+                    case $walletLogType == 'expend' && $log->change_type == UserWalletLog::TYPE_CASH_FREEZE:
                         $log->title = '提现';
                         break;
                     case UserWalletLog::TYPE_EXPEND_REWARD:
@@ -199,11 +199,23 @@ class ListUserWalletLogsController extends DzqController
                     case in_array($log->change_type, [UserWalletLog::TYPE_REDPACKET_REFUND, UserWalletLog::TYPE_LONG_RETURN_THAW, UserWalletLog::TYPE_TEXT_RETURN_THAW, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_REDPACKET_EXPEND]):
                         $log->title = '红包解冻';
                         break;
-                    case $walletLogType == 'freeze' && UserWalletLog::TYPE_CASH_FREEZE:
+                    case $walletLogType == 'freeze' && $log->change_type == UserWalletLog::TYPE_CASH_FREEZE:
                         $log->title = '提现';
                         break;
                     case in_array($log->change_type, [UserWalletLog::TYPE_CASH_SUCCESS, UserWalletLog::TYPE_CASH_THAW]):
                         $log->title = '提现解冻';
+                        break;
+                    case $walletLogType == 'freeze' && $log->change_type == UserWalletLog::TYPE_MERGE_FREEZE:
+                        $log->title = '合并订单冻结';
+                        break;
+                    case $walletLogType == 'expend' && $log->change_type == UserWalletLog::TYPE_MERGE_FREEZE:
+                        $log->title = '合并订单支出';
+                        break;
+                    case $walletLogType == 'freeze' && $log->change_type == UserWalletLog::TYPE_MERGE_REFUND:
+                        $log->title = '合并订单退款';
+                        break;
+                    case $walletLogType == 'income' && $log->change_type == UserWalletLog::TYPE_MERGE_REFUND:
+                        $log->title = '合并订单收入';
                         break;
                     default:
                         break;
@@ -447,6 +459,9 @@ class ListUserWalletLogsController extends DzqController
             switch ($this->walletLogType){
                 case 'income':
                     $amount = $val['changeAvailableAmount'];
+                    if($val['changeType'] == UserWalletLog::TYPE_MERGE_REFUND){
+                        $val['changeDesc'] = '合并订单收入';
+                    }
                     break;
                 case 'expend':
                     //红包支出
@@ -454,6 +469,9 @@ class ListUserWalletLogsController extends DzqController
                         $amount = $val['changeFreezeAmount'];
                     }else{
                         $amount = $val['changeAvailableAmount'];
+                    }
+                    if($val['changeType'] == UserWalletLog::TYPE_MERGE_FREEZE){
+                        $val['changeDesc'] = '合并订单支出';
                     }
                     break;
                 case 'freeze':
