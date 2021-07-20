@@ -27,6 +27,7 @@ use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\Order;
 use App\Models\Setting;
+use App\Models\Thread;
 use App\Models\User;
 use App\Models\UserWechat;
 use App\Repositories\UserRepository;
@@ -124,6 +125,16 @@ class ProfileController extends DzqController
                 $query->select()->where('action', 'ban');
             }]);
         }
+
+        //如果是当前用户，计算出审核中和已忽略的数量
+        if ($user_id == $this->user->id) {
+            $user->thread_count = Thread::query()
+                ->where('user_id', $user_id)
+                ->whereNull('deleted_at')
+                ->where('is_draft',Thread::IS_NOT_DRAFT)
+                ->count();
+        }
+
         $data = $user_serialize->getDefaultAttributes($user);
         $grounUser = [$user_id];
         $groups = GroupUser::instance()->getGroupInfo($grounUser);
