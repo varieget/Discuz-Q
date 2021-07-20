@@ -142,7 +142,7 @@ class ListUserWalletLogsController extends DzqController
                     case in_array($log->change_type, [UserWalletLog::TYPE_INCOME_THREAD_REWARD, UserWalletLog::TYPE_QUESTION_REWARD_INCOME, UserWalletLog::TYPE_INCOME_QUESTION_REWARD]):
                         $log->title = '获取了赏金';
                         break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN, UserWalletLog::TYPE_QUESTION_REWARD_REFUND]):
+                    case $walletLogType == 'income' && in_array($log->change_type, [UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN, UserWalletLog::TYPE_QUESTION_REWARD_REFUND]):
                         $log->title = '赏金被退回';
                         break;
                     case in_array($log->change_type, [UserWalletLog::TYPE_INCOME_ONLOOKER_REWARD, UserWalletLog::TYPE_INCOME_THREAD, UserWalletLog::TYPE_INCOME_SCALE_THREAD, UserWalletLog::TYPE_INCOME_ATTACHMENT, UserWalletLog::TYPE_INCOME_SCALE_ATTACHMENT]):
@@ -190,19 +190,19 @@ class ListUserWalletLogsController extends DzqController
                     case in_array($log->change_type, [UserWalletLog::TYPE_QUESTION_FREEZE, UserWalletLog::TYPE_QUESTION_REWARD_FREEZE]):
                         $log->title = '悬赏冻结';
                         break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_QUESTION_REWARD_FREEZE_RETURN, UserWalletLog::TYPE_QUESTION_RETURN_THAW, UserWalletLog::TYPE_QUESTION_REWARD_EXPEND]):
-                        $log->title = '悬赏冻结返还';
+                    case $walletLogType == 'freeze' && in_array($log->change_type, [UserWalletLog::TYPE_QUESTION_REWARD_FREEZE_RETURN, UserWalletLog::TYPE_QUESTION_RETURN_THAW, UserWalletLog::TYPE_QUESTION_REWARD_EXPEND]):
+                        $log->title = '悬赏解冻';
                         break;
                     case $walletLogType == 'freeze' && in_array($log->change_type, [UserWalletLog::TYPE_TEXT_FREEZE, UserWalletLog::TYPE_LONG_FREEZE, UserWalletLog::TYPE_REDPACKET_FREEZE]):
                         $log->title = '红包冻结';
                         break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_REDPACKET_REFUND, UserWalletLog::TYPE_LONG_RETURN_THAW, UserWalletLog::TYPE_TEXT_RETURN_THAW, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_REDPACKET_EXPEND]):
+                    case $walletLogType == 'freeze' && in_array($log->change_type, [UserWalletLog::TYPE_REDPACKET_REFUND, UserWalletLog::TYPE_LONG_RETURN_THAW, UserWalletLog::TYPE_TEXT_RETURN_THAW, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_REDPACKET_EXPEND]):
                         $log->title = '红包解冻';
                         break;
                     case $walletLogType == 'freeze' && $log->change_type == UserWalletLog::TYPE_CASH_FREEZE:
                         $log->title = '提现';
                         break;
-                    case in_array($log->change_type, [UserWalletLog::TYPE_CASH_SUCCESS, UserWalletLog::TYPE_CASH_THAW]):
+                    case $walletLogType == 'freeze' && in_array($log->change_type, [UserWalletLog::TYPE_CASH_SUCCESS, UserWalletLog::TYPE_CASH_THAW]):
                         $log->title = '提现解冻';
                         break;
                     case $walletLogType == 'freeze' && $log->change_type == UserWalletLog::TYPE_MERGE_FREEZE:
@@ -484,7 +484,7 @@ class ListUserWalletLogsController extends DzqController
                             break;
                         case in_array($val['changeType'], [UserWalletLog::TYPE_QUESTION_REWARD_EXPEND, UserWalletLog::TYPE_QUESTION_REWARD_FREEZE_RETURN, UserWalletLog::TYPE_QUESTION_ORDER_ABNORMAL_REFUND,
                             UserWalletLog::TYPE_QUESTION_REWARD_REFUND, UserWalletLog::TYPE_QUESTION_ABNORMAL_REFUND, UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN]):
-                            $val['changeDesc'] = '悬赏冻结返还';
+                            $val['changeDesc'] = '悬赏解冻';
                             break;
                         case in_array($val['changeType'], [UserWalletLog::TYPE_MERGE_REFUND]):
                             $val['changeDesc'] = '合并订单退回';
