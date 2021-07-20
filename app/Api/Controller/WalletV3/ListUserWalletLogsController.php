@@ -155,10 +155,10 @@ class ListUserWalletLogsController extends DzqController
                         $log->title = '异常订单退款';
                         break;
                     case UserWalletLog::TYPE_QUESTION_ORDER_ABNORMAL_REFUND:
-                        $log->title = '悬赏异常退款';
+                        $log->title = '悬赏异常退回';
                         break;
                     case UserWalletLog::TYPE_REDPACKET_ORDER_ABNORMAL_REFUND:
-                        $log->title = '红包异常退款';
+                        $log->title = '红包异常退回';
                         break;
                     case UserWalletLog::TYPE_CASH_THAW:
                         $log->title = '提现金额已返还';
@@ -212,7 +212,7 @@ class ListUserWalletLogsController extends DzqController
                         $log->title = '合并订单支出';
                         break;
                     case $walletLogType == 'freeze' && $log->change_type == UserWalletLog::TYPE_MERGE_REFUND:
-                        $log->title = '合并订单退款';
+                        $log->title = '合并订单退回';
                         break;
                     case $walletLogType == 'income' && $log->change_type == UserWalletLog::TYPE_MERGE_REFUND:
                         $log->title = '合并订单收入';
@@ -477,11 +477,17 @@ class ListUserWalletLogsController extends DzqController
                 case 'freeze':
                     $amount = $val['changeFreezeAmount'];
                     switch ($val['changeType']){
-                        case in_array($val['changeType'], [UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_REDPACKET_EXPEND]):
+                        case in_array($val['changeType'], [UserWalletLog::TYPE_EXPEND_TEXT, UserWalletLog::TYPE_EXPEND_LONG, UserWalletLog::TYPE_REDPACKET_EXPEND,
+                            UserWalletLog::TYPE_TEXT_RETURN_THAW, UserWalletLog::TYPE_LONG_RETURN_THAW, UserWalletLog::TYPE_TEXT_ABNORMAL_REFUND, UserWalletLog::TYPE_LONG_ABNORMAL_REFUND,
+                            UserWalletLog::TYPE_REDPACKET_REFUND, UserWalletLog::TYPE_REDPACKET_ORDER_ABNORMAL_REFUND]):
                             $val['changeDesc'] = '红包解冻';
                             break;
-                        case UserWalletLog::TYPE_QUESTION_REWARD_EXPEND:
-                            $val['changeDesc'] = '悬赏解冻';
+                        case in_array($val['changeType'], [UserWalletLog::TYPE_QUESTION_REWARD_EXPEND, UserWalletLog::TYPE_QUESTION_REWARD_FREEZE_RETURN, UserWalletLog::TYPE_QUESTION_ORDER_ABNORMAL_REFUND,
+                            UserWalletLog::TYPE_QUESTION_REWARD_REFUND, UserWalletLog::TYPE_QUESTION_ABNORMAL_REFUND, UserWalletLog::TYPE_INCOME_THREAD_REWARD_RETURN]):
+                            $val['changeDesc'] = '悬赏冻结返还';
+                            break;
+                        case in_array($val['changeType'], [UserWalletLog::TYPE_MERGE_REFUND]):
+                            $val['changeDesc'] = '合并订单退回';
                             break;
                         default:
                             break;
