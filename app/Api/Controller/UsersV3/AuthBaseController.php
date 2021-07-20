@@ -26,6 +26,7 @@ use App\Models\SessionToken;
 use App\Models\UserWechat;
 use App\Repositories\MobileCodeRepository;
 use Discuz\Base\DzqController;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Socialite\Exception\SocialiteException;
 use Discuz\Base\DzqLog;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -425,10 +426,11 @@ abstract class AuthBaseController extends DzqController
     }
 
     public function isOpenThirdLogin($name = ''){
+        $settings = app(SettingsRepository::class);
         $loginType = [
-            'offiaccount'   => [(bool)$this->settings->get('offiaccount_close', 'wx_offiaccount'), '请先开启公众号'],
-            'miniprogram'   => [(bool)$this->settings->get('miniprogram_close', 'wx_miniprogram'), '请先开启小程序'],
-            'sms'           => [(bool)$this->settings->get('qcloud_sms', 'qcloud'), '请先开启短信'],
+            'offiaccount'   => [(bool)$settings->get('offiaccount_close', 'wx_offiaccount'), '请先开启公众号'],
+            'miniprogram'   => [(bool)$settings->get('miniprogram_close', 'wx_miniprogram'), '请先开启小程序'],
+            'sms'           => [(bool)$settings->get('qcloud_sms', 'qcloud'), '请先开启短信'],
         ];
         if (empty($loginType[$name])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER);
