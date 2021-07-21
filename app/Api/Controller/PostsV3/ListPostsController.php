@@ -164,6 +164,7 @@ class ListPostsController extends DzqController
             ->with([
                 'thread:id,type,category_id',
                 'user:id,nickname,avatar,realname',
+                'user.groups:id,name,is_display',
                 'commentUser:id,nickname,avatar,realname',
                 'replyUser:id,nickname,avatar,realname',
                 'images',
@@ -299,11 +300,11 @@ class ListPostsController extends DzqController
             'isReal'   => !empty($user->realname)
         ]);
         if ($user->relationLoaded('groups')) {
-            $data['groups'] = $user->groups->map(function (Group $i) {
-                return [
-                    'id' => $i->id,
-                    'name' => $i->name,
-                    'isDisplay' => $i->is_display,
+            $groupInfos = $user->groups->toArray();
+            $data['groups'] =  [
+                    'id' => $groupInfos[0]['id'],
+                    'name' => $groupInfos[0]['name'],
+                    'isDisplay' => $groupInfos[0]['is_display'],
                 ];
             });
         }

@@ -273,11 +273,10 @@ class CreatePostController extends DzqController
         $userIds = [$userId];
         $groups = GroupUser::instance()->getGroupInfo($userIds);
         $groups = array_column($groups, null, 'user_id');
-
+        $group = [];
         if (!empty($groups[$userId])) {
             $group = $this->getGroupInfo($groups[$userId]);
         }
-        $group = [$group];
 
         return [
             'id' => $user['id'],
