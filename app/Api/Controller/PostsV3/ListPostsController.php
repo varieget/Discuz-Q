@@ -306,6 +306,7 @@ class ListPostsController extends DzqController
                     'name' => $groupInfos[0]['name'],
                     'isDisplay' => $groupInfos[0]['is_display'],
                 ];
+            });
         }
 
         return $data;
