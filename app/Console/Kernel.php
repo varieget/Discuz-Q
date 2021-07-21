@@ -29,6 +29,7 @@ use App\Console\Commands\QuestionClearCommand;
 use App\Console\Commands\ThreadRewardExpireCommand;
 use App\Console\Commands\RedPacketExpireCommand;
 use App\Console\Commands\TranscodeVideoCommand;
+use App\Console\Commands\CreateCrawlerDataCommand;
 use Discuz\Console\Kernel as ConsoleKernel;
 use Illuminate\Console\Scheduling\Schedule;
 
@@ -45,7 +46,8 @@ class Kernel extends ConsoleKernel
         RedPacketExpireCommand::class,
         AbnormalOrderDealCommand::class,
         TranscodeVideoCommand::class,
-        AttachmentAttributeUpdateCommand::class
+        AttachmentAttributeUpdateCommand::class,
+        CreateCrawlerDataCommand::class
     ];
 
     /**
@@ -71,5 +73,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('clear:question')->daily();
         $schedule->command('clear:thread_draft')->daily();
         $schedule->command('clear:session_token')->everyMinute();
+        $schedule->command('crawlerdata:create')->everyMinute()->withoutOverlapping();
     }
 }
