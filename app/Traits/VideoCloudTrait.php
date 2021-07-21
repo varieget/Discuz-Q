@@ -19,9 +19,8 @@
 namespace App\Traits;
 
 use App\Models\ThreadVideo;
-use App\Settings\SettingsRepository;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Carbon\Carbon;
-use Discuz\Base\DzqLog;
 use Illuminate\Support\Str;
 use Vod\VodUploadClient;
 use Vod\Model\VodUploadRequest;
@@ -35,9 +34,16 @@ trait VideoCloudTrait
 {
     protected $url = 'vod.tencentcloudapi.com';
 
-    private function videoUpload($mediaUrl){
-        if(empty($mediaUrl)){
-            DzqLog::error('媒体文件视url不能为空');
+    protected $setting;
+
+    private function __construct(SettingsRepository $setting) {
+        $this->setting = $setting;
+    }
+
+    private function videoUpload($userId,$threadId,$mediaUrl){
+        $log = app('log');
+        if(empty($mediaUrl) || empty($userId) || empty($threadId)){
+            $log->info('视频上传参数不能为空');
             return false;
         }
         if (strpos($mediaUrl, '?') !== false) {
@@ -52,25 +58,25 @@ trait VideoCloudTrait
         $absoluteUrl = storage_path('tmp/').$localFlie;
         $fileData = @file_get_contents($mediaUrl,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
         if(!$fileData){
-            DzqLog::error('媒体文件不存在');
+            $log->info('媒体文件不存在');
             return false;
         }
         $tempFlie = @file_put_contents($absoluteUrl,$fileData);
         if(!$tempFlie){
-            DzqLog::error('下载视频失败');
+            $log->info('下载视频失败');
             return false;
         }
-        $settingRepo = app(SettingsRepository::class);
-        $secretId = $settingRepo->get('qcloud_secret_id', 'qcloud');
-        $secretKey = $settingRepo->get('qcloud_secret_key', 'qcloud');
-        $region = $settingRepo->get('qcloud_cos_bucket_area','qcloud');
+
+        $secretId = $this->settings->get('qcloud_secret_id', 'qcloud');
+        $secretKey = $this->settings->get('qcloud_secret_key', 'qcloud');
+        $region = $this->settings->get('qcloud_cos_bucket_area','qcloud');
 
         if(empty($secretId) || empty($secretKey)){
-            DzqLog::error('云点播配置不能为空');
+            $log->info('云点播配置不能为空');
             return false;
         }
         if(!file_exists($absoluteUrl)){
-            DzqLog::error('本地临时文件不能为空');
+            $log->info('本地临时文件不能为空');
             return false;
         }
         $client = new VodUploadClient($secretId, $secretKey);
@@ -80,7 +86,7 @@ trait VideoCloudTrait
             $rsp = $client->upload($region, $req);
         } catch (\Exception $e) {
             // 处理上传异常
-            DzqLog::error('上传视频接口报错', $e->getMessage());
+            $log->info('上传视频接口报错', $e->getMessage());
             return false;
         }
         $fileId = $rsp->FileId;
@@ -88,10 +94,10 @@ trait VideoCloudTrait
         //删除临时文件
         unlink($absoluteUrl);
         //保存数据库
-        $videoId = $this->save($fileId,$mediaUrl);
+        $videoId = $this->save($fileId,$mediaUrl,$userId,$threadId,$log);
         //执行转码任务
-        $procedure = $this->processMedia($fileId);
-        if($videoId && $procedure){
+        $this->processMedia($fileId,$log);
+        if($videoId){
             return ['videoId'=>$videoId,'fileId'=>$fileId,'mediaUrl'=>$mediaUrl];
         }else{
             return false;
@@ -100,9 +106,8 @@ trait VideoCloudTrait
 
     private function getMediaUrl($mediaUrl)
     {
-        $settings = app(SettingsRepository::class);
-        $urlKey = $settings->get('qcloud_vod_url_key', 'qcloud');
-        $urlExpire = (int)$settings->get('qcloud_vod_url_expire', 'qcloud');
+        $urlKey = $this->settings->get('qcloud_vod_url_key', 'qcloud');
+        $urlExpire = (int)$this->settings->get('qcloud_vod_url_expire', 'qcloud');
         if ($urlKey  && !empty($mediaUrl)) {
             $currentTime = Carbon::now()->timestamp;
             $dir = Str::beforeLast(parse_url($mediaUrl)['path'], '/') . '/';
@@ -115,7 +120,7 @@ trait VideoCloudTrait
     }
 
     //保存到数据库
-    private function save($fileId,$mediaUrl){
+    private function save($fileId,$mediaUrl,$userId,$threadId,$log){
         if(empty($fileId)){
             return false;
         }
@@ -123,26 +128,25 @@ trait VideoCloudTrait
             $threadVideo = new ThreadVideo();
             $threadVideo->file_id = $fileId;
             $threadVideo->media_url = $mediaUrl;
-            $threadVideo->thread_id = 0;
+            $threadVideo->thread_id = $threadId;
             $threadVideo->post_id = 0;
-            $threadVideo->user_id = 0;
+            $threadVideo->user_id = $userId;
             $threadVideo->save();
             return $threadVideo->id;
         }catch (\Exception $e){
-            DzqLog::error('数据库异常', $e->getMessage());
+            $log->info('数据库异常', $e->getMessage());
             return false;
         }
     }
 
     //转码
-    private function processMedia($fileId){
+    private function processMedia($fileId,$log){
         if(empty($fileId)){
             return false;
         }
         try {
-            $settingRepo = app(SettingsRepository::class);
-            $secretId = $settingRepo->get('qcloud_secret_id', 'qcloud');
-            $secretKey = $settingRepo->get('qcloud_secret_key', 'qcloud');
+            $secretId = $this->settings->get('qcloud_secret_id', 'qcloud');
+            $secretKey = $this->settings->get('qcloud_secret_key', 'qcloud');
 
             $cred = new Credential($secretId, $secretKey);
             $httpProfile = new HttpProfile();
@@ -159,11 +163,11 @@ trait VideoCloudTrait
             $resp = $client->ProcessMedia($req);
             $resp = json_decode($resp->toJsonString(),true);
             if(empty($resp['TaskId'])){
-                DzqLog::error('转码任务未执行');
+                $log->info('转码任务未执行');
             }
             return true;
         }catch (\Exception $e){
-            DzqLog::error('转码异常', $e->getMessage());
+            $log->info('转码异常', $e->getMessage());
             return false;
         }
     }
