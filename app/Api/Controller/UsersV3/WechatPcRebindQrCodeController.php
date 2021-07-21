@@ -94,6 +94,11 @@ class WechatPcRebindQrCodeController extends AuthBaseController
                     '/apiv3/users/wechat/h5.oauth?redirect='.$redirectUri,
                     ['sessionToken' => $sessionToken]
                 );
+                $locationUrlArr = explode('redirect=', $locationUrl);
+                $locationUrl = $locationUrlArr[0].'redirect='.urlencode($locationUrlArr[1]);
+                //去掉无参数时最后一个是 ? 的字符
+                $locationUrl = rtrim($locationUrl, "?");
+
                 $qrCode = new QrCode($locationUrl);
 
                 $binary = $qrCode->writeString();
