@@ -348,12 +348,11 @@ trait ThreadTrait
         //考虑到升级V3，帖子的type 都要转为 99，所以针对 type 为 99 的也需要处理图文混排
         if (!empty($content['text'])) {
             $xml = $content['text'];
-            $tom_image_key = $body = '';
+            $body = '';
             if (!empty($content['indexes'])) {
                 foreach ($content['indexes'] as $key => $val) {
                     if ($val['tomId'] == TomConfig::TOM_IMAGE) {
                         $body = $val['body'];
-                        $tom_image_key = $key;
                     }
                 }
             }
