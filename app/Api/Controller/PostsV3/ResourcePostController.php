@@ -213,7 +213,7 @@ class ResourcePostController extends DzqController
         return [
             'id' => !empty($groupInfo[$userGroups[$k]['group_id']]['id']) ? $groupInfo[$userGroups[$k]['group_id']]['id'] : null,
             'name' => !empty($groupInfo[$userGroups[$k]['group_id']]['name']) ? $groupInfo[$userGroups[$k]['group_id']]['name'] : null,
-            'isDisplay' => !empty($groupInfo[$userGroups[$k]['group_id']]['is_display']) ? $groupInfo[$userGroups[$k]['group_id']]['is_display'] : false
+            'isDisplay' => !empty($groupInfo[$userGroups[$k]['group_id']]['is_display']) ? $groupInfo[$userGroups[$k]['group_id']]['is_display'] : 0
         ];
     }
 
