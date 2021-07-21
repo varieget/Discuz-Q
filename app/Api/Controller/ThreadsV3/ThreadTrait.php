@@ -321,8 +321,8 @@ trait ThreadTrait
                 if ($payType == Thread::PAY_ATTACH) {
                     $text = $post['content'];
                 } else if ($payType == Thread::PAY_THREAD) {
-                    $freeWords = $thread['free_words'];
-                    if (floatval($freeWords) > 0) {
+                    $freeWords = floatval($thread['free_words']);
+                    if ($freeWords > 0 && $freeWords < 1) {
                         $text = strip_tags($post['content']);
                         $freeLength = mb_strlen($text) * $freeWords;
                         $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
