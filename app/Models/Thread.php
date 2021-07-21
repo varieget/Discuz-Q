@@ -345,7 +345,7 @@ class Thread extends DzqModel
     {
         $this->last_posted_user_id = $post->user_id;
         $this->updated_at = $post->created_at->gt($this->updated_at) ? $post->created_at : $this->updated_at;
-        $this->posted_at = $post->created_at;
+//        $this->posted_at = $post->created_at;
         return $this;
     }
 
