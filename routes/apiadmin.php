@@ -97,3 +97,6 @@ $route->get('/stopWords/export', 'stopWords.export', ApiController\StopWordsV3\E
 //监听定时任务
 $route->get('/monitor/system/task', 'monitor.system.task', ApiController\System\MonitorSystemTaskController::class);
 
+// 数据爬取
+$route->get('/create.crawler', 'create.crawler', ApiController\Crawler\CreateCrawlerDataController::class);
+

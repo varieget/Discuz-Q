@@ -97,6 +97,20 @@ class AttachmentUploader
         $this->put($type, $this->file, $this->fileName, $this->path, $options);
     }
 
+    /**
+     * @param $file
+     * @param int $type
+     * @param array $options
+     */
+    public function uploadCrawlerData($file, $type, $options = [])
+    {
+        $this->file = $file;
+
+        $this->fileName = Str::random(40) . '.' . $this->file->getClientOriginalExtension();
+
+        $this->put($type, $this->file, $this->fileName, $this->path, $options);
+    }
+
     public function delete(Attachment $attachment)
     {
         /** @var Factory $filesystem */
