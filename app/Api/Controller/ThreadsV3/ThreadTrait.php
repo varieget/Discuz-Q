@@ -317,12 +317,10 @@ trait ThreadTrait
                 $content['text'] = $post['content'];
                 $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
             } else {
-                $text = '';
-                if ($payType == Thread::PAY_ATTACH) {
-                    $text = $post['content'];
-                } else if ($payType == Thread::PAY_THREAD) {
+                $text = $post['content'];;
+                if ($payType == Thread::PAY_THREAD) {
                     $freeWords = floatval($thread['free_words']);
-                    if ($freeWords > 0 && $freeWords < 1) {
+                    if ($freeWords >= 0 && $freeWords < 1) {
                         $text = strip_tags($post['content']);
                         $freeLength = mb_strlen($text) * $freeWords;
                         $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
