@@ -356,7 +356,7 @@ trait ThreadTrait
                     }
                 }
             }
-            if (!empty($body) && strpos($body, '<img') !== false) {
+            if (!empty($body) && strpos($content['text'], '<img') !== false) {
                 $attachments_body = $body;
                 $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
                 $isset_attachment_ids = [];
