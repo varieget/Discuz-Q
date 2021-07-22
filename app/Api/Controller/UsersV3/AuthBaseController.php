@@ -64,6 +64,7 @@ abstract class AuthBaseController extends DzqController
 
     protected function getWxuser()
     {
+        $this->info('begin_get_wx_user');
         $this->isOpenThirdLogin('offiaccount');
         $code           = $this->inPut('code');
         $sessionId      = $this->inPut('sessionId');
@@ -426,12 +427,14 @@ abstract class AuthBaseController extends DzqController
     }
 
     public function isOpenThirdLogin($name = ''){
+        $this->info('begin_check_is_open_third_login');
         $settings = app(SettingsRepository::class);
         $loginType = [
             'offiaccount'   => [(bool)$settings->get('offiaccount_close', 'wx_offiaccount'), '请先开启公众号'],
             'miniprogram'   => [(bool)$settings->get('miniprogram_close', 'wx_miniprogram'), '请先开启小程序'],
             'sms'           => [(bool)$settings->get('qcloud_sms', 'qcloud'), '请先开启短信'],
         ];
+        $this->info('login_type', ['loginType' => $loginType]);
         if (empty($loginType[$name])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
