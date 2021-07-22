@@ -231,7 +231,13 @@ abstract class AuthBaseController extends DzqController
         $app = $this->miniProgram();
         //获取小程序登陆session key
         try {
+            $this->info('get_auth_session', [
+                'input' => ['jsCode' => $jsCode]
+            ]);
             $authSession = $app->auth->session($jsCode);
+            $this->info('get_auth_session', [
+                'output' => ['authSession' => $authSession]
+            ]);
         } catch (\Exception $e) {
             DzqLog::error('code_get_user_error', [
                 'jsCode'        => $jsCode,
@@ -253,17 +259,19 @@ abstract class AuthBaseController extends DzqController
                           '获取小程序用户失败',
                           ['errmsg' => $authSession['errmsg'], 'errcode' => $authSession['errcode']]);
         }
+        $this->info('get_decrypted_data', [
+            'input'      => [
+                'session_key'   => Arr::get($authSession, 'session_key'),
+                'iv'            => $iv,
+                'encryptedData' => $encryptedData
+            ]
+        ]);
         $decryptedData = $app->encryptor->decryptData(
             Arr::get($authSession, 'session_key'),
             $iv,
             $encryptedData
         );
-        $this->info('get_decryptedData', [
-            'input'      => [
-                'session_key'   => Arr::get($authSession, 'session_key'),
-                'iv'            => $iv,
-                'encryptedData' => $encryptedData
-            ],
+        $this->info('get_decrypted_data', [
             'output'      => [
                 'decryptedData' => $decryptedData
             ]
