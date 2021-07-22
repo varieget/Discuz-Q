@@ -356,10 +356,22 @@ trait ThreadTrait
                     }
                 }
             }
-            if (!empty($body)) {
+            if (!empty($body) && strpos($body, '<img') !== false) {
                 $attachments_body = $body;
                 $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
                 $isset_attachment_ids = [];
+                //这里增加 前端拖拽图片的图文混排的形式
+                $xml = preg_replace_callback(
+                    '<img src="(.*)" alt="attachmentId-(\d+)" />',
+                    function ($m) use ($attachments) {
+                        if (!empty($m)) {
+                            $id = trim($m[2], '"');
+                            return 'img src="' . $attachments[$id] . '" title="' . $id . '"';
+                        }
+                    },
+                    $xml
+                );
+
                 $xml = preg_replace_callback(
                     '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
                     function ($m) use ($attachments, &$isset_attachment_ids) {
