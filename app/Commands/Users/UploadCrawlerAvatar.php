@@ -21,7 +21,7 @@ namespace App\Commands\Users;
 use App\Exceptions\UploadException;
 use App\Models\User;
 use App\Repositories\UserRepository;
-use App\User\AvatarUploader;
+use App\User\CrawlerAvatarUploader;
 use App\Validators\AvatarValidator;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -80,14 +80,14 @@ class UploadCrawlerAvatar
 
     /**
      * @param UserRepository $users
-     * @param AvatarUploader $uploader
+     * @param CrawlerAvatarUploader $uploader
      * @param AvatarValidator $validator
      * @return User|mixed
      * @throws PermissionDeniedException
      * @throws UploadException
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function handle(UserRepository $users, AvatarUploader $uploader, AvatarValidator $validator)
+    public function handle(UserRepository $users, CrawlerAvatarUploader $uploader, AvatarValidator $validator)
     {
         $this->users = $users;
         $this->uploader = $uploader;
