@@ -17,9 +17,11 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
+use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
+use App\Models\Attachment;
 use App\Traits\PostNoticesTrait;
 use Discuz\Base\DzqCache;
 use App\Formatter\Formatter;
@@ -354,33 +356,52 @@ trait ThreadTrait
                     }
                 }
             }
-            if (!empty($body) && strpos($content['text'], '<img') !== false) {
+            if (!empty($body) || strpos($content['text'], '<img') !== false) {
                 $attachments_body = $body;
-                $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
+                $attachments = [];
+                if(!empty($body)){
+                    $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
+                }
                 $isset_attachment_ids = [];
                 //这里增加 前端拖拽图片的图文混排的形式
-                $xml = preg_replace_callback(
-                    '<img src="(.*)" alt="attachmentId-(\d+)" />',
-                    function ($m) use ($attachments) {
-                        if (!empty($m)) {
-                            $id = trim($m[2], '"');
-                            return 'img src="' . $attachments[$id] . '" title="' . $id . '"';
+                if(strpos($xml, 'attachmentId') !== false){
+                    preg_match_all('/attachmentId-(\d+)/', $xml, $attachmentIds_all);
+                }
+                if(!empty($attachmentIds_all[1])){
+                    $content_attachments = Attachment::query()->whereIn('id', $attachmentIds_all[1])->get();
+                    if(!empty($content_attachments)){
+                        $serializer = $this->app->make(AttachmentSerializer::class);
+                        foreach ($content_attachments as $val){
+                            $attachments[$val->id] = $serializer->getImgUrl($val);
                         }
-                    },
-                    $xml
-                );
+                    }
+                }
+                if(!empty($attachments)){
+                    $xml = preg_replace_callback(
+                        '<img src="(.*)" alt="attachmentId-(\d+)" />',
+                        function ($m) use ($attachments) {
+                            if (!empty($m)) {
+                                $id = trim($m[2], '"');
+                                return 'img src="' . $attachments[$id] . '" title="' . $id . '"';
+                            }
+                        },
+                        $xml
+                    );
+                    $xml = preg_replace_callback(
+                        '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
+                        function ($m) use ($attachments, &$isset_attachment_ids) {
+                            if (!empty($m)) {
+                                $id = trim($m[3], '"');
+                                $isset_attachment_ids[] = $id;
+                                return 'img src="' . $attachments[$id] . '" alt="' . $m[2] . '" title="' . $id . '"';
+                            }
+                        },
+                        $xml
+                    );
+                }
 
-                $xml = preg_replace_callback(
-                    '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
-                    function ($m) use ($attachments, &$isset_attachment_ids) {
-                        if (!empty($m)) {
-                            $id = trim($m[3], '"');
-                            $isset_attachment_ids[] = $id;
-                            return 'img src="' . $attachments[$id] . '" alt="' . $m[2] . '" title="' . $id . '"';
-                        }
-                    },
-                    $xml
-                );
+
+
                 //针对图文混排的情况，这里要去掉外部图片展示
 //                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
                 $content['text'] = $xml;
