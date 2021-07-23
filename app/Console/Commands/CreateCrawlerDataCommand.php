@@ -29,19 +29,14 @@ use Carbon\Carbon;
 use Discuz\Auth\Guest;
 use Discuz\Console\AbstractCommand;
 use Discuz\Contracts\Setting\SettingsRepository;
-use Discuz\Filesystem\CosAdapter;
-use Discuz\Filesystem\LocalAdapter;
-use GuzzleHttp\Client;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Support\Arr;
 use Intervention\Image\ImageManager;
 use Laminas\Diactoros\UploadedFile as RequestUploadedFile;
 use League\Flysystem\Util;
 use Symfony\Component\HttpFoundation\File\UploadedFile as AttachmentUploadedFile;
-use League\Flysystem\Filesystem as LeagueFilesystem;
 
 class CreateCrawlerDataCommand extends AbstractCommand
 {
@@ -366,8 +361,6 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $mimeType
         );
 
-
-
         $avatar = new UploadCrawlerAvatar($registerUser->id, $avatarFile, $registerUser, $tmpFile);
         $uploadAvatarResult = $avatar->handle($this->userRepo, $this->crawlerAvatarUploader, $this->avatarValidator);
         return $uploadAvatarResult;
@@ -550,29 +543,30 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
                 $mimeType = Util\MimeType::detectByFilename($tmpFileWithExt);
 
-                    $this->info('----图片大小为：' . $imageSize . '----');
-                    app('log')->info('----图片大小为：' . $imageSize . '----');
-                    //上传临时目录之前验证
-                    $this->attachmentValidator->valid([
-                        'type' => $type,
-                        'file' => $file,
-                        'size' => $imageSize,
-                        'ext' => $imageData['extension'],
-                    ]);
+                $this->info('----图片大小为：' . $imageSize . '----');
+                app('log')->info('----图片大小为：' . $imageSize . '----');
+                //上传临时目录之前验证
+                $this->attachmentValidator->valid([
+                    'type' => $type,
+                    'file' => $file,
+                    'size' => $imageSize,
+                    'ext' => $imageData['extension'],
+                ]);
 
-                    $imageFile = new AttachmentUploadedFile(
-                        $tmpFileWithExt,
-                        $imageData['basename'],
-                        $mimeType,
-                        0,
-                        true
-                    );
+                $imageFile = new AttachmentUploadedFile(
+                    $tmpFileWithExt,
+                    $imageData['basename'],
+                    $mimeType,
+                    0,
+                    true
+                );
 
-                    if(strtolower($ext) != 'gif'){
-                        if ((int) $type === Attachment::TYPE_OF_IMAGE && extension_loaded('exif')) {
-                            $this->image->make($tmpFileWithExt)->orientate()->save();
-                        }
+                if(strtolower($ext) != 'gif'){
+                    if ((int) $type === Attachment::TYPE_OF_IMAGE && extension_loaded('exif')) {
+                        $this->image->make($tmpFileWithExt)->orientate()->save();
                     }
+                }
+
                 // 上传
                 $this->uploader->uploadCrawlerData($imageFile, $type);
 
