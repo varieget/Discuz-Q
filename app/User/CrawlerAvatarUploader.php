@@ -82,12 +82,19 @@ class CrawlerAvatarUploader
             $user->changeAvatar($avatarPath, true);
             $avatarPath = 'public/avatar/' . $avatarPath;
             $oldAvatarPath = 'public/avatar/' . $oldAvatarPath;
+            app(Factory::class)->disk('avatar_cos')->put($oldAvatarPath, $oldEncodedImage);
+            $encodedImage = $image->fit(500, 500)->encode('png')->save();
+            app(Factory::class)->disk('avatar_cos')->put($avatarPath, $encodedImage);
         } else {
             $user->changeAvatar($avatarPath);
+            $avatarPath = 'public/avatars/' . $avatarPath;
+            $oldAvatarPath = 'public/avatars/' . $oldAvatarPath;
+            $this->filesystem->put($oldAvatarPath, $oldEncodedImage);
+            $encodedImage = $image->fit(500, 500)->encode('png')->save();
+            $this->filesystem->put($avatarPath, $encodedImage);
         }
-        $this->filesystem->put('public/avatars/' . $oldAvatarPath, $oldEncodedImage);
-        $encodedImage = $image->fit(500, 500)->encode('png')->save();
-        $this->filesystem->put('public/avatars/' . $avatarPath, $encodedImage);
+
+
     }
 
     /**
