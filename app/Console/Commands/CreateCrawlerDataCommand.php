@@ -7,7 +7,6 @@ use App\Commands\Attachment\AttachmentUploader;
 use App\Commands\Users\RegisterUser;
 use App\Commands\Users\UploadCrawlerAvatar;
 use App\Common\CacheKey;
-use App\Common\Image;
 use App\Crawler\Weibo;
 use App\Models\Attachment;
 use App\Models\Category;
@@ -30,15 +29,19 @@ use Carbon\Carbon;
 use Discuz\Auth\Guest;
 use Discuz\Console\AbstractCommand;
 use Discuz\Contracts\Setting\SettingsRepository;
+use Discuz\Filesystem\CosAdapter;
+use Discuz\Filesystem\LocalAdapter;
+use GuzzleHttp\Client;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use Intervention\Image\ImageManager;
 use Laminas\Diactoros\UploadedFile as RequestUploadedFile;
 use League\Flysystem\Util;
 use Symfony\Component\HttpFoundation\File\UploadedFile as AttachmentUploadedFile;
+use League\Flysystem\Filesystem as LeagueFilesystem;
 
 class CreateCrawlerDataCommand extends AbstractCommand
 {
@@ -72,11 +75,13 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
     protected $filesystem;
 
+    protected $events;
+
+    protected $runTime;
+
     private $platform;
 
     private $categoryId;
-
-    private $runTime;
 
     private $startCrawlerTime;
 
@@ -92,10 +97,10 @@ class CreateCrawlerDataCommand extends AbstractCommand
         AvatarValidator     $avatarValidator,
         AttachmentValidator $attachmentValidator,
         ImageManager        $image,
-        Image               $images,
         ConnectionInterface $db,
         Filesystem          $filesystem)
     {
+        parent::__construct();
         $this->userRepo         = $userRepo;
         $this->bus              = $bus;
         $this->settings         = $settings;
@@ -105,13 +110,10 @@ class CreateCrawlerDataCommand extends AbstractCommand
         $this->avatarValidator  = $avatarValidator;
         $this->attachmentValidator = $attachmentValidator;
         $this->image               = $image;
-        $this->images              = $images;
         $this->db                  = $db;
         $this->filesystem          = $filesystem;
         $this->uploader              = new AttachmentUploader($this->filesystem , $this->settings);
         $this->crawlerAvatarUploader = new CrawlerAvatarUploader($this->censor, $this->filesystem , $this->settings);
-
-        parent::__construct();
     }
 
     public function handle()
@@ -536,16 +538,18 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $imageData = pathinfo($imageData['path']);
             set_time_limit(0);
             $file = @file_get_contents($value);
-            if ($file) {
+            $imageSize = strlen($file);
+            if ($file && $imageSize > 0) {
                 $this->info('----获取图片信息----');
                 app('log')->info('----获取图片信息----');
                 $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
                 $ext = $imageData['extension'];
                 $ext = $ext ? ".$ext" : '';
                 $tmpFileWithExt = $tmpFile . $ext;
-                $imageSize = file_put_contents($tmpFileWithExt, $file);
+                file_put_contents($tmpFileWithExt, $file);
+
                 $mimeType = Util\MimeType::detectByFilename($tmpFileWithExt);
-                if ($imageSize > 0) {
+
                     $this->info('----图片大小为：' . $imageSize . '----');
                     app('log')->info('----图片大小为：' . $imageSize . '----');
                     //上传临时目录之前验证
@@ -569,60 +573,30 @@ class CreateCrawlerDataCommand extends AbstractCommand
                             $this->image->make($tmpFileWithExt)->orientate()->save();
                         }
                     }
+                // 上传
+                $this->uploader->uploadCrawlerData($imageFile, $type);
 
-                    // 上传
-                    $this->uploader->uploadCrawlerData($imageFile, $type);
+                list($width, $height) = getimagesize($tmpFileWithExt);
 
-                    // 非帖子图片 或 远程图片 不处理
-                    if ($type == Attachment::TYPE_OF_IMAGE && !$this->uploader->isRemote()) {
+                $attachment = Attachment::build(
+                    $actor->id,
+                    $type,
+                    $this->uploader->fileName,
+                    $this->uploader->getPath(),
+                    $imageFile->getClientOriginalName(),
+                    $imageFile->getSize(),
+                    $imageFile->getClientMimeType(),
+                    1,
+                    Attachment::APPROVED,
+                    $ipAddress,
+                    0,
+                    $width,
+                    $height
+                );
 
-                        // 原图
-                        $image = $this->image->make(
-                            storage_path('app/' . $this->uploader->getFullPath())
-                        );
-
-                        // 缩略图及高斯模糊图存储路径
-                        $thumbPath = Str::replaceLast($image->filename, $image->filename . '_thumb', $image->basePath());
-                        $blurPath = Str::replaceLast($image->filename, md5($image->filename) . '_blur', $image->basePath());
-                        $blurFilename = md5($image->filename);
-                        // 生成缩略图
-                        $image->resize(Attachment::FIX_WIDTH, Attachment::FIX_WIDTH, function ($constraint) {
-                            $constraint->aspectRatio();     // 保持纵横比
-                            $constraint->upsize();          // 避免文件变大
-                        })->save($thumbPath);
-
-                        $ext = $image->extension;
-                        if(in_array($ext, ['jpeg', 'jpg', 'png', 'gif'])){
-                            $saveBlurPath = storage_path('app/' . $this->uploader->getPath());
-                            $saveBlurName = $blurFilename. '_blur.'.$image->extension;
-                            $this->images->gaussianBlur($image->basePath(),$saveBlurPath,$saveBlurName,3);
-                        }else{
-                            // 生成模糊图
-                            $image->blur(80)->save($blurPath);
-                        }
-                    }
-
-                    list($width, $height) = getimagesize($tmpFileWithExt);
-
-                    $attachment = Attachment::build(
-                        $actor->id,
-                        $type,
-                        $this->uploader->fileName,
-                        $this->uploader->getPath(),
-                        $imageFile->getClientOriginalName(),
-                        $imageFile->getSize(),
-                        $imageFile->getClientMimeType(),
-                        $this->uploader->isRemote(),
-                        Attachment::APPROVED,
-                        $ipAddress,
-                        0,
-                        $width,
-                        $height
-                    );
-
-                    $attachment->save();
-                    @unlink($tmpFile);
-                    @unlink($tmpFileWithExt);
+                $attachment->save();
+                @unlink($tmpFile);
+                @unlink($tmpFileWithExt);
 
 //            暂时无须拼接新src
 //            if ($attachment->is_remote) {
@@ -650,7 +624,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                         'oldImageSrc' => $value
 //                      'newImageSrc' => $imageUrl ?? $url
                     ];
-                }
+
             }
         }
 
