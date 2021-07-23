@@ -126,7 +126,7 @@ class AutoRegisterUser
         if ($exists) {
             $this->data[$name] = $name == 'username'
                                     ? User::getNewUsername()
-                                    : User::addStringToUsername($content ,'nickname');
+                                    : User::addStringToNickname($content);
         } else {
             $this->data[$name] = $content;
         }

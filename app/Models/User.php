@@ -717,19 +717,19 @@ class User extends DzqModel
     }
 
     /**
-     * 注册用户创建一个随机微信用户名
+     * 给昵称拼接随机字符串
      *
      * @return string
      */
-    public static function addStringToUsername($content = '', $fieled = 'username')
+    public static function addStringToNickname($content = '')
     {
         $preName = !empty($content) ? $content : trans('validation.attributes.username_prefix');
-        $username = $preName . Str::random(6);
-        $user = User::query()->where($fieled, $username)->first();
+        $nickname = $preName . Str::random(6);
+        $user = User::query()->where('nickname', $nickname)->first();
         if ($user) {
-            return self::addStringToUsername();
+            return self::addStringToNickname();
         }
-        return $username;
+        return $nickname;
     }
 
     /**
