@@ -249,10 +249,9 @@ class ListPostsController extends DzqController
         if($post->thread->type != Thread::TYPE_OF_ALL){     //老数据
             $data['content']  =  app()->make(Formatter::class)->render($post['content']);
         }else{
-//            $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $post['content']);
-//            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
-//            $data['content'] = str_replace($searches, $replaces, $content);
-            $data['content'] = $post['content'];
+            $content = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $post['content']);
+            list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($content);
+            $data['content'] = str_replace($searches, $replaces, $content);
         }
 
         if ($post->deleted_at) {
