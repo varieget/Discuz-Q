@@ -340,7 +340,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
         $avatarData = pathinfo($avatarData['path']);
 
         set_time_limit(0);
-        $file = @file_get_contents($data['avatar']);
+        $file = @file_get_contents($data['avatar'],false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
         if (!$file ) {
             return false;
         }
@@ -530,7 +530,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $imageData = parse_url($value);
             $imageData = pathinfo($imageData['path']);
             set_time_limit(0);
-            $file = @file_get_contents($value);
+            $file = @file_get_contents($value,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
             $imageSize = strlen($file);
             if ($file && $imageSize > 0) {
                 $this->info('----获取图片信息----');
@@ -539,7 +539,10 @@ class CreateCrawlerDataCommand extends AbstractCommand
                 $ext = $imageData['extension'];
                 $ext = $ext ? ".$ext" : '';
                 $tmpFileWithExt = $tmpFile . $ext;
-                file_put_contents($tmpFileWithExt, $file);
+                $putResult =  file_put_contents($tmpFileWithExt, $file);
+                if (!$putResult) {
+                    return false;
+                }
 
                 $mimeType = Util\MimeType::detectByFilename($tmpFileWithExt);
 
