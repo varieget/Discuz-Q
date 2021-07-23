@@ -21,7 +21,7 @@ use App\Models\Topic;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
-use App\User\AvatarUploader;
+use App\User\CrawlerAvatarUploader;
 use App\Validators\AttachmentValidator;
 use App\Validators\AvatarValidator;
 use App\Validators\UserValidator;
@@ -32,6 +32,7 @@ use Discuz\Console\AbstractCommand;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
@@ -59,7 +60,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
     protected $avatarValidator;
 
-    protected $avatarUploader;
+    protected $crawlerAvatarUploader;
 
     protected $attachmentValidator;
 
@@ -68,6 +69,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
     protected $image;
 
     protected $db;
+
+    protected $filesystem;
 
     private $platform;
 
@@ -87,12 +90,11 @@ class CreateCrawlerDataCommand extends AbstractCommand
         Censor              $censor,
         UserValidator       $userValidator,
         AvatarValidator     $avatarValidator,
-        AvatarUploader      $avatarUploader,
         AttachmentValidator $attachmentValidator,
-        AttachmentUploader  $uploader,
-        ImageManager $image,
-        Image $images,
-        ConnectionInterface $db)
+        ImageManager        $image,
+        Image               $images,
+        ConnectionInterface $db,
+        Filesystem          $filesystem)
     {
         $this->userRepo         = $userRepo;
         $this->bus              = $bus;
@@ -101,12 +103,14 @@ class CreateCrawlerDataCommand extends AbstractCommand
         $this->censor           = $censor;
         $this->userValidator    = $userValidator;
         $this->avatarValidator  = $avatarValidator;
-        $this->avatarUploader   = $avatarUploader;
         $this->attachmentValidator = $attachmentValidator;
-        $this->uploader            = $uploader;
         $this->image               = $image;
         $this->images              = $images;
         $this->db                  = $db;
+        $this->filesystem          = $filesystem;
+        $this->uploader              = new AttachmentUploader($this->filesystem , $this->settings);
+        $this->crawlerAvatarUploader = new CrawlerAvatarUploader($this->censor, $this->filesystem , $this->settings);
+
         parent::__construct();
     }
 
@@ -360,9 +364,10 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $mimeType
         );
 
-        $avatar = new UploadCrawlerAvatar($registerUser->id, $avatarFile, $registerUser, $tmpFile);
-        $uploadAvatarResult = $avatar->handle($this->userRepo, $this->avatarUploader, $this->avatarValidator);
 
+
+        $avatar = new UploadCrawlerAvatar($registerUser->id, $avatarFile, $registerUser, $tmpFile);
+        $uploadAvatarResult = $avatar->handle($this->userRepo, $this->crawlerAvatarUploader, $this->avatarValidator);
         return $uploadAvatarResult;
     }
 
@@ -453,7 +458,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                         if (isset($value['medias']['small_medias']['stream_url']) && !empty($value['medias']['small_medias']['stream_url'])) {
                             $this->info('----上传帖子视频开始----');
                             app('log')->info('----上传帖子视频开始，视频url为：' . $value['medias']['small_medias']['stream_url'] . '----');
-                            $videoId = $this->videoUpload($newThread->user_id, $newThread->id, $value['medias']['small_medias']['stream_url']);
+                            $videoId = $this->videoUpload($newThread->user_id, $newThread->id, $value['medias']['small_medias']['stream_url'], $this->settings);
                             $this->info('----上传帖子视频结束，videoId为：' . $videoId . '----');
                             app('log')->info('----上传帖子视频结束，videoId为：' . $videoId . '----');
                         }
@@ -708,7 +713,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
             ];
         }
 
-        if (!empty($videoIds)) {
+        if (!empty($videoId)) {
             $attrs[] = [
                 'thread_id' => $thread->id,
                 'tom_type' => ThreadTag::VIDEO,
