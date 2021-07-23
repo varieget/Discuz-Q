@@ -103,7 +103,7 @@ class ManageSubmitReview extends DzqController
                 $threadTitle = '【'. $v->title .'】';
             }
             //审核主题
-            if (empty($v->deleted_at) && in_array($arr[$v->id]['isApproved'], [1, 2]) && $v->is_approved != $arr[$v->id]['isApproved']) {
+            if (isset($arr[$v->id]['isApproved']) && empty($v->deleted_at) && in_array($arr[$v->id]['isApproved'], [1, 2]) && $v->is_approved != $arr[$v->id]['isApproved']) {
 
                 $v->is_approved = $arr[$v->id]['isApproved'];
                 $v->save();
@@ -121,7 +121,7 @@ class ManageSubmitReview extends DzqController
 
                 $logArr[] = $this->logs('用户主题帖'. $action_desc);
                 //删除主题
-            }else if (in_array($arr[$v->id]['isDeleted'],[true, false])) {
+            }else if (isset($arr[$v->id]['isDeleted']) && in_array($arr[$v->id]['isDeleted'],[true, false])) {
 
                 if ($arr[$v->id]['isDeleted'] == true) {
                     //软删除
@@ -202,7 +202,7 @@ class ManageSubmitReview extends DzqController
                 $threadContent = '【'. $v->content .'】';
             }
             //审核回复
-            if (empty($v->deleted_at) && in_array($arr[$v->id]['isApproved'], [1, 2]) && $v->is_approved != $arr[$v->id]['isApproved']) {
+            if (isset($arr[$v->id]['isApproved']) && empty($v->deleted_at) && in_array($arr[$v->id]['isApproved'], [1, 2]) && $v->is_approved != $arr[$v->id]['isApproved']) {
 
                 $v->is_approved = $arr[$v->id]['isApproved'];
                 $v->save();
@@ -222,7 +222,7 @@ class ManageSubmitReview extends DzqController
                 $logArr[] = $this->logs('用户回复评论'. $action_desc);
 
                 //删除回复
-            } else if (in_array($arr[$v->id]['isDeleted'],[true, false])) {
+            } else if (isset($arr[$v->id]['isDeleted']) && in_array($arr[$v->id]['isDeleted'],[true, false])) {
 
                 if ($arr[$v->id]['isDeleted'] == true) {
 
