@@ -717,6 +717,22 @@ class User extends DzqModel
     }
 
     /**
+     * 注册用户创建一个随机微信用户名
+     *
+     * @return string
+     */
+    public static function addStringToUsername($content = '', $fieled = 'username')
+    {
+        $preName = !empty($content) ? $content : trans('validation.attributes.username_prefix');
+        $username = $preName . Str::random(6);
+        $user = User::query()->where($fieled, $username)->first();
+        if ($user) {
+            return self::addStringToUsername();
+        }
+        return $username;
+    }
+
+    /**
      * 判断是否有上级 & 上级是否可以推广下线分成
      *
      * @param int $type 1推广下线 2/3收入提成
