@@ -19,7 +19,6 @@
 namespace App\User;
 
 use App\Censor\Censor;
-use App\Common\ResponseCode;
 use App\Exceptions\UploadException;
 use App\Models\User;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -69,12 +68,11 @@ class CrawlerAvatarUploader
         }*/
         $oldEncodedImage = $image->encode('png')->save();
 
-        // 检测敏感图
-        $this->censor->checkImage($image->dirname .'/'. $image->basename);
-
-        if ($this->censor->isMod) {
-            \Discuz\Common\Utils::outPut(ResponseCode::NOT_ALLOW_CENSOR_IMAGE);
-        }
+        // 无需检测敏感图
+        // $this->censor->checkImage($image->dirname .'/'. $image->basename);
+        // if ($this->censor->isMod) {
+        //     \Discuz\Common\Utils::outPut(ResponseCode::NOT_ALLOW_CENSOR_IMAGE);
+        // }
         $avatarPath = $this->getAvatarPath($user);
         $oldAvatarPath = $this->getOriginalAvatarPath($user);
         // 判断是否开启云储存
@@ -93,8 +91,6 @@ class CrawlerAvatarUploader
             $encodedImage = $image->fit(500, 500)->encode('png')->save();
             $this->filesystem->put($avatarPath, $encodedImage);
         }
-
-
     }
 
     /**
@@ -127,12 +123,7 @@ class CrawlerAvatarUploader
             }
         } else {
             $cosPath = 'public/avatar/' . Str::after($avatarPath, '://');
-            // 判断是否关闭了腾讯COS
-            if ($this->settings->get('qcloud_cos', 'qcloud')) {
-                $this->filesystem->delete($cosPath);
-            } else {
-                app(Factory::class)->disk('avatar_cos')->delete($cosPath);
-            }
+            app(Factory::class)->disk('avatar_cos')->delete($cosPath);
         }
     }
 
