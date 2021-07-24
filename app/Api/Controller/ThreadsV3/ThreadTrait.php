@@ -382,7 +382,7 @@ trait ThreadTrait
                         function ($m) use ($attachments) {
                             if (!empty($m)) {
                                 $id = trim($m[2], '"');
-                                return 'img src="' . $attachments[$id] . '" title="' . $id . '"';
+                                return 'img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '"';
                             }
                         },
                         $xml
