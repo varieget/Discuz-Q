@@ -100,3 +100,5 @@ $route->get('/monitor/system/task', 'monitor.system.task', ApiController\System\
 // 数据爬取
 $route->get('/create.crawler', 'create.crawler', ApiController\Crawler\CreateCrawlerDataController::class);
 
+$route->post('/open.view.count', 'open.view.count', ApiController\SettingsV3\OpenViewCountController::class);
+
