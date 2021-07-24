@@ -23,6 +23,7 @@ use App\Models\Thread;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Discuz\Contracts\Setting\SettingsRepository;
 
 class ViewCountController extends DzqController
 {
@@ -34,6 +35,11 @@ class ViewCountController extends DzqController
 
     public function main()
     {
+        $settings = app(SettingsRepository::class);
+        $openViewCount = (bool)$settings->get('open_view_count');
+        if ($openViewCount == true) {
+            $this->outPut(ResponseCode::SUCCESS,'后台已配置第一种计数方式');
+        }
         $threadId = (int)$this->inPut('threadId');
         $thread = Thread::query()->where('id',$threadId)->first(['id','view_count']);
         if (!$thread) {

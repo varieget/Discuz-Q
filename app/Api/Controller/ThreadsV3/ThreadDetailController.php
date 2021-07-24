@@ -28,6 +28,7 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Discuz\Contracts\Setting\SettingsRepository;
 
 class ThreadDetailController extends DzqController
 {
@@ -73,7 +74,13 @@ class ThreadDetailController extends DzqController
         }
         $group = Group::getGroup($user['id']);
         //前端控制浏览数
-//        $thread->increment('view_count');
+        $settings = app(SettingsRepository::class);
+        $openViewCount = (bool)$settings->get('open_view_count');
+        if ($openViewCount == true) {
+            //后台已配置第一种计数方式进行计数
+            $thread->increment('view_count');
+        }
+
         $tomInputIndexes = $this->getTomContent($thread);
         $result = $this->packThreadDetail($user, $group, $thread, $post, $tomInputIndexes['tomContent'], true, $tomInputIndexes['tags']);
         $result['orderInfo'] = [];
