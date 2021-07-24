@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Censor\Censor;
 use App\Commands\Attachment\AttachmentUploader;
-use App\Commands\Users\RegisterUser;
+use App\Commands\Users\RegisterCrawlerUser as RegisterUser;
 use App\Commands\Users\UploadCrawlerAvatar;
 use App\Common\CacheKey;
 use App\Crawler\Weibo;
@@ -124,17 +124,19 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $this->startCrawlerTime = file_get_contents($lockPath);
             $this->runTime = floor((time() - strtotime($this->startCrawlerTime))%86400/60);
             if ($this->runTime < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
-                $this->info('----内容导入进程已占用，暂不可开启新进程----');
+                $this->info('----The content import process has been occupied,You cannot start a new process.----');
                 exit;
             } else {
-                $this->info('----执行已超时，删除文件锁----');
-                app('log')->info('----执行已超时，删除文件锁----');
+                $this->info('----Execution timed out.The file lock has been deleted.----');
+                app('log')->info('----Execution timed out.The file lock has been deleted.----');
+                app('cache')->clear();
                 @unlink($lockPath);
+                exit;
             }
         }
 
-        $this->info('----创建文件锁----');
-        app('log')->info('----创建文件锁----');
+        $this->info('----Creating a File Lock.----');
+        app('log')->info('----Creating a File Lock.----');
         $lastPath = dirname($publicPath);
         $this->lockPath = $lastPath . DIRECTORY_SEPARATOR .'public'. DIRECTORY_SEPARATOR . 'crawlerSplQueueLock.conf';
         touch($this->lockPath);
@@ -144,8 +146,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
         $data = [];
         while (!$crawlerSplQueue->isEmpty()) {
-            $this->info('----内容导入开始----');
-            app('log')->info('----内容导入开始----');
+            $this->info('----Importing crawler data start.----');
+            app('log')->info('----Start importing crawler data.----');
             $inputData = $crawlerSplQueue->dequeue();
             $this->categoryId = $inputData['categoryId'];
             $this->platform = $inputData['platform'];
@@ -153,25 +155,27 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $page = 1;
             $weibo = new Weibo();
             $pageData = $weibo->main($inputData['topic'], $page);
-            $this->info('----第' . $page . '页抓取到' . count($pageData) . '条数据----');
-            app('log')->info('----第' . $page . '页抓取到' . count($pageData) . '条数据----');
+            $this->info("----The " . $page . " page capture " . count($pageData) . " data'records.----");
+            app('log')->info("----The " . $page . " page capture " . count($pageData) . " data'records.----");
             if (empty($pageData)) {
-                $this->info('----为获取到相关话题数据，内容导入结束----');
-                app('log')->info('----为获取到相关话题数据，内容导入结束----');
+                $this->info('----No data is obtained. Process ends.----');
+                app('log')->info('----No data is obtained. Process ends.----');
+                app('cache')->clear();
+                @unlink($this->lockPath);
                 exit;
             }
             $data = array_merge($data, $pageData);
             while (count($data) < $inputData['number'] && !empty($pageData)) {
                 $page++;
                 $pageData = $weibo->main($inputData['topic'], $page);
-                $this->info('----第' . $page . '页抓取到' . count($pageData) . '条数据----');
-                app('log')->info('----第' . $page . '页抓取到' . count($pageData) . '条数据----');
+                $this->info("----The " . $page . " page capture " . count($pageData) . " data'records.----");
+                app('log')->info("----The " . $page . " page capture " . count($pageData) . " data'records.----");
                 $data = array_merge($data, $pageData);
             }
 
             $totalCount = count($data);
-            $this->info('----抓取数据总条数为' . $totalCount . '----');
-            app('log')->info('----抓取数据总条数为' . $totalCount . '----');
+            $this->info('----The total number of crawler data: ' . $totalCount . '.----');
+            app('log')->info('----The total number of crawler data: ' . $totalCount . '.----');
 
             $threads = array_column($data, 'forum');
             $threads = array_column($threads, null, 'id');
@@ -198,29 +202,29 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
             $this->db->beginTransaction();
             try {
-                $this->info('----用户导入开始----');
-                app('log')->info('----用户导入开始----');
+                $this->info("----Insert users'data start.----");
+                app("log")->info("----Insert users'data start.----");
                 $insertUsersResult = $this->insertUsers($oldUsers, $users);
-                $this->info('----用户导入结束----');
-                app('log')->info('----用户导入结束----');
-                $this->info('----帖子导入开始----');
-                app('log')->info('----帖子导入开始----');
+                $this->info("----Insert users'data end.----");
+                app('log')->info("----Insert users'data end.----");
+                $this->info("----Insert threads'data start.----");
+                app('log')->info("----Insert threads'data start.----");
                 [$insertThreadsResult, $oldTopics] = $this->insertThreads($oldTopics, $insertUsersResult, $threads);
-                $this->info('----帖子导入结束----');
-                app('log')->info('----帖子导入结束----');
-                $this->info('----评论导入开始----');
-                app('log')->info('----评论导入开始----');
+                $this->info("----Insert threads'data end.----");
+                app('log')->info("----Insert threads'data end.----");
+                $this->info("----Insert posts'data start.----");
+                app('log')->info("----Insert posts'data start.----");
                 $insertPostsResult = $this->insertPosts($insertUsersResult, $insertThreadsResult, $commentLists);
-                $this->info('----评论导入结束----');
-                app('log')->info('----评论导入结束----');
+                $this->info("----Insert posts'data end.----");
+                app('log')->info("----Insert posts'data end.----");
 
                 $this->db->commit();
-                $this->info('----内容导入成功----');
-                app('log')->info('内容导入成功');
+                $this->info("----Importing crawler data success.The importing'data total number is " . count($insertThreadsResult) . ".----");
+                app('log')->info("----Importing crawler data success.The importing'data total number is " . count($insertThreadsResult) . ".----");
             } catch (\Exception $e) {
                 $this->db->rollBack();
-                $this->info('----内容导入失败，errorMsg: '. $e->getMessage() . '----');
-                app('log')->info('内容导入失败'.$e->getMessage());
+                $this->info('----Importing crawler data fail,errorMsg: '. $e->getMessage() . '----');
+                app('log')->info('----Importing crawler data fail,errorMsg: '. $e->getMessage() . '----');
                 app('cache')->clear();
                 @unlink($this->lockPath);
                 exit;
@@ -251,8 +255,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
         $newThreadData = Thread::query()->whereIn('id', array_column($updateThreadData, 'threadId'))->get();
         $newThreadData->map(function ($item) use ($updateThreadData) {
             if (isset($updateThreadData[$item->id])) {
-                $item->post_count = $updateThreadData[$item->id]['post_count'];
-                $item->view_count = $updateThreadData[$item->id]['view_count'];
+                $item->post_count = $item->post_count + $updateThreadData[$item->id]['post_count'];
+                $item->view_count = $item->view_count + $updateThreadData[$item->id]['view_count'];
                 $item->save();
             }
         });
@@ -285,12 +289,11 @@ class CreateCrawlerDataCommand extends AbstractCommand
                 $item->save();
             });
         }
-
         Category::refreshThreadCountV3($this->categoryId);
 
         app('cache')->clear();
         @unlink($this->lockPath);
-
+        exit;
     }
 
     /**
@@ -315,8 +318,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
                 $newGuest = new Guest();
                 $register = new RegisterUser($newGuest, $data);
                 $registerUserResult = $register->handle($this->events, $this->censor, $this->settings, $this->userValidator);
-                $this->info('----导入用户: ' . $registerUserResult->username . ',UID: ' . $registerUserResult->id . '----');
-                app('log')->info('----导入用户: ' . $registerUserResult->username . ',UID: ' . $registerUserResult->id . '----');
+                $this->info('----Insert a new user: ' . $registerUserResult->username . ' ,The user_id is ' . $registerUserResult->id .'.----');
+                app('log')->info('----Insert a new user: ' . $registerUserResult->username . ' ,The user_id is ' . $registerUserResult->id .'.----');
                 $uploadAvatarResult = $this->uploadCrawlerUserAvatar($value, $registerUserResult);
                 $oldUsers = $oldUsers + [
                     $registerUserResult->username => [
@@ -377,8 +380,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $threadAuthor = 'robotdzq_' . $value['nickname'];
             if (isset($users[$threadAuthor]) && !isset($threadIds[$value['id']])) {
                 $this->checkExecutionTime();
-                $this->info('----匹配到用户，开始创建帖子----');
-                app('log')->info('----匹配到用户，开始创建帖子----');
+                $this->info('----Match the user,insert a new thread start.----');
+                app('log')->info('----Match the user,insert a new thread start.----');
                 $attachmentIds = [];
                 $videoId = '';
                 $topicIds = [];
@@ -395,14 +398,14 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     if (!empty($value['text']['topic_list'])) {
                         foreach ($value['text']['topic_list'] as $k2 => $v2) {
                             if (isset($oldTopics[$v2])) {
-                                $this->info('----匹配到旧话题----');
-                                app('log')->info('----匹配到旧话题----');
+                                $this->info("----Match the topic,don't need to create a new topic.----");
+                                app('log')->info("----Match the topic,don't need to create a new topic.----");
                                 $topicIds[] = $oldTopics[$v2]['id'];
                                 $html = sprintf('<span id="topic" value="%s">#%s#</span>', $oldTopics[$v2]['id'], $v2);
                                 $topicContent = $oldTopics[$v2]['content'];
                             } else {
-                                $this->info('----创建话题----');
-                                app('log')->info('----创建话题----');
+                                $this->info('----Insert a new topic.----');
+                                app('log')->info('----Insert a new topic.----');
                                 $insertTopicResult = $this->insertTopic($users[$threadAuthor]['id'], $v2);
                                 $topicIds[] = $insertTopicResult->id;
                                 $html = sprintf('<span id="topic" value="%s">#%s#</span>', $insertTopicResult->id, $insertTopicResult->content);
@@ -417,8 +420,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
                             }
 
                             if (!strpos($threads[$key]['text']['text'], $html)){
-                                $this->info('----替换content中的话题内容----');
-                                app('log')->info('----替换content中的话题内容----');
+                                $this->info("----Replace the topic'content in thread content.----");
+                                app('log')->info("----Replace the topic'content in thread content.----");
                                 $threads[$key]['text']['text'] = str_replace('#' . $topicContent . '#', $html, $threads[$key]['text']['text']);
                             }
                         }
@@ -426,12 +429,12 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
                     // 处理图片:暂时只写入小图片，以后再优化
                     if (!empty($value['pics']['small_pics'])) {
-                        $this->info('----上传帖子图片开始----');
-                        app('log')->info('----上传帖子图片开始----');
+                        $this->info("----Upload the thread'images attachment start.----");
+                        app('log')->info("----Upload the thread'images attachment start.----");
                         $insertPicturesResult = $this->insertImages($users[$threadAuthor]['id'], $value['pics']['small_pics'], Attachment::TYPE_OF_IMAGE);
                         $attachmentIds = array_merge($attachmentIds, array_column($insertPicturesResult, 'id'));
-                        $this->info('----上传帖子图片结束----');
-                        app('log')->info('----上传帖子图片结束----');
+                        $this->info("----Upload the thread'images attachment end.----");
+                        app('log')->info("----Upload the thread'images attachment end.----");
                     }
 
                     // 写入帖子数据
@@ -440,6 +443,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     $newThread->category_id = $this->categoryId;
                     $newThread->type = Thread::TYPE_OF_ALL;
                     $newThread->post_count = 1;
+                    $newThread->share_count = mt_rand(0, 100);
+                    $newThread->view_count = mt_rand(0, 100);
                     $newThread->address = $threads[$key]['text']['position'] ?? '';
                     $newThread->location = $threads[$key]['text']['position'] ?? '';
                     $newThread->is_draft = Thread::BOOL_NO;
@@ -451,13 +456,12 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     // 处理视频，暂时只写入小视频，以后再优化
                     if (!empty($value['medias']['small_medias'])) {
                         if (isset($value['medias']['small_medias']['stream_url']) && !empty($value['medias']['small_medias']['stream_url'])) {
-                            $this->info('----上传帖子视频开始----');
-                            app('log')->info('----上传帖子视频开始，视频url为：' . $value['medias']['small_medias']['stream_url'] . '----');
+                            $this->info("----Upload the thread video start,the video url is [" . $value['medias']['small_medias']['stream_url'] . "].----");
+                            app('log')->info("----Upload the thread video start,the video url is [" . $value['medias']['small_medias']['stream_url'] . "].----");
                             $videoId = $this->videoUpload($newThread->user_id, $newThread->id, $value['medias']['small_medias']['stream_url'], $this->settings);
-                            $this->info('----上传帖子视频结束，videoId为：' . $videoId . '----');
-                            app('log')->info('----上传帖子视频结束，videoId为：' . $videoId . '----');
+                            $this->info("----Upload the thread video end,the video_id is " . $videoId . ".----");
+                            app('log')->info("----Upload the thread video end,the video_id is " . $videoId . ".----");
                         }
-
                     }
 
                     // 写入Tom,Tag
@@ -470,8 +474,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
                     // 写入帖子主体数据
                     $insertContentResult = $this->insertContent($newThread, $threads[$key]['text']['text']);
-                    $this->info('----导入帖子thread_id为: ' . $newThread->id . '----');
-                    app('log')->info('----导入帖子thread_id为: ' . $newThread->id . '----');
+                    $this->info('----Insert a new thread end.The thread_id is ' . $newThread->id . '.----');
+                    app('log')->info('----Insert a new thread end.The thread_id is ' . $newThread->id . '.----');
                     $threadIds = $threadIds + [
                         $threads[$key]['id'] => [
                             'threadId'  => $newThread->id,
@@ -514,7 +518,6 @@ class CreateCrawlerDataCommand extends AbstractCommand
                 }
             }
         }
-
         return $imgSrcArr;
     }
 
@@ -533,21 +536,20 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $file = @file_get_contents($value,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
             $imageSize = strlen($file);
             if ($file && $imageSize > 0) {
-                $this->info('----获取图片信息----');
-                app('log')->info('----获取图片信息----');
+                $this->info("----Capture image's information.----");
+                app('log')->info("----Capture image's information.----");
                 $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
                 $ext = $imageData['extension'];
                 $ext = $ext ? ".$ext" : '';
                 $tmpFileWithExt = $tmpFile . $ext;
-                $putResult =  file_put_contents($tmpFileWithExt, $file);
+                $putResult =  @file_put_contents($tmpFileWithExt, $file);
                 if (!$putResult) {
                     return false;
                 }
-
                 $mimeType = Util\MimeType::detectByFilename($tmpFileWithExt);
 
-                $this->info('----图片大小为：' . $imageSize . '----');
-                app('log')->info('----图片大小为：' . $imageSize . '----');
+                $this->info('----ImageSize is:' . $imageSize . '.----');
+                app('log')->info('----ImageSize is:' . $imageSize . '.----');
                 //上传临时目录之前验证
                 $this->attachmentValidator->valid([
                     'type' => $type,
@@ -804,8 +806,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
     {
         $runTime = floor((time() - strtotime($this->startCrawlerTime))%86400/60);
         if ($runTime > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
-            $this->info('----执行已超时，删除文件锁与缓存----');
-            app('log')->info('----执行已超时，删除文件锁与缓存----');
+            $this->info('----Execution timed out.The file lock has been deleted.----');
+            app('log')->info('----Execution timed out.The file lock has been deleted.----');
             app('cache')->clear();
             @unlink($this->lockPath);
             exit;
