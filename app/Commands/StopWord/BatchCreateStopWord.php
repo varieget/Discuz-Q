@@ -18,6 +18,7 @@
 
 namespace App\Commands\StopWord;
 
+use App\Common\ResponseCode;
 use App\Models\StopWord;
 use App\Models\User;
 use Discuz\Auth\AssertPermissionTrait;
@@ -68,39 +69,58 @@ class BatchCreateStopWord
 
         $overwrite = Arr::get($this->data, 'overwrite', false);
 
-        return collect(Arr::get($this->data, 'words'))
-            ->unique()
-            ->map(function ($word) {
-                return $this->parseWord($word);
-            })
-            ->filter()
-            ->unique('find')
-            ->when($overwrite, function ($collection) {
-                return $collection->map(function ($word) {
-                    $word['user_id'] = $this->actor->id;
-                    $stopWord = StopWord::query()->updateOrCreate(['find' => $word['find']], $word);
-                    if ($stopWord->wasRecentlyCreated) {
-                        return 'created';
-                    } elseif ($stopWord->wasChanged()) {
-                        return 'updated';
-                    } else {
-                        return 'unique';
+        $limitCount = collect(Arr::get($this->data, 'words'))->count();
+        if($limitCount>StopWord::LIMITCOUNT){
+            \Discuz\Common\Utils::outPut(ResponseCode::INVALID_PARAMETER,'最多导入'.StopWord::LIMITCOUNT.'条');
+        }
+
+        if($overwrite){
+            return collect(Arr::get($this->data, 'words'))
+                ->map(function ($word) {
+                    return $this->parseWord($word);
+                })
+                ->filter()
+                ->unique('find')
+                ->when($overwrite, function ($collection) {
+                    return $collection->map(function ($word) {
+                        $word['user_id'] = $this->actor->id;
+                        $stopWord = StopWord::query()->updateOrCreate(['find' => $word['find']], $word);
+                        if ($stopWord->wasRecentlyCreated) {
+                            return 'created';
+                        } elseif ($stopWord->wasChanged()) {
+                            return 'updated';
+                        } else {
+                            return 'unique';
+                        }
+                    });
+                })
+                ->countBy();
+        }else{
+            $existCollection = StopWord::query()->distinct(true)->get('find')->toArray();
+            $exist = array_column($existCollection,'find');
+            collect(Arr::get($this->data, 'words'))
+                ->map(function ($word) {
+                    return $this->parseWord($word);
+                })
+                ->filter()
+                ->unique('find')
+                ->whereNotIn('find',$exist)
+                ->when(true,function ($collection) {
+                    foreach ($collection->chunk(1000) as $k=>$val){
+                            $val->map(function ($word) {
+                            $word['user_id'] = $this->actor->id;
+                            StopWord::query()->firstOrCreate(['find' => $word['find']], $word);
+                        });
                     }
                 });
-            }, function ($collection) {
-                return $collection->map(function ($word) {
-                    $word['user_id'] = $this->actor->id;
-                    $stopWord = StopWord::query()->firstOrCreate(['find' => $word['find']], $word);
-                    if ($stopWord->wasRecentlyCreated) {
-                        return 'created';
-                    } elseif ($stopWord->wasChanged()) {
-                        return 'updated';
-                    } else {
-                        return 'unique';
-                    }
-                });
-            })
-            ->countBy();
+            $existCount = count($exist);
+            $totalCount = collect(Arr::get($this->data, 'words'))->count();
+            return collect([
+                'created'=>$totalCount-$existCount,
+                'updated'=>0,
+                'unique'=>$existCount
+            ]);
+        }
     }
 
     /**
@@ -144,8 +164,23 @@ class BatchCreateStopWord
                 $dialog = StopWord::IGNORE;
                 $nickname = StopWord::IGNORE;
             } else {
-                list($ugc, $username, $signature, $dialog, $nickname) = array_map('trim', explode('|', $replacement));
-
+                $arrMap = array_map('trim', explode('|', $replacement));
+                if(empty($arrMap[0])){
+                    $arrMap[0] = "undefined";
+                }
+                if(empty($arrMap[1])){
+                    $arrMap[1] = "undefined";
+                }
+                if(empty($arrMap[2])){
+                    $arrMap[2] = "undefined";
+                }
+                if(empty($arrMap[3])){
+                    $arrMap[3] = "undefined";
+                }
+                if(empty($arrMap[4])){
+                    $arrMap[4] = "undefined";
+                }
+                list($ugc, $username, $signature, $dialog, $nickname) = $arrMap;
                 if (! in_array($ugc, StopWord::$allowTypes)) {
                     $replacement = $ugc;
                     $ugc = StopWord::REPLACE;
