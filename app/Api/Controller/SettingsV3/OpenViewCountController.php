@@ -43,7 +43,8 @@ class OpenViewCountController extends DzqController
 
         if (! empty($openViewCount)) {
             try {
-                $openViewCount['value'] == 0 ? $value = 1 : $value = 0;
+                $value = !empty($this->inPut('openViewCount')) ? 1 : 0;
+
                 Setting::modifyValue('open_view_count', $value);
 
                 DzqCache::delKey(CacheKey::SETTINGS);
