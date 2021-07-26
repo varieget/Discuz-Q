@@ -28,6 +28,7 @@ use Discuz\Foundation\EventsDispatchTrait;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
+
 class BatchCreateStopWord
 {
     use AssertPermissionTrait;
@@ -64,6 +65,7 @@ class BatchCreateStopWord
      */
     public function handle()
     {
+
         $this->assertRegistered($this->actor);
         $this->assertCan($this->actor, 'create');
 
@@ -107,18 +109,23 @@ class BatchCreateStopWord
                 ->whereNotIn('find',$exist)
                 ->when(true,function ($collection) {
                     foreach ($collection->chunk(1000) as $k=>$val){
-                            $val->map(function ($word) {
-                            $word['user_id'] = $this->actor->id;
-                            StopWord::query()->firstOrCreate(['find' => $word['find']], $word);
-                        });
+                        StopWord::query()->insert($val->toArray());
                     }
                 });
-            $existCount = count($exist);
+
+           $createCount = collect(Arr::get($this->data, 'words'))
+                ->map(function ($word) {
+                    return $this->parseWord($word);
+                })
+                ->filter()
+                ->unique('find')
+                ->whereNotIn('find',$exist)
+                ->count();
             $totalCount = collect(Arr::get($this->data, 'words'))->count();
             return collect([
-                'created'=>$totalCount-$existCount,
+                'created'=>$createCount,
                 'updated'=>0,
-                'unique'=>$existCount
+                'unique'=>$totalCount-$createCount
             ]);
         }
     }
@@ -200,8 +207,11 @@ class BatchCreateStopWord
                 $replacement = strpos($replacement, '|') === false ? $replacement : '**';
             }
 
+            $user_id = $this->actor->id;
+            $created_at = date("Y-m-d h:i:s");
+            $updated_at = date("Y-m-d h:i:s");
             // 返回一组可用数据
-            return compact('ugc', 'username', 'signature', 'dialog', 'nickname', 'find', 'replacement');
+            return compact('ugc', 'username', 'signature', 'dialog', 'nickname', 'find', 'replacement','user_id','created_at','updated_at');
         } else {
             return [];
         }
