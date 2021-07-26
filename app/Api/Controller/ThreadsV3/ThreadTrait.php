@@ -607,7 +607,7 @@ trait ThreadTrait
 
     private function optimizeTopics($text)
     {
-        preg_match_all('/#.+?#/', $text, $m1);
+        preg_match_all('/#((?![<|>]).)+?#/i', $text, $m1);
         $topics = $m1[0];
         $topics = array_values($topics);
         return $topics;
