@@ -102,3 +102,6 @@ $route->get('/create.crawler', 'create.crawler', ApiController\Crawler\CreateCra
 
 $route->post('/open.view.count', 'open.view.count', ApiController\SettingsV3\OpenViewCountController::class);
 
+// 表情列表
+$route->get('/emoji.list', 'emoji.list', ApiController\EmojiV3\ListAdminEmojiController::class);
+
