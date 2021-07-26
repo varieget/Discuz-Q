@@ -40,11 +40,9 @@ class OpenViewCountController extends DzqController
     {
         //阅读数计算方式：1：仅点击帖子详情页增加阅读数，0：操作首页帖子、进入详情页增加阅读数
         $openViewCount = Setting::query()->where('key', '=', 'open_view_count')->first();
-
+        $value = !empty($this->inPut('openViewCount')) ? 1 : 0;
         if (! empty($openViewCount)) {
             try {
-                $value = !empty($this->inPut('openViewCount')) ? 1 : 0;
-
                 Setting::modifyValue('open_view_count', $value);
 
                 DzqCache::delKey(CacheKey::SETTINGS);
@@ -58,8 +56,10 @@ class OpenViewCountController extends DzqController
             }
         } else {
             try {
-                $res = Setting::query()->insert(['key' => 'open_view_count', 'value' => 1, 'tag' => 'default']);
+                $res = Setting::query()->insert(['key' => 'open_view_count', 'value' => $value, 'tag' => 'default']);
                 if ($res == true) {
+                    DzqCache::delKey(CacheKey::SETTINGS);
+                    $res = Setting::query()->where('key', '=', 'open_view_count')->first();
                     $this->outPut(ResponseCode::SUCCESS, 'open_view_count 数据添加成功', $res);
                 } else {
                     $this->outPut(ResponseCode::INTERNAL_ERROR, 'open_view_count 数据添加失败');
