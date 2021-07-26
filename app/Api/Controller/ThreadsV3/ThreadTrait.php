@@ -639,7 +639,7 @@ trait ThreadTrait
 
     private function renderTopic($text)
     {
-        preg_match_all('/#.+?#/', $text, $topic);
+        preg_match_all('/#((?![<|>]).)+?#/i', $text, $topic);
         if (empty($topic)) {
             return $text;
         }
