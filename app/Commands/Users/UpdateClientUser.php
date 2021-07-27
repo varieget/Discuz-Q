@@ -20,7 +20,6 @@ namespace App\Commands\Users;
 
 use App\Censor\Censor;
 use App\Censor\CensorNotPassedException;
-use App\Common\ResponseCode;
 use App\Events\Users\PayPasswordChanged;
 use App\Exceptions\TranslatorException;
 use App\Models\User;
@@ -28,7 +27,6 @@ use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Foundation\EventsDispatchTrait;
 use Discuz\SpecialChar\SpecialCharServer;
@@ -228,22 +226,6 @@ class UpdateClientUser
 
         if (! $nickname || $nickname == $user->nickname) {
             return $validate;
-        }
-
-        $nickname = strpos($nickname,' ');
-        if ($nickname !== false) {
-            Utils::outPut(ResponseCode::USERNAME_NOT_ALLOW_HAS_SPACE, '昵称不允许包含空格');
-        }
-        //重名校验
-        $user = User::query()->where('nickname', $nickname)->first();
-        if (!empty($user)) {
-            Utils::outPut(ResponseCode::USERNAME_HAD_EXIST, '昵称已经存在');
-        }
-
-        // 敏感词校验
-        $this->censor->checkText($nickname,'nickname');
-        if ($this->censor->isMod) {
-            throw new TranslatorException(trans('user.user_nickname_censor_error'));
         }
 
         // 过滤内容
