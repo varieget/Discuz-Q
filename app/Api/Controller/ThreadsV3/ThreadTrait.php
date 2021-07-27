@@ -607,7 +607,7 @@ trait ThreadTrait
 
     private function optimizeTopics($text)
     {
-        preg_match_all('/#((?![<|>]).)+?#/i', $text, $m1);
+        preg_match_all('/#((?![<|>|;|&]).)+?#/i', $text, $m1);
         $topics = $m1[0];
         $topics = array_values($topics);
         return $topics;
@@ -639,7 +639,7 @@ trait ThreadTrait
 
     private function renderTopic($text)
     {
-        preg_match_all('/#((?![<|>]).)+?#/i', $text, $topic);
+        preg_match_all('/#((?![<|>|;|&]).)+?#/i', $text, $topic);
         if (empty($topic)) {
             return $text;
         }
