@@ -123,6 +123,8 @@ class CacheKey
         DzqCache::delKey(CacheKey::CATEGORIES);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEARCH);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_PAID_HOMEPAGE);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
