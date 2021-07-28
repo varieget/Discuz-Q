@@ -70,20 +70,22 @@ class UpdateAdminController extends DzqController
             $requestData['username'] = $username;
         }
 
-        if(empty($nickname)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'昵称不能为空');
-        }
-        $isHasSpace = strpos($nickname,' ');
-        if ($isHasSpace !== false) {
-            $this->outPut(ResponseCode::USERNAME_NOT_ALLOW_HAS_SPACE, '昵称不允许包含空格');
-        }
-        $isExists = User::query()->where('nickname', $nickname)->exists();
-        if (!empty($isExists)) {
-            $this->outPut(ResponseCode::USERNAME_HAD_EXIST, '昵称已经存在');
-        }
-        $this->censor->checkText($nickname);
-        if (!empty($nickname)) {
-            $requestData['nickname'] = $nickname;
+        if (isset($this->request->getParsedBody()['nickname'])){
+            if(empty($nickname)){
+                $this->outPut(ResponseCode::INVALID_PARAMETER,'昵称不能为空');
+            }
+            $isHasSpace = strpos($nickname,' ');
+            if ($isHasSpace !== false) {
+                $this->outPut(ResponseCode::USERNAME_NOT_ALLOW_HAS_SPACE, '昵称不允许包含空格');
+            }
+            $isExists = User::query()->where('nickname', $nickname)->exists();
+            if (!empty($isExists)) {
+                $this->outPut(ResponseCode::USERNAME_HAD_EXIST, '昵称已经存在');
+            }
+            $this->censor->checkText($nickname);
+            if (!empty($nickname)) {
+                $requestData['nickname'] = $nickname;
+            }
         }
 
         if(!empty($password)){
