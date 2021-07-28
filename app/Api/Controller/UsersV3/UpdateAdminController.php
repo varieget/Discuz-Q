@@ -78,7 +78,7 @@ class UpdateAdminController extends DzqController
             if ($isHasSpace !== false) {
                 $this->outPut(ResponseCode::USERNAME_NOT_ALLOW_HAS_SPACE, '昵称不允许包含空格');
             }
-            $isExists = User::query()->where('nickname', $nickname)->exists();
+            $isExists = User::query()->where('nickname', $nickname)->where('id', '<>', $id)->exists();
             if (!empty($isExists)) {
                 $this->outPut(ResponseCode::USERNAME_HAD_EXIST, '昵称已经存在');
             }
