@@ -39,7 +39,7 @@ class ThreadListController extends DzqController
 
     const PRELOAD_PAGES = 20;//预加载的页数
 
-    private $categoryIds = [];
+    private array $categoryIds = [];
 
 
     protected function checkRequestPermissions(UserRepository $userRepo)
