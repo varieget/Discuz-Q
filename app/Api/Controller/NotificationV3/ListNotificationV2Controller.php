@@ -270,7 +270,7 @@ class ListNotificationV2Controller extends DzqController
     {
         $titleOrContent = Str::substr(strip_tags($titleOrContent), 0, $length) . '...';
         //处理表情被截断的情况，针对最后的表情被截断的情况做截断处理
-        $titleOrContent = preg_replace('/([^\w])\:\w*\.\.\./s', '$1...', $titleOrContent);
+        $titleOrContent = preg_replace('/([^\w])?\:\w*\.\.\./s', '$1...', $titleOrContent);
         return $titleOrContent;
     }
 }
