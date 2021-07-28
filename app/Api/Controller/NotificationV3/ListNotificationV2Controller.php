@@ -76,11 +76,18 @@ class ListNotificationV2Controller extends DzqController
                     $item->realname = $user->realname;
                     $item->nickname = $user->nickname;
                 }
+                // 判断是否是楼中楼，查询用户名
+                if (Arr::has($item->data, 'reply_post_user_id') && Arr::get($item->data, 'reply_post_user_id') != 0) {
+                    $replyPostUser = $users->get(Arr::get($item->data, 'reply_post_user_id'));
+                    if (!empty($replyPostUser)) {
+                        $item->reply_post_user_name = $replyPostUser->username;
+                    }
+                }
+
                 // 查询主题相关内容
                 if (!empty($threadID = Arr::get($item->data, 'thread_id', 0))) {
                     // 获取主题作者用户组
                     if (!empty($threads->get($threadID))) {
-                        $item->is_reply = 0;
                         $thread = $threads->get($threadID);
                         $item->thread_user_nickname = $thread->user->nickname;
                         $item->thread_user_avatar = $thread->user->avatar;
@@ -125,17 +132,6 @@ class ListNotificationV2Controller extends DzqController
                         }
                     }
                 }
-                // 判断是否是楼中楼，查询用户名
-                if (Arr::has($item->data, 'reply_post_user_id') && Arr::get($item->data, 'reply_post_user_id') != 0) {
-                    $replyPostUser = $users->get(Arr::get($item->data, 'reply_post_user_id'));
-                    if (!empty($replyPostUser)) {
-                        $item->reply_post_user_name = $replyPostUser->username;
-                        //如果是楼中楼，这里标识为1
-                        $item->is_reply = 1;
-                    }
-                }
-
-
             });
         } else {
             // 获取通知里当前的用户名称和头像
