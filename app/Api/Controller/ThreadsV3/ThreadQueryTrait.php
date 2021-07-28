@@ -19,7 +19,11 @@ namespace App\Api\Controller\ThreadsV3;
 
 
 use App\Models\Category;
+use App\Models\DenyUser;
+use App\Models\Post;
 use App\Models\Sequence;
+use App\Models\Thread;
+use Carbon\Carbon;
 
 trait ThreadQueryTrait
 {
@@ -109,33 +113,99 @@ trait ThreadQueryTrait
         return $query;
     }
 
+
     /**
      * @desc 发现页搜索结果数据
      * @param $filter
+     * @param bool $withLoginUser
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    private function buildSearchThreads($filter)
+    private function buildSearchThreads($filter, &$withLoginUser = false)
     {
-        if (empty($filter)) $filter = [];
-        $this->dzqValidate($filter, [
-            'sticky' => 'integer|in:0,1',
-            'essence' => 'integer|in:0,1',
-            'types' => 'array',
-            'categoryids' => 'array',
-            'sort' => 'integer|in:1,2,3,4',
-            'attention' => 'integer|in:0,1',
-            'complex' => 'integer|in:1,2,3,4,5',
-            'site' => 'integer|in:0,1',
-            'repeatedIds'=>'array'
-        ]);
+        list($essence, $types, $sort, $attention, $search, $complex, $categoryids) = $this->initFilter($filter);
+        $loginUserId = $this->user->id;
+        $threadsByHot = $this->getBaseThreadsBuilder();
+        if (!empty($search)) {
+            $threadsByHot->leftJoin('posts as post', 'th.id', '=', 'post.thread_id')
+                ->addSelect('post.content')
+                ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
+                ->whereNull('post.deleted_at')
+                ->where(function ($threads) use ($search) {
+                    $threads->where('th.title', 'like', '%' . $search . '%');
+                    $threads->orWhere('post.content', 'like', '%' . $search . '%');
+                });
+        }
+        if (!empty($loginUserId)) {
+            $denyUserIds = DenyUser::query()->where('user_id', $loginUserId)->get()->pluck('deny_user_id')->toArray();
+            if (!empty($denyUserIds)) {
+                $threadsByHot->whereNotIn('th.user_id', $denyUserIds);
+                $withLoginUser = true;
+            }
+        }
+        !empty($categoryids) && $threadsByHot->whereIn('category_id', $categoryids);
 
+        $threadsByHot->whereBetween('th.created_at', [Carbon::parse('-7 days'), Carbon::now()])
+            ->orderByDesc('th.view_count')->limit(10)->offset(0);
+        $threadsByHotIds = $threadsByHot->get()->pluck('id');
+        $threadsByUpdate = $this->getBaseThreadsBuilder();
+        if (!empty($search)) {
+            $threadsByUpdate->leftJoin('posts as post', 'th.id', '=', 'post.thread_id')
+                ->addSelect('post.content')
+                ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
+                ->whereNull('post.deleted_at')
+                ->where(function ($threads) use ($search) {
+                    $threads->where('th.title', 'like', '%' . $search . '%');
+                    $threads->orWhere('post.content', 'like', '%' . $search . '%');
+                });
+        }
+        if (!empty($loginUserId)) {
+            $denyUserIds = DenyUser::query()->where('user_id', $loginUserId)->get()->pluck('deny_user_id')->toArray();
+            if (!empty($denyUserIds)) {
+                $threadsByUpdate->whereNotIn('th.user_id', $denyUserIds);
+                $withLoginUser = true;
+            }
+        }
+        $threadsByUpdate->whereNotIn('id', $threadsByHotIds);
+        !empty($categoryids) && $threadsByUpdate->whereIn('category_id', $categoryids);
+        $threadsByUpdate->orderByDesc('th.updated_at')->limit(9999999999);
+        return $threadsByHot->unionAll($threadsByUpdate->getQuery());
     }
 
-    /**
-     * @desc 付费站首页帖子数据
-     * @param $filter
-     */
-    private function buildPayPageThreads($filter)
-    {
 
+    /**
+     * @desc 付费站首页帖子数据,最多显示10条
+     */
+    private function buildPaidHomePageThreads()
+    {
+        $maxCount = 10;
+        $threadsBySite = $this->getBaseThreadsBuilder();
+        $threadsBySite->where('th.is_site', Thread::IS_SITE);
+        $threadsBySite->orderByDesc('th.view_count');
+        if ($threadsBySite->count() >= $maxCount) {
+            return $threadsBySite;
+        }
+        $threadsBySiteIds = $threadsBySite->get()->pluck('id');
+        $threadsByHot = $this->getBaseThreadsBuilder();
+        $threadsByHot->whereBetween('th.created_at', [Carbon::parse('-7 days'), Carbon::now()])
+            ->whereNotIn('id', $threadsBySiteIds)
+            ->orderByDesc('th.view_count')
+            ->limit($maxCount)->offset(0);
+        $threadsBySite->unionAll($threadsByHot->getQuery());
+        return $threadsBySite;
+    }
+
+    private function getBaseThreadsBuilder($isDraft = Thread::BOOL_NO, $filterApprove = true)
+    {
+        $threads = Thread::query()
+            ->select('th.*')
+            ->from('threads as th')
+            ->whereNull('th.deleted_at')
+            ->whereNotNull('th.user_id')
+            ->where('th.is_draft', $isDraft)
+            ->where('th.is_display', Thread::BOOL_YES);
+        if ($filterApprove) {
+            $threads->where('th.is_approved', Thread::BOOL_YES);
+        }
+        return $threads;
     }
 }
