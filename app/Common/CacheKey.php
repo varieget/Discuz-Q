@@ -76,14 +76,6 @@ class CacheKey
     const LIST_THREADS_V3_CREATE_TIME = 'list_threads_v3_create_time';//filterId->pageId
     //智能排序，不参与筛选
     const LIST_THREADS_V3_SEQUENCE = 'list_threads_v3_sequence';//filterId->pageId
-
-    //搜索发现页
-    const LIST_THREADS_V3_SEARCH = 'list_threads_v3_search';//filterId->pageId
-
-    //付费首页
-    const LIST_THREADS_V3_PAID_HOMEPAGE = 'list_threads_v3_paid_homepage';//filterId->pageId
-
-
     //浏览数排序
     const LIST_THREADS_V3_VIEW_COUNT = 'list_threads_v3_view_count';//filterId->pageId
     //评论时间排序
