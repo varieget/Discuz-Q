@@ -116,14 +116,15 @@ trait ThreadTrait
     {
         $settingRepo = app(SettingsRepository::class);
         $mobileCodeRepo = app(MobileCodeRepository::class);
-        if ((bool)$settingRepo->get('qcloud_sms')) {
+        if ((bool)$settingRepo->get('qcloud_sms', 'qcloud')) {
+            $request = app('request');
             $realMobile = $user->getRawOriginal('mobile');
             if (empty($realMobile)) {
                 $this->outPut(ResponseCode::USER_MOBILE_NOT_ALLOW_NULL);
             }
             //校验手机号和验证码
             $type = "thread_verify";
-            $ip = ip($this->request->getServerParams());
+            $ip = ip($request->getServerParams());
             $mobileCode = $mobileCodeRepo->getSmsCode($realMobile, $type);
             if (!is_null($mobileCode) && $mobileCode->exists) {
                 $mobileCode = $mobileCode->refrecode(MobileCode::CODE_EXCEPTION, $ip);
@@ -141,6 +142,7 @@ trait ThreadTrait
             $mobileCode->save();
         }
         if ((bool)$settingRepo->get('qcloud_faceid')) {
+            // 该功能暂无需求
             $realName = $user->getRawOriginal('realname');
             $identity = $user->getRawOriginal('identity');
             if (empty($realName)) {
