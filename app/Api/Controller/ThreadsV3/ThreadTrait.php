@@ -668,13 +668,14 @@ trait ThreadTrait
         }
         $call = $call[0];
         $call = str_replace(['@', ' '], '', $call);
-        $ats = User::query()->select('id', 'username')->whereIn('username', $call)->get()->map(function ($item) {
-            $item['username'] = '@' . $item['username'];
-            $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
+        $ats = User::query()->select('id', 'nickname')->whereIn('nickname', $call)->get()->map(function ($item) {
+            $item['nickname'] = '@' . $item['nickname'];
+            $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['nickname']);
             return $item;
         })->toArray();
         foreach ($ats as $val) {
-            $text = preg_replace("/{$val['username']}/", "{$val['html']}", $text, 1);
+            $val['nickname'] = preg_quote($val['nickname']);
+            $text = preg_replace("/{$val['nickname']}/", "{$val['html']}", $text, 1);
         }
         return $text;
     }
