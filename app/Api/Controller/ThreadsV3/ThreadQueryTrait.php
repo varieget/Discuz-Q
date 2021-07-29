@@ -134,7 +134,7 @@ trait ThreadQueryTrait
         if (!empty($exclusiveIds)) {
             $threads = $threads->whereNotIn('th.id', $exclusiveIds);
         }
-        !empty($categoryids) && $threads->whereIn('category_id', $categoryids);
+        !empty($categoryids) && $threads->whereIn('th.category_id', $categoryids);
         return $threads;
     }
 
@@ -274,7 +274,7 @@ trait ThreadQueryTrait
                 $withLoginUser = true;
             }
         }
-        !empty($categoryids) && $threadsByHot->whereIn('category_id', $categoryids);
+        !empty($categoryids) && $threadsByHot->whereIn('th.category_id', $categoryids);
 
         $threadsByHot->whereBetween('th.created_at', [Carbon::parse('-7 days'), Carbon::now()])
             ->orderByDesc('th.view_count')->limit(10)->offset(0);
@@ -297,8 +297,8 @@ trait ThreadQueryTrait
                 $withLoginUser = true;
             }
         }
-        $threadsByUpdate->whereNotIn('id', $threadsByHotIds);
-        !empty($categoryids) && $threadsByUpdate->whereIn('category_id', $categoryids);
+        $threadsByUpdate->whereNotIn('th.id', $threadsByHotIds);
+        !empty($categoryids) && $threadsByUpdate->whereIn('th.category_id', $categoryids);
         $threadsByUpdate->orderByDesc('th.updated_at')->limit(9999999999);
         return $threadsByHot->unionAll($threadsByUpdate->getQuery());
     }
