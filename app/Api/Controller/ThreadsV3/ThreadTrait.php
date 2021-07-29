@@ -326,7 +326,9 @@ trait ThreadTrait
                         $freeLength = mb_strlen($text) * $freeWords;
                         $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
                         //针对最后的表情被截断的情况做截断处理
-                        $text = preg_replace('/([^\w])?\:\w*\.\.\./s', '$1...', $text);
+                        $text = preg_replace('/([^\w])\:\w*\.\.\./s', '$1...', $text);
+                        //处理内容开头是表情，表情被截断的情况
+                        $text = preg_replace('/^\:\w*\.\.\./s', '...', $text);
                     }
                 }
                 $content['text'] = $text;
