@@ -21,7 +21,6 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\DenyUser;
 use App\Models\Group;
-use App\Models\ThreadTopic;
 use Discuz\Base\DzqCache;
 use App\Models\Category;
 use App\Models\Order;
@@ -373,13 +372,7 @@ class ThreadListController extends DzqController
 
         $query = $this->getBaseThreadsBuilder();
         $query->leftJoin('group_user as g1', 'g1.user_id', '=', 'th.user_id');
-
-        $latestThreadTopics = ThreadTopic::query()
-            ->selectRaw('thread_id,max(topic_id) as topic_id')
-            ->groupBy('thread_topic.thread_id');
-        $query = $query->leftJoinSub($latestThreadTopics, 'topic', function ($join) {
-            $join->on('topic.thread_id', '=', 'th.id');
-        });
+        $query->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'th.id');
 
         if (!empty($types)) {
             $query->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
@@ -389,13 +382,7 @@ class ThreadListController extends DzqController
         if (!empty($categoryIds)) {
             $query->whereIn('th.category_id', $categoryIds);
         }
-        $groupIds = [];
-        $topicIds = [];
-        $userIds = [];
-        $threadIds = [];
-        $blockUserIds = [];
-        $blockThreadIds = [];
-        $blockTopicIds = [];
+
         foreach ($sequence as $key => $value) {
             if (!empty($value)) {
                 if ($key == 'group_ids') {
@@ -418,36 +405,26 @@ class ThreadListController extends DzqController
             }
         }
 
-        if(!empty($groupIds) || !empty($topicIds) || !empty($userIds) || !empty($threadIds)
-            || !empty($blockUserIds) || !empty($blockThreadIds) || !empty($blockTopicIds)){
-            $query->where(function($query)use ($groupIds,$topicIds,$userIds,$threadIds,$blockUserIds,$blockThreadIds,$blockTopicIds) {
-                $query->whereNull('th.deleted_at')
-                    ->whereNotNull('th.user_id')
-                    ->where('th.is_draft', Thread::IS_NOT_DRAFT)
-                    ->where('th.is_display', Thread::BOOL_YES)
-                    ->where('th.is_approved', Thread::BOOL_YES);
-                if (!empty($groupIds)) {
-                    $query->orWhereIn('g1.group_id', $groupIds);
-                }
-                if (!empty($topicIds)) {
-                    $query->orWhereIn('topic.topic_id', $topicIds);
-                }
-                if (!empty($userIds)) {
-                    $query->orWhereIn('th.user_id', $userIds);
-                }
-                if (!empty($threadIds)) {
-                    $query->orWhereIn('th.id', $threadIds);
-                }
-                if (!empty($blockUserIds)) {
-                    $query->whereNotIn('th.user_id', $blockUserIds);
-                }
-                if (!empty($blockThreadIds)) {
-                    $query->whereNotIn('th.id', $blockThreadIds);
-                }
-                if (!empty($blockTopicIds)) {
-                    $query->whereNotIn('topic.topic_id', $blockTopicIds);
-                }
-            });
+        if (!empty($groupIds)) {
+            $query->orWhereIn('g1.group_id', $groupIds);
+        }
+        if (!empty($topicIds)) {
+            $query->orWhereIn('topic.topic_id', $topicIds);
+        }
+        if (!empty($userIds)) {
+            $query->orWhereIn('th.user_id', $userIds);
+        }
+        if (!empty($threadIds)) {
+            $query->orWhereIn('th.id', $threadIds);
+        }
+        if (!empty($blockUserIds)) {
+            $query->whereNotIn('th.user_id', $blockUserIds);
+        }
+        if (!empty($blockThreadIds)) {
+            $query->whereNotIn('th.id', $blockThreadIds);
+        }
+        if (!empty($blockTopicIds)) {
+            $query->whereNotIn('topic.topic_id', $blockTopicIds);
         }
 
         $query->orderBy('th.created_at', 'desc');
