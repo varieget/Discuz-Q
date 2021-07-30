@@ -196,3 +196,8 @@ $route->get('/test', 'thread.test', ApiController\ThreadsV3\TestController::clas
 $route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);
 
 $route->get('/view.count', 'view.count', ApiController\ThreadsV3\ViewCountController::class);
+
+//上传文件临时参数
+$route->post('/coskey', 'coskey', ApiController\AttachmentV3\CoskeyAttachmentController::class);
+//记录前端上传文件的参数
+$route->post('/attachment.relation', 'attachment.relation', ApiController\AttachmentV3\RelationAttachmentController::class);
