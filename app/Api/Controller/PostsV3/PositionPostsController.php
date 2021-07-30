@@ -27,6 +27,7 @@ class PositionPostsController extends DzqController
 {
     protected $post_ids;
     protected $postId;
+    protected $posts;
     protected $pageSize;
     protected $is_reply;
 
@@ -59,18 +60,35 @@ class PositionPostsController extends DzqController
 
         $where = [
             'thread_id' => $threadId,
-            'is_first' => 0
+            'is_first' => 0,
+            'is_comment' => 0,
+            'is_approved' => 1
         ];
-        if($this->is_reply)     $where['reply_post_id'] = $posts->reply_post_id;
 
-        $this->post_ids = Post::query()
+        if($this->is_reply){
+            $where['reply_post_id'] = $posts->reply_post_id;
+            $where['is_comment'] = 1;
+        }
+
+        $this->posts = Post::query()
             ->where($where)
             ->whereNull('deleted_at')
-            ->orderBy('id','asc')
-            ->pluck('id')->toArray();
+            ->orderBy('created_at','asc')
+            ->get()->map(function ($post) {
+                return $this->getPost($post);
+            });
 
+
+        $this->post_ids = array_column($this->posts->toArray(), 'id');
 
         return $userRepo->canViewThreadDetail($this->user, $thread);
+    }
+
+    public function getPost($post){
+        return [
+            'id' => $post->id,
+            'rewards' => floatval(sprintf('%.2f', $post->getPostReward(UserWalletLog::TYPE_INCOME_THREAD_REWARD)))
+        ];
     }
 
     public function main(){
@@ -81,8 +99,11 @@ class PositionPostsController extends DzqController
         if($this->is_reply){
             $location = $position;
         }else{
-            $page = floor(count($this->post_ids)/$this->pageSize);
-            $location = $position%$this->pageSize;
+            $page = ceil($position/$this->pageSize);
+            //具体的 location 还需要  rewards 参数
+            $location_posts = $this->posts->slice(($page - 1) * $this->pageSize, $this->pageSize)->sortByDesc('rewards')->values()->toArray();
+            $location_post_ids = array_column($location_posts, 'id');
+            $location = array_search($this->postId, $location_post_ids);
         }
 
         $res_data = [
