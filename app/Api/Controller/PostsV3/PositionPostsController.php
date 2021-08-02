@@ -103,7 +103,7 @@ class PositionPostsController extends DzqController
             //具体的 location 还需要  rewards 参数
             $location_posts = $this->posts->slice(($page - 1) * $this->pageSize, $this->pageSize)->sortByDesc('rewards')->values()->toArray();
             $location_post_ids = array_column($location_posts, 'id');
-            $location = array_search($this->postId, $location_post_ids);
+            $location = array_search($this->postId, $location_post_ids) + 1;
         }
 
         $res_data = [
