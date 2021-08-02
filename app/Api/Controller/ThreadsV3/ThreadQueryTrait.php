@@ -154,7 +154,10 @@ trait ThreadQueryTrait
         $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         if (empty($filter)) $filter = [];
         isset($filter['types']) && $types = $filter['types'];
-
+        $groupIds = [];
+        $topicIds = [];
+        $userIds = [];
+        $threadIds = [];
         !empty($sequence['group_ids']) && $groupIds = explode(',', $sequence['group_ids']);
         !empty($sequence['user_ids']) && $userIds = explode(',', $sequence['user_ids']);
         !empty($sequence['topic_ids']) && $topicIds = explode(',', $sequence['topic_ids']);
@@ -166,12 +169,7 @@ trait ThreadQueryTrait
         $query = $this->getBaseThreadsBuilder();
         $query->leftJoin('group_user as g1', 'g1.user_id', '=', 'th.user_id');
 
-        $latestThreadTopics = ThreadTopic::query()
-            ->selectRaw('thread_id,max(topic_id) as topic_id')
-            ->groupBy('thread_topic.thread_id');
-        $query = $query->leftJoinSub($latestThreadTopics, 'topic', function ($join) {
-            $join->on('topic.thread_id', '=', 'th.id');
-        });
+        $query->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'th.id');
 
         if (!empty($types)) {
             $query->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
@@ -181,48 +179,16 @@ trait ThreadQueryTrait
         if (!empty($categoryIds)) {
             $query->whereIn('th.category_id', $categoryIds);
         }
-        $groupIds = [];
-        $topicIds = [];
-        $userIds = [];
-        $threadIds = [];
-        $blockUserIds = [];
-        $blockThreadIds = [];
-        $blockTopicIds = [];
-        foreach ($sequence as $key => $value) {
-            if (!empty($value)) {
-                if ($key == 'group_ids') {
-                    $query->whereIn('g1.group_id', $groupIds);
-                    $groupIds = [];
-                }
-                if ($key == 'topic_ids') {
-                    $query->whereIn('topic.topic_id', $topicIds);
-                    $topicIds = [];
-                }
-                if ($key == 'user_ids') {
-                    $query->whereIn('th.user_id', $userIds);
-                    $userIds = [];
-                }
-                if ($key == 'thread_ids') {
-                    $query->whereIn('th.id', $threadIds);
-                    $threadIds = [];
-                }
-                break;
-            }
-        }
 
-        if (!empty($groupIds) || !empty($topicIds) || !empty($userIds) || !empty($threadIds)
-            || !empty($blockUserIds) || !empty($blockThreadIds) || !empty($blockTopicIds)) {
-            $query->where(function ($query) use ($groupIds, $topicIds, $userIds, $threadIds, $blockUserIds, $blockThreadIds, $blockTopicIds) {
-                $query->whereNull('th.deleted_at')
-                    ->whereNotNull('th.user_id')
-                    ->where('th.is_draft', Thread::IS_NOT_DRAFT)
-                    ->where('th.is_display', Thread::BOOL_YES)
-                    ->where('th.is_approved', Thread::BOOL_YES);
+        $query->where(function($query)use ($groupIds,$userIds,$threadIds,$topicIds) {
+            $query->whereNull('th.deleted_at')
+                ->whereNotNull('th.user_id')
+                ->where('th.is_draft', Thread::IS_NOT_DRAFT)
+                ->where('th.is_display', Thread::BOOL_YES)
+                ->where('th.is_approved', Thread::BOOL_YES);
+            $query->where(function ($query) use ($groupIds,$userIds,$threadIds,$topicIds) {
                 if (!empty($groupIds)) {
                     $query->orWhereIn('g1.group_id', $groupIds);
-                }
-                if (!empty($topicIds)) {
-                    $query->orWhereIn('topic.topic_id', $topicIds);
                 }
                 if (!empty($userIds)) {
                     $query->orWhereIn('th.user_id', $userIds);
@@ -230,19 +196,25 @@ trait ThreadQueryTrait
                 if (!empty($threadIds)) {
                     $query->orWhereIn('th.id', $threadIds);
                 }
-                if (!empty($blockUserIds)) {
-                    $query->whereNotIn('th.user_id', $blockUserIds);
-                }
-                if (!empty($blockThreadIds)) {
-                    $query->whereNotIn('th.id', $blockThreadIds);
-                }
-                if (!empty($blockTopicIds)) {
-                    $query->whereNotIn('topic.topic_id', $blockTopicIds);
+                if (!empty($topicIds)) {
+                    $query->orWhereIn('topic.topic_id', $topicIds);
                 }
             });
-        }
+        });
 
+        if (!empty($blockUserIds)) {
+            $query->whereNotIn('th.user_id', $blockUserIds);
+        }
+        if (!empty($blockThreadIds)) {
+            $query->whereNotIn('th.id', $blockThreadIds);
+        }
+        if (!empty($blockTopicIds)) {
+            $thIds = ThreadTopic::query()->distinct(true)->whereIn('topic_id',$blockTopicIds)->get("thread_id")->toArray();
+            $thIds = array_column($thIds,'thread_id');
+            $query->whereNotIn('th.id', $thIds);
+        }
         $query->orderBy('th.created_at', 'desc');
+        $query->distinct(true);
         return $query;
     }
 
