@@ -305,7 +305,7 @@ class Censor
      * @throws GuzzleException
      * @throws InvalidConfigException
      */
-    public function checkImage($path, $isRemote = false)
+    public function checkImage($path, $isRemote = false,$tempPath)
     {
         // TODO 结耦
         if ($isRemote) {
@@ -317,7 +317,14 @@ class Censor
             $params = [];
 
             if ($isRemote) {
-                $params['FileUrl'] = $path;
+                $path = explode("?",$path);
+                $path = $path[0];
+                $ext = substr($path,strrpos($path,'.')+1);
+                if(strtolower($ext) == 'gif'){
+                    $params['FileContent'] = base64_encode(file_get_contents($tempPath));
+                }else{
+                    $params['FileUrl'] = $path;
+                }
             } else {
                 $params['FileContent'] = base64_encode(file_get_contents($path));
             }
@@ -326,8 +333,12 @@ class Censor
              * @property QcloudManage
              * @see 图片内容安全文档 https://cloud.tencent.com/document/product/1125/53273
              */
-            $result = $this->app->make('qcloud')->service('ims')->ImageModeration($params);
-
+            try {
+                $result = $this->app->make('qcloud')->service('ims')->ImageModeration($params);
+            }catch (\Exception $e){
+                app("log")->info("检测图片内容安全接口出错".$e->getMessage());
+                Utils::outPut(ResponseCode::INTERNAL_ERROR,'检测图片内容安全出错');
+            }
             /**
              * Suggestion 腾讯云系统推荐的后续操作
              * 返回值：Block：建议屏蔽，Review ：建议人工复审，Pass：建议通过
