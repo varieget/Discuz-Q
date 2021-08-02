@@ -28,6 +28,7 @@ class TomConfig
     const TOM_REDPACK = 106;
     const TOM_REWARD = 107;
     const TOM_DOC = 108;
+    const TOM_VOTE = 109;
 
     public static $map = [
         self::TOM_TEXT => [
@@ -81,6 +82,12 @@ class TomConfig
             'enName' => 'DOC',
             'desc' => '文件附件',
             'authorize'=>'switch.insertDoc',
+            'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
+        ],
+        self::TOM_VOTE => [
+            'enName' => 'VOTE',
+            'desc' => '投票',
+            'authorize'=>'switch.insertVote',
             'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
         ]
     ];
