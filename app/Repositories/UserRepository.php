@@ -605,16 +605,8 @@ class UserRepository extends AbstractRepository
      */
     public function canCreateThreadNeedBindPhone(User $user)
     {
-        $settings   = app(SettingsRepository::class);
-        $wechat     = (bool)$settings->get('offiaccount_close', 'wx_offiaccount');
-        $miniWechat = (bool)$settings->get('miniprogram_close', 'wx_miniprogram');
-        $sms        = (bool)$settings->get('qcloud_sms', 'qcloud');
         if ($user->isAdmin()) {
             return false;
-        } elseif (($wechat || $miniWechat) && empty($user->wechat)) {
-            return true;
-        } elseif ($sms && empty($user->mobile)) {
-            return true;
         } else {
             return $user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_PHONE);
         }
