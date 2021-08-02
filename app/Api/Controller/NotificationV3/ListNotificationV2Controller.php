@@ -215,7 +215,7 @@ class ListNotificationV2Controller extends DzqController
         }
 
         // 默认必须要有的字段
-        if (!array_key_exists('reply_post_id', $result)) {
+        if (!array_key_exists('replyPostId', $result)) {
             $result = array_merge($result, [
                 'replyPostId' => 0,
             ]);
@@ -238,6 +238,7 @@ class ListNotificationV2Controller extends DzqController
             'threadIsApproved' => $data->thread_is_approved ?: 0,
             'threadUserNickname' => $data->thread_user_nickname ?: '',
             'threadUserAvatar' => $data->thread_user_avatar ?: '',
+            'isReply'   =>  $data->is_reply ?: 0
         ]);
 
         // 判断是否要匿名
