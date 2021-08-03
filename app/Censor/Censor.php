@@ -305,7 +305,7 @@ class Censor
      * @throws GuzzleException
      * @throws InvalidConfigException
      */
-    public function checkImage($path, $isRemote = false,$tempPath)
+    public function checkImage($path, $isRemote = false,$tempPath = "")
     {
         // TODO 结耦
         if ($isRemote) {
