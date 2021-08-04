@@ -138,9 +138,11 @@ class UpdateThreadController extends DzqController
         $isAnonymous = $this->inPut('anonymous');
         $isDraft = $this->inPut('draft');
         //如果原帖是已发布的情况下，update 不允许在将帖子状态存为草稿
+        /*
         if($thread->is_draft == Thread::IS_NOT_DRAFT && !empty($isDraft)){
             $this->outPut(ResponseCode::INVALID_PARAMETER, '该帖已发布，不允许再存为草稿');
         }
+        */
 
         // 包含 红包 的帖子在已发布的情况下，再次编辑；条件：存在对应的 order 为 已支付的情况
         empty($content['indexes']) && $content['indexes'] = [];
@@ -161,9 +163,11 @@ class UpdateThreadController extends DzqController
                 }
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '包含红包/悬赏帖，需要创建对应的订单');
             }
-
         }
 
+        if ($price > 0 || $attachmentPrice > 0) {
+            $this->checkThreadPrice($price, $attachmentPrice);
+        }
 
         $thread->title = $title;
         !empty($categoryId) && $thread->category_id = $categoryId;
