@@ -23,6 +23,7 @@ use App\Common\PermissionKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Models\Group;
+use App\Models\Order;
 use App\Models\Thread;
 use App\Models\User;
 use App\Settings\SettingsRepository;
@@ -605,16 +606,8 @@ class UserRepository extends AbstractRepository
      */
     public function canCreateThreadNeedBindPhone(User $user)
     {
-        $settings   = app(SettingsRepository::class);
-        $wechat     = (bool)$settings->get('offiaccount_close', 'wx_offiaccount');
-        $miniWechat = (bool)$settings->get('miniprogram_close', 'wx_miniprogram');
-        $sms        = (bool)$settings->get('qcloud_sms', 'qcloud');
         if ($user->isAdmin()) {
             return false;
-        } elseif (($wechat || $miniWechat) && empty($user->wechat)) {
-            return true;
-        } elseif ($sms && empty($user->mobile)) {
-            return true;
         } else {
             return $user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_PHONE);
         }
@@ -633,14 +626,19 @@ class UserRepository extends AbstractRepository
             if ($user->isAdmin()) {
                 return true;
             }
-            if (($wechat || $miniWechat) && empty($user->wechat)) {
+            if (($wechat || $miniWechat) && !$sms && empty($user->wechat)) {
                 Utils::outPut(ResponseCode::NEED_BIND_WECHAT, '请先绑定微信');
             }
-            if ($sms && empty($user->mobile)) {
-                Utils::outPut(ResponseCode::NEED_BIND_PHONE, '请先绑定手机号');
-            } elseif ($sms && !empty($user->mobile)) {
-                if(preg_match("/^1[3-9]\d{9}$/", $user->getRawOriginal('mobile')) !== 1){
-                    Utils::outPut(ResponseCode::MOBILE_FORMAT_ERROR);
+            if (($wechat || $miniWechat) && $sms && empty($user->wechat) && empty($user->mobile)) {
+                Utils::outPut(ResponseCode::NEED_BIND_WECHAT, '请先绑定微信');
+            }
+            if (!($wechat || $miniWechat) && $sms) {
+                if (empty($user->mobile)) {
+                    Utils::outPut(ResponseCode::NEED_BIND_PHONE, '请先绑定手机号');
+                } else {
+                    if(preg_match("/^1[3-9]\d{9}$/", $user->getRawOriginal('mobile')) !== 1){
+                        Utils::outPut(ResponseCode::MOBILE_FORMAT_ERROR);
+                    }
                 }
             }
         }
@@ -654,11 +652,11 @@ class UserRepository extends AbstractRepository
     {
         return $user->isAdmin();
     }
-
     public function canDeleteAvatar(User $user)
     {
         return $user->isAdmin();
     }
+
 
 
     public function canExportUser(User $user)
@@ -688,5 +686,45 @@ class UserRepository extends AbstractRepository
     public function canUserStatus(User $user)
     {
         return $user->isAdmin();
+    }
+
+    /**
+     * 检查 $user 是否已付费，true：已付费，false：未付费
+     * @param User $user
+     * @return bool
+     */
+    public function isPaid(User $user): bool
+    {
+        $settings = app(SettingsRepository::class);
+        $siteMode = $settings->get('site_mode');
+        if ($siteMode == 'public'
+            || $user->group_id == Group::ADMINISTRATOR_ID
+            || $user->isAdmin()
+        ) {
+            return true;
+        }
+        if ($user->isGuest()) {
+            return false;
+        }
+
+        $order = Order::query()->where([
+            'status' => Order::ORDER_STATUS_PAID,
+            'user_id' => $user->id
+        ])  ->whereIn('type', [Order::ORDER_TYPE_REGISTER, Order::ORDER_TYPE_RENEW])
+            ->orderByDesc('id')
+            ->first();
+        $now = time();
+        if (!empty($order)
+            && ((strtotime($order->expired_at) > $now)
+                || (empty($order->expired_at) && empty($user->expired_at)))
+        ){
+            return true;
+        }
+
+        if (!empty($user->expired_at) && strtotime($user->expired_at) > $now) {
+            return true;
+        }
+
+        return false;
     }
 }

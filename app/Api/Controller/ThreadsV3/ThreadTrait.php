@@ -377,7 +377,9 @@ trait ThreadTrait
                     if(!empty($content_attachments)){
                         $serializer = $this->app->make(AttachmentSerializer::class);
                         foreach ($content_attachments as $val){
-                            $attachments[$val->id] = $serializer->getImgUrl($val);
+                            if($val->is_remote){
+                                $attachments[$val->id] = $serializer->getImgUrl($val);
+                            }
                         }
                     }
                 }
@@ -679,6 +681,20 @@ trait ThreadTrait
             $text = preg_replace("/{$val['nickname']}/", "{$val['html']}", $text, 1);
         }
         return $text;
+    }
+
+    public function checkThreadPrice($price, $attachmentPrice)
+    {
+        $limitMoney = Thread::PRICE_LIMIT;
+        if ($price > 0 && $attachmentPrice > 0) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '只可选择一种付费类型');
+        }
+        if ($price != round($price, 2) || $attachmentPrice != round($attachmentPrice, 2)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '价格设置小数点后不得超过2位');
+        }
+        if ($price > $limitMoney || $attachmentPrice > $limitMoney) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '价格设置不能超过' . $limitMoney . '元');
+        }
     }
 }
 
