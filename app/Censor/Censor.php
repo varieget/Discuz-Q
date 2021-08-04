@@ -108,7 +108,7 @@ class Censor
         if ($this->setting->get('censor', 'default', true)) {
             $content = $this->localStopWordsCheck($content, $type);
         }
-        
+
         if (blank($content)) {
             return $content;
         }
@@ -315,14 +315,11 @@ class Censor
 
         if ((bool) $this->setting->get('qcloud_cms_image', 'qcloud', false)) {
             $params = [];
-
             if ($isRemote) {
-                $path = explode("?",$path);
-                $path = $path[0];
-                $ext = substr($path,strrpos($path,'.')+1);
-                if(strtolower($ext) == 'gif'){
+                $url = explode('?', $path)[0];
+                if (strtolower(substr($url, -3)) == 'gif' && !empty($tempPath)) {
                     $params['FileContent'] = base64_encode(file_get_contents($tempPath));
-                }else{
+                } else {
                     $params['FileUrl'] = $path;
                 }
             } else {
