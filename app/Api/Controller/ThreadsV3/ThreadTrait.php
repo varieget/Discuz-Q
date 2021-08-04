@@ -390,6 +390,8 @@ trait ThreadTrait
                             $id = trim($m[2], '"');
                             if (!empty($m) && in_array($id, array_keys($attachments))) {
                                 return 'img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '"';
+                            }else{
+                                return 'img src="' . $m[1] . '" alt="attachmentId-' . $id . '"';
                             }
                         },
                         $xml
