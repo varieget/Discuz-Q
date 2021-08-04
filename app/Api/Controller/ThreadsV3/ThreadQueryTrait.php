@@ -194,19 +194,19 @@ trait ThreadQueryTrait
         }
 
         //需剔除的threadId
-        $removeId = [];
+        $removeThreadId = [];
         if (!empty($blockUserIds)) {
             $query->whereNotIn('th.user_id', $blockUserIds);
         }
         if (!empty($blockThreadIds)) {
             $query->whereNotIn('th.id', $blockThreadIds);
-            $removeThreadId = array_merge($removeId,$blockThreadIds);
+            $removeThreadId = array_merge($removeThreadId,$blockThreadIds);
         }
         if (!empty($blockTopicIds)) {
             $thIds = ThreadTopic::query()->distinct(true)->whereIn('topic_id',$blockTopicIds)->get("thread_id")->toArray();
             $thIds = array_column($thIds,'thread_id');
             $query->whereNotIn('th.id', $thIds);
-            $removeThreadId = array_merge($removeId,$thIds);
+            $removeThreadId = array_merge($removeThreadId,$thIds);
         }
 
         $query->$contidition(function($query)use ($groupIds,$userIds,$threadIds,$topicIds,$blockUserIds,$blockThreadIds,$blockTopicIds,$categoryIds,$removeThreadId) {
