@@ -377,7 +377,9 @@ trait ThreadTrait
                     if(!empty($content_attachments)){
                         $serializer = $this->app->make(AttachmentSerializer::class);
                         foreach ($content_attachments as $val){
-                            $attachments[$val->id] = $serializer->getImgUrl($val);
+                            if($val->is_remote){
+                                $attachments[$val->id] = $serializer->getImgUrl($val);
+                            }
                         }
                     }
                 }
