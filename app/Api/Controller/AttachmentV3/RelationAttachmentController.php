@@ -84,7 +84,7 @@ class RelationAttachmentController extends DzqController
         $attachment->order = $data['order'];
         $attachment->type = $data['type'];
         $attachment->is_approved = Attachment::APPROVED;
-        $attachment->attachment = Str::random(40) . $fileName[1];
+        $attachment->attachment = Str::random(40) . '.' . $fileName[1];
         $attachment->file_path = $data['filePath'];
         $attachment->file_name = $data['fileName'];
         $attachment->file_size = $data['fileSize'];
@@ -95,7 +95,7 @@ class RelationAttachmentController extends DzqController
         $attachment->ip = ip($this->request->getServerParams());
         $attachment->save();
 
-        $this->outPut(ResponseCode::SUCCESS,'',$attachment);
+        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($attachment));
     }
 
     //替换缓存
