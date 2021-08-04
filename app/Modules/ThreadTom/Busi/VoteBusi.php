@@ -37,6 +37,7 @@ class VoteBusi extends TomBaseBusi
         // 先创建 thread_vote
         $thread_vote = ThreadVote::query()->create([
             'thread_id'    =>  $this->threadId,
+            'expired_at'    =>  $input['expired_at'],
             'vote_title'    =>  $input['vote_title'],
             'choice_type'    =>  $input['choice_type']
         ]);
@@ -74,6 +75,7 @@ class VoteBusi extends TomBaseBusi
         //先修改 thread_vote
         $thread_vote->vote_title = $input['vote_title'];
         $thread_vote->choice_type = $input['choice_type'];
+        $thread_vote->expired_at = $input['expired_at'];
         $res = $thread_vote->save();
         if($res === false){
             $this->db->rollBack();
@@ -131,7 +133,7 @@ class VoteBusi extends TomBaseBusi
                     'choiceType' => $item['choice_type'],
                     'voteUsers'  => $item['vote_users'],
                     'expired_at'  => $item['expired_at'],
-                    'is_expired'  => $item['expired_at'] > Carbon::now(),
+                    'is_expired'  => $item['expired_at'] < Carbon::now(),
                     'subitems'  =>  $subitems->toArray()
                 ];
             }, $votes->toArray());
@@ -164,12 +166,14 @@ class VoteBusi extends TomBaseBusi
             'vote_id' => $this->getParams('voteId'),
             'vote_title' => $this->getParams('voteTitle'),
             'choice_type' => $this->getParams('choiceType'),
+            'expired_at'  => $this->getParams('expiredAt'),
             'subitems' => $this->getParams('subitems'),
         ];
         $rules = [
             'vote_id' => 'required|integer|min:1',
             'vote_title' => 'required|string|max:200',
             'choice_type' => 'required|int|in:1,2',
+            'expired_at'  => 'required|date',
             'subitems' => 'required|array|min:2',
         ];
         $this->dzqValidate($input, $rules);
