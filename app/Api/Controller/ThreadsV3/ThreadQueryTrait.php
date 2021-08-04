@@ -193,6 +193,60 @@ trait ThreadQueryTrait
             $query->whereIn('th.category_id', $categoryIds);
         }
 
+        //需剔除的threadId
+        $removeId = [];
+        if (!empty($blockUserIds)) {
+            $query->whereNotIn('th.user_id', $blockUserIds);
+        }
+        if (!empty($blockThreadIds)) {
+            $query->whereNotIn('th.id', $blockThreadIds);
+            $removeThreadId = array_merge($removeId,$blockThreadIds);
+        }
+        if (!empty($blockTopicIds)) {
+            $thIds = ThreadTopic::query()->distinct(true)->whereIn('topic_id',$blockTopicIds)->get("thread_id")->toArray();
+            $thIds = array_column($thIds,'thread_id');
+            $query->whereNotIn('th.id', $thIds);
+            $removeThreadId = array_merge($removeId,$thIds);
+        }
+
+        $query->$contidition(function($query)use ($groupIds,$userIds,$threadIds,$topicIds,$blockUserIds,$blockThreadIds,$blockTopicIds,$categoryIds,$removeThreadId) {
+            if(!empty($groupIds) || !empty($userIds) || !empty($threadIds) || !empty($topicIds) || !empty($blockUserIds) || !empty($blockThreadIds) || !empty($categoryIds)){
+                $query->whereNull('th.deleted_at')
+                    ->whereNotNull('th.user_id')
+                    ->where('th.is_draft', Thread::IS_NOT_DRAFT)
+                    ->where('th.is_display', Thread::BOOL_YES)
+                    ->where('th.is_approved', Thread::BOOL_YES);
+                $query->where(function ($query) use ($groupIds,$userIds,$threadIds,$topicIds,$blockUserIds,$blockThreadIds,$blockTopicIds,$categoryIds,$removeThreadId) {
+                    if (!empty($groupIds)) {
+                        $query->orWhereIn('g1.group_id', $groupIds);
+                    }
+                    if (!empty($userIds)) {
+                        if(!empty($blockUserIds)){
+                            $userIds = array_diff($userIds,$blockUserIds);
+                        }
+                        if(!empty($userIds)){
+                            $query->orWhereIn('th.user_id', $userIds);
+                        }
+                    }
+                    if (!empty($threadIds)) {
+                        if(!empty($removeThreadId)){
+                            $threadIds = array_diff($threadIds,$removeThreadId);
+                        }
+                        if(!empty($threadIds)){
+                            $query->orWhereIn('th.id', $threadIds);
+                        }
+                    }
+                    if (!empty($topicIds)) {
+                        $query->orWhereIn('topic.topic_id', $topicIds);
+                    }
+                    if(empty($groupIds) && empty($userIds) && empty($threadIds) && empty($topicIds)){
+                        if (!empty($categoryIds)) {
+                            $query->whereIn('th.category_id', $categoryIds);
+                        }
+                    }
+                });
+            }
+        });
         if (!empty($blockUserIds)) {
             $query->whereNotIn('th.user_id', $blockUserIds);
         }
@@ -204,46 +258,6 @@ trait ThreadQueryTrait
             $thIds = array_column($thIds,'thread_id');
             $query->whereNotIn('th.id', $thIds);
         }
-
-        $query->$contidition(function($query)use ($groupIds,$userIds,$threadIds,$topicIds,$blockUserIds,$blockThreadIds,$blockTopicIds,$categoryIds) {
-            if(!empty($groupIds) || !empty($userIds) || !empty($threadIds) || !empty($topicIds) || !empty($blockUserIds) || !empty($blockThreadIds) || !empty($categoryIds)){
-                $query->whereNull('th.deleted_at')
-                    ->whereNotNull('th.user_id')
-                    ->where('th.is_draft', Thread::IS_NOT_DRAFT)
-                    ->where('th.is_display', Thread::BOOL_YES)
-                    ->where('th.is_approved', Thread::BOOL_YES);
-                $query->where(function ($query) use ($groupIds,$userIds,$threadIds,$topicIds,$blockUserIds,$blockThreadIds,$blockTopicIds,$categoryIds) {
-                    if (!empty($groupIds)) {
-                        $query->orWhereIn('g1.group_id', $groupIds);
-                    }
-                    if (!empty($userIds)) {
-                        $query->orWhereIn('th.user_id', $userIds);
-                    }
-                    if (!empty($threadIds)) {
-                        $query->orWhereIn('th.id', $threadIds);
-                    }
-                    if (!empty($topicIds)) {
-                        $query->orWhereIn('topic.topic_id', $topicIds);
-                    }
-                    if (!empty($blockUserIds)) {
-                        $query->whereNotIn('th.user_id', $blockUserIds);
-                    }
-                    if (!empty($blockThreadIds)) {
-                        $query->whereNotIn('th.id', $blockThreadIds);
-                    }
-                    if (!empty($blockTopicIds)) {
-                        $thIds = ThreadTopic::query()->distinct(true)->whereIn('topic_id',$blockTopicIds)->get("thread_id")->toArray();
-                        $thIds = array_column($thIds,'thread_id');
-                        $query->whereNotIn('th.id', $thIds);
-                    }
-                    if(empty($groupIds) && empty($userIds) && empty($threadIds) && empty($topicIds)){
-                        if (!empty($categoryIds)) {
-                            $query->whereIn('th.category_id', $categoryIds);
-                        }
-                    }
-                });
-            }
-        });
 
         $query->orderBy('th.created_at', 'desc');
         $query->distinct(true);
