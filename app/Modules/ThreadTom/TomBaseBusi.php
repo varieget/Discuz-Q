@@ -46,6 +46,7 @@ abstract class TomBaseBusi
     public $user = null;
     public $key = null;
     public $app = null;
+    public $db = null;
 
     public $canViewTom = true;
 
@@ -60,6 +61,7 @@ abstract class TomBaseBusi
         $this->user = $user;
         $this->key = $key;
         $this->canViewTom = $canViewTom;
+        $this->db = app('db');
         $this->operationValid();
     }
 

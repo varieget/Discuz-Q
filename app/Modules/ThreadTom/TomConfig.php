@@ -87,8 +87,8 @@ class TomConfig
         self::TOM_VOTE => [
             'enName' => 'VOTE',
             'desc' => '投票',
-            'authorize'=>'switch.insertVote',
-            'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
+            'authorize'=>'',
+            'service' => \App\Modules\ThreadTom\Busi\VoteBusi::class
         ]
     ];
 

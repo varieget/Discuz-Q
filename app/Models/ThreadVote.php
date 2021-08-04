@@ -23,5 +23,6 @@ use Discuz\Base\DzqModel;
 class ThreadVote extends DzqModel
 {
 
+    protected $fillable = ['thread_id', 'vote_title', 'choice_type'];
 
 }
