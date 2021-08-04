@@ -322,25 +322,25 @@ class UpdateThreadController extends DzqController
             ->select('tom_type', 'key')
             ->where(['thread_id' => $threadId])
             ->whereIn('key', $keys)->delete();
-
         //针对其他类型，再做特殊处理。如投票帖，做软删除
         foreach ($keys as $val){
             switch ($val){
                 case TomConfig::TOM_VOTE:
-                    DB::beginTransaction();
+                    $this->getDB()->beginTransaction();
                     //目前是考虑一个帖子只有一个投票，暂时可以用 first
                     $thread_vote = ThreadVote::query()->where('thread_id', $threadId)->whereNull('deleted_at')->first();
                     $thread_vote->deleted_at = Carbon::now();
                     $res = $thread_vote->save();
                     if($res === false){
-                        DB::rollBack();
+                        $this->getDB()->rollBack();
                         $this->outPut(ResponseCode::INTERNAL_ERROR,'删除原投票出错');
                     }
                     $res = ThreadVoteSubitem::query()->where('thread_vote_id', $thread_vote->id)->whereNull('deleted_at')->update(['deleted_at' => $thread_vote->deleted_at]);
                     if($res === false){
-                        DB::rollBack();
+                        $this->getDB()->rollBack();
                         $this->outPut(ResponseCode::INTERNAL_ERROR,'删除原投票选项出错');
                     }
+                    $this->getDB()->commit();
                     break;
 
                 default:

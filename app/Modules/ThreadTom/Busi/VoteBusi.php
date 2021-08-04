@@ -20,6 +20,7 @@ namespace App\Modules\ThreadTom\Busi;
 use App\Common\CacheKey;
 use App\Models\ThreadVote;
 use App\Models\ThreadVoteSubitem;
+use App\Models\ThreadVoteUser;
 use Carbon\Carbon;
 use Discuz\Base\DzqCache;
 use App\Common\ResponseCode;
@@ -84,19 +85,23 @@ class VoteBusi extends TomBaseBusi
         //在修改 thread_vote_subitems
         $thread_vote_subitmes_ids = array_column($input['subitems'], 'id');
         //找出之前的 thread_vote_subitems 数据
-        $thread_vote_subitems_old_ids = ThreadVoteSubitem::query()->where('thread_vote_id', $thread_vote->id)->pluck('id')->toArray();
+        $thread_vote_subitems_old_ids = ThreadVoteSubitem::query()->where('thread_vote_id', $thread_vote->id)->whereNull('deleted_at')->pluck('id')->toArray();
         $remove_sub_ids = array_diff($thread_vote_subitems_old_ids, $thread_vote_subitmes_ids);
         //删除这次没有传对应id过来的
-        $res = ThreadVoteSubitem::query()->whereIn('id', $remove_sub_ids)->delete();
+        $res = ThreadVoteSubitem::query()->whereIn('id', $remove_sub_ids)->whereNull('deleted_at')->update(['deleted_at' => $thread_vote->updated_at]);
         if($res === false){
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '修改投票选项出错');
         }
         //修改
+        $insert_sub = [];
         foreach ($input['subitems'] as $val){
-            $insert_sub = [];
-            if(!empty($val)){
+            if(!empty($val['id'])){
                 $res = ThreadVoteSubitem::query()->where('id', $val['id'])->update(['content' => $val['content']]);
+                if($res === false){
+                    $this->db->rollBack();
+                    $this->outPut(ResponseCode::INTERNAL_ERROR, '修改投票选项出错');
+                }
             }else{
                 $insert_sub[] = [
                     'thread_vote_id'    =>  $thread_vote->id,
@@ -128,13 +133,33 @@ class VoteBusi extends TomBaseBusi
                 $subitems = DzqCache::hGet(CacheKey::LIST_THREADS_V3_VOTE_SUBITEMS, $item['id'], function ($thread_vote_id) {
                     return ThreadVoteSubitem::query()->where('thread_vote_id', $thread_vote_id)->whereNull('deleted_at')->get();
                 });
+                $res_subitems = $subitems->toArray();
+                //判断该用户是否投票
+                $isVoted = false;
+                $vote_ids = [];
+                if(!$this->user->isGuest()){
+                    $thread_vote_users_ids = ThreadVoteUser::query()->where(['thread_id' => $this->threadId, 'user_id' => $this->user->id])->pluck('thread_vote_subitem_id')->toArray();
+                    $res_subitems_ids = array_column($res_subitems, 'id');
+                    $vote_ids = array_diff($thread_vote_users_ids, $res_subitems_ids);
+                    if(!empty($vote_ids)){
+                        $isVoted = true;
+                    }
+                }
+                //计算投票选项的总票数
+                $res_subitems_sum_votes = array_sum(array_column($res_subitems, 'vote_count'));
+                foreach ($res_subitems as &$val){
+                    $val['isVoted'] = in_array($val['id'], $vote_ids);
+                    $val['voteRate'] = 0;
+                    if(!empty($res_subitems_sum_votes))     $val['voteRate'] = round(($val['voteRate']/$res_subitems_sum_votes) * 100, 2);
+                }
                 return  [
                     'voteTitle' =>  $item['vote_title'],
                     'choiceType' => $item['choice_type'],
                     'voteUsers'  => $item['vote_users'],
-                    'expired_at'  => $item['expired_at'],
-                    'is_expired'  => $item['expired_at'] < Carbon::now(),
-                    'subitems'  =>  $subitems->toArray()
+                    'expiredAt'  => $item['expired_at'],
+                    'isExpired'  => $item['expired_at'] < Carbon::now(),
+                    'isVoted'   =>  $isVoted,
+                    'subitems'  =>  $res_subitems
                 ];
             }, $votes->toArray());
         }
