@@ -169,6 +169,9 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'qcloud_sms' => (bool)$this->settings->get('qcloud_sms', 'qcloud'),
                 'qcloud_vod' => (bool)$this->settings->get('qcloud_vod', 'qcloud'),
                 'qcloud_cos_doc_preview' => (bool)$this->settings->get('qcloud_cos_doc_preview', 'qcloud'),
+                'qcloud_cos_bucket_name' => $this->settings->get('qcloud_cos_bucket_name', 'qcloud'),
+                'qcloud_cos_bucket_area' => $this->settings->get('qcloud_cos_bucket_area', 'qcloud'),
+                'qcloud_cos_sign_url' => (bool)$this->settings->get('qcloud_cos_sign_url', 'qcloud')
             ],
 
             // 提现设置
