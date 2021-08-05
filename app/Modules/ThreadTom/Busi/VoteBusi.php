@@ -93,6 +93,18 @@ class VoteBusi extends TomBaseBusi
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '修改投票选项出错');
         }
+        //判断是否thread_vote_user 中对应 user_id 被删除完，更新 thread_votes 中 vote_users 字段数据
+        $res = ThreadVoteUser::query()->whereIn('thread_vote_subitem_id', $remove_sub_ids)->delete();
+        if($res === false){
+            $this->db->rollBack();
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '删除相关投票出错');
+        }
+        $vote_users = ThreadVoteUser::query()->where('thread_id', $this->threadId)->groupBy('user_id')->count();
+        $res = ThreadVote::query()->where('id', $thread_vote->id)->update(['vote_users' => $vote_users]);
+        if($res === false){
+            $this->db->rollBack();
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '更新投票人数出错');
+        }
         //修改
         $insert_sub = [];
         foreach ($input['subitems'] as $val){
