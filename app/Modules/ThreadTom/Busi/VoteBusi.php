@@ -75,7 +75,10 @@ class VoteBusi extends TomBaseBusi
         }
         //先修改 thread_vote
         $thread_vote->vote_title = $input['vote_title'];
-        $thread_vote->choice_type = $input['choice_type'];
+        if($thread_vote->choice_type != $input['choice_type'] && $thread_vote->vote_users > 0){
+            $this->db->rollBack();
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '已有人投票，不可更改选择类型');
+        };
         $thread_vote->expired_at = $input['expired_at'];
         $res = $thread_vote->save();
         if($res === false){
