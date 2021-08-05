@@ -286,7 +286,8 @@ trait ThreadTrait
             'isPrice' => false,
             'isEssence' => false,
             'isRedPack' => null,
-            'isReward' => null
+            'isReward' => null,
+            'isVote'   => false
         ];
         if ($thread['price'] > 0 || $thread['attachment_price'] > 0) {
             $obj['isPrice'] = true;
@@ -301,6 +302,9 @@ trait ThreadTrait
             }
             if (in_array(TomConfig::TOM_REWARD, $tags)) {
                 $obj['isReward'] = true;
+            }
+            if (in_array(TomConfig::TOM_VOTE, $tags)){
+                $obj['isVote'] = true;
             }
         }
         return $obj;
