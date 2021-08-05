@@ -626,14 +626,19 @@ class UserRepository extends AbstractRepository
             if ($user->isAdmin()) {
                 return true;
             }
-            if (($wechat || $miniWechat) && empty($user->wechat)) {
+            if (($wechat || $miniWechat) && !$sms && empty($user->wechat)) {
                 Utils::outPut(ResponseCode::NEED_BIND_WECHAT, '请先绑定微信');
             }
-            if ($sms && empty($user->mobile)) {
-                Utils::outPut(ResponseCode::NEED_BIND_PHONE, '请先绑定手机号');
-            } elseif ($sms && !empty($user->mobile)) {
-                if(preg_match("/^1[3-9]\d{9}$/", $user->getRawOriginal('mobile')) !== 1){
-                    Utils::outPut(ResponseCode::MOBILE_FORMAT_ERROR);
+            if (($wechat || $miniWechat) && $sms && empty($user->wechat) && empty($user->mobile)) {
+                Utils::outPut(ResponseCode::NEED_BIND_WECHAT, '请先绑定微信');
+            }
+            if (!($wechat || $miniWechat) && $sms) {
+                if (empty($user->mobile)) {
+                    Utils::outPut(ResponseCode::NEED_BIND_PHONE, '请先绑定手机号');
+                } else {
+                    if(preg_match("/^1[3-9]\d{9}$/", $user->getRawOriginal('mobile')) !== 1){
+                        Utils::outPut(ResponseCode::MOBILE_FORMAT_ERROR);
+                    }
                 }
             }
         }

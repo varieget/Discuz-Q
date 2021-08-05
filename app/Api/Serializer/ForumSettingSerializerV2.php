@@ -21,6 +21,7 @@ namespace App\Api\Serializer;
 use App\Common\AuthUtils;
 use App\Common\PermissionKey;
 use App\Common\SettingCache;
+use App\Models\Category;
 use App\Models\User;
 use App\Settings\ForumSettingField;
 use App\Repositories\UserRepository;
@@ -91,6 +92,22 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 $usernameLoginIsdisplay = true;
             }
         }
+        //分类帖子总数计算
+        $categories = Category::query()
+            ->select([
+                'id as pid', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'
+            ])
+            ->orderBy('parentid', 'asc')
+            ->orderBy('sort')
+            ->get()->toArray();
+
+        $categoriesFather = [];
+        foreach ($categories as $category) {
+            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($actor, $category['pid'])) {
+                $categoriesFather[] = $category;
+            }
+        }
+        $threadCount = array_sum(array_column($categoriesFather,'threadCount'));
 
         $attributes = [
             // 站点设置
@@ -169,6 +186,9 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'qcloud_sms' => (bool)$this->settings->get('qcloud_sms', 'qcloud'),
                 'qcloud_vod' => (bool)$this->settings->get('qcloud_vod', 'qcloud'),
                 'qcloud_cos_doc_preview' => (bool)$this->settings->get('qcloud_cos_doc_preview', 'qcloud'),
+                'qcloud_cos_bucket_name' => $this->settings->get('qcloud_cos_bucket_name', 'qcloud'),
+                'qcloud_cos_bucket_area' => $this->settings->get('qcloud_cos_bucket_area', 'qcloud'),
+                'qcloud_cos_sign_url' => (bool)$this->settings->get('qcloud_cos_sign_url', 'qcloud')
             ],
 
             // 提现设置
@@ -180,7 +200,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
             // 其它信息(非setting中的信息)
             'other' => [
                 // 基础信息
-                'count_threads' => (int) $this->settings->get('thread_count'),          // 站点主题数
+                'count_threads' => (int) $threadCount,          // 站点主题数
                 'count_posts' => (int) $this->settings->get('post_count'),              // 站点回复数
                 'count_users' => (int) $this->settings->get('user_count'),              // 站点用户数
 
