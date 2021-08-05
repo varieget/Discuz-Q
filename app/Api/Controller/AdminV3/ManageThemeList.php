@@ -193,6 +193,7 @@ class ManageThemeList extends DzqController
         $query = $query->orderBy('threads.'.$sortDetect,
             Str::startsWith($sort, '-') ? 'desc' : 'asc');
 
+        $query->distinct(true);
         //分页
         $pagination = $this->pagination($page, $perPage, $query);
 
