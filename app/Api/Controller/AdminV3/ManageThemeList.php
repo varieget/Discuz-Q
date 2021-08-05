@@ -164,7 +164,7 @@ class ManageThemeList extends DzqController
 
         //发帖时间筛选
         if (!empty($createdAtBegin) && !empty($createdAtEnd)) {
-            $query->whereBetween('threads.updated_at', [$createdAtBegin, $createdAtEnd]);
+            $query->whereBetween('threads.created_at', [$createdAtBegin, $createdAtEnd]);
         }
 
         //发帖删除时间筛选
