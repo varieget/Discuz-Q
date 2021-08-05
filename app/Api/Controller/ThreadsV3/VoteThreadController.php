@@ -48,6 +48,9 @@ class VoteThreadController extends DzqController
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
         if($thread_vote->expired_at < Carbon::now())    $this->outPut(ResponseCode::INVALID_PARAMETER,'投票已过期');
+        //判断是单选还是多选
+        if($thread_vote->choice_type == 1 && count($vote['subitem_ids']) > 1)       $this->outPut(ResponseCode::INVALID_PARAMETER, '该投票是单选，不可多选');
+
         $hasPermission = $userRepo->canViewThreadDetail($this->user, $this->thread);
         if (! $hasPermission && $this->user->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
