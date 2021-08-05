@@ -49,7 +49,7 @@ class VoteThreadController extends DzqController
         }
         if($thread_vote->expired_at < Carbon::now())    $this->outPut(ResponseCode::INVALID_PARAMETER,'投票已过期');
         //判断是单选还是多选
-        if($thread_vote->choice_type == 1 && count($vote['subitem_ids']) > 1)       $this->outPut(ResponseCode::INVALID_PARAMETER, '该投票是单选，不可多选');
+        if($thread_vote->choice_type == 1 && count($vote['subitemIds']) > 1)       $this->outPut(ResponseCode::INVALID_PARAMETER, '该投票是单选，不可多选');
 
         $hasPermission = $userRepo->canViewThreadDetail($this->user, $this->thread);
         if (! $hasPermission && $this->user->isGuest()) {
@@ -63,7 +63,7 @@ class VoteThreadController extends DzqController
         $thread_id = $this->inPut('threadId');
         $vote = $this->inPut('vote');
         $thread_vote_subitems_ids = ThreadVoteSubitem::query()->where('thread_vote_id', $vote['id'])->whereNull('deleted_at')->pluck('id')->toArray();
-        $diff_subitems_ids = array_diff($vote['subitem_ids'], $thread_vote_subitems_ids);
+        $diff_subitems_ids = array_diff($vote['subitemIds'], $thread_vote_subitems_ids);
         if(!empty($diff_subitems_ids)){
             $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项有误');
         }
@@ -75,7 +75,7 @@ class VoteThreadController extends DzqController
         }
         $thread_vote_users = [];
         $now = Carbon::now();
-        foreach ($vote['subitem_ids'] as $val){
+        foreach ($vote['subitemIds'] as $val){
             $thread_vote_users[] = [
                 'user_id'   =>  $this->user->id,
                 'thread_id' =>  $thread_id,
@@ -90,7 +90,7 @@ class VoteThreadController extends DzqController
             $this->outPut(ResponseCode::INTERNAL_ERROR, '投票出错');
         }
         //增加 投票次数
-        $res = $this->getDB()->table('thread_vote_subitems')->whereIn('id', $vote['subitem_ids'])->increment('vote_count');
+        $res = $this->getDB()->table('thread_vote_subitems')->whereIn('id', $vote['subitemIds'])->increment('vote_count');
         if($res === false){
             $this->getDB()->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '投票选项增加票数出错');
