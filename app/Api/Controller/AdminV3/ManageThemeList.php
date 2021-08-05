@@ -76,12 +76,14 @@ class ManageThemeList extends DzqController
         $sort = $this->inPut('sort') ? $this->inPut('sort') : '-updated_at';     //排序
 
         $query = Thread::query()
+            ->join('posts', 'posts.thread_id', '=', 'threads.id')
             ->select(
                 'threads.*'
             );
 
         //是否审核and是否草稿
         $query->where('threads.is_draft', Thread::IS_NOT_DRAFT);
+        $query->where('posts.is_first', Post::FIRST_YES);
 
         //浏览次数
         if ($viewCountGt !== '') {
@@ -132,6 +134,7 @@ class ManageThemeList extends DzqController
         //内容筛选
         if (!empty($q)) {
             $query->where('threads.title','like','%'.$q.'%');
+            $query->orWhere('posts.content', 'like', '%'.$q.'%');
         }
 
         // 回收站
