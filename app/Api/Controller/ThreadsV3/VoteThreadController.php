@@ -43,7 +43,7 @@ class VoteThreadController extends DzqController
         }
         //判断帖子id与投票是否匹配
         $vote = $this->inPut('vote');
-        $thread_vote = ThreadVote::query()->where(['thread_id',$this->thread->id, 'id' => $vote['id']])->whereNull('deleted_at')->first();
+        $thread_vote = ThreadVote::query()->where(['thread_id' => $this->thread->id, 'id' => $vote['id']])->whereNull('deleted_at')->first();
         if(empty($thread_vote)){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }

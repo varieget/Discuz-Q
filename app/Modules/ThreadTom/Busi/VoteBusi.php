@@ -162,16 +162,21 @@ class VoteBusi extends TomBaseBusi
                 foreach ($res_subitems as &$val){
                     $val['isVoted'] = in_array($val['id'], $vote_ids);
                     $val['voteRate'] = 0;
-                    if(!empty($res_subitems_sum_votes))     $val['voteRate'] = round(($val['voteRate']/$res_subitems_sum_votes) * 100, 2);
+                    if(!empty($res_subitems_sum_votes))     $val['voteRate'] = round(($val['vote_count']/$res_subitems_sum_votes) * 100, 2);
+                    unset($val['thread_vote_id']);
+                    unset($val['created_at']);
+                    unset($val['updated_at']);
+                    unset($val['deleted_at']);
                 }
                 return  [
+                    'voteId'    =>  $item['id'],
                     'voteTitle' =>  $item['vote_title'],
                     'choiceType' => $item['choice_type'],
                     'voteUsers'  => $item['vote_users'],
                     'expiredAt'  => $item['expired_at'],
                     'isExpired'  => $item['expired_at'] < Carbon::now(),
                     'isVoted'   =>  $isVoted,
-                    'subitems'  =>  $res_subitems
+                    'subitems'  =>  $this->camelData($res_subitems)
                 ];
             }, $votes->toArray());
         }
