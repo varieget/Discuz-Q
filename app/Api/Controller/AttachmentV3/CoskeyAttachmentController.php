@@ -79,7 +79,6 @@ class CoskeyAttachmentController extends DzqController
         $settings = $this->settings();
         $cosParem = $this->configuration($settings);
         $type = $this->inPut('type'); //0 附件 1图片 2视频 3音频
-        $nameArr = $this->inPut('nameArr');
 
         if (!isset($settings['qcloud_cos_bucket_name']) || empty($settings['qcloud_cos_bucket_name'])) {
             $this->outPut(ResponseCode::INTERNAL_ERROR,'请去管理员后台腾讯云设置对象储存配置所属地域');
@@ -105,24 +104,11 @@ class CoskeyAttachmentController extends DzqController
             $this->outPut(ResponseCode::INTERNAL_ERROR,'请去管理员后台附件设置支持图片扩展名');
         }
 
-        if (!is_array($nameArr)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        if (in_array($type, [Attachment::TYPE_OF_FILE, Attachment::TYPE_OF_IMAGE])) {
+            $config = $this->appendix($settings, $cosParem);
+        } else {
+            $config = $this->complex($cosParem);
         }
-
-        $ext = $type == Attachment::TYPE_OF_IMAGE ? $settings['support_img_ext'] : $settings['support_file_ext'];
-        foreach ($nameArr as $value) {
-            $nameArr = explode('.',$value);
-            if (!isset($nameArr[1])) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER,'上传文件后缀名有错误');
-                break;
-            }
-            if (!in_array($nameArr[1],explode(',',$ext))) {
-                $this->outPut(ResponseCode::INTERNAL_ERROR,"暂时不支持{$nameArr[1]}后缀名格式");
-                break;
-            }
-        }
-
-        $config = $this->appendix($cosParem);
 
         $tempKeys = $this->sts->getTempKeys($config);
         $this->paramDetectCache($tempKeys);
@@ -161,24 +147,27 @@ class CoskeyAttachmentController extends DzqController
         );
     }
 
-    //多文件上传
-    private function appendix($cosParem)
+    //附件 图片
+    private function appendix($settings, $cosParem)
     {
-        $nameArr = $this->inPut('nameArr');
+        $type = $this->inPut('type'); //0 附件 1图片 2视频 3音频
+        if ($type == Attachment::TYPE_OF_FILE) {
+            $suffix = explode(',', $settings['support_file_ext']);
+        } else {
+            $suffix = explode(',', $settings['support_img_ext']);
+        }
+
         $config = array();
-
-        //$allowPrefix = '/public/attachments/' . date('Y/m/d') . '/';
-        $allowPrefix = 'public/attachments/' . date('Y/m/d') . '/';
-
-        foreach ($nameArr as $val) {
-            array_push($config, new Scope("name/cos:PutObject", $this->bucket, $this->region, $allowPrefix . $val));
+        $allowPrefix = '/public/attachments/' . date('Y/m/d') . '/';
+        foreach ($suffix as $val) {
+            array_push($config, new Scope("name/cos:PutObject", $this->bucket, $this->region, $allowPrefix . 'a.' . $val));
         }
 
         return array_merge($cosParem, ['policy' => $this->sts->getPolicy($config)]);
     }
 
-    //单文件上传
-    /*private function complex($cosParem)
+    //视频 语音
+    private function complex($cosParem)
     {
         $type = $this->inPut('type'); //0 附件 1图片 2视频 3音频
         if ($type == Attachment::TYPE_OF_AUDIO) {
@@ -186,10 +175,7 @@ class CoskeyAttachmentController extends DzqController
         }else{
             $suffix = 'mp3';
         }
-
-        //$allowPrefix = '/public/attachments/'.date('Y/m/d').'/a.'.$suffix;
-        $allowPrefix = 'public/attachments/'.date('Y/m/d').'/a.' . $suffix;
-
+        $allowPrefix = '/public/attachments/'.date('Y/m/d').'/a.'.$suffix;
         $config = [
             'bucket' => $this->bucket,
             'allowPrefix' => $allowPrefix,
@@ -207,7 +193,7 @@ class CoskeyAttachmentController extends DzqController
         ];
 
         return array_merge($cosParem, $config);
-    } */
+    }
 
     //生成缓存临时检测参数
     private function paramDetectCache($tempKeys){
