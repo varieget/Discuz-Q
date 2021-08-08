@@ -141,11 +141,11 @@ class CreateAttachmentController extends DzqController
             if (!empty($fileUrl)) {
                 $return_content = $this->http_get_data($fileUrl);
                 if (empty($return_content)) {
-                    return $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, 'URL有误');
+                    return $this->outPut(ResponseCode::INVALID_PARAMETER, 'URL有误');
                 }
                 $fileName = basename($fileUrl);
                 $ext = pathinfo($fileName, PATHINFO_EXTENSION);
-                $file = $tmpFileWithExt = storage_path('/tmp') .'/' . $fileName;
+                $file = $tmpFileWithExt = storage_path('/tmp') .'/' . $fileName.'_'.uniqid();
                 $fp = @fopen($tmpFileWithExt,"a"); //将文件绑定到流
                 fwrite($fp,$return_content); //写入文件
                 $imageSize = getimagesize($tmpFileWithExt);
