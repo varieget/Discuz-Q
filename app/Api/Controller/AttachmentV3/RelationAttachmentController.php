@@ -19,14 +19,11 @@
 namespace App\Api\Controller\AttachmentV3;
 
 use App\Censor\Censor;
-use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Repositories\UserRepository;
 use App\Validators\AttachmentValidator;
-use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
-use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Support\Str;
 use League\Flysystem\Util;
 use Symfony\Component\HttpFoundation\File\UploadedFile as AttachmentUploadedFile;
@@ -119,7 +116,7 @@ class RelationAttachmentController extends DzqController
         $attachment->user_id = $this->user->id;
         $attachment->type = $data['type'];
         $attachment->is_approved = Attachment::APPROVED;
-        $attachment->attachment = $fileData['basename'];
+        $attachment->attachment = urldecode($fileData['basename']);
         $attachment->file_path = substr_replace($fileData['dirname'], '', strpos($fileData['dirname'], '/'), strlen('/')) . '/';
         $attachment->file_name = $data['fileName'];
         $attachment->file_size = $fileSize;
