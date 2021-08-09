@@ -130,8 +130,9 @@ class SmsLoginController extends AuthBaseController
             if ($type == 'mobilebrowser_sms_login') {
                 $wechat     = (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount');
                 $miniWechat = (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram');
-                //微信，小程序均未开启
-                if (!$wechat && !$miniWechat) {
+                $sms        = (bool)$this->settings->get('qcloud_sms', 'qcloud');
+                //短信，微信，小程序均未开启
+                if (! $sms && !$wechat && !$miniWechat) {
                     $this->connection->commit();
                     $this->outPut(ResponseCode::SUCCESS, '', $result);
                 }
@@ -159,7 +160,7 @@ class SmsLoginController extends AuthBaseController
                             'uid'           => !empty($mobileCode->user->id) ? $mobileCode->user->id : 0
                         ];
                         $this->connection->commit();
-                        $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', array_merge($data, $result));
+                        return $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', $data);
                     }
                 }
             }
