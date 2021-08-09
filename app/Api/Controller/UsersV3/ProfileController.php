@@ -80,17 +80,6 @@ class ProfileController extends DzqController
         $userRepo = app(UserRepository::class);
         $user->paid = $userRepo->isPaid($user);
 
-        //isRenew：表示用户是否续过费，true：已续过费，false：未续过费
-        $user->isRenew = false;
-        $order = Order::query()->where([
-            'status' => Order::ORDER_STATUS_PAID,
-            'user_id' => $user->id
-        ])  ->whereIn('type', [Order::ORDER_TYPE_REGISTER, Order::ORDER_TYPE_RENEW])
-            ->exists();
-        if (!empty($order)) {
-            $user->isRenew = true;
-        }
-
         $key = array_search('dialog', $include);
         if($key != false){
             if(!$isSelf){
