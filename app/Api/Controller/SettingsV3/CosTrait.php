@@ -64,6 +64,7 @@ trait CosTrait
         $cosClient = $this->cosClient;
         $id = 0;
         $urlArray = [];
+        $corsRules = [];
 
         try {
             $oldBucketCors = $this->getBucketCors();
@@ -77,6 +78,7 @@ trait CosTrait
                 }
                 $ids = array_column($oldBucketCors['CORSRules'], 'ID');
                 $id  = max($ids) + 1;
+                $corsRules = $oldBucketCors['CORSRules'];
             }
         } catch (\Exception $e) {
             app('log')->info('未获取到原白名单信息，清空白名单，重置ID');
@@ -84,16 +86,19 @@ trait CosTrait
             $id = 1;
         }
 
+        $newCorsRules = [
+            'ID' => $id,
+            'AllowedHeaders' => array('*'),
+            'AllowedMethods' => array('PUT', 'GET', 'POST', 'DELETE', 'HEAD'),
+            'AllowedOrigins' => array($this->siteUrl),
+            'ExposeHeaders' => array('ETag', 'Content-Length', 'x-cos-request-id'),
+            'MaxAgeSeconds' => 300
+        ];
+
+        $corsRules[] = $newCorsRules;
         $cosClient->putBucketCors(array(
             'Bucket' => $this->bucket,
-            'CORSRules' => array(
-                array(
-                    'ID' => $id,
-                    'AllowedHeaders' => array('*'),
-                    'AllowedMethods' => array('PUT'),
-                    'AllowedOrigins' => array($this->siteUrl),
-                ),
-            ),
+            'CORSRules' => $corsRules,
         ));
 
         $newBucketCors = $this->getBucketCors();
