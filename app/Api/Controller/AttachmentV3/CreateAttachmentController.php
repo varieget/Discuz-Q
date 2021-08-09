@@ -164,7 +164,8 @@ class CreateAttachmentController extends DzqController
                 }
                 $tmp_file = fopen($tmp_file_path, 'w');
                 $file = $tmpFileWithExt = $real_file_path = realpath($tmp_file_path);
-                file_put_contents($real_file_path, $url_content);
+//                file_put_contents($real_file_path, $url_content);
+                fwrite($tmp_file, $url_content);
                 fclose($tmp_file);
                 $fileType = mime_content_type($real_file_path);
                 $fileSize = filesize($real_file_path);
