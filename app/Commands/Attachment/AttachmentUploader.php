@@ -18,8 +18,10 @@
 
 namespace App\Commands\Attachment;
 
+use App\Common\ResponseCode;
 use App\Models\Attachment;
 use Carbon\Carbon;
+use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Filesystem\CosAdapter;
 use Illuminate\Contracts\Filesystem\Factory;
@@ -164,7 +166,11 @@ class AttachmentUploader
                 ]
             ], $options);
         }
-        $this->filesystem->putFileAs($path, $file, $fileName, $options);
+        try {
+            $this->filesystem->putFileAs($path, $file, $fileName, $options);
+        } catch (\Exception $e) {
+            Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, '附件上传异常', [$e->getMessage()]);
+        }
     }
 
     public function putCrawlerAttachemnt($type, $file, $fileName, $path = '', $options = [])
