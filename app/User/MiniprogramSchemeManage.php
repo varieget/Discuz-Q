@@ -71,6 +71,33 @@ class MiniprogramSchemeManage
         return $wxScheme['openlink'];
     }
 
+    /**
+     * get wx bindscheme
+     * @param $accessToken
+     * @param $path
+     * @param $query
+     * @return string
+     */
+    public function getMiniProgramBindSchemeRefresh($accessToken, $path, $query): string
+    {
+        $url = $this->miniProgramSchemeUrl.'?access_token='.$accessToken;
+
+        $wxSchemeResponse = $this->httpClient->post($url, [
+            'json' => [
+                'jump_wxa' => [
+                    'path' => $path,
+                    'query' => $query
+                ]
+            ]
+        ]);
+        $wxScheme = json_decode($wxSchemeResponse->getBody()->getContents(),true);
+
+        if(isset($wxScheme['errcode']) && $wxScheme['errcode'] != 0 && isset($wxScheme['errmsg'])) {
+            return 'gen_bind_scheme_error';
+        }
+        return $wxScheme['openlink'];
+    }
+
     public function getMiniProgramScheme(): string
     {
         $record = !empty(Scheme::getLastRecord()) ? Scheme::getLastRecord()->toArray() : '';
