@@ -61,7 +61,7 @@ class RelationAttachmentController extends DzqController
             ]
         );
         $cosUrl = $data['cosUrl'];
-        $header_array = get_headers($cosUrl, true);
+        $header_array = get_headers($cosUrl, true, stream_context_set_default(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
         $fileSize = $header_array['Content-Length'];
         $fileData = parse_url($cosUrl);
         $fileData = pathinfo($fileData['path']);
@@ -86,7 +86,13 @@ class RelationAttachmentController extends DzqController
 
         $mimeType = Util\MimeType::detectByFilename($cosUrl);
 
-        list($width, $height) = getimagesize($cosUrl);
+        if (in_array($data['type'], [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
+            $imageFile = @file_get_contents($cosUrl,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
+            $imageSize = imagecreatefromstring($imageFile);
+            $width = imagesx($imageSize);
+            $height = imagesy($imageSize);
+        }
+
         $attachment = new Attachment();
         $attachment->uuid = Str::uuid();
         $attachment->user_id = $this->user->id;
@@ -96,8 +102,8 @@ class RelationAttachmentController extends DzqController
         $attachment->file_path = substr_replace($fileData['dirname'], '', strpos($fileData['dirname'], '/'), strlen('/')) . '/';
         $attachment->file_name = $data['fileName'];
         $attachment->file_size = $fileSize;
-        $attachment->file_width = $width ?: 0;
-        $attachment->file_height = $height ?: 0;
+        $attachment->file_width = $width ?? 0;
+        $attachment->file_height = $height ?? 0;
         $attachment->file_type = $mimeType;
         $attachment->is_remote = Attachment::YES_REMOTE;
         $attachment->ip = ip($this->request->getServerParams());
