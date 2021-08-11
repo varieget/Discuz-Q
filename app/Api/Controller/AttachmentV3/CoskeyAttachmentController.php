@@ -121,7 +121,8 @@ class CoskeyAttachmentController extends DzqController
             'durationSeconds' => $this->durationSeconds, // 密钥有效期
             'allowActions' => array(
                 'name/cos:PutObject',
-                'name/cos:GetObject'
+                'name/cos:GetObject',
+                'name/cos:PostObject'
             )
         );
     }
@@ -136,7 +137,8 @@ class CoskeyAttachmentController extends DzqController
         array_push(
             $config,
             new Scope("name/cos:PutObject", $this->bucket, $this->region, $allowPrefix . $fileName),
-            new Scope("name/cos:GetObject", $this->bucket, $this->region, $allowPrefix . $fileName)
+            new Scope("name/cos:GetObject", $this->bucket, $this->region, $allowPrefix . $fileName),
+            new Scope("name/cos:PostObject", $this->bucket, $this->region, $allowPrefix . $fileName)
         );
         return array_merge($cosParem, ['policy' => $this->sts->getPolicy($config)]);
     }
