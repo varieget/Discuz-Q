@@ -34,7 +34,6 @@ class MiniProgramBindSchemeGenController extends AuthBaseController
      * @var string[]
      */
     static $schemeType = [
-        'login_mini',
         'bind_mini'
     ];
     /**
@@ -43,7 +42,6 @@ class MiniProgramBindSchemeGenController extends AuthBaseController
      */
     //todo 对接前端时更换路由
     static $schemeTypeAndRouteMap = [
-        'login_mini' => 'subPages/user/wx-auth/index',   // 登录
         'bind_mini'  => 'subPages/user/wx-bind/index'    // 绑定
     ];
 
