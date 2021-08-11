@@ -62,11 +62,11 @@ class MiniProgramBindSchemeGenController extends AuthBaseController
     {
         try {
             $type = $this->inPut('type');
-            $query = $this->inPut('query');
+            $query = !empty($this->inPut('query')) ? $this->inPut('query') : [];
             if(! in_array($type, self::$schemeType)) {
                 $this->outPut(ResponseCode::GEN_SCHEME_TYPE_ERROR);
             }
-            if (empty($query['sessionToken'])) {
+            if (empty($query['scene'])) {
                 if (! $this->user->isGuest()) {
                     $accessToken = $this->getAccessToken($this->user);
                     $token = SessionToken::generate(
@@ -75,7 +75,7 @@ class MiniProgramBindSchemeGenController extends AuthBaseController
                         $this->user->id
                     );
                     $token->save();
-                    $query['sessionToken'] = $token->token;
+                    $query['scene'] = $token->token;
                 } else {
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '用户不存在', ['id' => $this->user->id]);
                 }
