@@ -36,6 +36,7 @@ $route->get('/users/pc/wechat/miniprogram.bind', 'pc.wechat.miniprogram.bind.pol
 $route->get('/users/pc/wechat/miniprogram.login', 'pc.wechat.miniprogram.login.poll', ApiController\UsersV3\MiniProgramPcLoginPollController::class);
 $route->get('/users/pc/wechat.rebind.poll', 'pc.wechat.rebind.poll', ApiController\UsersV3\WechatPcRebindPollController::class);
 $route->get('/users/mobilebrowser/wechat/miniprogram.genscheme', 'pc.wechat.miniprogram.login.poll', ApiController\UsersV3\MiniProgramSchemeGenController::class);
+$route->get('/users/mobilebrowser/wechat/miniprogram.genbindscheme', 'mobilebrowser.wechat.miniprogram.genbindscheme', ApiController\UsersV3\MiniProgramBindSchemeGenController::class);
 //登录
 $route->post('/users/username.login', 'username.login', ApiController\UsersV3\LoginController::class);
 //注册

@@ -99,7 +99,6 @@ class MiniProgramBindSchemeGenController extends AuthBaseController
             );
             if($miniProgramScheme == 'gen_bind_scheme_error') {
                 $this->outPut(ResponseCode::GEN_BIND_SCHEME_TYPE_ERROR, '', [
-                    'accessToken'   => $globalAccessToken['access_token'],
                     'path'          => $path,
                     'query'         => http_build_query($query)
                 ]);

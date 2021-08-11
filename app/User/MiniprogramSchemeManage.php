@@ -19,6 +19,7 @@ namespace App\User;
 
 use App\Settings\SettingsRepository;
 use Carbon\Carbon;
+use Discuz\Base\DzqLog;
 use Discuz\Wechat\EasyWechatTrait;
 use GuzzleHttp\Client;
 
@@ -64,6 +65,10 @@ class MiniprogramSchemeManage
         $wxScheme = json_decode($wxSchemeResponse->getBody()->getContents(),true);
 
         if(isset($wxScheme['errcode']) && $wxScheme['errcode'] != 0 && isset($wxScheme['errmsg'])) {
+            DzqLog::error('gen_scheme_error', [
+                'errcode'   => $wxScheme['errcode'],
+                'errmsg'    => $wxScheme['errmsg']
+            ]);
             return 'gen_scheme_error';
         }
         $appId = $this->settingsRepository->get('miniprogram_app_id', 'wx_miniprogram');
@@ -93,6 +98,12 @@ class MiniprogramSchemeManage
         $wxScheme = json_decode($wxSchemeResponse->getBody()->getContents(),true);
 
         if(isset($wxScheme['errcode']) && $wxScheme['errcode'] != 0 && isset($wxScheme['errmsg'])) {
+            DzqLog::error('gen_bind_scheme_error', [
+                'path'      => $path,
+                'query'     => $query,
+                'errcode'   => $wxScheme['errcode'],
+                'errmsg'    => $wxScheme['errmsg']
+            ]);
             return 'gen_bind_scheme_error';
         }
         return $wxScheme['openlink'];
