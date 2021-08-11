@@ -73,8 +73,11 @@ class WechatMiniProgramCodeController extends DzqController
             'b'=>$path,
         ];
 
-        if(!(bool)$this->settings->get('miniprogram_app_id', 'wx_miniprogram') || !(bool)$this->settings->get('miniprogram_app_secret', 'wx_miniprogram')){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '请先配置小程序参数');
+        if(!(bool)$this->settings->get('miniprogram_app_id', 'wx_miniprogram')
+            || !(bool)$this->settings->get('miniprogram_app_secret', 'wx_miniprogram')
+            || !(bool)$this->settings->get('miniprogram_close', 'wx_miniprogram')
+        ){
+            $this->outPut(ResponseCode::CONFIG_MINIPROGRAM_AND_OPEN);
         }
 
         try {
