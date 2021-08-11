@@ -62,13 +62,14 @@ trait AttachmentTrait
             $ext = $settings['support_file_ext'];
         }
         $fileExt = explode('.', $fileName);
-        if (!isset($fileExt[1])) {
+        $key = max(array_keys($fileExt));
+        if (!isset($fileExt[$key])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '上传文件后缀名有错误');
         }
-        if (!in_array($fileExt[1], explode(',', $ext))) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR, "暂时不支持{$fileExt[1]}类型文件，仅支持{$ext}类型文件");
+        if (!in_array($fileExt[$key], explode(',', $ext))) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, "暂时不支持{$fileExt[$key]}类型文件，仅支持{$ext}类型文件");
         }
-        return $fileExt[1];
+        return $fileExt[$key];
     }
 
     public function checkAttachmentSize($fileSize)
