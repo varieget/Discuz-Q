@@ -213,7 +213,7 @@ class SetSettingsController extends DzqController
         }
 
         $this->events->dispatch(new Saved($settings));
-        $this->outPut(ResponseCode::SUCCESS, '', $settings);
+        $this->outPut(ResponseCode::SUCCESS);
     }
 
     /**
@@ -242,7 +242,11 @@ class SetSettingsController extends DzqController
     {
         foreach ($settingData as &$item) {
             $key = $item['key'];
-            $value = $item['value'];
+            if (!empty($item['value'])) {
+                $value = $item['value'];
+            } else {
+                continue;
+            }
             $tag = $item['tag'];
             if (preg_match('/^\*+$/', $value)) {
                 $item['value'] = $this->settings->get($key, $tag);
