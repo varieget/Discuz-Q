@@ -20,6 +20,7 @@ namespace App\Api\Controller\AttachmentV3;
 
 use App\Api\Controller\SettingsV3\CosTrait;
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Models\Attachment;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -105,10 +106,7 @@ class CoskeyAttachmentController extends DzqController
 
         $this->checkAttachmentSize($fileSize);
         $this->checkAttachmentExt($type, $fileName);
-
-        $request = $this->app->make(ServerRequestInterface::class);
-        $serverParams = $request->getServerParams();
-        $siteUrl = $serverParams['REQUEST_SCHEME'] . '://' . $serverParams['HTTP_HOST'];
+        $siteUrl = Utils::getSiteUrl();
         if (empty($settings['qcloud_cors_origin']) || !in_array($siteUrl, json_decode($settings['qcloud_cors_origin']))) {
             $putBucketCorsResult = $this->putBucketCors();
             if (!$putBucketCorsResult) {
