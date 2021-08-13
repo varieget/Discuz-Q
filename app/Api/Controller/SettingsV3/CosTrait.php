@@ -17,6 +17,7 @@
 
 namespace App\Api\Controller\SettingsV3;
 
+use App\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Psr\Http\Message\ServerRequestInterface;
 use Qcloud\Cos\Client;
@@ -44,9 +45,7 @@ trait CosTrait
             app('log')->info('对象存储配置不全，无法配置跨域访问CORS');
             return false;
         }
-        $request = $this->app->make(ServerRequestInterface::class);
-        $serverParams = $request->getServerParams();
-        $this->siteUrl = $serverParams['REQUEST_SCHEME'] . '://' . $serverParams['HTTP_HOST'];
+        $this->siteUrl = Utils::getSiteUrl();
         $this->cosClient = new Client(
             array (
                 'region' => $this->region,
