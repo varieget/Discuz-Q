@@ -179,9 +179,7 @@ class SetSettingsController extends DzqController
             return $setting;
         });
 
-        if (isset($settings['qcloud_qcloud_cos']) && $settings['qcloud_qcloud_cos']['value']) {
-            $this->putBucketCors();
-        }
+        $this->putBucketCors();
 
         $action_desc = "";
         if (!empty($settings['cash_cash_interval_time']['key'])) {
