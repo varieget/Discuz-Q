@@ -18,16 +18,20 @@
 
 namespace App\Api\Controller\AttachmentV3;
 
+use App\Api\Controller\SettingsV3\CosTrait;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Psr\Http\Message\ServerRequestInterface;
 use QCloud\COSSTS\Sts;
 use QCloud\COSSTS\Scope;
 
 class CoskeyAttachmentController extends DzqController
 {
     use AttachmentTrait;
+
+    use CosTrait;
 
     private $sts;
     private $url = 'https://sts.tencentcloudapi.com/';
@@ -54,37 +58,41 @@ class CoskeyAttachmentController extends DzqController
     public function main()
     {
         $settings = $this->getSettings();
-        $cosParem = $this->configuration($settings);
+        $cosParam = $this->configuration($settings);
         $type = $this->inPut('type'); //0 附件 1图片 2视频 3音频 4消息图片
         $fileName = $this->inPut('fileName');
         $fileSize = $this->inPut('fileSize');
 
-        if (!isset($settings['qcloud_cos']) || empty($settings['qcloud_cos'])) {
+        if (empty($settings['qcloud_cos'])) {
             $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台开启腾讯云对象存储');
         }
 
-        if (!isset($settings['qcloud_cos_bucket_name']) || empty($settings['qcloud_cos_bucket_name'])) {
+        if (empty($settings['qcloud_cos_bucket_name'])) {
             $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台腾讯云设置对象存储配置所属地域');
         }
 
-        if (!isset($settings['qcloud_cos_bucket_area']) || empty($settings['qcloud_cos_bucket_area'])) {
+        if (empty($settings['qcloud_cos_bucket_area'])) {
             $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台腾讯云设置对象存储配置空间名称');
         }
 
-        if (!isset($settings['qcloud_secret_id']) || empty($settings['qcloud_secret_id'])) {
+        if (empty($settings['qcloud_secret_id'])) {
             $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台腾讯云设置云API配置Secretid');
         }
 
-        if (!isset($settings['qcloud_secret_key']) || empty($settings['qcloud_secret_key'])) {
+        if (empty($settings['qcloud_secret_key'])) {
             $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台腾讯云设置云API配置SecretKey');
         }
 
-        if ((!isset($settings['support_file_ext']) || empty($settings['support_file_ext'])) && $type == Attachment::TYPE_OF_FILE) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台附件设置支持的文件扩展名');
+        if (empty($settings['support_file_ext']) && $type == Attachment::TYPE_OF_FILE) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台补充附件设置-支持的文件扩展名');
         }
 
-        if ((!isset($settings['support_img_ext']) || empty($settings['support_img_ext'])) && $type == Attachment::TYPE_OF_IMAGE) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台附件设置支持图片扩展名');
+        if (empty($settings['support_img_ext']) && $type == Attachment::TYPE_OF_IMAGE) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台补充附件设置-支持图片扩展名');
+        }
+
+        if (empty($settings['support_max_size'])) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台补充附件设置-支持的最大尺寸');
         }
 
         if (empty($fileName)) {
@@ -97,7 +105,18 @@ class CoskeyAttachmentController extends DzqController
 
         $this->checkAttachmentSize($fileSize);
         $this->checkAttachmentExt($type, $fileName);
-        $config = $this->appendix($cosParem);
+
+        $request = $this->app->make(ServerRequestInterface::class);
+        $serverParams = $request->getServerParams();
+        $siteUrl = $serverParams['REQUEST_SCHEME'] . '://' . $serverParams['HTTP_HOST'];
+        if (empty($settings['qcloud_cors_origin']) || !in_array($siteUrl, json_decode($settings['qcloud_cors_origin']))) {
+            $putBucketCorsResult = $this->putBucketCors();
+            if (!$putBucketCorsResult) {
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '对象存储跨域设置失败，请去管理后台重新开启腾讯云对象存储！');
+            }
+        }
+
+        $config = $this->appendix($cosParam);
         $tempKeys = $this->sts->getTempKeys($config);
 
         $this->outPut(ResponseCode::SUCCESS,'', $tempKeys);
@@ -128,7 +147,7 @@ class CoskeyAttachmentController extends DzqController
     }
 
     // 文件上传
-    private function appendix($cosParem)
+    private function appendix($cosParam)
     {
         $fileName = $this->inPut('fileName');
         $config = array();
@@ -140,6 +159,6 @@ class CoskeyAttachmentController extends DzqController
             new Scope("name/cos:GetObject", $this->bucket, $this->region, $allowPrefix . $fileName),
             new Scope("name/cos:PostObject", $this->bucket, $this->region, $allowPrefix . $fileName)
         );
-        return array_merge($cosParem, ['policy' => $this->sts->getPolicy($config)]);
+        return array_merge($cosParam, ['policy' => $this->sts->getPolicy($config)]);
     }
 }

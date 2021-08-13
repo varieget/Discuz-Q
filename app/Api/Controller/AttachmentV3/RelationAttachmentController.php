@@ -19,12 +19,15 @@
 namespace App\Api\Controller\AttachmentV3;
 
 use App\Censor\Censor;
+use App\Commands\Attachment\AttachmentUploader;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
 use League\Flysystem\Util;
+use Illuminate\Http\UploadedFile;
 
 class RelationAttachmentController extends DzqController
 {
@@ -41,9 +44,11 @@ class RelationAttachmentController extends DzqController
         return true;
     }
 
-    public function __construct(Censor $censor)
+    public function __construct(Censor $censor, ImageManager $image, AttachmentUploader $uploader)
     {
-        $this->censor = $censor;
+        $this->censor   = $censor;
+        $this->image    = $image;
+        $this->uploader = $uploader;
     }
 
     public function main()
@@ -85,12 +90,32 @@ class RelationAttachmentController extends DzqController
         }
 
         $mimeType = Util\MimeType::detectByFilename($cosUrl);
+        $filePath = substr_replace($fileData['dirname'], '', strpos($fileData['dirname'], '/'), strlen('/')) . '/';
+        $attachmentName = urldecode($fileData['basename']);
 
         if (in_array($data['type'], [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
-            $imageFile = @file_get_contents($cosUrl,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
+            $imageFile = @file_get_contents($cosUrl, false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
             $imageSize = imagecreatefromstring($imageFile);
             $width = imagesx($imageSize);
             $height = imagesy($imageSize);
+
+            // 模糊图处理
+            if ($data['type'] == Attachment::TYPE_OF_IMAGE) {
+                @file_put_contents($tmpFileWithExt, $imageFile);
+                $imageFile = new UploadedFile(
+                    $tmpFileWithExt,
+                    $attachmentName,
+                    $mimeType,
+                    0,
+                    true
+                );
+                // 帖子图片自适应旋转
+                if(strtolower($ext) != 'gif' && extension_loaded('exif')) {
+                    $this->image->make($tmpFileWithExt)->orientate()->save();
+                }
+
+                $this->uploader->put($data['type'], $imageFile, urldecode($fileData['basename']), $filePath);
+            }
         }
 
         $attachment = new Attachment();
@@ -98,8 +123,8 @@ class RelationAttachmentController extends DzqController
         $attachment->user_id = $this->user->id;
         $attachment->type = $data['type'];
         $attachment->is_approved = Attachment::APPROVED;
-        $attachment->attachment = urldecode($fileData['basename']);
-        $attachment->file_path = substr_replace($fileData['dirname'], '', strpos($fileData['dirname'], '/'), strlen('/')) . '/';
+        $attachment->attachment = $attachmentName;
+        $attachment->file_path = $filePath;
         $attachment->file_name = $data['fileName'];
         $attachment->file_size = $fileSize;
         $attachment->file_width = $width ?? 0;
