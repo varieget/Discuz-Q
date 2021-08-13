@@ -62,7 +62,9 @@ trait CosTrait
     // 插入白名单
     public function putBucketCors()
     {
-        $this->getCosSettings();
+        if(!$this->getCosSettings()) {
+            return false;
+        }
         $cosClient = $this->cosClient;
         $id = 0;
         $urlArray = [];
