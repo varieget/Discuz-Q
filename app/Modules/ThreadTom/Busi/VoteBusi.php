@@ -155,7 +155,7 @@ class VoteBusi extends TomBaseBusi
                 if(!$this->user->isGuest()){
                     $thread_vote_users_ids = ThreadVoteUser::query()->where(['thread_id' => $this->threadId, 'user_id' => $this->user->id])->pluck('thread_vote_subitem_id')->toArray();
                     $res_subitems_ids = array_column($res_subitems, 'id');
-                    $vote_ids = array_diff($thread_vote_users_ids, $res_subitems_ids);
+                    $vote_ids = array_intersect($thread_vote_users_ids, $res_subitems_ids);
                     if(!empty($vote_ids)){
                         $isVoted = true;
                     }
