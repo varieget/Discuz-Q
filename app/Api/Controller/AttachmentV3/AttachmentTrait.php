@@ -92,4 +92,60 @@ trait AttachmentTrait
         curl_exec($ch);
         return curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
     }
+
+    public function getImageInfo($cosUrl, $censor)
+    {
+        $newCosUrl = strstr($cosUrl,'?') ? $cosUrl . '&imageInfo' : $cosUrl . '?imageInfo';
+        $thumbParameter = 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
+        $thumbUrl = strstr($cosUrl,'?') ? $cosUrl . '&' . $thumbParameter : $cosUrl . '?' . $thumbParameter;
+        $imageInfo = $this->getFileContents($newCosUrl);
+        $censor->checkImage($thumbUrl, true);
+        if (!$imageInfo) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息！');
+        }
+        $imageInfo = json_decode($imageInfo, true);
+        $fileData = $this->getFileData($cosUrl);
+        return [
+            'width' => $imageInfo['width'],
+            'height' => $imageInfo['height'],
+            'fileSize' => $imageInfo['size'],
+            'ext' => $imageInfo['format'],
+            'filePath' => $fileData['filePath'],
+            'attachmentName' => $fileData['attachmentName'],
+            'thumbUrl' => $thumbUrl
+        ];
+    }
+
+    public function getDocumentInfo($cosUrl)
+    {
+        $documentInfo = $this->getFileContents($cosUrl);
+        if(!$documentInfo) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息！');
+        }
+        $fileData = $this->getFileData($cosUrl);
+        return [
+            'width' => 0,
+            'height' => 0,
+            'fileSize' => strlen($documentInfo),
+            'ext' => $fileData['extension'],
+            'filePath' => $fileData['filePath'],
+            'attachmentName' => $fileData['attachmentName'],
+            'thumbUrl' => ''
+        ];
+    }
+
+    public function getFileData($cosUrl)
+    {
+        $fileData = parse_url($cosUrl);
+        $fileData = pathinfo($fileData['path']);
+        $fileData['filePath'] = substr_replace($fileData['dirname'], '', strpos($fileData['dirname'], '/'), strlen('/')) . '/';
+        $fileData['attachmentName'] = urldecode($fileData['basename']);
+        return $fileData;
+    }
+
+    public function getFileContents($url)
+    {
+        $fileContents = @file_get_contents($url, false, stream_context_set_default(['ssl' => ['verify_peer'=>false, 'verify_peer_name'=>false]]));
+        return $fileContents;
+    }
 }
