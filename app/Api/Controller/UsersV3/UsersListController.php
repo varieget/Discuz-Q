@@ -70,6 +70,7 @@ class UsersListController extends DzqController
             $userId = $userData['id'];
             $groupId = $groupUsers[$userId]['group_id'];
             $item = [
+                'userId'=>$userId,
                 'nickname' => $userData['nickname'],
                 'username' => $userData['username'],
                 'avatar' => $userData['avatar'],
