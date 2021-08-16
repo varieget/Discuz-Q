@@ -31,6 +31,7 @@ use App\Settings\SettingsRepository;
 use Discuz\Http\UrlGenerator;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Models\StopWord;
 
 class ForumSettingSerializerV2 extends AbstractSerializer
 {
@@ -108,7 +109,12 @@ class ForumSettingSerializerV2 extends AbstractSerializer
             }
         }
         $threadCount = array_sum(array_column($categoriesFather,'threadCount'));
-
+        //敏感词发私信禁用标识
+        $disabledChat  = false;
+        $dialog = StopWord::query()->where('find','{1}')->first("dialog");
+        if($dialog && $dialog = $dialog->toArray() && $dialog['dialog'] == '{BANNED}'){
+            $disabledChat = true;
+        }
         $attributes = [
             // 站点设置
             'set_site' => [
@@ -237,6 +243,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'create_thread_with_captcha' => $this->userRepo->canCreateThreadWithCaptcha($actor),      // 发布内容需要验证码
                 'publish_need_bind_phone'    => $this->userRepo->canCreateThreadNeedBindPhone($actor),    // 发布内容需要绑定手机
                 'publish_need_bind_wechat'    => $this->userRepo->canCreateThreadNeedBindWechat($actor),    // 发布内容需要绑定微信
+                'disabledChat'               =>  $disabledChat
             ],
 
             'lbs' => [
