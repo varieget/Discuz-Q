@@ -54,6 +54,16 @@ class QcloudDaily
      */
     public function handle(Saved $event)
     {
+        $settings = $this->settings;
+
+
+        $json = [
+            'site_id' => $settings['site_id'],
+            'site_name' =>  $settings['site_name'],
+
+        ];
+
+
 
     }
 
