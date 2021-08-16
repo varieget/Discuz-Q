@@ -57,19 +57,13 @@ trait AttachmentTrait
         return $qcloudSettings;
     }
 
-    public function checkAttachmentExt($type, $fileName)
+    public function checkAttachmentExt($type, $fileExt)
     {
         $settings = $this->getSettings();
         if (in_array($type, [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
             $ext = $settings['support_img_ext'];
         } else {
             $ext = $settings['support_file_ext'];
-        }
-
-        if (strrpos($fileName,".")) {
-            $fileExt = substr($fileName, strrpos($fileName,".") + 1, strlen($fileName));
-        } else {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '上传文件后缀名有错误');
         }
 
         if (!in_array($fileExt, explode(',', $ext))) {
@@ -86,5 +80,16 @@ trait AttachmentTrait
         if ($fileSize > $maxSize) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, "您的文件尺寸超过了站点所支持的最大尺寸({$settings['support_max_size']}MB)");
         }
+    }
+
+    public function getAttachmentMimeType($cosUrl)
+    {
+        $ch = curl_init ();
+        curl_setopt ( $ch, CURLOPT_CUSTOMREQUEST, 'GET' );
+        curl_setopt ( $ch, CURLOPT_SSL_VERIFYPEER, false );
+        curl_setopt ( $ch, CURLOPT_URL, $cosUrl );
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_exec($ch);
+        return curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
     }
 }
