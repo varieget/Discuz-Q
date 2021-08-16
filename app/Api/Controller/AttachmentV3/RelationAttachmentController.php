@@ -34,6 +34,10 @@ class RelationAttachmentController extends DzqController
 
     protected $censor;
 
+    protected $image;
+
+    protected $uploader;
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         $type = (int) $this->inPut('type'); //0 附件 1图片 2视频 3音频 4消息图片
@@ -64,58 +68,34 @@ class RelationAttachmentController extends DzqController
         );
 
         $cosUrl = $data['cosUrl'];
-        $cosSigns =  strstr($cosUrl,'?');
         if (in_array($data['type'], [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
-            if ($cosSigns && strstr($cosSigns, 'q-sign-algorithm') && strstr($cosSigns, 'q-signature')) {
-                $getCosInfoUrl = $cosUrl . '&imageInfo';
-                $thumbUrl = $cosUrl . '&imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
-            } else {
-                $getCosInfoUrl = $cosUrl . '?imageInfo';
-                $thumbUrl = $cosUrl . '?imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
-            }
-            $cosAttachmentData = @file_get_contents($getCosInfoUrl, false, stream_context_set_default(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
-            $this->censor->checkImage($cosUrl, true);
+            $fileInfo = $this->getImageInfo($cosUrl, $this->censor);
         } else {
-            $cosAttachmentData = @file_get_contents($cosUrl, false, stream_context_set_default(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
-            $fileSize = strlen($cosAttachmentData);
+            $fileInfo = $this->getDocumentInfo($cosUrl);
         }
 
-        if ($cosAttachmentData) {
-            $cosAttachmentData = json_decode($cosAttachmentData, true);
-            $fileData = parse_url($cosUrl);
-            $fileData = pathinfo($fileData['path']);
-            $width = $cosAttachmentData['width'] ?? 0;
-            $height = $cosAttachmentData['height'] ?? 0;
-            $fileSize = $cosAttachmentData['size'] ?? $fileSize;
-            $ext = $cosAttachmentData['format'] ?? $fileData['extension'];
-        } else {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息！');
-        }
-
-        $this->checkAttachmentExt($data['type'], $ext);
-        $this->checkAttachmentSize($fileSize);
+        $this->checkAttachmentExt($data['type'], $fileInfo['ext']);
+        $this->checkAttachmentSize($fileInfo['fileSize']);
         $mimeType = $this->getAttachmentMimeType($cosUrl);
-        $filePath = substr_replace($fileData['dirname'], '', strpos($fileData['dirname'], '/'), strlen('/')) . '/';
-        $attachmentName = urldecode($fileData['basename']);
 
         // 模糊图处理
         if ($data['type'] == Attachment::TYPE_OF_IMAGE) {
             $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
-            $tmpFileWithExt = $tmpFile . $ext;
-            @file_put_contents($tmpFileWithExt, @file_get_contents($cosUrl, false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]])));
+            $tmpFileWithExt = $tmpFile . $fileInfo['ext'];
+            @file_put_contents($tmpFileWithExt, $this->getFileContents($cosUrl));
             $blurImageFile = new UploadedFile(
                 $tmpFileWithExt,
-                $attachmentName,
+                $fileInfo['attachmentName'],
                 $mimeType,
                 0,
                 true
             );
             // 帖子图片自适应旋转
-            if(strtolower($ext) != 'gif' && extension_loaded('exif')) {
+            if(strtolower($fileInfo['ext']) != 'gif' && extension_loaded('exif')) {
                 $this->image->make($tmpFileWithExt)->orientate()->save();
             }
 
-            $this->uploader->put($data['type'], $blurImageFile, $attachmentName, $filePath);
+            $this->uploader->put($data['type'], $blurImageFile, $fileInfo['attachmentName'], $fileInfo['filePath']);
             @unlink($tmpFile);
             @unlink($tmpFileWithExt);
         }
@@ -125,18 +105,18 @@ class RelationAttachmentController extends DzqController
         $attachment->user_id = $this->user->id;
         $attachment->type = $data['type'];
         $attachment->is_approved = Attachment::APPROVED;
-        $attachment->attachment = $attachmentName;
-        $attachment->file_path = $filePath;
+        $attachment->attachment = $fileInfo['attachmentName'];
+        $attachment->file_path = $fileInfo['filePath'];
         $attachment->file_name = $data['fileName'];
-        $attachment->file_size = $fileSize;
-        $attachment->file_width = $width;
-        $attachment->file_height = $height;
+        $attachment->file_size = $fileInfo['fileSize'];
+        $attachment->file_width = $fileInfo['width'];
+        $attachment->file_height = $fileInfo['height'];
         $attachment->file_type = $mimeType;
         $attachment->is_remote = Attachment::YES_REMOTE;
         $attachment->ip = ip($this->request->getServerParams());
         $attachment->save();
         $attachment->url = $cosUrl;
-        $attachment->thumbUrl = $thumbUrl ?? '';
+        $attachment->thumbUrl = $fileInfo['thumbUrl'] ?: '';
 
         $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($attachment));
     }
