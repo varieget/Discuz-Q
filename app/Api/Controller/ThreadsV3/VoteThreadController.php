@@ -25,6 +25,8 @@ use App\Models\ThreadTom;
 use App\Models\ThreadVote;
 use App\Models\ThreadVoteSubitem;
 use App\Models\ThreadVoteUser;
+use App\Modules\ThreadTom\TomConfig;
+use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqCache;
@@ -32,6 +34,7 @@ use Discuz\Base\DzqController;
 
 class VoteThreadController extends DzqController
 {
+    use TomTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -104,7 +107,10 @@ class VoteThreadController extends DzqController
             }
         }
         $this->getDB()->commit();
-        $this->outPut(ResponseCode::SUCCESS);
+        $tom = ThreadTom::query()->where(['thread_id' => $thread_id, 'tom_type' => TomConfig::TOM_VOTE])->first();
+        $content = $this->buildTomJson($thread_id, TomConfig::TOM_VOTE, $this->SELECT_FUNC, json_decode($tom->value, true));
+        $result = $this->tomDispatcher([TomConfig::TOM_VOTE => $content]);
+        $this->outPut(ResponseCode::SUCCESS, '投票成功', $result);
     }
 
 }
