@@ -48,4 +48,5 @@ class PermissionKey
 
     const CREATE_THREAD_WITH_CAPTCHA = 'createThreadWithCaptcha';
     const PUBLISH_NEED_BIND_PHONE = 'publishNeedBindPhone';
+    const PUBLISH_NEED_BIND_WECHAT = 'publishNeedBindWechat';
 }
