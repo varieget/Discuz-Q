@@ -24,6 +24,12 @@ use Illuminate\Support\Arr;
 use Discuz\Qcloud\QcloudTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use TencentCloud\Common\Credential;
+use TencentCloud\Common\Profile\ClientProfile;
+use TencentCloud\Common\Profile\HttpProfile;
+use TencentCloud\Ms\V20180408\Models\DescribeUserBaseInfoInstanceRequest;
+use TencentCloud\Ms\V20180408\MsClient;
+use function Clue\StreamFilter\fun;
 
 class QcloudDaily
 {
@@ -55,11 +61,39 @@ class QcloudDaily
     public function handle(Saved $event)
     {
         $settings = $this->settings;
-
+        $qcloudSecret = collect($settings)->pluck('value', 'key')->filter(function ($value, $key){
+            return  in_array($key, ['qcloud_secret_id', 'qcloud_secret_key']);
+        });
+        $qcloudSecretId = $qcloudSecret['qcloud_secret_id'];
+        $qcloudSecretKey = $qcloudSecret['qcloud_secret_key'];
+        if(empty($qcloudSecretId) || empty($qcloudSecretKey)){
+            $uin = '';
+        }else{
+            try {
+                $cred = new Credential($qcloudSecretId, $qcloudSecretKey);
+                $httpProfile = new HttpProfile();
+                $httpProfile->setEndpoint('ms.tencentcloudapi.com');
+                $clientProfile = new ClientProfile();
+                $clientProfile->setHttpProfile($httpProfile);
+                $client = new MsClient($cred, '', $clientProfile);
+                $req = new DescribeUserBaseInfoInstanceRequest();
+                $params = '{}';
+                $req->fromJsonString($params);
+                $resp = $client->DescribeUserBaseInfoInstance($req);
+                $uin = $resp->UserUin;
+            }catch (\Exception $e){
+                $uin = '';
+            }
+        }
 
         $json = [
             'site_id' => $settings['site_id'],
             'site_name' =>  $settings['site_name'],
+            'site_uin'  =>  $uin,
+            'site_url'  =>  $settings['site_url'],
+            'site_on'   =>  empty($settings['site_close']) ? 1 : 0,
+            'qcloud_secret_id'  =>  $qcloudSecretId,
+            ''
 
         ];
 
