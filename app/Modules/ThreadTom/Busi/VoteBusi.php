@@ -200,6 +200,9 @@ class VoteBusi extends TomBaseBusi
             'subitems' => 'required|array|min:2',
         ];
         $this->dzqValidate($input, $rules);
+        if($input['expired_at'] < Carbon::now()){
+            $this->outPut(ResponseCode::INVALID_PARAMETER,'过期时间不正确');
+        }
         foreach ($input['subitems'] as $val){
             if(mb_strlen($val['content']) > self::SUBITEMS_LENGTH)    $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项最多50个字');
         }
@@ -222,6 +225,9 @@ class VoteBusi extends TomBaseBusi
             'subitems' => 'required|array|min:2',
         ];
         $this->dzqValidate($input, $rules);
+        if($input['expired_at'] < Carbon::now()){
+            $this->outPut(ResponseCode::INVALID_PARAMETER,'过期时间不正确');
+        }
         foreach ($input['subitems'] as $val){
             if(mb_strlen($val['content']) > self::SUBITEMS_LENGTH)    $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项最多50个字');
         }
