@@ -85,7 +85,6 @@ class QcloudDaily
                 $uin = '';
             }
         }
-
         $json = [
             'site_id' => $settings['site_id'],
             'site_name' =>  $settings['site_name'],
@@ -93,11 +92,19 @@ class QcloudDaily
             'site_url'  =>  $settings['site_url'],
             'site_on'   =>  empty($settings['site_close']) ? 1 : 0,
             'qcloud_secret_id'  =>  $qcloudSecretId,
-            ''
-
+            'cos_on'    =>  $settings['qcloud_cos'] ?? 0,
+            'sms_on'    =>  $settings['qcloud_sms'] ?? 0,
+            'vod_on'    =>  $settings['qcloud_vod'] ?? 0,
+            'faceid_on' =>  $settings['qcloud_faceid'] ?? 0,
+            'captcha_on'    =>  $settings['qcloud_captcha'] ?? 0,
+            'ims_on'    =>  $settings['qcloud_cms_image'] ?? 0,
+            'tms_on'    =>  $settings['qcloud_cms_text'] ?? 0
         ];
+        try {
+            $this->qcloudDaily($json);
+        }catch (\Exception $e){
 
-
+        }
 
     }
 
