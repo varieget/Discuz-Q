@@ -66,9 +66,6 @@ trait ThreadNoticesTrait
         }
 
         $message = $message ?: '无';
-        if (!empty($thread->title)) {
-            $thread->firstPost->content = strpos($thread->firstPost->content, '<img') ? $thread->title . '[图片]' : $thread->title;
-        }
 
         switch ($type) {
             case 'isEssence':   // 内容加精通知

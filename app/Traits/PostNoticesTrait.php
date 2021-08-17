@@ -25,6 +25,8 @@ use App\Notifications\Messages\Database\PostMessage;
 use App\Notifications\Related;
 use App\Notifications\Replied;
 use App\Notifications\System;
+use Illuminate\Support\Str;
+use s9e\TextFormatter\Utils;
 
 /**
  * Post 发送通知
@@ -48,6 +50,7 @@ trait PostNoticesTrait
         if ($post->user_id == $actor->id) {
             return;
         }
+
         $message = $message ?: '无';
 
         switch ($type) {
@@ -68,25 +71,12 @@ trait PostNoticesTrait
      */
     public function sendRelated(Post $post, User $actor)
     {
-        if (empty($post->content)) {
+        if (empty($post->parsedContent)) {
             return;
         }
 
-        $newsNameArr = [];
-        if ($post->is_first == Post::FIRST_YES) {
-            preg_match_all('/<span.*>(.*)<\/span>/isU', $post->content, $newsNameArr);
-            $newsNameArr = $newsNameArr[1];
-        } else {
-            $usernameArray=explode(' ', $post->content);
-            if (!empty($usernameArray)) {
-                foreach ($usernameArray as $value) {
-                    if (strpos($value, '@') !== false) {
-                        $newsNameArr[] = $value;
-                    }
-                }
-            }
-        }
-
+        preg_match_all('/<span.*>(.*)<\/span>/isU', $post->parsedContent, $newsNameArr);
+        $newsNameArr = $newsNameArr[1];
         if (empty($newsNameArr)) {
             return;
         }
@@ -128,7 +118,9 @@ trait PostNoticesTrait
      */
     private function postIsDeleted($post, $actor, array $attach)
     {
-        $post = Post::changeNotifitionPostContent($post);
+        $post->content = Str::of($post->content)->substr(0, Post::NOTICE_LENGTH);
+        $post->formatContent();
+
         $data = [
             'message' => $post->formatContent(), // 解析表情
             'post' => $post,

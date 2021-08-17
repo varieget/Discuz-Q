@@ -36,6 +36,7 @@ use App\Notifications\System;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
 
 class UpdateThreadController extends DzqController
 {
@@ -68,22 +69,16 @@ class UpdateThreadController extends DzqController
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '帖子详情不存在');
         }
         $oldContent = $post->content;
-        $oldTitle = $thread->title;
         $result = $this->updateThread($thread, $post);
 
         if (
             ($thread->user_id != $this->user->id)
-            && ($oldContent != $post->content || $oldTitle != $result['title'])
+            && ($oldContent != $post->content)
             && $thread->user
         ) {
-            $messagePost = $post;
-            if (!empty($oldTitle)) {
-                $messagePost->content = strpos($oldContent, '<img') ? $oldTitle . '[图片]' : $oldTitle;
-            }
-
             $thread->user->notify(new System(PostMessage::class, $this->user, [
-                'message' => $messagePost->content,
-                'post' => $messagePost,
+                'message' => $oldContent,
+                'post' => $post,
                 'notify_type' => Post::NOTIFY_EDIT_CONTENT_TYPE,
             ]));
         }
