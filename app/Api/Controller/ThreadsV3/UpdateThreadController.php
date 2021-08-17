@@ -341,7 +341,13 @@ class UpdateThreadController extends DzqController
     {
         $user = User::query()->where('id', $thread->user_id)->first();
         $group = Group::getGroup($user->id);
-        return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true);
+        $tags = [];
+        if(!empty($tomJsons)){
+            foreach ($tomJsons as $val){
+                $tags[]['tag'] = $val['tomId'];
+            }
+        }
+        return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true,$tags);
     }
 
     public function prefixClearCache($user)
