@@ -717,22 +717,6 @@ class User extends DzqModel
     }
 
     /**
-     * 给用户名拼接随机字符串
-     *
-     * @return string
-     */
-    public static function addStringToUsername($content = '')
-    {
-        $preName = !empty($content) ? $content : trans('validation.attributes.username_prefix');
-        $username = $preName . Str::random(6);
-        $user = User::query()->where('username', $username)->first();
-        if ($user) {
-            return self::addStringToUsername($content);
-        }
-        return $username;
-    }
-
-    /**
      * 给昵称拼接随机字符串
      *
      * @return string
@@ -743,7 +727,7 @@ class User extends DzqModel
         $nickname = $preName . Str::random(6);
         $user = User::query()->where('nickname', $nickname)->first();
         if ($user) {
-            return self::addStringToNickname($content);
+            return self::addStringToNickname();
         }
         return $nickname;
     }
