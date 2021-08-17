@@ -228,10 +228,15 @@ class ListNotificationV2Controller extends DzqController
         ]);
 
         // 判断是否要匿名
-        if (isset($data->isAnonymous) && $data->isAnonymous) {
-            $result['userId'] = -1;
-            $result['isReal'] = false; // 全部默认未认证
-            $result['isAnonymous'] = $data->isAnonymous;
+        if(!empty($result['threadId'])){
+            $thAnonymous = Thread::query()->where('id',$result['threadId'])->first(['id','is_anonymous']);
+            if(!empty($thAnonymous) && in_array($result['type'],['threadrewarded']) && (bool)$thAnonymous->is_anonymous){
+                $result['isReal'] = false; // 全部默认未认证
+                $result['isAnonymous'] = true;
+                $result['threadUsername'] = '匿名用户';
+                $result['threadUserNickname'] = '匿名用户';
+                $result['threadUserAvatar'] = '';
+            }
         }
 
         return $result;
