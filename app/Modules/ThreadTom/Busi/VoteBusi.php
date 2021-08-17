@@ -196,10 +196,10 @@ class VoteBusi extends TomBaseBusi
             'subitems' => $this->getParams('subitems'),
         ];
         $rules = [
-            'vote_title' => 'required|string|max:200',
+            'vote_title' => 'required|string|max:25',
             'choice_type' => 'required|int|in:1,2',
             'expired_at'  => 'required|date',
-            'subitems' => 'required|array|min:2',
+            'subitems' => 'required|array|min:2|max:20',
         ];
         $this->dzqValidate($input, $rules);
         if($input['expired_at'] < Carbon::now()){
