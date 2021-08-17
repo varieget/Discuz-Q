@@ -602,7 +602,7 @@ class UserRepository extends AbstractRepository
     }
 
     /**
-     * 发布内容是否需要绑定手机
+     * 发布内容是否需要绑定手机或微信
      */
     public function canCreateThreadNeedBindPhone(User $user)
     {
@@ -614,42 +614,31 @@ class UserRepository extends AbstractRepository
     }
 
     /**
-     * 发布内容是否需要绑定微信
-     */
-    public function canCreateThreadNeedBindWechat(User $user)
-    {
-        if ($user->isAdmin()) {
-            return false;
-        } else {
-            return $user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_WECHAT);
-        }
-    }
-
-    /**
      * 检查当前用户发帖权限
      */
     public function checkPublishPermission(User $user)
     {
-        if ($user->isAdmin()) {
-            return true;
-        }
-
-        $settings   = app(SettingsRepository::class);
-        $wechat     = (bool)$settings->get('offiaccount_close', 'wx_offiaccount');
-        $miniWechat = (bool)$settings->get('miniprogram_close', 'wx_miniprogram');
-        $sms        = (bool)$settings->get('qcloud_sms', 'qcloud');
-        if ($user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_WECHAT) && ($wechat || $miniWechat)) {
-            if (empty($user->wechat)) {
+        if ($user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_PHONE)) {
+            $settings   = app(SettingsRepository::class);
+            $wechat     = (bool)$settings->get('offiaccount_close', 'wx_offiaccount');
+            $miniWechat = (bool)$settings->get('miniprogram_close', 'wx_miniprogram');
+            $sms        = (bool)$settings->get('qcloud_sms', 'qcloud');
+            if ($user->isAdmin()) {
+                return true;
+            }
+            if (($wechat || $miniWechat) && !$sms && empty($user->wechat)) {
                 Utils::outPut(ResponseCode::NEED_BIND_WECHAT, '请先绑定微信');
             }
-        }
-
-        if ($user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_PHONE) && $sms) {
-            if (empty($user->mobile)) {
-                Utils::outPut(ResponseCode::NEED_BIND_PHONE, '请先绑定手机号');
-            } else {
-                if(preg_match("/^1[3-9]\d{9}$/", $user->getRawOriginal('mobile')) !== 1){
-                    Utils::outPut(ResponseCode::MOBILE_FORMAT_ERROR);
+            if (($wechat || $miniWechat) && $sms && empty($user->wechat) && empty($user->mobile)) {
+                Utils::outPut(ResponseCode::NEED_BIND_WECHAT, '请先绑定微信');
+            }
+            if (!($wechat || $miniWechat) && $sms) {
+                if (empty($user->mobile)) {
+                    Utils::outPut(ResponseCode::NEED_BIND_PHONE, '请先绑定手机号');
+                } else {
+                    if(preg_match("/^1[3-9]\d{9}$/", $user->getRawOriginal('mobile')) !== 1){
+                        Utils::outPut(ResponseCode::MOBILE_FORMAT_ERROR);
+                    }
                 }
             }
         }

@@ -235,8 +235,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 // 其他
                 'initialized_pay_password'   => (bool) $actor->pay_password,                              // 是否初始化支付密码
                 'create_thread_with_captcha' => $this->userRepo->canCreateThreadWithCaptcha($actor),      // 发布内容需要验证码
-                'publish_need_bind_phone'    => $this->userRepo->canCreateThreadNeedBindPhone($actor),    // 发布内容需要绑定手机
-                'publish_need_bind_wechat'    => $this->userRepo->canCreateThreadNeedBindWechat($actor),    // 发布内容需要绑定微信
+                'publish_need_bind_phone'    => $this->userRepo->canCreateThreadNeedBindPhone($actor),    // 发布内容需要绑定手机或微信
             ],
 
             'lbs' => [

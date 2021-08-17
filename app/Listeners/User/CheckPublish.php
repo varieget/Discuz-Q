@@ -63,9 +63,7 @@ class CheckPublish
             $rules = [];
 
             // 发布内容需先绑定手机
-            if (! $event->actor->isAdmin() && ($event->actor->can('publishNeedBindPhone')
-                                                || $event->actor->can('publishNeedBindWechat')
-                )) {
+            if (! $event->actor->isAdmin() && $event->actor->can('publishNeedBindPhone')) {
                 $rules['user'][] = function ($attribute, $value, $fail) use ($event, $userRepository) {
                     $userRepository->checkPublishPermission($event->actor);
                 };
