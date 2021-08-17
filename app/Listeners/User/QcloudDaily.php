@@ -18,6 +18,7 @@
 
 namespace App\Listeners\User;
 
+use App\Models\Setting;
 use App\Settings\SettingsRepository;
 use App\Events\Setting\Saved;
 use Illuminate\Support\Arr;
@@ -49,23 +50,17 @@ class QcloudDaily
      * @param Request $request
      * @param SettingsRepository $settings
      */
-    public function __construct(Request $request, SettingsRepository $settings)
+    public function __construct(Request $request)
     {
         $this->request = $request;
-        $this->settings = $settings;
     }
 
-    /**
-     * @param Saved $event
-     */
-    public function handle(Saved $event)
+
+    public function handle()
     {
-        $settings = $this->settings;
-        $qcloudSecret = collect($settings)->pluck('value', 'key')->filter(function ($value, $key){
-            return  in_array($key, ['qcloud_secret_id', 'qcloud_secret_key']);
-        });
-        $qcloudSecretId = $qcloudSecret['qcloud_secret_id'];
-        $qcloudSecretKey = $qcloudSecret['qcloud_secret_key'];
+        $settings = Setting::query()->get()->pluck('value', 'key')->toArray();
+        $qcloudSecretId = $settings['qcloud_secret_id'];
+        $qcloudSecretKey = $settings['qcloud_secret_key'];
         if(empty($qcloudSecretId) || empty($qcloudSecretKey)){
             $uin = '';
         }else{
