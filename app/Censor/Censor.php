@@ -241,7 +241,14 @@ class Censor
          * @property QcloudManage
          * @see 文本内容安全文档 https://cloud.tencent.com/document/product/1124/46976
          */
-        $result = $qcloud->service('tms')->TextModeration($content);
+        try {
+            $result = $qcloud->service('tms')->TextModeration($content);
+            $this->errorResult = $result;
+        }catch (\Exception $e){
+            DzqLog::error('tencent_cloud_check_text_error', [], $e->getMessage());
+            Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, '文本内容安全检测异常', [$e->getMessage()]);
+        }
+
         $keyWords = Arr::get($result, 'Data.Keywords', []);
 
         if (isset($result['DetailResults'])) {
@@ -333,8 +340,8 @@ class Censor
             try {
                 $result = $this->app->make('qcloud')->service('ims')->ImageModeration($params);
             }catch (\Exception $e){
-                app("log")->info("检测图片内容安全接口出错".$e->getMessage());
-                Utils::outPut(ResponseCode::INTERNAL_ERROR,'检测图片内容安全出错');
+                DzqLog::error('tencent_cloud_check_image_error', [], $e->getMessage());
+                Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, '图片内容安全检测异常', [$e->getMessage()]);
             }
             /**
              * Suggestion 腾讯云系统推荐的后续操作
@@ -370,6 +377,8 @@ class Censor
         }
 
         if ($this->isMod == true) {
+            //打印敏感日志
+            app('log')->info('图片敏感信息：', [$result]);
             Utils::outPut(ResponseCode::NOT_ALLOW_CENSOR_IMAGE);
         }
     }

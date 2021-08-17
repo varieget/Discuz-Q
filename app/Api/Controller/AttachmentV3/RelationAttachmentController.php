@@ -18,102 +18,106 @@
 
 namespace App\Api\Controller\AttachmentV3;
 
-use App\Common\CacheKey;
+use App\Censor\Censor;
+use App\Commands\Attachment\AttachmentUploader;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
+use Illuminate\Http\UploadedFile;
 
 class RelationAttachmentController extends DzqController
 {
+    use AttachmentTrait;
+
+    protected $censor;
+
+    protected $image;
+
+    protected $uploader;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if ($this->user->isGuest()) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
-        }
+        $type = (int) $this->inPut('type'); //0 附件 1图片 2视频 3音频 4消息图片
+        $this->checkUploadAttachmentPermissions($type, $this->user, $userRepo);
         return true;
+    }
+
+    public function __construct(Censor $censor, ImageManager $image, AttachmentUploader $uploader)
+    {
+        $this->censor   = $censor;
+        $this->image    = $image;
+        $this->uploader = $uploader;
     }
 
     public function main()
     {
-        $user = $this->user;
         $data = [
-            'typeId' => (int) $this->inPut('typeId'),
-            'order' => (int) $this->inPut('order'),
-            'type' => (int) $this->inPut('type'),
-            'filePath' => $this->inPut('filePath'),
-            'fileName' => $this->inPut('fileName'),
-            'fileSize' => (int) $this->inPut('fileSize'),
-            'fileWidth' => (int) $this->inPut('fileWidth'),
-            'fileHeight' => (int) $this->inPut('fileHeight'),
-            'fileType' => $this->inPut('fileType'),
-            'requestId' => $this->inPut('requestId')
+            'cosUrl' => $this->inPut('cosUrl'),
+            'type' => (int)$this->inPut('type'),
+            'fileName' => $this->inPut('fileName')
         ];
 
-        $this->dzqValidate($data,[
+        $this->dzqValidate($data, [
+                'cosUrl' => 'required',
                 'type' => 'required|integer|in:0,1,2,3,4',
-                'filePath' => 'required',
-                'fileName' => 'required|max:200',
-                'fileType' => 'required',
-                'requestId' => 'required',
+                'fileName' => 'required|max:200'
             ]
         );
 
-        $fileName = explode('.',$data['fileName']);
-        if (!isset($fileName[1])) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'fileNamec参数格式不正确');
+        $cosUrl = $data['cosUrl'];
+        if (in_array($data['type'], [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
+            $fileInfo = $this->getImageInfo($cosUrl, $this->censor);
+        } else {
+            $fileInfo = $this->getDocumentInfo($cosUrl);
         }
 
-        $get = DzqCache::get(CacheKey::IMG_UPLOAD_TMP_DETECT);
-        if (!isset($get[$user->id][$data['requestId']])) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'requestId参数无效');
-        }
+        $this->checkAttachmentExt($data['type'], $fileInfo['ext']);
+        $this->checkAttachmentSize($fileInfo['fileSize']);
+        $mimeType = $this->getAttachmentMimeType($cosUrl);
 
-        $userCache = $get[$user->id][$data['requestId']];
-        if ($userCache['createdAt'] < time()-1800) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER,'requestId参数过期');
+        // 模糊图处理
+        if ($data['type'] == Attachment::TYPE_OF_IMAGE) {
+            $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
+            $tmpFileWithExt = $tmpFile . $fileInfo['ext'];
+            @file_put_contents($tmpFileWithExt, $this->getFileContents($cosUrl));
+            $blurImageFile = new UploadedFile(
+                $tmpFileWithExt,
+                $fileInfo['attachmentName'],
+                $mimeType,
+                0,
+                true
+            );
+            // 帖子图片自适应旋转
+            if(strtolower($fileInfo['ext']) != 'gif' && extension_loaded('exif')) {
+                $this->image->make($tmpFileWithExt)->orientate()->save();
+            }
+
+            $this->uploader->put($data['type'], $blurImageFile, $fileInfo['attachmentName'], $fileInfo['filePath']);
+            @unlink($tmpFile);
+            @unlink($tmpFileWithExt);
         }
 
         $attachment = new Attachment();
         $attachment->uuid = Str::uuid();
-        $attachment->user_id = $user->id;
-        $attachment->type_id = $data['typeId'];
-        $attachment->order = $data['order'];
+        $attachment->user_id = $this->user->id;
         $attachment->type = $data['type'];
         $attachment->is_approved = Attachment::APPROVED;
-        $attachment->attachment = Str::random(40) . '.' . $fileName[1];
-        $attachment->file_path = $data['filePath'];
+        $attachment->attachment = $fileInfo['attachmentName'];
+        $attachment->file_path = $fileInfo['filePath'];
         $attachment->file_name = $data['fileName'];
-        $attachment->file_size = $data['fileSize'];
-        $attachment->file_width = $data['fileWidth'];
-        $attachment->file_height = $data['fileHeight'];
-        $attachment->file_type = $data['fileType'];
+        $attachment->file_size = $fileInfo['fileSize'];
+        $attachment->file_width = $fileInfo['width'];
+        $attachment->file_height = $fileInfo['height'];
+        $attachment->file_type = $mimeType;
         $attachment->is_remote = Attachment::YES_REMOTE;
         $attachment->ip = ip($this->request->getServerParams());
         $attachment->save();
+        $attachment->url = $cosUrl;
+        $attachment->thumbUrl = $fileInfo['thumbUrl'] ?: '';
 
         $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($attachment));
     }
-
-    //替换缓存
-    public function suffixClearCache($user)
-    {
-        $requestId = $this->inPut('requestId');
-        $get = DzqCache::get(CacheKey::IMG_UPLOAD_TMP_DETECT);
-        foreach ($get as $key=>$val) {
-            unset($get[$key][$requestId]);
-            foreach ($val as $k => $v) {
-                if ($v['createdAt'] < time()-1800) {
-                    unset($get[$key][$k]);
-                }
-            }
-        }
-        if (DzqCache::CACHE_TTL) {
-            app('cache')->put(CacheKey::IMG_UPLOAD_TMP_DETECT, $get);
-        }
-    }
-
 }

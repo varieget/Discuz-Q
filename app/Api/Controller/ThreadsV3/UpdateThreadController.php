@@ -39,7 +39,6 @@ use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class UpdateThreadController extends DzqController
@@ -73,16 +72,22 @@ class UpdateThreadController extends DzqController
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '帖子详情不存在');
         }
         $oldContent = $post->content;
+        $oldTitle = $thread->title;
         $result = $this->updateThread($thread, $post);
 
         if (
             ($thread->user_id != $this->user->id)
-            && ($oldContent != $post->content)
+            && ($oldContent != $post->content || $oldTitle != $result['title'])
             && $thread->user
         ) {
+            $messagePost = $post;
+            if (!empty($oldTitle)) {
+                $messagePost->content = strpos($oldContent, '<img') ? $oldTitle . '[图片]' : $oldTitle;
+            }
+
             $thread->user->notify(new System(PostMessage::class, $this->user, [
-                'message' => $oldContent,
-                'post' => $post,
+                'message' => $messagePost->content,
+                'post' => $messagePost,
                 'notify_type' => Post::NOTIFY_EDIT_CONTENT_TYPE,
             ]));
         }
@@ -119,9 +124,9 @@ class UpdateThreadController extends DzqController
         $this->saveThread($thread, $content);
         //插入话题
         $content = $this->saveTopic($thread, $content);
-        $parsedContent = $post->content;
         //更新post数据
         $this->savePost($post, $content);
+        $parsedContent = $post->content;
         //发帖@用户
         $this->sendNews($thread, $post);
         //更新tom数据
@@ -174,6 +179,7 @@ class UpdateThreadController extends DzqController
         }
 
         $thread->title = $title;
+        $originalCategoryId = $thread->category_id;
         !empty($categoryId) && $thread->category_id = $categoryId;
         if (!empty($position)) {
             $thread->longitude = $position['longitude'] ?? 0;
@@ -214,6 +220,9 @@ class UpdateThreadController extends DzqController
         if (!$isApproved && !$isDraft) {
             $this->user->refreshThreadCount();
             $this->user->save();
+            if($originalCategoryId != $categoryId){
+                Category::refreshThreadCountV3($originalCategoryId);
+            }
             Category::refreshThreadCountV3($categoryId);
         }
     }

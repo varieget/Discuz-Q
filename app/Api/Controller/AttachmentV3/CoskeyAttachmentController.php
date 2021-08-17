@@ -18,18 +18,22 @@
 
 namespace App\Api\Controller\AttachmentV3;
 
-use App\Common\CacheKey;
+use App\Api\Controller\SettingsV3\CosTrait;
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Models\Attachment;
-use App\Models\Setting;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Psr\Http\Message\ServerRequestInterface;
 use QCloud\COSSTS\Sts;
 use QCloud\COSSTS\Scope;
 
 class CoskeyAttachmentController extends DzqController
 {
+    use AttachmentTrait;
+
+    use CosTrait;
+
     private $sts;
     private $url = 'https://sts.tencentcloudapi.com/';
     private $domain = 'sts.tencentcloudapi.com';
@@ -40,32 +44,10 @@ class CoskeyAttachmentController extends DzqController
     private $secretKey;
     private $durationSeconds = 1800;
 
-    /*
-     * Attachment::TYPE_OF_FILE 附件
-     * Attachment::TYPE_OF_IMAGE 图片
-     * Attachment::TYPE_OF_AUDIO 视频
-     * Attachment::TYPE_OF_VIDEO 语音
-     */
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $user = $this->user;
-        if ($user->isGuest()) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
-        }
-
-        $type = (int) $this->inPut('type'); //0 附件 1图片 2视频 3音频
-        if ($type == Attachment::TYPE_OF_FILE) {
-            if (!$userRepo->canInsertAttachmentToThread($user)) $this->outPut(ResponseCode::UNAUTHORIZED,'没有发附件权限');
-        } else if ($type == Attachment::TYPE_OF_IMAGE) {
-            if (!$userRepo->canInsertImageToThread($user)) $this->outPut(ResponseCode::UNAUTHORIZED,'没有发图片权限');
-        } else if ($type == Attachment::TYPE_OF_AUDIO) {
-            if (!$userRepo->canInsertVideoToThread($user)) $this->outPut(ResponseCode::UNAUTHORIZED,'没有发视频权限');
-        } else if ($type == Attachment::TYPE_OF_VIDEO) {
-            if (!$userRepo->canInsertAudioToThread($user)) $this->outPut(ResponseCode::UNAUTHORIZED,'没有发音频权限');
-        } else {
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
-        }
-
+        $type = (int) $this->inPut('type'); //0 附件 1图片 2视频 3音频 4消息图片
+        $this->checkUploadAttachmentPermissions($type, $this->user, $userRepo);
         return true;
     }
 
@@ -76,72 +58,75 @@ class CoskeyAttachmentController extends DzqController
 
     public function main()
     {
-        $settings = $this->settings();
-        $cosParem = $this->configuration($settings);
-        $type = $this->inPut('type'); //0 附件 1图片 2视频 3音频
-        $nameArr = $this->inPut('nameArr');
+        $settings = $this->getSettings();
+        $cosParam = $this->configuration($settings);
+        $type = $this->inPut('type'); //0 附件 1图片 2视频 3音频 4消息图片
+        $fileName = $this->inPut('fileName');
+        $fileSize = $this->inPut('fileSize');
 
-        if (!isset($settings['qcloud_cos_bucket_name']) || empty($settings['qcloud_cos_bucket_name'])) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR,'请去管理员后台腾讯云设置对象储存配置所属地域');
+        if (empty($settings['qcloud_cos'])) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台开启腾讯云对象存储');
         }
 
-        if (!isset($settings['qcloud_cos_bucket_area']) || empty($settings['qcloud_cos_bucket_area'])) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR,'请去管理员后台腾讯云设置对象储存配置空间名称');
+        if (empty($settings['qcloud_cos_bucket_name'])) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台腾讯云设置对象存储配置所属地域');
         }
 
-        if (!isset($settings['qcloud_secret_id']) || empty($settings['qcloud_secret_id'])) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR,'请去管理员后台腾讯云设置云API配置Secretid');
+        if (empty($settings['qcloud_cos_bucket_area'])) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台腾讯云设置对象存储配置空间名称');
         }
 
-        if (!isset($settings['qcloud_secret_key']) || empty($settings['qcloud_secret_key'])) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR,'请去管理员后台腾讯云设置云API配置SecretKey');
+        if (empty($settings['qcloud_secret_id'])) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台腾讯云设置云API配置Secretid');
         }
 
-        if ((!isset($settings['support_file_ext']) || empty($settings['support_file_ext'])) && $type == Attachment::TYPE_OF_FILE) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR,'请去管理员后台附件设置支持的文件扩展名');
+        if (empty($settings['qcloud_secret_key'])) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台腾讯云设置云API配置SecretKey');
         }
 
-        if ((!isset($settings['support_img_ext']) || empty($settings['support_img_ext'])) && $type == Attachment::TYPE_OF_IMAGE) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR,'请去管理员后台附件设置支持图片扩展名');
+        if (empty($settings['support_file_ext']) && $type == Attachment::TYPE_OF_FILE) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台补充附件设置-支持的文件扩展名');
         }
 
-        if (!is_array($nameArr)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        if (empty($settings['support_img_ext']) && $type == Attachment::TYPE_OF_IMAGE) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台补充附件设置-支持图片扩展名');
         }
 
-        $ext = $type == Attachment::TYPE_OF_IMAGE ? $settings['support_img_ext'] : $settings['support_file_ext'];
-        foreach ($nameArr as $value) {
-            $nameArr = explode('.',$value);
-            if (!isset($nameArr[1])) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER,'上传文件后缀名有错误');
-                break;
+        if (empty($settings['support_max_size'])) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台补充附件设置-支持的最大尺寸');
+        }
+
+        if (empty($fileName)) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '缺少必要参数：文件名');
+        }
+
+        if (empty($fileSize)) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '缺少必要参数：文件大小');
+        }
+
+        $this->checkAttachmentSize($fileSize);
+        if (strrpos($fileName,".")) {
+            $fileExt = substr($fileName, strrpos($fileName,".") + 1);
+            $this->checkAttachmentExt($type, $fileExt);
+        } else {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '上传文件后缀名有错误');
+        }
+
+        $siteUrl = Utils::getSiteUrl();
+        if (empty($settings['qcloud_cors_origin']) || !in_array($siteUrl, json_decode($settings['qcloud_cors_origin']))) {
+            $putBucketCorsResult = $this->putBucketCors();
+            if (!$putBucketCorsResult) {
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '对象存储跨域设置失败，请去管理后台重新开启腾讯云对象存储！');
             }
-            if (!in_array($nameArr[1],explode(',',$ext))) {
-                $this->outPut(ResponseCode::INTERNAL_ERROR,"暂时不支持{$nameArr[1]}后缀名格式");
-                break;
-            }
         }
 
-        $config = $this->appendix($cosParem);
-
+        $config = $this->appendix($cosParam);
         $tempKeys = $this->sts->getTempKeys($config);
-        $this->paramDetectCache($tempKeys);
 
         $this->outPut(ResponseCode::SUCCESS,'', $tempKeys);
     }
 
-
-    //查询settings信息
-    private function settings()
-    {
-         return Setting::query()
-            ->whereIn('key', ['qcloud_cos_bucket_name','qcloud_cos_bucket_area','qcloud_secret_id','qcloud_secret_key','support_img_ext','support_file_ext'])
-            ->get(['key', 'value'])
-            ->pluck('value','key')
-            ->toArray();
-    }
-
-    //配置信息
+    // 配置信息
     private function configuration($settings)
     {
         $this->bucket = $settings['qcloud_cos_bucket_name'];
@@ -157,67 +142,27 @@ class CoskeyAttachmentController extends DzqController
             'secretId' => $this->secretId, // 固定密钥
             'secretKey' => $this->secretKey, // 固定密钥
             'durationSeconds' => $this->durationSeconds, // 密钥有效期
-
+            'allowActions' => array(
+                'name/cos:PutObject',
+                'name/cos:GetObject',
+                'name/cos:PostObject'
+            )
         );
     }
 
-    //多文件上传
-    private function appendix($cosParem)
+    // 文件上传
+    private function appendix($cosParam)
     {
-        $nameArr = $this->inPut('nameArr');
+        $fileName = $this->inPut('fileName');
         $config = array();
 
-        //$allowPrefix = '/public/attachments/' . date('Y/m/d') . '/';
-        $allowPrefix = 'public/attachments/' . date('Y/m/d') . '/';
-
-        foreach ($nameArr as $val) {
-            array_push($config, new Scope("name/cos:PutObject", $this->bucket, $this->region, $allowPrefix . $val));
-        }
-
-        return array_merge($cosParem, ['policy' => $this->sts->getPolicy($config)]);
+        $allowPrefix = '/public/attachments/' . date('Y/m/d') . '/';
+        array_push(
+            $config,
+            new Scope("name/cos:PutObject", $this->bucket, $this->region, $allowPrefix . $fileName),
+            new Scope("name/cos:GetObject", $this->bucket, $this->region, $allowPrefix . $fileName),
+            new Scope("name/cos:PostObject", $this->bucket, $this->region, $allowPrefix . $fileName)
+        );
+        return array_merge($cosParam, ['policy' => $this->sts->getPolicy($config)]);
     }
-
-    //单文件上传
-    /*private function complex($cosParem)
-    {
-        $type = $this->inPut('type'); //0 附件 1图片 2视频 3音频
-        if ($type == Attachment::TYPE_OF_AUDIO) {
-            $suffix = 'mp4';
-        }else{
-            $suffix = 'mp3';
-        }
-
-        //$allowPrefix = '/public/attachments/'.date('Y/m/d').'/a.'.$suffix;
-        $allowPrefix = 'public/attachments/'.date('Y/m/d').'/a.' . $suffix;
-
-        $config = [
-            'bucket' => $this->bucket,
-            'allowPrefix' => $allowPrefix,
-            'allowActions' => [
-                // 简单上传
-                'name/cos:PutObject',
-                'name/cos:PostObject',
-                // 分片上传
-                'name/cos:InitiateMultipartUpload',
-                'name/cos:ListMultipartUploads',
-                'name/cos:ListParts',
-                'name/cos:UploadPart',
-                'name/cos:CompleteMultipartUpload'
-            ]
-        ];
-
-        return array_merge($cosParem, $config);
-    } */
-
-    //生成缓存临时检测参数
-    private function paramDetectCache($tempKeys){
-        $user = $this->user;
-        $get = DzqCache::get(CacheKey::IMG_UPLOAD_TMP_DETECT);
-        $param = ['userId' => $this->user->id, 'createdAt' => time()];
-        $get[$user->id][$tempKeys['requestId']] = $param;
-        if (DzqCache::CACHE_TTL) {
-           app('cache')->put(CacheKey::IMG_UPLOAD_TMP_DETECT, $get);
-        }
-    }
-
 }
