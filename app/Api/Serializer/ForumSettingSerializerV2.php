@@ -237,6 +237,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'can_insert_thread_red_packet' => $this->userRepo->canInsertRedPacketToThread($actor),    // 插入红包
                 'can_insert_thread_reward'     => $this->userRepo->canInsertRewardToThread($actor),       // 插入悬赏
                 'can_insert_thread_anonymous'  => $this->userRepo->canCreateThreadAnonymous($actor),      // 允许匿名发布
+                'can_insert_thread_vote'       => $this->userRepo->canInsertVoteToThread($actor),        // 插入投票
 
                 // 其他
                 'initialized_pay_password'   => (bool) $actor->pay_password,                              // 是否初始化支付密码

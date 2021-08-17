@@ -117,6 +117,13 @@ class UserRepository extends AbstractRepository
     }
 
     /**
+     * 发帖插入投票权限
+     */
+    public function canInsertVoteToThread(User $user){
+        return  $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_VOTE);
+    }
+
+    /**
      * 发帖插入视频权限
      *
      * @param User $user
