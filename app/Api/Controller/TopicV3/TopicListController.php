@@ -116,7 +116,14 @@ class TopicListController extends DzqController
                 'threads' => $thread
             ];
         }
-
+        //判断查询的是否是新话题
+        if ($content = trim(Arr::get($filter, 'content'))) {
+           $topics['isNewTopic'] = true;
+           $existTopic = Topic::query()->where('content',$content)->first();
+           if($existTopic){
+               $topics['isNewTopic'] = false;
+           }
+        }
         $topics['pageData'] = $result;
         $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($topics));
     }
