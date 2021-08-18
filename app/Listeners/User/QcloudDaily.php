@@ -96,7 +96,9 @@ class QcloudDaily
             'tms_on'    =>  $settings['qcloud_cms_text'] ?? 0
         ];
         try {
-            $this->qcloudDaily($json);
+            $this->qcloudDaily($json)->then(function (ResponseInterface $response) {
+                echo 'report:' . $response->getBody()->getContents() . PHP_EOL;
+            })->wait();;
         }catch (\Exception $e){
 
         }
