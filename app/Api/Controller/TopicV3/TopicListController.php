@@ -118,7 +118,7 @@ class TopicListController extends DzqController
         }
 
         $topics['pageData'] = $result;
-        return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($topics));
+        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($topics));
     }
 
     private function filterTopics($filter, $currentPage, $perPage)
