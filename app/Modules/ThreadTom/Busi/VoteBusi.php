@@ -205,7 +205,12 @@ class VoteBusi extends TomBaseBusi
         if($input['expired_at'] < Carbon::now()){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'过期时间不正确');
         }
-        foreach ($input['subitems'] as $val){
+        $all_content = [];
+        foreach ($input['subitems'] as &$val){
+            $val['content'] = trim($val['content']);
+            if(empty($val['content']))      $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项内容不得为空');
+            if(in_array($val['content'], $all_content))         $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项内容不得重复');
+            $all_content[] = $val['content'];
             if(mb_strlen($val['content']) > self::SUBITEMS_LENGTH)    $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项最多50个字');
         }
         return $input;
@@ -230,7 +235,12 @@ class VoteBusi extends TomBaseBusi
         if($input['expired_at'] < Carbon::now()){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'过期时间不正确');
         }
-        foreach ($input['subitems'] as $val){
+        $all_content = [];
+        foreach ($input['subitems'] as &$val){
+            $val['content'] = trim($val['content']);
+            if(empty($val['content']))      $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项内容不得为空');
+            if(in_array($val['content'], $all_content))         $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项内容不得重复');
+            $all_content[] = $val['content'];
             if(mb_strlen($val['content']) > self::SUBITEMS_LENGTH)    $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项最多50个字');
         }
         return $input;
