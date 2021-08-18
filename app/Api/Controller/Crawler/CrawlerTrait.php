@@ -23,7 +23,7 @@ trait CrawlerTrait
     public function changeLockFileContent($lockPath, $startCrawlerTime, $progress, $status)
     {
         if (!file_exists($lockPath)) {
-            touch($this->lockPath);
+            touch($lockPath);
         }
         $data = [
             'status' => $status, // 0 未开始;1 进行中;2 正常结束;3 异常结束;4 超时
