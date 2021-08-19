@@ -92,6 +92,7 @@ class QcloudDaily
             'site_uin'  =>  $uin,
             'site_url'  =>  $settings['site_url'],
             'site_on'   =>  empty($settings['site_close']) ? 1 : 0,
+            'qcloud_close'  =>  $settings['qcloud_close'],
             'qcloud_secret_id'  =>  $qcloudSecretId,
             'cos_on'    =>  $settings['qcloud_cos'] ?? 0,
             'sms_on'    =>  $settings['qcloud_sms'] ?? 0,
