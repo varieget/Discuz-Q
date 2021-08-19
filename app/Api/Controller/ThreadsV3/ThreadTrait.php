@@ -403,7 +403,7 @@ trait ThreadTrait
 
                     $xml_attachments = $xml_attachments_ids = [];
                     $serializer = $this->app->make(AttachmentSerializer::class);
-                    if(!$canViewTom){       //如果没有权限查看的，则图文混排中的图片还是取清晰的
+                    if(!$canViewTom && !empty($attachments_body)){       //如果没有权限查看的，则图文混排中的图片还是取清晰的
                         $attachments_ids = array_column($attachments_body, 'id');
                         $x_attachments = Attachment::query()->whereIn('id', $attachments_ids)->get();
                         $xml_attachments = $x_attachments->keyBy('id');
