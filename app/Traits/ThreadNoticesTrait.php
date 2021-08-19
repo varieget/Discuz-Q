@@ -144,7 +144,7 @@ trait ThreadNoticesTrait
         $data = [
             'message'     => $this->getThreadTitle($thread),
             'post'        => $thread->firstPost,
-            'refuse'      => $attach['refuse'],
+            'refuse'      => $attach['refuse'] ?: '无',
             'notify_type' => Post::NOTIFY_DELETE_TYPE,
         ];
 
