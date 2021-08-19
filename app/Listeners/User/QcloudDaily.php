@@ -58,7 +58,13 @@ class QcloudDaily
 
     public function handle()
     {
+        $tomorrow = date("Y-m-d",strtotime("+1 day"));
+        $cache_time = strtotime($tomorrow) - time();
         $settings = Setting::query()->get()->pluck('value', 'key')->toArray();
+        $isset_daily = app('cache')->get($settings['site_id']);
+        if($isset_daily){
+            return;
+        }
         $qcloudSecretId = $settings['qcloud_secret_id'];
         $qcloudSecretKey = $settings['qcloud_secret_key'];
         if(empty($qcloudSecretId) || empty($qcloudSecretKey)){
@@ -96,9 +102,8 @@ class QcloudDaily
             'tms_on'    =>  $settings['qcloud_cms_text'] ?? 0
         ];
         try {
-            $this->qcloudDaily($json)->then(function (ResponseInterface $response) {
-                echo 'report:' . $response->getBody()->getContents() . PHP_EOL;
-            })->wait();;
+            $this->qcloudDaily($json)->wait();
+            app('cache')->put($settings['site_id'] , 1, $cache_time);
         }catch (\Exception $e){
 
         }
