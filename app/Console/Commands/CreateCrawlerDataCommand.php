@@ -503,7 +503,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
                 }
             }
-            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertThreadProgress, Thread::IMPORT_NORMAL_ENDING);
+            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertThreadProgress, Thread::IMPORT_PROCESSING);
         }
 
         return [$threadIds, $oldTopics];
@@ -784,7 +784,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     ];
                 }
             }
-            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertPortsProcess, Thread::IMPORT_NORMAL_ENDING);
+            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertPortsProcess, Thread::IMPORT_PROCESSING);
         }
         return $postIds;
     }
