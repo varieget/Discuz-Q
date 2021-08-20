@@ -39,7 +39,6 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\ConnectionInterface;
 use Intervention\Image\ImageManager;
 use Laminas\Diactoros\UploadedFile as RequestUploadedFile;
-use League\Flysystem\Util;
 use Symfony\Component\HttpFoundation\File\UploadedFile as AttachmentUploadedFile;
 
 class CreateCrawlerDataCommand extends AbstractCommand
@@ -84,6 +83,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
     private $categoryId;
 
+    private $topic;
+
     private $startCrawlerTime;
 
     private $lockPath;
@@ -119,7 +120,9 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
     public function handle()
     {
+        app('log')->info('------缓存获取点2--start---');
         $crawlerSplQueue = app('cache')->get(CacheKey::CRAWLER_SPLQUEUE_INPUT_DATA);
+        app('log')->info('------缓存获取点2--end---');
         if (!$crawlerSplQueue) {
             exit;
         }
@@ -133,14 +136,15 @@ class CreateCrawlerDataCommand extends AbstractCommand
                 exit;
             } else if ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
                 $this->insertLogs('----Execution timed out.The file lock has been deleted.----');
+                app('log')->info('------缓存清除点3--start---');
                 app('cache')->clear();
-                $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING);
+                app('log')->info('------缓存清除点3--end---');
+                $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $lockFileContent['topic']);
                 exit;
             }
         }
 
         $this->startCrawlerTime = Carbon::now();
-        $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_PROCESSING);
 
         $data = [];
         while (!$crawlerSplQueue->isEmpty()) {
@@ -148,6 +152,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $inputData = $crawlerSplQueue->dequeue();
             $this->categoryId = $inputData['categoryId'];
             $this->platform = $inputData['platform'];
+            $this->topic = $inputData['topic'];
+            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_PROCESSING, $this->topic);
 
             $page = 1;
             if ($inputData['platform'] == Thread::CRAWLER_DATA_PLATFORM_OF_WEIBO) {
@@ -161,8 +167,10 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $this->insertLogs("----The " . $page . " page capture " . count($pageData) . " data'records.----");
             if (empty($pageData)) {
                 $this->insertLogs('----No data is obtained. Process ends.----');
+                app('log')->info('------缓存清除点4--start---');
                 app('cache')->clear();
-                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_NOTHING_ENDING);
+                app('log')->info('------缓存清除点4--end---');
+                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_NOTHING_ENDING, $this->topic);
                 exit;
             }
             $data = array_merge($data, $pageData);
@@ -203,18 +211,18 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $oldTopics = Topic::query()->select('id', 'user_id', 'content', 'thread_count', 'view_count')->get()->toArray();
             $oldTopics = array_column($oldTopics, null, 'content');
 
-            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_GET_CRAWLER_DATA, Thread::IMPORT_PROCESSING);
+            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_GET_CRAWLER_DATA, Thread::IMPORT_PROCESSING, $this->topic);
             $this->db->beginTransaction();
             try {
                 $this->insertLogs("----Insert users'data start.----");
                 $insertUsersResult = $this->insertUsers($oldUsers, $users);
                 $this->insertLogs("----Insert users'data end.----");
-                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_INSERT_USERS, Thread::IMPORT_PROCESSING);
+                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_INSERT_USERS, Thread::IMPORT_PROCESSING, $this->topic);
 
                 $this->insertLogs("----Insert threads'data start.----");
                 [$insertThreadsResult, $oldTopics] = $this->insertThreads($oldTopics, $insertUsersResult, $threads);
                 $this->insertLogs("----Insert threads'data end.----");
-                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_INSERT_THREADS, Thread::IMPORT_PROCESSING);
+                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_INSERT_THREADS, Thread::IMPORT_PROCESSING, $this->topic);
 
                 $this->insertLogs("----Insert posts'data start.----");
                 $insertPostsResult = $this->insertPosts($insertUsersResult, $insertThreadsResult, $commentLists);
@@ -222,12 +230,14 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
                 $this->db->commit();
                 $this->insertLogs("----Importing crawler data success.The importing'data total number is " . count($insertThreadsResult) . ".----");
-                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_INSERT_POSTS, Thread::IMPORT_PROCESSING);
+                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_INSERT_POSTS, Thread::IMPORT_PROCESSING, $this->topic);
             } catch (\Exception $e) {
                 $this->db->rollBack();
                 $this->insertLogs('----Importing crawler data fail,errorMsg: '. $e->getMessage() . '----');
+                app('log')->info('------缓存清除点5--start---');
                 app('cache')->clear();
-                $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_ABNORMAL_ENDING);
+                app('log')->info('------缓存清除点5--end---');
+                $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_ABNORMAL_ENDING, $this->topic);
                 exit;
             }
         }
@@ -292,8 +302,10 @@ class CreateCrawlerDataCommand extends AbstractCommand
         }
         Category::refreshThreadCountV3($this->categoryId);
 
+        app('log')->info('------缓存清除点6--start---');
         app('cache')->clear();
-        $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING);
+        app('log')->info('------缓存清除点6--end---');
+        $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $this->topic);
         exit;
     }
 
@@ -336,7 +348,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                             ]
                         ];
                 }
-                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertUsersprogress, Thread::IMPORT_PROCESSING);
+                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertUsersprogress, Thread::IMPORT_PROCESSING, $this->topic);
             }catch (\Exception $e) {
                 $this->insertLogs('----Insert a new user fail,errorMsg: '. $e->getMessage() . '----');
             }
@@ -503,7 +515,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
                 }
             }
-            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertThreadProgress, Thread::IMPORT_PROCESSING);
+            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertThreadProgress, Thread::IMPORT_PROCESSING, $this->topic);
         }
 
         return [$threadIds, $oldTopics];
@@ -784,7 +796,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     ];
                 }
             }
-            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertPortsProcess, Thread::IMPORT_PROCESSING);
+            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertPortsProcess, Thread::IMPORT_PROCESSING, $this->topic);
         }
         return $postIds;
     }
@@ -827,8 +839,10 @@ class CreateCrawlerDataCommand extends AbstractCommand
         $runTime = floor((time() - strtotime($this->startCrawlerTime))%86400/60);
         if ($runTime > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
             $this->insertLogs('----Execution timed out.The file lock has been deleted.----');
+            app('log')->info('------缓存清除点7--start---');
             app('cache')->clear();
-            $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING);
+            app('log')->info('------缓存清除点7--end---');
+            $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $this->topic);
             exit;
         }
     }
