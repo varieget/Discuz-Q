@@ -68,7 +68,7 @@ class UsersListController extends DzqController
         $res = [];
         foreach ($userDatas as $userData) {
             $userId = $userData['id'];
-            $groupId = $groupUsers[$userId]['group_id'];
+            $groupId = $groupUsers[$userId]['group_id'] ?? '';
             $item = [
                 'userId'=>$userId,
                 'nickname' => $userData['nickname'],
