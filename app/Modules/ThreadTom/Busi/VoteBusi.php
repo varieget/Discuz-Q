@@ -135,6 +135,8 @@ class VoteBusi extends TomBaseBusi
         $this->db->commit();
         //删除之前的缓存
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_VOTES, $input['vote_id']);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_VOTE_SUBITEMS, $input['id']);
+
         return $this->jsonReturn(['voteIds' => [$thread_vote->id]]);
     }
 
