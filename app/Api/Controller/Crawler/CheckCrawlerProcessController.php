@@ -7,7 +7,7 @@ use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
-class CheckCrawlerProcess extends DzqController
+class CheckCrawlerProcessController extends DzqController
 {
     use CrawlerTrait;
 
@@ -20,7 +20,13 @@ class CheckCrawlerProcess extends DzqController
     {
         $publicPath = public_path();
         $lockPath = $publicPath . DIRECTORY_SEPARATOR . 'crawlerSplQueueLock.conf';
-        $lockFileContent = $this->getLockFileContent($lockPath);
+        $lockFileContent = [];
+        try {
+            $lockFileContent = $this->getLockFileContent($lockPath);
+        } catch (\Exception $e) {
+            app('log')->info('error_check_crawler_process:' . $e->getMessage());
+        }
+
         $this->outPut(ResponseCode::SUCCESS, '', $lockFileContent);
     }
 }
