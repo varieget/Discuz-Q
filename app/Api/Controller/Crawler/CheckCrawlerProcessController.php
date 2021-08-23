@@ -20,13 +20,7 @@ class CheckCrawlerProcessController extends DzqController
     {
         $publicPath = public_path();
         $lockPath = $publicPath . DIRECTORY_SEPARATOR . 'crawlerSplQueueLock.conf';
-        $lockFileContent = [];
-        try {
-            $lockFileContent = $this->getLockFileContent($lockPath);
-        } catch (\Exception $e) {
-            app('log')->info('error_check_crawler_process:' . $e->getMessage());
-        }
-
+        $lockFileContent = $this->getLockFileContent($lockPath);
         $this->outPut(ResponseCode::SUCCESS, '', $lockFileContent);
     }
 }
