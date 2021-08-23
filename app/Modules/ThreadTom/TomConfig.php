@@ -61,11 +61,6 @@ class TomConfig
             'authorize'=>'switch.insertGoods',
             'service' => \App\Modules\ThreadTom\Busi\GoodsBusi::class
         ],
-//        self::TOM_QA => [
-//            'enName' => 'QA',
-//            'desc' => '问答',
-//            'service' => \App\Modules\ThreadTom\Busi\QABusi::class
-//        ],
         self::TOM_REDPACK => [
             'enName' => 'REDPACK',
             'desc' => '红包',
