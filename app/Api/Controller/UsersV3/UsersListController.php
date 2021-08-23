@@ -68,7 +68,7 @@ class UsersListController extends DzqController
         $res = [];
         foreach ($userDatas as $userData) {
             $userId = $userData['id'];
-            $groupId = $groupUsers[$userId]['group_id'];
+            $groupId = $groupUsers[$userId]['group_id'] ?? '';
             $item = [
                 'userId'=>$userId,
                 'nickname' => $userData['nickname'],
@@ -80,7 +80,7 @@ class UsersListController extends DzqController
                 'followCount' => $userData['follow_count'],
                 'isFollow' => false,
                 'isMutualFollow' => false,
-                'groupName' => $userGroupDatas[$groupId]['name']
+                'groupName' => $userGroupDatas[$groupId]['name'] ?? ''
             ];
             if (isset($userFollowList[$userId])) {
                 $item['isFollow'] = true;

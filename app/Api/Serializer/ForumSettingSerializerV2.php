@@ -22,10 +22,12 @@ use App\Common\AuthUtils;
 use App\Common\PermissionKey;
 use App\Common\SettingCache;
 use App\Models\Category;
+use App\Models\Group;
 use App\Models\User;
 use App\Settings\ForumSettingField;
 use App\Repositories\UserRepository;
 use Discuz\Api\Serializer\AbstractSerializer;
+use Discuz\Auth\Guest;
 use Discuz\Common\PubEnum;
 use App\Settings\SettingsRepository;
 use Discuz\Http\UrlGenerator;
@@ -103,8 +105,13 @@ class ForumSettingSerializerV2 extends AbstractSerializer
             ->get()->toArray();
 
         $categoriesFather = [];
+        $groupId = !empty($actor->groups->toArray()[0]['id']) ? $actor->groups->toArray()[0]['id'] : Group::GUEST_ID;
+        $subActor = $actor;
+        if ($groupId == Group::UNPAID) {
+            $subActor = new Guest();
+        }
         foreach ($categories as $category) {
-            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($actor, $category['pid'])) {
+            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($subActor, $category['pid'])) {
                 $categoriesFather[] = $category;
             }
         }
@@ -179,6 +186,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'support_img_ext' => $this->settings->get('support_img_ext', 'default'),
                 'support_file_ext' => $this->settings->get('support_file_ext', 'default'),
                 'support_max_size' => $this->settings->get('support_max_size', 'default'),
+                'support_max_download_num' => $this->settings->get('support_max_download_num', 'default')
             ],
 
             // 腾讯云设置
@@ -237,6 +245,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'can_insert_thread_red_packet' => $this->userRepo->canInsertRedPacketToThread($actor),    // 插入红包
                 'can_insert_thread_reward'     => $this->userRepo->canInsertRewardToThread($actor),       // 插入悬赏
                 'can_insert_thread_anonymous'  => $this->userRepo->canCreateThreadAnonymous($actor),      // 允许匿名发布
+                'can_insert_thread_vote'       => $this->userRepo->canInsertVoteToThread($actor),        // 插入投票
 
                 // 其他
                 'initialized_pay_password'   => (bool) $actor->pay_password,                              // 是否初始化支付密码
