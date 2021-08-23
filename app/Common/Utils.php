@@ -174,13 +174,12 @@ class Utils
         return preg_replace('/.+?/i', '*', $str);
     }
 
-    public static function getSiteUrl()
-    {
-        $request = app('request');
-        $url = $request->getUri();
-        $port = $url->getPort();
-        $port = $port == null ? '' : ':' . $port;
-        return $url->getScheme() . '://' . $url->getHost() . $port;
+    //获取今天的开始和结束时间
+    public static function getTodayTime(){
+        return [
+            'begin'=>date("Y-m-d 00:00:00"),
+            'end'=>date("Y-m-d 23:59:59")
+        ];
     }
 
 }

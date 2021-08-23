@@ -19,6 +19,7 @@
 namespace App\Api\Controller\AttachmentV3;
 
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Models\Attachment;
 use App\Models\AttachmentShare;
 use App\Repositories\UserRepository;
@@ -42,36 +43,59 @@ class DownloadAttachmentController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
         return true;
     }
 
     public function main()
     {
+        $user = $this->user;
         $data = [
             'sign' => $this->inPut('sign'),
-            'attachmentsId' => $this->inPut('attachmentsId')
+            'attachmentsId' => $this->inPut('attachmentsId'),
+            'isCode' => $this->inPut('isCode')
         ];
-
         $this->dzqValidate($data, [
             'sign' => 'required',
             'attachmentsId' => 'required|int',
         ]);
-
+        $attachment = Attachment::query()->where('id', $data['attachmentsId'])->first();
         $share = AttachmentShare::query()
             ->where(['sign' => $data['sign'], 'attachments_id' => $data['attachmentsId']])
             ->first();
-
-        if (empty($share) || strtotime($share->expired_at) < time()) {
-            app('log')->info("requestId：{$this->requestId},分享记录不存在，时间已过期");
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        if(isset($data['isCode']) && !empty($data['isCode'])){
+            if (empty($attachment)) {
+                app('log')->info("requestId：{$this->requestId},附件不存在");
+                return $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+            }
+            $share = AttachmentShare::query()
+                ->where(['sign' => $data['sign'], 'attachments_id' => $data['attachmentsId']])
+                ->first();
+            if (empty($share)) {
+                app('log')->info("requestId：{$this->requestId},分享记录不存在");
+                return $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+            }
+            if(strtotime($share->expired_at) < time()){
+                app('log')->info("requestId：{$this->requestId},下载资源已失效");
+                return $this->outPut(ResponseCode::DOWNLOAD_RESOURCE_IS_INVALID);
+            }
+            //限制下载次数
+            $downloadNum = (int)$this->settings->get('support_max_download_num', 'default');
+            if($downloadNum > 0){
+                $todayTime = Utils::getTodayTime();
+                $dayLimitCount = AttachmentShare::query()->where('attachments_id',$data['attachmentsId'])
+                    ->where('user_id',$user->id)
+                    ->whereBetween('created_at', array($todayTime['begin'], $todayTime['end']))
+                    ->sum('download_count');
+                if((int)$dayLimitCount >= $downloadNum){
+                    app('log')->info("requestId：{$this->requestId},超过今天可下载附件的最大次数");
+                    return $this->outPut(ResponseCode::DOWNLOAD_NUMS_IS_TOPLIMIT);
+                }
+            }
+            return $this->outPut(ResponseCode::SUCCESS);
         }
-
-        $attachment = Attachment::query()->where('id', $data['attachmentsId'])->first();
-        if (empty($attachment)) {
-            app('log')->info("requestId：{$this->requestId},附件不存在");
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-        }
-
         if ($attachment->is_remote) {
             $url = $this->settings->get('qcloud_cos_sign_url', 'qcloud', true)
                 ? $this->filesystem->disk('attachment_cos')->temporaryUrl($attachment->full_path, Carbon::now()->addDay())
@@ -85,6 +109,8 @@ class DownloadAttachmentController extends DzqController
             'updated_at' => Carbon::now()
         ]);
         $origin_name = iconv("utf-8", "gb2312", $attachment->file_name);
+        header("Access-Control-Allow-Origin:*");
+        header('Access-Control-Allow-Methods:*');
         header("Content-type:application/octet-stream");
         header("Content-Disposition:attachment;filename = " . $origin_name);
         header("Accept-ranges:bytes");
