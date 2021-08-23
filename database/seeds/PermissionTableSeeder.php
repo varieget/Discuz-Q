@@ -57,7 +57,7 @@ class PermissionTableSeeder extends Seeder
 
         //查看权限
         'switch.'.PermissionKey::VIEW_THREADS       => [10,7],  // 查看主题列表-左侧勾选按钮
-        PermissionKey::VIEW_THREADS                 => [10,6,7],  // 查看主题列表-生效范围-全局
+        PermissionKey::VIEW_THREADS                 => [10,7],  // 查看主题列表-生效范围-全局
         'switch.'.PermissionKey::THREAD_VIEW_POSTS  => [10,7],  // 查看主题详情-左侧勾选按钮
         PermissionKey::THREAD_VIEW_POSTS            => [10,7],  // 查看主题详情-生效范围-全局
 
