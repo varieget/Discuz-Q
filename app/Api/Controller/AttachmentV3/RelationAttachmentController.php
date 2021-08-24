@@ -19,14 +19,14 @@
 namespace App\Api\Controller\AttachmentV3;
 
 use App\Censor\Censor;
+use App\Commands\Attachment\AttachmentUploader;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Repositories\UserRepository;
-use App\Validators\AttachmentValidator;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Str;
-use League\Flysystem\Util;
-use Symfony\Component\HttpFoundation\File\UploadedFile as AttachmentUploadedFile;
+use Intervention\Image\ImageManager;
+use Illuminate\Http\UploadedFile;
 
 class RelationAttachmentController extends DzqController
 {
@@ -34,7 +34,9 @@ class RelationAttachmentController extends DzqController
 
     protected $censor;
 
-    protected $settings;
+    protected $image;
+
+    protected $uploader;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -43,10 +45,11 @@ class RelationAttachmentController extends DzqController
         return true;
     }
 
-    public function __construct(Censor $censor, AttachmentValidator $attachmentValidator)
+    public function __construct(Censor $censor, ImageManager $image, AttachmentUploader $uploader)
     {
-        $this->censor = $censor;
-        $this->attachmentValidator = $attachmentValidator;
+        $this->censor   = $censor;
+        $this->image    = $image;
+        $this->uploader = $uploader;
     }
 
     public function main()
@@ -63,72 +66,57 @@ class RelationAttachmentController extends DzqController
                 'fileName' => 'required|max:200'
             ]
         );
+
         $cosUrl = $data['cosUrl'];
-
-        set_time_limit(0);
-        $file = @file_get_contents($cosUrl, false, stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]));
-        $fileSize = strlen($file);
-        if (!$file) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息');
-        }
-
-        $fileData = parse_url($cosUrl);
-        $fileData = pathinfo($fileData['path']);
-        $this->checkAttachmentSize($fileSize);
-        $this->checkAttachmentExt($data['type'], $fileData['basename']);
-
-        ini_set('memory_limit', -1);
-        $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
-        $ext = $fileData['extension'];
-        $ext = $ext ? ".$ext" : '';
-        $tmpFileWithExt = $tmpFile . $ext;
-        $putResult = @file_put_contents($tmpFileWithExt, $file);
-
-        if (!$putResult) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件拉取失败！');
-        }
         if (in_array($data['type'], [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
-            $this->censor->checkImage($cosUrl, true, $tmpFileWithExt);
-            if ($this->censor->isMod) {
-                $this->outPut(ResponseCode::NOT_ALLOW_CENSOR_IMAGE);
-            }
+            $fileInfo = $this->getImageInfo($cosUrl, $this->censor);
+        } else {
+            $fileInfo = $this->getDocumentInfo($cosUrl);
         }
 
-        $mimeType = Util\MimeType::detectByFilename($tmpFileWithExt);
-        //上传临时目录之前验证
-        $this->attachmentValidator->valid([
-            'type' => $data['type'],
-            'file' => $file,
-            'size' => $fileSize,
-            'ext' => $fileData['extension'],
-        ]);
-        $imageFile = new AttachmentUploadedFile(
-            $tmpFileWithExt,
-            $fileData['basename'],
-            $mimeType,
-            0,
-            true
-        );
+        $this->checkAttachmentExt($data['type'], $fileInfo['ext']);
+        $this->checkAttachmentSize($fileInfo['fileSize']);
+        $mimeType = $this->getAttachmentMimeType($cosUrl);
 
-        list($width, $height) = getimagesize($tmpFileWithExt);
+        // 模糊图处理
+        if ($data['type'] == Attachment::TYPE_OF_IMAGE) {
+            $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
+            $tmpFileWithExt = $tmpFile . '.' . $fileInfo['ext'];
+            @file_put_contents($tmpFileWithExt, $this->getFileContents($cosUrl));
+            $blurImageFile = new UploadedFile(
+                $tmpFileWithExt,
+                $fileInfo['attachmentName'],
+                $mimeType,
+                0,
+                true
+            );
+            // 帖子图片自适应旋转
+            if(strtolower($fileInfo['ext']) != 'gif' && extension_loaded('exif')) {
+                $this->image->make($tmpFileWithExt)->orientate()->save();
+            }
+
+            $this->uploader->put($data['type'], $blurImageFile, $fileInfo['attachmentName'], $fileInfo['filePath']);
+            @unlink($tmpFile);
+            @unlink($tmpFileWithExt);
+        }
+
         $attachment = new Attachment();
         $attachment->uuid = Str::uuid();
         $attachment->user_id = $this->user->id;
         $attachment->type = $data['type'];
         $attachment->is_approved = Attachment::APPROVED;
-        $attachment->attachment = urldecode($fileData['basename']);
-        $attachment->file_path = substr_replace($fileData['dirname'], '', strpos($fileData['dirname'], '/'), strlen('/')) . '/';
+        $attachment->attachment = $fileInfo['attachmentName'];
+        $attachment->file_path = $fileInfo['filePath'];
         $attachment->file_name = $data['fileName'];
-        $attachment->file_size = $fileSize;
-        $attachment->file_width = $width;
-        $attachment->file_height = $height;
+        $attachment->file_size = $fileInfo['fileSize'];
+        $attachment->file_width = $fileInfo['width'];
+        $attachment->file_height = $fileInfo['height'];
         $attachment->file_type = $mimeType;
         $attachment->is_remote = Attachment::YES_REMOTE;
         $attachment->ip = ip($this->request->getServerParams());
         $attachment->save();
-        @unlink($tmpFile);
-        @unlink($tmpFileWithExt);
-        $attachment->url = $attachment->thumbUrl = $cosUrl;
+        $attachment->url = $cosUrl;
+        $attachment->thumbUrl = $fileInfo['thumbUrl'] ?: '';
 
         $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($attachment));
     }

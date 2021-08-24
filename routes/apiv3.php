@@ -36,6 +36,7 @@ $route->get('/users/pc/wechat/miniprogram.bind', 'pc.wechat.miniprogram.bind.pol
 $route->get('/users/pc/wechat/miniprogram.login', 'pc.wechat.miniprogram.login.poll', ApiController\UsersV3\MiniProgramPcLoginPollController::class);
 $route->get('/users/pc/wechat.rebind.poll', 'pc.wechat.rebind.poll', ApiController\UsersV3\WechatPcRebindPollController::class);
 $route->get('/users/mobilebrowser/wechat/miniprogram.genscheme', 'pc.wechat.miniprogram.login.poll', ApiController\UsersV3\MiniProgramSchemeGenController::class);
+$route->get('/users/mobilebrowser/wechat/miniprogram.genbindscheme', 'mobilebrowser.wechat.miniprogram.genbindscheme', ApiController\UsersV3\MiniProgramBindSchemeGenController::class);
 //登录
 $route->post('/users/username.login', 'username.login', ApiController\UsersV3\LoginController::class);
 //注册
@@ -202,3 +203,8 @@ $route->get('/view.count', 'view.count', ApiController\ThreadsV3\ViewCountContro
 $route->post('/coskey', 'coskey', ApiController\AttachmentV3\CoskeyAttachmentController::class);
 //记录前端上传文件的参数
 $route->post('/attachment.relation', 'attachment.relation', ApiController\AttachmentV3\RelationAttachmentController::class);
+//用户投票
+$route->post('/vote.thread', 'vote.thread', ApiController\ThreadsV3\VoteThreadController::class);
+
+$route->get('/check.user.get.redpacket', 'check.user.get.redpacket', ApiController\ThreadsV3\CheckUserGetRedpacketController::class);
+

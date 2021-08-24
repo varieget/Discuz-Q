@@ -28,6 +28,7 @@ class TomConfig
     const TOM_REDPACK = 106;
     const TOM_REWARD = 107;
     const TOM_DOC = 108;
+    const TOM_VOTE = 109;
 
     public static $map = [
         self::TOM_TEXT => [
@@ -60,11 +61,6 @@ class TomConfig
             'authorize'=>'switch.insertGoods',
             'service' => \App\Modules\ThreadTom\Busi\GoodsBusi::class
         ],
-//        self::TOM_QA => [
-//            'enName' => 'QA',
-//            'desc' => '问答',
-//            'service' => \App\Modules\ThreadTom\Busi\QABusi::class
-//        ],
         self::TOM_REDPACK => [
             'enName' => 'REDPACK',
             'desc' => '红包',
@@ -82,12 +78,12 @@ class TomConfig
             'desc' => '文件附件',
             'authorize'=>'switch.insertDoc',
             'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
+        ],
+        self::TOM_VOTE => [
+            'enName' => 'VOTE',
+            'desc' => '投票',
+            'authorize'=>'',
+            'service' => \App\Modules\ThreadTom\Busi\VoteBusi::class
         ]
     ];
-
-    //扩展属性
-    const AUTHORIZE_PAY = 'switch.insertPay';
-    const AUTHORIZE_POSITION = 'switch.insertPosition';
-
-
 }
