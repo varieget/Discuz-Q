@@ -100,7 +100,15 @@ class QcloudDaily
             'faceid_on' =>  $settings['qcloud_faceid'] ?? 0,
             'captcha_on'    =>  $settings['qcloud_captcha'] ?? 0,
             'ims_on'    =>  $settings['qcloud_cms_image'] ?? 0,
-            'tms_on'    =>  $settings['qcloud_cms_text'] ?? 0
+            'tms_on'    =>  $settings['qcloud_cms_text'] ?? 0,
+            'qcloud_cms_image_init_time'    =>  $settings['qcloud_cms_image_init_time'] ?? null,
+            'qcloud_cms_text_init_time'    =>  $settings['qcloud_cms_text_init_time'] ?? null,
+            'qcloud_sms_init_time'    =>  $settings['qcloud_sms_init_time'] ?? null,
+            'qcloud_faceid_init_time'    =>  $settings['qcloud_faceid_init_time'] ?? null,
+            'qcloud_cos_init_time'    =>  $settings['qcloud_cos_init_time'] ?? null,
+            'qcloud_vod_init_time'    =>  $settings['qcloud_vod_init_time'] ?? null,
+            'qcloud_captcha_init_time'    =>  $settings['qcloud_captcha_init_time'] ?? null,
+
         ];
         try {
             $this->qcloudDaily($json)->wait();
