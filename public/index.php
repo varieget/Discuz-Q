@@ -20,6 +20,10 @@ define('DISCUZ_START', microtime(true));
 
 require __DIR__ . '/../vendor/autoload.php';
 
+$path = __DIR__.'/../app/ApiDoc';
+$openapi = \OpenApi\Generator::scan([$path]);
+header('Content-Type: application/json');
+echo $openapi->toJson();exit;
 $app = new Discuz\Foundation\Application(dirname(__DIR__));
 
 $app->singleton(Discuz\Http\Server::class, Discuz\Http\Server::class);
