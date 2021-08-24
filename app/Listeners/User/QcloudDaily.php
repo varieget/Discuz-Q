@@ -88,9 +88,9 @@ class QcloudDaily
         }
         $json = [
             'site_id' => $settings['site_id'] ?? '',
-            'site_name' =>  $settings['site_name'] ?? '',
+            'site_name' =>  !empty($settings['site_name']) ? $settings['site_name'] : '',
             'site_uin'  =>  $uin,
-            'site_url'  =>  $settings['site_url'] ?? '',
+            'site_url'  =>  !empty($settings['site_url']) ? $settings['site_url'] : '',
             'site_on'   =>  empty($settings['site_close']) ? 1 : 0,
             'qcloud_close'  =>  $settings['qcloud_close'] ?? 0,
             'qcloud_secret_id'  =>  $qcloudSecretId,
