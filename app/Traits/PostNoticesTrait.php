@@ -99,7 +99,7 @@ trait PostNoticesTrait
             }
         }
 
-        $users = User::query()->whereIn('username', $newsNameArr2)->get();
+        $users = User::query()->whereIn('nickname', $newsNameArr2)->get();
         if (empty($users)) {
             return;
         }
