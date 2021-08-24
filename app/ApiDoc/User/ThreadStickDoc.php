@@ -1,47 +1,57 @@
 <?php
 /**
- * @OA\Info(title="获取置顶列表", version="3.0",description="获取置顶列表",
- *     @OA\Contact(url="http://discuz.chat,name="coralchu"),
- *     @OA\License(name="Apache 2.0")
- *     )
- */
-/**
- * @OA\Server(url="https://discuz.chat/apiv3/thread.stick",description="hello")
- */
-
-/**
  *
  * @OA\Get(
- *      path="/users",
- *      operationId="getListOfUsers",
- *      tags={"Users"},
- *      description="Get list of users",
- *      security={{"Authorization-Bearer":{}}},
+ *     path="/apiv3/thread.stick",
+ *     summary="置顶列表",
+ *     description="获取首页置顶贴列表",
+ *     tags={"帖子列表"},
  *      @OA\Parameter(
  *         name="Authorization",
  *         in="header",
  *         required=true,
  *         description="Bearer {access-token}",
  *         @OA\Schema(
- *              type="bearerAuth"
+ *              type="string"
  *         )
  *      ),
+ *     @OA\Parameter(
+ *         name="nickname",
+ *         in="query",
+ *         required=true,
+ *         description = "用户名称",
+ *       @OA\Schema(
+ *              type="string"
+ *         )
+ *     ),
+ *     @OA\Parameter(
+ *         name="userId",
+ *         in="query",
+ *         required=true,
+ *         description = "用户id",
+ *        @OA\Schema(
+ *              type="integer"
+ *         )
+ *     ),
  *      @OA\Response(
  *          response=200,
- *          description="Get list of users.",
+ *          description="返回置顶列表",
  *          @OA\JsonContent(type="object",
- *              @OA\Property(property="message", type="string"),
- *              @OA\Property(property="data", type="array",
+ *              @OA\Property(property="Code", type="integer"),
+ *              @OA\Property(property="Message", type="string"),
+ *              @OA\Property(property="Data", type="array",
  *                  @OA\Items(type="object",
- *                      @OA\Property(property="id", type="integer",description="用户id"),
- *                      @OA\Property(property="name", type="string"),
- *                      @OA\Property(property="email", type="string"),
+ *                      @OA\Property(property="threadId", type="number",description="帖子id"),
+ *                      @OA\Property(property="categoryId", type="number",description="分类id"),
+ *                      @OA\Property(property="title", type="string",description="帖子标题"),
+ *                      @OA\Property(property="updatedAt", type="string",description="更新时间"),
+ *                      @OA\Property(property="canViewPosts", type="boolean",description="是否可查阅详情"),
  *                  ),
  *              ),
- *          ),
- *       ),
- *       @OA\Response(response=401, description="Unauthorized"),
- *       @OA\Response(response=404, description="Not Found"),
+ *             @OA\Property(property="RequestId", type="string"),
+ *             @OA\Property(property="RequestTime", type="string")
+ *          )
+ *       )
  * )
  *
  *
