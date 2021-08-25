@@ -245,12 +245,22 @@ class ListNotificationV2Controller extends DzqController
     protected function changeNotificationData($data)
     {
         if (isset($data['post_id']) && !empty($data['post_id'])) {
-            $data['post_content'] = Post::changeContent($data['post_content']);
+            if(!strpos($data['post_content'], "[音视频]") &&
+               !strpos($data['post_content'], "[代码块]")){
+                $data['post_content'] = Post::changeContent($data['post_content']);
+            }
+
             $post = Post::query()->where('id', $data['post_id'])->first();
             if ($post['is_first'] == Post::FIRST_YES) {
                 $data['post_content'] = Post::addTagToThreadContent($data['thread_id'], $data['post_content']);
+                if (!empty($data['thread_title'])) {
+                    $data['thread_title'] = Post::addTagToThreadContent($data['thread_id'], $data['thread_title']);
+                }
             } else {
                 $data['post_content'] = Post::addTagToPostContent($data['post_id'], $data['post_content']);
+                if (!empty($data['thread_title'])) {
+                    $data['thread_title'] = Post::addTagToPostContent($data['post_id'], $data['thread_title']);
+                }
             }
         }
         if (isset($data['reply_post_id']) && !empty($data['reply_post_id'])) {

@@ -24,6 +24,7 @@ use App\Events\Post\Restored;
 use App\Events\Post\Revised;
 use App\Models\UserWalletLog;
 use App\Formatter\Formatter;
+use App\Modules\ThreadTom\TomConfig;
 use Carbon\Carbon;
 use DateTime;
 use Discuz\Base\DzqModel;
@@ -780,26 +781,51 @@ class Post extends DzqModel
 
     public static function changeContent($content)
     {
+        $tags = Post::getContentTags($content);
         $content = Post::deleteHtmlTags($content);
         if (strlen($content) > Thread::NOTICE_MESSAGE_LENGTH) {
             $content = Post::getThreadTitleOrContent($content, Thread::NOTICE_MESSAGE_LENGTH);
         }
-        return $content;
+        return $content . $tags;
+    }
+
+    // 获取内容中相关标签
+    public static function getContentTags($content)
+    {
+        $tags = '';
+
+        if (strpos($content, '<img') !== false && strpos($content, 'attachmentId-') !== false) {
+            $tags = $tags . '[图片]';
+        }
+        preg_match('/<iframe[^>]*\s+src="([^"]*)"[^>]*>/is', $content, $iframeMatched);
+        if (!empty($iframeMatched)) {
+            $tags = $tags . '[音视频]';
+        }
+        if (strpos($content, "<pre><code>") !== false) {
+            $tags = $tags . '[代码块]';
+        }
+
+        return $tags;
     }
 
     public static function deleteHtmlTags($content)
     {
-        $content = str_replace("<p>", "", $content);
-        $content = str_replace("</p>", "", $content);
+        $content = str_replace(["<p>", "</p>"], ["", ""], $content);
+        $contentArray = explode("\n", $content);
+        foreach ($contentArray as $value) {
+            if (strpos($value, "<pre><code>") !== false) {
+                $content = str_replace($value, "", $content);;
+            }
+            if (strpos($value, "</code></pre>") !== false) {
+                $content = str_replace($value, "", $content);;
+            }
+        }
         $content = str_replace(PHP_EOL, "", $content);
         return $content;
     }
 
     public static function getThreadTitleOrContent($titleOrContent, $length)
     {
-        if (strpos($titleOrContent, '<img') !== false && strpos($titleOrContent, 'attachmentId-') !== false) {
-            $titleOrContent = $titleOrContent . '[图片]';
-        }
         $titleOrContent = strip_tags($titleOrContent);
         if (mb_strlen($titleOrContent) > $length) {
             $titleOrContent = Str::substr($titleOrContent, 0, $length) . '...';
@@ -812,35 +838,60 @@ class Post extends DzqModel
         return $titleOrContent;
     }
 
+    // 获取帖子属性标签
     public static function addTagToThreadContent($threadId, $content)
     {
         $tags = [];
         ThreadTag::query()->where('thread_id', $threadId)->get()->each(function ($item) use (&$tags) {
             $tags[$item['tag']][] = $item->toArray();
         });
+
         if (!empty($tags)) {
-            if (isset($tags[ThreadTag::IMAGE])) {
+            if (isset($tags[ThreadTag::IMAGE]) && !strpos($content, "[图片]")) {
                 $content = $content . '[图片]';
             }
-            if (isset($tags[ThreadTag::VIDEO])) {
+            if (isset($tags[ThreadTag::VIDEO]) && !strpos($content, "[视频]")) {
                 $content = $content . '[视频]';
             }
-            if (isset($tags[ThreadTag::DOC])) {
+            if (isset($tags[ThreadTag::DOC]) && !strpos($content, "[附件]")) {
                 $content = $content . '[附件]';
             }
-            if (isset($tags[ThreadTag::VOICE])) {
+            if (isset($tags[ThreadTag::VOICE]) && !strpos($content, "[语音条]")) {
                 $content = $content . '[语音条]';
             }
+            if (isset($tags[TomConfig::TOM_VOTE]) && !strpos($content, "[投票]")) {
+                $content = $content . '[投票]';
+            }
         }
+
         return $content;
     }
 
     public static function addTagToPostContent($postId, $content)
     {
+        if (strpos($content, "[图片]")) {
+            return $content;
+        }
         $postAttachment = Attachment::query()->where('type_id', $postId)->get()->toArray();
         if (!empty($postAttachment)) {
             $content = $content . '[图片]';
         }
         return $content;
+    }
+
+    public static function changeOriginNotification($post)
+    {
+        $tags = Post::getContentTags($post->content);
+        $post = Post::changeNotifitionPostContent($post);
+        $result = $post->getSummaryContent(Post::NOTICE_WITHOUT_LENGTH);
+        if (!empty($result['first_content']) && $result['first_content'] != $result['content']) {
+            if ($post->is_first) {
+                $result['first_content'] = $result['first_content'] . $tags;
+            } else {
+                $result['first_content'] = $result['content'];
+            }
+        }
+
+        return [$post, $result];
     }
 }
