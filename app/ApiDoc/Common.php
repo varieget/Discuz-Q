@@ -51,4 +51,22 @@
  *          url="http://discuz.chat"
  *     )
  * )
+ *
+ * @OA\Schema(
+ *     schema="dzq_layout",
+ *     title="接口返回",
+ *     @OA\Property(property="Code",type="integer",description="dzq错误码"),
+ *     @OA\Property(property="Message",type="string",description="错误描述信息"),
+ *     @OA\Property(property="RequestId",type="string",description="请求ID"),
+ *     @OA\Property(property="RequestTime",format="datetime",default="2021-02-02 02:22:22", type="string",description="请求时间"),
+ *     description="dzq接口的整体返回规范,Code等于0表示接口正常返回"
+ * )
+ * @OA\Parameter(
+ *     parameter="bear_token",
+ *     name="Authorization",
+ *     in="header",
+ *     required=true,
+ *     description="Bearer Token",
+ *     @OA\Schema(type="string")
+ * )
  */
