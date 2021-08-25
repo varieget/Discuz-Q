@@ -85,10 +85,11 @@ class DownloadAttachmentController extends DzqController
             $downloadNum = (int)$this->settings->get('support_max_download_num', 'default');
             if($downloadNum > 0){
                 $todayTime = Utils::getTodayTime();
-                $dayLimitCount = AttachmentShare::query()->where('attachments_id',$data['attachmentsId'])
+                $dayLimitCount = AttachmentShare::query()
                     ->where('user_id',$user->id)
-                    ->whereBetween('created_at', array($todayTime['begin'], $todayTime['end']))
-                    ->sum('download_count');
+                    ->where('download_count','>=',1)
+                    ->whereBetween('updated_at', array($todayTime['begin'], $todayTime['end']))
+                    ->count('sign');
                 if((int)$dayLimitCount >= $downloadNum){
                     app('log')->info("requestId：{$this->requestId},超过今天可下载附件的最大次数");
                     return $this->outPut(ResponseCode::DOWNLOAD_NUMS_IS_TOPLIMIT);
@@ -104,10 +105,18 @@ class DownloadAttachmentController extends DzqController
             $url = $this->filesystem->disk('attachment')->url($attachment->full_path);
         }
 
-        AttachmentShare::query()->where('sign', $data['sign'])->update([
-            'download_count' => intval($share->download_count + 1),
-            'updated_at' => Carbon::now()
-        ]);
+        $today = Utils::getTodayTime();
+        $dayUserCount = AttachmentShare::query()
+            ->where('attachments_id',$data['attachmentsId'])
+            ->where('user_id',$user->id)
+            ->whereBetween('updated_at', array($today['begin'], $today['end']))
+            ->sum('download_count');
+        if((int)$dayUserCount == 0){
+            AttachmentShare::query()->where('sign', $data['sign'])->update([
+                'download_count' => intval($share->download_count + 1),
+                'updated_at' => Carbon::now()
+            ]);
+        }
         $origin_name = iconv("utf-8", "gb2312", $attachment->file_name);
         header("Access-Control-Allow-Origin:*");
         header('Access-Control-Allow-Methods:*');
