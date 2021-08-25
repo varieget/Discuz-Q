@@ -83,8 +83,14 @@ class DownloadAttachmentController extends DzqController
             }
             //限制下载次数
             $downloadNum = (int)$this->settings->get('support_max_download_num', 'default');
-            if($downloadNum > 0){
-                $todayTime = Utils::getTodayTime();
+            $todayTime = Utils::getTodayTime();
+            $attachmentDownloaded = AttachmentShare::query()
+                ->where('user_id',$user->id)
+                ->where('attachments_id',$data['attachmentsId'])
+                ->where('download_count','>=',1)
+                ->whereBetween('updated_at', array($todayTime['begin'], $todayTime['end']))->get()->toArray();
+            //针对用户当天没下载过的附件进行限制判断
+            if($downloadNum > 0 && !$attachmentDownloaded){
                 $dayLimitCount = AttachmentShare::query()
                     ->where('user_id',$user->id)
                     ->where('download_count','>=',1)
