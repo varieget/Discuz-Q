@@ -82,7 +82,7 @@ class ThreadMigrationPlusCommand extends AbstractCommand
     {
         app('log')->info('开始修复帖子数据迁移start');
         $this->info('开始修复帖子数据迁移start');
-        $handle_max_thread_count = 3;
+        $handle_max_thread_count = 300;
 
         try{
             app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("select count(1) from posts_bakv2"));
