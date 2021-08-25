@@ -5,7 +5,7 @@
  *     path="/apiv3/thread.stick",
  *     summary="置顶列表",
  *     description="获取首页置顶贴列表",
- *     tags={"帖子列表"},
+ *     tags={"发布与展示"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
  *     @OA\Parameter(
  *         name="nickname",
