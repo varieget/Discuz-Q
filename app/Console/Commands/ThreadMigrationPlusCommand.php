@@ -167,6 +167,7 @@ class ThreadMigrationPlusCommand extends AbstractCommand
                 foreach ($threads as $vo){
                     //如果都没有 posts_bakv2 的话，说明posts都保留这原始的数据，那么这里直接修改对应的 posts 就好了
                     $posts = Post::query()->where('thread_id', $vo->id)->get();
+                    $this->db->beginTransaction();
                     foreach ($posts as $vi){
                         $content = $vi->content;
                         if(!empty($content)){
@@ -174,8 +175,21 @@ class ThreadMigrationPlusCommand extends AbstractCommand
                             $content = self::v3Content($content);
                         }
                         $vi->content = $content;
-                        $vi->save();
+                        $res = $vi->save();
+                        if($res === false){
+                            $this->db->rollBack();
+                            $this->info('修改posts出错');
+                            break;
+                        }
                     }
+                    $vo->type = self::V3_TYPE;
+                    $res = $vo->save();
+                    if($res === false){
+                        $this->db->rollBack();
+                        $this->info('修改threads出错');
+                        break;
+                    }
+                    $this->db->commit();
                 }
             }
         }
