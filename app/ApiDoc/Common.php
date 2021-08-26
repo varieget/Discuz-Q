@@ -84,7 +84,104 @@
  *     description="Bearer Token",
  *     @OA\Schema(type="string")
  * )
- *
+ * @OA\Parameter(
+ *    parameter="threadlist_page",
+ *    name="page",
+ *    in="query",
+ *    required=false,
+ *    description = "当前页",
+ *    @OA\Schema(
+ *        type="integer",default=1
+ *    ),
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_perPage",
+ *    name="perPage",
+ *    in="query",
+ *    required=false,
+ *    description = "每页数据条数",
+ *    @OA\Schema(
+ *        type="integer",default=20
+ *    ),
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_scope",
+ *    name="scope",
+ *    in="query",
+ *    required=false,
+ *    description = "列表所属模块域 0:普通 1：推荐 2：付费首页 3：搜索页",
+ *    @OA\Schema(
+ *        type="integer",
+ *        enum={0,1,2,3},
+ *        default=0
+ *    )
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_essence",
+ *    name="filter[essence]",
+ *    in="query",
+ *    required=false,
+ *    description = "精华帖",
+ *    @OA\Schema(
+ *        type="integer",default=1
+ *    )
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_types",
+ *    name="filter[types][]",
+ *    in="query",
+ *    required=false,
+ *    description = "帖子类型",
+ *    @OA\Schema(type="array",@OA\Items(type="integer"))
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_sort",
+ *    name="filter[sort]",
+ *    in="query",
+ *    required=false,
+ *    description = "排序规则",
+ *    @OA\Schema(
+ *        type="integer",enum={1,2,3,4},default=1
+ *    )
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_attention",
+ *    name="filter[attention]",
+ *    in="query",
+ *    required=false,
+ *    description = "是否关注",
+ *    @OA\Schema(
+ *        type="integer",enum={0,1},default=0
+ *    )
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_complex",
+ *    name="filter[complex]",
+ *    in="query",
+ *    required=false,
+ *    description = "其他复合筛选类型 1:我的草稿 2:我的点赞 3:我的收藏 4:我的购买 5:我or他的主题页",
+ *    @OA\Schema(
+ *        type="integer",enum={1,2,3,4,5}
+ *    )
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_exclusiveIds",
+ *    name="filter[exclusiveIds][]",
+ *    in="query",
+ *    required=false,
+ *    description = "需要过滤掉的帖子id集合",
+ *    @OA\Schema(type="array",@OA\Items(type="integer"))
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_categoryids",
+ *    name="filter[categoryids]",
+ *    in="query",
+ *    required=false,
+ *    description = "分类组合（需要查询的分类id集合）",
+ *    @OA\Schema(
+ *        type="array",@OA\Items(type="integer")
+ *    )
+ *),
  * @OA\Schema(
  *     schema="dzq_thread",
  *     title="全局的帖子详情",
