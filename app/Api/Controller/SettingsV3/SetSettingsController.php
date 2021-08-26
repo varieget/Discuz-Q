@@ -215,6 +215,11 @@ class SetSettingsController extends DzqController
                         $this->settings->set('qcloud_captcha_init_time', $now, $tag);
                     }
                     break;
+                case 'qcloud_secret_id':
+                    if($value && empty($this->settings->get('qcloud_secret_init_time'))){
+                        $this->settings->set('qcloud_secret_init_time', $now, $tag);
+                    }
+                    break;
                 default:
                     break;
             }
