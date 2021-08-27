@@ -77,12 +77,25 @@ class QcloudSiteInfoDaily
         $total_register_profit = round(Order::query()->where('type', Order::ORDER_TYPE_REGISTER)->where('status', Order::ORDER_STATUS_PAID)->sum('amount'), 2);
         $total_profit = $withdrawal_profit + $order_royalty + $total_register_profit;
 
+        //开源应用中心：KUBERNETES_OAC_HOST、云开发tcb：KUBERNETES_SERVICE_HOST、云市场镜像：CLOUD_MARKET_HOST
+        $install_type = 'default';
+        $oldversionfile = base_path('public/.oldversion');
+        if(!file_exists($oldversionfile)){
+            //docker 环境
+            $install_type = 'docker';
+            $oac = getenv('KUBERNETES_OAC_HOST');
+            $tcb = getenv('KUBERNETES_SERVICE_HOST');
+            $market = getenv('CLOUD_MARKET_HOST');
+            if(!empty($tcb))        $install_type = 'tcb';
+            if(!empty($oac))        $install_type = 'oac';
+            if(!empty($market))     $install_type = 'market';
+        }
         $json = [
             'site_id' => $settings['site_id'] ?? '',
             'site_secret' => !empty($settings['site_secret']) ? $settings['site_secret'] : '',
-            'site_name' =>  !empty($settings['site_name']) ? $settings['site_name'] : '',
-            'site_url'  =>  $settings['site_url'],
             'site_ip'   =>  !empty($site_url) ? gethostbyname($site_url) : '',
+            'site_url'  =>  $settings['site_url'],
+            'site_name' =>  !empty($settings['site_name']) ? $settings['site_name'] : '',
             'site_charge'    =>  !empty($settings['site_price']) ? 1 : 0,
             'qcloud_secret_id'  =>  !empty($settings['qcloud_secret_id']) ? $settings['qcloud_secret_id'] : '-',
             'site_uin'  =>  $uin,
@@ -92,6 +105,7 @@ class QcloudSiteInfoDaily
             'current_version_time'  =>  $current_version_time,
             'site_init_version' =>  $settings['site_init_version'],
             'site_init_version_time' =>  $settings['site_init_version_time'],
+            'install_type'  =>  $install_type,
             'miniprogram_open'     =>  !empty($settings['miniprogram_close']) ? 1 : 0,
             'offiaccount_open'     =>  !empty($settings['offiaccount_close']) ? 1 : 0,
             'web_open'  =>  empty($settings['site_close']) ? 1 : 0,
