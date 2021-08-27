@@ -740,7 +740,8 @@ trait ThreadTrait
     {
         if (!empty($content['indexes']) && is_array($content['indexes'])) {
             foreach ($content['indexes'] as $key => &$val) {
-                !empty($val['body']['mediaUrl']) && $val['body']['mediaUrl'] = '';
+                $key == TomConfig::TOM_VIDEO && $val['body']['mediaUrl'] = '';
+
             }
         }
         return $content;
