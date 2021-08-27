@@ -78,7 +78,7 @@ class SettingsTableSeeder extends Seeder
             ],
             [
                 'key' => 'support_img_ext',     // 默认支持的图片扩展名
-                'value' => 'png,gif,jpg,jpeg,heic',
+                'value' => 'png,gif,jpg,jpeg,heic,heif',
                 'tag' => 'default',
             ],
             [
