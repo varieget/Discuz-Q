@@ -20,22 +20,12 @@ namespace App\Listeners\User;
 
 use App\Models\Order;
 use App\Models\Post;
-use App\Models\Setting;
 use App\Models\Thread;
 use App\Models\User;
 use App\Models\UserWalletCash;
 use App\Settings\SettingsRepository;
-use App\Events\Setting\Saved;
-use Illuminate\Support\Arr;
 use Discuz\Qcloud\QcloudTrait;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use TencentCloud\Common\Credential;
-use TencentCloud\Common\Profile\ClientProfile;
-use TencentCloud\Common\Profile\HttpProfile;
-use TencentCloud\Ms\V20180408\Models\DescribeUserBaseInfoInstanceRequest;
-use TencentCloud\Ms\V20180408\MsClient;
-use function Clue\StreamFilter\fun;
 
 class QcloudSiteInfoDaily
 {
