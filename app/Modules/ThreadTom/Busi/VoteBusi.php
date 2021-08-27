@@ -102,7 +102,7 @@ class VoteBusi extends TomBaseBusi
             $this->db->rollBack();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '删除相关投票出错');
         }
-        $vote_users = ThreadVoteUser::query()->where('thread_id', $this->threadId)->groupBy('user_id')->count();
+        $vote_users = ThreadVoteUser::query()->where('thread_id', $this->threadId)->distinct()->count('user_id');
         $res = ThreadVote::query()->where('id', $thread_vote->id)->update(['vote_users' => $vote_users]);
         if($res === false){
             $this->db->rollBack();
