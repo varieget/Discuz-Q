@@ -63,6 +63,10 @@ trait ThreadTrait
         $canViewTom = $this->canViewTom($loginUser, $thread, $payType, $paid);
         $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
         $contentField = $this->getContentField($loginUser, $thread, $post, $tomInputIndexes, $payType, $paid, $canViewTom, $canFreeViewTom);
+        $canViewThreadVideo = $this->canViewThreadVideo($loginUser, $thread);
+        if (!$canViewThreadVideo) {
+            $contentField = $this->filterThreadVideo($contentField);
+        }
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -180,6 +184,12 @@ trait ThreadTrait
         }
     }
 
+    private function canViewThreadVideo($user, $thread): bool
+    {
+        $repo = new UserRepository();
+        return $repo->canViewThreadVideo($user, $thread);
+    }
+
     private function canFreeViewTom($user, $thread)
     {
         $repo = new UserRepository();
@@ -237,7 +247,10 @@ trait ThreadTrait
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
             'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
-            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread)
+            'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread),
+            'canViewVideo' => $userRepo->canViewThreadVideo($loginUser, $thread),
+            'canViewAttachment' => $userRepo->canViewThreadAttachment($loginUser, $thread),
+            'canDownloadAttachment' => $userRepo->canDownloadThreadAttachment($loginUser, $thread['user_id'])
         ];
     }
 
@@ -721,6 +734,16 @@ trait ThreadTrait
         if ($price > $limitMoney || $attachmentPrice > $limitMoney) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '价格设置不能超过' . $limitMoney . '元');
         }
+    }
+
+    private function filterThreadVideo($content)
+    {
+        if (!empty($content['indexes']) && is_array($content['indexes'])) {
+            foreach ($content['indexes'] as $key => &$val) {
+                !empty($val['body']['mediaUrl']) && $val['body']['mediaUrl'] = '';
+            }
+        }
+        return $content;
     }
 }
 
