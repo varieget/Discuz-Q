@@ -745,4 +745,66 @@ class UserRepository extends AbstractRepository
 
         return false;
     }
+
+    /**
+     * 用户查看视频权限
+     * @param User $user
+     * @param $thread
+     * @return bool
+     */
+    public function canViewThreadVideo(User $user, $thread):bool
+    {
+        if (!$thread) {
+            return false;
+        }
+
+        if ($user->isAdmin()) {
+            return true;
+        } else {
+            if ($thread['user_id'] == $user->id) {
+                return true;
+            }
+            return $user->hasPermission(PermissionKey::THREAD_VIEW_VIDEO);
+        }
+    }
+
+    /**
+     * 用户查看附件权限
+     * @param User $user
+     * @param $thread
+     * @return bool
+     */
+    public function canViewThreadAttachment(User $user, $thread):bool
+    {
+        if (!$thread) {
+            return false;
+        }
+
+        if ($user->isAdmin()) {
+            return true;
+        } else {
+            if ($thread['user_id'] == $user->id) {
+                return true;
+            }
+            return $user->hasPermission(PermissionKey::THREAD_VIEW_ATTACHMENT);
+        }
+    }
+
+    /**
+     * 用户下载附件权限
+     * @param User $user
+     * @param $threadUserId
+     * @return bool
+     */
+    public function canDownloadThreadAttachment(User $user, $threadUserId):bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        } else {
+            if ($threadUserId == $user->id) {
+                return true;
+            }
+            return $user->hasPermission(PermissionKey::THREAD_DOWNLOAD_ATTACHMENT);
+        }
+    }
 }
