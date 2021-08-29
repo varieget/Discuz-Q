@@ -46,6 +46,14 @@ class DownloadAttachmentController extends DzqController
         if ($this->user->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
+
+        $attachment = Attachment::query()->where('id', (int) $this->inPut('attachmentsId'))->first();
+        if (!empty($attachment)) {
+            if (!$userRepo->canDownloadThreadAttachment($this->user, $attachment->user_id)) {
+                $this->outPut(ResponseCode::UNAUTHORIZED, '无权限下载该附件');
+            }
+        }
+
         return true;
     }
 
