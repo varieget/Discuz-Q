@@ -49,6 +49,13 @@ class PayOrderController extends DzqController
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $user->id);
     }
 
+    public function suffixClearCache($user)
+    {
+        if(intval($this->inPut("paymentType")) == Order::PAYMENT_TYPE_WALLET){
+            CacheKey::delListCache();
+        }
+    }
+
     /**
      * @param Dispatcher $bus
      */
