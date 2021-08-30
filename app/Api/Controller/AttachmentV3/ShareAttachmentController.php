@@ -65,10 +65,6 @@ class ShareAttachmentController extends DzqController
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
-        if (!$userRepo->canViewThreadAttachment($user, $thread)) {
-            $this->outPut(ResponseCode::UNAUTHORIZED, '无权限查看该附件');
-        }
-
         //是否是管理员和自己的帖子
         if (!$user->isAdmin() && $user->id !== $thread->user_id){
             //是否付费帖

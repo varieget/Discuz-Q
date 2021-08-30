@@ -61,10 +61,6 @@ class PermissionTableSeeder extends Seeder
         'switch.'.PermissionKey::THREAD_VIEW_POSTS  => [10,7],  // 查看主题详情-左侧勾选按钮
         PermissionKey::THREAD_VIEW_POSTS            => [10,7],  // 查看主题详情-生效范围-全局
 
-        PermissionKey::THREAD_VIEW_VIDEO            => [10],    // 查看视频
-        PermissionKey::THREAD_VIEW_ATTACHMENT       => [10],    // 查看附件
-        PermissionKey::THREAD_DOWNLOAD_ATTACHMENT   => [10],    // 下载附件
-
         //管理权限
         'switch.'.PermissionKey::THREAD_EDIT_OWN    => [10],    // 编辑自己的主题-左侧勾选按钮
         PermissionKey::THREAD_EDIT_OWN              => [10],    // 编辑自己的主题-生效范围-全局

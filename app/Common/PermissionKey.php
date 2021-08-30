@@ -34,10 +34,6 @@ class PermissionKey
     const THREAD_VIEW_POSTS = 'thread.viewPosts';
     const THREAD_HIDE_POSTS = 'thread.hidePosts';
 
-    const THREAD_VIEW_VIDEO = 'thread.viewVideo'; // 查看视频
-    const THREAD_VIEW_ATTACHMENT = 'thread.viewAttachment'; // 查看附件
-    const THREAD_DOWNLOAD_ATTACHMENT = 'thread.downloadAttachment'; // 下载附件
-
     const DIALOG_CREATE = 'dialog.create';
     const CREATE_INVITE_USER_SCALE = 'other.canInviteUserScale';
 
