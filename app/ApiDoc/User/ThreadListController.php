@@ -2,7 +2,7 @@
 /**
  *@OA\Get(
  *    path = "/apiv3/thread.list",
- *    summary = "帖子列表",
+ *    summary = "主题列表",
  *    description = "Discuz! Q 全站帖子列表统一接口，包括且不限于首页列表、搜索列表、个人中心列表、购买列表、付费站首页等",
  *    tags ={"发布与展示"},
  *@OA\Parameter(ref = "#/components/parameters/bear_token"),

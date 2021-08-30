@@ -1,15 +1,16 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/thread.create",
- *     summary="发布新主题",
- *     description="统一发帖接口，所有帖子内容组件的数据合并一次性提交创建帖子",
+ *     path="/apiv3/thread.update",
+ *     summary="编辑更新主题",
+ *     description="统一更新主题接口",
  *     tags={"发布与展示"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
  *     @OA\RequestBody(
  *        required=true,
  *        description = "帖子原始内容",
  *        @OA\JsonContent(
+ *           @OA\Property(property="threadId",type="integer",description="帖子id"),
  *           @OA\Property(property="title",type="string",description="帖子标题"),
  *           @OA\Property(property="categoryId",type="integer",description="分类id"),
  *           @OA\Property(property="price",type="number",description="付费贴价格"),
@@ -36,9 +37,9 @@
  *        response=200,
  *        description="返回帖子详情",
  *        @OA\JsonContent(allOf={
- *           @OA\Schema(ref="#/components/schemas/dzq_layout"),
- *           @OA\Schema(@OA\Property(property="Data",type="object", ref="#/components/schemas/dzq_thread")),
- *       })
+ *            @OA\Schema(ref="#/components/schemas/dzq_layout"),
+ *            @OA\Schema(@OA\Property(property="Data",type="object", ref="#/components/schemas/dzq_thread"))
+ *        })
  *     )
  * )
  */

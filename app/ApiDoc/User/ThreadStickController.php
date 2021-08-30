@@ -3,8 +3,8 @@
  *
  * @OA\Get(
  *     path="/apiv3/thread.stick",
- *     summary="置顶列表",
- *     description="获取首页置顶贴列表",
+ *     summary="置顶主题列表",
+ *     description="获取首页置顶主题列表",
  *     tags={"发布与展示"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
  *     @OA\Parameter(
