@@ -76,7 +76,7 @@ class ThreadListController extends DzqController
         $filter = $this->inPut('filter');
         $page = intval($this->inPut('page'));
         $perPage = intval($this->inPut('perPage'));
-        $scope = $this->inPut('scope');//0:普通 1：推荐 2：付费首页 3：搜索页
+        $scope = $this->inPut('scope');//0:普通 1：推荐 2：搜索页 3：付费站首页列表
         $page <= 0 && $page = 1;
         if ($scope == DzqConst::SCOPE_PAID) {
             $page = 1;

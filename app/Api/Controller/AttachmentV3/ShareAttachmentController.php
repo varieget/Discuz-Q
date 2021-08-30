@@ -19,6 +19,7 @@
 namespace App\Api\Controller\AttachmentV3;
 
 use App\Common\ResponseCode;
+use App\Models\Attachment;
 use App\Models\Order;
 use App\Models\Thread;
 use App\Models\ThreadTom;
@@ -62,6 +63,10 @@ class ShareAttachmentController extends DzqController
         //如果帖子还在审核和草稿当中，只能当前用户下载
         if ($user->id !== $thread->user_id && ($thread->is_draft == Thread::IS_DRAFT || $thread->is_approved !== Thread::IS_ANONYMOUS)){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
+
+        if (!$userRepo->canViewThreadAttachment($user, $thread)) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '无权限查看该附件');
         }
 
         //是否是管理员和自己的帖子
@@ -121,8 +126,13 @@ class ShareAttachmentController extends DzqController
         $AttachmentShare->expired_at = Carbon::now()->modify('+10 minutes');
         $AttachmentShare->save();
 
+        $attachment = Attachment::query()->where('id', $data['attachmentsId'])->first();
+        if(empty($attachment)){
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
         $this->outPut(ResponseCode::SUCCESS, '', [
-            'url' => $this->url->to('/apiv3/attachment.download') . '?sign=' . $sign . '&attachmentsId=' . $data['attachmentsId']
+            'url' => $this->url->to('/apiv3/attachment.download') . '?sign=' . $sign . '&attachmentsId=' . $data['attachmentsId'],
+            'fileName'=>$attachment->file_name
         ]);
 
 

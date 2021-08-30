@@ -74,6 +74,7 @@ class ManageThemeList extends DzqController
         $categoryId = intval($this->inPut('categoryId')); //分类id
         $topicId = intval($this->inPut('topicId')); //话题id
         $sort = $this->inPut('sort') ? $this->inPut('sort') : '-updated_at';     //排序
+        $source = $this->inPut('source'); // 数据来源
 
         $query = Thread::query()
             ->join('posts', 'posts.thread_id', '=', 'threads.id')
@@ -84,6 +85,15 @@ class ManageThemeList extends DzqController
         //是否审核and是否草稿
         $query->where('threads.is_draft', Thread::IS_NOT_DRAFT);
         $query->where('posts.is_first', Post::FIRST_YES);
+
+        // 数据来源筛选
+        if (is_numeric($source)) {
+            if ($source == Thread::DATA_PLATFORM_OF_SITE) {
+                $query->where('threads.source', Thread::DATA_PLATFORM_OF_SITE);
+            } else {
+                $query->where('threads.source', '!=', Thread::DATA_PLATFORM_OF_SITE);
+            }
+        }
 
         //浏览次数
         if ($viewCountGt !== '') {
@@ -282,7 +292,7 @@ class ManageThemeList extends DzqController
 
             if (!empty($replace)){
                 foreach ($replace as $val){
-                    $content[$v['threadId']]['content'] = str_replace($val,'<span class="highlight">' . $val . '</span>',$content[$v['threadId']]['content']);
+                    $pageData[$k]['content']['text'] = str_replace($val,'<span class="highlight">' . $val . '</span>',$pageData[$k]['content']['text']);
                 }
 //                $pageData[$k]['content']['text'] = isset($content[$v['threadId']]['content']) ? $content[$v['threadId']]['content'] : null;
             }

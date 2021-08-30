@@ -75,7 +75,6 @@ class ResourceAnalysisGoodsController extends DzqController
 
         $this->httpClient = new Client($config);
     }
-
     /**
      * {@inheritdoc}
      * @param ServerRequestInterface $request
@@ -96,6 +95,8 @@ class ResourceAnalysisGoodsController extends DzqController
         $this->dzqValidate($data, [
             'address'  => 'required_without:address|max:1500',
         ]);
+
+        $this->isValidUrl($readyContent);
 
         /**
          * 查询数据库中是否存在
@@ -257,6 +258,23 @@ class ResourceAnalysisGoodsController extends DzqController
         $goods->save();
 
         return $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($goods));
+    }
+
+    private function isValidUrl($readyContent)
+    {
+        if (filter_var($readyContent, FILTER_VALIDATE_URL)) {
+            $urlInfo = parse_url($readyContent);
+            $host = $urlInfo['host'];
+            $isMatch = false;
+            foreach ($this->allowDomain as $item) {
+                if (strstr($host, $item)) {
+                    $isMatch = true;
+                    break;
+                }
+            }
+            !$isMatch && $this->outPut(ResponseCode::INVALID_PARAMETER, trans('post.post_goods_fail_url'));
+        }
+        return;
     }
 
     private function checkGoodTitle(PostGoods $goods)

@@ -31,6 +31,7 @@ use App\Models\ThreadTag;
 use App\Models\ThreadTom;
 use App\Models\ThreadVote;
 use App\Models\ThreadVoteSubitem;
+use App\Models\ThreadVoteUser;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Notifications\Messages\Database\PostMessage;
@@ -348,6 +349,12 @@ class UpdateThreadController extends DzqController
                     if($res === false){
                         $this->getDB()->rollBack();
                         $this->outPut(ResponseCode::INTERNAL_ERROR,'删除原投票选项出错');
+                    }
+                    //这里还要将之前的投票记录删除掉
+                    $res = ThreadVoteUser::query()->where('thread_id', $threadId)->delete();
+                    if($res === false){
+                        $this->getDB()->rollBack();
+                        $this->outPut(ResponseCode::INTERNAL_ERROR,'删除原投票记录出错');
                     }
                     $this->getDB()->commit();
                     break;
