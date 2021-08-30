@@ -45,9 +45,10 @@ class QcloudSiteInfoDaily
      * @param Request $request
      * @param SettingsRepository $settings
      */
-    public function __construct(Request $request)
+    public function __construct(Request $request, SettingsRepository $settings)
     {
         $this->request = $request;
+        $this->settings = $settings;
     }
 
 
