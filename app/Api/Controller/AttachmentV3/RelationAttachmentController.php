@@ -27,6 +27,7 @@ use Discuz\Base\DzqController;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Illuminate\Http\UploadedFile;
+use App\Settings\SettingsRepository;
 
 class RelationAttachmentController extends DzqController
 {
@@ -38,6 +39,22 @@ class RelationAttachmentController extends DzqController
 
     protected $uploader;
 
+    public $settings;
+
+    const RATIO = 0.25;
+
+    public $positions = [
+        1 => 'top-left',
+        2 => 'top',
+        3 => 'top-right',
+        4 => 'left',
+        5 => 'center',
+        6 => 'right',
+        7 => 'bottom-left',
+        8 => 'bottom',
+        9 => 'bottom-right',
+    ];
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         $type = (int) $this->inPut('type'); //0 附件 1图片 2视频 3音频 4消息图片
@@ -45,11 +62,12 @@ class RelationAttachmentController extends DzqController
         return true;
     }
 
-    public function __construct(Censor $censor, ImageManager $image, AttachmentUploader $uploader)
+    public function __construct(Censor $censor, ImageManager $image, AttachmentUploader $uploader,SettingsRepository $settings)
     {
         $this->censor   = $censor;
         $this->image    = $image;
         $this->uploader = $uploader;
+        $this->settings = $settings;
     }
 
     public function main()
@@ -93,6 +111,35 @@ class RelationAttachmentController extends DzqController
             // 帖子图片自适应旋转
             if(strtolower($fileInfo['ext']) != 'gif' && extension_loaded('exif')) {
                 $this->image->make($tmpFileWithExt)->orientate()->save();
+            }
+            //添加水印
+            if( (bool) $this->settings->get('watermark', 'watermark')){
+                // 原图
+                $waterImage = $this->image->make($tmpFileWithExt);
+                // 自定义水印图
+                $watermarkImage = storage_path(
+                    'app/public/' . $this->settings->get('watermark_image', 'watermark')
+                );
+                // 默认水印图
+                if (! is_file($watermarkImage)) {
+                    $watermarkImage = resource_path('images/watermark.png');
+                }
+                if (is_file($watermarkImage)) {
+                    // 水印图按原图百分比缩放
+                    $watermarkImage = $this->image->make($watermarkImage)
+                        ->resize($waterImage->getWidth() * self::RATIO, $waterImage->getHeight() * self::RATIO, function ($constraint) {
+                            $constraint->aspectRatio();     // 保持纵横比
+                            $constraint->upsize();          // 避免文件变大
+                        });
+                    // 水印位置
+                    $position = (int) $this->settings->get('position', 'watermark', 1);
+                    // the watermark image on x-axis of the current image.
+                    $x = (int) $this->settings->get('horizontal_spacing', 'watermark');
+                    // the watermark image on y-axis of the current image.
+                    $y = (int) $this->settings->get('vertical_spacing', 'watermark');
+                    $waterImage->insert($watermarkImage, $this->positions[$position], $x, $y);
+                    $waterImage->save();
+                }
             }
 
             $this->uploader->put($data['type'], $blurImageFile, $fileInfo['attachmentName'], $fileInfo['filePath']);
