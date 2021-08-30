@@ -17,9 +17,7 @@
  *           @OA\Property(property="attachmentPrice",type="number",description="附件价格"),
  *           @OA\Property(property="draft",type="integer",enum={0,1}, description="是否草稿"),
  *           @OA\Property(property="anonymous",type="integer",enum={0,1}, description="是否匿名"),
- *           @OA\Property(property="content",type="object",description="帖子正文"),
- *
- *
+ *           @OA\Property(property="content",type="object",description="帖子正文")
  *        )
  *     ),
  *     @OA\Response(
