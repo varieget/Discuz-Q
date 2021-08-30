@@ -105,6 +105,4 @@ $route->post('/open.view.count', 'open.view.count', ApiController\SettingsV3\Ope
 
 // 表情列表
 $route->get('/emoji.list', 'emoji.list', ApiController\EmojiV3\ListAdminEmojiController::class);
-//一键开启/关闭帖子敏感数据
-$route->post('/thread.optimize', 'thread.optimize', ApiController\ThreadsV3\ThreadOptimizeController::class);
 
