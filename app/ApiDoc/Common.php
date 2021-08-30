@@ -183,12 +183,20 @@
  *    )
  *),
  * @OA\Schema(
- *     schema="local_plugin",
+ *     schema="local_plugin_output",
  *     title="本地帖子插件",
- *     description="帖子插件个性化的参数",
+ *     description="帖子插件个性化的出参",
  *     @OA\Property(property = "body", type = "array", description = "插件个性化数据",@OA\Items(type="object")),
  *     @OA\Property(property = "operation", type = "string", description = "操作类型"),
  *     @OA\Property(property = "threadId", type = "integer", description = "帖子id"),
+ *     @OA\Property(property = "tomId", type = "integer", description = "帖子插件id")
+ * )
+ * @OA\Schema(
+ *     schema="local_plugin_input",
+ *     title="本地帖子插件",
+ *     description="帖子插件个性化的入参",
+ *     @OA\Property(property = "body", type = "array", description = "插件个性化数据",@OA\Items(type="object")),
+ *     @OA\Property(property = "operation", type = "string", description = "操作类型"),
  *     @OA\Property(property = "tomId", type = "integer", description = "帖子插件id")
  * )
  * @OA\Schema(
@@ -281,14 +289,14 @@
  *     @OA\Property(property = "content", type = "object", description = "帖子正文内容",
  *        @OA\Property(property = "text", type = "string", description = "帖子正文内容"),
  *        @OA\Property(property = "indexes", type = "object", description = "是否可删除帖子",
- *        @OA\Property(property = "101", type = "object", description = "图片",ref="#/components/schemas/local_plugin"),
- *        @OA\Property(property = "102", type = "object", description = "语音",ref="#/components/schemas/local_plugin"),
- *        @OA\Property(property = "103", type = "string", description = "视频",ref="#/components/schemas/local_plugin"),
- *        @OA\Property(property = "104", type = "string", description = "商品",ref="#/components/schemas/local_plugin"),
- *        @OA\Property(property = "106", type = "string", description = "红包",ref="#/components/schemas/local_plugin"),
- *        @OA\Property(property = "107", type = "string", description = "悬赏",ref="#/components/schemas/local_plugin"),
- *        @OA\Property(property = "108", type = "string", description = "文件附件",ref="#/components/schemas/local_plugin"),
- *        @OA\Property(property = "109", type = "string", description = "投票",ref="#/components/schemas/local_plugin"),
+ *        @OA\Property(property = "101", type = "object", description = "图片",ref="#/components/schemas/local_plugin_output"),
+ *        @OA\Property(property = "102", type = "object", description = "语音",ref="#/components/schemas/local_plugin_output"),
+ *        @OA\Property(property = "103", type = "string", description = "视频",ref="#/components/schemas/local_plugin_output"),
+ *        @OA\Property(property = "104", type = "string", description = "商品",ref="#/components/schemas/local_plugin_output"),
+ *        @OA\Property(property = "106", type = "string", description = "红包",ref="#/components/schemas/local_plugin_output"),
+ *        @OA\Property(property = "107", type = "string", description = "悬赏",ref="#/components/schemas/local_plugin_output"),
+ *        @OA\Property(property = "108", type = "string", description = "文件附件",ref="#/components/schemas/local_plugin_output"),
+ *        @OA\Property(property = "109", type = "string", description = "投票",ref="#/components/schemas/local_plugin_output"),
  *      )))
  * )
  */

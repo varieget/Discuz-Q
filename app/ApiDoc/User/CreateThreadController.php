@@ -17,7 +17,19 @@
  *           @OA\Property(property="attachmentPrice",type="number",description="附件价格"),
  *           @OA\Property(property="draft",type="integer",enum={0,1}, description="是否草稿"),
  *           @OA\Property(property="anonymous",type="integer",enum={0,1}, description="是否匿名"),
- *           @OA\Property(property="content",type="object",description="帖子正文")
+ *           @OA\Property(property="content",type="object",description="帖子正文",
+ *              @OA\Property(property="text",type="string",description="正文内容"),
+ *              @OA\Property(property="indexes",type="object",description="帖子插件发帖结构",
+ *                  @OA\Property(property = "101", type = "object", description = "图片",ref="#/components/schemas/local_plugin_input"),
+ *                  @OA\Property(property = "102", type = "object", description = "语音",ref="#/components/schemas/local_plugin_input"),
+ *                  @OA\Property(property = "103", type = "string", description = "视频",ref="#/components/schemas/local_plugin_input"),
+ *                  @OA\Property(property = "104", type = "string", description = "商品",ref="#/components/schemas/local_plugin_input"),
+ *                  @OA\Property(property = "106", type = "string", description = "红包",ref="#/components/schemas/local_plugin_input"),
+ *                  @OA\Property(property = "107", type = "string", description = "悬赏",ref="#/components/schemas/local_plugin_input"),
+ *                  @OA\Property(property = "108", type = "string", description = "文件附件",ref="#/components/schemas/local_plugin_input"),
+ *                  @OA\Property(property = "109", type = "string", description = "投票",ref="#/components/schemas/local_plugin_input"),
+ *              )
+ *           )
  *        )
  *     ),
  *     @OA\Response(
