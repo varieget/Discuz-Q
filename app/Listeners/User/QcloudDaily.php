@@ -50,9 +50,10 @@ class QcloudDaily
      * @param Request $request
      * @param SettingsRepository $settings
      */
-    public function __construct(Request $request)
+    public function __construct(Request $request, SettingsRepository $settings)
     {
         $this->request = $request;
+        $this->settings = $settings;
     }
 
 
@@ -61,7 +62,7 @@ class QcloudDaily
         $tomorrow = date("Y-m-d",strtotime("+1 day"));
         $cache_time = strtotime($tomorrow) - time();
         $settings = Setting::query()->get()->pluck('value', 'key')->toArray();
-        $isset_daily = app('cache')->get($settings['site_id']);
+        $isset_daily = app('cache')->get('qcloud_daily_'.$settings['site_id']);
         if($isset_daily){
             return;
         }
@@ -86,11 +87,17 @@ class QcloudDaily
                 $uin = '';
             }
         }
+        $site_url = !empty($settings['site_url']) ? $settings['site_url'] : '';
+        if(empty($site_url)){
+            $site_url = $_SERVER['HTTP_HOST'];
+            $this->settings->set('site_url', $site_url, 'default');
+            $settings['site_url'] = $site_url;
+        }
         $json = [
             'site_id' => $settings['site_id'] ?? '',
             'site_name' =>  !empty($settings['site_name']) ? $settings['site_name'] : '',
             'site_uin'  =>  $uin,
-            'site_url'  =>  !empty($settings['site_url']) ? $settings['site_url'] : '',
+            'site_url'  =>  $settings['site_url'],
             'site_on'   =>  empty($settings['site_close']) ? 1 : 0,
             'qcloud_close'  =>  $settings['qcloud_close'] ?? 0,
             'qcloud_secret_id'  =>  $qcloudSecretId,
@@ -112,7 +119,10 @@ class QcloudDaily
         ];
         try {
             $this->qcloudDaily($json)->wait();
-            app('cache')->put($settings['site_id'] , 1, $cache_time);
+            // 下面进行缓存是为了方便后面的上报直接调用
+            app('cache')->put('qcloud_uin' , $uin, $cache_time);
+            app('cache')->put('qcloud_daily_'.$settings['site_id'] , 1, $cache_time);
+            app('cache')->put('settings_up', $settings, $cache_time);
         }catch (\Exception $e){
 
         }

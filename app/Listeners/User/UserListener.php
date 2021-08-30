@@ -41,6 +41,7 @@ class UserListener
         $events->listen(PayPasswordChanged::class, [$this, 'payPasswordChanged']);
 
         $events->listen(AdminLogind::class, QcloudDaily::class);
+        $events->listen(AdminLogind::class, QcloudSiteInfoDaily::class);
     }
 
     public function refreshFollowCount(UserFollowCreated $event)
