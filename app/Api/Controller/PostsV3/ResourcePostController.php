@@ -51,9 +51,6 @@ class ResourcePostController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if ($this->user->isGuest()) {
-            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
-        }
         $post = Post::find($this->inPut('pid'));
         if (!$post) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
