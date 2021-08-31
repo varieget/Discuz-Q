@@ -89,62 +89,53 @@ class ReplyPostMakeRedPacket
             $this->outDebugInfo('回复领红包：该帖不为首帖、第一条评论');
             return;
         }
-        // Start Transaction
-        $this->connection->beginTransaction();
-        try {
-            $redPacket = RedPacket::query() ->where([   'thread_id' => $post->thread_id,
-                'status' => RedPacket::RED_PACKET_STATUS_VALID,
-                'condition' => 0])
-                ->lockForUpdate()
-                ->first();
-            if (empty($redPacket) || empty($redPacket['remain_money']) || empty($redPacket['remain_number'])) {
-                $this->outDebugInfo('回复领红包：该红包帖无剩余金额和个数');
-                return;
-            }
 
-            //领取过红包的用户不再领取
-            $currentPostUser = Post::query()->where(['id' => $post->id])->first();
-            if (empty($currentPostUser)) {
-                $this->outDebugInfo('回复领红包：post_id为空');
-                return;
-            }
-            $thread = Thread::query()->where(['id' => $currentPostUser['thread_id']])->first();
-            if (empty($thread)) {
-                $this->outDebugInfo('回复领红包：thread_id为空');
-                return;
-            }
+        $redPacket = RedPacket::query() ->where([   'thread_id' => $post->thread_id,
+                                                    'status' => RedPacket::RED_PACKET_STATUS_VALID,
+                                                    'condition' => 0])
+                                        ->first();
+        if (empty($redPacket) || empty($redPacket['remain_money']) || empty($redPacket['remain_number'])) {
+            $this->outDebugInfo('回复领红包：该红包帖无剩余金额和个数');
+            return;
+        }
+
+        //领取过红包的用户不再领取
+        $currentPostUser = Post::query()->where(['id' => $post->id])->first();
+        if (empty($currentPostUser)) {
+            $this->outDebugInfo('回复领红包：post_id为空');
+            return;
+        }
+        $thread = Thread::query()->where(['id' => $currentPostUser['thread_id']])->first();
+        if (empty($thread)) {
+            $this->outDebugInfo('回复领红包：thread_id为空');
+            return;
+        }
 //        if ($thread['type'] == Thread::TYPE_OF_TEXT) {
 //            $change_type = UserWalletLog::TYPE_INCOME_TEXT;
 //        } else {
 //            $change_type = UserWalletLog::TYPE_INCOME_LONG;
 //        }
 
-            $redPacketTom = ThreadTom::query()->where('thread_id', $thread['id'])
-                ->where('tom_type', 106)
-                ->first();
-            if ($redPacketTom) {
-                $change_type = UserWalletLog::TYPE_REDPACKET_INCOME;
-            } else {
-                $change_type = 0;
-            }
-
-            $isReceive = UserWalletLog::query()->where([
-                'user_id' => $actor['id'],
-                'change_type' => $change_type,
-                'thread_id' => $thread['id']
-            ])->lockForUpdate()->first();
-            if (!empty($isReceive)) {
-                $this->outDebugInfo('回复领红包：该用户已经领取过红包了');
-                return;
-            }
-
-            $this->bus->dispatch(new ReceiveRedPacket($thread, $post, $redPacket, $event->post->thread->user, $actor));
-            $this->connection->commit();
-        } catch (Exception $e) {
-            $this->connection->rollback();
-            app('log')->info('红包ID:'.$threadRedPacket['id'].'领取异常:' . $e->getMessage());
-            throw $e;
+        $redPacketTom = ThreadTom::query()->where('thread_id', $thread['id'])
+            ->where('tom_type', 106)
+            ->first();
+        if ($redPacketTom) {
+            $change_type = UserWalletLog::TYPE_REDPACKET_INCOME;
+        } else {
+            $change_type = 0;
         }
+
+        $isReceive = UserWalletLog::query()->where([
+            'user_id' => $actor['id'],
+            'change_type' => $change_type,
+            'thread_id' => $thread['id']
+        ])->first();
+        if (!empty($isReceive)) {
+            $this->outDebugInfo('回复领红包：该用户已经领取过红包了');
+            return;
+        }
+
+        $this->bus->dispatch(new ReceiveRedPacket($thread, $post, $redPacket, $event->post->thread->user, $actor));
     }
 
     public function outDebugInfo($info)
