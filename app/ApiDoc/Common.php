@@ -1,5 +1,15 @@
 <?php
 /**
+ * https://editor.swagger.io/
+ * https://petstore.swagger.io/
+ * https://github.com/zircote/swagger-php
+ *
+ * https://zircote.github.io/swagger-php/Getting-started.html#installation
+ *
+ * https://packagist.org/packages/zircote/swagger-php
+ * https://hub.docker.com/r/swaggerapi/swagger-ui
+ * https://hub.docker.com/r/swaggerapi/swagger-editor
+ *
  * @OA\Server(url="https://discuz.chat",description="Discuz! Q 官方网站")
  * @OA\Server(url="https://www.techo.chat",description="Discuz! Q 体验站")
  *
