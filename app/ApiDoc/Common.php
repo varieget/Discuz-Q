@@ -95,7 +95,7 @@
  *     parameter="bear_token",
  *     name="Authorization",
  *     in="header",
- *     required=true,
+ *     required=false,
  *     description="Bearer Token",
  *     @OA\Schema(type="string")
  * )
