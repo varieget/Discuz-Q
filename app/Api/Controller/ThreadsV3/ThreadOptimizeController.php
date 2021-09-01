@@ -2,22 +2,17 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\ResponseCode;
-use App\Models\Setting;
 use App\Models\Thread;
+use App\Models\ThreadTom;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
-use Discuz\Contracts\Setting\SettingsRepository;
+use App\Modules\ThreadTom\TomConfig;
+use Illuminate\Support\Facades\DB;
+use MongoDB\Driver\Query;
 
 class ThreadOptimizeController extends DzqController
 {
-    protected $settings;
-
-    public function __construct(SettingsRepository $settings)
-    {
-        $this->settings = $settings;
-    }
-
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         return $this->user->isAdmin();
@@ -34,24 +29,7 @@ class ThreadOptimizeController extends DzqController
         }
         try {
             $db = $this->getDB();
-            $prefix = $db->getTablePrefix();
-            $thread = 'threads';
-            $threadTom = 'thread_tom';
-            if(!empty($prefix)){
-                $thread = $prefix."threads";
-                $threadTom = $prefix."thread_tom";
-            }
-            $db->update("update {$thread} set is_display = {$isDisplay} where id in(select thread_id from {$threadTom} where tom_type in(104,106,107)) or price > 0 or attachment_price > 0 or is_anonymous = 1");
-            $threadOptimize = Setting::query()->where('key','thread_optimize')->first();
-            if($threadOptimize){
-                $this->settings->set('thread_optimize', $isDisplay, 'default');
-            }else{
-                $th = new Setting();
-                $th->key = 'thread_optimize';
-                $th->value = $isDisplay;
-                $th->tag = 'default';
-                $th->save();
-            }
+            $db->update("update threads set is_display = $isDisplay where id in(select thread_id from thread_tom where tom_type in(104,106,107)) or price > 0 or attachment_price > 0 or is_anonymous = 1");
             DzqCache::clear();
             $this->outPut(ResponseCode::SUCCESS);
         } catch (\Exception $e) {
