@@ -42,6 +42,7 @@ class ThreadShareController extends DzqController
     {
         $this->thread = Thread::getOneActiveThread($this->inPut('threadId'));
         if (!$this->thread) {
+            $this->outPut(ResponseCode::RESOURCE_IS_REVIEW, '审核中的帖子不可分享');
             throw new NotFoundResourceException();
         }
 
