@@ -10,11 +10,6 @@
  * https://hub.docker.com/r/swaggerapi/swagger-ui
  * https://hub.docker.com/r/swaggerapi/swagger-editor
  *
- * $path = __DIR__.'/../app/ApiDoc';
- * $openapi = \OpenApi\Generator::scan([$path]);
- * header('Content-Type: application/json');
- * echo $openapi->toJson();exit;
- *
  * @OA\Server(url="https://discuz.chat",description="Discuz! Q 官方网站")
  * @OA\Server(url="https://www.techo.chat",description="Discuz! Q 体验站")
  *
