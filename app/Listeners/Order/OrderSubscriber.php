@@ -20,6 +20,7 @@ namespace App\Listeners\Order;
 
 use App\Events\Order\Updated;
 use App\Models\Order;
+use App\Models\SiteInfoDaily;
 use Carbon\Carbon;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Container\BindingResolutionException;
@@ -93,5 +94,24 @@ class OrderSubscriber
         ) {
             $order->thread->refreshPaidCount()->save();
         }
+
+        //更新 site_info_dailies 订单情况
+        $today = date("Y-m-d", time());
+        $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
+        if(empty($site_info_daily)){
+            $site_info_daily = new SiteInfoDaily();
+            $site_info_daily->date = $today;
+            $site_info_daily->orders_count = 0;
+            $site_info_daily->orders_money = 0;
+            $site_info_daily->order_royalty = 0;
+            $site_info_daily->total_register_profit = 0;
+        }
+        $site_info_daily->orders_count += 1;
+        $site_info_daily->orders_money += $order->amount;
+        $site_info_daily->order_royalty += $order->master_amount;
+        if($order->type == Order::ORDER_TYPE_REGISTER){
+            $site_info_daily->total_register_profit += $order->amount;
+        }
+        $site_info_daily->save();
     }
 }

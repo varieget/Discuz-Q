@@ -20,9 +20,12 @@ namespace App\Listeners\User;
 
 use App\Events\Users\AdminLogind;
 use App\Events\Users\ChangeUserStatus;
+use App\Events\Users\Forum;
 use App\Events\Users\PayPasswordChanged;
 use App\Events\Users\UserFollowCreated;
 use App\Models\SessionToken;
+use App\Models\Setting;
+use App\Models\SiteInfoDaily;
 use App\Notifications\Messages\Database\StatusMessage;
 use App\Notifications\System;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -42,6 +45,8 @@ class UserListener
 
         $events->listen(AdminLogind::class, QcloudDaily::class);
         $events->listen(AdminLogind::class, QcloudSiteInfoDaily::class);
+
+        $events->listen(Forum::class, [$this, 'activeUsersStatistics']);
     }
 
     public function refreshFollowCount(UserFollowCreated $event)
@@ -73,5 +78,61 @@ class UserListener
             ->where('scope', 'reset_pay_password')
             ->where('user_id', $event->user->id)
             ->delete();
+    }
+
+    public function activeUsersStatistics(Forum $event)
+    {
+        $active_users = app('cache')->get('active_users');
+        if(empty($active_users))    $active_users = [];
+        //如果没有 user_id，就不统计活跃用户
+        if($event->user->id && !in_array($event->user->id, $active_users)){
+            $tomorrow = date("Y-m-d",strtotime("+1 day"));
+            $cache_time = strtotime($tomorrow) - time();
+
+            $today = date("Y-m-d", time());
+            $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
+            if(empty($site_info_daily)){
+                $site_info_daily = new SiteInfoDaily();
+                $site_info_daily->date = $today;
+                $site_info_daily->mini_active_users = 0;
+                $site_info_daily->pc_active_users = 0;
+                $site_info_daily->h5_active_users = 0;
+                $site_info_daily->new_users = 0;
+            }
+            //根据header头判断来自哪个端
+            $user_agent = $event->request->getHeaderLine('User-Agent');
+            preg_match('/AppleWebKit.*Mobile.*/',$user_agent, $is_mobile);
+            //获取小程序appid
+            $miniprogram_app_id = Setting::query()->where('key','miniprogram_app_id')->value('value');
+            $referer = $event->request->getHeaderLine('Referer');
+            $is_mini = false;
+            if(!empty($miniprogram_app_id) && strpos($referer, 'https://servicewechat.com/'.$miniprogram_app_id) !== false){
+                $is_mini = true;
+            }
+            $flag = 'web';
+            if(!empty($is_mobile)){
+                $flag = 'h5';
+            }elseif (!empty($is_mini)){
+                $flag = 'mini';
+            }
+            switch ($flag){
+                case 'mini':
+                    $site_info_daily->mini_active_users += 1;
+                    break;
+                case 'h5':
+                    $site_info_daily->h5_active_users += 1;
+                    break;
+                default:
+                    $site_info_daily->pc_active_users += 1;
+                    break;
+            }
+            //判断改用户的 created_at 时间，如果是今天则表示新注册的用户
+            if($event->user->created_at < $tomorrow && $event->user->created_at > $today){
+                $site_info_daily->new_users += 1;
+            }
+            $site_info_daily->save();
+            array_push($active_users, $event->user->id);
+            app('cache')->put('active_users' , $active_users, $cache_time);
+        }
     }
 }
