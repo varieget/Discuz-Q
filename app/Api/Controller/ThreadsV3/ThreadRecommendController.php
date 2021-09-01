@@ -26,7 +26,7 @@ use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
-class ThreadCommendController extends DzqController
+class ThreadRecommendController extends DzqController
 {
     use ThreadTrait;
 
