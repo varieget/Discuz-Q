@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Permission;
@@ -28,6 +29,7 @@ use App\Models\ThreadUserStickRecord;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Carbon;
 
@@ -78,6 +80,9 @@ class ThreadUserStickController extends DzqController
                 $userStickAdd->setAttribute("stick_thread_id", $thread_id);
                 $userStickAdd->setAttribute("stick_status", ThreadUserStickRecord::status_yes);
                 $userStickAdd->save();
+
+                //清thread缓存
+                $this->clearThreadCach($thread_id);
             }
         }else{
             if ($status == ThreadUserStickRecord::status_no){
@@ -85,12 +90,19 @@ class ThreadUserStickController extends DzqController
                     return $this->outPut(ResponseCode::INVALID_PARAMETER, "取消置顶与当前置顶的不是同一个");
                 }else{
                     ThreadUserStickRecord::query()->where("stick_user_id",'=', $user->id)->delete();
+                    //清thread缓存
+                    $this->clearThreadCach($thread_id);
                 }
             }else{
-                ThreadUserStickRecord::query()->where("stick_user_id",'=', $user->id)
-                    ->update(['stick_thread_id'=>$thread_id,
-                        'stick_status'=>ThreadUserStickRecord::status_yes,
-                        'updated_at'=>Carbon::now()]);
+                if ($thread_id != $userStick->stick_thread_id) {
+                    ThreadUserStickRecord::query()->where("stick_user_id", '=', $user->id)
+                        ->update(['stick_thread_id' => $thread_id,
+                            'stick_status' => ThreadUserStickRecord::status_yes,
+                            'updated_at' => Carbon::now()]);
+                    //清thread缓存
+                    $this->clearThreadCach($thread_id);
+                    $this->clearThreadCach($userStick->stick_thread_id);
+                }
             }
         }
 
@@ -100,5 +112,9 @@ class ThreadUserStickController extends DzqController
         ];
 
         $this->outPut(ResponseCode::SUCCESS,$status==0?'取消置顶成功':"置顶成功", $data);
+    }
+
+    private function clearThreadCach($threadId){
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
     }
 }
