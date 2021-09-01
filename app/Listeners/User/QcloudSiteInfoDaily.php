@@ -20,6 +20,7 @@ namespace App\Listeners\User;
 
 use App\Models\Order;
 use App\Models\Post;
+use App\Models\SiteInfoDaily;
 use App\Models\Thread;
 use App\Models\User;
 use App\Models\UserWalletCash;
@@ -91,6 +92,8 @@ class QcloudSiteInfoDaily
             if(!empty($oac))        $install_type = 'oac';
             if(!empty($market))     $install_type = 'market';
         }
+        //获取site_info_dailies 中 is_upload 为 0 的数据
+        $site_info_dailies = SiteInfoDaily::query()->where('is_upload', 0)->get()->toArray();
         $json = [
             'site_id' => $settings['site_id'] ?? '',
             'site_secret' => !empty($settings['site_secret']) ? $settings['site_secret'] : '',
@@ -116,10 +119,12 @@ class QcloudSiteInfoDaily
             'total_profit' =>  $total_profit,
             'total_user_count'  =>  User::query()->count(),
             'total_thread_count'    =>  Thread::query()->count(),
-            'total_post_count'  =>  Post::query()->count()
+            'total_post_count'  =>  Post::query()->count(),
+            'site_info_dailies'    =>  $site_info_dailies
         ];
         try {
             $this->siteInfoDaily($json)->wait();
+            SiteInfoDaily::query()->whereIn('id', array_column($site_info_dailies, 'id'))->update(['is_upload' => 1]);
             app('cache')->put('qcloud_site_info_daily_'.$settings['site_id'] , 1, $cache_time);
         }catch (\Exception $e){
 

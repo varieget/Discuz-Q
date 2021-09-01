@@ -28,6 +28,8 @@ use App\Formatter\Formatter;
 use App\Models\Attachment;
 use App\Models\GroupUser;
 use App\Models\Post;
+use App\Models\Setting;
+use App\Models\SiteInfoDaily;
 use App\Models\Thread;
 use App\Models\User;
 use App\Models\UserWalletLog;
@@ -178,6 +180,7 @@ class CreatePostController extends DzqController
         $post = $this->bus->dispatch(
             new CreatePost($threadId, $actor, $requestData, $ip, $port)
         );
+        $this->IncreasePosts($post);
         $build = $this->getPost($post, true);
         $data = $this->camelData($build);
         // 返回content要解析后的，方便前端直接展示最新的数据
@@ -299,5 +302,50 @@ class CreatePostController extends DzqController
             'groupName' => $group['groups']['name'],
             'isDisplay' => $group['groups']['is_display']
         ];
+    }
+
+    public function IncreasePosts($post){
+        // 增加 posts 数量
+        if($post->is_first != Post::FIRST_YES){
+            $today = date("Y-m-d", time());
+            $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
+            if(empty($site_info_daily)){
+                $site_info_daily = new SiteInfoDaily();
+                $site_info_daily->date = $today;
+                $site_info_daily->mini_posts = 0;
+                $site_info_daily->pc_posts = 0;
+                $site_info_daily->h5_posts = 0;
+                $site_info_daily->posts_sum = Post::query()->where('is_first', Post::FIRST_NO )->whereNotNull('deleted_at')->count();
+            }
+            //根据header头判断来自哪个端
+            $user_agent = $this->request->getHeaderLine('User-Agent');
+            preg_match('/AppleWebKit.*Mobile.*/',$user_agent, $is_mobile);
+            //获取小程序appid
+            $miniprogram_app_id = Setting::query()->where('key','miniprogram_app_id')->value('value');
+            $referer = $this->request->getHeaderLine('Referer');
+            $is_mini = false;
+            if(!empty($miniprogram_app_id) && strpos($referer, 'https://servicewechat.com/'.$miniprogram_app_id) !== false){
+                $is_mini = true;
+            }
+            $flag = 'web';
+            if(!empty($is_mobile)){
+                $flag = 'h5';
+            }elseif (!empty($is_mini)){
+                $flag = 'mini';
+            }
+            switch ($flag){
+                case 'mini':
+                    $site_info_daily->mini_posts += 1;
+                    break;
+                case 'h5':
+                    $site_info_daily->h5_posts += 1;
+                    break;
+                default:
+                    $site_info_daily->pc_posts += 1;
+                    break;
+            }
+            $site_info_daily->posts_sum += 1;
+            $site_info_daily->save();
+        }
     }
 }
