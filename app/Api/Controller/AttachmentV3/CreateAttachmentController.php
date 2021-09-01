@@ -157,7 +157,13 @@ class CreateAttachmentController extends DzqController
                 $url_content = $this->http_get_data($fileUrl);
                 $fileName = basename($fileUrl);
                 $file_basename = explode('.', $fileName);
-                $ext = $file_basename[1] ?? '';
+                $file_ext = $file_basename[1];
+                //判断file_ext 后面是否跟了 “？” ，需要做特殊判断
+                if(strpos($file_ext, '?') !== false){
+                    $file_ext = substr($file_ext, 0, strpos($file_ext, '?'));
+                    $fileName = $file_basename[0].'.'.$file_ext;
+                }
+                $ext = $file_ext ?? '';
                 $tmp_file_path = storage_path('tmp').'/'.$file_basename[0].'_'.uniqid().'.'.$ext;
                 while (file_exists($tmp_file_path)){
                     $tmp_file_path = storage_path('tmp').'/'.$file_basename[0].'_'.uniqid().'.'.$ext;
