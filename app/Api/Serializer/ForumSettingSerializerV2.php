@@ -252,7 +252,8 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'create_thread_with_captcha' => $this->userRepo->canCreateThreadWithCaptcha($actor),      // 发布内容需要验证码
                 'publish_need_bind_phone'    => $this->userRepo->canCreateThreadNeedBindPhone($actor),    // 发布内容需要绑定手机
                 'publish_need_bind_wechat'    => $this->userRepo->canCreateThreadNeedBindWechat($actor),    // 发布内容需要绑定微信
-                'disabledChat'               =>  $disabledChat
+                'disabledChat'               =>  $disabledChat,
+                'thread_optimize' => (bool) $this->settings->get('thread_optimize', 'default'),   // 小程序一键开启和关闭状态
             ],
 
             'lbs' => [
