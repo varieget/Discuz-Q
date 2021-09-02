@@ -82,7 +82,7 @@ class ThreadUserStickController extends DzqController
                 $userStickAdd->save();
 
                 //清thread缓存
-                $this->clearThreadCach($thread_id);
+                $this->clearThreadV3ComplexCach();
             }
         }else{
             if ($status == ThreadUserStickRecord::status_no){
@@ -91,7 +91,7 @@ class ThreadUserStickController extends DzqController
                 }else{
                     ThreadUserStickRecord::query()->where("stick_user_id",'=', $user->id)->delete();
                     //清thread缓存
-                    $this->clearThreadCach($thread_id);
+                    $this->clearThreadV3ComplexCach();
                 }
             }else{
                 if ($thread_id != $userStick->stick_thread_id) {
@@ -100,8 +100,7 @@ class ThreadUserStickController extends DzqController
                             'stick_status' => ThreadUserStickRecord::status_yes,
                             'updated_at' => Carbon::now()]);
                     //清thread缓存
-                    $this->clearThreadCach($thread_id);
-                    $this->clearThreadCach($userStick->stick_thread_id);
+                    $this->clearThreadV3ComplexCach();
                 }
             }
         }
@@ -114,7 +113,7 @@ class ThreadUserStickController extends DzqController
         $this->outPut(ResponseCode::SUCCESS,$status==0?'取消置顶成功':"置顶成功", $data);
     }
 
-    private function clearThreadCach($threadId){
+    private function clearThreadV3ComplexCach(){
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
     }
 }
