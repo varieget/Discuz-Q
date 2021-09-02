@@ -56,6 +56,7 @@ class QcloudSiteInfoDaily
     public function handle()
     {
         $tomorrow = date("Y-m-d",strtotime("+1 day"));
+        $today = date('Y-m-d',time());
         $cache_time = strtotime($tomorrow) - time();
         $uin = app('cache')->get('qcloud_uin');
         $settings = app('cache')->get('settings_up');
@@ -93,7 +94,7 @@ class QcloudSiteInfoDaily
             if(!empty($market))     $install_type = 'market';
         }
         //获取site_info_dailies 中 is_upload 为 0 的数据
-        $site_info_dailies = SiteInfoDaily::query()->where('is_upload', 0)->get()->toArray();
+        $site_info_dailies = SiteInfoDaily::query()->where('is_upload', 0)->where('date','<', $today)->get()->toArray();
         $json = [
             'site_id' => $settings['site_id'] ?? '',
             'site_secret' => !empty($settings['site_secret']) ? $settings['site_secret'] : '',
