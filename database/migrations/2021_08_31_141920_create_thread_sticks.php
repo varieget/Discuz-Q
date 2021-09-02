@@ -20,7 +20,7 @@ use Discuz\Database\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Query\Expression;
 
-class CreateThreadUserStickRecords extends Migration
+class CreateThreadSticks extends Migration
 {
     /**
      * Run the migrations.
@@ -29,7 +29,7 @@ class CreateThreadUserStickRecords extends Migration
      */
     public function up()
     {
-        $this->schema()->create('thread_user_stick_records', function (Blueprint $table) {
+        $this->schema()->create('thread_sticks', function (Blueprint $table) {
             $table->unsignedBigInteger('stick_id', true)->comment('自增id');
             $table->unsignedBigInteger('stick_user_id');
             $table->unsignedBigInteger('stick_thread_id');
@@ -47,6 +47,6 @@ class CreateThreadUserStickRecords extends Migration
      */
     public function down()
     {
-        $this->schema()->dropIfExists('thread_user_stick_records');
+        $this->schema()->dropIfExists('thread_sticks');
     }
 }

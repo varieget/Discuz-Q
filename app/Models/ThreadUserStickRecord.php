@@ -35,7 +35,7 @@ use Discuz\Base\DzqModel;
  */
 class ThreadUserStickRecord extends DzqModel
 {
-    protected $table = 'thread_user_stick_records';
+    protected $table = 'thread_sticks';
 
     const status_no = 0;
     const status_yes = 1;
