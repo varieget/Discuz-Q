@@ -174,7 +174,7 @@ $route->post('/users/deny.delete', 'user.delete.deny', ApiController\UsersV3\Del
 $route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);
 $route->get('/threads.paid', 'threads.paid', ApiController\UsersV3\ListPaidThreadsController::class);
 
-$route->get('/user/thread/stick','user.thread.stick',ApiController\ThreadsV3\ThreadUserStickController::class);
+$route->post('/user/thread/stick','user.thread.stick',ApiController\ThreadsV3\ThreadUserStickController::class);
 
 //待使用接口
 $route->post('/reports', 'reports.create', ApiController\ReportV3\CreateReportsController::class);
