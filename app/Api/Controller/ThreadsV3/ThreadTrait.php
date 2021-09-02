@@ -22,6 +22,7 @@ use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
+use App\Models\ThreadVideo;
 use App\Traits\PostNoticesTrait;
 use Discuz\Base\DzqCache;
 use App\Models\Category;
@@ -378,6 +379,32 @@ trait ThreadTrait
                     }
                 }
             }
+
+            if (!empty($body) || strpos($content['text'], '<iframe') !== false && $this->canViewThreadVideo($loginUser, $thread)) {
+                if(strpos($xml, 'videoId') !== false){
+                    preg_match_all('/videoId-(\d+)/', $xml, $videoIds_all);
+                }
+                $videoData = [];
+                if(!empty($videoIds_all[1])) {
+                    $content_videos = ThreadVideo::query()->whereIn('id', $videoIds_all[1])->get();
+                    if (!empty($content_videos)) {
+                        $content_videos->map(function ($item) use(&$videoData) {
+                            $mediaUrl = explode("?", $item['media_url']);
+                            $item->media_url = $mediaUrl[0];
+                            $videoData[$item->id] = $item->getMediaUrl($item);
+                        });
+                    }
+                }
+
+                if(!empty($videoData)) {
+                    foreach ($videoData as $key => $value) {
+                        $oldIframe = 'iframe src="" alt="videoId-' . $key . '"';
+                        $newIframe = 'iframe src="' . $value . '" alt="videoId-'. $key .'" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"';
+                        $xml = str_replace($oldIframe, $newIframe, $xml);
+                    }
+                }
+            }
+
             if (!empty($body) || strpos($content['text'], '<img') !== false) {
                 $attachments_body = $body;
                 $attachments = [];
@@ -400,8 +427,20 @@ trait ThreadTrait
                         }
                     }
                 }
+
                 if(!empty($attachments)){
-                    $xml = preg_replace_callback(
+                    preg_match_all('/<img.*?alt=[\"|\']?(.*?)[\"|\']?\s.*?>/i', $xml, $imagesSrc);
+                    if (!empty($imagesSrc[1])) {
+                        foreach ($imagesSrc[1] as $key => $value) {
+                            $id = substr($value,strrpos($value,'-') + 1);
+                            if (isset($attachments[$id])) {
+                                $newImageSrc = '<img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '" />';
+                                $xml = str_replace($imagesSrc[0][$key], $newImageSrc, $xml);
+                            }
+                        }
+                    }
+
+                    /* $xml = preg_replace_callback(
                         '<img src="(.*)" alt="attachmentId-(\d+)" />',
                         function ($m) use ($attachments) {
                             $id = trim($m[2], '"');
@@ -412,7 +451,7 @@ trait ThreadTrait
                             }
                         },
                         $xml
-                    );
+                    ); */
 
                     $xml_attachments = $xml_attachments_ids = [];
                     $serializer = $this->app->make(AttachmentSerializer::class);
@@ -422,24 +461,24 @@ trait ThreadTrait
                         $xml_attachments = $x_attachments->keyBy('id');
                         $xml_attachments_ids = $xml_attachments->pluck('id')->all();
                     }
-                    $xml = preg_replace_callback(
-                        '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
-                        function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
-                            if (!empty($m)) {
-                                $id = trim($m[3], '"');
-                                $isset_attachment_ids[] = $id;
-                                $replace_url = $attachments[$id];
-                                if(!$canViewTom && in_array($id, $xml_attachments_ids)){
-                                    $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
+                    if (!empty($xml_attachments_ids)) {
+                        $xml = preg_replace_callback(
+                            '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
+                            function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
+                                if (!empty($m)) {
+                                    $id = trim($m[3], '"');
+                                    $isset_attachment_ids[] = $id;
+                                    $replace_url = $attachments[$id];
+                                    if(!$canViewTom && in_array($id, $xml_attachments_ids)){
+                                        $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
+                                    }
+                                    return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
                                 }
-                                return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
-                            }
-                        },
-                        $xml
-                    );
+                            },
+                            $xml
+                        );
+                    }
                 }
-
-
 
                 //针对图文混排的情况，这里要去掉外部图片展示
 //                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
@@ -451,7 +490,6 @@ trait ThreadTrait
                 }
             }
         }
-
 
         return $content;
     }

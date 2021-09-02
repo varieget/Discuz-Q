@@ -33,18 +33,20 @@ trait VideoCloudTrait
 {
     protected $url = 'vod.tencentcloudapi.com';
 
-    private function videoUpload($userId,$threadId,$mediaUrl,$setting){
+    private function videoUpload($userId,$threadId,$mediaUrl,$setting,$ext = ''){
         $log = app('log');
         if(empty($mediaUrl) || empty($userId) || empty($threadId) || empty($setting)){
             $log->info('视频上传参数不能为空');
             return false;
         }
-        if (strpos($mediaUrl, '?') !== false) {
-            $media = explode("?",$mediaUrl);
-            $media = $media[0];
-            $ext = substr($media,strrpos($media,'.')+1);
-        } else {
-            $ext = substr($mediaUrl,strrpos($mediaUrl,'.')+1);
+        if (empty($ext)) {
+            if (strpos($mediaUrl, '?') !== false) {
+                $media = explode("?",$mediaUrl);
+                $media = $media[0];
+                $ext = substr($media,strrpos($media,'.')+1);
+            } else {
+                $ext = substr($mediaUrl,strrpos($mediaUrl,'.')+1);
+            }
         }
 
         $localFlie = Str::random(40).".".$ext;

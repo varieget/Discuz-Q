@@ -30,6 +30,7 @@ use App\Console\Commands\ThreadRewardExpireCommand;
 use App\Console\Commands\RedPacketExpireCommand;
 use App\Console\Commands\TranscodeVideoCommand;
 use App\Console\Commands\CreateCrawlerDataCommand;
+use App\Console\Commands\CreateCrawlerOfficialAccountDataCommand;
 use App\Console\Commands\MonitorSystemTaskCommand;
 use Discuz\Console\Kernel as ConsoleKernel;
 use Illuminate\Console\Scheduling\Schedule;
@@ -49,7 +50,8 @@ class Kernel extends ConsoleKernel
         TranscodeVideoCommand::class,
         AttachmentAttributeUpdateCommand::class,
         CreateCrawlerDataCommand::class,
-        MonitorSystemTaskCommand::class
+        MonitorSystemTaskCommand::class,
+        CreateCrawlerOfficialAccountDataCommand::class
     ];
 
     /**
@@ -75,7 +77,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('clear:question')->daily();
         $schedule->command('clear:thread_draft')->daily();
         $schedule->command('clear:session_token')->everyMinute();
-        $schedule->command('crawlerdata:create')->everyMinute();
+        $schedule->command('crawlerData:create')->everyMinute();
+        $schedule->command('crawlerOfficialAccountData:create')->everyMinute();
 
         //监听定时任务
         $schedule->command('task:start')->everyMinute();
