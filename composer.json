@@ -13,16 +13,17 @@
 		"ext-json": "*",
 		"ext-pdo": "*",
 		"discuz/core": "dev-master",
+		"doctrine/dbal": "^2.12.0",
 		"endroid/qr-code": "^3.6",
 		"ezyang/htmlpurifier": "^4.12",
 		"league/omnipay": "^3.0",
 		"lokielse/omnipay-wechatpay": "^3.0",
 		"overtrue/wechat": "~4.0",
+		"qcloud/vod-sdk-v5": "^2.0",
+		"qcloud_sts/qcloud-sts-sdk": "^3.0",
 		"s9e/text-formatter": "^2.3",
-        "doctrine/dbal": "^2.12.0",
-        "qcloud/vod-sdk-v5": "^2.0",
-        "qcloud_sts/qcloud-sts-sdk": "^3.0"
-    },
+		"zircote/swagger-php": "^3.2"
+	},
 	"config" : {
 		"optimize-autoloader" : true,
 		"preferred-install" : "dist",
