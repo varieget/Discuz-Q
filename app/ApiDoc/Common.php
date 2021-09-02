@@ -296,18 +296,10 @@
  *        @OA\Property(property = "canStick", type = "boolean", description = "是否可设置置顶"),
  *        @OA\Property(property = "canViewPost", type = "boolean", description = "是否可查看详情"),
  *     ),
- *     @OA\Property(property = "content", type = "object", description = "帖子正文内容",
- *        @OA\Property(property = "text", type = "string", description = "帖子正文内容"),
- *        @OA\Property(property = "indexes", type = "object", description = "插件集合",
- *        @OA\Property(property = "101", type = "object", description = "图片",ref="#/components/schemas/local_plugin_output"),
- *        @OA\Property(property = "102", type = "object", description = "语音",ref="#/components/schemas/local_plugin_output"),
- *        @OA\Property(property = "103", type = "string", description = "视频",ref="#/components/schemas/local_plugin_output"),
- *        @OA\Property(property = "104", type = "string", description = "商品",ref="#/components/schemas/local_plugin_output"),
- *        @OA\Property(property = "106", type = "string", description = "红包",ref="#/components/schemas/local_plugin_output"),
- *        @OA\Property(property = "107", type = "string", description = "悬赏",ref="#/components/schemas/local_plugin_output"),
- *        @OA\Property(property = "108", type = "string", description = "文件附件",ref="#/components/schemas/local_plugin_output"),
- *        @OA\Property(property = "109", type = "string", description = "投票",ref="#/components/schemas/local_plugin_output"),
- *      )))
+ *     @OA\Property(property = "content", type = "object", description = "帖子正文内容",allOf={
+ *         @OA\Schema(@OA\Property(property = "text", type = "string", description = "帖子正文内容")),
+ *         @OA\Schema(ref="#/components/schemas/thread_indexes_input")
+ *     })
  * )
  * @OA\Schema(
  *     schema="thread_indexes_input",
