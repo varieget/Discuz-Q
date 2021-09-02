@@ -194,7 +194,7 @@
  *),
  * @OA\Schema(
  *     schema="local_plugin_output",
- *     title="本地帖子插件",
+ *     title="主题插件输出参数",
  *     description="帖子插件个性化的出参",
  *     @OA\Property(property = "body", type = "array", description = "插件个性化数据",@OA\Items(type="object")),
  *     @OA\Property(property = "operation", type = "string", description = "操作类型"),
@@ -203,7 +203,7 @@
  * )
  * @OA\Schema(
  *     schema="local_plugin_input",
- *     title="本地帖子插件",
+ *     title="主题插件输入参数",
  *     description="帖子插件个性化的入参",
  *     @OA\Property(property = "body", type = "array", description = "插件个性化数据",@OA\Items(type="object")),
  *     @OA\Property(property = "operation", type = "string", description = "操作类型"),
@@ -211,7 +211,7 @@
  * )
  * @OA\Schema(
  *     schema="dzq_thread_item",
- *     title="全局的帖子详情",
+ *     title="主题详情集合",
  *     @OA\Property(property = "pageData", type = "array",@OA\Items(type = "object",ref="#/components/schemas/dzq_thread"))
  *
  * )
@@ -219,7 +219,7 @@
  *
  * @OA\Schema(
  *     schema="dzq_thread",
- *     title="全局的帖子详情",
+ *     title="单个主题详情",
  *     @OA\Property(property = "threadId", type = "integer", description = "帖子id"),
  *     @OA\Property(property = "postId", type = "integer", description = "正文id"),
  *     @OA\Property(property = "userId", type = "integer", description = "用户id"),
@@ -303,7 +303,7 @@
  * )
  * @OA\Schema(
  *     schema="thread_indexes_input",
- *     title="主题内含基础插件信息",
+ *     title="主题内含基础插件信息输入参数",
  *     @OA\Property(property="indexes",type="object",description="插件数据集合",
  *        @OA\Property(property = "101", type = "object", description = "图片",ref="#/components/schemas/local_plugin_input"),
  *        @OA\Property(property = "102", type = "object", description = "语音",ref="#/components/schemas/local_plugin_input"),
@@ -317,7 +317,7 @@
  * )
  * @OA\Schema(
  *     schema="thread_indexes_output",
- *     title="主题内含基础插件信息",
+ *     title="主题内含基础插件信息输出参数",
  *     @OA\Property(property="indexes",type="object",description="插件数据集合",
  *        @OA\Property(property = "101", type = "object", description = "图片",ref="#/components/schemas/local_plugin_output"),
  *        @OA\Property(property = "102", type = "object", description = "语音",ref="#/components/schemas/local_plugin_output"),
