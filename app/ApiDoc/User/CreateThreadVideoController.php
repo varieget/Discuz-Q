@@ -32,7 +32,7 @@
  *               @OA\Property(property="status",type="integer",enum={0,1,2}, description="0:转码中 1:转码完成 2:转码失败"),
  *               @OA\Property(property="threadId",type="integer",description="主题id"),
  *               @OA\Property(property="type",type="integer",enum={0,1},description="0:视频 1:音频"),
- *               @OA\Property(property="updatedAt",type="string",description="更新时间"),
+ *               @OA\Property(property="updatedAt",type="string",format="datetime", description="更新时间"),
  *               @OA\Property(property="userId",type="integer",description="视频发布人的用户id")
  *            ))
  *        })
