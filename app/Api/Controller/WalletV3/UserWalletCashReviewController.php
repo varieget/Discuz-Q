@@ -20,6 +20,7 @@ namespace App\Api\Controller\WalletV3;
 
 use App\Common\ResponseCode;
 use App\Events\Wallet\Cash;
+use App\Models\SiteInfoDaily;
 use App\Models\UserWallet;
 use App\Models\UserWalletCash;
 use App\Models\UserWalletLog;
@@ -177,6 +178,7 @@ class UserWalletCashReviewController extends DzqController
                             new Cash($cash_record, $ip, GatewayConfig::WECAHT_TRANSFER)
                         );
                         $db->commit();
+                        $this->IncreaseWithdrawalProfit($cash_record->cash_charge);
                         $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                         return $status_result[$id] = 'success';
                     }catch (\Exception $e){
@@ -223,6 +225,7 @@ class UserWalletCashReviewController extends DzqController
                             return $this->outPut(ResponseCode::INTERNAL_ERROR, '提现审核失败！');
                         }
                         $db->commit();
+                        $this->IncreaseWithdrawalProfit($cash_record->cash_charge);
                         $log->info("requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                         return $status_result[$id] = 'success';
                     }catch (\Exception $e){
@@ -234,5 +237,19 @@ class UserWalletCashReviewController extends DzqController
             });
 
         return $this->outPut(ResponseCode::SUCCESS, '', $status_result);
+    }
+
+
+    //提现审核成功，增加 site_info_dailies 中 withdrawal_profit
+    public function IncreaseWithdrawalProfit($cash_charge){
+        $today = date("Y-m-d", time());
+        $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
+        if(empty($site_info_daily)){
+            $site_info_daily = new SiteInfoDaily();
+            $site_info_daily->date = $today;
+            $site_info_daily->withdrawal_profit = 0;
+        }
+        $site_info_daily->withdrawal_profit += $cash_charge;
+        $site_info_daily->save();
     }
 }
