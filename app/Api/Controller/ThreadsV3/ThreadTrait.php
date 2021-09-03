@@ -383,113 +383,11 @@ trait ThreadTrait
             }
 
             if (!empty($body) || strpos($content['text'], '<iframe') !== false && $this->canViewThreadVideo($loginUser, $thread)) {
-                if(strpos($xml, 'videoId') !== false){
-                    preg_match_all('/videoId-(\d+)/', $xml, $videoIds_all);
-                }
-                $videoData = [];
-                if(!empty($videoIds_all[1])) {
-                    $content_videos = ThreadVideo::query()->whereIn('id', $videoIds_all[1])->get();
-                    if (!empty($content_videos)) {
-                        $content_videos->map(function ($item) use(&$videoData) {
-                            $mediaUrl = explode("?", $item['media_url']);
-                            $item->media_url = $mediaUrl[0];
-                            $videoData[$item->id] = $item->getMediaUrl($item);
-                        });
-                    }
-                }
-
-                if(!empty($videoData)) {
-                    foreach ($videoData as $key => $value) {
-                        $oldIframe = 'iframe src="" alt="videoId-' . $key . '"';
-                        $newIframe = 'iframe src="' . $value . '" alt="videoId-'. $key .'" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"';
-                        $xml = str_replace($oldIframe, $newIframe, $xml);
-                    }
-                }
+                $content['text'] = $this->changeContentIframeSrc($xml);
             }
 
             if (!empty($body) || strpos($content['text'], '<img') !== false) {
-                $attachments_body = $body;
-                $attachments = [];
-                if(!empty($body)){
-                    $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
-                }
-                $isset_attachment_ids = [];
-                //这里增加 前端拖拽图片的图文混排的形式
-                if(strpos($xml, 'attachmentId') !== false){
-                    preg_match_all('/attachmentId-(\d+)/', $xml, $attachmentIds_all);
-                }
-                if(!empty($attachmentIds_all[1])){
-                    $content_attachments = Attachment::query()->whereIn('id', $attachmentIds_all[1])->get();
-                    if(!empty($content_attachments)){
-                        $serializer = $this->app->make(AttachmentSerializer::class);
-                        foreach ($content_attachments as $val){
-                            if($val->is_remote){
-                                $attachments[$val->id] = $serializer->getImgUrl($val);
-                            }
-                        }
-                    }
-                }
-
-                if(!empty($attachments)){
-                    preg_match_all('/<img.*?alt=[\"|\']?(.*?)[\"|\']?\s.*?>/i', $xml, $imagesSrc);
-                    if (!empty($imagesSrc[1])) {
-                        foreach ($imagesSrc[1] as $key => $value) {
-                            $id = substr($value,strrpos($value,'-') + 1);
-                            if (isset($attachments[$id])) {
-                                $newImageSrc = '<img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '" />';
-                                $xml = str_replace($imagesSrc[0][$key], $newImageSrc, $xml);
-                            }
-                        }
-                    }
-
-                    /* $xml = preg_replace_callback(
-                        '<img src="(.*)" alt="attachmentId-(\d+)" />',
-                        function ($m) use ($attachments) {
-                            $id = trim($m[2], '"');
-                            if (!empty($m) && in_array($id, array_keys($attachments))) {
-                                return 'img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '"';
-                            }else{
-                                return 'img src="' . $m[1] . '" alt="attachmentId-' . $id . '"';
-                            }
-                        },
-                        $xml
-                    ); */
-
-                    $xml_attachments = $xml_attachments_ids = [];
-                    $serializer = $this->app->make(AttachmentSerializer::class);
-                    if(!$canViewTom && !empty($attachments_body)){       //如果没有权限查看的，则图文混排中的图片还是取清晰的
-                        $attachments_ids = array_column($attachments_body, 'id');
-                        $x_attachments = Attachment::query()->whereIn('id', $attachments_ids)->get();
-                        $xml_attachments = $x_attachments->keyBy('id');
-                        $xml_attachments_ids = $xml_attachments->pluck('id')->all();
-                    }
-                    if (!empty($xml_attachments_ids)) {
-                        $xml = preg_replace_callback(
-                            '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
-                            function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
-                                if (!empty($m)) {
-                                    $id = trim($m[3], '"');
-                                    $isset_attachment_ids[] = $id;
-                                    $replace_url = $attachments[$id];
-                                    if(!$canViewTom && in_array($id, $xml_attachments_ids)){
-                                        $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
-                                    }
-                                    return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
-                                }
-                            },
-                            $xml
-                        );
-                    }
-                }
-
-                //针对图文混排的情况，这里要去掉外部图片展示
-//                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
-                $content['text'] = $xml;
-                if(!empty($isset_attachment_ids) && isset($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
-                    foreach ($content['indexes'][TomConfig::TOM_IMAGE]['body'] as $k => $v){
-                        if(in_array($v['id'], $isset_attachment_ids))       unset($content['indexes'][TomConfig::TOM_IMAGE]['body'][$k]);
-                    }
-                }
+                $content = $this->changeContentImgSrc($content, $body, $canViewTom);
             }
         }
 
@@ -782,6 +680,121 @@ trait ThreadTrait
             foreach ($content['indexes'] as $key => &$val) {
                 $key == TomConfig::TOM_VIDEO && $val['body']['mediaUrl'] = '';
 
+            }
+        }
+        return $content;
+    }
+
+    private function changeContentIframeSrc($content)
+    {
+        if(strpos($content, 'videoId') !== false){
+            preg_match_all('/videoId-(\d+)/', $content, $videoIds_all);
+        }
+        $videoData = [];
+        if(!empty($videoIds_all[1])) {
+            $content_videos = ThreadVideo::query()->whereIn('id', $videoIds_all[1])->get();
+            if (!empty($content_videos)) {
+                $content_videos->map(function ($item) use(&$videoData) {
+                    $mediaUrl = explode("?", $item['media_url']);
+                    $item->media_url = $mediaUrl[0];
+                    $videoData[$item->id] = $item->getMediaUrl($item);
+                });
+            }
+        }
+
+        if(!empty($videoData)) {
+            foreach ($videoData as $key => $value) {
+                $oldIframe = 'iframe src="" alt="videoId-' . $key . '"';
+                $newIframe = 'iframe src="' . $value . '" alt="videoId-'. $key .'" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"';
+                $content = str_replace($oldIframe, $newIframe, $content);
+            }
+        }
+        return $content;
+    }
+
+    private function changeContentImgSrc($content, $body, $canViewTom)
+    {
+        $xml = $content['text'];
+        $attachments_body = $body;
+        $attachments = [];
+        if(!empty($body)){
+            $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
+        }
+        $isset_attachment_ids = [];
+        //这里增加 前端拖拽图片的图文混排的形式
+        if(strpos($xml, 'attachmentId') !== false){
+            preg_match_all('/attachmentId-(\d+)/', $xml, $attachmentIds_all);
+        }
+        if(!empty($attachmentIds_all[1])){
+            $content_attachments = Attachment::query()->whereIn('id', $attachmentIds_all[1])->get();
+            if(!empty($content_attachments)){
+                $serializer = $this->app->make(AttachmentSerializer::class);
+                foreach ($content_attachments as $val){
+                    if($val->is_remote){
+                        $attachments[$val->id] = $serializer->getImgUrl($val);
+                    }
+                }
+            }
+        }
+
+        if(!empty($attachments)){
+            preg_match_all('/<img.*?alt=[\"|\']?(.*?)[\"|\']?\s.*?>/i', $xml, $imagesSrc);
+            if (!empty($imagesSrc[1])) {
+                foreach ($imagesSrc[1] as $key => $value) {
+                    $id = substr($value,strrpos($value,'-') + 1);
+                    if (isset($attachments[$id])) {
+                        $newImageSrc = '<img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '" />';
+                        $xml = str_replace($imagesSrc[0][$key], $newImageSrc, $xml);
+                    }
+                }
+            }
+
+            /* $xml = preg_replace_callback(
+                '<img src="(.*)" alt="attachmentId-(\d+)" />',
+                function ($m) use ($attachments) {
+                    $id = trim($m[2], '"');
+                    if (!empty($m) && in_array($id, array_keys($attachments))) {
+                        return 'img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '"';
+                    }else{
+                        return 'img src="' . $m[1] . '" alt="attachmentId-' . $id . '"';
+                    }
+                },
+                $xml
+            ); */
+
+            $xml_attachments = $xml_attachments_ids = [];
+            $serializer = $this->app->make(AttachmentSerializer::class);
+            if(!$canViewTom && !empty($attachments_body)){       //如果没有权限查看的，则图文混排中的图片还是取清晰的
+                $attachments_ids = array_column($attachments_body, 'id');
+                $x_attachments = Attachment::query()->whereIn('id', $attachments_ids)->get();
+                $xml_attachments = $x_attachments->keyBy('id');
+                $xml_attachments_ids = $xml_attachments->pluck('id')->all();
+            }
+            if (!empty($xml_attachments_ids)) {
+                $xml = preg_replace_callback(
+                    '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
+                    function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
+                        if (!empty($m)) {
+                            $id = trim($m[3], '"');
+                            $isset_attachment_ids[] = $id;
+                            $replace_url = $attachments[$id];
+                            if(!$canViewTom && in_array($id, $xml_attachments_ids)){
+                                $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
+                            }
+                            return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
+                        }
+                    },
+                    $xml
+                );
+            }
+        }
+
+        //针对图文混排的情况，这里要去掉外部图片展示
+//                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
+        $content['text'] = $xml;
+        if(!empty($isset_attachment_ids) && isset($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
+            foreach ($content['indexes'][TomConfig::TOM_IMAGE]['body'] as $k => $v){
+                if(in_array($v['id'], $isset_attachment_ids))       unset($content['indexes'][TomConfig::TOM_IMAGE]['body'][$k]);
             }
         }
         return $content;
