@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-namespace Plugin\Register\Controller;
+namespace Plugin\Activity\Controller;
 
 
 use Discuz\Base\DzqController;
