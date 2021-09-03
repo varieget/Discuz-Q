@@ -31,6 +31,8 @@ use App\Listeners\User\CheckPublish;
 use App\Models\Post;
 use App\Models\PostGoods;
 use App\Models\PostMod;
+use App\Models\Setting;
+use App\Models\SiteInfoDaily;
 use App\Models\Thread;
 use App\Models\ThreadTopic;
 use App\Models\UserActionLogs;
@@ -43,6 +45,8 @@ use Discuz\Auth\AssertPermissionTrait;
 use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
+use Psr\Http\Message\ServerRequestInterface as Request;
+
 
 class PostListener
 {

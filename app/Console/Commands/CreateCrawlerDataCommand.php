@@ -49,7 +49,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
     use AttachmentTrait;
 
-    protected $signature = 'crawlerdata:create';
+    protected $signature = 'crawlerData:create';
 
     protected $description = '数据爬取，内容导入';
 
@@ -144,11 +144,14 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
         $data = [];
         while (!$crawlerSplQueue->isEmpty()) {
-            $this->insertLogs('----Start importing crawler data.----');
             $inputData = $crawlerSplQueue->dequeue();
             $this->categoryId = $inputData['categoryId'];
             $this->platform = $inputData['platform'];
+            if ($this->platform == Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT) {
+                exit;
+            }
             $this->topic = $inputData['topic'];
+            $this->insertLogs('----Start importing crawler data.----');
             $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_PROCESSING, $this->topic);
 
             $page = 1;
@@ -164,7 +167,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
             if (empty($pageData)) {
                 $this->insertLogs('----No data is obtained. Process ends.----');
                 app('cache')->clear();
-                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_NOTHING_ENDING, $this->topic);
+                $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_NOTHING_ENDING, $this->topic);
                 exit;
             }
             $data = array_merge($data, $pageData);
@@ -223,8 +226,9 @@ class CreateCrawlerDataCommand extends AbstractCommand
                 $this->insertLogs("----Insert posts'data end.----");
 
                 $this->db->commit();
-                $this->insertLogs("----Importing crawler data success.The importing'data total number is " . count($insertThreadsResult) . ".----");
-                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_INSERT_POSTS, Thread::IMPORT_PROCESSING, $this->topic);
+                $totalDataNumber = count($insertThreadsResult);
+                $this->insertLogs("----Importing crawler data success.The importing'data total number is " . $totalDataNumber . ".----");
+                $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_INSERT_POSTS, Thread::IMPORT_PROCESSING, $this->topic, $totalDataNumber);
             } catch (\Exception $e) {
                 $this->db->rollBack();
                 $this->insertLogs('----Importing crawler data fail,errorMsg: '. $e->getMessage() . '----');
@@ -295,7 +299,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
         Category::refreshThreadCountV3($this->categoryId);
 
         app('cache')->clear();
-        $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $this->topic);
+        $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $this->topic, $totalDataNumber);
         exit;
     }
 
@@ -326,7 +330,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     $registerUserResult = $register->handle($this->events, $this->censor, $this->settings, $this->userValidator);
                     $this->insertLogs('----Insert a new user: ' . $registerUserResult->username . ' ,The user_id is ' . $registerUserResult->id .'.----');
                     $uploadAvatarResult = $this->uploadCrawlerUserAvatar($value, $registerUserResult);
-                    if ($uploadAvatarResult) {
+                    if ($registerUserResult) {
                         $uploadAvatarResult->status = User::STATUS_NORMAL;
                         $uploadAvatarResult->save();
                     }

@@ -40,7 +40,11 @@ class CreateCrawlerDataController extends DzqController
     public function main()
     {
         $topic = $this->input('topic');
-        if (empty($topic)) {
+        $this->crawlerPlatform = $this->input('platform') ?: Thread::CRAWLER_DATA_PLATFORM_OF_WEIBO;
+        $officialAccountName = $this->input('officialAccountName');
+        $officialAccountCookie = $this->input('officialAccountCookie');
+        $officialAccountToken = str_replace(' ', '', $this->input('officialAccountToken'));
+        if (empty($topic) && $this->crawlerPlatform != Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入话题！');
         }
         $category = Category::query()->select('id')->orderBy('id', 'asc')->first()->toArray();
@@ -49,9 +53,13 @@ class CreateCrawlerDataController extends DzqController
         }
 
         $this->categoryId = $category['id'];
-        $this->crawlerPlatform = $this->input('platform') ?: Thread::CRAWLER_DATA_PLATFORM_OF_WEIBO;
+        if ($this->crawlerPlatform == Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT &&
+            (empty($officialAccountName) || empty($officialAccountCookie) || empty($officialAccountToken))) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入公众号相关信息！');
+        }
+
         $number = $this->input('number');
-        if ($number <= 0 || $number > 1000) {
+        if ($this->crawlerPlatform != Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT && ($number <= 0 || $number > 1000)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入正确的导入条数！');
         }
 
@@ -60,11 +68,11 @@ class CreateCrawlerDataController extends DzqController
         if (file_exists($lockPath)) {
             $lockFileContent = $this->getLockFileContent($lockPath);
             if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {
-                $this->outPut(ResponseCode::RESOURCE_IN_USE, "当前话题[{$lockFileContent['topic']}]正在导入，请勿重复操作！当前已执行" . $lockFileContent['runtime'] . "分钟。");
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, "当前内容[{$lockFileContent['topic']}]正在导入，请勿重复操作！当前已执行" . $lockFileContent['runtime'] . "分钟。");
             } else if ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
                 app('cache')->clear();
                 $this->changeLockFileContent($lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $lockFileContent['topic']);
-                $this->outPut(ResponseCode::INVALID_PARAMETER, "话题[{$lockFileContent['topic']}]导入时间过长，导入失败！");
+                $this->outPut(ResponseCode::INVALID_PARAMETER, "内容[{$lockFileContent['topic']}]导入时间过长，导入失败！");
             }
         }
 
@@ -72,7 +80,10 @@ class CreateCrawlerDataController extends DzqController
             'topic'    => $topic,
             'platform' => $this->crawlerPlatform,
             'number'   => $number,
-            'categoryId' => $this->categoryId
+            'categoryId' => $this->categoryId,
+            'officialAccountName' => $officialAccountName,
+            'officialAccountCookie' => $officialAccountCookie,
+            'officialAccountToken' => $officialAccountToken
         ];
 
         $crawlerSplQueue = new \SplQueue();

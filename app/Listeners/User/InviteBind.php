@@ -18,6 +18,7 @@
 
 namespace App\Listeners\User;
 
+use App\Common\ResponseCode;
 use App\Events\Users\Registered;
 use App\Models\Group;
 use App\Models\User;
@@ -25,6 +26,7 @@ use App\Models\UserDistribution;
 use App\Models\UserFollow;
 use App\Repositories\InviteRepository;
 use Carbon\Carbon;
+use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Exception;
 use Illuminate\Contracts\Encryption\Encrypter;
@@ -85,6 +87,8 @@ class InviteBind
                     $event->user->expired_at = Carbon::now()->addDays($this->settings->get('site_expire'));
                     $event->user->save();
                 }
+            } else {
+                Utils::outPut(ResponseCode::INVALID_PARAMETER, '未找到有效邀请码');
             }
         } else {
             $fromUserId = $code; // 邀请人userID
