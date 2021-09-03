@@ -118,6 +118,7 @@ class CacheKey
 
     const  CRAWLER_SPLQUEUE_INPUT_DATA = 'crawler_splqueue_input_data:'; // 数据抓取/内容导入-入参缓存
 
+    const PLUGIN_LOCAL_CONFIG = 'plugin_local_config';//存储本地插件配置信息
     public static $fileStore = [
         self::LIST_THREADS_V3_POSTS => 20
     ];

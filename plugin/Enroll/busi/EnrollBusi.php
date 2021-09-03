@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-namespace Plugin\Enroll;
+namespace Plugin\Enroll\Busi;
 
 
 use App\Modules\ThreadTom\TomBaseBusi;

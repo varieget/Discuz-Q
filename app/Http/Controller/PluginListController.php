@@ -15,12 +15,18 @@
  * limitations under the License.
  */
 
-namespace Plugin\XiangQin;
+namespace App\Http\Controller;
 
 
-use App\Modules\ThreadTom\TomBaseBusi;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-class XiangQinBusi extends TomBaseBusi
+class PluginListController implements RequestHandlerInterface
 {
 
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        // TODO: Implement handle() method.
+    }
 }
