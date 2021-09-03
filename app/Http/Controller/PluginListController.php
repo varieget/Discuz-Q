@@ -27,6 +27,15 @@ class PluginListController implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        // TODO: Implement handle() method.
+        $pluginList = \App\Common\Utils::getPluginList();
+        foreach ($pluginList as &$item) {
+            $appId = $item['app_id'];
+            unset($item['plugin_'.$appId]);
+            unset($item['busi']);
+            unset($item['routes']);
+            //前端插件入口
+            $item['plugin_trigger'] = "http://v3.go/plugin/{$appId}/index.js";
+        }
+        \Discuz\Common\Utils::outPut(0,'',array_values($pluginList));
     }
 }
