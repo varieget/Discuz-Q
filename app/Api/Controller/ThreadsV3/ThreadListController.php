@@ -19,12 +19,14 @@ namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
 use App\Common\DzqConst;
+use App\Common\Platform;
 use Discuz\Base\DzqCache;
 use App\Models\Category;
 use App\Models\Thread;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
+use Discuz\Common\Utils;
 use \Illuminate\Database\ConnectionInterface;
 
 class ThreadListController extends DzqController
@@ -226,6 +228,11 @@ class ThreadListController extends DzqController
             $groupId = $groups[0]['id'];
         }
         $serialize = ['perPage' => $perPage, 'filter' => $filter, 'group' => $groupId];
+        if(Utils::requestFrom() == Platform::MinProgram){
+            $serialize['isMini'] = 1;
+        }else{
+            $serialize['isMini'] = 0;
+        }
         $withLoginUser && $serialize['user'] = $this->user->id;
         return md5(serialize($serialize));
     }
