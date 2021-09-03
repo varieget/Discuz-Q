@@ -20,8 +20,8 @@ namespace Plugin\enroll\model;
 
 use Discuz\Base\DzqModel;
 
-class PluginThreadEnroll extends DzqModel
+class PluginThreadRegister extends DzqModel
 {
-    protected $table='thread_enroll';
+    protected $table='thread_register';
 
 }

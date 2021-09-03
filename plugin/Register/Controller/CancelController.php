@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-namespace Plugin\Enroll\Controller;
+namespace Plugin\Register\Controller;
 
 
 use Discuz\Base\DzqController;
 
-class AppendController extends DzqController
+class CancelController extends DzqController
 {
     public function main()
     {
-
+        // TODO: Implement main() method.
     }
 }
