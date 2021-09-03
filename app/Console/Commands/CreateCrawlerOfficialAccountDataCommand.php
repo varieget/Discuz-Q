@@ -77,21 +77,11 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
 
     private $categoryId;
 
-    private $officialAccountName;
-
-    private $userId;
-
-    private $threadId;
+    private $topic;
 
     private $startCrawlerTime;
 
     private $lockPath;
-
-    private $wxMaterial;
-
-    private $wxSearchOfficialAccountUrl = 'https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&begin=0&count=10&lang=zh_CN&f=json&ajax=1';
-
-    private $wxArticleSearchOfficialAccountUrl = 'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&type=9&query=&lang=zh_CN&f=json&ajax=1';
 
     //微信内容div正则
     private $wxContentDiv = '/<div class="rich_media_content " id="js_content" style="visibility: hidden;">(.*?)<\/div>/s';
@@ -142,117 +132,103 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         }
 
         $this->startCrawlerTime = Carbon::now();
+        $this->topic = '公众号文章';
 
-        if (!$crawlerSplQueue->isEmpty()) {
-            $inputData = $crawlerSplQueue->dequeue();
-            $this->categoryId = $inputData['categoryId'];
-            $this->platform = $inputData['platform'];
-            $this->officialAccountName = $inputData['officialAccountName'];
-            $officialAccountCookie = $inputData['officialAccountCookie'];
-            $officialAccountToken = $inputData['officialAccountToken'];
-            if ($this->platform != Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT) {
-                exit;
-            }
+        if ($crawlerSplQueue->isEmpty()) {
+            $this->changeEmptydataStatus();
+        }
 
-            $this->wxSearchOfficialAccountUrl = $this->wxSearchOfficialAccountUrl . '&query=' . $this->officialAccountName . '&token=' . $officialAccountToken;
-            $this->wxMaterial = new WxMaterial();
-            $searchResult = $this->wxMaterial->curl($this->wxSearchOfficialAccountUrl, [], $officialAccountCookie);
-            $searchResult = json_decode($searchResult, true);
-            if (empty($searchResult['list'])) {
-                $this->insertLogs('----No official account is obtained. Process ends.----');
-                app('cache')->clear();
-                $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_NOTHING_ENDING, $this->officialAccountName);
-                exit;
-            } else {
-                $this->officialAccountName = $searchResult['list'][0]['nickname'];
-                $fakeId = $searchResult['list'][0]['fakeid'];
-                $avatarUrl = $searchResult['list'][0]['round_head_img'];
-                $pageArticleNumber = 5;
-                $newWxArticleSearchOfficialAccountUrl = $this->wxArticleSearchOfficialAccountUrl . '&fakeid=' . $fakeId . '&token=' . $officialAccountToken . '&begin=0&count=';
-                $articleSearchResult = $this->wxMaterial->curl($newWxArticleSearchOfficialAccountUrl . $pageArticleNumber, [], $officialAccountCookie);
-                $articleSearchResult = json_decode($articleSearchResult, true);
-                if (!isset($articleSearchResult['app_msg_cnt']) || $articleSearchResult['app_msg_cnt'] == 0) {
-                    $this->insertLogs('----No official account article is obtained. Process ends.----');
-                    app('cache')->clear();
-                    $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_NOTHING_ENDING, $this->officialAccountName);
-                    exit;
-                }
-                $this->insertLogs("----The official account's total data number is  [" . $articleSearchResult['app_msg_cnt'] . "].----");
-
-                $totalNumber = count($articleSearchResult['app_msg_list']);
-                $articleList = $articleSearchResult['app_msg_list'];
-                if ($articleSearchResult['app_msg_cnt'] > 25) {
-                    while ($totalNumber < $articleSearchResult['app_msg_cnt']) {
-                        $begin = $totalNumber;
-                        $url = $this->wxArticleSearchOfficialAccountUrl . '&fakeid=' . $fakeId . '&token=' . $officialAccountToken . '&begin=' . $begin . '&count=' . $pageArticleNumber;
-                        $moreArticleSearchResult = $this->wxMaterial->curl($url, [], $officialAccountCookie);
-                        $moreArticleSearchResult = json_decode($moreArticleSearchResult, true);
-                        if (isset($moreArticleSearchResult['app_msg_list']) && count($moreArticleSearchResult['app_msg_list']) > 0) {
-                            $articleList = array_merge($articleList, $moreArticleSearchResult['app_msg_list']);
-                        } else {
-                            break;
-                        }
-                        $totalNumber = count($articleList);
-                        sleep(5);
-                    }
-                }
-            }
-            $this->insertLogs('----The total number of crawler data: ' . $totalNumber . '.----');
-
-            $this->insertLogs('----Start importing crawler data.----');
-            $this->userId = $this->insertUser($this->officialAccountName, $avatarUrl);
-            $startProcessPercent = 5;
-            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $startProcessPercent, Thread::IMPORT_PROCESSING, $this->officialAccountName);
-            $dataNumber = 0;
-            $averageProcessPercent = 90 / $totalNumber;
-            $importThreadProcessPercent = $startProcessPercent;
-
-            foreach ($articleList as $key => $value) {
-                try {
-                    $this->connection->beginTransaction();
-                    $value['link'] = str_replace('#rd', '', $value['link']);
-                    $articleBasicInfo = [
-                        'createdAt' => $value['create_time'],
-                        'title' => $value['title'],
-                        'wechatName' => $this->officialAccountName,
-                        'contentUrl' => $value['link']
-                    ];
-                    $this->insertLogs("----The article url is [" . $value['link'] . "].----");
-                    $this->insertLogs("----Insert thread's data start.----");
-                    $newThread = $this->insertThread($articleBasicInfo);
-                    $this->insertLogs("----Insert thread's data end,The thread id is " . $newThread->id . ".----");
-
-                    $this->insertLogs("----Insert post's data start.----");
-                    $urlContents = $this->getFileContents($value['link']);
-                    $content = $this->getArticleContent($value['link'], $urlContents, $newThread->id);
-
-                    $newPost = $this->insertPost($newThread, $content);
-                    $this->insertLogs("----Insert post's data end,The post id is " . $newPost->id . ".----");
-                    $this->connection->commit();
-                    $newThread->is_draft = Thread::BOOL_NO;
-                    $newThread->save();
-                    $dataNumber++;
-                    $importThreadProcessPercent = $importThreadProcessPercent + $averageProcessPercent;
-                    $this->checkExecutionTime($importThreadProcessPercent, $dataNumber);
-                } catch (\Exception $e) {
-                    $this->connection->rollback();
-                    $this->updateCountCache();
-                    $this->insertLogs('----Importing crawler data fail,errorMsg: '. $e->getMessage() . '----');
-                    app('cache')->clear();
-                    $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_ABNORMAL_ENDING, $this->officialAccountName, $dataNumber);
-                    exit;
-                }
-            }
-
-            $this->updateCountCache();
-            $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $this->officialAccountName, $dataNumber);
-            $this->insertLogs("----Importing crawler data success.The importing'data total number is " . $dataNumber . ".----");
-            app('cache')->clear();
+        $inputData = $crawlerSplQueue->dequeue();
+        $this->categoryId = $inputData['categoryId'];
+        $this->platform = $inputData['platform'];
+        $officialAccountUrl = $inputData['officialAccountUrl'];
+        if ($this->platform != Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT) {
             exit;
         }
+        if (count($officialAccountUrl) == 0) {
+            $this->changeEmptydataStatus();
+        }
+
+        $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_PROCESSING, $this->topic);
+        $dataNumber = $importThreadProcessPercent = 0;
+        $averageProcessPercent = 95 / count($officialAccountUrl);
+
+        $this->insertLogs("----The official account's total data number is [" . count($officialAccountUrl) . "].Start importing crawler data.----");
+        foreach ($officialAccountUrl as $url) {
+            try {
+                $this->connection->beginTransaction();
+                $this->insertLogs("----The official account url is [" . $url . "].----");
+                $urlContents = $this->getFileContents($url);
+                $articleBasicInfo = $this->getArticleBasicInfo($urlContents);
+                $articleBasicInfo['wechatName'] = str_replace(' ', '', $articleBasicInfo['wechatName']);
+                $articleBasicInfo['title'] = str_replace("'", "", $articleBasicInfo['title']);
+                $articleBasicInfo['contentUrl'] = str_replace('#rd', '', $articleBasicInfo['contentUrl']);
+
+                $this->insertLogs("----Insert user's data start.----");
+                $userId = $this->insertUser($articleBasicInfo['wechatName']);
+                $this->insertLogs("----Insert user's data end,The user id is " . $userId . ".----");
+
+                $this->insertLogs("----Insert thread's data start.----");
+                $newThread = $this->insertThread($articleBasicInfo, $userId);
+                $this->insertLogs("----Insert thread's data end,The thread id is " . $newThread->id . ".----");
+
+                $this->insertLogs("----Insert post's data start.----");
+                $urlContents = $this->getFileContents($articleBasicInfo['contentUrl']);
+                $content = $this->getArticleContent($articleBasicInfo['contentUrl'], $urlContents, $userId, $newThread->id);
+                $newPost = $this->insertPost($content, $newThread);
+                $this->insertLogs("----Insert post's data end,The post id is " . $newPost->id . ".----");
+
+                $this->connection->commit();
+
+                $newThread->is_draft = Thread::BOOL_NO;
+                $newThread->save();
+                $this->updateCountCache($userId);
+
+                $dataNumber++;
+                $importThreadProcessPercent = $importThreadProcessPercent + $averageProcessPercent;
+                $this->checkExecutionTime($importThreadProcessPercent, $dataNumber);
+            } catch (\Exception $e) {
+                $this->connection->rollback();
+                $this->insertLogs('----Importing crawler data fail,errorMsg: '. $e->getMessage() . '----');
+                app('cache')->clear();
+                $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_ABNORMAL_ENDING, $this->topic, $dataNumber);
+                exit;
+            }
+        }
+
+        $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $this->topic, $dataNumber);
+        $this->insertLogs("----Importing crawler data success.The importing'data total number is " . $dataNumber . ".----");
+        app('cache')->clear();
+        exit;
     }
 
-    private function insertUser($articleUsername, $avatarUrl)
+    private function getArticleBasicInfo($urlContents)
+    {
+        $item = [
+            'ct' => 'createdAt', //发布时间
+            'msg_title' => 'title', //标题
+            'msg_link' => 'contentUrl', //文章链接
+            'nickname' => 'wechatName', //公众号名称
+        ];
+        $basicInfo = [];
+        foreach ($item as $k => $v) {
+            if($k == 'msg_title'){
+                $pattern = '/ var '.$k.' = (.*?)\.html\(false\);/s';
+            } else {
+                $pattern = '/ var ' . $k . ' = "(.*?)";/s';
+            }
+            preg_match_all($pattern, $urlContents, $matches);
+            if(array_key_exists(1, $matches) && !empty($matches[1][0])){
+                $basicInfo[$v] = $this->transformHtml($matches[1][0]);
+            }else{
+                $basicInfo[$v] = '';
+            }
+        }
+
+        return $basicInfo;
+    }
+
+    private function insertUser($articleUsername)
     {
         $userData = User::query()->select('id', 'username', 'nickname')->get()->toArray();
         $usernameData = array_column($userData, null, 'username');
@@ -279,7 +255,6 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         $newGuest = new Guest();
         $register = new RegisterUser($newGuest, $data);
         $registerUserResult = $register->handle($this->events, $this->censor, $this->settings, $this->userValidator);
-        $this->uploadCrawlerUserAvatar($avatarUrl, $registerUserResult);
         if ($registerUserResult) {
             $registerUserResult->status = User::STATUS_NORMAL;
             $registerUserResult->save();
@@ -318,11 +293,11 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         return $uploadAvatarResult;
     }
 
-    private function insertThread($articleBasicInfo)
+    private function insertThread($articleBasicInfo, $userId)
     {
         $createdAt = date('Y-m-d H:i:s', $articleBasicInfo['createdAt']);
         $newThread = new Thread();
-        $newThread->user_id = $this->userId;
+        $newThread->user_id = $userId;
         $newThread->category_id = $this->categoryId;
         $newThread->title = $articleBasicInfo['title'];
         $newThread->type = Thread::TYPE_OF_ALL;
@@ -339,7 +314,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         return $newThread;
     }
 
-    private function getArticleContent($url, $urlContents, $threadId)
+    private function getArticleContent($url, $urlContents, $userId, $threadId)
     {
         $content_html_pattern = $this->wxContentDiv;
         preg_match_all($content_html_pattern, $urlContents, $html_matchs);
@@ -351,24 +326,27 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         $content = str_replace('style="visibility: hidden;"','', $content);
         $content = preg_replace("/<(\/?mpprofile.*?)>/si",'', $content);
         $content = preg_replace("/<(\/?svg.*?)>/si",'', $content);
+        $content = preg_replace("/<(\/?g.*?)>/si",'', $content);
+        $content = preg_replace("/<(\/?path.*?)>/si",'', $content);
+        $content = preg_replace("/<(\/?figure.*?)>/si",'', $content);
         $content = preg_replace("/<(\/?mpvideosnap.*?)>/si",'', $content); //  过滤视频号
         $content = preg_replace("/<(\/?mp-miniprogram.*?)>/si",'', $content); //  过滤小程序
-        $content = $this->changeArticleImg($content);
-        $content = $this->changeArticleVideo($url, $content, $threadId);
+        $content = $this->changeArticleImg($content, $userId);
+        $content = $this->changeArticleVideo($url, $content, $userId, $threadId);
         //添加微信样式
         $content = '<div style="max-width: 677px;margin-left: auto;margin-right: auto;">' . $content . '</div>';
 
         return $content;
     }
 
-    private function changeArticleImg($content)
+    private function changeArticleImg($content, $userId)
     {
         preg_match_all('/<img.*?data-src=[\"|\']?(.*?)[\"|\']?\s.*?>/i', $content, $imagesSrc);
         if (!empty($imagesSrc[1])) {
             foreach ($imagesSrc[1] as $key => $value) {
                 $this->insertLogs("----Upload the thread' image attachment start,the image url is [" . $value . "].----");
-                [$attachmentId, $attachmentUrl] = $this->importArticleImg($value);
-                $this->insertLogs("----Upload the thread' image attachment end,the attachment_id is " . $attachmentId . ".----");
+                [$attachmentId, $attachmentUrl] = $this->importArticleImg($value, $userId);
+                $this->insertLogs("----Upload the thread' image attachment end,the attachment id is " . $attachmentId . ".----");
 
                 if($attachmentId) {
                     $newImageUrl = '<img src="' . $attachmentUrl . '" alt="attachmentId-' . $attachmentId . '" />';
@@ -380,7 +358,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         return $content;
     }
 
-    private function importArticleImg($url){
+    private function importArticleImg($url, $userId){
         $refer = "https://mmbiz.qpic.cn/";
         $opt = [
             'https'=>[
@@ -427,7 +405,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
 
         $attachment = new Attachment();
         $attachment->uuid = Str::uuid();
-        $attachment->user_id = $this->userId;
+        $attachment->user_id = $userId;
         $attachment->type = Attachment::TYPE_OF_IMAGE;
         $attachment->is_approved = Attachment::APPROVED;
         $attachment->attachment = $fileName;
@@ -456,7 +434,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         return $attachmentUrl;
     }
 
-    private function changeArticleVideo($url, $content, $threadId)
+    private function changeArticleVideo($url, $content, $userId, $threadId)
     {
         preg_match_all('/<iframe(.*?)<\/iframe>/', $content, $videoIframeSrc);
         preg_match_all('/<mpvoice(.*?)<\/mpvoice>/', $content, $voiceIframeSrc);
@@ -470,7 +448,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
             return $content;
         }
 
-        $videoData = $this->importVideo($resources, $threadId);
+        $videoData = $this->importVideo($resources, $userId, $threadId);
         if (!empty($videoIframeSrc[0])) {
             $content = $this->changeVideoIframe($videoIframeSrc[0], $videoData, $content, ThreadVideo::TYPE_OF_VIDEO);
         }
@@ -482,7 +460,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         return $content;
     }
 
-    private function importVideo($videoData, $threadId)
+    private function importVideo($videoData, $userId, $threadId)
     {
         $newVideoData = [];
         foreach($videoData as $key => $value) {
@@ -510,11 +488,11 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
                 if ($value['videoType'] == ThreadVideo::TYPE_OF_AUDIO) {
                     $mimeType = $this->getAttachmentMimeType($value['url']);
                     $ext = substr($mimeType,strrpos($mimeType,'/') + 1);
-                    $videoId = $this->videoUpload($this->userId, $threadId, $value['url'], $this->settings, $ext);
+                    $videoId = $this->videoUpload($userId, $threadId, $value['url'], $this->settings, $ext);
                 } else {
-                    $videoId = $this->videoUpload($this->userId, $threadId, $value['url'], $this->settings);
+                    $videoId = $this->videoUpload($userId, $threadId, $value['url'], $this->settings);
                 }
-                $this->insertLogs("----Upload the thread video end,the video_id is " . $videoId . ".----");
+                $this->insertLogs("----Upload the thread video end,the video id is " . $videoId . ".----");
                 if ($videoId) {
                     $video = ThreadVideo::query()->where('id', $videoId)->first();
                     $video->type = $value['videoType'];
@@ -539,10 +517,10 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         return $content;
     }
 
-    private function insertPost($newThread, $content)
+    private function insertPost($content, $newThread)
     {
         $threadPost = new Post();
-        $threadPost->user_id = $this->userId;
+        $threadPost->user_id = $newThread->user_id;
         $threadPost->thread_id = $newThread->id;
         $threadPost->content = $content;
         $threadPost->is_first = Post::FIRST_YES;
@@ -579,19 +557,19 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         if ($runTime > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
             $this->insertLogs('----Execution timed out.The file lock has been deleted.----');
             app('cache')->clear();
-            $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $this->officialAccountName, $dataNumber);
+            $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $this->topic, $dataNumber);
             exit;
         } else {
-            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $importThreadProcessPercent, Thread::IMPORT_PROCESSING, $this->officialAccountName, $dataNumber);
+            $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $importThreadProcessPercent, Thread::IMPORT_PROCESSING, $this->topic, $dataNumber);
             return true;
         }
     }
 
-    private function updateCountCache()
+    private function updateCountCache($userId)
     {
-        $user = User::query()->where('id', $this->userId)->first();
+        $user = User::query()->where('id', $userId)->first();
         $user->thread_count = Thread::query()
-            ->where('user_id', $this->userId)
+            ->where('user_id', $userId)
             ->whereNull('deleted_at')
             ->where('is_draft',Thread::IS_NOT_DRAFT)
             ->where('is_display', Thread::BOOL_YES)
@@ -600,5 +578,13 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         $user->save();
         Category::refreshThreadCountV3($this->categoryId);
         return true;
+    }
+
+    private function changeEmptydataStatus()
+    {
+        $this->insertLogs('----Empty official account url. Process ends.----');
+        app('cache')->clear();
+        $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_NOTHING_ENDING, $this->topic);
+        exit;
     }
 }
