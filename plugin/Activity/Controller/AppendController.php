@@ -30,8 +30,7 @@ class AppendController extends DzqController
 
     public function main()
     {
-        $userId = $this->user->id;
         $activeId = $this->inPut('activeId');
-
+        $this->outPut(0,'报名成功');
     }
 }

@@ -25,6 +25,33 @@ class ListController extends DzqController
 
     public function main()
     {
-        // TODO: Implement main() method.
+        //分页获取报名用户列表
+        $this->outPut(0, '', [
+            [
+                'userId' => 1,
+                'avatar' => '',
+                'nickname' => '昵称1'
+            ],
+            [
+                'userId' => 1,
+                'avatar' => '',
+                'nickname' => '昵称2'
+            ],
+            [
+                'userId' => 1,
+                'avatar' => '',
+                'nickname' => '昵称3'
+            ],
+            [
+                'userId' => 1,
+                'avatar' => '',
+                'nickname' => '昵称4'
+            ],
+            [
+                'userId' => 1,
+                'avatar' => '',
+                'nickname' => '昵称5'
+            ]
+        ]);
     }
 }

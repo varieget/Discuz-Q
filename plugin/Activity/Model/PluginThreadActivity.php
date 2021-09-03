@@ -22,6 +22,6 @@ use Discuz\Base\DzqModel;
 
 class PluginThreadActivity extends DzqModel
 {
-    protected $table='thread_register';
+    protected $table='plugin_thread_activity';
 
 }

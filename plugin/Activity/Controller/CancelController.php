@@ -24,6 +24,6 @@ class CancelController extends DzqController
 {
     public function main()
     {
-        // TODO: Implement main() method.
+        $this->outPut(0,'取消报名成功');
     }
 }
