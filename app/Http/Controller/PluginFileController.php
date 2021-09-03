@@ -29,9 +29,11 @@ class PluginFileController implements RequestHandlerInterface
     {
         $query = $request->getQueryParams();
         $pluginList = Utils::getPluginList();
-        $pluginId = $query['plugin_name'];
-        $config = $pluginList[$pluginId];
-        $plugin = $config['plugin_' . $pluginId];
+        $pluginList = array_values($pluginList);
+        $pluginList = array_column($pluginList,null,'name_en');
+        $pluginName = $query['plugin_name'];
+        $config = $pluginList[$pluginName];
+        $plugin = $config['plugin_' . $config['app_id']];
         $filePath = $plugin['view'] . $query['file_path'];
         exit(file_get_contents($filePath));
         return DiscuzResponseFactory::FileResponse($filePath);
