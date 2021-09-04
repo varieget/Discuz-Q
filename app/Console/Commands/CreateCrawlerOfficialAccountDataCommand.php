@@ -15,6 +15,7 @@ use App\Models\Attachment;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Thread;
+use App\Models\ThreadTag;
 use App\Models\ThreadVideo;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -170,6 +171,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
 
                 $this->insertLogs("----Insert thread's data start.----");
                 $newThread = $this->insertThread($articleBasicInfo, $userId);
+                $this->insertThreadTom($newThread->id, ThreadTag::TEXT);
                 $this->insertLogs("----Insert thread's data end,The thread id is " . $newThread->id . ".----");
 
                 $this->insertLogs("----Insert post's data start.----");
@@ -586,5 +588,14 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         app('cache')->clear();
         $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_NOTHING_ENDING, $this->topic);
         exit;
+    }
+
+    private function insertThreadTom($threadId, $tag)
+    {
+        $threadTag = [
+            'thread_id' => $threadId,
+            'tag' => $tag,
+        ];
+        return ThreadTag::query()->insert($threadTag);
     }
 }
