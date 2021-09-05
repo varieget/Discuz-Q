@@ -23,7 +23,7 @@
  * )
  * @OA\Tag(
  *     name="发布与展示",
- *     description="帖子相关接口",
+ *     description="主题和评论相关接口",
  *     @OA\ExternalDocumentation(
  *          description="Discuz! Q官方网站",
  *          url="http://discuz.chat"
