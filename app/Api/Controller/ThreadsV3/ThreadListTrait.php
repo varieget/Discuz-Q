@@ -80,7 +80,10 @@ trait ThreadListTrait
             isset($tags[$threadId]) && $threadTags = $tags[$threadId];
             $concatString .= ($thread['title'] . $post['content']);
 
-            $userStick = $threadId == $userThreadStickIds[$userId]?1:0;
+            $userStick = 0;
+            if(!empty($userThreadStickIds[$userId])){
+                $userStick = $threadId == $userThreadStickIds[$userId]?1:0;
+            };
 
             $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags, $loginUserData,$userStick);
 
