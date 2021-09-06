@@ -397,11 +397,11 @@ trait ThreadListTrait
     private function getUserThreadStickId($userIds)
     {
         $ret = [];
-        $userStickRows = ThreadUserStickRecord::query()->whereIn('stick_user_id',$userIds)->get()->toArray();
+        $userStickRows = ThreadUserStickRecord::query()->whereIn('user_id',$userIds)->get()->toArray();
         if (!empty($userStickRows)){
             for ($i=0;$i<count($userStickRows);$i++){
-                $uId = $userStickRows[$i]['stick_user_id'];
-                $thread_id = $userStickRows[$i]['stick_thread_id'];
+                $uId = $userStickRows[$i]['user_id'];
+                $thread_id = $userStickRows[$i]['thread_id'];
                 $ret[$uId] =$thread_id;
             }
         }

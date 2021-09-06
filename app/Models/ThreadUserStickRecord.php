@@ -37,7 +37,7 @@ class ThreadUserStickRecord extends DzqModel
 {
     protected $table = 'thread_sticks';
 
-    const status_no = 0;
-    const status_yes = 1;
+    const STATUS_NO = 0;
+    const STATUS_YES = 1;
 
 }

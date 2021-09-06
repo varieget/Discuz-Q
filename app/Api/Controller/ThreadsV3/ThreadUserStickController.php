@@ -42,11 +42,20 @@ class ThreadUserStickController extends DzqController
         if ($this->user->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
-        if ($this->user->status == User::STATUS_NEED_FIELDS) {
-            $this->outPut(ResponseCode::JUMP_TO_SIGIN_FIELDS);
+
+
+        $thread_id = $this->inPut('threadId');
+        if (empty($thread_id)){
+            return $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
-        if ($this->user->status == User::STATUS_MOD) {
-            $this->outPut(ResponseCode::JUMP_TO_AUDIT);
+
+        $user = $this->user;
+
+        $threadRow = Thread::query()->where('id', $thread_id)->first();
+        if (!empty($threadRow)) {
+            if ($threadRow->user_id != $user->id){
+                return $this->outPut(ResponseCode::INVALID_PARAMETER, "主题id" . $thread_id . "没权限操作");
+            }
         }
 
         return true;
@@ -58,62 +67,54 @@ class ThreadUserStickController extends DzqController
         $thread_id = $this->inPut('threadId');
         $status = $this->inPut('status'); //0 取消 1 置顶
 
-        if (empty($thread_id)) return $this->outPut(ResponseCode::INVALID_PARAMETER);
+        if (empty($thread_id)) {
+            return $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
 
         $threadRow = Thread::query()->where('id', $thread_id)->first();
         if (empty($threadRow)) {
             return $this->outPut(ResponseCode::INVALID_PARAMETER, "主题id" . $thread_id . "不存在");
         }
-        if ($threadRow->user_id != $user->id){
-            return $this->outPut(ResponseCode::INVALID_PARAMETER, "主题id" . $thread_id . "不属于自己");
-        }
 
-        $userStick = ThreadUserStickRecord::query()->where("stick_user_id",'=', $user->id)->first();
+        $userStick = ThreadUserStickRecord::query()->where("user_id",'=', $user->id)->first();
         if(empty($userStick)){
-            if ($status == ThreadUserStickRecord::status_no){
+            if ($status == ThreadUserStickRecord::STATUS_NO){
                 //没有置顶的，不能取消
                // return $this->outPut(ResponseCode::INVALID_PARAMETER, "没有置顶，不需要取消");
             }else{
                 //插入数据库
                 $userStickAdd = new ThreadUserStickRecord();
-                $userStickAdd->setAttribute("stick_user_id",$user->id);
-                $userStickAdd->setAttribute("stick_thread_id", $thread_id);
-                $userStickAdd->setAttribute("stick_status", ThreadUserStickRecord::status_yes);
+                $userStickAdd->user_id = $user->id;
+                $userStickAdd->thread_id = $thread_id;
+                $userStickAdd->status = ThreadUserStickRecord::STATUS_YES;
                 $userStickAdd->save();
-
-                //清thread缓存
-                $this->clearThreadV3ComplexCach();
             }
         }else{
-            if ($status == ThreadUserStickRecord::status_no){
-                if ($thread_id != $userStick->stick_thread_id){
+            if ($status == ThreadUserStickRecord::STATUS_NO){
+                if ($thread_id != $userStick->thread_id){
                     return $this->outPut(ResponseCode::INVALID_PARAMETER, "取消置顶与当前置顶的不是同一个");
                 }else{
-                    ThreadUserStickRecord::query()->where("stick_user_id",'=', $user->id)->delete();
-                    //清thread缓存
-                    $this->clearThreadV3ComplexCach();
+                    ThreadUserStickRecord::query()->where("user_id",'=', $user->id)->delete();
                 }
             }else{
-                if ($thread_id != $userStick->stick_thread_id) {
-                    ThreadUserStickRecord::query()->where("stick_user_id", '=', $user->id)
-                        ->update(['stick_thread_id' => $thread_id,
-                            'stick_status' => ThreadUserStickRecord::status_yes,
+                if ($thread_id != $userStick->thread_id) {
+                    ThreadUserStickRecord::query()->where("user_id", '=', $user->id)
+                        ->update(['thread_id' => $thread_id,
+                            'status' => ThreadUserStickRecord::STATUS_YES,
                             'updated_at' => Carbon::now()]);
-                    //清thread缓存
-                    $this->clearThreadV3ComplexCach();
                 }
             }
         }
 
         $data=[
             "threadId" => $thread_id,
-            "status" => $status==0?0:1
+            "status" => $status==0?ThreadUserStickRecord::STATUS_NO:ThreadUserStickRecord::STATUS_YES
         ];
 
         $this->outPut(ResponseCode::SUCCESS,$status==0?'取消置顶成功':"置顶成功", $data);
     }
 
-    private function clearThreadV3ComplexCach(){
+    public function suffixClearCache($user){
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
     }
 }

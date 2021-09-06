@@ -30,13 +30,13 @@ class CreateThreadSticks extends Migration
     public function up()
     {
         $this->schema()->create('thread_sticks', function (Blueprint $table) {
-            $table->unsignedBigInteger('stick_id', true)->comment('自增id');
-            $table->unsignedBigInteger('stick_user_id');
-            $table->unsignedBigInteger('stick_thread_id');
-            $table->integer('stick_status');
+            $table->unsignedBigInteger('id', true)->comment('自增id');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('thread_id');
+            $table->integer('status');
             $table->timestamp('created_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
-            $table->unique(['stick_user_id'],'index_user_id');
+            $table->unique(['user_id'],'index_user_id');
         });
     }
 
