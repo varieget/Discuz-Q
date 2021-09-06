@@ -95,11 +95,11 @@ class ThreadMigrationPlusCommand extends AbstractCommand
             $isset_posts_bakv2 = false;
         }
         //先计算帖子总数量
-        $thread_counts = Thread::query()->pluck('id')->toArray();
+        $thread_counts = Thread::query()->orderBy('id')->pluck('id')->toArray();
         $per_between = array_chunk($thread_counts, $handle_max_thread_count);
         $handle_end_thread = $handle_max_thread_count - 1;
         foreach ($per_between as $val){
-            $threads = Thread::query()->whereBetween('id', [$val[0], $val[$handle_end_thread]])->get();
+            $threads = Thread::query()->whereBetween('id', [$val[0], end($val)])->get();
 
             if($isset_posts_bakv2){
                 //如果 posts_bakv2 表已经存在
