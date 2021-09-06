@@ -22,6 +22,7 @@ use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
+use App\Models\ThreadUserStickRecord;
 use App\Traits\PostNoticesTrait;
 use Discuz\Base\DzqCache;
 use App\Models\Category;
@@ -52,7 +53,7 @@ trait ThreadTrait
 
     private $loginUserData = [];
 
-    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [], $loginUserData = [], $userStick = 0)
+    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [], $loginUserData = [], $userStick = -1)
     {
         $loginUser = $this->user;
         $this->loginUserData = $loginUserData;
@@ -66,6 +67,9 @@ trait ThreadTrait
         $canViewThreadVideo = $this->canViewThreadVideo($loginUser, $thread);
         if (!$canViewThreadVideo) {
             $contentField = $this->filterThreadVideo($contentField);
+        }
+        if ($userStick == -1){
+            $userStick = $this->getThreadUserStick($thread, $user);
         }
         $result = [
             'threadId' => $thread['id'],
@@ -746,6 +750,23 @@ trait ThreadTrait
             }
         }
         return $content;
+    }
+
+
+    private function getThreadUserStick($thread,$user){
+        if (empty($thread)|| empty($user)){
+            return  0;
+        }
+
+        $userThreadStick = ThreadUserStickRecord::query()->where('user_id',$user->id)->first();
+        if(empty($userThreadStick)){
+            return 0;
+        }
+
+        if($userThreadStick->thread_id == $thread->id){
+            return 1;
+        }
+        return 0;
     }
 }
 
