@@ -22,6 +22,7 @@ use App\Models\Category;
 use App\Models\Permission;
 use App\Models\PostUser;
 use App\Models\ThreadUser;
+use App\Models\ThreadUserStickRecord;
 use Discuz\Base\DzqCache;
 use App\Models\Attachment;
 use App\Models\Group;
@@ -62,6 +63,9 @@ trait ThreadListTrait
         $result = [];
         $concatString = '';
         $loginUserData = $this->getLoginUserData($loginUserId, $threadIds, $postIds);
+
+        $userThreadStickIds = $this->getUserThreadStickId($userIds);
+
         foreach ($threads as $thread) {
             $threadId = $thread['id'];
             $userId = $thread['user_id'];
@@ -75,7 +79,11 @@ trait ThreadListTrait
             $threadTags = [];
             isset($tags[$threadId]) && $threadTags = $tags[$threadId];
             $concatString .= ($thread['title'] . $post['content']);
-            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags, $loginUserData);
+
+            $userStick = $threadId == $userThreadStickIds[$userId]?1:0;
+
+            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags, $loginUserData,$userStick);
+
         }
         list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($concatString);
         foreach ($result as &$item) {
@@ -383,5 +391,20 @@ trait ThreadListTrait
         $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $userId)->get()->toArray();
         DzqCache::hMSet($key1, $postUsers, 'post_id', false, $postIds, null);
         DzqCache::hMSet($key2, $favorite, 'thread_id', false, $threadIds, null);
+    }
+
+    //个人中心置顶
+    private function getUserThreadStickId($userIds)
+    {
+        $ret = [];
+        $userStickRows = ThreadUserStickRecord::query()->whereIn('user_id',$userIds)->get()->toArray();
+        if (!empty($userStickRows)){
+            for ($i=0;$i<count($userStickRows);$i++){
+                $uId = $userStickRows[$i]['user_id'];
+                $thread_id = $userStickRows[$i]['thread_id'];
+                $ret[$uId] =$thread_id;
+            }
+        }
+        return $ret;
     }
 }
