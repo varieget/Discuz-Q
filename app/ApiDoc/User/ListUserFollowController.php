@@ -8,8 +8,8 @@
  *@OA\Parameter(ref = "#/components/parameters/bear_token"),
  *@OA\Parameter(ref = "#/components/parameters/page"),
  *@OA\Parameter(ref = "#/components/parameters/perPage"),
- *@OA\Parameter(ref = "#/components/parameters/filter_userId", required=true),
- *@OA\Parameter(ref = "#/components/parameters/filter_type", required=true, description="赛选类型；1：我的关注、2：我的粉丝"),
+ *@OA\Parameter(ref = "#/components/parameters/filter_userId"),
+ *@OA\Parameter(ref = "#/components/parameters/filter_type"),
  *
  * @OA\Response(
  *        response = 200,
@@ -34,9 +34,9 @@
  * @OA\Schema(
  *     schema="dzq_follow",
  *     title="关注/粉丝用户详情",
- *     @OA\Property(property = "group", type = "object", description="用户组", ref="#/components/schemas/dzq_group_simple_detail"),
- *     @OA\Property(property = "user", type = "object", description="用户", ref="#/components/schemas/dzq_user_simple_detail"),
- *     @OA\Property(property = "userFollow", type = "object", description="粉丝/关注用户", ref="#/components/schemas/dzq_user_follow_simple_detail"),
+ *     @OA\Property(property = "group", type = "object", ref="#/components/schemas/dzq_group_simple_detail"),
+ *     @OA\Property(property = "user", type = "object", ref="#/components/schemas/dzq_user_simple_detail"),
+ *     @OA\Property(property = "userFollow", type = "object",  ref="#/components/schemas/dzq_user_follow_simple_detail"),
  * )
  *
  * @OA\Schema(
