@@ -798,8 +798,9 @@ trait ThreadTrait
                 if(in_array($v['id'], $isset_attachment_ids))       unset($content['indexes'][TomConfig::TOM_IMAGE]['body'][$k]);
             }
         }
-
-        $content['indexes'][TomConfig::TOM_IMAGE]['body'] = array_values($content['indexes'][TomConfig::TOM_IMAGE]['body']);
+        if(!empty($content['indexes'][TomConfig::TOM_IMAGE]) && !empty($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
+            $content['indexes'][TomConfig::TOM_IMAGE]['body'] = array_values($content['indexes'][TomConfig::TOM_IMAGE]['body']);
+        }
 
         return $content;
     }
