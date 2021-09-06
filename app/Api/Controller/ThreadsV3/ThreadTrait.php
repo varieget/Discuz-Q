@@ -53,7 +53,7 @@ trait ThreadTrait
 
     private $loginUserData = [];
 
-    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [], $loginUserData = [], $userStick = 0)
+    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [], $loginUserData = [])
     {
         $loginUser = $this->user;
         $this->loginUserData = $loginUserData;
@@ -106,8 +106,7 @@ trait ThreadTrait
             ],
             'ability' => $this->getAbilityField($loginUser, $thread),
             'content' => $contentField,
-            'freewords' => $thread['free_words'],
-            'userStickStatus'=>$userStick
+            'freewords' => $thread['free_words']
         ];
         if ($analysis) {
             $concatString = $thread['title'] . $post['content'];
