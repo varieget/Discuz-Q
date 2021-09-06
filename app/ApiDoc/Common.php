@@ -486,4 +486,89 @@
  *           @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
  *           @OA\Property(property = "createdAt", type = "string", description = "创建时间")
  * )
+ *
+ * @OA\Schema(
+ *     schema="dzq_qrcode",
+ *     title="返回二维码相关信息",
+ *     @OA\Property(property="Data",type="object",
+ *         @OA\Property(property = "sessionToken", type = "string", description = "用户sessionToken"),
+ *         @OA\Property(property = "base64Img", type = "string", description = "二维码"),
+ *     ))
+ * )
+ *
+ * @OA\Schema(
+ *     schema="dzq_login_token",
+ *     title="登录态相关信息",
+ *     @OA\Property(property="Data",type="object",
+ *         @OA\Property(property = "tokenType", type = "string", description = "token类型"),
+ *         @OA\Property(property = "expiresIn", type = "integer", description = "过期时间(秒)"),
+ *         @OA\Property(property = "accessToken", type = "string", description = "token类型"),
+ *         @OA\Property(property = "refreshToken", type = "string", description = "token类型"),
+ *         @OA\Property(property = "isMissNickname", type = "integer", description = "是否缺少昵称"),
+ *         @OA\Property(property = "avatarUrl", type = "string", description = "头像url"),
+ *         @OA\Property(property = "userStatus", type = "integer", description = "用户状态"),
+ *         @OA\Property(property = "uid", type = "integer", description = "用户id"),
+ *     ))
+ * )
+ *
+ * @OA\Schema(
+ *     schema="dzq_user_info",
+ *     title="用户相关信息",
+ *     @OA\Property(property = "Data", type = "object",ref="#/components/schemas/dzq_user_model")
+ * )
+ *
+ * @OA\Schema(
+ *     schema="dzq_user_model",
+ *     title="用户model",
+ *     @OA\Property(property = "id", type = "integer", description = "用户id"),
+ *     @OA\Property(property = "username", type = "string", description = "用户名"),
+ *     @OA\Property(property = "password", type = "string", description = "密码"),
+ *     @OA\Property(property = "nickname", type = "string", description = "用户昵称"),
+ *     @OA\Property(property = "payPassword", type = "string", description = "支付密码"),
+ *     @OA\Property(property = "mobile", type = "string", description = "手机号"),
+ *     @OA\Property(property = "signature", type = "string", description = "签名"),
+ *     @OA\Property(property = "lastLoginIp", type = "string", description = "最后登录ip地址"),
+ *     @OA\Property(property = "lastLoginPort", type = "integer", description = "最后登录端口"),
+ *     @OA\Property(property = "registerIp", type = "string", description = "注册ip"),
+ *     @OA\Property(property = "registerPort", type = "string", description = "注册端口"),
+ *     @OA\Property(property = "registerReason", type = "string", description = "注册原因"),
+ *     @OA\Property(property = "rejectReason", type = "string", description = "审核拒绝原因"),
+ *     @OA\Property(property = "usernameBout", type = "integer", description = "用户名修改次数"),
+ *     @OA\Property(property = "threadCount", type = "integer", description = "主题数"),
+ *     @OA\Property(property = "followCount", type = "integer", description = "关注数"),
+ *     @OA\Property(property = "fansCount", type = "integer", description = "粉丝数"),
+ *     @OA\Property(property = "likedCount", type = "integer", description = "点赞数"),
+ *     @OA\Property(property = "questionCount", type = "integer", description = "提问数"),
+ *     @OA\Property(property = "status", type = "integer", description = "用户状态：0正常 1禁用 2审核中 3审核拒绝 4审核忽略"),
+ *     @OA\Property(property = "avatar", type = "integer", description = "头像地址"),
+ *     @OA\Property(property = "identity", type = "string", description = "身份证号码"),
+ *     @OA\Property(property = "realname", type = "string", description = "身份证姓名"),
+ *     @OA\Property(property = "avatarAt", type = "string", description = "头像修改时间"),
+ *     @OA\Property(property = "loginAt", type = "string", description = "最后登录时间"),
+ *     @OA\Property(property = "joinedAt", type = "string", description = "付费加入时间"),
+ *     @OA\Property(property = "expiredAt", type = "string", description = "付费到期时间"),
+ *     @OA\Property(property = "createdAt", type = "string", description = "创建时间"),
+ *     @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
+ *     @OA\Property(property = "bindType", type = "integer", description = "登录绑定类型；0：默认或微信；2：qq登录；"),
+ * )
+ *
+ * @OA\Schema(
+ *     schema="dzq_wechat_user_model",
+ *     title="微信用户model",
+ *     @OA\Property(property = "id", type = "integer", description = "自增长id"),
+ *     @OA\Property(property = "userId", type = "integer", description = "用户id"),
+ *     @OA\Property(property = "mpOpenid", type = "string", description = "公众号openid"),
+ *     @OA\Property(property = "devOpenid", type = "string", description = "开放平台openid"),
+ *     @OA\Property(property = "minOpenid", type = "string", description = "小程序openid"),
+ *     @OA\Property(property = "nickname", type = "string", description = "微信昵称"),
+ *     @OA\Property(property = "sex", type = "integer", description = "性别"),
+ *     @OA\Property(property = "province", type = "string", description = "省份"),
+ *     @OA\Property(property = "city", type = "string", description = "城市"),
+ *     @OA\Property(property = "country", type = "string", description = "国家"),
+ *     @OA\Property(property = "headimgurl", type = "string", description = "头像"),
+ *     @OA\Property(property = "privilege", type = "string", description = "用户特权信息"),
+ *     @OA\Property(property = "unionid", type = "string", description = "只有在用户将公众号绑定到微信开放平台帐号后，才会出现该字段"),
+ *     @OA\Property(property = "createdAt", type = "string", description = "创建时间"),
+ *     @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
+ * )
  */
