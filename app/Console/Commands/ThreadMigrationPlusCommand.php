@@ -170,9 +170,14 @@ class ThreadMigrationPlusCommand extends AbstractCommand
                     $this->db->beginTransaction();
                     foreach ($posts as $vi){
                         $content = $vi->content;
-                        if(!empty($content)){
-                            $content = self::s9eRender($content);
-                            $content = self::v3Content($content);
+                        try {
+                            if(!empty($content)){
+                                $content = self::s9eRender($content);
+                                $content = self::v3Content($content);
+                            }
+                        }catch (\Exception $e){
+                            //如果这里报错，说明处理到了升级过程中发的评论了，V3 格式，则保持原数据格式
+                            continue;
                         }
                         $vi->content = $content;
                         $res = $vi->save();
