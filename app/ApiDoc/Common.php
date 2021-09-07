@@ -353,6 +353,69 @@
  *        @OA\Property(property = "108", type = "string", description = "文件附件",ref="#/components/schemas/local_plugin_output"),
  *        @OA\Property(property = "109", type = "string", description = "投票",ref="#/components/schemas/local_plugin_output"),
  *     )
+ * ),
+ *
+ * @OA\Parameter(
+ *     parameter="page",
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="当前页",
+ *     @OA\Schema(
+ *          type="integer",
+ *          default=1
+ *      )
+ * ),
+ *
+ * @OA\Parameter(
+ *     parameter="perPage",
+ *     name="perPage",
+ *     in="query",
+ *     required=false,
+ *     description="当前页",
+ *     @OA\Schema(
+ *          type="integer",
+ *          default=20
+ *      )
+ * ),
+ *
+ * @OA\Parameter(
+ *     parameter="filter_userId",
+ *     name="filter[userId]",
+ *     in="query",
+ *     required=false,
+ *     description = "筛选用户id",
+ *     @OA\Schema(
+ *          type="integer", default=1
+ *      )
+ * ),
+ *
+ * @OA\Parameter(
+ *     parameter="filter_type",
+ *     name="filter[type]",
+ *     in="query",
+ *     required=false,
+ *     description="筛选类型",
+ *     @OA\Schema(
+ *          type="integer", default = 1
+ *      )
+ * ),
+ *
+ * @OA\Schema(
+ *     schema="dzq_group_simple_detail",
+ *     title="用户组详情",
+ *     @OA\Property(property = "groupIcon", type="string", description = "用户组icon"),
+ *     @OA\Property(property = "groupName", type="string", description = "用户组名称"),
+ *     @OA\Property(property = "pid", type="integer", description = "用户组id"),
+ * )
+ *
+ * @OA\Schema(
+ *     schema="dzq_user_simple_detail",
+ *     title="用户详情",
+ *     @OA\Property(property = "avatar", type="string", description = "用户头像url"),
+ *     @OA\Property(property = "nickName", type="string", description = "用户昵称"),
+ *     @OA\Property(property = "pid", type="integer", description = "用户id"),
+ *     @OA\Property(property = "userName", type="string", description = "用户名称"),
  * )
  * @OA\Schema(
  *     schema = "post_detail_output",
