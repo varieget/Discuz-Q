@@ -23,7 +23,8 @@
  *              allOf={
  *                  @OA\Schema(ref="#/components/schemas/dzq_layout"),
  *                  @OA\Schema(@OA\Property(property="Data",type="object",
- *                      @OA\Property(property="url",type="string",description = "下载链接")
+ *                      @OA\Property(property="url",type="string",description = "下载链接"),
+ *                      @OA\Property(property="fileName",type="string",description = "文件名"),
  *                  ))
  *          }))
  * )

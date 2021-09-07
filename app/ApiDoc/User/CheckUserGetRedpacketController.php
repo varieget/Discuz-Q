@@ -18,7 +18,7 @@
  *              allOf={
  *                  @OA\Schema(ref="#/components/schemas/dzq_layout"),
  *                  @OA\Schema(@OA\Property(property="Data",type="object",
- *                      @OA\Property(property="status",type="integer",description = "是否领取到红包"),
+ *                      @OA\Property(property="status",type="boolean",description = "是否领取到红包"),
  *                      @OA\Property(property="amount",type="integer",description = "领取的红包金额"),
  *                      @OA\Property(property="getRedPacketTime",type="string",default="2021-02-18T09:26:19.000000",description = "领取红包的时间"),
  *                      @OA\Property(property="afterGetRedPacketFirstEnter",type="boolean",description = "是否是领取红包后第一次进入帖子"),

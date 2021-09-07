@@ -10,6 +10,7 @@
 *          required=true,
 *          description = "",
 *          @OA\JsonContent(
+*               @OA\Property(property="userId",required=true,type="integer",description = "用户id"),
 *               @OA\Property(property="threadId",required=true,type="integer",description = "主题id"),
 *               @OA\Property(property="type",required=true,type="integer",description = "举报类型(0个人主页 1主题 2评论/回复)",enum={0,1,2}),
 *               @OA\Property(property="reason",required=true,type="string",description="举报原因"),

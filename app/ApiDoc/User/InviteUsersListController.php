@@ -35,6 +35,7 @@
  *                                  @OA\Property(property="pid",type="integer",description="邀请者ID"),
  *                                  @OA\Property(property="userId", type="integer",description="被邀请者ID"),
  *                                  @OA\Property(property="avatar", type="string",description="头像"),
+ *                                  @OA\Property(property="joinedAt",type="string",format="datetime",default="2021-01-02 02:22:22",description = "加入时间"),
  *                                  @OA\Property(property="nickname", type="string",description="用户名"),
  *                                  @OA\Property(property="bounty", type="integer",description="赏金"),
  *                              )
