@@ -61,6 +61,22 @@
  *          url="http://discuz.chat"
  *     )
  * )
+ * @OA\Tag(
+ *     name="附件",
+ *     description="附件相关接口",
+ *     @OA\ExternalDocumentation(
+ *          description="Discuz! Q官方网站",
+ *          url="http://discuz.chat"
+ *     )
+ * )
+ *  * @OA\Tag(
+ *     name="邀请",
+ *     description="邀请件相关接口",
+ *     @OA\ExternalDocumentation(
+ *          description="Discuz! Q官方网站",
+ *          url="http://discuz.chat"
+ *     )
+ * )
  *
  * @OA\Schema(
  *     schema="dzq_layout",
