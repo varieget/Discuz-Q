@@ -20,9 +20,11 @@ namespace App\Api\Controller\SettingsV3;
 use App\Api\Serializer\ForumSettingSerializerV2;
 use App\Common\ResponseCode;
 use App\Common\Utils;
+use App\Events\Users\Forum;
 use App\Settings\SettingsRepository;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Support\Str;
 
 class ForumSettingsController extends DzqController
@@ -33,10 +35,14 @@ class ForumSettingsController extends DzqController
     }
 
     public $settings;
+    protected $events;
 
-    public function __construct(SettingsRepository $settings)
+
+    public function __construct(SettingsRepository $settings, Events $events)
     {
         $this->settings = $settings;
+        $this->events = $events;
+
     }
 
     public function main()
@@ -53,7 +59,10 @@ class ForumSettingsController extends DzqController
             'register' => (bool) ($agreement['register'] ?? false),
             'register_content' => $agreement['register_content'] ?? '',
         ];
+
         $this->hideSensitive($data);
+        $this->events->dispatch(new Forum($this->request, $this->user));
+
         $data = $this->camelData($data);
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
     }

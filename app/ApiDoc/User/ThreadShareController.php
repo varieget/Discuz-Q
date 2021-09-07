@@ -1,16 +1,14 @@
 <?php
 /**
- * Copyright (C) 2021 Tencent Cloud.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @OA\Post(
+ *     path="/apiv3/thread.share",
+ *     summary="记录分享数",
+ *     description="单个帖子的分享数累计",
+ *     tags={"发布与展示"},
+ *     @OA\Parameter(ref="#/components/parameters/bear_token"),
+ *     @OA\RequestBody(required=true,description = "入参body",@OA\JsonContent(
+ *         @OA\Property(property="threadId",type="integer",description="分享的主题id"),
+ *     )),
+ *     @OA\Response(response=200,description="返回删除结果",@OA\JsonContent(ref="#/components/schemas/dzq_layout"))
+ * )
  */

@@ -115,8 +115,6 @@ class ReceiveRedPacket
             $income_change_desc = trans('wallet.redpacket_income');//红包收入
         }
 
-        // Start Transaction
-        $this->connection->beginTransaction();
         try {
             $redPacketData = RedPacket::query()->lockForUpdate()->find($this->redPacket['id']);
             $redPacketData->remain_money = $this->redPacket['remain_money'] - $prepareChangeAmount;
@@ -147,12 +145,8 @@ class ReceiveRedPacket
                 'change_desc' => $income_change_desc
             ];
             $this->bus->dispatch(new ChangeUserWallet($this->incomeUser, UserWallet::OPERATE_INCREASE, $prepareChangeAmount, $data));
-
-            $this->connection->commit();
         } catch (Exception $e) {
-            $this->connection->rollback();
             app('log')->info('红包ID:'.$this->redPacket['id'].'领取异常:' . $e->getMessage());
-
             throw $e;
         }
 

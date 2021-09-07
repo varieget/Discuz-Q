@@ -20,6 +20,7 @@ namespace App\Api\Controller\ThreadsV3;
 #帖子点赞打赏用户列表
 use App\Common\Utils;
 use App\Common\ResponseCode;
+use App\Models\Post;
 use App\Models\Thread;
 use App\Models\PostUser;
 use App\Models\User;
@@ -45,7 +46,6 @@ class ThreadLikedUsersController extends DzqController
     public function main()
     {
         $data = [
-            'postId' => $this->inPut('postId'),
             'threadId' => $this->inPut('threadId'),
             'perPage' => $this->inPut('perPage') ? $this->inPut('perPage') : 10,
             'page' => $this->inPut('page') ? $this->inPut('page') : 0,
@@ -53,12 +53,21 @@ class ThreadLikedUsersController extends DzqController
         ];
 
         $this->dzqValidate($data,[
-            'postId' => 'required|int',
             'threadId' => 'required|int',
             'type' => 'required|integer|in:0,1,2'
         ]);
 
         $thread = Thread::query()->where('id',$data['threadId'])->first(['price','attachment_price']);
+
+        $post = Post::query()
+            ->where(['thread_id' => $data['threadId'], 'is_first' => Post::FIRST_YES])
+            ->whereNull('deleted_at')
+            ->first();
+        if (empty($post)) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '帖子详情不存在');
+        }
+        $data['postId'] = $post['id'];
+
 
         $postUser = PostUser::query()
             ->where('post_id',$data['postId'])

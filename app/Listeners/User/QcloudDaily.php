@@ -66,8 +66,8 @@ class QcloudDaily
         if($isset_daily){
             return;
         }
-        $qcloudSecretId = $settings['qcloud_secret_id'];
-        $qcloudSecretKey = $settings['qcloud_secret_key'];
+        $qcloudSecretId = !empty($settings['qcloud_secret_id']) ? $settings['qcloud_secret_id'] : '';
+        $qcloudSecretKey = !empty($settings['qcloud_secret_key']) ? $settings['qcloud_secret_key'] : '';
         if(empty($qcloudSecretId) || empty($qcloudSecretKey)){
             $uin = '';
         }else{
