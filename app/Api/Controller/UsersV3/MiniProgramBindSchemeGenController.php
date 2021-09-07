@@ -42,7 +42,7 @@ class MiniProgramBindSchemeGenController extends AuthBaseController
      */
     //todo 对接前端时更换路由
     static $schemeTypeAndRouteMap = [
-        'bind_mini'  => 'subPages/user/wx-bind/index'    // 绑定
+        'bind_mini'  => 'userPages/user/wx-bind/index'    // 绑定
     ];
 
     protected $httpClient;
