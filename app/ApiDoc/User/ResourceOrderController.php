@@ -29,7 +29,7 @@
  *     @OA\Property(property="amount", type="number", description="订单金额"),
  *     @OA\Property(property="createdAt", type="string", format="datetime", description="订单创建时间"),
  *     @OA\Property(property="groupId", type="integer", description="组id"),
- *     @OA\Property(property="id", type="interger", description="订单id"),
+ *     @OA\Property(property="id", type="integer", description="订单id"),
  *     @OA\Property(property="orderSn", type="string", description="订单编号"),
  *     @OA\Property(property="status", type="integer", description="订单状态；0：待付款、1：已付款、4：订单已过期"),
  *     @OA\Property(property="threadId", type="integer", description="帖子id"),
