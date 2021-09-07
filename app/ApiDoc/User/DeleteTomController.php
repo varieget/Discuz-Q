@@ -7,13 +7,13 @@
  *     tags={"发布与展示"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
  *     @OA\RequestBody(
- *          required=true,
- *          description = "待删除的主题id",
- *          @OA\JsonContent(
- *              @OA\Property(property="threadId",type="integer",description="主题id"),
- *              @OA\Property(property="tomId",type="integer",description="扩展对象id"),
- *              @OA\Property(property="key",type="integer",description="对象所属索引标记"),
- *          )
+ *         required=true,
+ *         description = "待删除的主题id",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="threadId",type="integer",description="主题id"),
+ *             @OA\Property(property="tomId",type="integer",description="扩展对象id"),
+ *             @OA\Property(property="key",type="integer",description="对象所属索引标记"),
+ *         )
  *     ),
  *     @OA\Response(response=200,description="返回删除结果",@OA\JsonContent(ref="#/components/schemas/dzq_layout"))
  * )

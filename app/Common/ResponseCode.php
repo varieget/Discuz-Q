@@ -132,6 +132,7 @@ class ResponseCode
     const CONFIG_MINIPROGRAM_AND_OPEN = -7081;
     const DOWNLOAD_RESOURCE_IS_INVALID = -7082;
     const DOWNLOAD_NUMS_IS_TOPLIMIT = -7083;
+    const RESOURCE_IS_REVIEW = -7084;
 
     const NEED_BIND_WECHAT = -8000;
     const NEED_BIND_PHONE = -8001;
@@ -248,5 +249,6 @@ class ResponseCode
         self::CONFIG_MINIPROGRAM_AND_OPEN =>'请先配置小程序并开启',
         self::DOWNLOAD_RESOURCE_IS_INVALID =>'下载资源已失效',
         self::DOWNLOAD_NUMS_IS_TOPLIMIT =>'超过今天可下载附件的最大次数',
+        self::RESOURCE_IS_REVIEW =>'资源审核中',
     ];
 }

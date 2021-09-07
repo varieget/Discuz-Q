@@ -17,17 +17,11 @@
  *@OA\Parameter(ref = "#/components/parameters/threadlist_exclusiveIds"),
  *@OA\Parameter(ref = "#/components/parameters/threadlist_categoryids"),
  *
- * @OA\Response(
- *        response = 200,
- *        description = "返回帖子列表",
- *        @OA\JsonContent(allOf ={
- *                @OA\Schema(ref = "#/components/schemas/dzq_layout"),
- *                @OA\Schema(@OA\Property(property = "Data", type = "object",allOf={
- *                    @OA\Schema(ref = "#/components/schemas/dzq_pagination"),
- *                    @OA\Schema(ref = "#/components/schemas/dzq_thread_item")
- *                }))
- *            }
- *        )
- *    )
- *)
+ * @OA\Response(response = 200,description = "返回帖子列表",@OA\JsonContent(allOf ={
+ *     @OA\Schema(ref = "#/components/schemas/dzq_layout"),
+ *     @OA\Schema(@OA\Property(property = "Data", type = "object",allOf={
+ *         @OA\Schema(ref = "#/components/schemas/dzq_pagination"),
+ *         @OA\Schema(ref = "#/components/schemas/dzq_thread_item")
+ *      }))})
+ *  ))
  */

@@ -23,6 +23,8 @@ use App\Models\Category;
 use App\Models\Group;
 use App\Models\Permission;
 use App\Models\Post;
+use App\Models\Setting;
+use App\Models\SiteInfoDaily;
 use App\Models\Thread;
 use App\Models\ThreadTag;
 use App\Models\ThreadTom;
@@ -105,6 +107,7 @@ class CreateThreadController extends DzqController
         try {
             $result = $this->executeEloquent();
             $db->commit();
+            $this->increaseThreads();
             return $result;
         } catch (\Exception $e) {
             $db->rollBack();
@@ -312,5 +315,46 @@ class CreateThreadController extends DzqController
     public function prefixClearCache($user)
     {
         CacheKey::delListCache();
+    }
+
+    public function increaseThreads(){
+        $user_agent = $this->request->getHeaderLine('User-Agent');
+        $today = date("Y-m-d", time());
+        $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
+        if(empty($site_info_daily)){
+            $site_info_daily = new SiteInfoDaily();
+            $site_info_daily->date = $today;
+            $site_info_daily->mini_threads = 0;
+            $site_info_daily->pc_threads = 0;
+            $site_info_daily->h5_threads = 0;
+            $site_info_daily->threads_sum = Thread::query()->where('is_approved', Thread::APPROVED)->whereNotNull('deleted_at')->count();
+        }
+        preg_match('/AppleWebKit.*Mobile.*/',$user_agent, $is_mobile);
+        //获取小程序appid
+        $miniprogram_app_id = Setting::query()->where('key','miniprogram_app_id')->value('value');
+        $referer = $this->request->getHeaderLine('Referer');
+        $is_mini = false;
+        if(!empty($miniprogram_app_id) && strpos($referer, 'https://servicewechat.com/'.$miniprogram_app_id) !== false){
+            $is_mini = true;
+        }
+        $flag = 'web';
+        if(!empty($is_mobile)){
+            $flag = 'h5';
+        }elseif (!empty($is_mini)){
+            $flag = 'mini';
+        }
+        switch ($flag){
+            case 'mini':
+                $site_info_daily->mini_threads += 1;
+                break;
+            case 'h5':
+                $site_info_daily->h5_threads += 1;
+                break;
+            default:
+                $site_info_daily->pc_threads += 1;
+                break;
+        }
+        $site_info_daily->threads_sum += 1;
+        $site_info_daily->save();
     }
 }
