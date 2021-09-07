@@ -69,6 +69,22 @@
  *          url="http://discuz.chat"
  *     )
  * )
+ * @OA\Tag(
+ *     name="附件",
+ *     description="附件相关接口",
+ *     @OA\ExternalDocumentation(
+ *          description="Discuz! Q官方网站",
+ *          url="http://discuz.chat"
+ *     )
+ * )
+ *  * @OA\Tag(
+ *     name="邀请",
+ *     description="邀请件相关接口",
+ *     @OA\ExternalDocumentation(
+ *          description="Discuz! Q官方网站",
+ *          url="http://discuz.chat"
+ *     )
+ * )
  *
  * @OA\Schema(
  *     schema="dzq_layout",
@@ -252,6 +268,7 @@
  *     @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
  *     @OA\Property(property = "diffTime", type = "string",default="5秒前", description = "显示统一规则下的时间差"),
  *     @OA\Property(property = "freewords", type = "number", description = "免费字数占比（0~1）"),
+ *     @OA\Property(property = "userStickStatus", type = "number", enum={0,1}, description = "是否在个人中心置顶（1置顶0不置顶）"),
  *     @OA\Property(property = "user", type = "object", description = "用户信息",
  *          @OA\Property(property = "userId", type = "integer", description = "用户id"),
  *          @OA\Property(property = "nickname", type = "string", description = "昵称"),
