@@ -26,10 +26,10 @@ use Discuz\Base\DzqModel;
 /**
  * Models a thread-user state record in the database.
  *
- * @property int $stick_id
- * @property int $stick_user_id
- * @property int $stick_thread_id
- * @property int $stick_status
+ * @property int $id
+ * @property int $user_id
+ * @property int $thread_id
+ * @property int $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
