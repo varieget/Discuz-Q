@@ -26,7 +26,7 @@ use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
 
-class ThreadCommendController extends DzqController
+class ThreadRecommendController extends DzqController
 {
     use ThreadTrait;
 
@@ -50,6 +50,7 @@ class ThreadCommendController extends DzqController
         $threads = $threads
             ->where('is_essence', 1)
             ->where('is_draft', 0)
+            ->where('is_approved',1)
             ->whereNull('deleted_at')
             ->whereNotNull('user_id')
             ->inRandomOrder()

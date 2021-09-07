@@ -174,6 +174,7 @@ class Thread extends DzqModel
     const CRAWLER_DATA_PLATFORM_OF_WEIBO = 1;
     const CRAWLER_DATA_PLATFORM_OF_TIEBA = 2;
     const CRAWLER_DATA_PLATFORM_OF_DOUBAN = 3;
+    const CRAWLER_DATA_PLATFORM_OF_WECHAT = 4;
     const CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME = 60;
 
     const PRICE_LIMIT = 100000;
@@ -190,6 +191,7 @@ class Thread extends DzqModel
     const PROCESS_OF_INSERT_THREADS = 75;
     const PROCESS_OF_INSERT_POSTS = 99;
     const PROCESS_OF_END_INSERT_CRAWLER_DATA = 100;
+    const IMPORT_WECHAT_DATA_LIMIT = 20;
 
     /**
      * {@inheritdoc}

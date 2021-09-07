@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 
+use App\Common\Platform;
 use App\Models\Category;
 use App\Models\DenyUser;
 use App\Models\Order;
@@ -27,6 +28,7 @@ use App\Models\Thread;
 use App\Models\ThreadTopic;
 use App\Models\ThreadUserStickRecord;
 use Carbon\Carbon;
+use Discuz\Common\Utils;
 
 trait ThreadQueryTrait
 {
@@ -327,8 +329,10 @@ trait ThreadQueryTrait
             ->from('threads as th')
             ->whereNull('th.deleted_at')
             ->whereNotNull('th.user_id')
-            ->where('th.is_draft', $isDraft)
-            ->where('th.is_display', Thread::BOOL_YES);
+            ->where('th.is_draft', $isDraft);
+        if(Utils::requestFrom() == Platform::MinProgram){
+            $threads->where('th.is_display', Thread::BOOL_YES);
+        }
         if ($filterApprove) {
             $threads->where('th.is_approved', Thread::BOOL_YES);
         }

@@ -84,7 +84,7 @@ $route->get('/thread.list','thread.list',ApiController\ThreadsV3\ThreadListContr
 $route->get('/thread.stick','thread.stick',ApiController\ThreadsV3\ThreadStickController::class);
 $route->get('/thread.likedusers','thread.likedusers',ApiController\ThreadsV3\ThreadLikedUsersController::class);
 $route->get('/tom.detail','tom.detail',ApiController\ThreadsV3\SelectTomController::class);
-$route->get('/thread.recommends','thread.recommends',ApiController\ThreadsV3\ThreadCommendController::class);
+$route->get('/thread.recommends','thread.recommends',ApiController\ThreadsV3\ThreadRecommendController::class);
 
 //帖子变更
 $route->post('/thread.create','thread.create',ApiController\ThreadsV3\CreateThreadController::class);
@@ -100,7 +100,6 @@ $route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsCo
 $route->post('/thread.share','thread.share',ApiController\ThreadsV3\ThreadShareController::class);
 $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
 
-$route->get('/attachments', 'attachments.resource', ApiController\AttachmentV3\ResourceAttachmentController::class);
 $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
 $route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
 $route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
