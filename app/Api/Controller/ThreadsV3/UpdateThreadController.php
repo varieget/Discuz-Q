@@ -50,6 +50,7 @@ class UpdateThreadController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        $this->checkThreadPluginAuth($userRepo);
         $this->thread = $this->thread = Thread::query()
             ->where(['id' => $this->inPut('threadId')])
             ->whereNull('deleted_at')
