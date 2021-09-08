@@ -18,6 +18,7 @@
 
 namespace App\Listeners\User;
 
+use App\Common\Platform;
 use App\Events\Users\AdminLogind;
 use App\Events\Users\ChangeUserStatus;
 use App\Events\Users\Forum;
@@ -100,29 +101,14 @@ class UserListener
                 $site_info_daily->new_users = 0;
             }
             //根据header头判断来自哪个端
-            $user_agent = $event->request->getHeaderLine('User-Agent');
-            preg_match('/AppleWebKit.*Mobile.*/',$user_agent, $is_mobile);
-            //获取小程序appid
-            $miniprogram_app_id = Setting::query()->where('key','miniprogram_app_id')->value('value');
-            $referer = $event->request->getHeaderLine('Referer');
-            $is_mini = false;
-            if(!empty($miniprogram_app_id) && strpos($referer, 'https://servicewechat.com/'.$miniprogram_app_id) !== false){
-                $is_mini = true;
-            }
-            $flag = 'web';
-            if(!empty($is_mobile)){
-                $flag = 'h5';
-            }elseif (!empty($is_mini)){
-                $flag = 'mini';
-            }
-            switch ($flag){
-                case 'mini':
+            switch ($event->request->getAttribute('dzqPf')){
+                case Platform::FROM_WEAPP:
                     $site_info_daily->mini_active_users += 1;
                     break;
-                case 'h5':
+                case Platform::FROM_H5:
                     $site_info_daily->h5_active_users += 1;
                     break;
-                default:
+                case Platform::FROM_PC:
                     $site_info_daily->pc_active_users += 1;
                     break;
             }
