@@ -25,7 +25,7 @@
  *
  * @OA\Schema(
  *     schema="dzq_order_detail",
- *     title="object",
+ *     title="订单详情",
  *     @OA\Property(property="amount", type="number", description="订单金额"),
  *     @OA\Property(property="createdAt", type="string", format="datetime", description="订单创建时间"),
  *     @OA\Property(property="groupId", type="integer", description="组id"),
