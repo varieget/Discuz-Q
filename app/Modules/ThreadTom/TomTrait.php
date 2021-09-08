@@ -55,15 +55,7 @@ trait TomTrait
     {
         $config = TomConfig::$map;
         $tomJsons = [];
-        if (isset($tomContent['indexes'])) {
-            $indexes = $tomContent['indexes'];
-        } else {
-            if (isset($tomContent['text'])) {
-                $indexes = [];
-            } else {
-                $indexes = $tomContent;
-            }
-        }
+        $indexes = $this->getContentIndexes($tomContent);
         if (empty($indexes)) return $tomJsons;
         $tomList = [];
         if (!empty($threadId) && empty($operation)) {
@@ -94,6 +86,20 @@ trait TomTrait
             }
         }
         return $tomJsons;
+    }
+
+    private function getContentIndexes($tomContent)
+    {
+        if (isset($tomContent['indexes'])) {
+            $indexes = $tomContent['indexes'];
+        } else {
+            if (isset($tomContent['text'])) {
+                $indexes = [];
+            } else {
+                $indexes = $tomContent;
+            }
+        }
+        return $indexes;
     }
 
     /**
