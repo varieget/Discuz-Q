@@ -41,7 +41,6 @@ trait TomTrait
     private $SELECT_FUNC = 'select';
 
 
-
     /**
      * @desc 支持一次提交包含新建或者更新或者删除等各种类型混合
      * @param $tomContent
@@ -53,7 +52,8 @@ trait TomTrait
      */
     private function tomDispatcher($tomContent, $operation = null, $threadId = null, $postId = null, $canViewTom = true)
     {
-        $config = TomConfig::$map;
+        $config = $this->threadPluginList();
+        dd($config);
         $tomJsons = [];
         $indexes = $this->getContentIndexes($tomContent);
         if (empty($indexes)) return $tomJsons;
@@ -86,6 +86,22 @@ trait TomTrait
             }
         }
         return $tomJsons;
+    }
+
+    /**
+     * @desc 原生插件和外部插件混合
+     */
+    private function threadPluginList()
+    {
+        $config = TomConfig::$map;
+        $pluginList = \App\Common\Utils::getPluginList();
+        foreach ($pluginList as $item) {
+            $config[$item['app_id']] = [
+                'name_en' => $item['name_en'],
+                'service' => $item['busi']
+            ];
+        }
+        return $config;
     }
 
     private function getContentIndexes($tomContent)
@@ -150,13 +166,13 @@ trait TomTrait
      */
     private function needPay($tomJsons)
     {
-        if(empty($tomJsons))        return false;
+        if (empty($tomJsons)) return false;
         $tomTypes = array_keys($tomJsons);
         foreach ($tomTypes as $tomType) {
             $tomService = Arr::get(TomConfig::$map, $tomType . '.service');
             if (class_exists($tomService) && constant($tomService . '::NEED_PAY')) {
                 return true;
-            }else{
+            } else {
                 DzqLog::info('service_not_exist', [$tomService, $tomJsons, $tomTypes]);
             }
         }
@@ -166,23 +182,24 @@ trait TomTrait
 
     /**
      * @param $threadId
-     * @param bool $isDeleteRedOrder        删除红包相关数据
-     * @param bool $isDeleteRewardOrder     删除悬赏相关数据
+     * @param bool $isDeleteRedOrder 删除红包相关数据
+     * @param bool $isDeleteRewardOrder 删除悬赏相关数据
      */
-    public function delRedRelations($threadId, $isDeleteRedOrder = false, $isDeleteRewardOrder = false){
+    public function delRedRelations($threadId, $isDeleteRedOrder = false, $isDeleteRewardOrder = false)
+    {
         //将对应的 order、orderChildren、threadRedPacket、threadReward 与 原帖 脱离关系
         $order = self::getRedOrderInfo($threadId);
-        if(empty($order) || $order->staus != Order::ORDER_STATUS_PAID){         //订单未支付的情况下才删除数据
-            if($isDeleteRedOrder){      //删除之前的order、orderChildren、$threadRedPacket
+        if (empty($order) || $order->staus != Order::ORDER_STATUS_PAID) {         //订单未支付的情况下才删除数据
+            if ($isDeleteRedOrder) {      //删除之前的order、orderChildren、$threadRedPacket
                 Order::query()->where('thread_id', $threadId)->update(['thread_id' => 0]);
-                if($order->type == Order::ORDER_TYPE_MERGE){
+                if ($order->type == Order::ORDER_TYPE_MERGE) {
                     OrderChildren::query()->where(['order_sn' => $order->order_sn, 'thread_id' => $threadId])->update(['thread_id' => 0]);
                 }
                 ThreadRedPacket::query()->where(['thread_id' => $threadId])->update(['thread_id' => 0, 'post_id' => 0]);
             }
-            if($isDeleteRewardOrder){
+            if ($isDeleteRewardOrder) {
                 Order::query()->where('thread_id', $threadId)->update(['thread_id' => 0]);
-                if($order->type == Order::ORDER_TYPE_MERGE){
+                if ($order->type == Order::ORDER_TYPE_MERGE) {
                     OrderChildren::query()->where(['order_sn' => $order->order_sn, 'thread_id' => $threadId])->update(['thread_id' => 0]);
                 }
                 ThreadReward::query()->where(['thread_id' => $threadId])->update(['thread_id' => 0, 'post_id' => 0]);
@@ -190,8 +207,9 @@ trait TomTrait
         }
     }
 
-    public function getRedOrderInfo($threadId){
-        return  Order::query()->where('thread_id', $threadId)
+    public function getRedOrderInfo($threadId)
+    {
+        return Order::query()->where('thread_id', $threadId)
             ->whereIn('type', [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_QUESTION_REWARD, Order::ORDER_TYPE_MERGE])
             ->first();
     }
