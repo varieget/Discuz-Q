@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @OA\Get(
+ * @OA\Post(
  *     path="/apiv3/user/thread.stick",
  *     summary="个人中心帖子置顶",
  *     description="个人中心帖子置顶",

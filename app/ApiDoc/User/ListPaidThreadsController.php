@@ -10,12 +10,14 @@
  *          in="query",
  *          required=false,
  *          description = "页码",
- *          type="integer"),
+ *          @OA\Schema(type="integer")
+ *      ),
  *     @OA\Parameter(name="perPage",
  *          in="query",
  *          required=false,
  *          description = "每页数据条数,不传则默认20，最大值50",
- *          type="integer"),
+ *          @OA\Schema(type="integer")
+ *      ),
  *     @OA\Response(
  *          response=200,
  *          description="返回更新结果",

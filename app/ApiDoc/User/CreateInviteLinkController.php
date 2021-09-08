@@ -10,7 +10,8 @@
  *          in="query",
  *          required=false,
  *          description = "用户组id",
- *          type="integer"),
+ *          @OA\Schema(type="integer")
+ *      ),
  *     @OA\Response(
  *          response=200,
  *          description="返回更新结果",
