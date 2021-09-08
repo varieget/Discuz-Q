@@ -651,4 +651,41 @@
  *     @OA\Property(property = "createdAt", type = "string", description = "创建时间"),
  *     @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
  * )
+ *
+ * @OA\Schema(
+ *     schema = "dzq_emoji",
+ *     title = "表情详情",
+ *     description="表情详情",
+ *     @OA\Property(property = "id", type = "integer", description = "表情id"),
+ *     @OA\Property(property = "category", type = "string", description = "表情类型", default = "qq"),
+ *     @OA\Property(property = "code", type = "string", description = "表情编码", default = ":weixiao:"),
+ *     @OA\Property(property = "createdAt", type = "string", format="datetime", description = "创建时间", default = "2021-08-09T12:16:18.000000Z"),
+ *     @OA\Property(property = "order", type = "integer", description = "序号", default = 1),
+ *     @OA\Property(property = "updatedAt", type = "string", format="datetime", description = "更新时间", default = "2021-08-09T12:16:18.000000Z"),
+ *     @OA\Property(property = "url", type = "string", description = "表情地址", default = "https://discuz.chat/emoji/qq/weixiao.gif")
+ * )
+ *
+ *  @OA\Schema(
+ *     schema="dzq_user_follow_simple_detail",
+ *     title="关注/粉丝用户详情",
+ *     description="关注/粉丝用户详情",
+ *     @OA\Property(property = "createdAt", type="string", description = "创建时间", format = "datetime"),
+ *     @OA\Property(property = "fromUserId", type="integer", description = "关注人id"),
+ *     @OA\Property(property = "id", type="integer", description = "关注id"),
+ *     @OA\Property(property = "isFollow", type="integer", description = "是否关注过别人/被别人关注过"),
+ *     @OA\Property(property = "isMutual", type="integer", description = "是否互关"),
+ *     @OA\Property(property = "toUserId", type="integer", description = "被关注人id"),
+ *     @OA\Property(property = "updatedAt", type="string", format = "datetime", description = "更新时间"),
+ * )
+ *
+ * @OA\Schema(
+ *     schema="dzq_follow_item",
+ *     title="关注/粉丝详情",
+ *     @OA\Property(property = "pageData", type = "array", @OA\Items(type = "object",
+ *          @OA\Property(property = "group", type = "object", ref="#/components/schemas/dzq_group_simple_detail"),
+ *          @OA\Property(property = "user", type = "object", ref="#/components/schemas/dzq_user_simple_detail"),
+ *          @OA\Property(property = "userFollow", type = "object",  ref="#/components/schemas/dzq_user_follow_simple_detail"),
+ *      ))
+ * )
+ *
  */

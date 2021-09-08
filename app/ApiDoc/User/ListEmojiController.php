@@ -19,16 +19,5 @@
  *)
  *
  *
- * @OA\Schema(
- *     schema = "dzq_emoji",
- *     title = "表情详情",
- *     @OA\Property(property = "id", type = "integer", description = "表情id"),
- *     @OA\Property(property = "category", type = "string", description = "表情类型", default = "qq"),
- *     @OA\Property(property = "code", type = "string", description = "表情编码", default = ":weixiao:"),
- *     @OA\Property(property = "createdAt", type = "string", format="datetime", description = "创建时间", default = "2021-08-09T12:16:18.000000Z"),
- *     @OA\Property(property = "order", type = "integer", description = "序号", default = 1),
- *     @OA\Property(property = "updatedAt", type = "string", format="datetime", description = "更新时间", default = "2021-08-09T12:16:18.000000Z"),
- *     @OA\Property(property = "url", type = "string", description = "表情地址", default = "https://discuz.chat/emoji/qq/weixiao.gif")
- * )
  */
 
