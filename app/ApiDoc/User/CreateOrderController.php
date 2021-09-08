@@ -36,6 +36,7 @@
  *
  * @OA\Schema(
  *     schema="dzq_order",
+ *     title="订单状态",
  *     @OA\Property(property="orderSn", type="string", description="订单编号"),
  *     @OA\Property(property="paymentSn", type="string", description="支付订单编号"),
  *     @OA\Property(property="status", type="integer", description="订单状态；0：待付款、1：已付款、4：订单已过期"),
