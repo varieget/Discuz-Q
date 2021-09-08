@@ -220,13 +220,14 @@ class Utils
             $configBase = $pluginDir . '/' . $dirName . '/';
             $configPath = $configBase . $configName;
             $viewPath = $configBase.$viewName.'/';
-            //todo 检查config样式模板
             $config = require($configPath);
-            $config['plugin_'.$config['app_id']] = [
-                'directory' => $configBase,
-                'view' => $viewPath,
-                'config'=>$configPath
-            ];
+            if($config['status'] == DzqConst::BOOL_YES){
+                $config['plugin_'.$config['app_id']] = [
+                    'directory' => $configBase,
+                    'view' => $viewPath,
+                    'config'=>$configPath
+                ];
+            }
             isset($config['app_id']) && $plugins[$config['app_id']] = $config;
         }
         DzqCache::set(CacheKey::PLUGIN_LOCAL_CONFIG, $plugins, 5 * 60);
