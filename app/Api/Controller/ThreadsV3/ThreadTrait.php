@@ -826,7 +826,7 @@ trait ThreadTrait
                 foreach ($indexes as $k => $v) {
                     $pluginName = TomConfig::$map[$k]['enName'];
                     $func = "canInsert{$pluginName}ToThread";
-                    if (!$userRepo->$func($user)) {
+                    if (method_exists($userRepo, $func) && !$userRepo->$func($user)) {
                         $this->outPut(ResponseCode::UNAUTHORIZED, "没有插入" . TomConfig::$map[$k]['desc'] . "权限");
                     }
                 }
