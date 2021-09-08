@@ -100,7 +100,6 @@ $route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsCo
 $route->post('/thread.share','thread.share',ApiController\ThreadsV3\ThreadShareController::class);
 $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
 
-$route->get('/attachments', 'attachments.resource', ApiController\AttachmentV3\ResourceAttachmentController::class);
 $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
 $route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
 $route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
@@ -174,6 +173,7 @@ $route->post('/users/deny.delete', 'user.delete.deny', ApiController\UsersV3\Del
 $route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);
 $route->get('/threads.paid', 'threads.paid', ApiController\UsersV3\ListPaidThreadsController::class);
 
+$route->post('/user/thread.stick','user.thread.stick',ApiController\ThreadsV3\ThreadUserStickController::class);
 
 //待使用接口
 $route->post('/reports', 'reports.create', ApiController\ReportV3\CreateReportsController::class);

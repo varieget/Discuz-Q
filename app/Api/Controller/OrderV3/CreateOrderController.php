@@ -48,7 +48,7 @@ class CreateOrderController extends DzqController
             'group_id' => (int) $this->inPut('groupId') ?? '',
             'payee_id' => (int) $this->inPut('payeeId') ?? 0
         ];
-
+        $this->canCreateOrder($data);
         if ($data['type'] == Order::ORDER_TYPE_MERGE) {
             $totalAmount = $data['red_amount'] + $data['reward_amount'];
             if (Utils::compareMath($totalAmount, $data['amount'])) {
@@ -365,6 +365,24 @@ class CreateOrderController extends DzqController
             $db->rollBack();
             $this->info('createOrderChildren_error_' . $this->user->id, $e->getMessage());
             $this->outPut(ResponseCode::DB_ERROR, $e->getMessage());
+        }
+    }
+
+    /**
+     * @desc 付费站点注册逻辑兜底
+     * @param $data
+     */
+    private function canCreateOrder($data)
+    {
+        if ($data['type'] == Order::ORDER_TYPE_REGISTER) {
+            $order = Order::query()->where([
+                'user_id' => $this->user->id,
+                'type' => Order::ORDER_TYPE_REGISTER,
+                'status' => Order::ORDER_STATUS_PAID
+            ])->whereNotNull('expired_at')->where('expired_at', '>', date('Y-m-d H:i:s'))->first();
+            if (!empty($order)) {
+                $this->outPut(ResponseCode::RESOURCE_EXIST, '不能重复创建注册订单');
+            }
         }
     }
 }

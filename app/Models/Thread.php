@@ -191,6 +191,7 @@ class Thread extends DzqModel
     const PROCESS_OF_INSERT_THREADS = 75;
     const PROCESS_OF_INSERT_POSTS = 99;
     const PROCESS_OF_END_INSERT_CRAWLER_DATA = 100;
+    const IMPORT_WECHAT_DATA_LIMIT = 20;
 
     /**
      * {@inheritdoc}

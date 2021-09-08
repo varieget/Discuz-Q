@@ -72,7 +72,7 @@ class OperateThreadController extends DzqController
 
         if (
             (!empty($isEssence) || $isEssence === 0 || is_bool($isEssence))
-            && !$userRepo->canFavoriteThread($actor)
+            && !$userRepo->canEssenceThread($actor)
         ) {
             throw new PermissionDeniedException('没有加精权限');
         }
@@ -82,9 +82,11 @@ class OperateThreadController extends DzqController
         ) {
             throw new PermissionDeniedException('没有收藏权限');
         }
+        $thread_id = $this->inPut('id');
+        $thread = Thread::getOneActiveThread($thread_id);
         if (
             (!empty($isDeleted) || $isDeleted === 0 || is_bool($isDeleted))
-            && !$userRepo->canFavoriteThread($actor)
+            && !$userRepo->canHideThread($actor,$thread)
         ) {
             throw new PermissionDeniedException('没有删除权限');
         }

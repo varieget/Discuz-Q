@@ -41,9 +41,8 @@ class CreateCrawlerDataController extends DzqController
     {
         $topic = $this->input('topic');
         $this->crawlerPlatform = $this->input('platform') ?: Thread::CRAWLER_DATA_PLATFORM_OF_WEIBO;
-        $officialAccountName = $this->input('officialAccountName');
-        $officialAccountCookie = $this->input('officialAccountCookie');
-        $officialAccountToken = str_replace(' ', '', $this->input('officialAccountToken'));
+        $officialAccountUrl = $this->input('officialAccountUrl');
+
         if (empty($topic) && $this->crawlerPlatform != Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入话题！');
         }
@@ -53,9 +52,12 @@ class CreateCrawlerDataController extends DzqController
         }
 
         $this->categoryId = $category['id'];
-        if ($this->crawlerPlatform == Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT &&
-            (empty($officialAccountName) || empty($officialAccountCookie) || empty($officialAccountToken))) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入公众号相关信息！');
+        if ($this->crawlerPlatform == Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT) {
+            if (empty($officialAccountUrl)) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入公众号文章链接！');
+            } elseif (count($officialAccountUrl) > Thread::IMPORT_WECHAT_DATA_LIMIT) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '公众号文章链接不可超过' . Thread::IMPORT_WECHAT_DATA_LIMIT . '条！');
+            }
         }
 
         $number = $this->input('number');
@@ -81,9 +83,7 @@ class CreateCrawlerDataController extends DzqController
             'platform' => $this->crawlerPlatform,
             'number'   => $number,
             'categoryId' => $this->categoryId,
-            'officialAccountName' => $officialAccountName,
-            'officialAccountCookie' => $officialAccountCookie,
-            'officialAccountToken' => $officialAccountToken
+            'officialAccountUrl' => $officialAccountUrl
         ];
 
         $crawlerSplQueue = new \SplQueue();

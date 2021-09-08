@@ -26,6 +26,7 @@ use App\Models\Post;
 use App\Models\Sequence;
 use App\Models\Thread;
 use App\Models\ThreadTopic;
+use App\Models\ThreadUserStickRecord;
 use Carbon\Carbon;
 use Discuz\Common\Utils;
 
@@ -77,7 +78,17 @@ trait ThreadQueryTrait
                         $threads = $threads->where('th.is_anonymous', Thread::IS_NOT_ANONYMOUS);
                     }
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
-                    $threads = $threads->where('user_id', $userId)
+
+                    //个人中心置顶
+                    {
+                        $threads = $threads->leftJoin('thread_sticks as thstick', function($thjoin){
+                            $thjoin->on('th.id', '=', 'thstick.thread_id')->on('th.user_id', '=', 'thstick.user_id');
+                        })->addSelect('thstick.status')
+                            ->orderByDesc('thstick.status');  //置顶，该sql放第一位
+
+                    }
+
+                    $threads = $threads->where('th.user_id', $userId)
                         ->orderByDesc('th.id');
                     break;
             }
