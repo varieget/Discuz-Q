@@ -30,7 +30,7 @@
  *
  * @OA\Schema(
  *     schema="dzq_pay_order",
- *     title="支付订单数据,
+ *     title="支付订单数据",
  *     @OA\Property(property="desc", type="string", description="描述"),
  *     @OA\Property(property="walletPayResult", type="object", description="钱包支付结果",
  *          @OA\Property(property="message", type="string", description="结果描述"),
