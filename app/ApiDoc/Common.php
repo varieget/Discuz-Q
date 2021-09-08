@@ -599,7 +599,7 @@
  *
  * @OA\Schema(
  *     schema="dzq_user_model",
- *     title="用户model",
+ *     title="用户表数据",
  *     @OA\Property(property = "id", type = "integer", description = "用户id"),
  *     @OA\Property(property = "username", type = "string", description = "用户名"),
  *     @OA\Property(property = "password", type = "string", description = "密码"),
@@ -634,7 +634,7 @@
  *
  * @OA\Schema(
  *     schema="dzq_wechat_user_model",
- *     title="微信用户model",
+ *     title="微信用户表数据",
  *     @OA\Property(property = "id", type = "integer", description = "自增长id"),
  *     @OA\Property(property = "userId", type = "integer", description = "用户id"),
  *     @OA\Property(property = "mpOpenid", type = "string", description = "公众号openid"),
