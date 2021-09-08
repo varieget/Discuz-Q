@@ -94,19 +94,6 @@ trait TomTrait
                         $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body, $canViewTom]);
                     }
                     method_exists($service, $op) && $tomJsons[$key] = $service->$op();
-//                    if (isset($config[$tomId])) {
-//                        try {
-//                            $service = new \ReflectionClass($config[$tomId]['service']);
-//                            if (empty($tomJson['threadId'])) {
-//                                $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body, $canViewTom]);
-//                            } else {
-//                                $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body, $canViewTom]);
-//                            }
-//                            method_exists($service, $op) && $tomJsons[$key] = $service->$op();
-//                        } catch (\ReflectionException $e) {
-//                            Utils::outPut(ResponseCode::INTERNAL_ERROR, $e->getMessage());
-//                        }
-//                    }
                 }
             }
         }
@@ -171,95 +158,6 @@ trait TomTrait
             'operation' => $operation,
             'body' => $body
         ];
-    }
-
-    /**
-     * @desc 创建新贴权限
-     * @param User $user
-     * @param $categoryId
-     * @return bool
-     */
-    private function canCreateThread(User $user, $categoryId)
-    {
-        if ($user->isAdmin()) {
-            return true;
-        }
-        $permissions = Permission::getUserPermissions($user);
-        $permission = 'category' . $categoryId . '.createThread';
-        if (in_array('createThread', $permissions) || in_array($permission, $permissions)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @desc 阅读帖子详情权限
-     * @param $user
-     * @param $thread
-     * @return bool
-     */
-    private function canViewThreadDetail($user, $thread)
-    {
-        if ($user->isAdmin() || $user->id == $thread['user_id']) {
-            return true;
-        }
-        $permissions = Permission::getUserPermissions($user);
-        $permission = 'category' . $thread['category_id'] . '.thread.viewPosts';
-        if (in_array('thread.viewPosts', $permissions) || in_array($permission, $permissions)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @desc 编辑更新帖子权限
-     * @param User $user
-     * @param $categoryId
-     * @param null $threadUserId
-     * @return bool
-     */
-    private function canEditThread(User $user, $categoryId, $threadUserId = null)
-    {
-        if ($user->isAdmin()) {
-            return true;
-        }
-        $permissions = Permission::getUserPermissions($user);
-        $permission = 'category' . $categoryId . '.thread.edit';
-        if (in_array('thread.edit', $permissions) || in_array($permission, $permissions)) {
-            return true;
-        }
-        if (!empty($threadUserId) && $user->id == $threadUserId) {
-            $permission = 'category' . $categoryId . '.thread.editOwnThreadOrPost';
-            if (in_array('thread.editOwnThreadOrPost', $permissions) || in_array($permission, $permissions)) {
-                return true;
-            }
-        }
-    }
-
-    /**
-     * @desc 删除帖子的权限
-     * @param User $user
-     * @param $categoryId
-     * @param null $threadUserId
-     * @return bool
-     */
-    private function canDeleteThread(User $user, $categoryId, $threadUserId = null)
-    {
-        if ($user->isAdmin()) {
-            return true;
-        }
-        $permissions = Permission::getUserPermissions($user);
-        $permission = 'category' . $categoryId . '.thread.hide';
-        if (in_array('thread.hide', $permissions) || in_array($permission, $permissions)) {
-            return true;
-        }
-        if (!empty($threadUserId) && $user->id == $threadUserId) {
-            $permission = 'category' . $categoryId . '.thread.hideOwnThreadOrPost';
-            if (in_array('thread.hideOwnThreadOrPost', $permissions) || in_array($permission, $permissions)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
