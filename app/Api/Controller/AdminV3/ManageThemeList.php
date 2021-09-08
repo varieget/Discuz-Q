@@ -129,11 +129,12 @@ class ManageThemeList extends DzqController
             $query->where('threads.is_sticky', 1)
                 ->where('threads.is_essence', 1);
         } else if ($threadType == 4){
-            $query->where('threads.is_site', 1)
+            $query->where('threads.is_site', 1);
+            /* $query->where('threads.is_site', 1)
                 ->where(function ($query) {
                     $query->orWhere('threads.price', '>', 0)
                         ->orWhere('threads.attachment_price', '>' ,0);
-                });
+                }); */
         }
 
         //帖子id筛选
