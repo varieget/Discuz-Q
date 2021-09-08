@@ -41,7 +41,6 @@ trait TomTrait
     private $SELECT_FUNC = 'select';
 
 
-    private $CLOSE_BUSI_PERMISSION = true;
 
     /**
      * @desc 支持一次提交包含新建或者更新或者删除等各种类型混合
@@ -76,25 +75,22 @@ trait TomTrait
         }
         foreach ($indexes as $key => $tomJson) {
             $this->setOperation($threadId, $operation, $key, $tomJson, $tomList);
-            $this->busiPermission($this->user, $tomJson);
-            if (isset($tomJson['tomId']) && isset($tomJson['operation'])) {
-                if (in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
-                    $tomId = strval($tomJson['tomId']);
-                    $op = $tomJson['operation'];
-                    $body = $tomJson['body'] ?? false;
-                    if (isset($config[$tomId])) {
-                        $busiClass = $config[$tomId]['service'];
-                    } else {
-                        $busiClass = \App\Modules\ThreadTom\Busi\DefaultBusi::class;
-                    }
-                    $service = new \ReflectionClass($busiClass);
-                    if (empty($tomJson['threadId'])) {
-                        $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body, $canViewTom]);
-                    } else {
-                        $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body, $canViewTom]);
-                    }
-                    method_exists($service, $op) && $tomJsons[$key] = $service->$op();
+            if (isset($tomJson['tomId']) && isset($tomJson['operation']) && in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
+                $tomId = strval($tomJson['tomId']);
+                $op = $tomJson['operation'];
+                $body = $tomJson['body'] ?? false;
+                if (isset($config[$tomId])) {
+                    $busiClass = $config[$tomId]['service'];
+                } else {
+                    $busiClass = \App\Modules\ThreadTom\Busi\DefaultBusi::class;
                 }
+                $service = new \ReflectionClass($busiClass);
+                if (empty($tomJson['threadId'])) {
+                    $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body, $canViewTom]);
+                } else {
+                    $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body, $canViewTom]);
+                }
+                method_exists($service, $op) && $tomJsons[$key] = $service->$op();
             }
         }
         return $tomJsons;
@@ -129,26 +125,6 @@ trait TomTrait
         }
         return $tomJson;
     }
-
-    private function busiPermission(User $user, $tom)
-    {
-        if ($this->CLOSE_BUSI_PERMISSION) {
-            return true;
-        }
-        if ($user->isAdmin()) {
-            return true;
-        }
-        if (!empty($tom['operation']) && $tom['operation'] == $this->CREATE_FUNC) {
-            $tomConfig = TomConfig::$map[$tom['tomId']];
-            $permissions = Permission::getUserPermissions($this->user);
-            //todo 权限名称+分组id
-            if (!in_array($tomConfig['authorize'], $permissions)) {
-                Utils::outPut(ResponseCode::UNAUTHORIZED, sprintf('没有插入【%s】权限', $tomConfig['desc']));
-            }
-        }
-        return true;
-    }
-
 
     private function buildTomJson($threadId, $tomId, $operation, $body)
     {

@@ -220,23 +220,6 @@ class CreateThreadController extends DzqController
         return $thread;
     }
 
-    /**
-     * @desc  todo 扩展属性权限判断,后面迁移到busi插件里
-     * @param $permission
-     * @param $msg
-     */
-    private function propertyExtendPermission($permission, $msg)
-    {
-        $permissions = Permission::getUserPermissions($this->user);
-        if (!in_array($permission, $permissions) && !$this->user->isAdmin()) {
-            //todo 联调关闭权限检查
-            if (!$this->CLOSE_BUSI_PERMISSION) {
-                $this->outPut(ResponseCode::UNAUTHORIZED, $msg);
-            }
-        }
-    }
-
-
     private function savePost($thread, $content)
     {
         $text = $content['text'];
