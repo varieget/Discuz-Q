@@ -801,5 +801,37 @@ trait ThreadTrait
 
         return $content;
     }
+    //检查发帖和更新帖子的内容权限
+    private function checkThreadPluginAuth(UserRepository $userRepo)
+    {
+        $price = floatval($this->inPut('price'));
+        $attachmentPrice = floatval($this->inPut('attachmentPrice'));
+        $position = $this->inPut('position');
+        $isAnonymous = $this->inPut('anonymous');
+        $content = $this->inPut('content');
+        $user = $this->user;
+        if (empty($user)) $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+        if (($price > 0 || $attachmentPrice > 0) && !$userRepo->canInsertPayToThread($user)) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '没有插入付费权限');
+        }
+        if (!empty($position) && !$userRepo->canInsertPositionToThread($user)) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '没有插入位置信息权限');
+        }
+        if (!empty($isAnonymous) && !$userRepo->canCreateThreadAnonymous($user)) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '没有匿名发帖权限');
+        }
+        if (!empty($content) && !empty($content['indexes'])) {
+            $indexes = $content['indexes'];
+            if (is_array($indexes)) {
+                foreach ($indexes as $k => $v) {
+                    $pluginName = TomConfig::$map[$k]['enName'];
+                    $func = "canInsert{$pluginName}ToThread";
+                    if (!$userRepo->$func($user)) {
+                        $this->outPut(ResponseCode::UNAUTHORIZED, "没有插入" . TomConfig::$map[$k]['desc'] . "权限");
+                    }
+                }
+            }
+        }
+    }
 }
 
