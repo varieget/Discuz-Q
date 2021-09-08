@@ -1,6 +1,6 @@
 <?php
 /**
- * @OA\Get(
+ * @OA\Post(
  *     path="/apiv3/vote.thread",
  *     summary="投票",
  *     description="投票",
@@ -13,7 +13,7 @@
  *              @OA\Property(property="threadId",type="integer",description="主题id"),
  *              @OA\Property(property="vote",type="object",description = "",
  *                  @OA\Property(property="id",type="integer",description = "投票id"),
- *                  @OA\Property(property="subitemIds",type="array",description = "投票选项数组[选项id]"),
+ *                  @OA\Property(property="subitemIds",type="array",description = "投票选项数组[选项id]",@OA\Items(type="integer")),
  *              ),
  *          )
  *     ),
@@ -41,7 +41,7 @@
  *                                      @OA\Property(property="content",type="string",description="选项内容"),
  *                                      @OA\Property(property="voteCount",type="integer", description="选择次数"),
  *                                      @OA\Property(property="isVoted",type="boolean",description="已选择"),
- *                                      @OA\Property(property="voteRate",type="string",defualt="0%",description="选择占比"),
+ *                                      @OA\Property(property="voteRate",type="string",default="0%",description="选择占比"),
  *                                  ),
  *                              ),
  *                          ),

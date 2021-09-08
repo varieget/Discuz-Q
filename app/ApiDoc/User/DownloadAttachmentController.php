@@ -10,12 +10,18 @@
  *          in="query",
  *          required=true,
  *          description = "唯一识别",
- *          type="integer"),
+ *          @OA\Schema(type="integer")
+ *      ),
  *     @OA\Parameter(name="attachmentsId",
  *          in="query",
  *          required=true,
  *          description = "附件id",
- *          type="integer"),
+ *          @OA\Schema(type="integer")
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="返回更新结果",
+ *     )
  * )
  */
 
