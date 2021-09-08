@@ -20,7 +20,7 @@ trait CrawlerTrait
         return $lockFileContent;
     }
 
-    public function changeLockFileContent($lockPath, $startCrawlerTime, $progress, $status, $topic)
+    public function changeLockFileContent($lockPath, $startCrawlerTime, $progress, $status, $topic, $totalDataNumber = '')
     {
         if (!file_exists($lockPath)) {
             touch($lockPath);
@@ -30,7 +30,8 @@ trait CrawlerTrait
             'progress' => floor((string)$progress),
             'startCrawlerTime' => $startCrawlerTime,
             'runtime' => 0,
-            'topic' => $topic
+            'topic' => $topic,
+            'totalDataNumber' => (int) $totalDataNumber
         ];
         $writeCrawlerSplQueueLock = fopen($lockPath, 'w');
         fwrite($writeCrawlerSplQueueLock, json_encode($data));

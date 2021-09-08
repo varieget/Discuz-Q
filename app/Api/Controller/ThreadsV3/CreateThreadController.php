@@ -45,7 +45,7 @@ class CreateThreadController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $settings   = app(SettingsRepository::class);
+        $this->checkThreadPluginAuth($userRepo);
         $categoryId = $this->inPut('categoryId');
         $user = $this->user;
 

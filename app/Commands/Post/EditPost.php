@@ -20,6 +20,7 @@ namespace App\Commands\Post;
 
 use App\Censor\Censor;
 use App\Censor\CensorNotPassedException;
+use App\Common\ResponseCode;
 use App\Events\Post\PostWasApproved;
 use App\Events\Post\Revising;
 use App\Events\Post\Saved;
@@ -30,6 +31,7 @@ use App\Models\User;
 use App\Repositories\PostRepository;
 use App\Validators\PostValidator;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Common\Utils;
 use Discuz\Foundation\EventsDispatchTrait;
 use EasyWeChat\Kernel\Exceptions\InvalidConfigException;
 use GuzzleHttp\Exception\GuzzleException;
@@ -89,11 +91,15 @@ class EditPost
     public function handle(Dispatcher $events, PostRepository $posts, Censor $censor, PostValidator $validator)
     {
         $this->events = $events;
-
-        $post = Post::query()->where('id', $this->postId)->firstOrFail();
-
         $attributes = Arr::get($this->data, 'attributes', []);
-
+        if (isset($attributes['isDeleted']) && $attributes['isDeleted'] == 1) {
+            $post = Post::query()->where(['id' => $this->postId, 'is_first' => Post::FIRST_NO])->whereNull('deleted_at')->first();
+        } else {
+            $post = Post::query()->where(['id' => $this->postId])->first();
+        }
+        if (empty($post)) {
+            Utils::outPut(ResponseCode::RESOURCE_NOT_FOUND, '资源不存在');
+        }
         if (isset($attributes['content'])) {
             $post->raise(new Revising($post, $this->actor, $this->data));
 
