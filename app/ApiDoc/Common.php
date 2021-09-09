@@ -666,36 +666,7 @@
  *     @OA\Property(property = "updatedAt", type="string", format = "datetime", description = "更新时间"),
  * )
  *
- * @OA\Schema(
- *     schema="dzq_follow_item",
- *     title="关注/粉丝详情",
- *     @OA\Property(property = "pageData", type = "array", @OA\Items(type = "object",
- *          @OA\Property(property = "group", type = "object", ref="#/components/schemas/dzq_group_simple_detail"),
- *          @OA\Property(property = "user", type = "object", ref="#/components/schemas/dzq_user_simple_detail"),
- *          @OA\Property(property = "userFollow", type = "object",  ref="#/components/schemas/dzq_user_follow_simple_detail"),
- *      ))
- * )
  *
- * @OA\Schema(
- *     schema = "dzq_category",
- *     title = "分类详情",
- *     @OA\Property(property = "pid", type = "integer", description = "分类id"),
- *     @OA\Property(property = "canCreateThread", type = "boolean", description = "该分类是否能发帖"),
- *     @OA\Property(property = "name", type = "string", description = "分类名称"),
- *     @OA\Property(property = "parentid", type = "integer", description = "父级分类id"),
- *     @OA\Property(property = "sort", type = "integer", description = "序号"),
- *     @OA\Property(property = "threadCount", type = "integer", description = "帖子数量"),
- *     @OA\Property(property = "searchIds", type= "array",  description = "可搜索的子分类", @OA\Items(type="integer")),
- *     @OA\Property(property = "children", type = "array", description = "子分类", @OA\Items(
- *     type="object",
- *          @OA\Property(property = "pid", type = "integer", description = "分类id"),
- *          @OA\Property(property = "canCreateThread", type = "boolean", description = "该分类是否能发帖"),
- *          @OA\Property(property = "name", type = "string", description = "分类名称"),
- *          @OA\Property(property = "parentid", type = "integer", description = "父级分类id"),
- *          @OA\Property(property = "sort", type = "integer", description = "序号"),
- *          @OA\Property(property = "threadCount", type = "integer", description = "帖子数量"),
- * ))
- * )
  *
  *  * @OA\Schema(
  *     schema="dzq_post_detail",

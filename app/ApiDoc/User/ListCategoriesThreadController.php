@@ -12,7 +12,7 @@
  *        description = "返回帖子分类列表",
  *        @OA\JsonContent(allOf ={
  *                @OA\Schema(ref = "#/components/schemas/dzq_layout"),
- *                @OA\Schema(@OA\Property(property = "Data", type = "array", description="帖子分类列表", @OA\Items(type = "object",
+ *                @OA\Schema(title="帖子分类列表", description="帖子分类列表", @OA\Property(property = "Data", type = "array", description="帖子分类列表", @OA\Items(type = "object",
  *                  @OA\Property(property = "pid", type = "integer", description = "分类id"),
  *                  @OA\Property(property = "canCreateThread", type = "boolean", description = "该分类是否能发帖子"),
  *                  @OA\Property(property = "canEditThread", type = "boolean", description = "该分类是否能编辑帖子"),

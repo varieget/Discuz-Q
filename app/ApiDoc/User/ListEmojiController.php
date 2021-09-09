@@ -12,7 +12,7 @@
  *        description = "返回表情列表",
  *        @OA\JsonContent(allOf ={
  *                @OA\Schema(ref = "#/components/schemas/dzq_layout"),
- *                @OA\Schema(@OA\Property(property = "Data", type = "array", description="表情列表", @OA\Items(type = "object",
+ *                @OA\Schema(title="表情列表", description="表情列表",@OA\Property(property = "Data", type = "array", description="表情列表", @OA\Items(type = "object",
  *                      @OA\Property(property = "id", type = "integer", description = "表情id"),
  *                      @OA\Property(property = "category", type = "string", description = "表情类型", default = "qq"),
  *                      @OA\Property(property = "code", type = "string", description = "表情编码", default = ":weixiao:"),

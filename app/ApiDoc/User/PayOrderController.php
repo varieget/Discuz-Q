@@ -19,7 +19,7 @@
  *
  * @OA\Response(
  *        response = 200,
- *        description = "",
+ *        description = "钱包支付响应",
  *        @OA\JsonContent(allOf ={
  *                @OA\Schema(ref = "#/components/schemas/dzq_layout"),
  *                @OA\Schema(title="支付订单数据", description="支付订单数据", @OA\Property(property="Data",type="object",

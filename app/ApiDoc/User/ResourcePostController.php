@@ -18,7 +18,7 @@
  *        description="订单详情",
  *        @OA\JsonContent(allOf={
  *            @OA\Schema(ref="#/components/schemas/dzq_layout"),
- *            @OA\Schema(@OA\Property(property="Data",type="object", allOf={
+ *            @OA\Schema(title="评论详情", description="评论详情",@OA\Property(property="Data",type="object", allOf={
                     @OA\Schema( ref="#/components/schemas/dzq_post_detail"),
  *                  @OA\Schema( title="评论详情附加项", description="评论详情附加项",
  *                      @OA\Property(property="commentPosts", type="array", @OA\Items(
