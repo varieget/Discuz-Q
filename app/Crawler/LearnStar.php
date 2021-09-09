@@ -4,9 +4,9 @@
 namespace App\Crawler;
 
 
-class LeanStar
+class LearnStar
 {
-    private $cookie = 'sensorsdata2015jssdkcross=%7B%22distinct_id%22%3A%2217b7b43630b3fa-085d629eefb5fa-c343365-1327104-17b7b43630cb03%22%2C%22first_id%22%3A%22%22%2C%22props%22%3A%7B%7D%2C%22%24device_id%22%3A%2217b7b43630b3fa-085d629eefb5fa-c343365-1327104-17b7b43630cb03%22%7D; zsxq_access_token=BA81A50F-6396-ECFD-911A-1420740E002F_F6DE2B0A0F5B4E57; abtest_env=product';
+    private $cookie = '';
 
 
     /**
@@ -18,51 +18,67 @@ class LeanStar
      */
     public function main($topic, $num = 1, $cookie = '')
     {
-
         set_time_limit(0);
-
         $this->cookie = $cookie;
-
         return $this->getData($topic, $num);
     }
 
-    private function getData($topic, $page){
+    private function getData($topic, $num){
         $filterList = [];
         //搜索
-        $this->getData_groupsSearch();
-
-        //拉取全部
-        $groupIdList = $this->getData_groups();
-        $threadDataList = [];
-        foreach ($groupIdList as $gId){
-            $oneGroup = $this->getData_oneGroup($gId, $page,$filterList);
-            $threadDataList = array_merge($threadDataList,$oneGroup);
+        $threadDataList = $this->getData_groupsSearch($topic,$num);
+        foreach ($threadDataList as $oneThread){
+            if(!empty($oneThread["forum"] && !empty($oneThread["forum"]["id"]))){
+                $id = $oneThread["forum"]["id"];
+                array_push($filterList,$id);
+            }
         }
+
+//        $lefNum = $num-count($threadDataList);
+//        if ($lefNum<$num){
+//            //拉取全部
+//            $groupIdList = $this->getData_groups();
+//            foreach ($groupIdList as $gId){
+//                $oneGroup = $this->getData_oneGroup($gId, $lefNum,$filterList);
+//                $threadDataList = array_merge($threadDataList,$oneGroup);
+//            }
+//        }
+
 
         return $threadDataList;
     }
 
     private function getData_groupsSearch($key,$num){
-
-        $url = "https://api.zsxq.com/v2/search/topics?keyword=".urlencode($key)."&index=0&count=".$num;
-        $html = $this->getDataByUrl($url);
-        $data = json_decode($html);
         $ret = [];
-        if(empty($data)){
-            return $ret;
-        }
-        if($data->succeeded != true){
-            return $ret;
-        }
+        $curIndex = 0;
+        $count = $num<30?$num:30;
+        for ($i=0;$i<100;$i++){
+            $url = "https://api.zsxq.com/v2/search/topics?keyword=".urlencode($key)."&index=".$curIndex."&count=".$count;
+            $html = $this->getDataByUrl($url);
+            $data = json_decode($html);
 
-        $resp_data = $data->resp_data;
-        if(empty($resp_data->topics)){
-            foreach ($resp_data->topics as $oneTopic){
-                //$this—>($oneTopic);
+            if(empty($data)){
+                break;
+            }
+            if($data->succeeded != true){
+                break;
             }
 
+            $resp_data = $data->resp_data;
+            if(!empty($resp_data->topics)){
+                foreach ($resp_data->topics as $oneTopic){
+                    $oneThread = $this->paseOneTopic($oneTopic->topic);
+                    array_push($ret, $oneThread);
+                }
+            }
+            if ($count<30 || count($resp_data->topics) < $count){
+                break;
+            }
+
+            $curIndex = $curIndex+count($resp_data->topics);
         }
 
+        return $ret;
     }
 
     private function getData_groups(){
@@ -91,7 +107,7 @@ class LeanStar
         $threadDataList=[];
         $leftN = $num;
         $endTime = null;
-        while (true){
+        for($i=0;$i<100;$i++){
             $oneN = $leftN>=20?20:$leftN;
 
             list($data,$endTime,$isFull) = $this->getData_oneGroupPer($gId, $endTime, $oneN,$filterIdList);
@@ -133,7 +149,6 @@ class LeanStar
 
         $url = "https://api.zsxq.com/v2/groups/".$gId."/topics?scope=all&count=".$num;
         if ($endTime!=null){
-            //时间减1
             $tempET = urlencode($endTime);
             $url = "https://api.zsxq.com/v2/groups/".$gId."/topics?scope=all&count=".($num+1)."&end_time=".$tempET;
         }
@@ -150,8 +165,12 @@ class LeanStar
         }
 
         $respData = $data->resp_data;
+
+        if(empty($respData->topics)){
+            return [$ret];
+        }
         $topics = $respData->topics;
-        $isFull = count($topics)==$num;
+        $isFull = count($topics)>=$num;
 
         $i=0;
         if(!empty($endTime)){
@@ -159,13 +178,14 @@ class LeanStar
         }
         for (;$i<count($topics);$i++){
             $oneTopic = $topics[$i];
+            if (array_key_exists($oneTopic->topic_id,$filterIds)){
+                $oneD = $this->paseOneTopic($oneTopic);
+            }
 
-            $oneD = $this->paseOneTopic($oneTopic);
 
             array_push($ret, $oneD);
 
             if (!empty($oneD->forum)){
-
                 $endTime = $oneD->forum->create_at;
             }
         }
