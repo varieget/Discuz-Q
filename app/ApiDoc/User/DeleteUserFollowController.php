@@ -2,11 +2,11 @@
 /**
  *@OA\Post(
  *    path = "/apiv3/follow.delete",
- *    summary = "个人中心",
+ *    summary = "删除我的关注/粉丝",
  *    description = "Discuz! Q 删除我的关注/粉丝",
  *    tags ={"个人中心"},
  *    @OA\Parameter(ref = "#/components/parameters/bear_token"),
- *     @OA\RequestBody(
+ *    @OA\RequestBody(
  *        required=true,
  *        description = "取消关注/粉丝",
  *        @OA\JsonContent(
@@ -15,7 +15,7 @@
  *        )
  *     ),
  *
- * @OA\Response(
+ *    @OA\Response(
  *        response = 200,
  *        description = "",
  *        @OA\JsonContent(allOf ={

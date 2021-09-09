@@ -2,16 +2,16 @@
 /**
  *@OA\Get(
  *    path = "/apiv3/follow",
- *    summary = "个人中心",
+ *    summary = "我的关注/粉丝列表",
  *    description = "Discuz! Q 关注/粉丝列表",
  *    tags ={"个人中心"},
- *@OA\Parameter(ref = "#/components/parameters/bear_token"),
- *@OA\Parameter(ref = "#/components/parameters/page"),
- *@OA\Parameter(ref = "#/components/parameters/perPage"),
- *@OA\Parameter(ref = "#/components/parameters/filter_userId"),
- *@OA\Parameter(ref = "#/components/parameters/filter_type"),
+ *    @OA\Parameter(ref = "#/components/parameters/bear_token"),
+ *    @OA\Parameter(ref = "#/components/parameters/page"),
+ *    @OA\Parameter(ref = "#/components/parameters/perPage"),
+ *    @OA\Parameter(ref = "#/components/parameters/filter_userId"),
+ *    @OA\Parameter(ref = "#/components/parameters/filter_type"),
  *
- * @OA\Response(
+ *    @OA\Response(
  *        response = 200,
  *        description = "返回关注/粉丝列表",
  *        @OA\JsonContent(allOf ={
