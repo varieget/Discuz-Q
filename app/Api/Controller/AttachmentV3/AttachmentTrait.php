@@ -104,7 +104,7 @@ trait AttachmentTrait
             $thumbUrl = $cosUrl . '?' . $thumbParameter;
         }
         $imageInfo = $this->getFileContents($newCosUrl);
-        $censor->checkImage($thumbUrl, true);
+        $censor->checkImage($cosUrl, true);
         if (!$imageInfo) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息！');
         }
