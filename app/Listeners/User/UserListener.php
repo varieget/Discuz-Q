@@ -128,7 +128,7 @@ class UserListener
     public function startStatistics(Forum $event){
         $get_query_params = $event->request->getQueryParams();
         $start_peoples_dzqSid = app('cache')->get('start_peoples_dzqSid');
-        if(empty($start_peoples))    $start_peoples = [];
+        if(empty($start_peoples_dzqSid))    $start_peoples_dzqSid = [];
         $today = date("Y-m-d", time());
         $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
         if(empty($site_info_daily)){
@@ -173,7 +173,7 @@ class UserListener
             $site_info_daily->start_peoples += 1;
         }
         $site_info_daily->save();
-        if($event->user->id && !in_array($event->user->id, $start_peoples) && !empty($cache_time)){
+        if($event->user->id && !in_array($event->user->id, $start_peoples_dzqSid) && !empty($cache_time)){
             array_push($start_peoples_dzqSid, $get_query_params['dzqSid']);
             app('cache')->put('start_peoples_dzqSid' , $start_peoples_dzqSid, $cache_time);
         }
