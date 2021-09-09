@@ -387,6 +387,9 @@ abstract class AuthBaseController extends DzqController
             );
             return $response;
         } catch (\Exception $e) {
+            if (array_key_exists('password', $data)) {
+                unset($data['password']);
+            }
             DzqLog::error('login_error', $data, $e->getMessage());
             if (empty($e->getMessage())) {
                 return $this->outPut(ResponseCode::USERNAME_OR_PASSWORD_ERROR);

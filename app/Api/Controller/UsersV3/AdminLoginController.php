@@ -68,6 +68,7 @@ class AdminLoginController extends DzqController
                 new GenJwtToken($data)
             );
         } catch (Exception $e) {
+            unset($data['password']);
             DzqLog::error('admin_login_error', $data, $e->getMessage());
             if (empty($e->getMessage())) {
                 return $this->outPut(ResponseCode::USERNAME_OR_PASSWORD_ERROR);
