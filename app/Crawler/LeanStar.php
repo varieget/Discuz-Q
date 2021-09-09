@@ -1,0 +1,517 @@
+<?php
+
+
+namespace App\Crawler;
+
+
+class LeanStar
+{
+    private $cookie = 'sensorsdata2015jssdkcross=%7B%22distinct_id%22%3A%2217b7b43630b3fa-085d629eefb5fa-c343365-1327104-17b7b43630cb03%22%2C%22first_id%22%3A%22%22%2C%22props%22%3A%7B%7D%2C%22%24device_id%22%3A%2217b7b43630b3fa-085d629eefb5fa-c343365-1327104-17b7b43630cb03%22%7D; zsxq_access_token=BA81A50F-6396-ECFD-911A-1420740E002F_F6DE2B0A0F5B4E57; abtest_env=product';
+
+
+    /**
+     * @method  主入口
+     * @param string $topic 话题
+     * @param int $page 获取几天前的数据，每次获取10天
+     * @param string $cookie 用户cookie
+     * @return array
+     */
+    public function main($topic, $num = 1, $cookie = '')
+    {
+
+        set_time_limit(0);
+
+        $this->cookie = $cookie;
+
+        return $this->getData($topic, $num);
+    }
+
+    private function getData($topic, $page){
+        $filterList = [];
+        //搜索
+        $this->getData_groupsSearch();
+
+        //拉取全部
+        $groupIdList = $this->getData_groups();
+        $threadDataList = [];
+        foreach ($groupIdList as $gId){
+            $oneGroup = $this->getData_oneGroup($gId, $page,$filterList);
+            $threadDataList = array_merge($threadDataList,$oneGroup);
+        }
+
+        return $threadDataList;
+    }
+
+    private function getData_groupsSearch($key,$num){
+
+        $url = "https://api.zsxq.com/v2/search/topics?keyword=".urlencode($key)."&index=0&count=".$num;
+        $html = $this->getDataByUrl($url);
+        $data = json_decode($html);
+        $ret = [];
+        if(empty($data)){
+            return $ret;
+        }
+        if($data->succeeded != true){
+            return $ret;
+        }
+
+        $resp_data = $data->resp_data;
+        if(empty($resp_data->topics)){
+            foreach ($resp_data->topics as $oneTopic){
+                //$this—>($oneTopic);
+            }
+
+        }
+
+    }
+
+    private function getData_groups(){
+        $url = "https://api.zsxq.com/v2/groups";
+        $html = $this->getDataByUrl($url);
+        $data = json_decode($html);
+        $ret = [];
+        if(empty($data)){
+            return $ret;
+        }
+        if($data->succeeded != true){
+            return $ret;
+        }
+
+        $respData = $data->resp_data;
+        $groups = $respData->groups;
+        foreach ($groups as $v){
+            array_push($ret, $v->group_id);
+        }
+
+        return $ret;
+    }
+
+
+    private function getData_oneGroup($gId, $num,$filterIdList){
+        $threadDataList=[];
+        $leftN = $num;
+        $endTime = null;
+        while (true){
+            $oneN = $leftN>=20?20:$leftN;
+
+            list($data,$endTime,$isFull) = $this->getData_oneGroupPer($gId, $endTime, $oneN,$filterIdList);
+            if (!empty($data)){
+                $threadDataList = array_merge($threadDataList,$data);
+                if (!$isFull){
+                    break;
+                }
+            }
+
+            $leftN = $leftN-$oneN;
+            if ($leftN <=0 ){
+                break;
+            }
+        }
+        return $threadDataList;
+    }
+
+    private function getDataByUrl($url){
+        $rrd = $this->rId();
+        $tts = $this->ts();
+        $strS = $url." ".$tts." ".$rrd;
+        $aa11 = sha1($strS);
+
+        $headers = array();
+
+        $headers[0] = 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36';
+        $headers[1] = 'cookie:'.$this->cookie;
+        $headers[2] = 'x-request-id:'.$rrd;
+        $headers[3] = 'x-signature:'.$aa11;
+        $headers[4] = 'x-timestamp:'.$tts;
+
+        $html = $this->curlGet2($url,$headers);
+
+        return $html;
+    }
+
+    private function getData_oneGroupPer($gId, $endTime, $num, $filterIds){
+
+        $url = "https://api.zsxq.com/v2/groups/".$gId."/topics?scope=all&count=".$num;
+        if ($endTime!=null){
+            //时间减1
+            $tempET = urlencode($endTime);
+            $url = "https://api.zsxq.com/v2/groups/".$gId."/topics?scope=all&count=".($num+1)."&end_time=".$tempET;
+        }
+
+        $html = $this->getDataByUrl($url);
+
+        $data = json_decode($html);
+        $ret = [];
+        if(empty($data)){
+            return [$ret];
+        }
+        if($data->succeeded != true){
+            return [$ret];
+        }
+
+        $respData = $data->resp_data;
+        $topics = $respData->topics;
+        $isFull = count($topics)==$num;
+
+        $i=0;
+        if(!empty($endTime)){
+            $i = 1;
+        }
+        for (;$i<count($topics);$i++){
+            $oneTopic = $topics[$i];
+
+            $oneD = $this->paseOneTopic($oneTopic);
+
+            array_push($ret, $oneD);
+
+            if (!empty($oneD->forum)){
+
+                $endTime = $oneD->forum->create_at;
+            }
+        }
+
+        return [$ret,$endTime,$isFull];
+    }
+
+    private function paseOneTopic($oneTopic){
+
+
+        $oneD = [];
+        $author=[];
+        $forum =[];
+
+        $forum["id"] = $oneTopic->topic_id;
+        $forum["create_at"] = $oneTopic->create_time;
+
+        $text = [];
+        $pics = [];
+        $medias = [];
+        $attachment = [];
+
+        if ($oneTopic->type == "talk")// 帖子,作业,问答等类型
+        {
+            $talk = $oneTopic->talk;
+            $owner = $talk->owner;
+            $author["nickname"] = $owner->name;
+            $author["avatar"] = $owner->avatar_url;
+
+            //文字
+            if (!empty($talk->article)){
+                //文字图片混编的
+                $text = $this->getTextArticle($talk->article);
+            }else{
+                if(!empty($talk->text)){
+                    $text = $this->getTextContent($talk->text);
+                }
+            }
+
+            //文件的
+            if(!empty($talk->files)) {
+                $attachment = $this->getAttachFile($talk->files);
+            }
+
+            //图片的
+            if(!empty($talk->images)) {
+                $pics = $this->getAttachImage($talk->images);
+            }
+        }
+
+        $forum["text"] = $text;
+        $forum["pics"] = $pics;
+        $forum["medias"] = $medias;
+        $forum["attachment"] = $attachment;
+
+        //评论
+        $commonetList = $this->getData_OneComment($oneTopic->topic_id);
+
+        $oneD["user"] = $author;
+        $oneD["forum"] = $forum;
+        $oneD["comment"] = $commonetList;
+
+        return $oneD;
+    }
+
+    private function getTextContent($textIn){
+        $textIn = urldecode($textIn);
+        $tagList = array();
+        $textContent = "";
+        $posStart = 0;
+        $flagStartStr = '<e type=';  //hashtag标签,web链接
+        $flagEndStr = '/>';
+        while (1){
+            list($preStr,$flagStr,$posFlagEnd) = $this->getFlagSubStr($textIn,$posStart,$flagStartStr,$flagEndStr);
+            $textContent = $textContent.$preStr;
+
+            if (strpos($flagStr,'type="hashtag"')!==false){ //标签
+                $textContent = $textContent.$flagStr;
+            }else{
+                //取出文字
+                $titleStr = $this->dealMatchStr('/<e[^>]+title=["\'](.*?)["\']/i', $flagStr);
+                $textContent = $textContent. $titleStr;
+                //取出链接
+                $linkStr = $this->dealMatchStr('/<e[^>]+href=["\'](.*?)["\']/i', $flagStr);
+                if ($titleStr != $linkStr){
+                    $textContent = $textContent.$linkStr;
+                }
+            }
+
+            if ($posFlagEnd === false){
+                break;
+            }
+            $posStart = $posFlagEnd;
+        }
+
+
+        list($textContent,$tagList) = $this->filterDataTag($textContent);
+
+        $text = array();
+        $text["text"] = $textContent;
+        $text["topic_list"] = $tagList;
+
+        return $text;
+    }
+
+    private function getTextArticle($article){
+        $url = $article->article_url;
+        $html = $this->getDataByUrl($url);
+
+        $contentPosStart = strpos($html,'<div class="content">',0);
+        $contentPosEnd = strpos($html,'</div>',$contentPosStart);
+        $textIn = substr($html,$contentPosStart,$contentPosEnd-$contentPosStart+6);
+
+        list($textContent,$tagList) = $this->filterDataTag($textIn);
+
+        $text = array();
+        $text["text"] = $textContent;
+        $text["topic_list"] = $tagList;
+
+        return $text;
+    }
+
+    /**
+     * @method  获取两个字符串，标识符前面部分和标识符包括的字符串
+     * @param string $textIn 文本
+     * @param string $posStart 起始
+     * @param string $flagStartStr 起始符
+     * @param string $flagEndStr 结束符
+     * @return array
+     */
+    private function getFlagSubStr($textIn,$posStart,$flagStartStr,$flagEndStr){
+        $subStrPre = "";
+        $subStrFlag = "";
+        $posEnd = false;
+        $posFlagStart = strpos($textIn, $flagStartStr, $posStart);
+        //拿出第一节文字
+        if ($posFlagStart === false){
+            $subStrPre = substr($textIn,$posStart);
+        }else{
+            $subStrPre = substr($textIn,$posStart,$posFlagStart-$posStart);
+            $posFlagEnd = strpos($textIn, $flagEndStr, $posFlagStart);
+            if ($posFlagEnd!==false){
+                $subStrFlag = substr($textIn, $posFlagStart, $posFlagEnd-$posFlagStart+strlen($flagEndStr));
+                $posEnd = $posFlagEnd+strlen($flagEndStr);
+            }
+        }
+
+
+        return [$subStrPre,$subStrFlag,$posEnd];
+    }
+
+
+    private function filterDataTag($textIn){
+        //处理标签
+        $tagList = array();
+        $textContent = "";
+        $posStart = 0;
+        $flagStartStr = '<e type="hashtag"';  //hashtag标签
+        $flagEndStr = '/>';
+        while (1){
+            list($preStr,$flagStr,$posFlagEnd) = $this->getFlagSubStr($textIn,$posStart,$flagStartStr,$flagEndStr);
+
+            if (strpos($flagStr,'type="hashtag"') !== false){ //标签
+
+                $tagStrTemp = $this->dealMatchStr('/<e[^>]+title=["\']#(.*?)#["\']/i', $flagStr);
+                $tagStr = urldecode($tagStrTemp);
+                array_push($tagList,$tagStr);
+            }
+
+            if ($posFlagEnd === false){
+                break;
+            }
+            $posStart = $posFlagEnd;
+        }
+        return [$textIn,$tagList];
+    }
+
+    private function getAttachFile($files){
+        $fileLinkList = [];
+        foreach ($files as $oneFile){
+            $url = "https://api.zsxq.com/v2/files/".$oneFile->file_id."/download_url";
+            $html = $this->getDataByUrl($url);
+            $data = json_decode($html);
+            if(empty($data)){
+                continue;
+            }
+            if($data->succeeded != true){
+                continue;
+            }
+
+            $respData = $data->resp_data;
+            if (empty($respData->download_url)){
+                continue;
+            }
+            $fileLink = urldecode($respData->download_url);
+            array_push($fileLinkList, $fileLink);
+        }
+        return $fileLinkList;
+    }
+
+
+    private function getAttachImage($images){
+        $pics = [];
+        foreach ($images as $oneImage){
+
+            if(empty($oneImage->thumbnail)){
+                return false;
+            }
+
+            if (empty($oneImage->thumbnail->url)){
+                return false;
+            }
+
+            $imagelink =  urldecode($oneImage->thumbnail->url);
+            array_push($pics,$imagelink);
+        }
+        return $pics;
+    }
+
+    /**
+     * @method  处理单个正则匹配，返回结果
+     * @param string $match 正则
+     * @param string $content 内容
+     * @return string
+     */
+    private function dealMatchStr($match, $content)
+    {
+        $result = '';
+        if ($content) {
+            //评论ID
+            preg_match_all($match, $content, $matches);
+            if (isset($matches[1][0]) && !empty($matches[1][0])) {
+                $result = $matches[1][0];
+            }
+        }
+        return $result;
+    }
+
+
+    private function  getData_OneComment($topicId){
+        $url = "https://api.zsxq.com/v2/topics/".$topicId."/comments?sort=asc&count=30";
+        $html = $this->getDataByUrl($url);
+        $data = json_decode($html);
+        $ret = [];
+        if(empty($data)){
+            return $ret;
+        }
+        if($data->succeeded != true){
+            return $ret;
+        }
+
+        $resp_data = $data->resp_data;
+        if(empty($resp_data->comments)){
+            return $ret;
+        }
+        $comments = $resp_data->comments;
+        foreach ($comments as $one){
+            $oneComment = [];
+            $oneComment["id"] = $one->comment_id;
+            $oneComment["forumId"] = $one->comment_id;
+
+            $text = [];
+            $text["text"] = $one->text;
+            $text["topic_list"] = [];
+            $oneComment["text"] = $text;
+
+            $oneComment["images"] = [];
+            $oneComment["created_at"] = $one->create_time;
+
+
+            $userComment = [];
+            if(!empty($one->owner)){
+                $owner = $one->owner;
+                $userComment["nickname"]= $owner->name;
+                $userComment["avatar"] = $owner->avatar_url;
+            }
+
+            $oneComment["user"] = $userComment;
+
+            array_push($ret, $oneComment);
+        }
+
+        return $ret;
+    }
+
+
+    private function randFloat($min = 0, $max = 1)
+    {
+        return round($min + mt_rand() / mt_getrandmax() * ($max - $min),2);
+    }
+
+    private function rId(){
+        $t="";
+        $e=0;
+
+        for (;$e<32;$e++){
+            $a = 16*$this->randFloat();
+            $strRandom = floor($a);
+            $t .= dechex($strRandom);
+
+            if($e==8 || $e==12 || $e==16 || $e==20 )
+                $t .= "-";
+        }
+        return $t;
+    }
+
+    private function  ts(){
+        $t = time();
+        $t1 = $t/1e3;
+        $t2 = floor(  $t1 );
+        return $t;
+    }
+
+
+
+    /**
+     * @method  curl-get请求
+     * @param string $url 请求地址D
+     * @param array $headers 请求头信息
+     * @param int $port 端口号
+     * @return string $filecontent  采集内容
+     */
+    private function curlGet2($url, $headers = [], $port = 80)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        if ($port !== 80) {
+            curl_setopt($ch, CURLOPT_PORT, $port);
+        }
+        curl_setopt($ch, CURLOPT_HEADER, 0);//设定是否输出页面内容
+        if ($headers) {
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        }
+
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);       //链接超时时间
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3);       //设置超时时间
+
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);  //对于web页等有重定向的，要加上这个设置，才能真正访问到页面
+
+        $filecontent = curl_exec($ch);
+        curl_close($ch);
+
+        return $filecontent;
+    }
+
+}
