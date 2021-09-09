@@ -22,21 +22,18 @@
  *        description = "",
  *        @OA\JsonContent(allOf ={
  *                @OA\Schema(ref = "#/components/schemas/dzq_layout"),
- *                @OA\Schema(@OA\Property(property="Data",type="object", ref="#/components/schemas/dzq_pay_order"))
- *            }
+ *                @OA\Schema(title="支付订单数据", description="支付订单数据", @OA\Property(property="Data",type="object",
+ *                  @OA\Property(property="desc", type="string", description="描述"),
+ *                  @OA\Property(property="walletPayResult", type="object", description="钱包支付结果"),
+ *                  @OA\Property(property="message", type="string", description="结果描述"),
+ *                  @OA\Property(property="result", type="string", description="success/failed")
+ *                  )
+ *               )
+ *            })
  *        )
  *    )
  *)
  *
- * @OA\Schema(
- *     schema="dzq_pay_order",
- *     title="支付订单数据",
- *     @OA\Property(property="desc", type="string", description="描述"),
- *     @OA\Property(property="walletPayResult", type="object", description="钱包支付结果",
- *          @OA\Property(property="message", type="string", description="结果描述"),
- *          @OA\Property(property="result", type="string", description="success/failed"),
- *      ),
- * )
  *
  *
  *

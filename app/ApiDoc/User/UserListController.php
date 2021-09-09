@@ -25,34 +25,25 @@
  *                 @OA\Schema(ref = "#/components/schemas/dzq_layout"),
  *                 @OA\Schema(@OA\Property(property = "Data", type = "object",allOf={
  *                    @OA\Schema(ref = "#/components/schemas/dzq_pagination"),
- *                    @OA\Schema(ref = "#/components/schemas/dzq_user_list")
+ *                    @OA\Schema(title="用户列表", description="用户列表", @OA\Property(property="pageData", type="array", @OA\Items(type="object",
+ *                      @OA\Property(property = "avatar", type = "string", description = "用户头像url"),
+ *                      @OA\Property(property = "userId", type = "integer", description = "用户id"),
+ *                      @OA\Property(property = "username", type = "string", description = "用户名称"),
+ *                      @OA\Property(property = "nickname", type = "string", description = "用户所属组"),
+ *                      @OA\Property(property = "groupName", type = "string", description = "话题引用帖子数量"),
+ *                      @OA\Property(property = "followCount", type = "integer", description = "关注数"),
+ *                      @OA\Property(property = "isFollow", type = "boolean", description = "是否关注"),
+ *                      @OA\Property(property = "isMutualFollow", type = "boolean", description = "是否互关"),
+ *                      @OA\Property(property = "likedCount", type = "integer", description = "点赞数"),
+ *                      @OA\Property(property = "questionCount", type = "integer", description = "问题数"),
+ *                      @OA\Property(property = "threadCount", type = "integer", description = "主题数"),
+ *                    )))
  *                }))
  *            }
  *        )
  *    )
  *)
  *
- * @OA\Schema(
- *     schema="dzq_user_list",
- *     title="用户列表",
- *     @OA\Property(property = "pageData", type = "array", @OA\Items(type="object", ref="#/components/schemas/dzq_user_item"))
- * )
  *
- *
- * @OA\Schema(
- *     schema = "dzq_user_item",
- *     title = "用户详情",
- *     @OA\Property(property = "avatar", type = "string", description = "用户头像url"),
- *     @OA\Property(property = "userId", type = "integer", description = "用户id"),
- *     @OA\Property(property = "username", type = "string", description = "用户名称"),
- *     @OA\Property(property = "nickname", type = "string", description = "用户所属组"),
- *     @OA\Property(property = "groupName", type = "string", description = "话题引用帖子数量"),
- *     @OA\Property(property = "followCount", type = "integer", description = "关注数"),
- *     @OA\Property(property = "isFollow", type = "boolean", description = "是否关注"),
- *     @OA\Property(property = "isMutualFollow", type = "boolean", description = "是否互关"),
- *     @OA\Property(property = "likedCount", type = "integer", description = "点赞数"),
- *     @OA\Property(property = "questionCount", type = "integer", description = "问题数"),
- *     @OA\Property(property = "threadCount", type = "integer", description = "主题数"),
- * )
  */
 
