@@ -47,7 +47,7 @@ class SelectTomController extends DzqController
         $key = $this->inPut('key');
         $tom = ThreadTom::query()->where([
             'thread_id' => $threadId,
-            'tom_id' => $tomId,
+            'tom_type' => $tomId,
             'key' => $key,
             'status' => ThreadTom::STATUS_ACTIVE
         ])->first();

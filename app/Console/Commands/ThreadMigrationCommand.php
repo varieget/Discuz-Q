@@ -225,13 +225,13 @@ class ThreadMigrationCommand extends AbstractCommand
         app('log')->info('迁移图片帖 thread_tom start');
         $imageStringStart = '\'{\"imageIds\":[\'';
         $imageStringEnd = '\']}\'';
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_id,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->posts}.thread_id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$imageStringStart}, group_concat({$this->attachments}.id order by {$this->attachments}.order,{$this->attachments}.id), {$imageStringEnd}) as value from {$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id inner join {$this->threads} on {$this->posts}.thread_id = {$this->threads}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type in (1,4,5) and {$this->posts}.thread_id not in (select thread_id from {$this->thread_tom} where tom_id = ? )  group by {$this->posts}.thread_id"), [ThreadTag::IMAGE,ThreadTag::IMAGE, ThreadTag::IMAGE]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->posts}.thread_id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$imageStringStart}, group_concat({$this->attachments}.id order by {$this->attachments}.order,{$this->attachments}.id), {$imageStringEnd}) as value from {$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id inner join {$this->threads} on {$this->posts}.thread_id = {$this->threads}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type in (1,4,5) and {$this->posts}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ? )  group by {$this->posts}.thread_id"), [ThreadTag::IMAGE,ThreadTag::IMAGE, ThreadTag::IMAGE]);
         app('log')->info('迁移图片帖 thread_tom end');
         //迁移附件
         app('log')->info('迁移附件帖 thread_tom start');
         $docStringStart = '\'{\"docIds\":[\'';
         $docStringEnd = '\']}\'';
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_id,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->posts}.thread_id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$docStringStart}, group_concat({$this->attachments}.id order by {$this->attachments}.order,{$this->attachments}.id), {$docStringEnd}) as value from {$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id inner join {$this->threads} on {$this->posts}.thread_id = {$this->threads}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type = 0 and {$this->posts}.thread_id not in (select thread_id from {$this->thread_tom} where tom_id = ? ) group by {$this->posts}.thread_id"), [ThreadTag::DOC,ThreadTag::DOC, ThreadTag::DOC]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->posts}.thread_id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$docStringStart}, group_concat({$this->attachments}.id order by {$this->attachments}.order,{$this->attachments}.id), {$docStringEnd}) as value from {$this->attachments} inner join {$this->posts} on {$this->attachments}.type_id = {$this->posts}.id inner join {$this->threads} on {$this->posts}.thread_id = {$this->threads}.id where {$this->posts}.is_first = 1 and {$this->attachments}.type = 0 and {$this->posts}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ? ) group by {$this->posts}.thread_id"), [ThreadTag::DOC,ThreadTag::DOC, ThreadTag::DOC]);
         app('log')->info('迁移附件帖 thread_tom end');
 
         //迁移视频
@@ -344,7 +344,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateRedPacket(){
         $start_page = 0;
-        $isset_red_thread_ids = ThreadTom::query()->where('tom_id', ThreadTag::RED_PACKET)->pluck('thread_id')->toArray();
+        $isset_red_thread_ids = ThreadTom::query()->where('tom_type', ThreadTag::RED_PACKET)->pluck('thread_id')->toArray();
         while (!empty($list = self::getThreadRedPacket($start_page, $isset_red_thread_ids)) && !empty($list->toArray())){
             $this->db->beginTransaction();
             $res = array();
@@ -390,25 +390,25 @@ class ThreadMigrationCommand extends AbstractCommand
         //先刷新已经转码的
         $videoStringStart = '\'{\"videoId\":\'';
         $videoStringEnd = '\'}\'';
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_id,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$videoStringStart},{$this->thread_video}.id, {$videoStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 0 and {$this->thread_video}.status = 1 and {$this->threads}.is_draft = 0 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_id = ?)"), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$videoStringStart},{$this->thread_video}.id, {$videoStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 0 and {$this->thread_video}.status = 1 and {$this->threads}.is_draft = 0 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?)"), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
 
         //刷新未转码的
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_id,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$videoStringStart},MAX({$this->thread_video}.id), {$videoStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 0 and {$this->thread_video}.status = 0 and {$this->threads}.is_draft = 1 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_id = ?) group by {$this->thread_video}.thread_id"), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$videoStringStart},MAX({$this->thread_video}.id), {$videoStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 0 and {$this->thread_video}.status = 0 and {$this->threads}.is_draft = 1 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?) group by {$this->thread_video}.thread_id"), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
     }
 
     public function migrateAudio(){
         //先刷新已经转码的
         $audioStringStart = '\'{\"audioId\":\'';
         $audioStringEnd = '\'}\'';
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_id,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$audioStringStart},{$this->thread_video}.id, {$audioStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 1 and {$this->thread_video}.status = 1 and {$this->threads}.is_draft = 0 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_id = ?)"), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$audioStringStart},{$this->thread_video}.id, {$audioStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 1 and {$this->thread_video}.status = 1 and {$this->threads}.is_draft = 0 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?)"), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
 
         //刷新未转码的
-        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_id,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$audioStringStart},MAX({$this->thread_video}.id), {$audioStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 1 and {$this->thread_video}.status = 0 and {$this->threads}.is_draft = 1 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_id = ?) group by {$this->thread_video}.thread_id"), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
+        app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$audioStringStart},MAX({$this->thread_video}.id), {$audioStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 1 and {$this->thread_video}.status = 0 and {$this->threads}.is_draft = 1 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?) group by {$this->thread_video}.thread_id"), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
     }
 
     public function migrateQuestion(){
         $start_page = 0;
-        $isset_reward_ids = ThreadTom::query()->where('tom_id', ThreadTag::REWARD)->pluck('thread_id')->toArray();
+        $isset_reward_ids = ThreadTom::query()->where('tom_type', ThreadTag::REWARD)->pluck('thread_id')->toArray();
         while(!empty($list = self::getThreadQuestion($start_page, $isset_reward_ids)) && !empty($list->toArray())){
             $this->db->beginTransaction();
             $res = array();
@@ -467,7 +467,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
     public function migrateGoods(){
         $start_page = 0;
-        $isset_goods_thread_ids = ThreadTom::query()->where('tom_id', ThreadTag::GOODS)->pluck('thread_id')->toArray();
+        $isset_goods_thread_ids = ThreadTom::query()->where('tom_type', ThreadTag::GOODS)->pluck('thread_id')->toArray();
         while (!empty($list = self::getThreadGoods($start_page, $isset_goods_thread_ids)) && !empty($list->toArray())){
             $res = array();
             $this->db->beginTransaction();
@@ -516,11 +516,11 @@ class ThreadMigrationCommand extends AbstractCommand
         return $url;
     }
 
-    public function insertThreadTom($thread, $tomId, $value){
+    public function insertThreadTom($thread, $tom_type, $value){
         return $this->db->table('thread_tom')->insert([
             'thread_id' =>  $thread->id,
-            'tom_id'  =>  $tomId,
-            'key'   =>  $tomId,
+            'tom_type'  =>  $tom_type,
+            'key'   =>  $tom_type,
             'value' =>  $value,
             'status'    => !empty($thread->deleted_at) ? -1 : 0,
             'created_at'    =>  $thread->created_at,
@@ -530,11 +530,11 @@ class ThreadMigrationCommand extends AbstractCommand
 
 
 
-    public function collectThreadTom($thread, $tomId, $value){
+    public function collectThreadTom($thread, $tom_type, $value){
         return [
             'thread_id' =>  $thread->id,
-            'tom_id'  =>  $tomId,
-            'key'   =>  $tomId,
+            'tom_type'  =>  $tom_type,
+            'key'   =>  $tom_type,
             'value' =>  $value,
             'status'    => !empty($thread->deleted_at) ? -1 : 0,
             'created_at'    =>  $thread->created_at,

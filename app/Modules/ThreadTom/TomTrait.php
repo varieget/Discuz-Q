@@ -60,7 +60,7 @@ trait TomTrait
         if (!empty($threadId) && empty($operation)) {
             $tomList = DzqCache::hGet(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
                 return ThreadTom::query()
-                    ->select('tom_id', 'key')
+                    ->select('tom_type', 'key')
                     ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
             });
         }
@@ -137,7 +137,7 @@ trait TomTrait
                 if (empty($threadId)) {
                     $tomJson['operation'] = $this->CREATE_FUNC;
                 } else {
-                    if (in_array(['tom_id' => $tomJson['tomId'], 'key' => $key], $tomList)) {
+                    if (in_array(['tom_type' => $tomJson['tomId'], 'key' => $key], $tomList)) {
                         $tomJson['operation'] = $this->UPDATE_FUNC;
                     } else {
                         $tomJson['operation'] = $this->CREATE_FUNC;

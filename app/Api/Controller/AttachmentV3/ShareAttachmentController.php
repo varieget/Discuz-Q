@@ -54,7 +54,7 @@ class ShareAttachmentController extends DzqController
             ->whereNull('th.deleted_at')
             ->where('th.id', $threadId)
             ->leftJoin('thread_tom as tt','tt.thread_id','=','th.id')
-            ->where(['tom_id' => TomConfig::TOM_DOC , 'status' => ThreadTom::STATUS_ACTIVE])
+            ->where(['tom_type' => TomConfig::TOM_DOC , 'status' => ThreadTom::STATUS_ACTIVE])
             ->first(['th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'th.is_draft', 'th.is_approved', 'tt.value']);
 
         if (!$thread) {

@@ -110,7 +110,7 @@ class VoteThreadController extends DzqController
         //删除之前的缓存
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_VOTE_SUBITEMS, $vote['id']);
 
-        $tom = ThreadTom::query()->where(['thread_id' => $thread_id, 'tom_id' => TomConfig::TOM_VOTE])->first();
+        $tom = ThreadTom::query()->where(['thread_id' => $thread_id, 'tom_type' => TomConfig::TOM_VOTE])->first();
         $content = $this->buildTomJson($thread_id, TomConfig::TOM_VOTE, $this->SELECT_FUNC, json_decode($tom->value, true));
         $result = $this->tomDispatcher([TomConfig::TOM_VOTE => $content]);
         $this->outPut(ResponseCode::SUCCESS, '投票成功', $result);

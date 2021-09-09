@@ -48,7 +48,7 @@ class DeleteTomController extends DzqController
         $key = $this->inPut('key');
         $tom = ThreadTom::query()->where([
             'thread_id' => $threadId,
-            'tom_id' => $tomType,
+            'tom_type' => $tomType,
             'key' => $key,
             'status' => ThreadTom::STATUS_ACTIVE
         ])->first();

@@ -31,7 +31,7 @@ class ThreadTom extends DzqModel
     public static function deleteTom($threadId, $tomId, $key)
     {
         $ret = ThreadTom::query()
-            ->where(['thread_id' => $threadId, 'tom_id' => $tomId, 'key' => $key])
+            ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'key' => $key])
             ->update(['status' => ThreadTom::STATUS_DELETE]);
         if ($ret) {
             return true;

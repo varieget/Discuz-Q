@@ -74,7 +74,7 @@ class PostSerializer extends BasicPostSerializer
         }
 
         $redPacketTom = ThreadTom::query()->where('thread_id',$thread_id)
-                          ->where('tom_id',106)
+                          ->where('tom_type',106)
                             ->first();
 
         $redPacketAmount = 0;

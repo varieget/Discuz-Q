@@ -123,7 +123,7 @@ class ReplyPostMakeRedPacket
 //        }
 
             $redPacketTom = ThreadTom::query()->where('thread_id', $thread['id'])
-                ->where('tom_id', 106)
+                ->where('tom_type', 106)
                 ->first();
             if ($redPacketTom) {
                 $change_type = UserWalletLog::TYPE_REDPACKET_INCOME;
