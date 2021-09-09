@@ -20,6 +20,8 @@ class CreatePluginGroupPermission extends Migration
             $table->string('permission', 100)->nullable(false)->comment('权限描述符');
             $table->timestamp('created_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
+            $table->index('app_id');
+            $table->index('permission');
         });
     }
 
