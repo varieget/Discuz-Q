@@ -255,7 +255,7 @@ class CreateThreadController extends DzqController
         foreach ($tomJsons as $key => $value) {
             $attrs[] = [
                 'thread_id' => $thread['id'],
-                'tom_type' => $value['tomId'],
+                'tom_id' => $value['tomId'],
                 'key' => $key,
                 'value' => json_encode($value['body'], 256)
             ];

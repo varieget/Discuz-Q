@@ -117,7 +117,7 @@ class CountLikedMakeRedPacket
                             ',msg:';
 
         $redPacketTom = ThreadTom::query()->where('thread_id',$thread['id'])
-            ->where('tom_type',106)
+            ->where('tom_id',106)
             ->first();
         if (!$redPacketTom) {
             $this->outDebugInfo('点赞领红包：该帖不为红包贴');

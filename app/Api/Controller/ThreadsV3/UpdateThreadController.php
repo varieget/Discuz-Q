@@ -277,7 +277,7 @@ class UpdateThreadController extends DzqController
                 case $this->CREATE_FUNC:
                     ThreadTom::query()->insert([
                         'thread_id' => $threadId,
-                        'tom_type' => $tomId,
+                        'tom_id' => $tomId,
                         'key' => $key,
                         'value' => json_encode($body, 256),
                         'status' => ThreadTom::STATUS_ACTIVE
@@ -285,7 +285,7 @@ class UpdateThreadController extends DzqController
                     break;
                 case $this->DELETE_FUNC:
                     ThreadTom::query()
-                        ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'status' => ThreadTom::STATUS_ACTIVE])
+                        ->where(['thread_id' => $threadId, 'tom_id' => $tomId, 'status' => ThreadTom::STATUS_ACTIVE])
                         ->update(['status' => ThreadTom::STATUS_DELETE]);
                     $isDeleteRedOrder = $isDeleteRewardOrder = false;
                     if(empty($order) || $order->status != Order::ORDER_STATUS_PAID){
@@ -296,7 +296,7 @@ class UpdateThreadController extends DzqController
                     break;
                 case $this->UPDATE_FUNC:
                     ThreadTom::query()
-                        ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'key' => $key, 'status' => ThreadTom::STATUS_ACTIVE])
+                        ->where(['thread_id' => $threadId, 'tom_id' => $tomId, 'key' => $key, 'status' => ThreadTom::STATUS_ACTIVE])
                         ->update(['value' => json_encode($body, 256)]);
                     break;
                 default:
@@ -313,24 +313,24 @@ class UpdateThreadController extends DzqController
     {
         $order = $this->getRedOrderInfo($threadId);
         $tomList = ThreadTom::query()
-            ->select('tom_type', 'key')
+            ->select('tom_id', 'key')
             ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get();
         $keys = [];
         $isDeleteRedOrder = $isDeleteRewardOrder = false;
         foreach ($tomList as $item) {
             if (empty($tomJsons[$item['key']])) {
-                if (in_array($item['tom_type'], [TomConfig::TOM_REDPACK, TomConfig::TOM_REWARD]) &&
+                if (in_array($item['tom_id'], [TomConfig::TOM_REDPACK, TomConfig::TOM_REWARD]) &&
                     (empty($order) || $order->status != Order::ORDER_STATUS_PAID)
                 ) {
-                    if ($item['tom_type'] == TomConfig::TOM_REDPACK) $isDeleteRedOrder = true;
-                    if ($item['tom_type'] == TomConfig::TOM_REWARD) $isDeleteRewardOrder = true;
+                    if ($item['tom_id'] == TomConfig::TOM_REDPACK) $isDeleteRedOrder = true;
+                    if ($item['tom_id'] == TomConfig::TOM_REWARD) $isDeleteRewardOrder = true;
                 }
                 $keys[] = $item['key'];
             }
         }
 
         ThreadTom::query()
-            ->select('tom_type', 'key')
+            ->select('tom_id', 'key')
             ->where(['thread_id' => $threadId])
             ->whereIn('key', $keys)->delete();
         //针对其他类型，再做特殊处理。如投票帖，做软删除

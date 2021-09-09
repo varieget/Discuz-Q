@@ -698,7 +698,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
         if (!empty($attachmentIds)) {
             $attrs[] = [
                 'thread_id' => $thread->id,
-                'tom_type' => ThreadTag::IMAGE,
+                'tom_id' => ThreadTag::IMAGE,
                 'key' => ThreadTag::IMAGE,
                 'value' => json_encode(['imageIds' => $attachmentIds], 256)
             ];
@@ -712,7 +712,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
         if (!empty($videoId)) {
             $attrs[] = [
                 'thread_id' => $thread->id,
-                'tom_type' => ThreadTag::VIDEO,
+                'tom_id' => ThreadTag::VIDEO,
                 'key' => ThreadTag::VIDEO,
                 'value' => json_encode(['videoId' => $videoId], 256)
             ];

@@ -96,8 +96,8 @@ class ThreadDetailController extends DzqController
             ])->orderBy('key')->get()->toArray();
         $tomContent = $tags = [];
         foreach ($threadTom as $item) {
-            $tomContent[$item['key']] = $this->buildTomJson($threadId, $item['tom_type'], $this->SELECT_FUNC, json_decode($item['value'], true));
-            $tags[$item['key']]['tag'] = $item['tom_type'];
+            $tomContent[$item['key']] = $this->buildTomJson($threadId, $item['tom_id'], $this->SELECT_FUNC, json_decode($item['value'], true));
+            $tags[$item['key']]['tag'] = $item['tom_id'];
         }
         return ['tomContent' => $tomContent, 'tags' => $tags];
     }

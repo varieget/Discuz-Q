@@ -51,7 +51,7 @@ class UpdateTomController extends DzqController
         try {
             foreach ($tomJsons as $key => $value) {
                 ThreadTom::query()
-                    ->where(['thread_id' => $threadId, 'tom_type' => $value['tomId'], 'key' => $key, 'status' => ThreadTom::STATUS_ACTIVE])
+                    ->where(['thread_id' => $threadId, 'tom_id' => $value['tomId'], 'key' => $key, 'status' => ThreadTom::STATUS_ACTIVE])
                     ->update(['value' => json_encode($value['body'], 256)]);
             }
             $db->commit();

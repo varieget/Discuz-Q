@@ -248,7 +248,7 @@ trait ThreadListTrait
             foreach ($toms as $tom) {
                 $value = json_decode($tom['value'], true);
                 if ($withIds) {
-                    switch ($tom['tom_type']) {
+                    switch ($tom['tom_id']) {
                         case TomConfig::TOM_IMAGE:
                             isset($value['imageIds']) && $attachmentIds = array_merge($attachmentIds, $value['imageIds']);
                             break;
@@ -263,7 +263,7 @@ trait ThreadListTrait
                             break;
                     }
                 }
-                $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
+                $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_id'], $this->SELECT_FUNC, $value);
             }
         }
         if ($withIds) {
