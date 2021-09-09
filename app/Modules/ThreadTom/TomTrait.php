@@ -66,7 +66,8 @@ trait TomTrait
         }
         foreach ($indexes as $key => $tomJson) {
             $this->setOperation($threadId, $operation, $key, $tomJson, $tomList);
-            if (isset($tomJson['tomId']) && isset($tomJson['operation']) && in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
+            if (isset($tomJson['tomId']) && isset($tomJson['operation']) &&
+                in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
                 $tomId = strval($tomJson['tomId']);
                 $op = $tomJson['operation'];
                 $body = $tomJson['body'] ?? false;
