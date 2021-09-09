@@ -26,15 +26,23 @@ class ActivityBusi extends TomBaseBusi
     {
         return $this->jsonReturn($this->body);
     }
+
     public function create()
     {
         return $this->jsonReturn($this->body);
     }
+
     public function update()
     {
         return $this->jsonReturn($this->body);
     }
+
     public function delete()
+    {
+
+    }
+
+    public function permission()
     {
 
     }
