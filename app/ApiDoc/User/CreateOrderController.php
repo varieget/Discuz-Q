@@ -25,23 +25,19 @@
  *
  * @OA\Response(
  *        response = 200,
- *        description = "",
+ *        description = "订单状态",
  *        @OA\JsonContent(allOf ={
  *                @OA\Schema(ref = "#/components/schemas/dzq_layout"),
- *                @OA\Schema(@OA\Property(property="Data",type="object", ref="#/components/schemas/dzq_order"))
+ *                @OA\Schema(title="订单状态", description="刚才提交的订单返回的状态", @OA\Property(property="Data",type="object",
+ *                      @OA\Property(property="orderSn", type="string", description="订单编号"),
+ *                      @OA\Property(property="paymentSn", type="string", description="支付订单编号"),
+ *                      @OA\Property(property="status", type="integer", description="订单状态；0：待付款、1：已付款、4：订单已过期"),
+ *                ))
  *            }
  *        )
  *    )
  *)
  *
- * @OA\Schema(
- *     schema="dzq_order",
- *     title="订单状态",
- *     @OA\Property(property="orderSn", type="string", description="订单编号"),
- *     @OA\Property(property="paymentSn", type="string", description="支付订单编号"),
- *     @OA\Property(property="status", type="integer", description="订单状态；0：待付款、1：已付款、4：订单已过期"),
- *
- * )
  *
  *
  *
