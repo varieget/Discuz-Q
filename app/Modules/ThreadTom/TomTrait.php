@@ -53,7 +53,6 @@ trait TomTrait
     private function tomDispatcher($tomContent, $operation = null, $threadId = null, $postId = null, $canViewTom = true)
     {
         $config = $this->threadPluginList();
-        dd($config);
         $tomJsons = [];
         $indexes = $this->getContentIndexes($tomContent);
         if (empty($indexes)) return $tomJsons;
