@@ -183,7 +183,7 @@ class SmsSendController extends AuthBaseController
                     'errMsg' => $errMsg,
                     'getExceptions' => $e->getExceptions()
                 ], $e->getMessage());
-                $this->outPut(ResponseCode::EXTERNAL_API_ERROR, '腾讯云验证码发送异常', [$e->getMessage()]);
+                $this->outPut(ResponseCode::EXTERNAL_API_ERROR, '腾讯云验证码发送异常', [$e->getMessage(),$errMsg]);
             }
             DzqLog::error('sms_send_error', $paramData, $e->getMessage());
             $this->outPut(ResponseCode::INTERNAL_ERROR, '短信发送接口异常');
