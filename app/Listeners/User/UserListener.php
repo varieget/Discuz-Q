@@ -85,6 +85,9 @@ class UserListener
     public function activeUsersStatistics(Forum $event)
     {
         $get_query_params = $event->request->getQueryParams();
+        if(empty($get_query_params['dzqPf'])){
+            return;
+        }
         $active_users = app('cache')->get('active_users');
         if(empty($active_users))    $active_users = [];
         //如果没有 user_id，就不统计活跃用户
@@ -127,6 +130,9 @@ class UserListener
     //启动数统计
     public function startStatistics(Forum $event){
         $get_query_params = $event->request->getQueryParams();
+        if(empty($get_query_params['dzqPf'])){
+            return;
+        }
         $start_peoples_dzqSid = app('cache')->get('start_peoples_dzqSid');
         if(empty($start_peoples_dzqSid))    $start_peoples_dzqSid = [];
         $today = date("Y-m-d", time());
