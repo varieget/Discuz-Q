@@ -74,9 +74,9 @@ $route->post('/users/wechat/transition/sms.bind', 'wechat.transition.sms.bind', 
 $route->post('/users/nickname.set', 'users.nickname.set', ApiController\UsersV3\NicknameSettingController::class);
 //前台扩展字段
 // 查询扩展字段列表（用户注册后显示）
-$route->get('/user/signinfields', 'user.signinfields.list', ApiController\SignInFieldsV3\ListUserSignInController::class);
+$route->get('/user/signinfields.list', 'user.signinfields.list', ApiController\SignInFieldsV3\ListUserSignInController::class);
 // 用户首次提交扩展字段信息或者被驳回之后再次提交
-$route->post('/user/signinfields', 'user.signinfields.create', ApiController\SignInFieldsV3\CreateUserSignInController::class);
+$route->post('/user/signinfields.create', 'user.signinfields.create', ApiController\SignInFieldsV3\CreateUserSignInController::class);
 
 //帖子查询
 $route->get('/thread.detail','thread.detail',ApiController\ThreadsV3\ThreadDetailController::class);
@@ -102,8 +102,8 @@ $route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\Resou
 
 $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
 $route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
-$route->get('/follow', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
-$route->post('/follow', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
+$route->get('/follow.list', 'follow.list', ApiController\UsersV3\ListUserFollowController::class);
+$route->post('/follow.create', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
 $route->post('/follow.delete', 'follow.delete', ApiController\UsersV3\DeleteUserFollowController::class);
 
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
@@ -115,9 +115,9 @@ $route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\TradeV
 $route->post('/trade/pay/order', 'trade.pay.order', ApiController\TradeV3\PayOrderController::class);
 $route->get('/categories', 'categories', ApiController\CategoryV3\ListCategoriesController::class);
 $route->get('/categories.thread', '/categories.thread', ApiController\CategoryV3\ListCategoriesThreadController::class);
-$route->get('/posts', 'posts', ApiController\PostsV3\ListPostsController::class);
+$route->get('/posts.list', 'posts', ApiController\PostsV3\ListPostsController::class);
 $route->post('/posts.update', 'posts.update', ApiController\PostsV3\UpdatePostController::class);
-$route->post('/posts', 'posts', ApiController\PostsV3\CreatePostController::class);
+$route->post('/posts.create', 'posts', ApiController\PostsV3\CreatePostController::class);
 $route->get('/posts.detail', 'posts.resource', ApiController\PostsV3\ResourcePostController::class);
 $route->get('/posts.reply', 'posts.reply', ApiController\PostsV3\ResourcePostReplyController::class);
 $route->get('/posts.postion', 'posts.postion', ApiController\PostsV3\PositionPostsController::class);
@@ -166,8 +166,8 @@ $route->post('/users/update.mobile', 'update.mobile', ApiController\UsersV3\Upda
 $route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarController::class);
 
 
-$route->get('/users/deny', 'user.deny.list', ApiController\UsersV3\ListDenyUserController::class);
-$route->post('/users/deny', 'user.deny', ApiController\UsersV3\CreateDenyUserController::class);
+$route->get('/users/deny.list', 'user.deny.list', ApiController\UsersV3\ListDenyUserController::class);
+$route->post('/users/deny.create', 'user.deny', ApiController\UsersV3\CreateDenyUserController::class);
 $route->post('/users/deny.delete', 'user.delete.deny', ApiController\UsersV3\DeleteDenyUserController::class);
 
 $route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);

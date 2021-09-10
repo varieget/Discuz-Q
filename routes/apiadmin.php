@@ -41,8 +41,8 @@ $route->post('/permission.update', 'permission.update', ApiController\Permission
 
 $route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
 //注册扩展
-$route->get('/signinfields', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
-$route->post('/signinfields', 'signinfields.create', ApiController\SignInFieldsV3\CreateAdminSignInController::class);
+$route->get('/signinfields.list', 'signinfields.list', ApiController\SignInFieldsV3\ListAdminSignInController::class);
+$route->post('/signinfields.create', 'signinfields.create', ApiController\SignInFieldsV3\CreateAdminSignInController::class);
 $route->get('/user/signinfields', 'user.signinfields.resource', ApiController\SignInFieldsV3\ResourceUserSignInController::class);
 
 $route->post('/threads.batch', 'threads.batch', ApiController\ThreadsV3\BatchThreadsController::class);
@@ -80,8 +80,8 @@ $route->get('/notification/tpl/detail', 'notification.tpl.detail', ApiController
 $route->post('/notification/tpl/update', 'notification.tpl.update', ApiController\NotificationV3\UpdateNotificationTplV3Controller::class);
 
 $route->get('/cache.delete', 'cache.delete', ApiController\CacheV3\DeleteCacheController::class);
-$route->get('/sequence', 'sequence.list', ApiController\SettingsV3\ListSequenceController::class);
-$route->post('/sequence', 'sequence', ApiController\SettingsV3\UpdateSequenceController::class);
+$route->get('/sequence.list', 'sequence.list', ApiController\SettingsV3\ListSequenceController::class);
+$route->post('/sequence.update', 'sequence', ApiController\SettingsV3\UpdateSequenceController::class);
 $route->post('/refresh.token', 'refresh.token', ApiController\Oauth2V3\RefreshTokenController::class);
 
 $route->get('/recommend.users', 'recommend.users', ApiController\Recommend\RecommendedUserListController::class);
