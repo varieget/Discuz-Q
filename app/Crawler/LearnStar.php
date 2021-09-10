@@ -7,7 +7,7 @@ namespace App\Crawler;
 class LearnStar
 {
     private $cookie = '';
-
+    private $userAgent = '';
 
     /**
      * @method  主入口
@@ -16,10 +16,11 @@ class LearnStar
      * @param string $cookie 用户cookie
      * @return array
      */
-    public function main($topic, $num = 1, $cookie = '')
+    public function main($topic, $num = 1, $cookie = '', $userAgent)
     {
         set_time_limit(0);
         $this->cookie = $cookie;
+        $this->userAgent = $userAgent;
         return $this->getData($topic, $num);
     }
 
@@ -134,7 +135,7 @@ class LearnStar
 
         $headers = array();
 
-        $headers[0] = 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36';
+        $headers[0] = 'user-agent:'.$this->userAgent;
         $headers[1] = 'cookie:'.$this->cookie;
         $headers[2] = 'x-request-id:'.$rrd;
         $headers[3] = 'x-signature:'.$aa11;
