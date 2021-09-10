@@ -382,8 +382,7 @@ class LearnStar
             if (empty($respData->download_url)){
                 continue;
             }
-            $fileLink = urldecode($respData->download_url);
-            array_push($fileLinkList, $fileLink);
+            array_push($fileLinkList, $respData->download_url);
         }
         return $fileLinkList;
     }
