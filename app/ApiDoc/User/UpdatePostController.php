@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Post(
- *    path = "/apiv3/post.update",
+ *    path = "/apiv3/posts.update",
  *    summary = "点赞/采纳评论",
  *    description = "Discuz! Q 点赞/采纳评论",
  *    tags ={"发布与展示"},
@@ -10,7 +10,7 @@
  *        description = "点赞/采纳评论",
  *        required=true,
  *        @OA\JsonContent(
- *           @OA\Property(property="pid",type="integer",description="评论id"),
+ *           @OA\Property(property="postId",type="integer",description="评论id"),
  *           @OA\Property(property="data",type="object",
  *              @OA\Property(property="attributes", type="object",
  *                  @OA\Property(property="isLiked", type="boolean", description="是否点赞")

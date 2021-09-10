@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/deny",
+ *     path="/apiv3/users/deny.create",
  *     summary="屏蔽用户",
  *     description="屏蔽用户接口",
  *     tags={"个人中心"},
