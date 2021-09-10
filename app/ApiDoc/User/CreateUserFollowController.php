@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Post(
- *    path = "/apiv3/follow",
+ *    path = "/apiv3/follow.create",
  *    summary = "关注用户",
  *    description = "Discuz! Q 关注/粉丝列表",
  *    tags ={"个人中心"},

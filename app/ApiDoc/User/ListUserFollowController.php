@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Get(
- *    path = "/apiv3/follow",
+ *    path = "/apiv3/follow.list",
  *    summary = "我的关注/粉丝列表",
  *    description = "Discuz! Q 关注/粉丝列表",
  *    tags ={"个人中心"},

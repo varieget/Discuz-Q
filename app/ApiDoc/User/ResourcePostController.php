@@ -7,7 +7,7 @@
  *     tags={"发布与展示"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
  *     @OA\Parameter(
- *        name="pid",
+ *        name="postId",
  *        in="query",
  *        required=true,
  *        description = "评论id",

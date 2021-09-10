@@ -7,7 +7,7 @@
  *     tags={"个人中心"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
  *     @OA\Parameter(
- *         name="pid",
+ *         name="userId",
  *         in="query",
  *         required=true,
  *         description = "用户id",

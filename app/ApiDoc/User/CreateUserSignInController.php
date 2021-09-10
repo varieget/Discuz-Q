@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/user/signinfields",
+ *     path="/apiv3/user/signinfields.create",
  *     summary="用户首次提交扩展字段信息或者被驳回之后再次提交",
  *     description="用户首次提交扩展字段信息或者被驳回之后再次提交",
  *     tags={"注册登录"},
