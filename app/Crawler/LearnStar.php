@@ -55,7 +55,7 @@ class LearnStar
         $count = $num<30?$num:30;
         for ($i=0;$i<100;$i++){
             $url = "https://api.zsxq.com/v2/search/topics?keyword=".urlencode($key)."&index=".$curIndex."&count=".$count;
-            $html = $this->getDataByUrl($url);
+            $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
             $data = json_decode($html);
 
             if(empty($data)){
@@ -84,7 +84,7 @@ class LearnStar
 
     private function getData_groups(){
         $url = "https://api.zsxq.com/v2/groups";
-        $html = $this->getDataByUrl($url);
+        $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
         $data = json_decode($html);
         $ret = [];
         if(empty($data)){
@@ -127,7 +127,7 @@ class LearnStar
         return $threadDataList;
     }
 
-    private function getDataByUrl($url){
+    public function getDataByUrl($url, $userAgent, $cookie){
         $rrd = $this->rId();
         $tts = $this->ts();
         $strS = $url." ".$tts." ".$rrd;
@@ -135,11 +135,11 @@ class LearnStar
 
         $headers = array();
 
-        $headers[0] = 'user-agent:'.$this->userAgent;
-        $headers[1] = 'cookie:'.$this->cookie;
-        $headers[2] = 'x-request-id:'.$rrd;
-        $headers[3] = 'x-signature:'.$aa11;
-        $headers[4] = 'x-timestamp:'.$tts;
+        $headers[0] = 'user-agent:' . $userAgent;
+        $headers[1] = 'cookie:' . $cookie;
+        $headers[2] = 'x-request-id:' . $rrd;
+        $headers[3] = 'x-signature:' . $aa11;
+        $headers[4] = 'x-timestamp:' . $tts;
 
         $html = $this->curlGet2($url,$headers);
 
@@ -154,7 +154,7 @@ class LearnStar
             $url = "https://api.zsxq.com/v2/groups/".$gId."/topics?scope=all&count=".($num+1)."&end_time=".$tempET;
         }
 
-        $html = $this->getDataByUrl($url);
+        $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
 
         $data = json_decode($html);
         $ret = [];
@@ -238,8 +238,8 @@ class LearnStar
         }
 
         $forum["text"] = $text;
-        $forum["pics"] = $pics;
-        $forum["medias"] = $medias;
+        $forum["pics"]["small_pics"] = $pics;
+        $forum["medias"]["small_medias"] = $medias;
         $forum["attachment"] = $attachment;
 
         //评论
@@ -295,7 +295,7 @@ class LearnStar
 
     private function getTextArticle($article){
         $url = $article->article_url;
-        $html = $this->getDataByUrl($url);
+        $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
 
         $contentPosStart = strpos($html,'<div class="content">',0);
         $contentPosEnd = strpos($html,'</div>',$contentPosStart);
@@ -369,7 +369,7 @@ class LearnStar
         $fileLinkList = [];
         foreach ($files as $oneFile){
             $url = "https://api.zsxq.com/v2/files/".$oneFile->file_id."/download_url";
-            $html = $this->getDataByUrl($url);
+            $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
             $data = json_decode($html);
             if(empty($data)){
                 continue;
@@ -432,7 +432,7 @@ class LearnStar
 
     private function  getData_OneComment($topicId, $nickname){
         $url = "https://api.zsxq.com/v2/topics/".$topicId."/comments?sort=asc&count=30";
-        $html = $this->getDataByUrl($url);
+        $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
         $data = json_decode($html);
         $ret = [];
         if(empty($data)){
