@@ -447,7 +447,7 @@ class LearnStar
         foreach ($comments as $one){
             $oneComment = [];
             $oneComment["id"] = $one->comment_id;
-            $oneComment["forumId"] = $one->comment_id;
+            $oneComment["forumId"] = $topicId;
             $oneComment["nickname"] = $nickname;
 
             $text = [];
