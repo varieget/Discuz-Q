@@ -77,9 +77,17 @@
  *          url="http://discuz.chat"
  *     )
  * )
- *  * @OA\Tag(
+ * @OA\Tag(
  *     name="邀请",
  *     description="邀请件相关接口",
+ *     @OA\ExternalDocumentation(
+ *          description="Discuz! Q官方网站",
+ *          url="http://discuz.chat"
+ *     )
+ * )
+ *  @OA\Tag(
+ *     name="插件",
+ *     description="插件相关接口【未开放】",
  *     @OA\ExternalDocumentation(
  *          description="Discuz! Q官方网站",
  *          url="http://discuz.chat"

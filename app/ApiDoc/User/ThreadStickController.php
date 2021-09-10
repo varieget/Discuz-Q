@@ -7,21 +7,7 @@
  *     description="获取首页置顶主题列表",
  *     tags={"发布与展示"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
- *     @OA\Parameter(
- *         name="nickname",
- *         in="query",
- *         required=true,
- *         description = "用户名称",
- *         @OA\Schema(type="string")
- *     ),
- *     @OA\Parameter(
- *         name="userId",
- *         in="query",
- *         required=true,
- *         description = "用户id",
- *         @OA\Schema(type="integer")
- *     ),
- *      @OA\Response(
+ *     @OA\Response(
  *         response=200,
  *         description="返回置顶列表",
  *         @OA\JsonContent(allOf={
