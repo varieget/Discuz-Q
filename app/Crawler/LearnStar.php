@@ -243,9 +243,10 @@ class LearnStar
         $forum["attachment"] = $attachment;
 
         //评论
-        $commonetList = $this->getData_OneComment($oneTopic->topic_id);
+        $commonetList = $this->getData_OneComment($oneTopic->topic_id, $author['nickname']);
 
         $oneD["user"] = $author;
+        $forum['nickname'] = $author['nickname'];
         $oneD["forum"] = $forum;
         $oneD["comment"] = $commonetList;
 
@@ -426,7 +427,7 @@ class LearnStar
     }
 
 
-    private function  getData_OneComment($topicId){
+    private function  getData_OneComment($topicId, $nickname){
         $url = "https://api.zsxq.com/v2/topics/".$topicId."/comments?sort=asc&count=30";
         $html = $this->getDataByUrl($url);
         $data = json_decode($html);
@@ -447,6 +448,7 @@ class LearnStar
             $oneComment = [];
             $oneComment["id"] = $one->comment_id;
             $oneComment["forumId"] = $one->comment_id;
+            $oneComment["nickname"] = $nickname;
 
             $text = [];
             $text["text"] = $one->text;
