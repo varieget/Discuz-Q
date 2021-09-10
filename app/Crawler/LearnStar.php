@@ -392,17 +392,20 @@ class LearnStar
     private function getAttachImage($images){
         $pics = [];
         foreach ($images as $oneImage){
-
-            if(empty($oneImage->thumbnail)){
-                return false;
+            if(!empty($oneImage->original)){//原图
+                $imagelink =  urldecode($oneImage->original->url);
+                array_push($pics,$imagelink);
+            }else if(!empty($oneImage->large)){//大图
+                $imagelink =  urldecode($oneImage->large->url);
+                array_push($pics,$imagelink);
+            }else{
+                //小图
+                if(empty($oneImage->thumbnail)){
+                    continue;
+                }
+                $imagelink =  urldecode($oneImage->thumbnail->url);
+                array_push($pics,$imagelink);
             }
-
-            if (empty($oneImage->thumbnail->url)){
-                return false;
-            }
-
-            $imagelink =  urldecode($oneImage->thumbnail->url);
-            array_push($pics,$imagelink);
         }
         return $pics;
     }
@@ -454,8 +457,12 @@ class LearnStar
             $text["text"] = $one->text;
             $text["topic_list"] = [];
             $oneComment["comment"]["text"] = $text;
-            $oneComment["comment"]["images"] = [];
+
+
+            $images = $this->getAttachImage($one->images);
+            $oneComment["comment"]["images"] = $images;
             $oneComment["comment"]["created_at"] = $one->create_time;
+
 
             $userComment = [];
             if(!empty($one->owner)){
