@@ -68,7 +68,18 @@ class LearnStar
             $resp_data = $data->resp_data;
             if(!empty($resp_data->topics)){
                 foreach ($resp_data->topics as $oneTopic){
-                    $oneThread = $this->paseOneTopic($oneTopic->topic);
+                    //搜索的要重新拉取一遍，图文混排的这种，在搜索中没有链接出来
+                    $urlTopic = "https://api.zsxq.com/v2/topics/".$oneTopic->topic->topic_id;
+                    $htmlTopic = $this->getDataByUrl($urlTopic);
+                    $dataTopic = json_decode($htmlTopic);
+                    if(empty($dataTopic)){
+                        continue;
+                    }
+                    if($dataTopic->succeeded != true){
+                        continue;
+                    }
+                    $oneTopicTemp = $dataTopic->resp_data->topic;
+                    $oneThread = $this->paseOneTopic($oneTopicTemp);
                     array_push($ret, $oneThread);
                 }
             }
