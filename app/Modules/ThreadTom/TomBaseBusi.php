@@ -30,7 +30,7 @@ use Illuminate\Support\Str;
  * @method  update()
  * @method  select()
  * @method  userfunc()
- * @method permission()
+ * @method checkPermission()
  */
 abstract class TomBaseBusi
 {

@@ -42,7 +42,7 @@ class ActivityBusi extends TomBaseBusi
 
     }
 
-    public function permission()
+    public function checkPermission()
     {
 
     }
