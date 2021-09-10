@@ -117,7 +117,15 @@
  *     required=false,
  *     description="Bearer Token",
  *     @OA\Schema(type="string")
- * )
+ * ),
+ * @OA\Parameter(
+ *     parameter="bear_token_true",
+ *     name="Authorization",
+ *     in="header",
+ *     required=true,
+ *     description="Bearer Token",
+ *     @OA\Schema(type="string")
+ * ),
  * @OA\Parameter(
  *    parameter="threadlist_page",
  *    name="page",
