@@ -1,12 +1,11 @@
 <?php
 
-namespace Plugin\Activity\database\migrations;
 
 use Discuz\Base\DzqPluginMigration;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
 
-class PluginActivityThreadActivity extends DzqPluginMigration
+class CreatePluginActivityThreadActivity extends DzqPluginMigration
 {
     /**
      * Run the migrations.
@@ -19,10 +18,11 @@ class PluginActivityThreadActivity extends DzqPluginMigration
             $table->unsignedBigInteger('id', true)->comment('自增id');
             $table->string('title', 100)->nullable(false)->comment('活动名称');
             $table->text('content')->comment('活动内容');
-            $table->timestamp('activity_start_time')->comment('活动开始时间');
-            $table->timestamp('activity_end_time')->comment('活动结束时间');
-            $table->timestamp('register_start_time')->comment('报名开始时间');
-            $table->timestamp('register_end_time')->comment('报名结束时间');
+            $table->dateTime('activity_start_time')->comment('活动开始时间');
+            $table->dateTime('activity_end_time')->comment('活动结束时间');
+            $table->dateTime('register_start_time')->comment('报名开始时间');
+            $table->dateTime('register_end_time')->comment('报名结束时间');
+            $table->integer('total_number')->default(0)->comment('报名人数上限 0:不限制');
             $table->string('address', 200)->comment('地址信息');
             $table->string('location', 200)->comment('位置信息');
             $table->decimal('longitude', 10, 7)->default(0.0000000)->nullable(false)->comment('经度');
