@@ -446,18 +446,16 @@ class LearnStar
         $comments = $resp_data->comments;
         foreach ($comments as $one){
             $oneComment = [];
-            $oneComment["id"] = $one->comment_id;
-            $oneComment["forumId"] = $topicId;
-            $oneComment["nickname"] = $nickname;
+            $oneComment["comment"]["id"] = $one->comment_id;
+            $oneComment["comment"]["forumId"] = $topicId;
+            $oneComment["comment"]["nickname"] = $nickname;
 
             $text = [];
             $text["text"] = $one->text;
             $text["topic_list"] = [];
-            $oneComment["text"] = $text;
-
-            $oneComment["images"] = [];
-            $oneComment["created_at"] = $one->create_time;
-
+            $oneComment["comment"]["text"] = $text;
+            $oneComment["comment"]["images"] = [];
+            $oneComment["comment"]["created_at"] = $one->create_time;
 
             $userComment = [];
             if(!empty($one->owner)){
