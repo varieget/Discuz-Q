@@ -10,7 +10,7 @@
  *         required=true,
  *         description = "提现参数",
  *         @OA\JsonContent(
- *             @OA\Property(property="cashApplyAmount",type="decimal", description ="提现金额")
+ *             @OA\Property(property="cashApplyAmount",type="number", description ="提现金额")
  *             )
  *           ),
  * @OA\Response(response=200,

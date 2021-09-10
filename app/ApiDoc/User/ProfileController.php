@@ -28,7 +28,7 @@
  *                   @OA\Property(property="canEditUsername", type="boolean", description="能否编辑用户名"),
  *                   @OA\Property(property="canWalletPay", type="boolean", description="能否钱包支付"),
  *                   @OA\Property(property="denyStatus", type="boolean", description="待定"),
- *                   @OA\Property(property="expiredAt", type="datetime", description = "过期时间"),
+ *                   @OA\Property(property="expiredAt", type="string",format="datetime", description= "过期时间"),
  *                   @OA\Property(property="expiredDays", type="boolean", description = "待定"),
  *                   @OA\Property(property="follow", type="string", description = "关注"),
  *                   @OA\Property(property="followCount", type="integer", description = "关注数"),
@@ -51,7 +51,7 @@
  *                   @OA\Property(property="originalBackGroundUrl", type="string", description = "原始背景图地址"),
  *                   @OA\Property(property="originalMobile", type="string", description = "原始手机号码"),
  *                   @OA\Property(property="paid", type="boolean", description = "待定"),
- *                   @OA\Property(property="payTime", type="datetime", description = "待定"),
+ *                   @OA\Property(property="payTime", type="string",format="datetime", description = "待定"),
  *                   @OA\Property(property="questionCount", type="integer", description = "提问数"),
  *                   @OA\Property(property="realname", type="string", description = "身份证姓名"),
  *                   @OA\Property(property="registerReason", type="string", description = "注册原因"),
@@ -62,8 +62,8 @@
  *                   @OA\Property(property="updatedAt", type="string", description = "更新时间"),
  *                   @OA\Property(property="username", type="string", description = "用户名"),
  *                   @OA\Property(property="usernameBout", type="integer", description = "待定"),
- *                   @OA\Property(property="walletBalance", type="decimal", description = "钱包余额"),
- *                   @OA\Property(property="walletFreeze", type="decimal", description = "冻结金额"),
+ *                   @OA\Property(property="walletBalance", type="number", description = "钱包余额"),
+ *                   @OA\Property(property="walletFreeze", type="number", description = "冻结金额"),
  *                   @OA\Property(property="wxHeadImgUrl", type="string", description = "微信头像地址"),
  *                   @OA\Property(property="wxNickname", type="string", description = "微信昵称")
  * ))
