@@ -680,6 +680,21 @@
  *     ),
  *     @OA\Property(property = "userId", type = "integer", description="发帖用户id"),
  * )
- *
+ *  @OA\Parameter(
+ *    parameter="filter_changeType",
+ *    name="filter[changeType]",
+ *    in="query",
+ *    required=false,
+ *    description = "收入类型",
+ *    @OA\Schema(type="array",@OA\Items(type="integer"))
+ *)
+ * *  @OA\Parameter(
+ *    parameter="filter_cashStatus",
+ *    name="filter[cashStatus]",
+ *    in="query",
+ *    required=false,
+ *    description = "提现状态",
+ *    @OA\Schema(type="array",@OA\Items(type="integer"))
+ *)
  *
  */
