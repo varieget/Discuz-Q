@@ -21,20 +21,15 @@ namespace App\Api\Controller\GroupV3;
 use App\Common\ResponseCode;
 use App\Repositories\GroupRepository;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
-class ResourceGroupsController extends DzqController
+class ResourceGroupsController extends DzqAdminController
 {
     public $optionalInclude = [
         'permission',
         'categoryPermissions',
     ];
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
 
     public function main()
     {

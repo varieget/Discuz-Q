@@ -20,11 +20,11 @@ namespace App\Api\Controller\CategoryV3;
 use App\Common\ResponseCode;
 use App\Models\AdminActionLog;
 use App\Models\Category;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
-class CreateCategoriesController extends DzqController
+class CreateCategoriesController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

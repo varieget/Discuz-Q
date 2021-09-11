@@ -6,22 +6,13 @@ use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use App\Models\NotificationTpl;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Discuz\Wechat\EasyWechatTrait;
 
-class ResourceNotificationTplV3Controller extends DzqController
+class ResourceNotificationTplV3Controller extends DzqAdminController
 {
     use NotificationTrait;
     use EasyWechatTrait;
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        $actor = $this->user;
-        if (!$actor->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
 
     public function main()
     {

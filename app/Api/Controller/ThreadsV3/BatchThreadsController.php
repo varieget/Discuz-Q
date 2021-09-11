@@ -23,10 +23,10 @@ use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqCache;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
-class BatchThreadsController extends DzqController
+class BatchThreadsController extends DzqAdminController
 {
 
     protected $bus;

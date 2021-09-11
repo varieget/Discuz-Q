@@ -20,11 +20,11 @@ namespace App\Api\Controller\SignInFieldsV3;
 use App\Common\ResponseCode;
 use App\Models\AdminSignInFields;
 use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
-class ListAdminSignInController extends DzqController
+class ListAdminSignInController extends DzqAdminController
 {
 
     use AssertPermissionTrait;

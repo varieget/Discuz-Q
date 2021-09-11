@@ -25,12 +25,12 @@ use App\Common\ResponseCode;
 use App\Models\Setting;
 use App\Models\User;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
 
-class UpdateAdminController extends DzqController
+class UpdateAdminController extends DzqAdminController
 {
 
     protected $bus;
@@ -42,12 +42,6 @@ class UpdateAdminController extends DzqController
         $this->bus = $bus;
         $this->settings = $settings;
         $this->censor = $censor;
-    }
-
-    // 权限检查
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
     }
 
     public function main()

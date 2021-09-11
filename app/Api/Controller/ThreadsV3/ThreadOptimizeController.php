@@ -5,22 +5,17 @@ use App\Common\ResponseCode;
 use App\Models\Setting;
 use App\Models\Thread;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 
-class ThreadOptimizeController extends DzqController
+class ThreadOptimizeController extends DzqAdminController
 {
     protected $settings;
 
     public function __construct(SettingsRepository $settings)
     {
         $this->settings = $settings;
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
     }
 
     public function main()

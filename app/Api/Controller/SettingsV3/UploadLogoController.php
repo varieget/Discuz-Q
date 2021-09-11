@@ -23,8 +23,8 @@ use App\Common\ResponseCode;
 use App\Models\Setting;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
-use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Http\UrlGenerator;
 use Exception;
@@ -33,7 +33,7 @@ use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class UploadLogoController extends DzqController
+class UploadLogoController extends DzqAdminController
 {
     public function prefixClearCache($user)
     {
@@ -80,11 +80,6 @@ class UploadLogoController extends DzqController
         $this->filesystem = $filesystem;
         $this->url = $url;
         $this->settings = $settings;
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
     }
 
     public function main()
