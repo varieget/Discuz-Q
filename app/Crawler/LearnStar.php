@@ -70,7 +70,7 @@ class LearnStar
                 foreach ($resp_data->topics as $oneTopic){
                     //搜索的要重新拉取一遍，图文混排的这种，在搜索中没有链接出来
                     $urlTopic = "https://api.zsxq.com/v2/topics/".$oneTopic->topic->topic_id;
-                    $htmlTopic = $this->getDataByUrl($urlTopic);
+                    $htmlTopic = $this->getDataByUrl($urlTopic, $this->userAgent, $this->cookie);
                     $dataTopic = json_decode($htmlTopic);
                     if(empty($dataTopic)){
                         continue;
@@ -468,9 +468,10 @@ class LearnStar
             $text["topic_list"] = [];
             $oneComment["comment"]["text"] = $text;
 
-
-            $images = $this->getAttachImage($one->images);
-            $oneComment["comment"]["images"] = $images;
+            if (isset($one->images)) {
+                $images = $this->getAttachImage($one->images);
+                $oneComment["comment"]["images"] = $images;
+            }
             $oneComment["comment"]["created_at"] = $one->create_time;
 
 
