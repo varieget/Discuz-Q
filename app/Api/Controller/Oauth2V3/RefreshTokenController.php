@@ -25,7 +25,7 @@ use App\Passport\Repositories\RefreshTokenRepository;
 use App\Repositories\UserRepository;
 use DateInterval;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Discuz\Foundation\Application;
 use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -36,7 +36,7 @@ use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\RefreshTokenGrant;
 use Psr\Http\Message\ServerRequestInterface;
 
-class RefreshTokenController extends DzqController
+class RefreshTokenController extends DzqAdminController
 {
     public $serializer = TokenSerializer::class;
 

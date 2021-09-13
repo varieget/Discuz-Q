@@ -21,11 +21,11 @@ use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Permission;
 use App\Models\Sequence;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
-class AdminListCategoriesController extends DzqController
+class AdminListCategoriesController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

@@ -23,11 +23,11 @@ use App\Exports\UsersExport;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Traits\UserTrait;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Discuz\Foundation\Application;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 
-class ExportUserController extends DzqController
+class ExportUserController extends DzqAdminController
 {
     use UserTrait;
 

@@ -6,9 +6,9 @@ use App\Models\AdminActionLog;
 use App\Models\Topic;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class BatchUpdateTopicController extends DzqController
+class BatchUpdateTopicController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

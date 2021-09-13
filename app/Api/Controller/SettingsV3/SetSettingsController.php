@@ -28,11 +28,11 @@ use App\Repositories\UserRepository;
 use App\Validators\SetSettingValidator;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqLog;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Qcloud\QcloudTrait;
-use Discuz\Base\DzqController;
 use Exception;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Support\Arr;
@@ -40,7 +40,7 @@ use Illuminate\Support\Collection;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class SetSettingsController extends DzqController
+class SetSettingsController extends DzqAdminController
 {
     use CosTrait;
 
@@ -49,14 +49,6 @@ class SetSettingsController extends DzqController
     public function suffixClearCache($user)
     {
         DzqCache::delKey(CacheKey::SETTINGS);
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
     }
 
     /**

@@ -22,9 +22,9 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class RecommendedUserListController extends DzqController
+class RecommendedUserListController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

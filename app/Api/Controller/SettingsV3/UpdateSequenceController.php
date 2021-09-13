@@ -24,19 +24,14 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Contracts\Setting\SettingsRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class UpdateSequenceController extends DzqController
+class UpdateSequenceController extends DzqAdminController
 {
     public function __construct(User $actor, SettingsRepository $settings)
     {
         $this->actor = $actor;
         $this->settings = $settings;
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
     }
 
     public function main()

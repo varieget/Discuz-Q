@@ -22,11 +22,11 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Setting;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
-use Discuz\Base\DzqController;
 use Discuz\Base\DzqLog;
 
-class OpenViewCountController extends DzqController
+class OpenViewCountController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

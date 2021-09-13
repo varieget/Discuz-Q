@@ -5,16 +5,11 @@ namespace App\Api\Controller\Crawler;
 
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class CheckCrawlerProcessController extends DzqController
+class CheckCrawlerProcessController extends DzqAdminController
 {
     use CrawlerTrait;
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
 
     public function main()
     {

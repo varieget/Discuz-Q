@@ -22,15 +22,10 @@ use App\Models\Sequence;
 use App\Models\Topic;
 use App\Models\User;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class ListSequenceController extends DzqController
+class ListSequenceController extends DzqAdminController
 {
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
-
     public function main()
     {
         $sequence = Sequence::query()->first();

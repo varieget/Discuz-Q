@@ -22,10 +22,10 @@ use App\Commands\Wallet\UpdateUserWallet;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
-class UpdateUserWalletController extends DzqController
+class UpdateUserWalletController extends DzqAdminController
 {
     protected $bus;
 

@@ -22,11 +22,11 @@ use App\Commands\Users\UpdateAdminUser;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 
-class UpdateUsersStatusController extends DzqController
+class UpdateUsersStatusController extends DzqAdminController
 {
 
     protected $bus;

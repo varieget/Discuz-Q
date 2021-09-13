@@ -26,20 +26,11 @@ use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class UpdateNotificationTplV3Controller extends DzqController
+class UpdateNotificationTplV3Controller extends DzqAdminController
 {
     use NotificationTrait;
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        $actor = $this->user;
-        if (!$actor->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
 
     public function main()
     {

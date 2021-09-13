@@ -21,15 +21,10 @@ namespace App\Api\Controller\SettingsV3;
 use App\Common\ResponseCode;
 use App\Models\Setting;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class ListSettingsController extends DzqController
+class ListSettingsController extends DzqAdminController
 {
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
-
     public function main()
     {
         $key = $this->inPut('key');

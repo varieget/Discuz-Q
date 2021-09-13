@@ -22,10 +22,10 @@ use App\Common\ResponseCode;
 use App\Commands\Group\CreateGroup;
 use App\Models\Group;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
-class CreateGroupController extends DzqController
+class CreateGroupController extends DzqAdminController
 {
     protected $bus;
 

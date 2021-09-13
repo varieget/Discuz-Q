@@ -60,7 +60,7 @@ class ProfileController extends DzqController
     {
         $user_serialize = $this->app->make(UserV2Serializer::class);
         $user_serialize->setRequest($this->request);
-        $user_id = $this->inPut('pid');
+        $user_id = $this->inPut('userId');
         $user = User::find($user_id);
         if(!$user){
             return $this->outPut(ResponseCode::INVALID_PARAMETER);
