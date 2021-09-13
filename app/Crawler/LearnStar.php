@@ -35,15 +35,16 @@ class LearnStar
             }
         }
 
-//        $lefNum = $num-count($threadDataList);
-//        if ($lefNum<$num){
-//            //拉取全部
-//            $groupIdList = $this->getData_groups();
-//            foreach ($groupIdList as $gId){
-//                $oneGroup = $this->getData_oneGroup($gId, $lefNum,$filterList);
-//                $threadDataList = array_merge($threadDataList,$oneGroup);
-//            }
-//        }
+        $lefNum = $num-count($threadDataList);
+        if ($lefNum>0){
+            //拉取全部
+            $groupIdList = $this->getData_groups();
+            foreach ($groupIdList as $gId){
+                $oneGroup = $this->getData_oneGroup($gId, $lefNum,$filterList);
+                $threadDataList = array_merge($threadDataList,$oneGroup);
+                $lefNum = $num-count($threadDataList);
+            }
+        }
 
 
         return $threadDataList;
@@ -190,15 +191,17 @@ class LearnStar
         }
         for (;$i<count($topics);$i++){
             $oneTopic = $topics[$i];
-            if (array_key_exists($oneTopic->topic_id,$filterIds)){
-                $oneD = $this->paseOneTopic($oneTopic);
+
+            if (in_array($oneTopic->topic_id,$filterIds)){
+               continue;
             }
 
+            $oneD = $this->paseOneTopic($oneTopic);
 
             array_push($ret, $oneD);
 
-            if (!empty($oneD->forum)){
-                $endTime = $oneD->forum->create_at;
+            if (!empty($oneD["forum"])){
+                $endTime = $oneD["forum"]["create_at"];
             }
         }
 
