@@ -25,10 +25,6 @@ class LearnStar
     }
 
     private function getData($topic, $num){
-        if ($num<=0){
-            return [];
-        }
-
         $filterList = [];
         //搜索
         $threadDataList = $this->getData_groupsSearch($topic,$num);
@@ -39,19 +35,15 @@ class LearnStar
             }
         }
 
-        $lefNum = $num-count($threadDataList);
-        if ($lefNum>0){
-            //拉取全部
-            $groupIdList = $this->getData_groups();
-            foreach ($groupIdList as $gId){
-                $oneGroup = $this->getData_oneGroup($gId, $lefNum,$filterList);
-                $threadDataList = array_merge($threadDataList,$oneGroup);
-                $lefNum = $num-count($threadDataList);
-                if ($lefNum<=0){
-                    break;
-                }
-            }
-        }
+//        $lefNum = $num-count($threadDataList);
+//        if ($lefNum<$num){
+//            //拉取全部
+//            $groupIdList = $this->getData_groups();
+//            foreach ($groupIdList as $gId){
+//                $oneGroup = $this->getData_oneGroup($gId, $lefNum,$filterList);
+//                $threadDataList = array_merge($threadDataList,$oneGroup);
+//            }
+//        }
 
 
         return $threadDataList;
@@ -61,7 +53,6 @@ class LearnStar
         $ret = [];
         $curIndex = 0;
         $count = $num<30?$num:30;
-        $leftNum = $num;
         for ($i=0;$i<100;$i++){
             $url = "https://api.zsxq.com/v2/search/topics?keyword=".urlencode($key)."&index=".$curIndex."&count=".$count;
             $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
@@ -90,11 +81,6 @@ class LearnStar
                     $oneTopicTemp = $dataTopic->resp_data->topic;
                     $oneThread = $this->paseOneTopic($oneTopicTemp);
                     array_push($ret, $oneThread);
-
-                    $leftNum--;
-                    if ($leftNum<=0){
-                       return $ret;
-                    }
                 }
             }
             if ($count<30 || count($resp_data->topics) < $count){
@@ -131,25 +117,23 @@ class LearnStar
 
     private function getData_oneGroup($gId, $num,$filterIdList){
         $threadDataList=[];
-        if ($num<=0){
-            return $threadDataList;
-        }
         $leftN = $num;
         $endTime = null;
-        $oneN = 20;
         for($i=0;$i<100;$i++){
-            list($data,$endTime,$isContinue) = $this->getData_oneGroupPer($gId, $endTime, $oneN, $filterIdList, $leftN);
+            $oneN = $leftN>=20?20:$leftN;
+
+            list($data,$endTime,$isFull) = $this->getData_oneGroupPer($gId, $endTime, $oneN,$filterIdList);
             if (!empty($data)){
                 $threadDataList = array_merge($threadDataList,$data);
-                $leftN-=count($data);
-                if ($leftN<=0){
+                if (!$isFull){
                     break;
                 }
             }
-            if (!$isContinue){
+
+            $leftN = $leftN-$oneN;
+            if ($leftN <=0 ){
                 break;
             }
-
         }
         return $threadDataList;
     }
@@ -173,7 +157,8 @@ class LearnStar
         return $html;
     }
 
-    private function getData_oneGroupPer($gId, $endTime, $num, $filterIds, $leftN){
+    private function getData_oneGroupPer($gId, $endTime, $num, $filterIds){
+
         $url = "https://api.zsxq.com/v2/groups/".$gId."/topics?scope=all&count=".$num;
         if ($endTime!=null){
             $tempET = urlencode($endTime);
@@ -185,48 +170,39 @@ class LearnStar
         $data = json_decode($html);
         $ret = [];
         if(empty($data)){
-            return [$ret,null,false];
+            return [$ret];
         }
         if($data->succeeded != true){
-            return [$ret,null,false];
+            return [$ret];
         }
 
         $respData = $data->resp_data;
 
         if(empty($respData->topics)){
-            return [$ret,null,false];
+            return [$ret];
         }
         $topics = $respData->topics;
-        $isContinue = count($topics)>=$num;
+        $isFull = count($topics)>=$num;
 
         $i=0;
         if(!empty($endTime)){
             $i = 1;
         }
-
-
         for (;$i<count($topics);$i++){
             $oneTopic = $topics[$i];
-
-            if (!empty($oneTopic->create_time)){
-                $endTime = $oneTopic->create_time;
+            if (array_key_exists($oneTopic->topic_id,$filterIds)){
+                $oneD = $this->paseOneTopic($oneTopic);
             }
 
-            if (in_array($oneTopic->topic_id,$filterIds)){
-               continue;
-            }
-
-            $oneD = $this->paseOneTopic($oneTopic);
 
             array_push($ret, $oneD);
-            $leftN--;
-            if ($leftN<=0){
-                $isContinue = false;
-                break;
+
+            if (!empty($oneD->forum)){
+                $endTime = $oneD->forum->create_at;
             }
         }
 
-        return [$ret,$endTime,$isContinue];
+        return [$ret,$endTime,$isFull];
     }
 
     private function paseOneTopic($oneTopic){
