@@ -61,6 +61,7 @@ class LearnStar
         $ret = [];
         $curIndex = 0;
         $count = $num<30?$num:30;
+        $leftNum = $num;
         for ($i=0;$i<100;$i++){
             $url = "https://api.zsxq.com/v2/search/topics?keyword=".urlencode($key)."&index=".$curIndex."&count=".$count;
             $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
@@ -89,6 +90,11 @@ class LearnStar
                     $oneTopicTemp = $dataTopic->resp_data->topic;
                     $oneThread = $this->paseOneTopic($oneTopicTemp);
                     array_push($ret, $oneThread);
+
+                    $leftNum--;
+                    if ($leftNum<=0){
+                       return $ret;
+                    }
                 }
             }
             if ($count<30 || count($resp_data->topics) < $count){
