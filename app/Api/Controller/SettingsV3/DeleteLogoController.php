@@ -22,12 +22,12 @@ use App\Common\CacheKey;
 use App\Models\Setting;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
 use Discuz\Contracts\Setting\SettingsRepository;
-use Discuz\Base\DzqController;
 use Illuminate\Contracts\Filesystem\Factory;
 
-class DeleteLogoController extends DzqController
+class DeleteLogoController extends DzqAdminController
 {
     public function suffixClearCache($user)
     {
@@ -65,11 +65,6 @@ class DeleteLogoController extends DzqController
     {
         $this->filesystem = $filesystem;
         $this->settings = $settings;
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
     }
 
     public function main()

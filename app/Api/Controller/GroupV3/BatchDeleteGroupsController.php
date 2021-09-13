@@ -21,10 +21,10 @@ namespace App\Api\Controller\GroupV3;
 use App\Common\ResponseCode;
 use App\Models\Group;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
-class BatchDeleteGroupsController extends DzqController
+class BatchDeleteGroupsController extends DzqAdminController
 {
     protected $bus;
 

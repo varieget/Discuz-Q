@@ -22,20 +22,15 @@ use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Thread;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class CreateCrawlerDataController extends DzqController
+class CreateCrawlerDataController extends DzqAdminController
 {
     use CrawlerTrait;
 
     private $crawlerPlatform;
 
     private $categoryId;
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
 
     public function main()
     {

@@ -22,11 +22,11 @@ use App\Models\Group;
 use App\Common\ResponseCode;
 use App\Models\Sequence;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 
-class ListGroupsController extends DzqController
+class ListGroupsController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

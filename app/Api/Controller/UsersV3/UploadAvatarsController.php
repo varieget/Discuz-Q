@@ -22,10 +22,10 @@ use App\Commands\Users\UploadAvatar;
 use App\Common\DzqCache;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
-class UploadAvatarsController extends DzqController
+class UploadAvatarsController extends DzqAdminController
 {
     /**
      * @var Dispatcher

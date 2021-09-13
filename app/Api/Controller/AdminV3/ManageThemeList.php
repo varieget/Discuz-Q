@@ -26,10 +26,10 @@ use App\Repositories\UserRepository;
 use App\Models\Thread;
 use App\Models\StopWord;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Support\Str;
 
-class ManageThemeList extends DzqController
+class ManageThemeList extends DzqAdminController
 {
     use ThreadTrait;
     use ThreadListTrait;
@@ -42,14 +42,6 @@ class ManageThemeList extends DzqController
         'updated_at',
         'deleted_at',
     ];
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
 
     public function main()
     {

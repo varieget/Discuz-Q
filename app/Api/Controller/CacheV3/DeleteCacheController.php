@@ -22,10 +22,10 @@ use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqCache;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqLog;
 
-class DeleteCacheController extends DzqController
+class DeleteCacheController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

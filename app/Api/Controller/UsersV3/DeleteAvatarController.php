@@ -21,9 +21,9 @@ namespace App\Api\Controller\UsersV3;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use App\User\AvatarUploader;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class DeleteAvatarController extends DzqController
+class DeleteAvatarController extends DzqAdminController
 {
     protected $users;
 

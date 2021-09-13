@@ -18,7 +18,7 @@
 
 namespace App\Api\Controller\GroupV3;
 
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use App\Common\ResponseCode;
 use Discuz\Auth\AssertPermissionTrait;
 use App\Models\Group;
@@ -28,7 +28,7 @@ use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
 
-class BatchUpdateGroupController extends DzqController
+class BatchUpdateGroupController extends DzqAdminController
 {
     use AssertPermissionTrait;
 

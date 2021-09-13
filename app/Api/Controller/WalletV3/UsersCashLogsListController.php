@@ -22,18 +22,10 @@ use App\Models\UserWalletCash;
 use App\Models\UserWechat;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class UsersCashLogsListController extends DzqController
+class UsersCashLogsListController extends DzqAdminController
 {
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
-
     public function main()
     {
         $currentPage = $this->inPut('page');

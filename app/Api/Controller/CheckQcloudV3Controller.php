@@ -21,7 +21,7 @@ namespace App\Api\Controller;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use App\Models\Setting;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Discuz\Http\DiscuzResponseFactory;
 use Discuz\Qcloud\QcloudStatisticsTrait;
 use Psr\Http\Message\ResponseInterface;
@@ -33,7 +33,7 @@ use TencentCloud\Common\Profile\HttpProfile;
 use TencentCloud\Ms\V20180408\Models\DescribeUserBaseInfoInstanceRequest;
 use TencentCloud\Ms\V20180408\MsClient;
 
-class CheckQcloudV3Controller extends DzqController
+class CheckQcloudV3Controller extends DzqAdminController
 {
     use QcloudStatisticsTrait;
 

@@ -6,20 +6,11 @@ use App\Common\ResponseCode;
 use App\Models\NotificationTpl;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Support\Collection;
 
-class ListNotificationTplV3Controller extends DzqController
+class ListNotificationTplV3Controller extends DzqAdminController
 {
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        $actor = $this->user;
-        if (!$actor->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
-
     public function main()
     {
         $page = $this->inPut('page');

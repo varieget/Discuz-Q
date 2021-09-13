@@ -4,15 +4,10 @@ namespace App\Api\Controller\ReportV3;
 use App\Models\Report;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class BatchDeleteReportsController extends DzqController
+class BatchDeleteReportsController extends DzqAdminController
 {
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
-
     public function main()
     {
         $idString = $this->inPut('ids');

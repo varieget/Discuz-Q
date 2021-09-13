@@ -27,22 +27,14 @@ use App\Models\AdminActionLog;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqCache;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Events\Dispatcher;
 
-class UpdateGroupPermissionController extends DzqController
+class UpdateGroupPermissionController extends DzqAdminController
 {
     public function suffixClearCache($user)
     {
         DzqCache::clear();
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
     }
 
     protected $events;
