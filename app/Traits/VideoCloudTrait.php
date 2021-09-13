@@ -34,11 +34,6 @@ trait VideoCloudTrait
     protected $url = 'vod.tencentcloudapi.com';
 
     private function videoUpload($userId,$threadId,$mediaUrl,$setting,$ext = ''){
-
-        if (!$setting->get('qcloud_vod', 'qcloud')) {
-            return false;
-        }
-
         $log = app('log');
         if(empty($mediaUrl) || empty($userId) || empty($threadId) || empty($setting)){
             $log->info('视频上传参数不能为空');

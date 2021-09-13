@@ -42,8 +42,6 @@ class CreateCrawlerDataController extends DzqController
         $topic = $this->input('topic');
         $this->crawlerPlatform = $this->input('platform') ?: Thread::CRAWLER_DATA_PLATFORM_OF_WEIBO;
         $officialAccountUrl = $this->input('officialAccountUrl');
-        $cookie = $this->input('cookie');
-        $userAgent = $this->input('userAgent');
 
         if (empty($topic) && $this->crawlerPlatform != Thread::CRAWLER_DATA_PLATFORM_OF_WECHAT) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入话题！');
@@ -67,14 +65,6 @@ class CreateCrawlerDataController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入正确的导入条数！');
         }
 
-        if ($this->crawlerPlatform == Thread::CRAWLER_DATA_PLATFORM_OF_ZSXQ) {
-            if (empty($cookie)) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入cookie！');
-            } elseif (empty($userAgent)) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入userAgent！');
-            }
-        }
-
         $publicPath = public_path();
         $lockPath = $publicPath . DIRECTORY_SEPARATOR . 'crawlerSplQueueLock.conf';
         if (file_exists($lockPath)) {
@@ -82,8 +72,8 @@ class CreateCrawlerDataController extends DzqController
             if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {
                 $this->outPut(ResponseCode::RESOURCE_IN_USE, "当前内容[{$lockFileContent['topic']}]正在导入，请勿重复操作！当前已执行" . $lockFileContent['runtime'] . "分钟。");
             } else if ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
-                $this->changeLockFileContent($lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $lockFileContent['topic']);
                 app('cache')->clear();
+                $this->changeLockFileContent($lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $lockFileContent['topic']);
                 $this->outPut(ResponseCode::INVALID_PARAMETER, "内容[{$lockFileContent['topic']}]导入时间过长，导入失败！");
             }
         }
@@ -93,9 +83,7 @@ class CreateCrawlerDataController extends DzqController
             'platform' => $this->crawlerPlatform,
             'number'   => $number,
             'categoryId' => $this->categoryId,
-            'officialAccountUrl' => $officialAccountUrl,
-            'cookie' => $cookie,
-            'userAgent' => $userAgent
+            'officialAccountUrl' => $officialAccountUrl
         ];
 
         $crawlerSplQueue = new \SplQueue();
