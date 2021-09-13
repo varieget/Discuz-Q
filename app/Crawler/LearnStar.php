@@ -25,6 +25,10 @@ class LearnStar
     }
 
     private function getData($topic, $num){
+        if ($num<=0){
+            return [];
+        }
+
         $filterList = [];
         //搜索
         $threadDataList = $this->getData_groupsSearch($topic,$num);
@@ -43,6 +47,9 @@ class LearnStar
                 $oneGroup = $this->getData_oneGroup($gId, $lefNum,$filterList);
                 $threadDataList = array_merge($threadDataList,$oneGroup);
                 $lefNum = $num-count($threadDataList);
+                if ($lefNum<=0){
+                    break;
+                }
             }
         }
 
@@ -118,23 +125,25 @@ class LearnStar
 
     private function getData_oneGroup($gId, $num,$filterIdList){
         $threadDataList=[];
+        if ($num<=0){
+            return $threadDataList;
+        }
         $leftN = $num;
         $endTime = null;
+        $oneN = 20;
         for($i=0;$i<100;$i++){
-            $oneN = $leftN>=20?20:$leftN;
-
-            list($data,$endTime,$isFull) = $this->getData_oneGroupPer($gId, $endTime, $oneN,$filterIdList);
+            list($data,$endTime,$isContinue) = $this->getData_oneGroupPer($gId, $endTime, $oneN, $filterIdList, $leftN);
             if (!empty($data)){
                 $threadDataList = array_merge($threadDataList,$data);
-                if (!$isFull){
+                $leftN-=count($data);
+                if ($leftN<=0){
                     break;
                 }
             }
-
-            $leftN = $leftN-$oneN;
-            if ($leftN <=0 ){
+            if (!$isContinue){
                 break;
             }
+
         }
         return $threadDataList;
     }
@@ -158,8 +167,7 @@ class LearnStar
         return $html;
     }
 
-    private function getData_oneGroupPer($gId, $endTime, $num, $filterIds){
-
+    private function getData_oneGroupPer($gId, $endTime, $num, $filterIds, $leftN){
         $url = "https://api.zsxq.com/v2/groups/".$gId."/topics?scope=all&count=".$num;
         if ($endTime!=null){
             $tempET = urlencode($endTime);
@@ -171,26 +179,32 @@ class LearnStar
         $data = json_decode($html);
         $ret = [];
         if(empty($data)){
-            return [$ret];
+            return [$ret,null,false];
         }
         if($data->succeeded != true){
-            return [$ret];
+            return [$ret,null,false];
         }
 
         $respData = $data->resp_data;
 
         if(empty($respData->topics)){
-            return [$ret];
+            return [$ret,null,false];
         }
         $topics = $respData->topics;
-        $isFull = count($topics)>=$num;
+        $isContinue = count($topics)>=$num;
 
         $i=0;
         if(!empty($endTime)){
             $i = 1;
         }
+
+
         for (;$i<count($topics);$i++){
             $oneTopic = $topics[$i];
+
+            if (!empty($oneTopic->create_time)){
+                $endTime = $oneTopic->create_time;
+            }
 
             if (in_array($oneTopic->topic_id,$filterIds)){
                continue;
@@ -199,13 +213,14 @@ class LearnStar
             $oneD = $this->paseOneTopic($oneTopic);
 
             array_push($ret, $oneD);
-
-            if (!empty($oneD["forum"])){
-                $endTime = $oneD["forum"]["create_at"];
+            $leftN--;
+            if ($leftN<=0){
+                $isContinue = false;
+                break;
             }
         }
 
-        return [$ret,$endTime,$isFull];
+        return [$ret,$endTime,$isContinue];
     }
 
     private function paseOneTopic($oneTopic){
