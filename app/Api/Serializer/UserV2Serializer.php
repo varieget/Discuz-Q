@@ -208,7 +208,6 @@ class UserV2Serializer extends AbstractSerializer
         $originalAvatar = $dir1.'/'.$dir2.'/'.$dir3.'/original_'.substr($uid, -2).'.png';
         $avatar = $model->getRawOriginal('avatar');
         $originalAvatarUrl = $model->getOriginalAvatarPath();
-        return $originalAvatarUrl;
         if (strpos($avatar, '://') === false) {
             if(!file_exists(storage_path('app/public/avatars/' . $originalAvatar))){
                 $originalAvatarUrl = $model->avatar;
@@ -230,7 +229,6 @@ class UserV2Serializer extends AbstractSerializer
 
         $background = $model->getRawOriginal('background');
         $originalBackGroundUrl = $model->getOriginalBackGroundPath();
-        return $originalBackGroundUrl;
         if (strpos($background, '://') === false) {
             $backUrl = str_replace($dir1.'/'.$dir2.'/'.$dir3.'/',$dir1.'/'.$dir2.'/'.$dir3.'/'.'original_',$background);
             if(!file_exists(storage_path('app/public/background/' . $backUrl))){
