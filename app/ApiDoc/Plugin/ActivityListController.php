@@ -2,10 +2,24 @@
 /**
  * @OA\Get(
  *     path="/plugin/activity/api/register/list",
- *     summary="参与人列表",
+ *     summary="分页获取参与人列表",
  *     description="获取报名用户列表",
  *     tags={"插件"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
+ *     @OA\Parameter(
+ *         name="perPage",
+ *         in="query",
+ *         required=true,
+ *         description = "每页显示数据条数",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Parameter(
+ *         name="page",
+ *         in="query",
+ *         required=true,
+ *         description = "当前页",
+ *         @OA\Schema(type="integer")
+ *     ),
  *     @OA\Parameter(
  *         name="activityId",
  *         in="query",
