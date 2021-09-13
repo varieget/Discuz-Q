@@ -4,7 +4,7 @@ use Discuz\Base\DzqPluginMigration;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
 
-class CreatePluginActivityUsers extends DzqPluginMigration
+class CreatePluginActivityUser extends DzqPluginMigration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class CreatePluginActivityUsers extends DzqPluginMigration
      */
     public function up()
     {
-        $this->schema()->create('plugin_activity_users', function (Blueprint $table) {
+        $this->schema()->create('plugin_activity_user', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true)->comment('自增id');
             $table->unsignedBigInteger('thread_id')->nullable(false)->comment('主题id');
             $table->unsignedBigInteger('activity_id')->nullable(false)->comment('活动id');

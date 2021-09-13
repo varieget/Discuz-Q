@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-namespace Plugin\enroll\model;
+namespace Plugin\Activity\Model;
 
 
 use Discuz\Base\DzqModel;
 
-class PluginThreadActivity extends DzqModel
+class ActivityUser extends DzqModel
 {
-    protected $table='plugin_thread_activity';
+    protected $table = 'plugin_activity_user';
 
 }
