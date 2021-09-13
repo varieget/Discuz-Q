@@ -21,6 +21,8 @@ class CreatePluginActivityUsers extends DzqPluginMigration
             $table->tinyInteger('status')->default(1)->comment('0:无效 1：有效');
             $table->timestamp('created_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
+            $table->index('thread_id');
+            $table->index(['activity_id','user_id']);
         });
     }
 
