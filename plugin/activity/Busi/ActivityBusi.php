@@ -22,6 +22,10 @@ use App\Modules\ThreadTom\TomBaseBusi;
 
 class ActivityBusi extends TomBaseBusi
 {
+    public function checkPermission()
+    {
+
+    }
     public function select()
     {
         return $this->jsonReturn($this->body);
@@ -42,9 +46,6 @@ class ActivityBusi extends TomBaseBusi
 
     }
 
-    public function checkPermission()
-    {
 
-    }
 
 }
