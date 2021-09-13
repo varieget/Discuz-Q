@@ -23,6 +23,7 @@ use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\PostSerializer;
 use App\Commands\Post\CreatePost;
 use App\Common\CacheKey;
+use App\Common\Platform;
 use App\Common\ResponseCode;
 use App\Formatter\Formatter;
 use App\Models\Attachment;
@@ -317,33 +318,22 @@ class CreatePostController extends DzqController
                 $site_info_daily->h5_posts = 0;
                 $site_info_daily->posts_sum = Post::query()->where('is_first', Post::FIRST_NO )->whereNotNull('deleted_at')->count();
             }
-            //根据header头判断来自哪个端
-            $user_agent = $this->request->getHeaderLine('User-Agent');
-            preg_match('/AppleWebKit.*Mobile.*/',$user_agent, $is_mobile);
-            //获取小程序appid
-            $miniprogram_app_id = Setting::query()->where('key','miniprogram_app_id')->value('value');
-            $referer = $this->request->getHeaderLine('Referer');
-            $is_mini = false;
-            if(!empty($miniprogram_app_id) && strpos($referer, 'https://servicewechat.com/'.$miniprogram_app_id) !== false){
-                $is_mini = true;
-            }
-            $flag = 'web';
-            if(!empty($is_mobile)){
-                $flag = 'h5';
-            }elseif (!empty($is_mini)){
-                $flag = 'mini';
-            }
-            switch ($flag){
-                case 'mini':
+            //判断来自哪个端
+            switch ($this->inPut('dzqPf')){
+                case Platform::FROM_WEAPP:
                     $site_info_daily->mini_posts += 1;
                     break;
-                case 'h5':
+                case Platform::FROM_H5:
                     $site_info_daily->h5_posts += 1;
                     break;
-                default:
+                case Platform::FROM_PC:
                     $site_info_daily->pc_posts += 1;
                     break;
+                default:
+                    break;
             }
+
+
             $site_info_daily->posts_sum += 1;
             $site_info_daily->save();
         }

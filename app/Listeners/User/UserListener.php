@@ -18,6 +18,7 @@
 
 namespace App\Listeners\User;
 
+use App\Common\Platform;
 use App\Events\Users\AdminLogind;
 use App\Events\Users\ChangeUserStatus;
 use App\Events\Users\Forum;
@@ -47,6 +48,7 @@ class UserListener
         $events->listen(AdminLogind::class, QcloudSiteInfoDaily::class);
 
         $events->listen(Forum::class, [$this, 'activeUsersStatistics']);
+        $events->listen(Forum::class, [$this, 'startStatistics']);
     }
 
     public function refreshFollowCount(UserFollowCreated $event)
@@ -82,6 +84,10 @@ class UserListener
 
     public function activeUsersStatistics(Forum $event)
     {
+        $get_query_params = $event->request->getQueryParams();
+        if(empty($get_query_params['dzqPf'])){
+            return;
+        }
         $active_users = app('cache')->get('active_users');
         if(empty($active_users))    $active_users = [];
         //如果没有 user_id，就不统计活跃用户
@@ -99,30 +105,15 @@ class UserListener
                 $site_info_daily->h5_active_users = 0;
                 $site_info_daily->new_users = 0;
             }
-            //根据header头判断来自哪个端
-            $user_agent = $event->request->getHeaderLine('User-Agent');
-            preg_match('/AppleWebKit.*Mobile.*/',$user_agent, $is_mobile);
-            //获取小程序appid
-            $miniprogram_app_id = Setting::query()->where('key','miniprogram_app_id')->value('value');
-            $referer = $event->request->getHeaderLine('Referer');
-            $is_mini = false;
-            if(!empty($miniprogram_app_id) && strpos($referer, 'https://servicewechat.com/'.$miniprogram_app_id) !== false){
-                $is_mini = true;
-            }
-            $flag = 'web';
-            if(!empty($is_mobile)){
-                $flag = 'h5';
-            }elseif (!empty($is_mini)){
-                $flag = 'mini';
-            }
-            switch ($flag){
-                case 'mini':
+            //根据url上dzqPf参数判断来自哪个端
+            switch ($get_query_params['dzqPf']){
+                case Platform::FROM_WEAPP:
                     $site_info_daily->mini_active_users += 1;
                     break;
-                case 'h5':
+                case Platform::FROM_H5:
                     $site_info_daily->h5_active_users += 1;
                     break;
-                default:
+                case Platform::FROM_PC:
                     $site_info_daily->pc_active_users += 1;
                     break;
             }
@@ -133,6 +124,64 @@ class UserListener
             $site_info_daily->save();
             array_push($active_users, $event->user->id);
             app('cache')->put('active_users' , $active_users, $cache_time);
+        }
+    }
+
+    //启动数统计
+    public function startStatistics(Forum $event){
+        $get_query_params = $event->request->getQueryParams();
+        if(empty($get_query_params['dzqPf'])){
+            return;
+        }
+        $start_peoples_dzqSid = app('cache')->get('start_peoples_dzqSid');
+        if(empty($start_peoples_dzqSid))    $start_peoples_dzqSid = [];
+        $today = date("Y-m-d", time());
+        $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
+        if(empty($site_info_daily)){
+            $site_info_daily = new SiteInfoDaily();
+            $site_info_daily->date = $today;
+            $site_info_daily->pc_start_count = 0;
+            $site_info_daily->h5_start_count = 0;
+            $site_info_daily->mini_start_count = 0;
+            $site_info_daily->start_count = 0;
+            $site_info_daily->pc_start_peoples = 0;
+            $site_info_daily->h5_start_peoples = 0;
+            $site_info_daily->mini_start_peoples = 0;
+            $site_info_daily->start_peoples = 0;
+        }
+        //根据url上dzqPf参数判断来自哪个端
+        switch ($get_query_params['dzqPf']){
+            case Platform::FROM_WEAPP:
+                $site_info_daily->mini_start_count += 1;
+                break;
+            case Platform::FROM_H5:
+                $site_info_daily->h5_start_count += 1;
+                break;
+            case Platform::FROM_PC:
+                $site_info_daily->pc_start_count += 1;
+                break;
+        }
+        $site_info_daily->start_count += 1;
+        if(!in_array($get_query_params['dzqSid'], $start_peoples_dzqSid)){
+            $tomorrow = date("Y-m-d",strtotime("+1 day"));
+            $cache_time = strtotime($tomorrow) - time();
+            switch ($get_query_params['dzqPf']){
+                case Platform::FROM_WEAPP:
+                    $site_info_daily->mini_start_peoples += 1;
+                    break;
+                case Platform::FROM_H5:
+                    $site_info_daily->h5_start_peoples += 1;
+                    break;
+                case Platform::FROM_PC:
+                    $site_info_daily->pc_start_peoples += 1;
+                    break;
+            }
+            $site_info_daily->start_peoples += 1;
+        }
+        $site_info_daily->save();
+        if($event->user->id && !in_array($event->user->id, $start_peoples_dzqSid) && !empty($cache_time)){
+            array_push($start_peoples_dzqSid, $get_query_params['dzqSid']);
+            app('cache')->put('start_peoples_dzqSid' , $start_peoples_dzqSid, $cache_time);
         }
     }
 }
