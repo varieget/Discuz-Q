@@ -83,9 +83,7 @@ class TopicListController extends DzqController
         $topicThreadDatas = [];
 
         $threads = $this->getFilterThreads($topicIds, $filter, $currentPage, $perPage);
-        if (isset($filter['topicId']) && !empty($filter['topicId'])) {
-            $topics['currentPage'] = $threads['currentPage'];
-            $topics['perPage'] = $threads['perPage'];
+        if (isset($threads['pageData'])) {
             $topics['pageLength'] = $threads['pageLength'];
             $topics['totalCount'] = $threads['totalCount'];
             $topics['totalPage'] = $threads['totalPage'];
@@ -142,10 +140,8 @@ class TopicListController extends DzqController
             $query->where('topics.recommended', (int)Arr::get($filter, 'recommended'));
         }
 
-        $topicId = trim(Arr::get($filter, 'topicId'));
-        if ($topicId) {
+        if ($topicId = trim(Arr::get($filter, 'topicId'))) {
             $query->where('topics.id', '=', $topicId);
-            $currentPage = 1;
         }
 
         if ((Arr::has($filter, 'hot') && Arr::get($filter, 'hot') == 1) || 
