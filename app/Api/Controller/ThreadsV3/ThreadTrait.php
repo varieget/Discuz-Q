@@ -349,7 +349,8 @@ trait ThreadTrait
                     if ($freeWords >= 0 && $freeWords < 1) {
                         $text = strip_tags($post['content']);
                         $freeLength = mb_strlen($text) * $freeWords;
-                        $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+//                        $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+                        $text = self::truncateHTML($post['content'], $freeLength, Post::SUMMARY_END_WITH);
                         //针对最后的表情被截断的情况做截断处理
                         $text = preg_replace('/([^\w])\:\w*\.\.\./s', '$1...', $text);
                         //处理内容开头是表情，表情被截断的情况
@@ -856,6 +857,39 @@ trait ThreadTrait
                 }
             }
         }
+    }
+
+    public function truncateHTML($html_string, $length, $append = '', $is_html = true) {
+        $html_string = trim($html_string);
+        $append = (mb_strlen(strip_tags($html_string)) > $length) ? $append : '';
+        $i = 0;
+        $tags = [];
+
+        if ($is_html) {
+            preg_match_all('/<[^>]+>([^<]*)/', $html_string, $tag_matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
+
+            foreach($tag_matches as $tag_match) {
+                if ($tag_match[0][1] - $i >= $length) {
+                    break;
+                }
+                $tag = mb_substr(strtok($tag_match[0][0]," \\\t\\\0\\\x0B>"), 1);
+                if ($tag[0] != '/') {
+                    if(!in_array($tag, ['img'])){       //针对有些标签是单标签的情况，不需要成对出现
+                        $tags[] = $tag;
+                    }
+                }elseif (end($tags) == mb_substr($tag, 1)) {
+                    array_pop($tags);
+                }else{      // </*> 匹配对应的tag标签，然后去掉 tags 中对应的标签
+                    while(end($tags) != substr($tag, 1)){
+                        array_pop($tags);
+                    }
+                    array_pop($tags);
+                }
+                $i += $tag_match[1][1] - $tag_match[0][1];
+            }
+        }
+
+        return mb_substr($html_string, 0, $length = min(mb_strlen($html_string), $length + $i)) . (count($tags = array_reverse($tags)) ? '</' . implode('></', $tags) . '>' : '') . $append;
     }
 }
 

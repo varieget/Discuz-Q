@@ -22,6 +22,7 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\UserWalletLog;
+use App\Modules\ThreadTom\TomConfig;
 use Exception;
 use Tobscure\JsonApi\Relationship;
 
@@ -74,7 +75,7 @@ class PostSerializer extends BasicPostSerializer
         }
 
         $redPacketTom = ThreadTom::query()->where('thread_id',$thread_id)
-                          ->where('tom_type',106)
+                          ->where('tom_type',TomConfig::TOM_REDPACK)
                             ->first();
 
         $redPacketAmount = 0;

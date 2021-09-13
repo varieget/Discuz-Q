@@ -26,6 +26,7 @@ use App\Models\RedPacket;
 use App\Models\ThreadRedPacket;
 use App\Models\ThreadTom;
 use App\Models\UserWalletLog;
+use App\Modules\ThreadTom\TomConfig;
 use Discuz\Foundation\EventsDispatchTrait;
 use Exception;
 use Illuminate\Contracts\Bus\Dispatcher;
@@ -123,7 +124,7 @@ class ReplyPostMakeRedPacket
 //        }
 
             $redPacketTom = ThreadTom::query()->where('thread_id', $thread['id'])
-                ->where('tom_type', 106)
+                ->where('tom_type', TomConfig::TOM_REDPACK)
                 ->first();
             if ($redPacketTom) {
                 $change_type = UserWalletLog::TYPE_REDPACKET_INCOME;

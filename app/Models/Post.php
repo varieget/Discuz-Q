@@ -24,6 +24,7 @@ use App\Events\Post\Restored;
 use App\Events\Post\Revised;
 use App\Models\UserWalletLog;
 use App\Formatter\Formatter;
+use App\Modules\ThreadTom\TomConfig;
 use Carbon\Carbon;
 use DateTime;
 use Discuz\Base\DzqModel;
@@ -684,7 +685,7 @@ class Post extends DzqModel
         $this->rewards = 0;
 
         $rewardTom = ThreadTom::query()->where('thread_id',$thread['id'])
-            ->where('tom_type',107)
+            ->where('tom_type',TomConfig::TOM_REWARD)
             ->first();
         if(!empty($rewardTom)){
             $UserWalletLog = UserWalletLog::query()

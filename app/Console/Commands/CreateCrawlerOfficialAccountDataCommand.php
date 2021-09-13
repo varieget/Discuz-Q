@@ -333,6 +333,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         $content = preg_replace("/<(\/?figure.*?)>/si",'', $content);
         $content = preg_replace("/<(\/?mpvideosnap.*?)>/si",'', $content); //  过滤视频号
         $content = preg_replace("/<(\/?mp-miniprogram.*?)>/si",'', $content); //  过滤小程序
+        $content = preg_replace("/<(\/?qqmusic.*?)>/si",'', $content); //  过滤qq音乐
         $content = $this->changeArticleImg($content, $userId);
         $content = $this->changeArticleVideo($url, $content, $userId, $threadId);
         //添加微信样式
