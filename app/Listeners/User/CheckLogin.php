@@ -18,12 +18,14 @@
 
 namespace App\Listeners\User;
 
+use App\Common\ResponseCode;
 use App\Events\Users\Logining;
 use App\Models\UserLoginFailLog;
 use App\Repositories\UserLoginFailLogRepository;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\LoginFailedException;
 use Discuz\Auth\Exception\LoginFailuresTimesToplimitException;
+use Discuz\Common\Utils;
 use Discuz\Foundation\Application;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -74,9 +76,11 @@ class CheckLogin
         ++$this->userLoginFailCount;
 
         $expire = Carbon::parse($maxTime)->addMinutes(self::LIMIT_TIME);
-        if ($this->userLoginFailCount > self::FAIL_NUM && ($expire > Carbon::now())) {
-            throw new LoginFailuresTimesToplimitException;
-        } elseif ($this->userLoginFailCount > self::FAIL_NUM && ($expire < Carbon::now())) {
+        $isLargeUserLoginFailCount = $this->userLoginFailCount > self::FAIL_NUM;
+        $isLargeNowTime = $expire > Carbon::now();
+        if ($isLargeUserLoginFailCount && $isLargeNowTime) {
+            Utils::outPut(ResponseCode::LOGIN_FAILED, '登录错误次数超出限制');
+        } elseif ($isLargeUserLoginFailCount && !$isLargeNowTime) {
             //reset fail count
             $this->userLoginFailCount = 1;
             UserLoginFailLog::reSetFailCountByIp($this->ip);
@@ -93,10 +97,10 @@ class CheckLogin
             UserLoginFailLog::setFailCountByIp($this->ip, $userId, $username);
 
             if ($this->userLoginFailCount == self::FAIL_NUM) {
-                throw new LoginFailuresTimesToplimitException;
+                Utils::outPut(ResponseCode::LOGIN_FAILED, '登录错误次数超出限制');
             }
         }
 
-        throw new LoginFailedException(self::FAIL_NUM-$this->userLoginFailCount, 403);
+        Utils::outPut(ResponseCode::LOGIN_FAILED, '登录失败，您还可以尝试'.(self::FAIL_NUM-$this->userLoginFailCount).'次');
     }
 }
