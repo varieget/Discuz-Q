@@ -25,8 +25,8 @@ class CreatePluginActivityThreadActivity extends DzqPluginMigration
             $table->dateTime('register_start_time')->comment('报名开始时间');
             $table->dateTime('register_end_time')->comment('报名结束时间');
             $table->integer('total_number')->default(0)->comment('报名人数上限 0:不限制');
-            $table->string('address', 200)->comment('地址信息');
-            $table->string('location', 200)->comment('位置信息');
+            $table->string('address', 200)->nullable(false)->default('')->comment('地址信息');
+            $table->string('location', 200)->nullable(true)->default('')->comment('位置信息');
             $table->decimal('longitude', 10, 7)->default(0.0000000)->nullable(false)->comment('经度');
             $table->decimal('latitude', 10, 7)->default(0.0000000)->nullable(false)->comment('纬度');
             $table->tinyInteger('status')->default(1)->comment('0:无效 1：有效');

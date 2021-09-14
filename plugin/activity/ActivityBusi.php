@@ -18,11 +18,18 @@
 namespace Plugin\Activity;
 
 
+use App\Common\CacheKey;
+use App\Common\DzqConst;
+use App\Common\ResponseCode;
+use App\Models\User;
 use App\Modules\ThreadTom\TomBaseBusi;
+use Discuz\Base\DzqCache;
+use Plugin\Activity\Model\ActivityUser;
 use Plugin\Activity\Model\ThreadActivity;
 
 class ActivityBusi extends TomBaseBusi
 {
+
     public function checkPermission()
     {
 
@@ -30,114 +37,150 @@ class ActivityBusi extends TomBaseBusi
 
     public function select()
     {
-        return $this->jsonReturn($this->body);
+        $activityId = $this->getParams('activityId');
+        $activity = ThreadActivity::query()->where([
+            'id' => $activityId,
+            'status' => DzqConst::BOOL_YES
+        ])->first();
+        if (empty($activity)) return false;
+        $activityUser = ActivityUser::query()->where([
+            'activity_id' => $activityId,
+            'status' => DzqConst::BOOL_YES
+        ]);
+        $currentNumber = $activityUser->count();
+        $userIds = $activityUser->orderByDesc('id')->limit(3)->select('user_id')->pluck('user_id')->toArray();
+        $users = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
+            return User::instance()->getUsers($userIds);
+        }, 'id');
+        $registerUsers = [];
+        foreach ($users as $user) {
+            $registerUsers[] = [
+                'userId' => $user['id'],
+                'avatar' => $user['avatar'],
+                'nickname' => $user['nickname']
+            ];
+        }
+        $isRegisted = $activityUser->where('user_id',$this->user->id)->exists();
+        $result = [
+            'activityId' => $activity['id'],
+            'title' => $activity['title'],
+            'content' => $activity['content'],
+            'activityStartTime' => $activity['activity_start_time'],
+            'activityEndTime' => $activity['activity_end_time'],
+            'registerStartTime' => $activity['register_start_time'],
+            'registerEndTime' => $activity['register_end_time'],
+            'totalNumber' => $activity['total_number'],
+            'currentNumber' => $currentNumber,
+            'position' => [
+                'address' => $activity['address'],
+                'location' => $activity['location'],
+                'longitude' => $activity['longitude'],
+                'latitude' => $activity['latitude']
+            ],
+            'isRegisted'=>$isRegisted,
+            'isExpired' => time() > strtotime($activity['register_start_time']),
+            'isMemberFull' => $activity['total_number'] == 0 ? false : $activity['total_number'] < $currentNumber,
+            'createdAt' => date('Y-m-d H:i:s', strtotime($activity['created_at'])),
+            'registerUsers' => $registerUsers
+        ];
+        return $this->jsonReturn($result);
     }
 
     public function create()
     {
-        $title = $this->getParams('title');
-        $content = $this->getParams('content');
-        $activityStartTime = $this->getParams('activityStartTime');
-        $activityEndTime = $this->getParams('activityEndTime');
-        $registerStartTime = $this->getParams('registerStartTime');
-        $registerEndTime = $this->getParams('registerEndTime');
-        $totalNumber = $this->getParams('totalNumber');
-        $position = $this->getParams('position');
-
-//        if (!empty($position)) {
-//            $this->dzqValidate(
-//                [
-//                    'address' => $position['address'],
-//                    'location' => $position['location'],
-//                    'longitude' => $position['longitude'],
-//                    'latitude' => $position['latitude']
-//
-//                ],
-//                [
-//                    'address' => 'required',
-//                    'location' => 'required',
-//                    'longitude' => 'required|numeric',
-//                    'latitude' => 'required|numeric'
-//                ],
-//                [
-//                    'address' => '缺少参数address',
-//                    'location' => '缺少参数location',
-//                    'longitude' => '经度数据错误',
-//                    'latitude' => '纬度数据错误'
-//                ]
-//            );
-//        }
-        $this->dzqValidate(
-            [
-//                'now' => time(),
-//                'userId'=>$this->user->id,
-//                'threadId'=>$this->threadId,
-                'title1' => $title,
-                'content1' => $content,
-//                'activityStartTime' => $activityStartTime,
-//                'activityEndTime' => $activityEndTime,
-//                'registerStartTime' => $registerStartTime,
-//                'registerEndTime' => $registerEndTime,
-//                'totalNumber' => $totalNumber,
-            ],
-            [
-//                'now' => time(),
-//                'userId'=>'required|nullable:false',
-//                'threadId'=>'required|nullable:false',
-                'title1' => 'required|max:50',
-                'content1' => 'required|max:200',
-//                'activityStartTime' => 'required|date|after_or_equal:now',
-//                'activityEndTime' => 'required|date|after_or_equal:activityStartTime',
-//                'registerStartTime' => 'required|date|after_or_equal:now',
-//                'registerEndTime' => 'required|date|after_or_equal:registerStartTime',
-//                'totalNumber' => 'required|integer|min:0',
-            ],
-            [
-//                'userId'=>'用户未登录',
-//                'threadId'=>'用户未发帖',
-                'title1' => '标题12313不能超过50个字符',
-                'content1' => '内容不能超过200个字符',
-//                'activityStartTime' => '活动开始时间必须大于当前时间',
-//                'activityEndTime' => '活动结束时间必须大于开始时间',
-//                'registerStartTime' => '报名开始时间必须大于当前时间',
-//                'registerEndTime' => '报名结束时间必须大于开始时间',
-//                'totalNumber' => '报名人数必须大于0'
-            ]
-        );
+        $this->activityValidate();
         $activity = new ThreadActivity();
-        $activity->setRawAttributes([
-            'user_id'=>'用户未登录',
-            'thread_id'=>'用户未发帖',
-            'title' => '标题不能超过50个字符',
-            'content' => '内容不能超过200个字符',
-            'activity_start_time' => '活动开始时间必须大于当前时间',
-            'activity_end_time' => '活动结束时间必须大于开始时间',
-            'register_start_time' => '报名开始时间必须大于当前时间',
-            'register_end_time' => '报名结束时间必须大于开始时间',
-            'total_number' => '报名人数必须大于0'
-        ]);
-        if(!empty($position)){
-            $activity->address = $position['address'];
-            $activity->location = $position['location'];
-            $activity->longitude = $position['longitude'];
-            $activity->latitude = $position['latitude'];
-        }
-        if($activity->save()){
-            return $this->jsonReturn($activity->toArray());
-        }else{
+        $rawAttr = $this->getActivityRawAttr();
+        $rawAttr += [
+            'user_id' => $this->user->id,
+            'thread_id' => $this->threadId
+        ];
+        $activity->setRawAttributes($rawAttr);
+        if ($activity->save()) {
+            return $this->jsonReturn(['activityId'=>$activity['id']]);
+        } else {
             return false;
         }
     }
 
     public function update()
     {
-        return $this->jsonReturn($this->body);
+        $this->activityValidate();
+        $activityId = $this->getParams('activityId');
+
+        $activity = ThreadActivity::query()->where([
+            'id' => $activityId,
+            'status' => DzqConst::BOOL_YES
+        ])->first();
+        if (empty($activity)) $this->outPut(ResponseCode::INVALID_PARAMETER, '活动不存在');
+        $rawAttr = $this->getActivityRawAttr();
+        $activity->setRawAttributes($rawAttr);
+        if ($activity->save()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function delete()
     {
-
+        $activityId = $this->getParams('activityId');
+        $activity = ThreadActivity::query()->where([
+            'id' => $activityId,
+            'status' => DzqConst::BOOL_YES
+        ])->first();
+        if (empty($activity)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '活动不存在');
+        }
+        $activity->save();
+        return true;
     }
 
+    private function activityValidate()
+    {
+        $userId = $this->user->id;
+        $threadId = $this->threadId;
+        empty($userId) && $this->outPut(ResponseCode::INVALID_PARAMETER, '用户id无效');
+        empty($threadId) && $this->outPut(ResponseCode::INVALID_PARAMETER, '帖子id无效');
+        $position = $this->getParams('position');
+        if (!empty($position)) {
+            $this->dzqValidate($position, ['address' => 'required', 'location' => 'required', 'longitude' => 'required', 'latitude' => 'required']);
+        }
+        $now = date('Y-m-d H:i:s');
+        $this->dzqValidate(
+            $this->body,
+            [
+                'title' => 'required|max:50',
+                'content' => 'required|max:200',
+                'activityStartTime' => 'required|date|after:' . $now,
+                'activityEndTime' => 'required|date|after:' . $this->getParams('activityStartTime'),
+                'registerStartTime' => 'required|date|after:' . $now,
+                'registerEndTime' => 'required|date|after:' . $this->getParams('registerStartTime'),
+                'totalNumber' => 'required|integer|min:0',
+            ]
+        );
+    }
 
+    private function getActivityRawAttr()
+    {
+        $data = [
+            'title' => $this->getParams('title'),
+            'content' => $this->getParams('content'),
+            'activity_start_time' => $this->getParams('activityStartTime'),
+            'activity_end_time' => $this->getParams('activityEndTime'),
+            'register_start_time' => $this->getParams('registerStartTime'),
+            'register_end_time' => $this->getParams('registerEndTime'),
+            'total_number' => $this->getParams('totalNumber')
+        ];
+        $position = $this->getParams('position');
+        if (!empty($position)) {
+            $data += [
+                'address' => $position['address'],
+                'location' => $position['location'],
+                'longitude' => $position['longitude'],
+                'latitude' => $position['latitude']
+            ];
+        }
+        return $data;
+    }
 }

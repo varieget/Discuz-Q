@@ -116,7 +116,7 @@ abstract class TomBaseBusi
     {
         try {
             $validate = app('validator');
-            $validate->validate($inputArray, $rules,$messages);
+            $validate->validate($inputArray, $rules,$messages,$customAttributes);
         } catch (\Exception $e) {
             $validate_error = $e->validator->errors()->first();
             $error_message = !empty($validate_error) ? $validate_error : $e->getMessage();

@@ -30,7 +30,7 @@
  *         @OA\Property(property = "currentNumber", type = "integer", description = "当前已报名人数"),
  *         @OA\Property(property = "isRegist", type = "boolean", description = "已经报名登记"),
  *         @OA\Property(property = "isExpired", type = "boolean", description = "活动已过期"),
- *         @OA\Property(property = "isFull", type = "boolean", description = "人数已满"),
+ *         @OA\Property(property = "isMemberFull", type = "boolean", description = "人数已满"),
  *         @OA\Property(property = "position", type = "object", description = "位置信息",
  *            @OA\Property(property = "address", type = "string", description = "地址信息"),
  *            @OA\Property(property = "location", type = "string", description = "位置信息"),

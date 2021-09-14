@@ -382,7 +382,7 @@ trait ThreadTrait
             $body = '';
             if (!empty($content['indexes'])) {
                 foreach ($content['indexes'] as $key => $val) {
-                    if ($val['tomId'] == TomConfig::TOM_IMAGE) {
+                    if ($val && $val['tomId'] == TomConfig::TOM_IMAGE) {
                         $body = $val['body'];
                     }
                 }

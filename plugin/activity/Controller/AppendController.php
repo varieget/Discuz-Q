@@ -48,7 +48,9 @@ class AppendController extends DzqController
             'activity_id'=>$activityId,
             'status'=>DzqConst::BOOL_YES
         ]);
-        $activityUserBuilder->count() >= $totalNumber && $this->outPut(ResponseCode::INVALID_PARAMETER, '人数已满，报名失败');
+        if($totalNumber != 0){
+            $activityUserBuilder->count() >= $totalNumber && $this->outPut(ResponseCode::INVALID_PARAMETER, '人数已满，报名失败');
+        }
         $activityUser = $activityUserBuilder->where('user_id',$this->user->id)->first();
         if(!empty($activityUser)){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'您已经报名，不能重复报名');
