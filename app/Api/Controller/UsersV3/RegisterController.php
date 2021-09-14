@@ -154,6 +154,8 @@ class RegisterController extends AuthBaseController
                                  $this->camelData($this->addUserInfo($user, $accessToken))
             );
         } catch (\Exception $e) {
+            unset($data['password']);
+            unset($data['password_confirmation']);
             DzqLog::error('username_register_api_error', $data, $e->getMessage());
             $this->connection->rollback();
             $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册接口异常', [$e->getMessage()]);

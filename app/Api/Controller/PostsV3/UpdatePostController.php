@@ -59,7 +59,7 @@ class UpdatePostController extends DzqController
             $this->outPut(ResponseCode::JUMP_TO_AUDIT);
         }
 
-        $post = Post::query()->where(['id' => $this->inPut('pid')])->first();
+        $post = Post::query()->where(['id' => $this->inPut('postId')])->first();
         if (!$post) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
@@ -89,7 +89,7 @@ class UpdatePostController extends DzqController
     public function main()
     {
         $actor = $this->user;
-        $postId = $this->inPut('pid');
+        $postId = $this->inPut('postId');
         if (empty($postId)) return $this->outPut(ResponseCode::INVALID_PARAMETER);
 
         $data = $this->inPut('data', []);
@@ -145,7 +145,7 @@ class UpdatePostController extends DzqController
 
     public function prefixClearCache($user)
     {
-        $postId = $this->inPut('pid');
+        $postId = $this->inPut('postId');
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_POST_LIKED . $user->id, $postId);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
         $post = Post::query()->where('id', $postId)->first();

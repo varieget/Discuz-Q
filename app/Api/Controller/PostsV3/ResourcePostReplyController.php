@@ -43,7 +43,7 @@ class ResourcePostReplyController extends DzqController
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
 
-        $post = Post::find($this->inPut('pid'));
+        $post = Post::find($this->inPut('postId'));
         if (!$post) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
@@ -55,7 +55,7 @@ class ResourcePostReplyController extends DzqController
         $coment_post_serialize = $this->app->make(CommentPostSerializer::class);
         $attachment_serialize = $this->app->make(AttachmentSerializer::class);
 
-        $post_id = $this->inPut('pid');
+        $post_id = $this->inPut('postId');
         if(empty($post_id))       return  $this->outPut(ResponseCode::INVALID_PARAMETER );
         $comment_post = Post::find($post_id);
 

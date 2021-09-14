@@ -24,6 +24,7 @@ use App\Models\ThreadTom;
 use App\Models\User;
 use App\Models\RedPacket;
 use App\Models\UserWalletLog;
+use App\Modules\ThreadTom\TomConfig;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Foundation\EventsDispatchTrait;
 use Exception;
@@ -117,7 +118,7 @@ class CountLikedMakeRedPacket
                             ',msg:';
 
         $redPacketTom = ThreadTom::query()->where('thread_id',$thread['id'])
-            ->where('tom_type',106)
+            ->where('tom_type',TomConfig::TOM_REDPACK)
             ->first();
         if (!$redPacketTom) {
             $this->outDebugInfo('点赞领红包：该帖不为红包贴');
