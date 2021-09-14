@@ -20,6 +20,7 @@ namespace App\Passport\Repositories;
 
 use App\Api\Serializer\TokenSerializer;
 use App\Events\Users\Logining;
+use App\Listeners\User\CheckLogin;
 use App\Passport\Entities\UserEntity;
 use App\Repositories\UserRepository as RepositoriesUserRepository;
 use Discuz\Auth\Exception\LoginFailedException;
@@ -58,6 +59,7 @@ class UserRepository implements UserRepositoryInterface
         $user = $this->users->findByIdentification($where);
 
         if (! $user && ! $user = $this->users->findByIdentification(['mobile'=>$username])) {
+            $this->handleLoginFailed($username);
             throw new LoginFailedException;
         }
 
@@ -73,5 +75,12 @@ class UserRepository implements UserRepositoryInterface
     public function getUser()
     {
         return static::$user;
+    }
+
+    private function handleLoginFailed($username)
+    {
+        $checkLogin = app()->make(CheckLogin::class);
+        $checkLogin->checkLoginFailuresTimes($username);
+        $checkLogin->handleLoginFailuresTimes(0, $username);
     }
 }
