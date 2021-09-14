@@ -76,14 +76,14 @@ class CheckLogin
         ++$this->userLoginFailCount;
 
         $expire = Carbon::parse($maxTime)->addMinutes(self::LIMIT_TIME);
-        $isLargeUserLoginFailCount = $this->userLoginFailCount > self::FAIL_NUM;
-        $isLargeNowTime = $expire > Carbon::now();
-        if ($isLargeUserLoginFailCount && $isLargeNowTime) {
-            Utils::outPut(ResponseCode::LOGIN_FAILED, '登录错误次数超出限制');
-        } elseif ($isLargeUserLoginFailCount && !$isLargeNowTime) {
-            //reset fail count
-            $this->userLoginFailCount = 1;
-            UserLoginFailLog::reSetFailCountByIp($this->ip);
+        if ($this->userLoginFailCount > self::FAIL_NUM) {
+            if ($expire > Carbon::now()) {
+                Utils::outPut(ResponseCode::LOGIN_FAILED, '登录错误次数超出限制');
+            } else {
+                //reset fail count
+                $this->userLoginFailCount = 1;
+                UserLoginFailLog::reSetFailCountByIp($this->ip);
+            }
         }
     }
 
