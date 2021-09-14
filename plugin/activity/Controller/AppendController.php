@@ -43,11 +43,13 @@ class AppendController extends DzqController
         if(empty($activity)){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,'活动不存在');
         }
-        $activityUser = ActivityUser::query()->where([
+        $totalNumber = $activity['total_number'];
+        $activityUserBuilder = ActivityUser::query()->where([
             'activity_id'=>$activityId,
-            'user_id'=>$this->user->id,
             'status'=>DzqConst::BOOL_YES
-        ])->first();
+        ]);
+        $activityUserBuilder->count() >= $totalNumber && $this->outPut(ResponseCode::INVALID_PARAMETER, '人数已满，报名失败');
+        $activityUser = $activityUserBuilder->where('user_id',$this->user->id)->first();
         if(!empty($activityUser)){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'您已经报名，不能重复报名');
         }
