@@ -39,11 +39,18 @@ class CancelController extends DzqController
     public function main()
     {
         $activityId = intval($this->inPut('activityId'));
-        $activity = ThreadActivity::query()->where(['id'=>$activityId,'user_id'=>$this->user->id])->first();
+        $activity = ThreadActivity::query()->where(['id'=>$activityId,'status'=>DzqConst::BOOL_YES])->first();
         if (empty($activity)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '活动不存在');
         }
-        $activityUser = new ActivityUser();
+        $activityUser = ActivityUser::query()->where([
+            'activity_id'=>$activityId,
+            'user_id'=>$this->user->id,
+            'status'=>DzqConst::BOOL_YES
+        ])->first();
+        if(empty($activityUser)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER,'您还没有报名,不能取消');
+        }
         $activityUser->status = DzqConst::BOOL_NO;
         if (!$activityUser->save()) {
             $this->outPut(ResponseCode::DB_ERROR);
