@@ -33,7 +33,6 @@ class AddIssueAtToThreads extends Migration
         $this->schema()->table('threads', function (Blueprint $table) {
             $table->datetime('issue_at')->after('deleted_at')->default(new Expression('now()'))->comment('帖子首次发布、草稿箱发布、审核通过发布，重新编辑内容发布，四种变更的时间记录');
         });
-        app('db')->update('update threads t set t.issue_at=t.created_at');
 
     }
 
