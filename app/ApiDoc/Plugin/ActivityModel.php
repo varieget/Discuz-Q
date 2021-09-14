@@ -28,7 +28,7 @@
  *         @OA\Property(property = "registerEndTime", type = "string", description = "报名结束时间"),
  *         @OA\Property(property = "totalNumber", type = "integer", description = "报名人数上限 0:不限制"),
  *         @OA\Property(property = "currentNumber", type = "integer", description = "当前已报名人数"),
- *         @OA\Property(property = "isRegist", type = "boolean", description = "已经报名登记"),
+ *         @OA\Property(property = "isRegistered", type = "boolean", description = "已经报名登记"),
  *         @OA\Property(property = "isExpired", type = "boolean", description = "活动已过期"),
  *         @OA\Property(property = "isMemberFull", type = "boolean", description = "人数已满"),
  *         @OA\Property(property = "position", type = "object", description = "位置信息",

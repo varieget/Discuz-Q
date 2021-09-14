@@ -60,7 +60,7 @@ class ActivityBusi extends TomBaseBusi
                 'nickname' => $user['nickname']
             ];
         }
-        $isRegisted = $activityUser->where('user_id',$this->user->id)->exists();
+        $isRegistered = $activityUser->where('user_id', $this->user->id)->exists();
         $result = [
             'activityId' => $activity['id'],
             'title' => $activity['title'],
@@ -77,7 +77,7 @@ class ActivityBusi extends TomBaseBusi
                 'longitude' => $activity['longitude'],
                 'latitude' => $activity['latitude']
             ],
-            'isRegisted'=>$isRegisted,
+            'isRegistered' => $isRegistered,
             'isExpired' => time() > strtotime($activity['register_start_time']),
             'isMemberFull' => $activity['total_number'] == 0 ? false : $activity['total_number'] < $currentNumber,
             'createdAt' => date('Y-m-d H:i:s', strtotime($activity['created_at'])),
@@ -97,7 +97,7 @@ class ActivityBusi extends TomBaseBusi
         ];
         $activity->setRawAttributes($rawAttr);
         if ($activity->save()) {
-            return $this->jsonReturn(['activityId'=>$activity['id']]);
+            return $this->jsonReturn(['activityId' => $activity['id']]);
         } else {
             return false;
         }
