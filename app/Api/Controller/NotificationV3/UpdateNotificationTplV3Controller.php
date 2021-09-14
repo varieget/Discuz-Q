@@ -36,6 +36,11 @@ class UpdateNotificationTplV3Controller extends DzqAdminController
     {
         $data = $this->inPut('data');
 
+        if (empty($data)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
+        $this->checkData($data);
+
         $tpl = NotificationTpl::query()->whereIn('id', array_column($data,'id'))->get()->keyBy('id');
 
         collect($data)->map(function ($attributes) use ($tpl) {
@@ -134,5 +139,17 @@ class UpdateNotificationTplV3Controller extends DzqAdminController
         $notificationTpl->save();
 
         return $notificationTpl;
+    }
+
+    protected function checkData($data)
+    {
+        foreach ($data as $value) {
+            if ((isset($value['id']) && !is_numeric($value['id'])) ||
+                (isset($value['status']) && !is_numeric($value['status'])) ||
+                (isset($value['redirectType']) && !is_numeric($value['redirectType']))) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER);
+            }
+        }
+        return true;
     }
 }
