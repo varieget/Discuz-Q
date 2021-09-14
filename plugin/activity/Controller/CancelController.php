@@ -39,7 +39,7 @@ class CancelController extends DzqController
     public function main()
     {
         $activityId = intval($this->inPut('activityId'));
-        $activity = ThreadActivity::query()->where('id', $activityId)->first();
+        $activity = ThreadActivity::query()->where(['id'=>$activityId,'user_id'=>$this->user->id])->first();
         if (empty($activity)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '活动不存在');
         }

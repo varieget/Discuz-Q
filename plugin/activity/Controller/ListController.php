@@ -19,7 +19,6 @@ namespace Plugin\Activity\Controller;
 
 
 use App\Common\DzqConst;
-use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
