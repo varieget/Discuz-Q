@@ -518,39 +518,6 @@
  *      )
  * ),
  *
- *
- * @OA\Schema(
- *     schema = "post_detail_output",
- *     title = "评论详情输出数据集合",
- *          @OA\Property(property = "id", type = "integer", description = "评论id"),
- *          @OA\Property(property = "userId", type = "integer", description = "评论作者id"),
- *          @OA\Property(property = "replyPostId", type = "integer", description = "最新回复id"),
- *          @OA\Property(property = "replyUserId", type = "integer", description = "最新回复作者id"),
- *          @OA\Property(property = "commentPostId", type = "integer", description = "评论回复id"),
- *          @OA\Property(property = "commentUserId", type = "integer", description = "评论回复作者id"),
- *          @OA\Property(property = "summaryText", type = "string", description = "评论摘要"),
- *          @OA\Property(property = "content", type = "string", description = "评论内容"),
- *          @OA\Property(property = "replyCount", type = "integer", description = "关联回复数"),
- *          @OA\Property(property = "likeCount", type = "integer", description = "点赞数"),
- *          @OA\Property(property = "createdAt", type = "string", description = "创建时间"),
- *          @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
- *          @OA\Property(property = "isApproved", type = "integer", description = "是否已审核(0审核中，1正常)", enum = {0, 1}),
- *          @OA\Property(property = "canApprove", type = "boolean", description = "是否可审核"),
- *          @OA\Property(property = "canDelete", type = "boolean", description = "是否可删除"),
- *          @OA\Property(property = "canHide", type = "boolean", description = "是否可删除"),
- *          @OA\Property(property = "contentAttachIds", type = "array", description = "内容附件id", @OA\Items()),
- *          @OA\Property(property = "parseContentHtml", type = "string", description = "评论内容-html"),
- *          @OA\Property(property = "ip", type = "string", description = "ip地址"),
- *          @OA\Property(property = "port", type = "integer", description = "端口"),
- *          @OA\Property(property = "isDeleted", type = "boolean", description = "是否已删除"),
- *          @OA\Property(property = "isFirst", type = "boolean", description = "是否首个回复"),
- *          @OA\Property(property = "isComment", type = "boolean", description = "是否是回复回帖的内容"),
- *          @OA\Property(property = "isLiked", type = "boolean", description = "是否已点赞"),
- *          @OA\Property(property = "user", type = "object", description = "评论作者信息", allOf = {@OA\Schema(ref = "#/components/schemas/user_detail_output")}),
- *          @OA\Property(property = "replyUser", type = "object", description = "回复作者信息", allOf = {@OA\Schema(ref = "#/components/schemas/user_detail_output")}),
- *          @OA\Property(property = "commentUser", type = "object", description = "评论回复作者信息", allOf = {@OA\Schema(ref = "#/components/schemas/user_detail_output")}),
- *          @OA\Property(property = "attachments", type = "array", description = "评论图片信息", @OA\Items(ref = "#/components/schemas/attachment_detail_output"))
- * )
  * @OA\Schema(
  *     schema = "attachment_detail_output",
  *     title = "附件详情输出数据集合",
@@ -754,11 +721,7 @@
  *     @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
  * )
  *
- *
- *
- *
- *
- *  * @OA\Schema(
+ * @OA\Schema(
  *     schema="dzq_post_detail",
  *     title="评论详情",
  *     @OA\Property(property = "canDelete", type = "boolean", description="能否删除"),
@@ -797,21 +760,32 @@
  *     ),
  *     @OA\Property(property = "userId", type = "integer", description="发帖用户id"),
  * )
- *  @OA\Parameter(
+ *
+ * @OA\Parameter(
  *    parameter="filter_changeType",
  *    name="filter[changeType]",
  *    in="query",
  *    required=false,
  *    description = "收入类型",
  *    @OA\Schema(type="array",@OA\Items(type="integer"))
- *)
- * *  @OA\Parameter(
+ * )
+ *
+ * @OA\Parameter(
  *    parameter="filter_cashStatus",
  *    name="filter[cashStatus]",
  *    in="query",
  *    required=false,
  *    description = "提现状态",
  *    @OA\Schema(type="array",@OA\Items(type="integer"))
- *)
+ * )
+ *
+ * @OA\Schema(
+ *     schema="deleted_user_detail",
+ *     title="删除者信息",
+ *     @OA\Property(property = "deletedUserId", type = "integer", description = "删除者id"),
+ *     @OA\Property(property = "deletedNickname", type = "string", description = "删除者昵称"),
+ *     @OA\Property(property = "deletedAt", type = "string", description = "删除时间")
+ * )
+ *
  *
  */
