@@ -25,10 +25,10 @@ use App\Models\UserActionLogs;
 use App\Models\Post;
 use App\Models\StopWord;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Support\Str;
 
-class ManagePostList extends DzqController
+class ManagePostList extends DzqAdminController
 {
 
     protected $attachmentSerializer;
@@ -41,14 +41,6 @@ class ManagePostList extends DzqController
         'updated_at',
         'deleted_at',
     ];
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
 
     public function __construct( AttachmentSerializer $attachmentSerializer) {
         $this->attachmentSerializer = $attachmentSerializer;

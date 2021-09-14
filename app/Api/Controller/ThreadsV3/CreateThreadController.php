@@ -18,6 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
+use App\Common\Platform;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
@@ -331,29 +332,17 @@ class CreateThreadController extends DzqController
             $site_info_daily->h5_threads = 0;
             $site_info_daily->threads_sum = Thread::query()->where('is_approved', Thread::APPROVED)->whereNotNull('deleted_at')->count();
         }
-        preg_match('/AppleWebKit.*Mobile.*/',$user_agent, $is_mobile);
-        //获取小程序appid
-        $miniprogram_app_id = Setting::query()->where('key','miniprogram_app_id')->value('value');
-        $referer = $this->request->getHeaderLine('Referer');
-        $is_mini = false;
-        if(!empty($miniprogram_app_id) && strpos($referer, 'https://servicewechat.com/'.$miniprogram_app_id) !== false){
-            $is_mini = true;
-        }
-        $flag = 'web';
-        if(!empty($is_mobile)){
-            $flag = 'h5';
-        }elseif (!empty($is_mini)){
-            $flag = 'mini';
-        }
-        switch ($flag){
-            case 'mini':
+        switch ($this->inPut('dzqPf')){
+            case Platform::FROM_WEAPP:
                 $site_info_daily->mini_threads += 1;
                 break;
-            case 'h5':
+            case Platform::FROM_H5:
                 $site_info_daily->h5_threads += 1;
                 break;
-            default:
+            case Platform::FROM_PC:
                 $site_info_daily->pc_threads += 1;
+                break;
+            default:
                 break;
         }
         $site_info_daily->threads_sum += 1;

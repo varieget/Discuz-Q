@@ -23,9 +23,9 @@ use App\Models\StopWord;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class ExportStopWordsController extends DzqController
+class ExportStopWordsController extends DzqAdminController
 {
     use AssertPermissionTrait;
 

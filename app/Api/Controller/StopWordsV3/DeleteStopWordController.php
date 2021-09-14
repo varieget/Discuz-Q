@@ -22,9 +22,9 @@ use App\Common\ResponseCode;
 use App\Models\StopWord;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class DeleteStopWordController extends DzqController
+class DeleteStopWordController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

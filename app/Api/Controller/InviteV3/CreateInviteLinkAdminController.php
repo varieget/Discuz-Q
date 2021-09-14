@@ -23,10 +23,10 @@ use App\Models\Group;
 use App\Models\Invite;
 use Carbon\Carbon;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Support\Str;
 
-class CreateInviteLinkAdminController extends DzqController
+class CreateInviteLinkAdminController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

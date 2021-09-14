@@ -23,20 +23,12 @@ use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
-use Discuz\Base\DzqController;
 
-class MonitorSystemTaskController extends DzqController
+class MonitorSystemTaskController extends DzqAdminController
 {
     use AssertPermissionTrait;
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
 
     public function main()
     {

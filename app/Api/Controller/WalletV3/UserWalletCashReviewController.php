@@ -29,12 +29,12 @@ use App\Settings\SettingsRepository;
 use App\Trade\Config\GatewayConfig;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
-class UserWalletCashReviewController extends DzqController
+class UserWalletCashReviewController extends DzqAdminController
 {
     private $settings;
     private $data;
@@ -52,14 +52,6 @@ class UserWalletCashReviewController extends DzqController
         $this->settings = $settings;
         $this->events = $events;
         $this->db = app('db');
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
     }
 
     public function main()

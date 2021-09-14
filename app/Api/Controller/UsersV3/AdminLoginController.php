@@ -23,15 +23,15 @@ use App\Common\ResponseCode;
 use App\Events\Users\AdminLogind;
 use App\Events\Users\Logind;
 use App\Models\User;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqLog;
 use Exception;
 use App\Passport\Repositories\UserRepository;
-use Discuz\Base\DzqController;
 use Discuz\Foundation\Application;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 
-class AdminLoginController extends DzqController
+class AdminLoginController extends DzqAdminController
 {
     protected $bus;
     protected $app;

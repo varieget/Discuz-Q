@@ -24,12 +24,12 @@ use App\Common\ResponseCode;
 use App\Models\Finance;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 
 
-class FirstChartController extends DzqController
+class FirstChartController extends DzqAdminController
 {
     public $serializer = FirstStatisticsSerializer::class;
 
@@ -46,11 +46,6 @@ class FirstChartController extends DzqController
     public function __construct(Dispatcher $bus)
     {
         $this->bus = $bus;
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
     }
 
     /**
