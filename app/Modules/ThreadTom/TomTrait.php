@@ -49,6 +49,7 @@ trait TomTrait
      * @param null $postId
      * @param bool $canViewTom
      * @return array
+     * @throws \ReflectionException
      */
     private function tomDispatcher($tomContent, $operation = null, $threadId = null, $postId = null, $canViewTom = true)
     {
