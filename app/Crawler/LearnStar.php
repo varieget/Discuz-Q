@@ -75,28 +75,33 @@ class LearnStar
             }
 
             $resp_data = $data->resp_data;
-            if(!empty($resp_data->topics)){
-                foreach ($resp_data->topics as $oneTopic){
-                    //搜索的要重新拉取一遍，图文混排的这种，在搜索中没有链接出来
-                    $urlTopic = "https://api.zsxq.com/v2/topics/".$oneTopic->topic->topic_id;
-                    $htmlTopic = $this->getDataByUrl($urlTopic, $this->userAgent, $this->cookie);
-                    $dataTopic = json_decode($htmlTopic);
-                    if(empty($dataTopic)){
-                        continue;
-                    }
-                    if($dataTopic->succeeded != true){
-                        continue;
-                    }
-                    $oneTopicTemp = $dataTopic->resp_data->topic;
-                    $oneThread = $this->paseOneTopic($oneTopicTemp);
-                    array_push($ret, $oneThread);
+            if (empty($resp_data->topics)){
+                break;
+            }
+            foreach ($resp_data->topics as $oneTopic){
+                //搜索的要重新拉取一遍，图文混排的这种，在搜索中没有链接出来
+                $urlTopic = "https://api.zsxq.com/v2/topics/".$oneTopic->topic->topic_id;
+                $htmlTopic = $this->getDataByUrl($urlTopic, $this->userAgent, $this->cookie);
+                $dataTopic = json_decode($htmlTopic);
+                if(empty($dataTopic)){
+                    continue;
+                }
+                if($dataTopic->succeeded != true){
+                    continue;
+                }
+                $oneTopicTemp = $dataTopic->resp_data->topic;
+                $oneThread = $this->paseOneTopic($oneTopicTemp);
+                if (empty($oneThread)){
+                    continue;
+                }
+                array_push($ret, $oneThread);
 
-                    $leftNum--;
-                    if ($leftNum<=0){
-                       return $ret;
-                    }
+                $leftNum--;
+                if ($leftNum<=0){
+                   return $ret;
                 }
             }
+
             if ($count<30 || count($resp_data->topics) < $count){
                 break;
             }
@@ -217,6 +222,9 @@ class LearnStar
             }
 
             $oneD = $this->paseOneTopic($oneTopic);
+            if (empty($oneD)){
+                continue;
+            }
 
             array_push($ret, $oneD);
             $leftN--;
@@ -243,6 +251,8 @@ class LearnStar
         $pics = [];
         $medias = [];
         $attachment = [];
+        $commonetList = [];
+
 
         if ($oneTopic->type == "talk")// 帖子,作业,问答等类型
         {
@@ -270,6 +280,41 @@ class LearnStar
             if(!empty($talk->images)) {
                 $pics = $this->getAttachImage($talk->images);
             }
+            //评论
+            $commonetList = $this->getData_OneComment($oneTopic->topic_id, $author['nickname']);
+        }elseif($oneTopic->type == "q&a"){
+            $talk = $oneTopic->question;
+            $owner = $talk->questionee;
+            $author["nickname"] = $owner->name;
+            $author["avatar"] = $owner->avatar_url;
+
+            //文字
+            if (!empty($talk->article)){
+                //文字图片混编的
+                $text = $this->getTextArticle($talk->article);
+            }else{
+                if(!empty($talk->text)){
+                    $text = $this->getTextContent($talk->text);
+                }
+            }
+            //文件的
+            if(!empty($talk->files)) {
+                $attachment = $this->getAttachFile($talk->files);
+            }
+            //图片的
+            if(!empty($talk->images)) {
+                $pics = $this->getAttachImage($talk->images);
+            }
+
+            //有回答者的，把回答者转为一个评论
+            if(!empty($oneTopic->answer)) {
+                $answerComment = $this->answerToComment($oneTopic->answer,$oneTopic->topic_id, $author['nickname'],$oneTopic->create_time);
+                array_push($commonetList, $answerComment);
+            }
+            $otherCommonet= $this->getData_OneComment($oneTopic->topic_id, $author['nickname']);
+            $commonetList = array_merge($commonetList,$otherCommonet);
+        }else{ //非帖子类型的排除
+            return [];
         }
 
         $forum["text"] = $text;
@@ -277,8 +322,7 @@ class LearnStar
         $forum["medias"]["small_medias"] = $medias;
         $forum["attachment"] = $attachment;
 
-        //评论
-        $commonetList = $this->getData_OneComment($oneTopic->topic_id, $author['nickname']);
+
 
         $oneD["user"] = $author;
         $forum['nickname'] = $author['nickname'];
@@ -488,7 +532,11 @@ class LearnStar
             $oneComment["comment"]["nickname"] = $nickname;
 
             $text = [];
-            $text["text"] = $one->text;
+            if(isset($one->text)){
+                $text["text"] = $one->text;
+            }else{
+                $text["text"] = "";
+            }
             $text["topic_list"] = [];
             $oneComment["comment"]["text"] = $text;
 
@@ -496,8 +544,11 @@ class LearnStar
                 $images = $this->getAttachImage($one->images);
                 $oneComment["comment"]["images"] = $images;
             }
-            $oneComment["comment"]["created_at"] = $one->create_time;
-
+            if (isset($one->create_time)){
+                $oneComment["comment"]["created_at"] = $one->create_time;
+            }else{
+                $oneComment["comment"]["created_at"] = date(DATE_ISO8601);
+            }
 
             $userComment = [];
             if(!empty($one->owner)){
@@ -514,6 +565,39 @@ class LearnStar
         return $ret;
     }
 
+
+    private function answerToComment($answer,$topicId, $nickname, $createTime){
+        $oneComment = [];
+        $oneComment["comment"]["id"] = 0;
+        $oneComment["comment"]["forumId"] = $topicId;
+        $oneComment["comment"]["nickname"] = $nickname;
+
+        $text = [];
+        if (!isset($answer->text)) {
+            $text["text"] = "";
+        }else {
+            $text["text"] = $answer->text;
+        }
+        $text["topic_list"] = [];
+        $oneComment["comment"]["text"] = $text;
+
+        if (isset($answer->images)) {
+            $images = $this->getAttachImage($answer->images);
+            $oneComment["comment"]["images"] = $images;
+        }
+        $oneComment["comment"]["created_at"] = $createTime;
+
+        $userComment = [];
+        if(!empty($answer->owner)){
+            $owner = $answer->owner;
+            $userComment["nickname"]= $owner->name;
+            $userComment["avatar"] = $owner->avatar_url;
+        }
+
+        $oneComment["user"] = $userComment;
+
+        return $oneComment;
+    }
 
     private function randFloat($min = 0, $max = 1)
     {
