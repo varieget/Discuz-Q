@@ -37,7 +37,7 @@ class ListController extends DzqController
 
     public function main()
     {
-        $activityId = intval($this->inPut('activityId'));
+        $activityId = $this->inPut('activityId');
         $perPage = $this->inPut('perPage');
         $page = $this->inPut('page');
 
