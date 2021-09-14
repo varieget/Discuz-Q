@@ -69,10 +69,11 @@ class OperateThreadController extends DzqController
         ) {
             throw new PermissionDeniedException('没有置顶权限');
         }
-
+        $thread_id = $this->inPut('id');
+        $thread = Thread::getOneActiveThread($thread_id);
         if (
             (!empty($isEssence) || $isEssence === 0 || is_bool($isEssence))
-            && !$userRepo->canEssenceThread($actor)
+            && !$userRepo->canEssenceThread($actor,$thread)
         ) {
             throw new PermissionDeniedException('没有加精权限');
         }
@@ -82,8 +83,6 @@ class OperateThreadController extends DzqController
         ) {
             throw new PermissionDeniedException('没有收藏权限');
         }
-        $thread_id = $this->inPut('id');
-        $thread = Thread::getOneActiveThread($thread_id);
         if (
             (!empty($isDeleted) || $isDeleted === 0 || is_bool($isDeleted))
             && !$userRepo->canHideThread($actor,$thread)
