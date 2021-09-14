@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-namespace Plugin\Activity\Busi;
+namespace Plugin\Activity;
 
 
 use App\Modules\ThreadTom\TomBaseBusi;

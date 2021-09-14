@@ -217,6 +217,9 @@ class Utils
                         break;
                 }
             }
+            if($configName == ''){
+                continue;
+            }
             $configBase = $pluginDir . '/' . $dirName . '/';
             $configPath = $configBase . $configName;
             $viewPath = $configBase.$viewName.'/';
