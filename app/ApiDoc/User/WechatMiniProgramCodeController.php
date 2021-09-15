@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get (
- *     path="/apiv3/oauth/wechat/miniprogram/code",
+ *     path="/api/v3/oauth/wechat/miniprogram/code",
  *     summary="生成海报二维码接口",
  *     description="生成海报二维码接口",
  *     tags={"注册登录"},

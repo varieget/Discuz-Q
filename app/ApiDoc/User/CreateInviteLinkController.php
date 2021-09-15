@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/invite.link.create",
+ *     path="/api/v3/invite.link.create",
  *     summary="创建邀请链接",
  *     description="创建邀请链接",
  *     tags={"邀请"},

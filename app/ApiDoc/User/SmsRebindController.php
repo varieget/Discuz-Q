@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/sms.rebind",
+ *     path="/api/v3/users/sms.rebind",
  *     summary="换绑手机号",
  *     description="用户换绑手机号时请求该接口，无解绑手机号逻辑",
  *     tags={"注册登录"},

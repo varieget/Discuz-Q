@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get (
- *     path="/apiv3/user/signinfields.list",
+ *     path="/api/v3/user/signinfields.list",
  *     summary="查询扩展字段列表（用户注册后显示）",
  *     description="查询扩展字段列表（用户注册后显示）",
  *     tags={"注册登录"},

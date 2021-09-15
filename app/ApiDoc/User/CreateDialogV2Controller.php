@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path = "/apiv3/dialog.create",
+ *     path = "/api/v3/dialog.create",
  *     summary = "创建对话框",
  *     description = "创建对话框（与某用户首次对话）",
  *     tags = {"私信与消息"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/thread.update",
+ *     path="/api/v3/thread.update",
  *     summary="编辑更新主题",
  *     description="统一更新主题接口",
  *     tags={"发布与展示"},

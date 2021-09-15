@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/users/pc/wechat/miniprogram.bind",
+ *     path="/api/v3/users/pc/wechat/miniprogram.bind",
  *     summary="PC扫码绑定-扫码成功后小程序二维码（轮询）",
  *     description="pc扫码小程序二维码后轮询接口",
  *     tags={"注册登录"},

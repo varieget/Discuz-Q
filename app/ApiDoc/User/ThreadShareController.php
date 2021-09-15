@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/thread.share",
+ *     path="/api/v3/thread.share",
  *     summary="记录分享数",
  *     description="单个帖子的分享数累计",
  *     tags={"发布与展示"},

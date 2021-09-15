@@ -2,7 +2,7 @@
 
 /**
  * @OA\Post(
- *     path="/apiv3/coskey",
+ *     path="/api/v3/coskey",
  *     summary="上传文件临时参数",
  *     description="上传文件临时参数",
  *     tags={"附件"},

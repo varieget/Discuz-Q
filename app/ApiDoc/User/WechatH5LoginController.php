@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get (
- *     path="/apiv3/users/wechat/h5.login",
+ *     path="/api/v3/users/wechat/h5.login",
  *     summary="授权后登录",
  *     description="H5授权之后的登录跳转接口",
  *     tags={"注册登录"},

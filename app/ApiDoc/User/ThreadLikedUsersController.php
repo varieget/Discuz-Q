@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/thread.likedusers",
+ *     path="/api/v3/thread.likedusers",
  *     summary="点赞支付的用户列表",
  *     description="获取首页置顶主题列表",
  *     tags={"发布与展示"},

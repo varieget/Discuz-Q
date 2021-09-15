@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/thread.delete",
+ *     path="/api/v3/thread.delete",
  *     summary="删除主题",
  *     description="软删除主题",
  *     tags={"发布与展示"},

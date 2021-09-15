@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Post(
- *    path = "/apiv3/trade/pay/order",
+ *    path = "/api/v3/trade/pay/order",
  *    summary = "钱包支付",
  *    description = "Discuz! Q 钱包支付",
  *    tags ={"支付钱包"},

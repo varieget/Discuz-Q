@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/user",
+ *     path="/api/v3/user",
  *     summary="用户资料",
  *     description="用户资料接口",
  *     tags={"个人中心"},

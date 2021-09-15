@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/threads.paid",
+ *     path="/api/v3/threads.paid",
  *     summary="查询已经购买帖子列表",
  *     description="查询已经购买帖子列表",
  *     tags={"个人中心"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path = "/apiv3/posts.postion",
+ *     path = "/api/v3/posts.postion",
  *     summary = "获取评论位置",
  *     description = "获取评论位置",
  *     tags = {"发布与展示"},

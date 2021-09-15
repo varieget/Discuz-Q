@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path = "/apiv3/users/real",
+ *     path = "/api/v3/users/real",
  *     summary = "用户实名认证",
  *     description = "用户实名认证",
  *     tags = {"个人中心"},

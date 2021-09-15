@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get (
- *     path="/apiv3/users/mobilebrowser/wechat/miniprogram.bind",
+ *     path="/api/v3/users/mobilebrowser/wechat/miniprogram.bind",
  *     summary="手机浏览器绑定小程序",
  *     description="手机浏览器（微信外）拉起小程序后进行小程序绑定;暂无使用",
  *     tags={"注册登录"},

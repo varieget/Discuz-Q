@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/users/pc/wechat.rebind.poll",
+ *     path="/api/v3/users/pc/wechat.rebind.poll",
  *     summary="PC扫码换绑-扫码成功后（轮询）",
  *     description="pc扫码进行换绑的二维码轮询接口",
  *     tags={"注册登录"},

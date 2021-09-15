@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/thread/video",
+ *     path="/api/v3/thread/video",
  *     summary="写入视频信息",
  *     description="云点播上传完视频，需要提交视频和帖子的关联关系等数据",
  *     tags={"发布与展示"},

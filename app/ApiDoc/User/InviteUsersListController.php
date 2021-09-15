@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/invite.users.list",
+ *     path="/api/v3/invite.users.list",
  *     summary="邀请列表",
  *     description="邀请列表",
  *     tags={"邀请"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/sms.reset.pay.pwd",
+ *     path="/api/v3/users/sms.reset.pay.pwd",
  *     summary="重置密码",
  *     description="重置密码接口",
  *     tags={"个人中心"},

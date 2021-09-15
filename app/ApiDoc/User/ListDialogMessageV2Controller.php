@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path = "/apiv3/dialog/message",
+ *     path = "/api/v3/dialog/message",
  *     summary = "私信消息列表",
  *     description = "私信消息列表(单个对话框内的消息列表)",
  *     tags = {"私信与消息"},

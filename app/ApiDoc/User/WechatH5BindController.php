@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get (
- *     path="/apiv3/users/wechat/h5.bind",
+ *     path="/api/v3/users/wechat/h5.bind",
  *     summary="H5登录绑定",
  *     description="扫PC的H5二维码进行登录绑定；公众号内进行登录绑定",
  *     tags={"注册登录"},

@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Post(
- *    path = "/apiv3/posts.create",
+ *    path = "/api/v3/posts.create",
  *    summary = "发表评论",
  *    description = "Discuz! Q 发表评论",
  *    tags ={"发布与展示"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path = "/apiv3/unreadnotification",
+ *     path = "/api/v3/unreadnotification",
  *     summary = "未读消息通知统计",
  *     description = "未读消息通知统计",
  *     tags = {"私信与消息"},

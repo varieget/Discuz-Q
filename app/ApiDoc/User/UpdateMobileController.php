@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/update.mobile",
+ *     path="/api/v3/users/update.mobile",
  *     summary="更换手机号",
  *     description="更换手机号接口",
  *     tags={"个人中心"},

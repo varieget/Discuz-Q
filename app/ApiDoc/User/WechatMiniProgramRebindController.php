@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/wechat/miniprogram.rebind",
+ *     path="/api/v3/users/wechat/miniprogram.rebind",
  *     summary="小程序换绑",
  *     description="扫PC的小程序二维码进行换绑",
  *     tags={"注册登录"},

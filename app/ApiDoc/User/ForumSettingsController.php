@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/forum",
+ *     path="/api/v3/forum",
  *     summary="全局配置信息",
  *     description="全局配置信息",
  *     tags={"发布与展示"},

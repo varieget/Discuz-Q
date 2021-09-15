@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/wechat/miniprogram.bind",
+ *     path="/api/v3/users/wechat/miniprogram.bind",
  *     summary="小程序绑定",
  *     description="小程序绑定接口",
  *     tags={"注册登录"},

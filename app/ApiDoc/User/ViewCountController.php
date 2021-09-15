@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/view.count",
+ *     path="/api/v3/view.count",
  *     summary="获得主题的查看次数",
  *     description="主获得主题的查看次数",
  *     tags={"发布与展示"},

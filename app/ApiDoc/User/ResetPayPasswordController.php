@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path = "/apiv3/users/pay-password/reset",
+ *     path = "/api/v3/users/pay-password/reset",
  *     summary = "获取修改支付密码凭证（验证token）",
  *     description = "获取修改支付密码凭证（验证token）",
  *     tags = {"支付钱包"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/users/pc/wechat.rebind.genqrcode",
+ *     path="/api/v3/users/pc/wechat.rebind.genqrcode",
  *     summary="微信换绑二维码生成",
  *     description="小程序换绑仅在PC端个人中心请求该接口",
  *     tags={"注册登录"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/offiaccount/jssdk",
+ *     path="/api/v3/offiaccount/jssdk",
  *     summary="获得jssdk数据",
  *     description="获得jssdk数据",
  *     tags={"微信相关"},

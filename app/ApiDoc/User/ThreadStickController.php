@@ -2,7 +2,7 @@
 /**
  *
  * @OA\Get(
- *     path="/apiv3/thread.stick",
+ *     path="/api/v3/thread.stick",
  *     summary="置顶主题列表",
  *     description="获取首页置顶主题列表",
  *     tags={"发布与展示"},

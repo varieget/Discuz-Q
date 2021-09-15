@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path = "/apiv3/dialog.delete",
+ *     path = "/api/v3/dialog.delete",
  *     summary = "删除对话框",
  *     description = "删除对话框",
  *     tags = {"私信与消息"},

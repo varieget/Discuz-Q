@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Get(
- *    path = "/apiv3/wallet/log",
+ *    path = "/api/v3/wallet/log",
  *    summary = "收入明细",
  *    description = "个人中心",
  *    tags ={"个人中心"},

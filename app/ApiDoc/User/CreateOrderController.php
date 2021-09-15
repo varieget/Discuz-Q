@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Post(
- *    path = "/apiv3/order.create",
+ *    path = "/api/v3/order.create",
  *    summary = "创建订单",
  *    description = "Discuz! Q 创建订单",
  *    tags ={"支付钱包"},

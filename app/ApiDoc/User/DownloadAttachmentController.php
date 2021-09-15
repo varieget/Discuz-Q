@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/attachment.download",
+ *     path="/api/v3/attachment.download",
  *     summary="附件生成url链接",
  *     description="附件生成url链接",
  *     tags={"附件"},

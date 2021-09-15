@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/sms.bind",
+ *     path="/api/v3/users/sms.bind",
  *     summary="绑定手机号",
  *     description="绑定手机号接口，用户绑定手机号时请求该接口",
  *     tags={"注册登录"},

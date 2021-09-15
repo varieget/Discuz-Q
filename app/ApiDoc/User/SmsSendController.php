@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/sms.send",
+ *     path="/api/v3/users/sms.send",
  *     summary="短信码发送",
  *     description="需要用到手机号短信验证码时",
  *     tags={"注册登录"},

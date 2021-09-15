@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/thread.detail",
+ *     path="/api/v3/thread.detail",
  *     summary="主题详情",
  *     description="主题详情",
  *     tags={"发布与展示"},

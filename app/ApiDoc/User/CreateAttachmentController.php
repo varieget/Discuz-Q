@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/attachments.create",
+ *     path="/api/v3/attachments.create",
  *     summary="附件上传",
  *     description="主题详情",
  *     tags={"发布与展示"},

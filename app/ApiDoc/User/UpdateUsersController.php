@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/update.user",
+ *     path="/api/v3/users/update.user",
  *     summary="编辑资料",
  *     description="编辑资料接口",
  *     tags={"个人中心"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/users/deny.list",
+ *     path="/api/v3/users/deny.list",
  *     summary="屏蔽用户列表",
  *     description="屏蔽用户列表接口",
  *     tags={"个人中心"},

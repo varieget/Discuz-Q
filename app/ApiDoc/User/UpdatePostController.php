@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Post(
- *    path = "/apiv3/posts.update",
+ *    path = "/api/v3/posts.update",
  *    summary = "点赞/采纳评论",
  *    description = "Discuz! Q 点赞/采纳评论",
  *    tags ={"发布与展示"},

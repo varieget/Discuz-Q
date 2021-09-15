@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/check.user.get.redpacket",
+ *     path="/api/v3/check.user.get.redpacket",
  *     summary="是否领取红包后第一次进入帖子",
  *     description="查询是否是领取红包后第一次进入帖子",
  *     tags={"发布与展示"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path = "/apiv3/dialog.update",
+ *     path = "/api/v3/dialog.update",
  *     summary = "更新对话私信已读状态",
  *     description = "更新对话私信已读状态",
  *     tags = {"私信与消息"},

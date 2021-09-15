@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path = "/apiv3/dialog.record",
+ *     path = "/api/v3/dialog.record",
  *     summary = "获取与某一用户的对话框",
  *     description = "获取与某一用户的对话框",
  *     tags = {"私信与消息"},

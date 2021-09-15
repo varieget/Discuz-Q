@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/wallet/cash",
+ *     path="/api/v3/wallet/cash",
  *     summary="提现",
  *     description="提现接口",
  *     tags={"个人中心"},

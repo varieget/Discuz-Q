@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/sms.login",
+ *     path="/api/v3/users/sms.login",
  *     summary="手机号登录",
  *     description="用户发送手机验证码进行登录，不存在此手机时将自动注册账户",
  *     tags={"注册登录"},

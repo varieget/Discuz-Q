@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get (
- *     path="/apiv3/users/wechat/h5.rebind",
+ *     path="/api/v3/users/wechat/h5.rebind",
  *     summary="H5登录换绑",
  *     description="扫PC的H5二维码进行换绑",
  *     tags={"注册登录"},

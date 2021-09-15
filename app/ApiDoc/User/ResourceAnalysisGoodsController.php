@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/goods/analysis",
+ *     path="/api/v3/goods/analysis",
  *     summary="商品解析",
  *     description="可解析部分电商url链接",
  *     tags={"发布与展示"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/users/pc/wechat/h5.genqrcode",
+ *     path="/api/v3/users/pc/wechat/h5.genqrcode",
  *     summary="H5二维码生成接口",
  *     description="pc点击微信登录图片或者手机浏览器公众号登录",
  *     tags={"注册登录"},

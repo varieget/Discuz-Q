@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path = "/apiv3/posts.reply",
+ *     path = "/api/v3/posts.reply",
  *     summary = "查询单条评论的最新回复评论",
  *     description = "查询单条评论的最新回复评论",
  *     tags = {"发布与展示"},

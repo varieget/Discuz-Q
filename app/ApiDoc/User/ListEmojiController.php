@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Get(
- *    path = "/apiv3/emoji",
+ *    path = "/api/v3/emoji",
  *    summary = "表情列表",
  *    description = "Discuz! Q 表情列表",
  *    tags ={"发布与展示"},

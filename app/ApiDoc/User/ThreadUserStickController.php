@@ -2,7 +2,7 @@
 /**
  *
  * @OA\Post(
- *     path="/apiv3/user/thread.stick",
+ *     path="/api/v3/user/thread.stick",
  *     summary="个人中心帖子置顶",
  *     description="个人中心帖子置顶",
  *     tags={"个人中心"},

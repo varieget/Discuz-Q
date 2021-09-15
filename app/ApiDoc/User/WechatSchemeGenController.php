@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get (
- *     path="/apiv3/users/mobilebrowser/wechat/h5.bind",
+ *     path="/api/v3/users/mobilebrowser/wechat/h5.bind",
  *     summary="手机浏览器绑定公众号",
  *     description="手机浏览器下载二维码并扫码绑定公众号;暂无使用",
  *     tags={"注册登录"},

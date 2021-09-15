@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path = "/apiv3/wallet/user",
+ *     path = "/api/v3/wallet/user",
  *     summary = "获取用户钱包信息",
  *     description = "获取用户钱包信息",
  *     tags = {"支付钱包"},

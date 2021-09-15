@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path = "/apiv3/notification.delete",
+ *     path = "/api/v3/notification.delete",
  *     summary = "删除消息",
  *     description = "删除消息",
  *     tags = {"私信与消息"},

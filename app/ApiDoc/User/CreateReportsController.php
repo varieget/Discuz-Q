@@ -1,7 +1,7 @@
 <?php
 /**
 * @OA\Post(
-*     path="/apiv3/reports",
+*     path="/api/v3/reports",
 *     summary="创建举报反馈记录",
 *     description="创建举报反馈记录",
 *     tags={"发布与展示"},

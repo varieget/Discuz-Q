@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/signature",
+ *     path="/api/v3/signature",
  *     summary="云点播回调",
  *     description="云点播回调",
  *     tags={"发布与展示"},

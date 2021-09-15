@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/users/pc/wechat/h5.login",
+ *     path="/api/v3/users/pc/wechat/h5.login",
  *     summary="PC扫码登录-扫码成功后H5二维码（轮询）",
  *     description="pc扫码公众号二维码后轮询接口",
  *     tags={"注册登录"},

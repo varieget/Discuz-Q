@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/avatar",
+ *     path="/api/v3/users/avatar",
  *     summary="上传头像",
  *     description="上传头像接口",
  *     tags={"个人中心"},

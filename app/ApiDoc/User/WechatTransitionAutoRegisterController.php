@@ -2,7 +2,7 @@
 /**
  *
  * @OA\Get(
- *     path="/apiv3/users/wechat/transition/username.autobind",
+ *     path="/api/v3/users/wechat/transition/username.autobind",
  *     summary="创建新账号",
  *     description="过渡阶段，微信登录创建账号并登陆",
  *     tags={"注册登录"},

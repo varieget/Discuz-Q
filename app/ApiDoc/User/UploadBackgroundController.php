@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/background",
+ *     path="/api/v3/users/background",
  *     summary="上传背景图",
  *     description="上传背景图接口",
  *     tags={"个人中心"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path = "/apiv3/notification",
+ *     path = "/api/v3/notification",
  *     summary = "用户消息列表",
  *     description = "获取用户消息列表",
  *     tags = {"私信与消息"},

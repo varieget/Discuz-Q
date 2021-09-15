@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/users/pc/wechat/miniprogram.genqrcode",
+ *     path="/api/v3/users/pc/wechat/miniprogram.genqrcode",
  *     summary="小程序二维码生成接口",
  *     description="pc点击微信登录图片",
  *     tags={"注册登录"},

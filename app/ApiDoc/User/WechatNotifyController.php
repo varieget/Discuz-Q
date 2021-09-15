@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Post(
- *    path = "/apiv3/trade/notify/wechat",
+ *    path = "/api/v3/trade/notify/wechat",
  *    summary = "微信支付回调",
  *    description = "Discuz! Q 微信支付回调",
  *    tags ={"支付钱包"},

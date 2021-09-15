@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/sms.reset.pwd",
+ *     path="/api/v3/users/sms.reset.pwd",
  *     summary="重设登录密码",
  *     description="用户重新设置登录密码时请求该接口",
  *     tags={"注册登录"},

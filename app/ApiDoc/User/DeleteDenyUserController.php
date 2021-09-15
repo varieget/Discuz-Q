@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/deny.delete",
+ *     path="/api/v3/users/deny.delete",
  *     summary="解除屏蔽",
  *     description="解除屏蔽接口",
  *     tags={"个人中心"},

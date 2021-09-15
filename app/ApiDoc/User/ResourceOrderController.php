@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/order.detail",
+ *     path="/api/v3/order.detail",
  *     summary="订单详情",
  *     description="订单详情",
  *     tags={"支付钱包"},

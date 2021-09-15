@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/tom.detail",
+ *     path="/api/v3/tom.detail",
  *     summary="主题内扩展对象详情",
  *     description="主体内扩展对象详情，如图片、视频、投票等",
  *     tags={"发布与展示"},

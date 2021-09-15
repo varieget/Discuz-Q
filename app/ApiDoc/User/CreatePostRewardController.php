@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/posts.reward",
+ *     path="/api/v3/posts.reward",
  *     summary="帖子打赏",
  *     description="帖子打赏接口",
  *     tags={"发布与展示"},

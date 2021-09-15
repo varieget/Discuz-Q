@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/username.check",
+ *     path="/api/v3/users/username.check",
  *     summary="用户名、昵称重名检测",
  *     description="用户名、昵称是否存在",
  *     tags={"注册登录"},

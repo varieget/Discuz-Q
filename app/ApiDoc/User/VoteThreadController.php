@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/vote.thread",
+ *     path="/api/v3/vote.thread",
  *     summary="投票",
  *     description="投票",
  *     tags={"发布与展示"},

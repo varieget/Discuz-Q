@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/operate",
+ *     path="/api/v3/users/operate",
  *     summary="帖子操作",
  *     description="帖子操作接口",
  *     tags={"发布与展示"},

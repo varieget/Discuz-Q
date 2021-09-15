@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/tom.update",
+ *     path="/api/v3/tom.update",
  *     summary="更新主题内扩展对象详情",
  *     description="主题内扩展对象详情，如图片、视频、投票等【官方暂时未使用该接口】",
  *     tags={"发布与展示"},

@@ -2,7 +2,7 @@
 /**
  *
  * @OA\POST(
- *     path="/apiv3/users/users/nickname.set",
+ *     path="/api/v3/users/users/nickname.set",
  *     summary="设置或修改昵称",
  *     description="设置或修改用户昵称，需要登录态",
  *     tags={"注册登录"},

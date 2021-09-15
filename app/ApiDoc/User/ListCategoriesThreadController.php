@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Get(
- *    path = "/apiv3/categories.thread",
+ *    path = "/api/v3/categories.thread",
  *    summary = "帖子分类列表",
  *    description = "Discuz! Q 帖子分类列表",
  *    tags ={"发布与展示"},

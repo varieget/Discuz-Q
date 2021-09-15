@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/posts.detail",
+ *     path="/api/v3/posts.detail",
  *     summary="评论详情",
  *     description="评论详情",
  *     tags={"发布与展示"},

@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/users/mobilebrowser/wechat/miniprogram.genscheme",
+ *     path="/api/v3/users/mobilebrowser/wechat/miniprogram.genscheme",
  *     summary="拉起小程序scheme生成接口",
  *     description="手机浏览器拉起小程序使用",
  *     tags={"注册登录"},

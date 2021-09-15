@@ -1,7 +1,7 @@
 <?php
 /**
  *@OA\Get(
- *    path = "/apiv3/topics.list",
+ *    path = "/api/v3/topics.list",
  *    summary = "发布与展示",
  *    description = "Discuz! Q 表情列表",
  *    tags ={"发布与展示"},

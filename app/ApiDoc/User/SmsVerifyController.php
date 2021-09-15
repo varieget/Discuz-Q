@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/sms.verify",
+ *     path="/api/v3/users/sms.verify",
  *     summary="验证手机号是否为当前用户",
  *     description="数据库有此手机用户，验证码一码一用",
  *     tags={"注册登录"},

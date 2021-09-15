@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/attachment.relation",
+ *     path="/api/v3/attachment.relation",
  *     summary="写入前端上传文件的参数",
  *     description="写入前端上传文件的参数",
  *     tags={"附件"},

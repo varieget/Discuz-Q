@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/username.register",
+ *     path="/api/v3/users/username.register",
  *     summary="用户名密码注册",
  *     description="用户名密码注册",
  *     tags={"注册登录"},

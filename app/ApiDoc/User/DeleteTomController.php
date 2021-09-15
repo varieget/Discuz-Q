@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/tom.delete",
+ *     path="/api/v3/tom.delete",
  *     summary="删除扩展对象里的指定索引下数据",
  *     description="例如扩展对象里包含两个视频对象，索引为$1和$2,该接口可定向删除其中一个视频对象【官方安装包暂未使用该接口】",
  *     tags={"发布与展示"},

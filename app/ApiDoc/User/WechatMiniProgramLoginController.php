@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Post(
- *     path="/apiv3/users/wechat/miniprogram.login",
+ *     path="/api/v3/users/wechat/miniprogram.login",
  *     summary="小程序登录",
  *     description="用小程序登录时请求",
  *     tags={"注册登录"},

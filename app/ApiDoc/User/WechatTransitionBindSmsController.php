@@ -2,7 +2,7 @@
 /**
  *
  * @OA\Post (
- *     path="/apiv3/users/wechat/transition/sms.bind",
+ *     path="/api/v3/users/wechat/transition/sms.bind",
  *     summary="微信绑定手机并登陆",
  *     description="过渡阶段,微信登录绑定手机号并登录",
  *     tags={"注册登录"},

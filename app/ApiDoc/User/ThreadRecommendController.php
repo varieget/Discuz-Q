@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/thread.recommends",
+ *     path="/api/v3/thread.recommends",
  *     summary="推荐的精华帖列表",
  *     description="推荐的精华帖列表",
  *     tags={"发布与展示"},

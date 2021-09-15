@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/group.permission.list",
+ *     path="/api/v3/group.permission.list",
  *     summary="我的角色-我的权限",
  *     description="我的角色-我的权限",
  *     tags={"个人中心"},

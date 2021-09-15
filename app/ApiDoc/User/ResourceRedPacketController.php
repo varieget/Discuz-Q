@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/apiv3/redpacket.resource",
+ *     path="/api/v3/redpacket.resource",
  *     summary="获取红包数据",
  *     description="获取红包数据",
  *     tags={"发布与展示"},
