@@ -27,6 +27,7 @@ use App\Trade\Config\GatewayConfig;
 use App\Trade\PayTrade;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Common\Utils;
 use Exception;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -266,7 +267,7 @@ class PayOrder
             case Order::PAYMENT_TYPE_WECHAT_MINI: //微信小程序支付
                 $config = $this->setting->tag('wxpay'); //配置信息
                 // $config['notify_url'] = $this->url->to('/api/trade/notify/wechat');
-                $config['notify_url'] = $this->url->to('/apiv3/trade/notify/wechat');
+            $config['notify_url'] = $this->url->to('/' . Utils::getApiName() . '/trade/notify/wechat');
                 switch ($this->payment_type) {
                     case Order::PAYMENT_TYPE_WECHAT_NATIVE: //微信扫码支付
                         $pay_gateway          = GatewayConfig::WECAHT_PAY_NATIVE;
