@@ -200,6 +200,8 @@ class CreateThreadController extends DzqController
             $dataThread['address'] = '';
             $dataThread['location'] = '';
         }
+        //添加变更时间
+        $dataThread['issue_at']=date('Y-m-d H:i:s');
         [$newTitle, $newContent] = $this->boolApproved($title, $content['text'], $isApproved);
         $content['text'] = $newContent;
         $dataThread['title'] = $newTitle;

@@ -216,8 +216,8 @@ class UpdateThreadController extends DzqController
         }else{
             $thread->is_anonymous = Thread::BOOL_NO;
         }
-
-
+        //设置变更时间
+        $thread->issue_at=date('Y-m-d H:i:s');
         $thread->save();
         if (!$isApproved && !$isDraft) {
             $this->user->refreshThreadCount();

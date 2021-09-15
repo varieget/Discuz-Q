@@ -100,6 +100,8 @@ class ManageSubmitReview extends DzqAdminController
             if (isset($arr[$v->id]['isApproved']) && empty($v->deleted_at) && in_array($arr[$v->id]['isApproved'], [1, 2]) && $v->is_approved != $arr[$v->id]['isApproved']) {
 
                 $v->is_approved = $arr[$v->id]['isApproved'];
+                //设置变更时间
+                $v->issue_at=date('Y-m-d H:i:s');
                 $v->save();
 
                 if ($arr[$v->id]['isApproved'] == 1) {
