@@ -20,7 +20,7 @@ namespace App\Console\Commands;
 
 use Discuz\Console\AbstractCommand;
 
-class AddIssueAtColumnCommand extends AbstractCommand
+class AddIssueAtColumeCommand extends AbstractCommand
 {
     protected $signature = 'upgrade:issue_at';
 
