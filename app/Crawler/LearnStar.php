@@ -258,7 +258,7 @@ class LearnStar
         {
             $talk = $oneTopic->talk;
             $owner = $talk->owner;
-            $author["nickname"] = $owner->name;
+            $author["nickname"] = str_replace(" ","", $owner->name); ;;
             $author["avatar"] = $owner->avatar_url;
 
             //文字
@@ -285,7 +285,7 @@ class LearnStar
         }elseif($oneTopic->type == "q&a"){
             $talk = $oneTopic->question;
             $owner = $talk->questionee;
-            $author["nickname"] = $owner->name;
+            $author["nickname"] = str_replace(" ","", $owner->name);
             $author["avatar"] = $owner->avatar_url;
 
             //文字
@@ -553,7 +553,7 @@ class LearnStar
             $userComment = [];
             if(!empty($one->owner)){
                 $owner = $one->owner;
-                $userComment["nickname"]= $owner->name;
+                $userComment["nickname"]= str_replace(" ","",$owner->name);
                 $userComment["avatar"] = $owner->avatar_url;
             }
 
@@ -590,7 +590,7 @@ class LearnStar
         $userComment = [];
         if(!empty($answer->owner)){
             $owner = $answer->owner;
-            $userComment["nickname"]= $owner->name;
+            $userComment["nickname"]= str_replace(" ","", $owner->name);;
             $userComment["avatar"] = $owner->avatar_url;
         }
 
