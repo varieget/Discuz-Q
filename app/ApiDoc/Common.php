@@ -795,5 +795,27 @@
  *     @OA\Property(property = "deletedAt", type = "string", description = "删除时间")
  * )
  *
+ * @OA\Schema(
+ *     schema="dzq_notification_tpls_model",
+ *     title="通知模板model",
+ *      @OA\Property(property="id",type="integer",description = "通知id"),
+ *      @OA\Property(property="noticeId",type="string",description = "模板唯一标识ID"),
+ *      @OA\Property(property="status",type="integer",description = "状态1开启 0关闭"),
+ *      @OA\Property(property="type",type="integer",description = "通知类型0系统1微信2短信"),
+ *      @OA\Property(property="typeName",type="string",description = "类型名称"),
+ *      @OA\Property(property="title",type="string",description = "标题"),
+ *      @OA\Property(property="content",type="string",description = "内容"),
+ *      @OA\Property(property="vars",type="string",description = "可选的变量"),
+ *      @OA\Property(property="templateId",type="string",description = "模板ID"),
+ *      @OA\Property(property="firstData",type="string",description = "first.DATA"),
+ *      @OA\Property(property="keywordsData",type="string",description = "keywords.DATA"),
+ *      @OA\Property(property="remarkData",type="string",description = "remark.DATA"),
+ *      @OA\Property(property="color",type="string",description = "data color"),
+ *      @OA\Property(property="redirectType",type="integer",description = "跳转类型0无跳转 1跳转H5 2跳转小程序"),
+ *      @OA\Property(property="redirectUrl",type="string",description = "跳转地址"),
+ *      @OA\Property(property="pagePath",type="string",description = "跳转路由"),
+ *      @OA\Property(property="isError",type="integer",description = "模板是否配置错误0不是1是"),
+ *      @OA\Property(property="errorMsg",type="string",description = "错误信息"),
+ * )
  *
  */
