@@ -319,4 +319,14 @@ class Attachment extends DzqModel
         }
         return $data;
     }
+
+    public static function getOneAttachment($attachmentsId,$toArray = false){
+        $ret = self::query()
+            ->where([
+                'id' => $attachmentsId,
+            ])
+            ->first();
+        $toArray && $ret = $ret->toArray();
+        return $ret;
+    }
 }
