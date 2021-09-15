@@ -83,7 +83,10 @@ trait TomTrait
                 } else {
                     $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body, $canViewTom]);
                 }
-                method_exists($service, $op) && $tomJsons[$key] = $service->$op();
+                $opResult = $service->$op();
+                if(method_exists($service, $op) && is_array($opResult)){
+                    $tomJsons[$key] = $opResult;
+                }
             }
         }
         return $tomJsons;

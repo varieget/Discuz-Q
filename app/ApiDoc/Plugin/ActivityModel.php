@@ -39,6 +39,11 @@
  *         ),
  *         @OA\Property(property = "createAt", type = "string", description = "活动发起时间"),
  *         @OA\Property(property = "updateAt", type = "string", description = "活动最近编辑时间"),
+ *         @OA\Property(property = "registerUsers", type = "array", description = "已报名用户(最多显示三个)",@OA\Items(
+ *             @OA\Property(property = "userId", type = "integer", description = "用户id"),
+ *             @OA\Property(property = "avatar", type = "string", description = "头像"),
+ *             @OA\Property(property = "nickname", type = "string", description = "昵称"),
+ *         )),
  *     )
  * )
  */

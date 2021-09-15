@@ -43,46 +43,7 @@ class ActivityBusi extends TomBaseBusi
             'status' => DzqConst::BOOL_YES
         ])->first();
         if (empty($activity)) return false;
-        $activityUser = ActivityUser::query()->where([
-            'activity_id' => $activityId,
-            'status' => DzqConst::BOOL_YES
-        ]);
-        $currentNumber = $activityUser->count();
-        $userIds = $activityUser->orderByDesc('id')->limit(3)->select('user_id')->pluck('user_id')->toArray();
-        $users = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
-            return User::instance()->getUsers($userIds);
-        }, 'id');
-        $registerUsers = [];
-        foreach ($users as $user) {
-            $registerUsers[] = [
-                'userId' => $user['id'],
-                'avatar' => $user['avatar'],
-                'nickname' => $user['nickname']
-            ];
-        }
-        $isRegistered = $activityUser->where('user_id', $this->user->id)->exists();
-        $result = [
-            'activityId' => $activity['id'],
-            'title' => $activity['title'],
-            'content' => $activity['content'],
-            'activityStartTime' => $activity['activity_start_time'],
-            'activityEndTime' => $activity['activity_end_time'],
-            'registerStartTime' => $activity['register_start_time'],
-            'registerEndTime' => $activity['register_end_time'],
-            'totalNumber' => $activity['total_number'],
-            'currentNumber' => $currentNumber,
-            'position' => [
-                'address' => $activity['address'],
-                'location' => $activity['location'],
-                'longitude' => $activity['longitude'],
-                'latitude' => $activity['latitude']
-            ],
-            'isRegistered' => $isRegistered,
-            'isExpired' => time() > strtotime($activity['register_start_time']),
-            'isMemberFull' => $activity['total_number'] == 0 ? false : $activity['total_number'] < $currentNumber,
-            'createdAt' => date('Y-m-d H:i:s', strtotime($activity['created_at'])),
-            'registerUsers' => $registerUsers
-        ];
+        $result = $this->getActivityDetail($activity);
         return $this->jsonReturn($result);
     }
 
@@ -97,6 +58,7 @@ class ActivityBusi extends TomBaseBusi
         ];
         $activity->setRawAttributes($rawAttr);
         if ($activity->save()) {
+
             return $this->jsonReturn(['activityId' => $activity['id']]);
         } else {
             return false;
@@ -107,7 +69,7 @@ class ActivityBusi extends TomBaseBusi
     {
         $this->activityValidate();
         $activityId = $this->getParams('activityId');
-
+        if(empty($activityId))$this->outPut(ResponseCode::INVALID_PARAMETER,'插件参数缺少字段 activityId ');
         $activity = ThreadActivity::query()->where([
             'id' => $activityId,
             'status' => DzqConst::BOOL_YES
@@ -116,7 +78,7 @@ class ActivityBusi extends TomBaseBusi
         $rawAttr = $this->getActivityRawAttr();
         $activity->setRawAttributes($rawAttr);
         if ($activity->save()) {
-            return true;
+            return $this->jsonReturn($this->getActivityDetail($activity));
         } else {
             return false;
         }
@@ -132,6 +94,7 @@ class ActivityBusi extends TomBaseBusi
         if (empty($activity)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '活动不存在');
         }
+        $activity->status = DzqConst::BOOL_NO;
         $activity->save();
         return true;
     }
@@ -182,5 +145,49 @@ class ActivityBusi extends TomBaseBusi
             ];
         }
         return $data;
+    }
+    private function getActivityDetail($activity){
+        $activityId = $this->getParams('activityId');
+        $activityUser = ActivityUser::query()->where([
+            'activity_id' => $activityId,
+            'status' => DzqConst::BOOL_YES
+        ]);
+        $currentNumber = $activityUser->count();
+        $userIds = $activityUser->orderByDesc('id')->limit(3)->select('user_id')->pluck('user_id')->toArray();
+        $users = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
+            return User::instance()->getUsers($userIds);
+        }, 'id');
+        $registerUsers = [];
+        foreach ($users as $user) {
+            $registerUsers[] = [
+                'userId' => $user['id'],
+                'avatar' => $user['avatar'],
+                'nickname' => $user['nickname']
+            ];
+        }
+        $isRegistered = $activityUser->where('user_id', $this->user->id)->exists();
+        return [
+            'activityId' => $activityId,
+            'title' => $activity['title'],
+            'content' => $activity['content'],
+            'activityStartTime' => $activity['activity_start_time'],
+            'activityEndTime' => $activity['activity_end_time'],
+            'registerStartTime' => $activity['register_start_time'],
+            'registerEndTime' => $activity['register_end_time'],
+            'totalNumber' => $activity['total_number'],
+            'currentNumber' => $currentNumber,
+            'position' => [
+                'address' => $activity['address'],
+                'location' => $activity['location'],
+                'longitude' => $activity['longitude'],
+                'latitude' => $activity['latitude']
+            ],
+            'isRegistered' => $isRegistered,
+            'isExpired' => time() > strtotime($activity['register_start_time']),
+            'isMemberFull' => $activity['total_number'] == 0 ? false : $activity['total_number'] < $currentNumber,
+            'createdAt' => date('Y-m-d H:i:s', strtotime($activity['created_at'])),
+            'updatedAt' => date('Y-m-d H:i:s', strtotime($activity['updated_at'])),
+            'registerUsers' => $registerUsers
+        ];
     }
 }
