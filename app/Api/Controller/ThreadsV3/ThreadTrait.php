@@ -242,8 +242,6 @@ trait ThreadTrait
     {
         /** @var UserRepository $userRepo */
         $userRepo = app(UserRepository::class);
-        /** @var SettingsRepository $settingRepo */
-        $settingRepo = app(SettingsRepository::class);
 
         return [
             'canEdit' => $userRepo->canEditThread($loginUser, $thread),
@@ -252,7 +250,6 @@ trait ThreadTrait
             'canStick' => $userRepo->canStickThread($loginUser),
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
-            'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
             'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread),
             'canViewVideo' => $userRepo->canViewThreadVideo($loginUser, $thread),
             'canViewAttachment' => $userRepo->canViewThreadAttachment($loginUser, $thread),

@@ -29,10 +29,6 @@ class CreateOrderController extends DzqController
         if (!$userRepo->canCreateOrder($this->user)) {
             throw new PermissionDeniedException('没有创建订单权限');
         }
-
-        if ($this->inPut('type') == Order::ORDER_TYPE_REWARD){
-            if(empty($this->settings->get('site_can_reward'))) throw new PermissionDeniedException('站点没有开启打赏');
-        }
         return true;
     }
 
