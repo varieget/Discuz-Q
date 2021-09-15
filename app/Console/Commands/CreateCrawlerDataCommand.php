@@ -195,6 +195,12 @@ class CreateCrawlerDataCommand extends AbstractCommand
                 }
             } else {
                 $data = $this->crawlerPlatform->main($this->topic, $inputData['number'], $this->cookie, $this->userAgent);
+                if (empty($data)) {
+                    $this->insertLogs('----No data is obtained. Process ends.----');
+                    app('cache')->clear();
+                    $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_NOTHING_ENDING, $this->topic);
+                    exit;
+                }
             }
 
             if (count($data) > $inputData['number']) {
@@ -359,7 +365,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     $registerUserResult = $register->handle($this->events, $this->censor, $this->settings, $this->userValidator);
                     $this->insertLogs('----Insert a new user: ' . $registerUserResult->username . ' ,The user_id is ' . $registerUserResult->id .'.----');
                     $uploadAvatarResult = $this->uploadCrawlerUserAvatar($value, $registerUserResult);
-                    if ($registerUserResult) {
+                    if ($registerUserResult && $uploadAvatarResult) {
                         $uploadAvatarResult->status = User::STATUS_NORMAL;
                         $uploadAvatarResult->save();
                     }
@@ -385,7 +391,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
      */
     private function uploadCrawlerUserAvatar($data, $registerUser)
     {
-        if (strstr($data['avatar'], '?')) {
+        if (strstr($data['avatar'], '?') && $this->platform != Thread::CRAWLER_DATA_PLATFORM_OF_ZSXQ) {
             $data['avatar'] = substr($data['avatar'], 0, strpos($data['avatar'], '?'));
         }
 
@@ -394,29 +400,28 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $data['avatar'] = $data['avatar'] . '.jpg';
         }
 
-        $avatarData = parse_url($data['avatar']);
-        $avatarData = pathinfo($avatarData['path']);
-
+        $mimeType = $this->getAttachmentMimeType($data['avatar']);
+        $fileExt = substr($mimeType, strpos($mimeType, "/") + strlen("/"));
+        $fileName = Str::random(40) . '.' . $fileExt;
         set_time_limit(0);
         $file = $this->getFileContents($data['avatar']);
         if (!$file ) {
             return false;
         }
         $tmpFile = tempnam(storage_path('/tmp'), 'avatar');
-        $ext = $avatarData['extension'];
 
-        if (!in_array($ext, ['gif', 'png', 'jpg', 'jpeg', 'jpe', 'heic'])) {
+        if (!in_array($fileExt, ['gif', 'png', 'jpg', 'jpeg', 'jpe', 'heic'])) {
             return false;
         }
-        $ext = $ext ? ".$ext" : '';
-        $tmpFileWithExt = $tmpFile . $ext;
+        $fileExt = $fileExt ? ".$fileExt" : '';
+        $tmpFileWithExt = $tmpFile . $fileExt;
         $avatarSize = @file_put_contents($tmpFileWithExt, $file);
         $mimeType = $this->getAttachmentMimeType($tmpFileWithExt);
         $avatarFile = new RequestUploadedFile(
             $tmpFile,
             $avatarSize,
             0,
-            $avatarData['basename'],
+            $fileName,
             $mimeType
         );
 
