@@ -22,6 +22,8 @@ use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
+use App\Models\ThreadUserStickRecord;
+use App\Models\ThreadVideo;
 use App\Traits\PostNoticesTrait;
 use Discuz\Base\DzqCache;
 use App\Models\Category;
@@ -52,7 +54,7 @@ trait ThreadTrait
 
     private $loginUserData = [];
 
-    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [], $loginUserData = [])
+    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [], $loginUserData = [], $userStick = -1)
     {
         $loginUser = $this->user;
         $this->loginUserData = $loginUserData;
@@ -66,6 +68,9 @@ trait ThreadTrait
         $canViewThreadVideo = $this->canViewThreadVideo($loginUser, $thread);
         if (!$canViewThreadVideo) {
             $contentField = $this->filterThreadVideo($contentField);
+        }
+        if ($userStick == -1){
+            $userStick = $this->getThreadUserStick($thread, $user);
         }
         $result = [
             'threadId' => $thread['id'],
@@ -105,7 +110,8 @@ trait ThreadTrait
             ],
             'ability' => $this->getAbilityField($loginUser, $thread),
             'content' => $contentField,
-            'freewords' => $thread['free_words']
+            'freewords' => $thread['free_words'],
+            'userStickStatus'=>$userStick
         ];
         if ($analysis) {
             $concatString = $thread['title'] . $post['content'];
@@ -355,6 +361,8 @@ trait ThreadTrait
                 $tomConfig = [];
                 isset($tomInput[TomConfig::TOM_REDPACK]) && $tomConfig += [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]];
                 isset($tomInput[TomConfig::TOM_IMAGE]) && $tomConfig += [TomConfig::TOM_IMAGE => $tomInput[TomConfig::TOM_IMAGE]];
+                isset($tomInput[TomConfig::TOM_VOTE]) && $tomConfig += [TomConfig::TOM_VOTE => $tomInput[TomConfig::TOM_VOTE]];
+                isset($tomInput[TomConfig::TOM_REWARD]) && $tomConfig += [TomConfig::TOM_REWARD => $tomInput[TomConfig::TOM_REWARD]];
                 if (!empty($tomConfig)) {
                     $content['indexes'] = $this->tomDispatcher(
                         $tomConfig,
@@ -378,80 +386,15 @@ trait ThreadTrait
                     }
                 }
             }
+
+            if (!empty($body) || strpos($content['text'], '<iframe') !== false && $this->canViewThreadVideo($loginUser, $thread)) {
+                $content['text'] = $this->changeContentIframeSrc($xml);
+            }
+
             if (!empty($body) || strpos($content['text'], '<img') !== false) {
-                $attachments_body = $body;
-                $attachments = [];
-                if(!empty($body)){
-                    $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
-                }
-                $isset_attachment_ids = [];
-                //这里增加 前端拖拽图片的图文混排的形式
-                if(strpos($xml, 'attachmentId') !== false){
-                    preg_match_all('/attachmentId-(\d+)/', $xml, $attachmentIds_all);
-                }
-                if(!empty($attachmentIds_all[1])){
-                    $content_attachments = Attachment::query()->whereIn('id', $attachmentIds_all[1])->get();
-                    if(!empty($content_attachments)){
-                        $serializer = $this->app->make(AttachmentSerializer::class);
-                        foreach ($content_attachments as $val){
-                            if($val->is_remote){
-                                $attachments[$val->id] = $serializer->getImgUrl($val);
-                            }
-                        }
-                    }
-                }
-                if(!empty($attachments)){
-                    $xml = preg_replace_callback(
-                        '<img src="(.*)" alt="attachmentId-(\d+)" />',
-                        function ($m) use ($attachments) {
-                            $id = trim($m[2], '"');
-                            if (!empty($m) && in_array($id, array_keys($attachments))) {
-                                return 'img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '"';
-                            }else{
-                                return 'img src="' . $m[1] . '" alt="attachmentId-' . $id . '"';
-                            }
-                        },
-                        $xml
-                    );
-
-                    $xml_attachments = $xml_attachments_ids = [];
-                    $serializer = $this->app->make(AttachmentSerializer::class);
-                    if(!$canViewTom && !empty($attachments_body)){       //如果没有权限查看的，则图文混排中的图片还是取清晰的
-                        $attachments_ids = array_column($attachments_body, 'id');
-                        $x_attachments = Attachment::query()->whereIn('id', $attachments_ids)->get();
-                        $xml_attachments = $x_attachments->keyBy('id');
-                        $xml_attachments_ids = $xml_attachments->pluck('id')->all();
-                    }
-                    $xml = preg_replace_callback(
-                        '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
-                        function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
-                            if (!empty($m)) {
-                                $id = trim($m[3], '"');
-                                $isset_attachment_ids[] = $id;
-                                $replace_url = $attachments[$id];
-                                if(!$canViewTom && in_array($id, $xml_attachments_ids)){
-                                    $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
-                                }
-                                return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
-                            }
-                        },
-                        $xml
-                    );
-                }
-
-
-
-                //针对图文混排的情况，这里要去掉外部图片展示
-//                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
-                $content['text'] = $xml;
-                if(!empty($isset_attachment_ids) && isset($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
-                    foreach ($content['indexes'][TomConfig::TOM_IMAGE]['body'] as $k => $v){
-                        if(in_array($v['id'], $isset_attachment_ids))       unset($content['indexes'][TomConfig::TOM_IMAGE]['body'][$k]);
-                    }
-                }
+                $content = $this->changeContentImgSrc($content, $body, $canViewTom);
             }
         }
-
 
         return $content;
     }
@@ -745,6 +688,174 @@ trait ThreadTrait
             }
         }
         return $content;
+    }
+
+
+    private function getThreadUserStick($thread,$user){
+        if (empty($thread)|| empty($user)){
+            return  0;
+        }
+
+        $userThreadStick = ThreadUserStickRecord::query()->where('user_id',$user->id)->first();
+        if(empty($userThreadStick)){
+            return 0;
+        }
+
+        if($userThreadStick->thread_id == $thread->id){
+            return 1;
+        }
+        return 0;
+    }
+
+    private function changeContentIframeSrc($content)
+    {
+        if(strpos($content, 'videoId') !== false){
+            preg_match_all('/videoId-(\d+)/', $content, $videoIds_all);
+        }
+        $videoData = [];
+        if(!empty($videoIds_all[1])) {
+            $content_videos = ThreadVideo::query()->whereIn('id', $videoIds_all[1])->get();
+            if (!empty($content_videos)) {
+                $content_videos->map(function ($item) use(&$videoData) {
+                    $mediaUrl = explode("?", $item['media_url']);
+                    $item->media_url = $mediaUrl[0];
+                    $videoData[$item->id] = $item->getMediaUrl($item);
+                });
+            }
+        }
+
+        if(!empty($videoData)) {
+            foreach ($videoData as $key => $value) {
+                $oldIframe = 'iframe src="" alt="videoId-' . $key . '"';
+                $newIframe = 'iframe src="' . $value . '" alt="videoId-'. $key .'" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"';
+                $content = str_replace($oldIframe, $newIframe, $content);
+            }
+        }
+        return $content;
+    }
+
+    private function changeContentImgSrc($content, $body, $canViewTom)
+    {
+        $xml = $content['text'];
+        $attachments_body = $body;
+        $attachments = [];
+        if(!empty($body)){
+            $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
+        }
+        $isset_attachment_ids = [];
+        //这里增加 前端拖拽图片的图文混排的形式
+        if(strpos($xml, 'attachmentId') !== false){
+            preg_match_all('/attachmentId-(\d+)/', $xml, $attachmentIds_all);
+        }
+        if(!empty($attachmentIds_all[1])){
+            $content_attachments = Attachment::query()->whereIn('id', $attachmentIds_all[1])->get();
+            if(!empty($content_attachments)){
+                $serializer = $this->app->make(AttachmentSerializer::class);
+                foreach ($content_attachments as $val){
+                    if($val->is_remote){
+                        $attachments[$val->id] = $serializer->getImgUrl($val);
+                    }
+                }
+            }
+        }
+
+        if(!empty($attachments)){
+            preg_match_all('/<img.*?alt=[\"|\']?(.*?)[\"|\']?\s.*?>/i', $xml, $imagesSrc);
+            if (!empty($imagesSrc[1])) {
+                foreach ($imagesSrc[1] as $key => $value) {
+                    $id = substr($value,strrpos($value,'-') + 1);
+                    if (isset($attachments[$id])) {
+                        $newImageSrc = '<img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '" />';
+                        $xml = str_replace($imagesSrc[0][$key], $newImageSrc, $xml);
+                    }
+                }
+            }
+
+            /* $xml = preg_replace_callback(
+                '<img src="(.*)" alt="attachmentId-(\d+)" />',
+                function ($m) use ($attachments) {
+                    $id = trim($m[2], '"');
+                    if (!empty($m) && in_array($id, array_keys($attachments))) {
+                        return 'img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '"';
+                    }else{
+                        return 'img src="' . $m[1] . '" alt="attachmentId-' . $id . '"';
+                    }
+                },
+                $xml
+            ); */
+
+            $xml_attachments = $xml_attachments_ids = [];
+            $serializer = $this->app->make(AttachmentSerializer::class);
+            if(!$canViewTom && !empty($attachments_body)){       //如果没有权限查看的，则图文混排中的图片还是取清晰的
+                $attachments_ids = array_column($attachments_body, 'id');
+                $x_attachments = Attachment::query()->whereIn('id', $attachments_ids)->get();
+                $xml_attachments = $x_attachments->keyBy('id');
+                $xml_attachments_ids = $xml_attachments->pluck('id')->all();
+            }
+            if (!empty($xml_attachments_ids)) {
+                $xml = preg_replace_callback(
+                    '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
+                    function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
+                        if (!empty($m)) {
+                            $id = trim($m[3], '"');
+                            $isset_attachment_ids[] = $id;
+                            $replace_url = $attachments[$id];
+                            if(!$canViewTom && in_array($id, $xml_attachments_ids)){
+                                $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
+                            }
+                            return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
+                        }
+                    },
+                    $xml
+                );
+            }
+        }
+
+        //针对图文混排的情况，这里要去掉外部图片展示
+//                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
+        $content['text'] = $xml;
+        if(!empty($isset_attachment_ids) && isset($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
+            foreach ($content['indexes'][TomConfig::TOM_IMAGE]['body'] as $k => $v){
+                if(in_array($v['id'], $isset_attachment_ids))       unset($content['indexes'][TomConfig::TOM_IMAGE]['body'][$k]);
+            }
+        }
+        if(!empty($content['indexes'][TomConfig::TOM_IMAGE]) && !empty($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
+            $content['indexes'][TomConfig::TOM_IMAGE]['body'] = array_values($content['indexes'][TomConfig::TOM_IMAGE]['body']);
+        }
+
+        return $content;
+    }
+    //检查发帖和更新帖子的内容权限
+    private function checkThreadPluginAuth(UserRepository $userRepo)
+    {
+        $price = floatval($this->inPut('price'));
+        $attachmentPrice = floatval($this->inPut('attachmentPrice'));
+        $position = $this->inPut('position');
+        $isAnonymous = $this->inPut('anonymous');
+        $content = $this->inPut('content');
+        $user = $this->user;
+        if (empty($user)) $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
+        if (($price > 0 || $attachmentPrice > 0) && !$userRepo->canInsertPayToThread($user)) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '没有插入付费权限');
+        }
+        if (!empty($position) && !$userRepo->canInsertPositionToThread($user)) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '没有插入位置信息权限');
+        }
+        if (!empty($isAnonymous) && !$userRepo->canCreateThreadAnonymous($user)) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '没有匿名发帖权限');
+        }
+        if (!empty($content) && !empty($content['indexes'])) {
+            $indexes = $content['indexes'];
+            if (is_array($indexes)) {
+                foreach ($indexes as $k => $v) {
+                    $pluginName = TomConfig::$map[$k]['enName'];
+                    $func = "canInsert{$pluginName}ToThread";
+                    if (method_exists($userRepo, $func) && !$userRepo->$func($user)) {
+                        $this->outPut(ResponseCode::UNAUTHORIZED, "没有插入" . TomConfig::$map[$k]['desc'] . "权限");
+                    }
+                }
+            }
+        }
     }
 }
 

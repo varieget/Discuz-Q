@@ -89,7 +89,116 @@
  * @OA\Schema(
  *     schema="dzq_layout",
  *     title="接口返回",
- *     @OA\Property(property="Code",type="integer",description="dzq错误码"),
+ *     @OA\Property(property="Code",type="object",description="dzq错误码",oneOf={
+ *                     	   @OA\Schema(type="string",title="0",description="返回成功"),
+ *                     	   @OA\Schema(type="string",title="-10001",description="当前站点未安装"),
+ *                     	   @OA\Schema(type="string",title="-2001",description="无效未知url地址"),
+ *                     	   @OA\Schema(type="string",title="-2002",description="无效配置"),
+ *                     	   @OA\Schema(type="string",title="-2003",description="运行时异常"),
+ *                         @OA\Schema(type="string",title="-2004",description="无效参数"),
+ *                         @OA\Schema(type="string",title="-3001",description="跳转到登录页"),
+ *                         @OA\Schema(type="string",title="-3002",description="跳转到注册页"),
+ *                         @OA\Schema(type="string",title="-3003",description="跳转到审核页"),
+ *                         @OA\Schema(type="string",title="-3004",description="跳转到首页"),
+ *                         @OA\Schema(type="string",title="-3005",description="站点已关闭"),
+ *                         @OA\Schema(type="string",title="-3006",description="跳转到站点付费页"),
+ *                         @OA\Schema(type="string",title="-3007",description="跳转到扩展字段页"),
+ *                         @OA\Schema(type="string",title="-4001",description="参数错误"),
+ *                         @OA\Schema(type="string",title="-4002",description="没有权限、没有访问扩展字段的权限"),
+ *                         @OA\Schema(type="string",title="-4003",description="资源已存在"),
+ *                         @OA\Schema(type="string",title="-4004",description="资源不存在"),
+ *                         @OA\Schema(type="string",title="-4005",description="资源被占用"),
+ *                         @OA\Schema(type="string",title="-4006",description="内容被禁用"),
+ *                         @OA\Schema(type="string",title="-4007",description="审核不通过"),
+ *                         @OA\Schema(type="string",title="-4008",description="忽略审核"),
+ *                         @OA\Schema(type="string",title="-4009",description="用户已被封禁"),
+ *                         @OA\Schema(type="string",title="-4010",description="资源已过期"),
+ *                         @OA\Schema(type="string",title="-4011",description="无效token"),
+ *                         @OA\Schema(type="string",title="-5001",description="网络错误"),
+ *                         @OA\Schema(type="string",title="-5002",description="内部系统错误"),
+ *                         @OA\Schema(type="string",title="-5003",description="数据库错误"),
+ *                         @OA\Schema(type="string",title="-5004",description="外部接口错误"),
+ *                         @OA\Schema(type="string",title="-5005",description="敏感词校验未通过"),
+ *                         @OA\Schema(type="string",title="-6001",description="未知错误"),
+ *                         @OA\Schema(type="string",title="-6002",description="调试错误"),
+ *                         @OA\Schema(type="string",title="-7001",description="二维码已失效，扫码超时"),
+ *                         @OA\Schema(type="string",title="-7002",description="扫码中"),
+ *                         @OA\Schema(type="string",title="7003",description="扫码失败，请重新扫码"),
+ *                         @OA\Schema(type="string",title="-7004",description="SESSION TOKEN过期"),
+ *                         @OA\Schema(type="string",title="-7005",description="未找到用户"),
+ *                         @OA\Schema(type="string",title="-7006",description="未找到微信用户"),
+ *                         @OA\Schema(type="string",title="-7007",description="扫码登录失败"),
+ *                         @OA\Schema(type="string",title="-7008",description="生成二维码参数类型错误"),
+ *                         @OA\Schema(type="string",title="-7009",description="全局token获取失败"),
+ *                         @OA\Schema(type="string",title="-7010",description="小程序二维码生成失败"),
+ *                         @OA\Schema(type="string",title="-7011",description="绑定失败"),
+ *                         @OA\Schema(type="string",title="-7012",description="生成scheme失败"),
+ *                         @OA\Schema(type="string",title="-7013",description="解密邀请码失败"),
+ *                         @OA\Schema(type="string",title="-7014",description="注册邀请码失败"),
+ *                         @OA\Schema(type="string",title="-7016",description="需要绑定或注册用户"),
+ *                         @OA\Schema(type="string",title="-7017",description="换绑失败"),
+ *                         @OA\Schema(type="string",title="-7031",description="手机号已被绑定"),
+ *                         @OA\Schema(type="string",title="-7032",description="站点关闭注册"),
+ *                         @OA\Schema(type="string",title="-7033",description="注册类型错误"),
+ *                         @OA\Schema(type="string",title="-7034",description="不可以使用相同的密码"),
+ *                         @OA\Schema(type="string",title="-7035",description="请验证旧的手机号"),
+ *                         @OA\Schema(type="string",title="-7036",description="请输入新的手机号"),
+ *                         @OA\Schema(type="string",title="-7037",description="账户已经被绑定"),
+ *                         @OA\Schema(type="string",title="-7038",description="账户微信为空"),
+ *                         @OA\Schema(type="string",title="-7039",description="绑定错误"),
+ *                         @OA\Schema(type="string",title="-7040",description="登录失败"),
+ *                         @OA\Schema(type="string",title="-7041",description="用户名或昵称长度超过15个字符"),
+ *                         @OA\Schema(type="string",title="-7042",description="用户名已经存在"),
+ *                         @OA\Schema(type="string",title="-7043",description="短信服务未开启"),
+ *                         @OA\Schema(type="string",title="-7044",description="绑定类型不存在"),
+ *                         @OA\Schema(type="string",title="-7045",description="授权信息已过期，请重新授权"),
+ *                         @OA\Schema(type="string",title="-7046",description="用户绑定类型不存在"),
+ *                         @OA\Schema(type="string",title="-7047",description="参数不为对象"),
+ *                         @OA\Schema(type="string",title="-7048",description="过渡开关未开启"),
+ *                         @OA\Schema(type="string",title="-7049",description="用户名不能为空"),
+ *                         @OA\Schema(type="string",title="-7050",description="用户登录态不能为空"),
+ *                         @OA\Schema(type="string",title="-7051",description="该网站暂不支持微信换绑功能"),
+ *                         @OA\Schema(type="string",title="-7052",description="用户id不允许为空"),
+ *                         @OA\Schema(type="string",title="-7053",description="用户手机号不允许为空"),
+ *                         @OA\Schema(type="string",title="-7054",description="真实姓名不能为空"),
+ *                         @OA\Schema(type="string",title="-7055",description="身份证不能为空"),
+ *                         @OA\Schema(type="string",title="-7056",description="实名认证不通过"),
+ *                         @OA\Schema(type="string",title="-7057",description="昵称未通过敏感词校验"),
+ *                         @OA\Schema(type="string",title="-7058",description="用户签名限制错误"),
+ *                         @OA\Schema(type="string",title="-7059",description="不能关注自己"),
+ *                         @OA\Schema(type="string",title="-7060",description="关注用户不存在"),
+ *                         @OA\Schema(type="string",title="-7061",description="已被对方拉黑"),
+ *                         @OA\Schema(type="string",title="-7062",description="用户名或密码错误"),
+ *                         @OA\Schema(type="string",title="-7063",description="不能换绑自己的手机号"),
+ *                         @OA\Schema(type="string",title="-7064",description="该网站暂不支持手机绑定功能"),
+ *                         @OA\Schema(type="string",title="-7065",description="该网站暂不支持手机换绑功能"),
+ *                         @OA\Schema(type="string",title="-7066",description="原有手机号验证码处理失败"),
+ *                         @OA\Schema(type="string",title="-7067",description="密码输入非法"),
+ *                         @OA\Schema(type="string",title="-7068",description="你已拉黑对方"),
+ *                         @OA\Schema(type="string",title="-7069",description="密码不允许包含空格"),
+ *                         @OA\Schema(type="string",title="-7070",description="用户需填写扩展字段"),
+ *                         @OA\Schema(type="string",title="-7071",description="用户审核中"),
+ *                         @OA\Schema(type="string",title="-7072",description="请付费加入站点"),
+ *                         @OA\Schema(type="string",title="-7073",description="用户名不允许包含空格"),
+ *                         @OA\Schema(type="string",title="-7074",description="当前注册人数过多，请稍后登录"),
+ *                         @OA\Schema(type="string",title="-7075",description="不允许上传敏感图"),
+ *                         @OA\Schema(type="string",title="-7076",description="分类不存在"),
+ *                         @OA\Schema(type="string",title="-7077",description="当前站点是付费模式"),
+ *                         @OA\Schema(type="string",title="-7078",description="手机号格式错误"),
+ *                         @OA\Schema(type="string",title="-7079",description="生成scheme参数类型错误"),
+ *                         @OA\Schema(type="string",title="-7080",description="生成绑定scheme参数类型错误"),
+ *                         @OA\Schema(type="string",title="-7081",description="请先配置小程序并开启"),
+ *                         @OA\Schema(type="string",title="-7082",description="下载资源已失效"),
+ *                         @OA\Schema(type="string",title="-7083",description="超过今天可下载附件的最大次数"),
+ *                         @OA\Schema(type="string",title="-7084",description="资源审核中"),
+ *                         @OA\Schema(type="string",title="-8000",description="需要绑定微信"),
+ *                         @OA\Schema(type="string",title="-8001",description="需要绑定手机"),
+ *                         @OA\Schema(type="string",title="-9001",description="短信未开启"),
+ *                         @OA\Schema(type="string",title="-9002",description="验证码错误"),
+ *                         @OA\Schema(type="string",title="-9003",description="验证码已过期"),
+ *                         @OA\Schema(type="string",title="-10000",description="支付失败")
+ *      }
+ * ),
  *     @OA\Property(property="Message",type="string",description="错误描述信息"),
  *     @OA\Property(property="Data",description="api数据集",type="object"),
  *     @OA\Property(property="RequestId",type="string",description="请求ID"),
@@ -117,7 +226,15 @@
  *     required=false,
  *     description="Bearer Token",
  *     @OA\Schema(type="string")
- * )
+ * ),
+ * @OA\Parameter(
+ *     parameter="bear_token_true",
+ *     name="Authorization",
+ *     in="header",
+ *     required=true,
+ *     description="Bearer Token",
+ *     @OA\Schema(type="string")
+ * ),
  * @OA\Parameter(
  *    parameter="threadlist_page",
  *    name="page",
@@ -353,39 +470,54 @@
  *        @OA\Property(property = "108", type = "string", description = "文件附件",ref="#/components/schemas/local_plugin_output"),
  *        @OA\Property(property = "109", type = "string", description = "投票",ref="#/components/schemas/local_plugin_output"),
  *     )
- * )
- * @OA\Schema(
- *     schema = "post_detail_output",
- *     title = "评论详情输出数据集合",
- *          @OA\Property(property = "id", type = "integer", description = "评论id"),
- *          @OA\Property(property = "userId", type = "integer", description = "评论作者id"),
- *          @OA\Property(property = "replyPostId", type = "integer", description = "最新回复id"),
- *          @OA\Property(property = "replyUserId", type = "integer", description = "最新回复作者id"),
- *          @OA\Property(property = "commentPostId", type = "integer", description = "评论回复id"),
- *          @OA\Property(property = "commentUserId", type = "integer", description = "评论回复作者id"),
- *          @OA\Property(property = "summaryText", type = "string", description = "评论摘要"),
- *          @OA\Property(property = "content", type = "string", description = "评论内容"),
- *          @OA\Property(property = "replyCount", type = "integer", description = "关联回复数"),
- *          @OA\Property(property = "likeCount", type = "integer", description = "点赞数"),
- *          @OA\Property(property = "createdAt", type = "string", description = "创建时间"),
- *          @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
- *          @OA\Property(property = "isApproved", type = "integer", description = "是否已审核(0审核中，1正常)", enum = {0, 1}),
- *          @OA\Property(property = "canApprove", type = "boolean", description = "是否可审核"),
- *          @OA\Property(property = "canDelete", type = "boolean", description = "是否可删除"),
- *          @OA\Property(property = "canHide", type = "boolean", description = "是否可删除"),
- *          @OA\Property(property = "contentAttachIds", type = "array", description = "内容附件id", @OA\Items()),
- *          @OA\Property(property = "parseContentHtml", type = "string", description = "评论内容-html"),
- *          @OA\Property(property = "ip", type = "string", description = "ip地址"),
- *          @OA\Property(property = "port", type = "integer", description = "端口"),
- *          @OA\Property(property = "isDeleted", type = "boolean", description = "是否已删除"),
- *          @OA\Property(property = "isFirst", type = "boolean", description = "是否首个回复"),
- *          @OA\Property(property = "isComment", type = "boolean", description = "是否是回复回帖的内容"),
- *          @OA\Property(property = "isLiked", type = "boolean", description = "是否已点赞"),
- *          @OA\Property(property = "user", type = "object", description = "评论作者信息", allOf = {@OA\Schema(ref = "#/components/schemas/user_detail_output")}),
- *          @OA\Property(property = "replyUser", type = "object", description = "回复作者信息", allOf = {@OA\Schema(ref = "#/components/schemas/user_detail_output")}),
- *          @OA\Property(property = "commentUser", type = "object", description = "评论回复作者信息", allOf = {@OA\Schema(ref = "#/components/schemas/user_detail_output")}),
- *          @OA\Property(property = "attachments", type = "array", description = "评论图片信息", @OA\Items(ref = "#/components/schemas/attachment_detail_output"))
- * )
+ * ),
+ *
+ * @OA\Parameter(
+ *     parameter="page",
+ *     name="page",
+ *     in="query",
+ *     required=false,
+ *     description="当前页",
+ *     @OA\Schema(
+ *          type="integer",
+ *          default=1
+ *      )
+ * ),
+ *
+ * @OA\Parameter(
+ *     parameter="perPage",
+ *     name="perPage",
+ *     in="query",
+ *     required=false,
+ *     description="当前页",
+ *     @OA\Schema(
+ *          type="integer",
+ *          default=20
+ *      )
+ * ),
+ *
+ * @OA\Parameter(
+ *     parameter="filter_userId",
+ *     name="filter[userId]",
+ *     in="query",
+ *     required=false,
+ *     description = "筛选用户id",
+ *     @OA\Schema(
+ *          type="integer", default=1
+ *      )
+ * ),
+ *
+ * @OA\Parameter(
+ *     parameter="filter_type",
+ *     name="filter[type]",
+ *     in="query",
+ *     required=false,
+ *     description="筛选类型",
+ *     @OA\Schema(
+ *          type="integer", default = 1
+ *      )
+ * ),
+ *
  * @OA\Schema(
  *     schema = "attachment_detail_output",
  *     title = "附件详情输出数据集合",
@@ -536,7 +668,7 @@
  *
  * @OA\Schema(
  *     schema="dzq_user_model",
- *     title="用户model",
+ *     title="用户表数据",
  *     @OA\Property(property = "id", type = "integer", description = "用户id"),
  *     @OA\Property(property = "username", type = "string", description = "用户名"),
  *     @OA\Property(property = "password", type = "string", description = "密码"),
@@ -571,7 +703,7 @@
  *
  * @OA\Schema(
  *     schema="dzq_wechat_user_model",
- *     title="微信用户model",
+ *     title="微信用户表数据",
  *     @OA\Property(property = "id", type = "integer", description = "自增长id"),
  *     @OA\Property(property = "userId", type = "integer", description = "用户id"),
  *     @OA\Property(property = "mpOpenid", type = "string", description = "公众号openid"),
@@ -588,4 +720,72 @@
  *     @OA\Property(property = "createdAt", type = "string", description = "创建时间"),
  *     @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
  * )
+ *
+ * @OA\Schema(
+ *     schema="dzq_post_detail",
+ *     title="评论详情",
+ *     @OA\Property(property = "canDelete", type = "boolean", description="能否删除"),
+ *     @OA\Property(property = "canHide", type = "boolean", description="能否删除"),
+ *     @OA\Property(property = "canLike", type = "boolean", description="能否点赞"),
+ *     @OA\Property(property = "commentPostId", type = "integer", description="被评论id"),
+ *     @OA\Property(property = "commentUserId", type = "integer", description="被评论用户id"),
+ *     @OA\Property(property = "content", type = "string", description="评论内容"),
+ *     @OA\Property(property = "createdAt", type = "string", description="评论时间"),
+ *     @OA\Property(property = "id", type = "integer", description="评论id"),
+ *     @OA\Property(property = "images", type = "array", description="图片url", @OA\Items(type="string")),
+ *     @OA\Property(property = "isApproved", type = "integer", description="是否审核通过"),
+ *     @OA\Property(property = "isComment", type = "boolean", description="是否是二级评论"),
+ *     @OA\Property(property = "isDeleted", type = "boolean", description="是否被删除"),
+ *     @OA\Property(property = "isFirst", type = "boolean", description="是否是帖子内容"),
+ *     @OA\Property(property = "isLiked", type = "boolean", description="是否点赞"),
+ *     @OA\Property(property = "likeCount", type = "integer", description="点赞数量"),
+ *     @OA\Property(property = "likeState", type = "object", description="关联点赞详情",
+ *          @OA\Property(property = "post_id", type="integer", description="点赞评论id"),
+ *          @OA\Property(property = "user_id", type="integer", description="点赞用户id")
+ *     ),
+ *     @OA\Property(property = "likedAt", type = "string", description="点赞时间"),
+ *     @OA\Property(property = "redPacketAmount", type = "number", description="红包金额"),
+ *     @OA\Property(property = "replyCount", type = "integer", description="回复数量"),
+ *     @OA\Property(property = "replyPostId", type = "integer", description="回复评论id"),
+ *     @OA\Property(property = "replyUserId", type = "integer", description="回复用户id"),
+ *     @OA\Property(property = "rewards", type = "number", description="获得悬赏金额"),
+ *     @OA\Property(property = "summaryText", type = "string", description="评论简介"),
+ *     @OA\Property(property = "threadId", type = "integer", description="帖子id"),
+ *     @OA\Property(property = "user", type = "object", description="发评论用户信息",
+ *          @OA\Property(property="avatar", type="string", description="用户头像url"),
+ *          @OA\Property(property="id", type="integer", description="用户id"),
+ *          @OA\Property(property="isReal", type="boolean", description="是否实名"),
+ *          @OA\Property(property="nickname", type="string", description="用户昵称"),
+ *          @OA\Property(property="username", type="string", description="用户名称"),
+ *     ),
+ *     @OA\Property(property = "userId", type = "integer", description="发帖用户id"),
+ * )
+ *
+ * @OA\Parameter(
+ *    parameter="filter_changeType",
+ *    name="filter[changeType]",
+ *    in="query",
+ *    required=false,
+ *    description = "收入类型",
+ *    @OA\Schema(type="array",@OA\Items(type="integer"))
+ * )
+ *
+ * @OA\Parameter(
+ *    parameter="filter_cashStatus",
+ *    name="filter[cashStatus]",
+ *    in="query",
+ *    required=false,
+ *    description = "提现状态",
+ *    @OA\Schema(type="array",@OA\Items(type="integer"))
+ * )
+ *
+ * @OA\Schema(
+ *     schema="deleted_user_detail",
+ *     title="删除者信息",
+ *     @OA\Property(property = "deletedUserId", type = "integer", description = "删除者id"),
+ *     @OA\Property(property = "deletedNickname", type = "string", description = "删除者昵称"),
+ *     @OA\Property(property = "deletedAt", type = "string", description = "删除时间")
+ * )
+ *
+ *
  */
