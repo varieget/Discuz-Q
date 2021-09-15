@@ -19,6 +19,7 @@
 namespace App\Console\Commands;
 
 use Discuz\Console\AbstractCommand;
+use Discuz\Foundation\Application;
 
 class AddIssueAtColumeCommand extends AbstractCommand
 {
@@ -26,10 +27,30 @@ class AddIssueAtColumeCommand extends AbstractCommand
 
     protected $description = '新增字段issue_at，设置初始化值为created_at';
 
+    protected $table_threads;
+
+    protected $app;
+
+    protected $db;
+
+    protected $db_pre;
+
+    public function __construct(Application $app)
+    {
+        parent::__construct();
+        $this->app = $app;
+        $this->db = app('db');
+        $database = $this->app->config('database');
+        $this->db_pre = $database['prefix'];
+        //该脚本会操作到的相关表
+        $this->table_threads = $this->db_pre.'threads';
+    }
+
     public function handle()
     {
+        $sql='update '.$this->table_threads.' set issue_at=created_at';
         $this->info('初始化issue_at任务开始: '.date('Y-m-d H:i:s'));
-        app('db')->update('update threads t set t.issue_at=t.created_at');
+        app('db')->update($sql);
         $this->info('初始化issue_at任务结束: '.date('Y-m-d H:i:s'));
     }
 }
