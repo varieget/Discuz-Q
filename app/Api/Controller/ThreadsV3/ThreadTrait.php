@@ -250,7 +250,7 @@ trait ThreadTrait
         return [
             'canEdit' => $userRepo->canEditThread($loginUser, $thread),
             'canDelete' => $userRepo->canHideThread($loginUser, $thread),
-            'canEssence' => $userRepo->canEssenceThread($loginUser, $thread['category_id']),
+            'canEssence' => $userRepo->canEssenceThread($loginUser, $thread),
             'canStick' => $userRepo->canStickThread($loginUser),
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
