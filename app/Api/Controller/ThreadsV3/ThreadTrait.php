@@ -790,23 +790,21 @@ trait ThreadTrait
                 $xml_attachments = $x_attachments->keyBy('id');
                 $xml_attachments_ids = $xml_attachments->pluck('id')->all();
             }
-            if (!empty($xml_attachments_ids)) {
-                $xml = preg_replace_callback(
-                    '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
-                    function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
-                        if (!empty($m)) {
-                            $id = trim($m[3], '"');
-                            $isset_attachment_ids[] = $id;
-                            $replace_url = $attachments[$id];
-                            if(!$canViewTom && in_array($id, $xml_attachments_ids)){
-                                $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
-                            }
-                            return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
+            $xml = preg_replace_callback(
+                '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
+                function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
+                    if (!empty($m)) {
+                        $id = trim($m[3], '"');
+                        $isset_attachment_ids[] = $id;
+                        $replace_url = $attachments[$id];
+                        if(!$canViewTom && in_array($id, $xml_attachments_ids)){
+                            $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
                         }
-                    },
-                    $xml
-                );
-            }
+                        return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
+                    }
+                },
+                $xml
+            );
         }
 
         //针对图文混排的情况，这里要去掉外部图片展示
