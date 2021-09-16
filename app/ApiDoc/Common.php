@@ -809,5 +809,52 @@
  *      @OA\Property(property="isError",type="integer",description = "模板是否配置错误0不是1是"),
  *      @OA\Property(property="errorMsg",type="string",description = "错误信息"),
  * )
- *
+ * @OA\Schema(
+ *     schema="group_detail",
+ *     title="用户组信息",
+ *     @OA\Property(property = "pid", type = "integer", description = "用户组id"),
+ *     @OA\Property(property = "groupName", type = "string", description = "用户组名称"),
+ *     @OA\Property(property = "groupIcon", type = "string", description = "")
+ * )
+ * @OA\Schema(
+ *     schema="report_detail",
+ *     title="举报信息",
+ *     @OA\Property(property = "id", type = "integer", description = "举报id"),
+ *     @OA\Property(property = "userId", type = "integer", description = "用户id"),
+ *     @OA\Property(property = "threadId", type = "integer", description = "主题id"),
+ *     @OA\Property(property = "postId", type = "integer", description = "回复id"),
+ *     @OA\Property(property = "type", type = "integer", description = "举报类型:0个人主页 1主题 2评论/回复"),
+ *     @OA\Property(property = "reason", type = "string", description = "举报理由"),
+ *     @OA\Property(property = "status", type = "integer", description = "举报状态:0未处理 1已处理"),
+ *     @OA\Property(property = "createdAt", type = "string", description = "创建时间"),
+ *     @OA\Property(property = "updatedAt", type = "string", description = "更新时间")
+ * )
+ * @OA\Schema(
+ *     schema="site_info",
+ *     title="站点信息项",
+ *     @OA\Property(property = "version", type = "string", description = "版本号"),
+ *     @OA\Property(property = "phpVersion", type = "string", description = "PHP版本"),
+ *     @OA\Property(property = "serverSoftware", type = "string", description = "nginx版本"),
+ *     @OA\Property(property = "serverOs", type = "string", description = "windows版本"),
+ *     @OA\Property(property = "db", type = "string", description = "mysql版本"),
+ *     @OA\Property(property = "databaseConnectionName", type = "string", description = "数据库类型"),
+ *     @OA\Property(property = "sslInstalled", type = "boolean", description = "是否安装：否false、 是true"),
+ *     @OA\Property(property = "cacheDriver", type = "string", description = "文件"),
+ *     @OA\Property(property = "uploadSize", type = "string", description = "上传文件大小"),
+ *     @OA\Property(property = "dbSize", type = "string", description = "数据库大小"),
+ *     @OA\Property(property = "timezone", type = "string", description = "时区"),
+ *     @OA\Property(property = "debugMode", type = "boolean", description = "是否开启debug"),
+ *     @OA\Property(property = "storageDirWritable", type = "boolean", description = "是否开启写入权限"),
+ *     @OA\Property(property = "cacheDirWritable", type = "boolean", description = "是否开启查看权限"),
+ *     @OA\Property(property = "appSize", type = "string", description = "app大小"),
+ *     @OA\Property(property = "packages", type = "array", description = "composer包",@OA\Items())
+ * )
+ * @OA\Schema(
+ *     schema="unapproved_info",
+ *     title="审核项",
+ *     @OA\Property(property = "unapprovedUsers", type = "integer", description = "未审核的用户数"),
+ *     @OA\Property(property = "unapprovedThreads", type = "integer", description = "未审核的主题数"),
+ *     @OA\Property(property = "unapprovedPosts", type = "integer", description = "未审核的主题数"),
+ *     @OA\Property(property = "unapprovedMoneys", type = "integer", description = "未审核的主题数")
+ * )
  */
