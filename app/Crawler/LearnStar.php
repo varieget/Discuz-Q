@@ -258,7 +258,7 @@ class LearnStar
         {
             $talk = $oneTopic->talk;
             $owner = $talk->owner;
-            $author["nickname"] = str_replace(" ","", $owner->name); ;;
+            $author["nickname"] = str_replace(" ","", $owner->name);
             $author["avatar"] = $owner->avatar_url;
 
             //文字
