@@ -30,13 +30,6 @@ use Plugin\Activity\Model\ThreadActivity;
 class ActivityBusi extends TomBaseBusi
 {
 
-    private $now;
-    public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body, $canViewTom)
-    {
-        $this->now = date('Y-m-d H:i:s');
-        parent::__construct($user, $threadId, $postId, $tomId, $key, $operation, $body, $canViewTom);
-    }
-
     public function checkPermission()
     {
 
@@ -123,7 +116,7 @@ class ActivityBusi extends TomBaseBusi
                 'content' => 'required|max:200',
                 'activityStartTime' => 'required|date',
                 'activityEndTime' => 'required|date|after_or_equal:' . $this->getParams('activityStartTime'),
-                'registerStartTime' => 'date|after_or_equal:' . $this->now,
+                'registerStartTime' => 'date',
                 'registerEndTime' => 'date|after_or_equal:' . $this->getParams('registerStartTime'),
                 'totalNumber' => 'required|integer|min:0',
             ]
@@ -136,7 +129,7 @@ class ActivityBusi extends TomBaseBusi
         $activityEndTime = $this->getParams('activityEndTime');
         $registerStartTime = $this->getParams('registerStartTime');
         $registerEndTime = $this->getParams('registerEndTime');
-        empty($registerStartTime) && $registerStartTime = $this->now;
+        empty($registerStartTime) && $registerStartTime = date('Y-m-d H:i:s');
         empty($registerEndTime) && $registerEndTime = $activityStartTime;
         $data = [
             'title' => $this->getParams('title'),
