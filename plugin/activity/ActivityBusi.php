@@ -117,6 +117,7 @@ class ActivityBusi extends TomBaseBusi
             $this->dzqValidate($position, ['address' => 'string|max:100', 'location' => 'string|max:200', 'longitude' => 'numeric', 'latitude' => 'numeric']);
         }
 
+
         $this->dzqValidate(
             $this->body,
             [
