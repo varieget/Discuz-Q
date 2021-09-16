@@ -86,7 +86,7 @@ abstract class TomBaseBusi
     }
 
     /**
-     * @desc输出结果写入到thread_tom表的value值
+     * @desc 输出结果写入到thread_tom表的value值
      * @param $array
      * @return array
      */
