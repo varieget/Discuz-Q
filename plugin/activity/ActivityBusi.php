@@ -30,6 +30,13 @@ use Plugin\Activity\Model\ThreadActivity;
 class ActivityBusi extends TomBaseBusi
 {
 
+    private $now;
+    public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body, $canViewTom)
+    {
+        $this->now = date('Y-m-d H:i:s');
+        parent::__construct($user, $threadId, $postId, $tomId, $key, $operation, $body, $canViewTom);
+    }
+
     public function checkPermission()
     {
 
@@ -69,7 +76,7 @@ class ActivityBusi extends TomBaseBusi
     {
         $this->activityValidate();
         $activityId = $this->getParams('activityId');
-        if(empty($activityId))$this->outPut(ResponseCode::INVALID_PARAMETER,'插件参数缺少字段 activityId ');
+        if (empty($activityId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '插件参数缺少字段 activityId ');
         $activity = ThreadActivity::query()->where([
             'id' => $activityId,
             'status' => DzqConst::BOOL_YES
@@ -107,18 +114,18 @@ class ActivityBusi extends TomBaseBusi
         empty($threadId) && $this->outPut(ResponseCode::INVALID_PARAMETER, '帖子id无效');
         $position = $this->getParams('position');
         if (!empty($position)) {
-            $this->dzqValidate($position, ['address' => 'required', 'location' => 'required', 'longitude' => 'required', 'latitude' => 'required']);
+            $this->dzqValidate($position, ['address' => 'string|max:100', 'location' => 'string|max:200', 'longitude' => 'numeric', 'latitude' => 'numeric']);
         }
-        $now = date('Y-m-d H:i:s');
+
         $this->dzqValidate(
             $this->body,
             [
                 'title' => 'required|max:50',
                 'content' => 'required|max:200',
-                'activityStartTime' => 'required|date|after:' . $now,
-                'activityEndTime' => 'required|date|after:' . $this->getParams('activityStartTime'),
-                'registerStartTime' => 'required|date|after:' . $now,
-                'registerEndTime' => 'required|date|after:' . $this->getParams('registerStartTime'),
+                'activityStartTime' => 'required|date|after_or_equal:' . $this->now,
+                'activityEndTime' => 'required|date|after_or_equal:' . $this->getParams('activityStartTime'),
+                'registerStartTime' => 'date|after_or_equal:' . $this->now,
+                'registerEndTime' => 'date|after_or_equal:' . $this->getParams('registerStartTime'),
                 'totalNumber' => 'required|integer|min:0',
             ]
         );
@@ -126,13 +133,19 @@ class ActivityBusi extends TomBaseBusi
 
     private function getActivityRawAttr()
     {
+        $activityStartTime = $this->getParams('activityStartTime');
+        $activityEndTime = $this->getParams('activityEndTime');
+        $registerStartTime = $this->getParams('registerStartTime');
+        $registerEndTime = $this->getParams('registerEndTime');
+        empty($registerStartTime) && $registerStartTime = $this->now;
+        empty($registerEndTime) && $registerEndTime = $activityStartTime;
         $data = [
             'title' => $this->getParams('title'),
             'content' => $this->getParams('content'),
-            'activity_start_time' => $this->getParams('activityStartTime'),
-            'activity_end_time' => $this->getParams('activityEndTime'),
-            'register_start_time' => $this->getParams('registerStartTime'),
-            'register_end_time' => $this->getParams('registerEndTime'),
+            'activity_start_time' => $activityStartTime,
+            'activity_end_time' => $activityEndTime,
+            'register_start_time' => $registerStartTime,
+            'register_end_time' => $registerEndTime,
             'total_number' => $this->getParams('totalNumber')
         ];
         $position = $this->getParams('position');
@@ -146,7 +159,9 @@ class ActivityBusi extends TomBaseBusi
         }
         return $data;
     }
-    private function getActivityDetail($activity){
+
+    private function getActivityDetail($activity)
+    {
         $activityId = $this->getParams('activityId');
         $activityUser = ActivityUser::query()->where([
             'activity_id' => $activityId,

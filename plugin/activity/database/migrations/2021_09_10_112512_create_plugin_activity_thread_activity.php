@@ -5,7 +5,7 @@ use Discuz\Base\DzqPluginMigration;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
 
-class CreatePluginActivityThreadActivity extends DzqPluginMigration
+class CreatePluginActivityThreadActivity1 extends DzqPluginMigration
 {
     /**
      * Run the migrations.
@@ -14,7 +14,7 @@ class CreatePluginActivityThreadActivity extends DzqPluginMigration
      */
     public function up()
     {
-        $this->schema()->create('plugin_activity_thread_activity', function (Blueprint $table) {
+        $this->schema()->create('plugin_activity_thread_activity123', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true)->comment('自增id');
             $table->unsignedBigInteger('user_id')->comment('用户id');
             $table->unsignedBigInteger('thread_id')->comment('帖子id');
@@ -22,8 +22,8 @@ class CreatePluginActivityThreadActivity extends DzqPluginMigration
             $table->text('content')->comment('活动内容');
             $table->dateTime('activity_start_time')->comment('活动开始时间');
             $table->dateTime('activity_end_time')->comment('活动结束时间');
-            $table->dateTime('register_start_time')->comment('报名开始时间');
-            $table->dateTime('register_end_time')->comment('报名结束时间');
+            $table->dateTime('register_start_time')->nullable(true)->comment('报名开始时间');
+            $table->dateTime('register_end_time')->nullable(true)->comment('报名结束时间');
             $table->integer('total_number')->default(0)->comment('报名人数上限 0:不限制');
             $table->string('address', 200)->nullable(false)->default('')->comment('地址信息');
             $table->string('location', 200)->nullable(true)->default('')->comment('位置信息');

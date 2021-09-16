@@ -31,7 +31,7 @@
  *         @OA\Property(property = "isRegistered", type = "boolean", description = "已经报名登记"),
  *         @OA\Property(property = "isExpired", type = "boolean", description = "活动已过期"),
  *         @OA\Property(property = "isMemberFull", type = "boolean", description = "人数已满"),
- *         @OA\Property(property = "position", type = "object", description = "位置信息",
+ *         @OA\Property(property = "position", type = "object", description = "位置信息【可以不传】",
  *            @OA\Property(property = "address", type = "string", description = "地址信息"),
  *            @OA\Property(property = "location", type = "string", description = "位置信息"),
  *            @OA\Property(property = "longitude", type = "string", description = "经度"),
