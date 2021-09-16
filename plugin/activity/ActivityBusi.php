@@ -58,7 +58,6 @@ class ActivityBusi extends TomBaseBusi
         ];
         $activity->setRawAttributes($rawAttr);
         if ($activity->save()) {
-
             return $this->jsonReturn(['activityId' => $activity['id']]);
         } else {
             return false;
@@ -112,13 +111,13 @@ class ActivityBusi extends TomBaseBusi
         $this->dzqValidate(
             $this->body,
             [
-                'title' => 'required|max:50',
-                'content' => 'required|max:200',
+                'title' => 'string|max:50',
+                'content' => 'string|max:200',
                 'activityStartTime' => 'required|date',
                 'activityEndTime' => 'required|date|after_or_equal:' . $this->getParams('activityStartTime'),
                 'registerStartTime' => 'date',
                 'registerEndTime' => 'date|after_or_equal:' . $this->getParams('registerStartTime'),
-                'totalNumber' => 'required|integer|min:0',
+                'totalNumber' => 'integer|min:0',
             ]
         );
     }
@@ -131,6 +130,8 @@ class ActivityBusi extends TomBaseBusi
         $registerEndTime = $this->getParams('registerEndTime');
         empty($registerStartTime) && $registerStartTime = date('Y-m-d H:i:s');
         empty($registerEndTime) && $registerEndTime = $activityStartTime;
+        $totalNumber = $this->getParams('totalNumber');
+        empty($totalNumber) && $totalNumber = 0;
         $data = [
             'title' => $this->getParams('title'),
             'content' => $this->getParams('content'),
@@ -138,7 +139,7 @@ class ActivityBusi extends TomBaseBusi
             'activity_end_time' => $activityEndTime,
             'register_start_time' => $registerStartTime,
             'register_end_time' => $registerEndTime,
-            'total_number' => $this->getParams('totalNumber')
+            'total_number' => $totalNumber
         ];
         $position = $this->getParams('position');
         if (!empty($position)) {

@@ -51,6 +51,8 @@ abstract class TomBaseBusi
 
     public $canViewTom = true;
 
+    public $plugin = null;
+
     public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body, $canViewTom)
     {
         $this->app = app();
@@ -90,6 +92,8 @@ abstract class TomBaseBusi
      */
     public function jsonReturn($array)
     {
+        $plugin = $this->body['_plugin'] ?? null;
+        $array['_plugin'] = $plugin;
         $ret = [
             'tomId' => $this->tomId,
             'operation' => $this->operation,
