@@ -116,14 +116,12 @@ class ActivityBusi extends TomBaseBusi
         if (!empty($position)) {
             $this->dzqValidate($position, ['address' => 'string|max:100', 'location' => 'string|max:200', 'longitude' => 'numeric', 'latitude' => 'numeric']);
         }
-
-
         $this->dzqValidate(
             $this->body,
             [
                 'title' => 'required|max:50',
                 'content' => 'required|max:200',
-                'activityStartTime' => 'required|date|after_or_equal:' . $this->now,
+                'activityStartTime' => 'required|date',
                 'activityEndTime' => 'required|date|after_or_equal:' . $this->getParams('activityStartTime'),
                 'registerStartTime' => 'date|after_or_equal:' . $this->now,
                 'registerEndTime' => 'date|after_or_equal:' . $this->getParams('registerStartTime'),
