@@ -76,9 +76,14 @@ class Group extends DzqModel
     const MEMBER_ID = 10;
 
     /**
-     * The ID of preset groups
+     * The ID of preset groups : admin 、待付费、游客、普通会员
      */
-    const PRESET_GROUPS = [1, 5, 6, 7, 10];
+    const PRESET_GROUPS = [1, 6, 7, 10];
+
+    /**
+     * 付费站点禁止被购买用户组：admin、待付费、游客
+     */
+    const FORBIDDEN_PAY_GROUPS = [1, 6, 7];
 
     /**
      * The group need paid
