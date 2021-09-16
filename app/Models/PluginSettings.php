@@ -17,15 +17,16 @@
 
 namespace App\Models;
 
-
 use Discuz\Base\DzqModel;
 
 class PluginSettings extends DzqModel
 {
     protected $table = 'plugin_settings';
 
-    public static function deleteSetting($appId)
+    public static function getSetting($appId)
     {
-        return self::query()->where('app_id', $appId)->delete();
+        $setting = PluginSettings::query()->where(['app_id' => $appId])->first();
+        if (empty($setting)) return [];
+        return json_decode($setting['value'], true);
     }
 }

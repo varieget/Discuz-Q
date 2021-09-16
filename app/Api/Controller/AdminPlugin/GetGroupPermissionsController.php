@@ -18,6 +18,7 @@
 namespace App\Api\Controller\AdminPlugin;
 
 
+use App\Common\PermissionKey;
 use App\Common\Utils;
 use App\Models\PluginGroupPermission;
 use Discuz\Base\DzqAdminController;
@@ -27,6 +28,7 @@ class GetGroupPermissionsController extends DzqAdminController
     public function main()
     {
         $groupId = $this->inPut('groupId');
+        $this->dzqValidate(['groupId' => $groupId], ['groupId' => 'required|integer']);
         $pluginList = Utils::getPluginList();
         $permissions = PluginGroupPermission::query()
             ->where('group_id', $groupId)->get()->keyBy('app_id')->toArray();
@@ -34,9 +36,12 @@ class GetGroupPermissionsController extends DzqAdminController
         foreach ($pluginList as $appId => $appConfig) {
             $ret[] = [
                 'appId' => $appId,
+                'authority' => [
+                    'title' => '插入' . $appConfig['name_cn'],
+                    'permission' => PermissionKey::PLUGIN_INSERT_PERMISSION,
+                    'canInsert' => isset($permissions[$appId]),
+                ],
                 'name' => $appConfig['name_cn'],
-                'authTitle' => '插入' . $appConfig['name_cn'],
-                'canInsert' => isset($permissions[$appId]),
                 'description' => $appConfig['description']
             ];
         }
