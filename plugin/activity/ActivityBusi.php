@@ -145,8 +145,8 @@ class ActivityBusi extends TomBaseBusi
             $data += [
                 'address' => $position['address'],
                 'location' => $position['location'],
-                'longitude' => $position['longitude'],
-                'latitude' => $position['latitude']
+                'longitude' => $position['longitude'] ?: 0,
+                'latitude' => $position['latitude'] ?: 0
             ];
         }
         return $data;

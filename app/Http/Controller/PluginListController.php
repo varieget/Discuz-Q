@@ -17,7 +17,7 @@
 
 namespace App\Http\Controller;
 
-
+use App\Common\Utils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -30,12 +30,13 @@ class PluginListController implements RequestHandlerInterface
         $pluginList = \App\Common\Utils::getPluginList();
         foreach ($pluginList as &$item) {
             $appId = $item['app_id'];
-            unset($item['plugin_'.$appId]);
+            $appName = $item['name_en'];
+            unset($item['plugin_' . $appId]);
             unset($item['busi']);
             unset($item['routes']);
             //前端插件入口
-            $item['plugin_trigger'] = "http://v3.go/plugin/{$appId}/index.js";
+            $item['plugin_trigger'] = Utils::getDzqDomain() . "/plugin/{$appName}/index.js";
         }
-        \Discuz\Common\Utils::outPut(0,'',array_values($pluginList));
+        \Discuz\Common\Utils::outPut(0, '', array_values($pluginList));
     }
 }

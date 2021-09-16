@@ -36,6 +36,5 @@ class PluginFileController implements RequestHandlerInterface
         $plugin = $config['plugin_' . $config['app_id']];
         $filePath = $plugin['view'] . $query['file_path'];
         exit(file_get_contents($filePath));
-        return DiscuzResponseFactory::FileResponse($filePath);
     }
 }

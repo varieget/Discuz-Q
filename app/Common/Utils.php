@@ -236,5 +236,4 @@ class Utils
         DzqCache::set(CacheKey::PLUGIN_LOCAL_CONFIG, $plugins, 5 * 60);
         return $plugins;
     }
-
 }
