@@ -191,7 +191,7 @@ class ActivityBusi extends TomBaseBusi
                 'latitude' => $activity['latitude']
             ],
             'isRegistered' => $isRegistered,
-            'isExpired' => time() > strtotime($activity['register_start_time']),
+            'isExpired' => time() > strtotime($activity['register_end_time']),
             'isMemberFull' => $activity['total_number'] == 0 ? false : $activity['total_number'] < $currentNumber,
             'createdAt' => date('Y-m-d H:i:s', strtotime($activity['created_at'])),
             'updatedAt' => date('Y-m-d H:i:s', strtotime($activity['updated_at'])),

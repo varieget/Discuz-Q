@@ -15,17 +15,15 @@
  * limitations under the License.
  */
 
-namespace App\Models;
+namespace App\Api\Controller\AdminPlugin;
 
 
-use Discuz\Base\DzqModel;
+use Discuz\Base\DzqAdminController;
 
-class PluginSettings extends DzqModel
+class GetSettingController extends DzqAdminController
 {
-    protected $table = 'plugin_settings';
-
-    public static function deleteSetting($appId)
+    public function main()
     {
-        return self::query()->where('app_id', $appId)->delete();
+        // TODO: Implement main() method.
     }
 }

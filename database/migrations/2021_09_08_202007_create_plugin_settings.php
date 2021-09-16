@@ -21,8 +21,9 @@ class CreatePluginSettings extends Migration
             $table->text('value')->comment('JSON存储配置信息');
             $table->timestamp('created_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
-            $table->index('app_id');
-            $table->index('app_name');
+            $table->unique('app_id');
+            $table->unique('app_name');
+            $table->index(['app_id','type']);
         });
     }
 
