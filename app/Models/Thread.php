@@ -21,7 +21,6 @@ namespace App\Models;
 use App\Common\Utils;
 use App\Events\Thread\Hidden;
 use App\Events\Thread\Restored;
-use App\Modules\ThreadTom\TomConfig;
 use Carbon\Carbon;
 use DateTime;
 use Discuz\Auth\Anonymous;
@@ -948,14 +947,5 @@ class Thread extends DzqModel
             ->first();
         $toArray && $ret = $ret->toArray();
         return $ret;
-    }
-
-    public static function getThreadTomInfoById($threadId){
-         return self::query()->from('threads as th')
-             ->whereNull('th.deleted_at')
-             ->where('th.id', $threadId)
-             ->leftJoin('thread_tom as tt','tt.thread_id','=','th.id')
-             ->where(['tt.tom_type' => TomConfig::TOM_DOC , 'tt.status' => ThreadTom::STATUS_ACTIVE])
-             ->first(['th.id','th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'th.is_draft', 'th.is_approved', 'tt.value']);
     }
 }

@@ -22,174 +22,123 @@ use App\Common\ResponseCode;
 use App\Common\Utils;
 use App\Models\Attachment;
 use App\Models\AttachmentShare;
-use App\Models\Thread;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Filesystem\Factory as Filesystem;
-use Illuminate\Contracts\Routing\UrlGenerator;
 
 class DownloadAttachmentController extends DzqController
 {
-    use DownloadAuthTrait;
 
     protected $filesystem;
 
     protected $settings;
 
-    protected $url;
-
-    protected $thread;
-
-    protected $attachment;
-
-    public function __construct(Filesystem $filesystem, SettingsRepository $settings,UrlGenerator $url)
+    public function __construct(Filesystem $filesystem, SettingsRepository $settings)
     {
         $this->filesystem = $filesystem;
         $this->settings = $settings;
-        $this->url = $url;
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $threadId =$this->inPut('threadId');
-        $attachmentsId = $this->inPut('attachmentsId');
-        $user = $this->user;
-
-        $thread = Thread::getThreadTomInfoById($threadId);
-        if (!$thread) {
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-        }
-        $attachment = Attachment::getOneAttachment($attachmentsId);
-        if(empty($attachment)){
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
 
-        $this->checkDownloadAttachment($thread,$user,$userRepo);
-
-        if (!$userRepo->canDownloadThreadAttachment($this->user, $attachment->user_id)) {
-            $this->outPut(ResponseCode::UNAUTHORIZED, '无权限下载该附件');
+        $attachment = Attachment::query()->where('id', (int) $this->inPut('attachmentsId'))->first();
+        if (!empty($attachment)) {
+            if (!$userRepo->canDownloadThreadAttachment($this->user, $attachment->user_id)) {
+                $this->outPut(ResponseCode::UNAUTHORIZED, '无权限下载该附件');
+            }
         }
-        $this->thread = $thread;
+
         return true;
     }
 
     public function main()
     {
         $user = $this->user;
-
         $data = [
-            'threadId' => $this->inPut('threadId'),
+            'sign' => $this->inPut('sign'),
             'attachmentsId' => $this->inPut('attachmentsId'),
-            'sign' => $this->inPut('sign')
+            'isCode' => $this->inPut('isCode')
         ];
-        $this->dzqValidate($data,[
-            'threadId' => 'required|int',
-            'attachmentsId' => 'required|int'
+        $this->dzqValidate($data, [
+            'sign' => 'required',
+            'attachmentsId' => 'required|int',
         ]);
-
-        if (!($user->isGuest())) {
+        $attachment = Attachment::query()->where('id', $data['attachmentsId'])->first();
+        $share = AttachmentShare::query()
+            ->where(['sign' => $data['sign'], 'attachments_id' => $data['attachmentsId']])
+            ->first();
+        if(isset($data['isCode']) && !empty($data['isCode'])){
+            if (empty($attachment)) {
+                app('log')->info("requestId：{$this->requestId},附件不存在");
+                return $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+            }
+            $share = AttachmentShare::query()
+                ->where(['sign' => $data['sign'], 'attachments_id' => $data['attachmentsId']])
+                ->first();
+            if (empty($share)) {
+                app('log')->info("requestId：{$this->requestId},分享记录不存在");
+                return $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+            }
+            if(strtotime($share->expired_at) < time()){
+                app('log')->info("requestId：{$this->requestId},下载资源已失效");
+                return $this->outPut(ResponseCode::DOWNLOAD_RESOURCE_IS_INVALID);
+            }
             //限制下载次数
             $downloadNum = (int)$this->settings->get('support_max_download_num', 'default');
             $todayTime = Utils::getTodayTime();
-
-            $share = AttachmentShare::query()
+            $attachmentDownloaded = AttachmentShare::query()
                 ->where('user_id',$user->id)
-                ->whereBetween('updated_at', array($todayTime['begin'], $todayTime['end']));
-            //当天已下载次数
-            $dayLimitCount = (int)$share->sum('is_downloaded');
-            //当天附件是否已下载
-            $share = $share->where('attachments_id',$data['attachmentsId'])
-                ->where('is_downloaded','=',1);
-            //针对当天没下载过当前附件的用户进行限制
-            if($downloadNum > 0 && !($share->exists())){
-                if($dayLimitCount >= $downloadNum){
+                ->where('attachments_id',$data['attachmentsId'])
+                ->where('download_count','>=',1)
+                ->whereBetween('updated_at', array($todayTime['begin'], $todayTime['end']))->get()->toArray();
+            //针对用户当天没下载过的附件进行限制判断
+            if($downloadNum > 0 && !$attachmentDownloaded){
+                $dayLimitCount = AttachmentShare::query()
+                    ->where('user_id',$user->id)
+                    ->where('download_count','>=',1)
+                    ->whereBetween('updated_at', array($todayTime['begin'], $todayTime['end']))
+                    ->count('sign');
+                if((int)$dayLimitCount >= $downloadNum){
                     app('log')->info("requestId：{$this->requestId},超过今天可下载附件的最大次数");
                     return $this->outPut(ResponseCode::DOWNLOAD_NUMS_IS_TOPLIMIT);
                 }
             }
+            return $this->outPut(ResponseCode::SUCCESS);
+        }
+        if ($attachment->is_remote) {
+            $url = $this->settings->get('qcloud_cos_sign_url', 'qcloud', true)
+                ? $this->filesystem->disk('attachment_cos')->temporaryUrl($attachment->full_path, Carbon::now()->addDay())
+                : $this->filesystem->disk('attachment_cos')->url($attachment->full_path);
+        } else {
+            $url = $this->filesystem->disk('attachment')->url($attachment->full_path);
         }
 
-        $attachmentShare = null;
-        if(empty($data['sign'])){
-            //直接下载操作
-            if (!($user->isGuest())) {
-                $count = AttachmentShare::query()
-                    ->where(['attachments_id' => $data['attachmentsId'], 'user_id' => $user->id])
-                    ->where('created_at', '>=', Carbon::now()->modify('-1 minutes'))
-                    ->count('attachments_id');
-                if ($count >= 2) $this->outPut(ResponseCode::NET_ERROR,'操作太快，请稍后再试');
-            }
-
-            $docValue = json_decode($this->thread->value,true);
-            if (!isset($docValue['docIds']) || !is_array($docValue['docIds']) || !in_array($data['attachmentsId'], $docValue['docIds'])) {
-                $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-            }
-
-            $sign = $this->sign($data);
-            $attachmentShare = new AttachmentShare;
-            $attachmentShare->sign = $sign;
-            $attachmentShare->attachments_id = $data['attachmentsId'];
-            $attachmentShare->user_id = $user->id;
-            $attachmentShare->expired_at = Carbon::now()->modify('+10 minutes');
-            $attachmentShare->save();
-        }else{
-            //复制链接的方式
-            $attachmentShare = AttachmentShare::query()
-                ->where(['sign' => $data['sign'], 'attachments_id' => $data['attachmentsId']])
-                ->where('user_id',$user->id)
-                ->first();
-
-            if (empty($attachmentShare)) {
-                app('log')->info("requestId：{$this->requestId},分享记录不存在");
-                return $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
-            }
-            if(strtotime($attachmentShare->expired_at) < time()){
-                app('log')->info("requestId：{$this->requestId},下载资源已失效");
-                return $this->outPut(ResponseCode::DOWNLOAD_RESOURCE_IS_INVALID);
-            }
-
-            $s1 = date_create(date('Y-m-d',time()));
-            $s2 = date_create(date('Y-m-d',strtotime($attachmentShare->created_at)));
-            $diff = date_diff($s1,$s2)->days;
-            if(!empty($data['sign']) && $diff === 1){
-                //如果是昨天的链接则生成新的链接
-                $sign = $this->sign($data);
-                $attachmentShare = new AttachmentShare;
-                $attachmentShare->sign = $sign;
-                $attachmentShare->attachments_id = $data['attachmentsId'];
-                $attachmentShare->user_id = $user->id;
-                $attachmentShare->expired_at = Carbon::now()->modify('+10 minutes');
-                $attachmentShare->save();
-            }
+        $today = Utils::getTodayTime();
+        $dayUserCount = AttachmentShare::query()
+            ->where('attachments_id',$data['attachmentsId'])
+            ->where('user_id',$user->id)
+            ->whereBetween('updated_at', array($today['begin'], $today['end']))
+            ->sum('download_count');
+        if((int)$dayUserCount == 0){
+            AttachmentShare::query()->where('sign', $data['sign'])->update([
+                'download_count' => intval($share->download_count + 1),
+                'updated_at' => Carbon::now()
+            ]);
         }
-        $shareSign = AttachmentShare::query()->where('sign',$attachmentShare->sign);
-        if (!($user->isGuest())) {
-            //当前附件当天第一次下载则记录
-            $dayUserCount = $share->sum('is_downloaded');
-            if((int)$dayUserCount == 0){
-                $shareSign->update([
-                    'is_downloaded' => 1,
-                    'updated_at' => Carbon::now()
-                ]);
-            }
-        }
-        //每次下载都记录一次
-        $shareSign->update([
-            'download_count' => intval($attachmentShare->download_count + 1),
-        ]);
-        $this->outPut(ResponseCode::SUCCESS);
-    }
-
-    //生成唯一标识
-    public function sign($data)
-    {
-        $stringArr = openssl_random_pseudo_bytes(16);
-        $stringArr[6] = chr(ord($stringArr[6]) & 0x0f | 0x40); // set version to 0100
-        $stringArr[8] = chr(ord($stringArr[8]) & 0x3f | 0x80); // set bits 6-7 to 10
-        $string =  vsprintf('%s%s%s%s%s%s%s%s',
-            str_split(bin2hex($stringArr), 4));
-        return md5($string.$data['threadId'].$data['attachmentsId']);
+        $origin_name = iconv("utf-8", "gb2312", $attachment->file_name);
+        header("Access-Control-Allow-Origin:*");
+        header('Access-Control-Allow-Methods:*');
+        header("Content-type:application/octet-stream");
+        header("Content-Disposition:attachment;filename = " . $origin_name);
+        header("Accept-ranges:bytes");
+        header("Accept-length:" . $attachment->file_size);
+        readfile($url, false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
+        exit;
     }
 }

@@ -32,11 +32,8 @@ use Illuminate\Contracts\Routing\UrlGenerator;
 
 class ShareAttachmentController extends DzqController
 {
-    use DownloadAuthTrait;
 
     protected $url;
-
-    protected $thread;
 
     public function __construct(UrlGenerator $url)
     {
@@ -45,23 +42,49 @@ class ShareAttachmentController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+
         $threadId =$this->inPut('threadId');
-        $attachmentsId = $this->inPut('attachmentsId');
         $user = $this->user;
 
-        $thread = Thread::getThreadTomInfoById($threadId);
+        $thread = Thread::query()
+            ->from('threads as th')
+            ->whereNull('th.deleted_at')
+            ->where('th.id', $threadId)
+            ->leftJoin('thread_tom as tt','tt.thread_id','=','th.id')
+            ->where(['tom_type' => TomConfig::TOM_DOC , 'status' => ThreadTom::STATUS_ACTIVE])
+            ->first(['th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'th.is_draft', 'th.is_approved', 'tt.value']);
+
         if (!$thread) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-        $attachment = Attachment::getOneAttachment($attachmentsId);
-        if(empty($attachment)){
+        //如果帖子还在审核和草稿当中，只能当前用户下载
+        if ($user->id !== $thread->user_id && ($thread->is_draft == Thread::IS_DRAFT || $thread->is_approved !== Thread::IS_ANONYMOUS)){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
 
-        $this->checkDownloadAttachment($thread,$user,$userRepo);
-
         if (!$userRepo->canViewThreadAttachment($user, $thread)) {
             $this->outPut(ResponseCode::UNAUTHORIZED, '无权限查看该附件');
+        }
+
+        //是否是管理员和自己的帖子
+        if (!$user->isAdmin() && $user->id !== $thread->user_id){
+            //是否付费帖
+            if ( $thread->price > 0 || $thread->attachment_price > 0 ) {
+                //免费查看付费帖权限
+                if (!$userRepo->canFreeViewPosts($user, $thread)) {
+                    $isPay = Order::query()
+                        ->whereIn('type',[Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
+                        ->where([ 'thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID])
+                        ->exists();
+                    if (!$isPay) $this->outPut(ResponseCode::UNAUTHORIZED);
+                }
+                //是否有详情查看权限
+            } else if (!$userRepo->canViewThreadDetail($user, $thread)) {
+                $this->outPut(ResponseCode::UNAUTHORIZED);
+            }
         }
 
         $this->thread = $thread;
@@ -73,7 +96,7 @@ class ShareAttachmentController extends DzqController
         $user = $this->user;
         $data = [
             'threadId' => $this->inPut('threadId'),
-            'attachmentsId' => $this->inPut('attachmentsId'),
+            'attachmentsId' => $this->inPut('attachmentsId')
         ];
 
         $this->dzqValidate($data,[
@@ -81,13 +104,13 @@ class ShareAttachmentController extends DzqController
             'attachmentsId' => 'required|int'
         ]);
 
-        if (!($user->isGuest())) {
-            $count = AttachmentShare::query()
-                ->where(['attachments_id' => $data['attachmentsId'], 'user_id' => $user->id])
-                ->where('created_at', '>=', Carbon::now()->modify('-1 minutes'))
-                ->count('attachments_id');
-            if ($count >= 2) $this->outPut(ResponseCode::NET_ERROR,'操作太快，请稍后再试');
-        }
+        $count = AttachmentShare::query()
+            ->where(['attachments_id' => $data['attachmentsId'], 'user_id' => $user->id])
+            ->where('created_at', '>=', Carbon::now()->modify('-1 minutes'))
+            ->count('attachments_id');
+
+        if ($count >= 2) $this->outPut(ResponseCode::NET_ERROR,'操作太快，请稍后再试');
+        
         $docValue = json_decode($this->thread->value,true);
 
         if (!isset($docValue['docIds']) || !is_array($docValue['docIds']) || !in_array($data['attachmentsId'], $docValue['docIds'])) {
@@ -96,16 +119,23 @@ class ShareAttachmentController extends DzqController
 
         $sign = $this->sign($data);
 
-        $attachmentShare = new AttachmentShare;
-        $attachmentShare->sign = $sign;
-        $attachmentShare->attachments_id = $data['attachmentsId'];
-        $attachmentShare->user_id = $user->id;
-        $attachmentShare->expired_at = Carbon::now()->modify('+10 minutes');
-        $attachmentShare->save();
+        $AttachmentShare = new AttachmentShare;
+        $AttachmentShare->sign = $sign;
+        $AttachmentShare->attachments_id = $data['attachmentsId'];
+        $AttachmentShare->user_id = $user->id;
+        $AttachmentShare->expired_at = Carbon::now()->modify('+10 minutes');
+        $AttachmentShare->save();
 
+        $attachment = Attachment::query()->where('id', $data['attachmentsId'])->first();
+        if(empty($attachment)){
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
         $this->outPut(ResponseCode::SUCCESS, '', [
-            'url' => $this->url->to('/apiv3/attachment.download') . '?sign=' . $sign . '&attachmentsId=' . $data['attachmentsId']
+            'url' => $this->url->to('/apiv3/attachment.download') . '?sign=' . $sign . '&attachmentsId=' . $data['attachmentsId'],
+            'fileName'=>$attachment->file_name
         ]);
+
+
     }
     //生成唯一标识
     public function sign($data)
