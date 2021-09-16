@@ -17,7 +17,6 @@
 namespace App\Http\Controller;
 
 use App\Common\Utils;
-use Discuz\Http\DiscuzResponseFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
