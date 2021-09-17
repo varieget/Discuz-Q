@@ -18,9 +18,19 @@
 namespace App\Models;
 
 
+use App\Common\PermissionKey;
 use Discuz\Base\DzqModel;
 
 class PluginGroupPermission extends DzqModel
 {
     protected $table = 'plugin_group_permission';
+
+    public static function hasPluginPermission($appId, $groupId)
+    {
+        return PluginGroupPermission::query()->where([
+            'group_id' => $groupId,
+            'app_id' => $appId,
+            'permission' => PermissionKey::PLUGIN_INSERT_PERMISSION
+        ])->exists();
+    }
 }

@@ -222,12 +222,7 @@ class ThreadListController extends DzqController
 
     private function filterKey($perPage, $filter, $withLoginUser = false)
     {
-        $groups =  $this->user->groups->toArray();
-        $groupId = '';
-        if(!empty($groups)){
-            $groupId = $groups[0]['id'];
-        }
-        $serialize = ['perPage' => $perPage, 'filter' => $filter, 'group' => $groupId];
+        $serialize = ['perPage' => $perPage, 'filter' => $filter, 'group' => $this->user->groupId];
         if(Utils::requestFrom() == Platform::MinProgram){
             $serialize['isMini'] = 1;
         }else{

@@ -33,47 +33,47 @@ class TomConfig
     public static $map = [
         self::TOM_TEXT => [
             'name_en' => 'Text',
-            'desc' => '文字',
+            'name_cn' => '文字',
             'service' => ''
         ],
         self::TOM_IMAGE => [
             'name_en' => 'Image',
-            'desc' => '图片',
+            'name_cn' => '图片',
             'service' => \App\Modules\ThreadTom\Busi\ImageBusi::class
         ],
         self::TOM_AUDIO => [
             'name_en' => 'Audio',
-            'desc' => '语音',
+            'name_cn' => '语音',
             'service' => \App\Modules\ThreadTom\Busi\AudioBusi::class
         ],
         self::TOM_VIDEO => [
             'name_en' => 'Video',
-            'desc' => '视频',
+            'name_cn' => '视频',
             'service' => \App\Modules\ThreadTom\Busi\VideoBusi::class
         ],
         self::TOM_GOODS => [
             'name_en' => 'Goods',
-            'desc' => '商品',
+            'name_cn' => '商品',
             'service' => \App\Modules\ThreadTom\Busi\GoodsBusi::class
         ],
         self::TOM_REDPACK => [
             'name_en' => 'RedPacket',
-            'desc' => '红包',
+            'name_cn' => '红包',
             'service' => \App\Modules\ThreadTom\Busi\RedPackBusi::class
         ],
         self::TOM_REWARD => [
             'name_en' => 'Reward',
-            'desc' => '悬赏',
+            'name_cn' => '悬赏',
             'service' => \App\Modules\ThreadTom\Busi\RewardBusi::class
         ],
         self::TOM_DOC => [
             'name_en' => 'Attachment',
-            'desc' => '文件附件',
+            'name_cn' => '文件附件',
             'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
         ],
         self::TOM_VOTE => [
             'name_en' => 'Vote',
-            'desc' => '投票',
+            'name_cn' => '投票',
             'service' => \App\Modules\ThreadTom\Busi\VoteBusi::class
         ]
     ];
