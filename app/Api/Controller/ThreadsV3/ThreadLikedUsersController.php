@@ -79,24 +79,30 @@ class ThreadLikedUsersController extends DzqController
             })
             ->toArray();
 
+        $orderType = [];
+        if (in_array($data['type'], [0, 2])) {
+            $orderType = [Order::ORDER_TYPE_REWARD];
+        }
         if ($thread['price']  > 0) {
-            $isPaid = Order::ORDER_TYPE_THREAD;
+            $orderType = array_merge($orderType, [Order::ORDER_TYPE_THREAD]);
         } else if ($thread['attachment_price']  > 0) {
-            $isPaid = Order::ORDER_TYPE_ATTACHMENT;
-        } else {
-            $isPaid = Order::ORDER_TYPE_REWARD;
+            $orderType = array_merge($orderType, [Order::ORDER_TYPE_ATTACHMENT]);
         }
 
+        $paidCount = 0;
+        $rewardCount = 0;
         $order = Order::query()->where('thread_id',$data['threadId'])
-            ->where('type',$isPaid)
+            ->whereIn('type', $orderType)
             ->where('status', Order::ORDER_STATUS_PAID)
             ->orderBy('created_at','desc')
             ->get(['user_id','created_at','type'])
-            ->map(function ($value) {
+            ->map(function ($value) use (&$paidCount, &$rewardCount) {
                 if (in_array($value->type, [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])) {
                     $value->type = 2;
+                    $paidCount++;
                 } else {
                     $value->type = 3;
+                    $rewardCount++;
                 }
                 return $value;
             })
@@ -125,10 +131,10 @@ class ThreadLikedUsersController extends DzqController
         $pageData = $this->specialPagination($data['page'],$data['perPage'],$likeSort);
 
         $pageData['pageData'] = [
-            'allCount' => count($postUser)+count($order),
+            'allCount' => count($postUser) + count($order),
             'likeCount' => count($postUser),
-            'rewardCount' => $thread['price'] > 0 ? 0 : count($order),
-            'raidCount' => $thread['price'] > 0 ? count($order) : 0,
+            'rewardCount' => $rewardCount,
+            'raidCount' => $paidCount,
             'list' => $this->camelData($pageData['pageData'])
         ];
 
