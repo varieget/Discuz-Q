@@ -842,7 +842,7 @@ trait ThreadTrait
         $user = $this->user;
         if (empty($user)) $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
         if (($price > 0 || $attachmentPrice > 0) && !$userRepo->canInsertPayToThread($user)) {
-            $this->outPut(ResponseCode::UNAUTHORIZED, '没有插入付费权限');
+            $this->outPut(ResponseCode::UNAUTHORIZED, '没有添加付费项权限');
         }
         if (!empty($position) && !$userRepo->canInsertPositionToThread($user)) {
             $this->outPut(ResponseCode::UNAUTHORIZED, '没有插入位置信息权限');
@@ -855,17 +855,17 @@ trait ThreadTrait
             if (!is_array($indexes)) return;
             foreach ($indexes as $k => $v) {
                 $appId = $v['tomId'];
-                $config = TomConfig::$map[$appId] ?: null;
+                $config = TomConfig::$map[$appId] ?? null;
                 $isAllowed = true;
                 if (is_null($config)) {
                     $pluginList = Utils::getPluginList();
-                    $config = $pluginList[$appId] ?: null;
+                    $config = $pluginList[$appId] ?? null;
                     (!is_null($config) && !PluginGroupPermission::hasPluginPermission($appId, $this->user->groupId)) && $isAllowed = false;
                 } else {
                     $func = 'canInsert' . $config['name_en'] . 'ToThread';
                     (method_exists($userRepo, $func) && !$userRepo->$func($user)) && $isAllowed = false;
                 }
-                !$isAllowed &&  $this->outPut(ResponseCode::UNAUTHORIZED, "没有插入" . $config['name_cn'] . "权限");
+                !$isAllowed &&  $this->outPut(ResponseCode::UNAUTHORIZED, "没有插入'" . $config['name_cn'] . "'权限");
             }
         }
     }
