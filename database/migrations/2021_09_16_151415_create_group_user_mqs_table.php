@@ -17,7 +17,6 @@ class CreateGroupUserMqsTable extends Migration
             $table->bigIncrements('id');
             $table->bigInteger('group_id')->nullable(false)->default(0)->comment('用户组id');
             $table->bigInteger('user_id')->nullable(false)->default(0)->comment('用户id');
-            $table->unsignedInteger('order')->nullable(false)->default(0)->comment('排序；按降序恢复用户等级');
             $table->unsignedInteger('remain_days')->nullable(false)->default(0)->comment('剩余天数');
             $table->timestamp('created_at')->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
