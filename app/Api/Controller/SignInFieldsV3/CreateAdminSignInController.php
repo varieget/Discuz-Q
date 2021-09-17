@@ -21,20 +21,11 @@ use App\Common\ResponseCode;
 use App\Models\AdminSignInFields;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Support\Arr;
 
-class CreateAdminSignInController extends DzqController
+class CreateAdminSignInController extends DzqAdminController
 {
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
-
     //兼容老版本斜杠入参
     public function enumerate(){
         return [

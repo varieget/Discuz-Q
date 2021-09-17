@@ -26,10 +26,10 @@ use App\Repositories\UserRepository;
 use App\Models\Group;
 use App\Models\UserSignInFields;
 use Illuminate\Support\Arr;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Support\Str;
 
-class ListUserScreenController extends DzqController
+class ListUserScreenController extends DzqAdminController
 {
     // 权限检查，是否为管理员
     protected function checkRequestPermissions(UserRepository $userRepo)

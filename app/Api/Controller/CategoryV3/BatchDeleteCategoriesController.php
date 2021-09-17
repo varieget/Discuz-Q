@@ -20,11 +20,11 @@ namespace App\Api\Controller\CategoryV3;
 use App\Models\Category;
 use App\Common\ResponseCode;
 use App\Library\Json;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 
-class BatchDeleteCategoriesController extends DzqController
+class BatchDeleteCategoriesController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

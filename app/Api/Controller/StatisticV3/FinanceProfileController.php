@@ -23,10 +23,10 @@ use App\Models\Order;
 use App\Models\UserWallet;
 use App\Models\UserWalletCash;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Support\Arr;
 
-class FinanceProfileController extends DzqController
+class FinanceProfileController extends DzqAdminController
 {
     /**
      * @var Order
@@ -51,11 +51,6 @@ class FinanceProfileController extends DzqController
         $this->order = $order;
         $this->userWallet = $userWallet;
         $this->userWalletCash = $userWalletCash;
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
     }
 
     public function main()

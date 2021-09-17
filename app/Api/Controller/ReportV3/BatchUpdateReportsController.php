@@ -4,15 +4,10 @@ namespace App\Api\Controller\ReportV3;
 use App\Models\Report;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class BatchUpdateReportsController extends DzqController
+class BatchUpdateReportsController extends DzqAdminController
 {
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
-
     public function main()
     {
         $data = $this->inPut('data');

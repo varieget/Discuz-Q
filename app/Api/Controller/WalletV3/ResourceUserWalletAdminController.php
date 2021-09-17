@@ -21,10 +21,10 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Repositories\UserWalletRepository;
 use App\Settings\SettingsRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use App\Repositories\UserRepository;
 
-class ResourceUserWalletAdminController extends DzqController
+class ResourceUserWalletAdminController extends DzqAdminController
 {
 
     public $wallet;

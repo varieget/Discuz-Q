@@ -27,15 +27,15 @@ use App\Models\User;
 use App\Models\UserWalletCash;
 use App\Models\Setting;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqAdminController;
 use Discuz\Foundation\Application;
 use Discuz\Foundation\Support\Decomposer;
 use Discuz\Qcloud\QcloudTrait;
-use Discuz\Base\DzqController;
 use Exception;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ResponseInterface;
 
-class SiteInfoV3Controller extends DzqController
+class SiteInfoV3Controller extends DzqAdminController
 {
     use QcloudTrait;
 
@@ -51,12 +51,6 @@ class SiteInfoV3Controller extends DzqController
     {
         $this->app = $app;
     }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
-
 
     public function main()
     {

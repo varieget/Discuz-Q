@@ -26,10 +26,10 @@ use App\Models\Thread;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Support\Arr;
 
-class AdminTopicListController extends DzqController
+class AdminTopicListController extends DzqAdminController
 {
     use ThreadTrait;
     use ThreadListTrait;

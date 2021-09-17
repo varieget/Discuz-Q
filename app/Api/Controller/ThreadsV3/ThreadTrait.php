@@ -96,8 +96,10 @@ trait ThreadTrait
             'isLike' => $this->isLike($loginUser, $post),
             'isReward' => $this->isReward($loginUser, $thread),
             'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
+            //修改创建时间为变更时间
+            'issueAt' => date('Y-m-d H:i:s', strtotime($thread['issue_at'])),
             'updatedAt' => date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
-            'diffTime' => Utils::diffTime($thread['created_at']),
+            'diffTime' => Utils::diffTime($thread['issue_at']),
             'user' => $userField,
             'group' => $groupField,
             'likeReward' => $likeRewardField,
@@ -242,8 +244,6 @@ trait ThreadTrait
     {
         /** @var UserRepository $userRepo */
         $userRepo = app(UserRepository::class);
-        /** @var SettingsRepository $settingRepo */
-        $settingRepo = app(SettingsRepository::class);
 
         return [
             'canEdit' => $userRepo->canEditThread($loginUser, $thread),
@@ -252,7 +252,6 @@ trait ThreadTrait
             'canStick' => $userRepo->canStickThread($loginUser),
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
-            'canBeReward' => (bool)$settingRepo->get('site_can_reward'),
             'canFreeViewPost' => $userRepo->canFreeViewPosts($loginUser, $thread),
             'canViewVideo' => $userRepo->canViewThreadVideo($loginUser, $thread),
             'canViewAttachment' => $userRepo->canViewThreadAttachment($loginUser, $thread),
@@ -349,7 +348,8 @@ trait ThreadTrait
                     if ($freeWords >= 0 && $freeWords < 1) {
                         $text = strip_tags($post['content']);
                         $freeLength = mb_strlen($text) * $freeWords;
-                        $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+//                        $text = mb_substr($text, 0, $freeLength) . Post::SUMMARY_END_WITH;
+                        $text = self::truncateHTML($post['content'], $freeLength, Post::SUMMARY_END_WITH);
                         //针对最后的表情被截断的情况做截断处理
                         $text = preg_replace('/([^\w])\:\w*\.\.\./s', '$1...', $text);
                         //处理内容开头是表情，表情被截断的情况
@@ -792,23 +792,21 @@ trait ThreadTrait
                 $xml_attachments = $x_attachments->keyBy('id');
                 $xml_attachments_ids = $xml_attachments->pluck('id')->all();
             }
-            if (!empty($xml_attachments_ids)) {
-                $xml = preg_replace_callback(
-                    '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
-                    function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
-                        if (!empty($m)) {
-                            $id = trim($m[3], '"');
-                            $isset_attachment_ids[] = $id;
-                            $replace_url = $attachments[$id];
-                            if(!$canViewTom && in_array($id, $xml_attachments_ids)){
-                                $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
-                            }
-                            return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
+            $xml = preg_replace_callback(
+                '<img src="(.*?)" alt="(.*?)" title="(\d+)">',
+                function ($m) use ($attachments, &$isset_attachment_ids, $xml_attachments, $xml_attachments_ids, $canViewTom, $serializer) {
+                    if (!empty($m)) {
+                        $id = trim($m[3], '"');
+                        $isset_attachment_ids[] = $id;
+                        $replace_url = $attachments[$id];
+                        if(!$canViewTom && in_array($id, $xml_attachments_ids)){
+                            $replace_url = $serializer->getImgUrl($xml_attachments[$id]);
                         }
-                    },
-                    $xml
-                );
-            }
+                        return 'img src="' . $replace_url . '" alt="' . $m[2] . '" title="' . $id . '"';
+                    }
+                },
+                $xml
+            );
         }
 
         //针对图文混排的情况，这里要去掉外部图片展示
@@ -856,6 +854,39 @@ trait ThreadTrait
                 }
             }
         }
+    }
+
+    public function truncateHTML($html_string, $length, $append = '', $is_html = true) {
+        $html_string = trim($html_string);
+        $append = (mb_strlen(strip_tags($html_string)) > $length) ? $append : '';
+        $i = 0;
+        $tags = [];
+
+        if ($is_html) {
+            preg_match_all('/<[^>]+>([^<]*)/', $html_string, $tag_matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
+
+            foreach($tag_matches as $tag_match) {
+                if ($tag_match[0][1] - $i >= $length) {
+                    break;
+                }
+                $tag = mb_substr(strtok($tag_match[0][0]," \\\t\\\0\\\x0B>"), 1);
+                if ($tag[0] != '/') {
+                    if(!in_array($tag, ['img'])){       //针对有些标签是单标签的情况，不需要成对出现
+                        $tags[] = $tag;
+                    }
+                }elseif (end($tags) == mb_substr($tag, 1)) {
+                    array_pop($tags);
+                }else{      // </*> 匹配对应的tag标签，然后去掉 tags 中对应的标签
+                    while(end($tags) != substr($tag, 1)){
+                        array_pop($tags);
+                    }
+                    array_pop($tags);
+                }
+                $i += $tag_match[1][1] - $tag_match[0][1];
+            }
+        }
+
+        return mb_substr($html_string, 0, $length = min(mb_strlen($html_string), $length + $i)) . (count($tags = array_reverse($tags)) ? '</' . implode('></', $tags) . '>' : '') . $append;
     }
 }
 

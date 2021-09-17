@@ -22,10 +22,10 @@ use App\Commands\StopWord\BatchCreateStopWord;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
-class BatchCreateStopWordsController extends DzqController
+class BatchCreateStopWordsController extends DzqAdminController
 {
     /**
      * @var Dispatcher

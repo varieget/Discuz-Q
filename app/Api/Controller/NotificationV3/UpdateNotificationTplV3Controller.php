@@ -26,24 +26,20 @@ use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class UpdateNotificationTplV3Controller extends DzqController
+class UpdateNotificationTplV3Controller extends DzqAdminController
 {
     use NotificationTrait;
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        $actor = $this->user;
-        if (!$actor->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
-    }
 
     public function main()
     {
         $data = $this->inPut('data');
+
+        if (empty($data)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
+        $this->checkData($data);
 
         $tpl = NotificationTpl::query()->whereIn('id', array_column($data,'id'))->get()->keyBy('id');
 
@@ -143,5 +139,17 @@ class UpdateNotificationTplV3Controller extends DzqController
         $notificationTpl->save();
 
         return $notificationTpl;
+    }
+
+    protected function checkData($data)
+    {
+        foreach ($data as $value) {
+            if ((isset($value['id']) && !is_numeric($value['id'])) ||
+                (isset($value['status']) && !is_numeric($value['status'])) ||
+                (isset($value['redirectType']) && !is_numeric($value['redirectType']))) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER);
+            }
+        }
+        return true;
     }
 }

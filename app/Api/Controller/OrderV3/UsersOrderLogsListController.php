@@ -9,16 +9,11 @@ use App\Models\Thread;
 use App\Models\Post;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Support\Str;
 
-class UsersOrderLogsListController extends DzqController
+class UsersOrderLogsListController extends DzqAdminController
 {
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return $this->user->isAdmin();
-    }
-
     public function main()
     {
         $currentPage = $this->inPut('page');

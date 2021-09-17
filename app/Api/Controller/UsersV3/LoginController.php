@@ -144,6 +144,7 @@ class LoginController extends AuthBaseController
             }
             $this->outPut(ResponseCode::SUCCESS, '', $userLoginToken);
         } catch (\Exception $e) {
+            unset($paramData['password']);
             DzqLog::error('username_login_api_error', $paramData, $e->getMessage());
             $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名登录接口异常');
         }

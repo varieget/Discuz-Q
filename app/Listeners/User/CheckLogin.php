@@ -18,12 +18,14 @@
 
 namespace App\Listeners\User;
 
+use App\Common\ResponseCode;
 use App\Events\Users\Logining;
 use App\Models\UserLoginFailLog;
 use App\Repositories\UserLoginFailLogRepository;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\LoginFailedException;
 use Discuz\Auth\Exception\LoginFailuresTimesToplimitException;
+use Discuz\Common\Utils;
 use Discuz\Foundation\Application;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -37,10 +39,17 @@ class CheckLogin
 
     const LIMIT_TIME = 15;
 
+    protected $ip;
+
+    protected $userLoginFailCount;
+
     public function __construct(UserLoginFailLogRepository $userLoginFailLog, Application $app)
     {
         $this->userLoginFailLog = $userLoginFailLog;
         $this->app = $app;
+
+        $request = $this->app->make(ServerRequestInterface::class);
+        $this->ip = ip($request->getServerParams());
     }
 
     /**
@@ -50,39 +59,48 @@ class CheckLogin
      */
     public function handle(Logining $event)
     {
-        $request = $this->app->make(ServerRequestInterface::class);
-        $ip = ip($request->getServerParams());
-
-        $userLoginFailCount = $this->userLoginFailLog->getCount($ip, $event->user->username);
-        $maxTime = $this->userLoginFailLog->getLastFailTime($ip, $event->user->username);
-
-        //set current count
-        ++$userLoginFailCount;
-
-        $expire = Carbon::parse($maxTime)->addMinutes(self::LIMIT_TIME);
-        if ($userLoginFailCount > self::FAIL_NUM && ($expire > Carbon::now())) {
-            throw new LoginFailuresTimesToplimitException;
-        } elseif ($userLoginFailCount > self::FAIL_NUM && ($expire < Carbon::now())) {
-            //reset fail count
-            $userLoginFailCount = 1;
-            UserLoginFailLog::reSetFailCountByIp($ip);
-        }
+        $this->checkLoginFailuresTimes($event->user->username);
 
         //password not match
         if ($event->password !== '' && !$event->user->checkPassword($event->password)) {
-            if ($userLoginFailCount == 1) {
-                //first time set fail log
-                UserLoginFailLog::writeLog($ip, $event->user->id, $event->user->username);
-            } else {
-                //fail count +1
-                UserLoginFailLog::setFailCountByIp($ip, $event->user->id, $event->user->username);
-
-                if ($userLoginFailCount == self::FAIL_NUM) {
-                    throw new LoginFailuresTimesToplimitException;
-                }
-            }
-
-            throw new LoginFailedException(self::FAIL_NUM-$userLoginFailCount, 403);
+            $this->handleLoginFailuresTimes($event->user->id, $event->user->username);
         }
+    }
+
+    public function checkLoginFailuresTimes($username)
+    {
+        $this->userLoginFailCount = $this->userLoginFailLog->getCount($this->ip, $username);
+        $maxTime = $this->userLoginFailLog->getLastFailTime($this->ip, $username);
+
+        //set current count
+        ++$this->userLoginFailCount;
+
+        $expire = Carbon::parse($maxTime)->addMinutes(self::LIMIT_TIME);
+        if ($this->userLoginFailCount > self::FAIL_NUM) {
+            if ($expire > Carbon::now()) {
+                Utils::outPut(ResponseCode::LOGIN_FAILED, '登录错误次数超出限制');
+            } else {
+                //reset fail count
+                $this->userLoginFailCount = 1;
+                UserLoginFailLog::reSetFailCountByIp($this->ip);
+            }
+        }
+    }
+
+    public function handleLoginFailuresTimes($userId, $username)
+    {
+        if ($this->userLoginFailCount == 1) {
+            //first time set fail log
+            UserLoginFailLog::writeLog($this->ip, $userId, $username);
+        } else {
+            //fail count +1
+            UserLoginFailLog::setFailCountByIp($this->ip, $userId, $username);
+
+            if ($this->userLoginFailCount == self::FAIL_NUM) {
+                Utils::outPut(ResponseCode::LOGIN_FAILED, '登录错误次数超出限制');
+            }
+        }
+
+        Utils::outPut(ResponseCode::LOGIN_FAILED, '登录失败，您还可以尝试'.(self::FAIL_NUM-$this->userLoginFailCount).'次');
     }
 }

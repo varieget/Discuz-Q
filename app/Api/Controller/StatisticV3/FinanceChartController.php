@@ -24,10 +24,10 @@ use App\Repositories\FinanceRepository;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
 
-class FinanceChartController extends DzqController
+class FinanceChartController extends DzqAdminController
 {
     const CREATE_AT_BEGIN = '-60 days'; //默认统计周期
 
@@ -58,14 +58,6 @@ class FinanceChartController extends DzqController
     public function __construct(FinanceRepository $finance)
     {
         $this->finance = $finance;
-    }
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        if (!$this->user->isAdmin()) {
-            throw new PermissionDeniedException('没有权限');
-        }
-        return true;
     }
 
     public function main()
