@@ -17,11 +17,9 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-use App\Api\Controller\AdminPlugin\GroupPermissionController;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
 use App\Common\CacheKey;
-use App\Common\PermissionKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Models\PluginGroupPermission;
