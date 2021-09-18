@@ -253,6 +253,7 @@ class ForumSettingSerializerV2 extends AbstractSerializer
                 'publish_need_bind_wechat'    => $this->userRepo->canCreateThreadNeedBindWechat($actor),    // 发布内容需要绑定微信
                 'disabledChat'               =>  $disabledChat,
                 'thread_optimize' => (bool) $this->settings->get('thread_optimize', 'default'),   // 小程序一键开启和关闭状态
+                'thread_tab' => (int) $this->settings->get('thread_tab', 'default'),   //首页导航选项 所有:1 推荐:2 精华:3 已关注:4
             ],
 
             'lbs' => [
