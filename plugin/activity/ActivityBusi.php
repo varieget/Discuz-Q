@@ -30,11 +30,6 @@ use Plugin\Activity\Model\ThreadActivity;
 class ActivityBusi extends TomBaseBusi
 {
 
-    public function checkPermission()
-    {
-
-    }
-
     public function select()
     {
         $activityId = $this->getParams('activityId');
