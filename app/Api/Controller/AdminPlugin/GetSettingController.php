@@ -17,7 +17,6 @@
 
 namespace App\Api\Controller\AdminPlugin;
 
-use App\Common\Utils;
 use App\Models\PluginSettings;
 use Discuz\Base\DzqAdminController;
 
@@ -27,7 +26,7 @@ class GetSettingController extends DzqAdminController
     {
         $appId = $this->inPut('appId');
         $this->dzqValidate(['appId' => $appId], ['appId' => 'required|string']);
-        $pluginList = Utils::getPluginList();
+        $pluginList = \Discuz\Common\Utils::getPluginList();
         $setting = PluginSettings::getSetting($appId);
         $data = [
             'setting'=>$setting,

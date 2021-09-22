@@ -98,7 +98,7 @@ trait TomTrait
     private function threadPluginList()
     {
         $config = TomConfig::$map;
-        $pluginList = \App\Common\Utils::getPluginList();
+        $pluginList = \Discuz\Common\Utils::getPluginList();
         foreach ($pluginList as $item) {
             $config[$item['app_id']] = [
                 'name_en' => $item['name_en'],

@@ -193,47 +193,4 @@ class Utils
             'end' => date("Y-m-d 23:59:59")
         ];
     }
-
-    public static function getPluginList()
-    {
-        $cacheConfig = DzqCache::get(CacheKey::PLUGIN_LOCAL_CONFIG);
-        if ($cacheConfig) return $cacheConfig;
-        $pluginDir = base_path('plugin');
-        $directories = scandir($pluginDir);
-        $plugins = [];
-        foreach ($directories as $dirName) {
-            if ($dirName == '.' || $dirName == '..') continue;
-            $subPlugins = scandir($pluginDir . '/' . $dirName);
-            $configName = '';
-            $viewName = '';
-            foreach ($subPlugins as $item) {
-                if ($dirName == '.' || $dirName == '..') continue;
-                switch (strtolower($item)) {
-                    case 'config.php':
-                        $configName = $item;
-                        break;
-                    case 'view':
-                        $viewName = $item;
-                        break;
-                }
-            }
-            if($configName == ''){
-                continue;
-            }
-            $configBase = $pluginDir . '/' . $dirName . '/';
-            $configPath = $configBase . $configName;
-            $viewPath = $configBase.$viewName.'/';
-            $config = require($configPath);
-            if($config['status'] == DzqConst::BOOL_YES){
-                $config['plugin_'.$config['app_id']] = [
-                    'directory' => $configBase,
-                    'view' => $viewPath,
-                    'config'=>$configPath
-                ];
-            }
-            isset($config['app_id']) && $plugins[$config['app_id']] = $config;
-        }
-        DzqCache::set(CacheKey::PLUGIN_LOCAL_CONFIG, $plugins, 5 * 60);
-        return $plugins;
-    }
 }

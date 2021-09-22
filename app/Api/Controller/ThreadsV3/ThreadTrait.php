@@ -853,7 +853,7 @@ trait ThreadTrait
                 $config = TomConfig::$map[$appId] ?? null;
                 $isAllowed = true;
                 if (is_null($config)) {
-                    $pluginList = Utils::getPluginList();
+                    $pluginList = \Discuz\Common\Utils::getPluginList();
                     $config = $pluginList[$appId] ?? null;
                     (!is_null($config) && !PluginGroupPermission::hasPluginPermission($appId, $this->user->groupId)) && $isAllowed = false;
                 } else {

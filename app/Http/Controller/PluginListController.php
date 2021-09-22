@@ -27,7 +27,7 @@ class PluginListController implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $pluginList = \App\Common\Utils::getPluginList();
+        $pluginList = \Discuz\Common\Utils::getPluginList();
         foreach ($pluginList as &$item) {
             $appId = $item['app_id'];
             $appName = $item['name_en'];

@@ -16,7 +16,6 @@
  */
 namespace App\Http\Controller;
 
-use App\Common\Utils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -27,7 +26,7 @@ class PluginFileController implements RequestHandlerInterface
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $query = $request->getQueryParams();
-        $pluginList = Utils::getPluginList();
+        $pluginList = \Discuz\Common\Utils::getPluginList();
         $pluginList = array_values($pluginList);
         $pluginList = array_column($pluginList,null,'name_en');
         $pluginName = $query['plugin_name'];

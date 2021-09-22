@@ -19,7 +19,6 @@ namespace App\Api\Controller\AdminPlugin;
 
 
 use App\Common\PermissionKey;
-use App\Common\Utils;
 use App\Models\PluginGroupPermission;
 use Discuz\Base\DzqAdminController;
 
@@ -29,7 +28,7 @@ class GetGroupPermissionsController extends DzqAdminController
     {
         $groupId = $this->inPut('groupId');
         $this->dzqValidate(['groupId' => $groupId], ['groupId' => 'required|integer']);
-        $pluginList = Utils::getPluginList();
+        $pluginList = \Discuz\Common\Utils::getPluginList();
         $permissions = PluginGroupPermission::query()
             ->where('group_id', $groupId)->get()->keyBy('app_id')->toArray();
         $ret = [];
