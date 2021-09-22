@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\AdminPlugin;
+namespace App\Api\Controller\Plugin;
 
 use App\Models\PluginSettings;
 use Discuz\Base\DzqAdminController;

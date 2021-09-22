@@ -208,3 +208,5 @@ $route->post('/vote.thread', 'vote.thread', ApiController\ThreadsV3\VoteThreadCo
 
 $route->get('/check.user.get.redpacket', 'check.user.get.redpacket', ApiController\ThreadsV3\CheckUserGetRedpacketController::class);
 
+$route->get('/plugin/list', 'plugin', ApiController\Plugin\PluginListController::class);
+

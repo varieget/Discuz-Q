@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path="/plugin/list",
+ *     path="/api/v3/plugin/list",
  *     summary="插件列表",
  *     description="获取站点已安装插件信息",
  *     tags={"插件"},
@@ -20,6 +20,11 @@
  *             @OA\Property(property="author",type="object", description="作者信息",
  *                 @OA\Property(property="name",type="string", description="作者名称"),
  *                 @OA\Property(property="email",type="string", description="作者联系邮件")
+ *             ),
+ *             @OA\Property(property="authority",type="object", description="权限设置",
+ *                 @OA\Property(property="title",type="string", description="权限名称"),
+ *                 @OA\Property(property="permission",type="string", description="权限字段名称"),
+ *                 @OA\Property(property="canUsePlugin",type="boolean", description="是否可以使用插件")
  *             ),
  *             @OA\Property(property="plugin_trigger",type="string", description="触发前端插件的js文件"),
  *         )))

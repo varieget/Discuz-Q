@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\AdminPlugin;
+namespace App\Api\Controller\Plugin;
 
 
 use App\Common\PermissionKey;
@@ -39,7 +39,7 @@ class GetGroupPermissionsController extends DzqAdminController
                 'authority' => [
                     'title' => '插入' . $appConfig['name_cn'],
                     'permission' => PermissionKey::PLUGIN_INSERT_PERMISSION,
-                    'canInsert' => empty($permission) ? false : ($permission['status'] ? true : false),
+                    'canUsePlugin' => empty($permission) ? false : ($permission['status'] ? true : false),
                 ],
                 'name' => $appConfig['name_cn'],
                 'description' => $appConfig['description']

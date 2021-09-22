@@ -23,7 +23,7 @@
  *                 @OA\Property(property="authority",type="object",description="权限字段",
  *                     @OA\Property(property="title",type="string",description="权限描述"),
  *                     @OA\Property(property="permission",type="string",description="权限字段名称"),
- *                     @OA\Property(property="canInsert",type="boolean",description="是否有使用该插件权限"),
+ *                     @OA\Property(property="canUsePlugin",type="boolean",description="是否有使用该插件权限"),
  *                 ),
  *                 @OA\Property(property="name",type="string",description="插件中文名称"),
  *                 @OA\Property(property="description",type="string",description="描述"),
