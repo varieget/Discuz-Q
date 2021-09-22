@@ -16,6 +16,8 @@
  */
 namespace App\Http\Controller;
 
+use App\Common\ResponseCode;
+use Discuz\Common\Utils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -26,13 +28,17 @@ class PluginFileController implements RequestHandlerInterface
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $query = $request->getQueryParams();
-        $pluginList = \Discuz\Common\Utils::getPluginList();
+        $pluginList = Utils::getPluginList();
         $pluginList = array_values($pluginList);
-        $pluginList = array_column($pluginList,null,'name_en');
+        $pluginList = array_column($pluginList, null, 'name_en');
         $pluginName = $query['plugin_name'];
         $config = $pluginList[$pluginName];
         $plugin = $config['plugin_' . $config['app_id']];
-        $filePath = $plugin['view'] . $query['file_path'];
-        exit(file_get_contents($filePath));
+        $filePath = $plugin['view'] . '/dist/' . $query['file_path'];
+        if (file_exists($filePath)) {
+            exit(file_get_contents($filePath));
+        } else {
+            Utils::outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
     }
 }
