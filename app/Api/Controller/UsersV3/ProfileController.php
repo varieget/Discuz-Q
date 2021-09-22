@@ -167,9 +167,15 @@ class ProfileController extends DzqController
 
     private function getGroupInfo($group)
     {
+        //判断用户当前所在用户组是否是最高级别
+        $level = $group['groups']['level'];
+        $is_top = Group::query()->where('level', '>', $level)->exists();
         return [
             'pid' => $group['group_id'],
-            'groupName' => $group['groups']['name']
+            'groupName' => $group['groups']['name'],
+            'isTop' =>  $is_top,
+            'expirationTime'    =>  $group['expiration_time'],
+            'color' =>  $group['groups']['color']
         ];
     }
 
