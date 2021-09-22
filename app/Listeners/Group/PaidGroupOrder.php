@@ -81,7 +81,11 @@ class PaidGroupOrder
                     return;
                 }
                 //针对付费站点有到期时间的概念，增加 users 的 expired_at
-                $event->user->expired_at = Carbon::parse($event->user->expired_at)->addDays($group_info->days);
+                if(!empty($event->user->expired_at)){
+                    $event->user->expired_at = Carbon::parse($event->user->expired_at)->addDays($group_info->days);
+                }else{
+                    $event->user->expired_at = Carbon::now()->addDays($group_info->days);
+                }
                 $res = $event->user->save();
                 if($res === false){
                     $db->rollBack();
@@ -101,7 +105,11 @@ class PaidGroupOrder
                 //对于没有 group_user 记录的情况有两种：1、完全全新的用户；2、在已有用户组的情况下购买其他用户组的情况
                 $remain_days = $group_info->days;
                 //增加 users 中 expired_at 的时间
-                $event->user->expired_at = Carbon::parse($event->user->expired_at)->addDays($remain_days);
+                if(!empty($event->user->expired_at)){
+                    $event->user->expired_at = Carbon::parse($event->user->expired_at)->addDays($remain_days);
+                }else{
+                    $event->user->expired_at = Carbon::now()->addDays($remain_days);
+                }
                 $res = $event->user->save();
                 if($res === false){
                     $db->rollBack();
