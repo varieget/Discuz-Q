@@ -175,12 +175,9 @@ class CreateThreadController extends DzqController
         ];
         $price = floatval($price);
         $attachmentPrice = floatval($attachmentPrice);
-        if ($price > 0 || $attachmentPrice > 0) {
-            $this->checkThreadPrice($price, $attachmentPrice);
-        }
-
         $freeWords = floatval($freeWords);
         if ($price > 0 || $attachmentPrice > 0) {
+            $this->checkThreadPrice($price, $attachmentPrice);
             $price > 0 && $dataThread['price'] = $price;
             $attachmentPrice > 0 && $dataThread['attachment_price'] = $attachmentPrice;
             $freeWords > 0 && $dataThread['free_words'] = $freeWords;
