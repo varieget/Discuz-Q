@@ -17,7 +17,6 @@
 
 namespace Plugin\Activity\Controller;
 
-
 use App\Common\DzqConst;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
