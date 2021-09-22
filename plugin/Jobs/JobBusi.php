@@ -20,7 +20,7 @@ namespace Plugin\Jobs;
 
 use App\Modules\ThreadTom\TomBaseBusi;
 
-class JobsBusi extends TomBaseBusi
+class JobBusi extends TomBaseBusi
 {
 
 }

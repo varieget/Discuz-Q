@@ -50,6 +50,8 @@ abstract class TomBaseBusi
 
     public $canViewTom = true;
 
+    public $plugin = null;
+
     public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body, $canViewTom)
     {
         $this->app = app();
@@ -83,12 +85,14 @@ abstract class TomBaseBusi
     }
 
     /**
-     * @desc输出结果写入到thread_tom表的value值
+     * @desc 输出结果写入到thread_tom表的value值
      * @param $array
      * @return array
      */
     public function jsonReturn($array)
     {
+        $plugin = $this->body['_plugin'] ?? null;
+        $array['_plugin'] = $plugin;
         $ret = [
             'tomId' => $this->tomId,
             'operation' => $this->operation,
@@ -115,7 +119,7 @@ abstract class TomBaseBusi
     {
         try {
             $validate = app('validator');
-            $validate->validate($inputArray, $rules);
+            $validate->validate($inputArray, $rules,$messages,$customAttributes);
         } catch (\Exception $e) {
             $validate_error = $e->validator->errors()->first();
             $error_message = !empty($validate_error) ? $validate_error : $e->getMessage();

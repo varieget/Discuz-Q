@@ -33,7 +33,6 @@ class ImageBusi extends TomBaseBusi
         if (count($imageIds) > 9) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '图片数量不能超过9张');
         }
-        app('log')->info('帖子id'.$this->threadId.'图片入参：' . json_encode($imageIds));
         return $this->jsonReturn(['imageIds' => $imageIds]);
     }
 

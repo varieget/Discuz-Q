@@ -30,4 +30,11 @@ class DzqConst
     const SCOPE_SEARCH = 2;//发现页搜索列表
     const SCOPE_PAID = 3;//付费站首页列表
 
+
+    const PLUGIN_THREAD = 1;//主体扩展对象插件
+    const PLUGIN_DATA_IMPORT = 2;//外部数据导入
+    const PLUGIN_AD = 3;//广告插件
+    const PLUGIN_BANNER = 4;//首页banner插件
+
+
 }
