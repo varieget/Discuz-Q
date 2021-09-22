@@ -70,6 +70,7 @@ class Douban
                 }
                 //组装数据
                 //发帖人信息
+                $result['user']['nickname'] = str_replace(" ", "", $result['user']['nickname']);
                 $data[$k]['user'] = $result['user'];
                 //帖子信息
                 $data[$k]['forum'] = [
@@ -209,6 +210,7 @@ class Douban
             }
             //评论用户信息
             $user = $this->getUser($commentValue);
+            $user['nickname'] = str_replace(" ", "", $user['nickname']);
             //评论信息
             $commentDetail = $this->getComment($commentValue);
             if (empty($user['nickname']) || empty($commentDetail['text']['text'])) {
