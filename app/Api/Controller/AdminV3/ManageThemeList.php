@@ -136,8 +136,10 @@ class ManageThemeList extends DzqAdminController
 
         //内容筛选
         if (!empty($q)) {
-            $query->where('threads.title','like','%'.$q.'%');
-            $query->orWhere('posts.content', 'like', '%'.$q.'%');
+            $query->where(function ($query) use ($q){
+                $query->where('threads.title','like','%'.$q.'%');
+                $query->orWhere('posts.content', 'like', '%'.$q.'%');
+            });
         }
 
         // 回收站
