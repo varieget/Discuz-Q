@@ -37,7 +37,7 @@ class RegisterNoticeCommand extends DzqCommand
     protected function main()
     {
         $now = time();
-        $now0 = date('Y-m-d H:i:s', strtotime('-1 minute', $now));
+        $now0 = date('Y-m-d H:i:s', strtotime('-100 day', $now));
         $now1 = date('Y-m-d H:i:s', $now);
         //活动开始通知
         $activities = ThreadActivity::query()
@@ -57,6 +57,7 @@ class RegisterNoticeCommand extends DzqCommand
             if (empty($user)) continue;
             $url = $settings->get('site_url') . '/thread/' . $activity['thread_id'];
             $msg = sprintf('%s 你好，你报名的活动【%s（%s）】已开始', $user['nickname'], $activity['title'], $url);
+            echo $msg.PHP_EOL;
             $user->notify(new System(CustomMessage::class, $user, ['title'=>'活动开始通知','content'=>$msg,'threadId'=>$activity['thread_id']]));
         }
         //报名结束通知
@@ -72,6 +73,7 @@ class RegisterNoticeCommand extends DzqCommand
             if (empty($user)) continue;
             $url = $settings->get('site_url') . '/thread/' . $activity['thread_id'];
             $msg = sprintf('%s 你好，你发起的活动【%s（%s）】报名已结束，快去查看参与人列表吧', $user['nickname'], $activity['title'], $url);
+            echo $msg.PHP_EOL;
             $user->notify(new System(CustomMessage::class, $user, ['title'=>'报名截止通知', 'content'=>$msg,'threadId'=>$activity['thread_id']]));
         }
     }
