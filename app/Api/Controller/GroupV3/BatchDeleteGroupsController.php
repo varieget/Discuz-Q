@@ -20,8 +20,12 @@ namespace App\Api\Controller\GroupV3;
 
 use App\Common\ResponseCode;
 use App\Models\Group;
+use App\Models\GroupUser;
+use App\Models\GroupUserMq;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqAdminController;
+use Discuz\Base\DzqLog;
 use Illuminate\Contracts\Bus\Dispatcher;
 
 class BatchDeleteGroupsController extends DzqAdminController
@@ -60,12 +64,67 @@ class BatchDeleteGroupsController extends DzqAdminController
         }
         $groupDatas = Group::query()->whereIn('id', $ids)->get();
 
-        $groupDatas->each(function ($group) {
-            $group->delete();
-        });
-
-        return $this->outPut(ResponseCode::SUCCESS, '');
+        $groupIdDeletes = $groupDatas->pluck('id')->toArray();
+        $result = $this->changeUserGroupId($groupIdDeletes);
+        if ($result == 'true'){
+            $groupDatas->each(function ($group) {
+                $group->delete();
+            });
+            return $this->outPut(ResponseCode::SUCCESS, '');
+        }else{
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, $result);
+        }
     }
 
+    private function changeUserGroupId($groupIdDeletes){
+        $do_userIds=[];
+        try {
+            $defualtGroup = Group::query()->select('id')->where("default",1)->first();
+            $defualtGroupId = Group::MEMBER_ID;
+            if (!empty($defualtGroup)){
+                $defualtGroupId = $defualtGroupId->id;
+            }
+            $changeUserIds = GroupUser::query()->select("user_id")->whereIn('group_id',$groupIdDeletes)->get();
+
+            $doClosure = function () use ($changeUserIds, $groupIdDeletes, $defualtGroupId){
+                foreach ($changeUserIds as $key=>$item){
+                    $user_id = $item->user_id;
+
+                    //减少过期时间
+                    $remainDays = GroupUserMq::query()->whereIn('group_id',$groupIdDeletes)->sum('remain_days');
+                    User::query()->where('id',$user_id)->update(['expired_at'=>'date_add(`expired_at`,interval '.-$remainDays.' day)']);
+
+                    //设置新的用户组
+                    $newFeeGroup = GroupUserMq::query()->select("tb1.group_id")
+                        ->leftJoin("groups as tb2","tb1.group_id","tb2.id")
+                        ->where("tb2.is_paid",Group::IS_PAID)
+                        ->where('tb1.user_id', $user_id)
+                        ->whereNotIn('tb1.group_id',$groupIdDeletes)
+                        ->orderByDesc("tb2.level")->first();
+                    if (empty($newFeeGroup)){
+                        //设置为免费默认组
+                        GroupUser::query()->where('user_id',$user_id)->update('group_id',$defualtGroupId);
+                    }else{
+                        GroupUser::query()->where('user_id',$user_id)->update('group_id',$newFeeGroup->group_id);
+                    }
+                    $do_userIds[] = $user_id;
+                }
+            };
+            $doClosure();
+
+            GroupUserMq::query()->whereIn('group_id',$groupIdDeletes)->delete();
+            return true;
+        }catch (Throwable $e){
+            GroupUserMq::query()->whereIn('group_id',$groupIdDeletes)->whereIn('user_id',$do_userIds)->delete();
+
+            if (empty($e->validator) || empty($e->validator->errors())) {
+                $errorMsg = $e->getMessage();
+            } else {
+                $errorMsg = $e->validator->errors()->first();
+            }
+            DzqLog::error('delete_user_group_error', [], $errorMsg);
+            return $errorMsg;
+        }
+    }
 
 }
