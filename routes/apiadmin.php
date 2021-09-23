@@ -114,5 +114,6 @@ $route->post('/plugin/permission.switch', 'plugin.permission.switch', ApiControl
 $route->get('/plugin/permissionlist', 'plugin.permissionlist', ApiController\Plugin\GetGroupPermissionsController::class);
 $route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingController::class);
 
+$route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);
 
 
