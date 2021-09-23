@@ -20,6 +20,7 @@ namespace App\Notifications;
 
 use App\Models\Post;
 use App\Models\User;
+use App\Notifications\Messages\Database\CustomMessage;
 use App\Notifications\Messages\Database\GroupMessage;
 use App\Notifications\Messages\Database\PostMessage;
 use App\Notifications\Messages\Database\RegisterMessage;
@@ -196,6 +197,17 @@ class System extends AbstractNotification
             $this->messageRelationship['sms']           = app(RegisterSmsMessage::class);
             $this->messageRelationship['miniProgram']   = app(RegisterMiniProgramMessage::class);
             // set tpl id
+            $this->tplId = [
+                'database'    => 'system.registered.passed',
+                'wechat'      => 'wechat.registered.passed',
+                'sms'         => 'sms.registered.passed',
+                'miniProgram' => 'miniprogram.registered.passed',
+            ];
+        }else{
+            $this->messageRelationship['database']      = app(CustomMessage::class);
+//            $this->messageRelationship['wechat']        = app(RegisterWechatMessage::class);
+//            $this->messageRelationship['sms']           = app(RegisterSmsMessage::class);
+//            $this->messageRelationship['miniProgram']   = app(RegisterMiniProgramMessage::class);
             $this->tplId = [
                 'database'    => 'system.registered.passed',
                 'wechat'      => 'wechat.registered.passed',
