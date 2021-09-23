@@ -29,6 +29,10 @@ class GroupUser extends DzqModel
 
     public static $relationGroups = 'groups';
 
+    public function getUpdatedAtColumn(){
+        return null;
+    }
+
 
     public function groups(){
         return $this->hasOne(Group::class,'id','group_id');
