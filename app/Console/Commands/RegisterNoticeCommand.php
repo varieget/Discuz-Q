@@ -37,7 +37,7 @@ class RegisterNoticeCommand extends DzqCommand
     protected function main()
     {
         $now = time();
-        $now0 = date('Y-m-d H:i:s', strtotime('-100 day', $now));
+        $now0 = date('Y-m-d H:i:s', strtotime('-1 minute', $now));
         $now1 = date('Y-m-d H:i:s', $now);
         //活动开始通知
         $activities = ThreadActivity::query()
