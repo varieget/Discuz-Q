@@ -23,6 +23,9 @@ use App\Models\GroupPaidUser;
 use App\Models\Group;
 use App\Models\GroupUser;
 use App\Models\GroupUserMq;
+use App\Notifications\Messages\Database\GroupMessage;
+use App\Notifications\Messages\Database\GroupUpgradeMessage;
+use App\Notifications\System;
 use Illuminate\Support\Carbon;
 
 /**
@@ -147,6 +150,11 @@ class PaidGroupOrder
                 $group_paid_user->save();
             }
             $db->commit();
+            //发送通知
+            $notifyData = [
+                'new_group'     =>  $group_info->name
+            ];
+            $event->user->notify(new System(GroupUpgradeMessage::class, $event->user, $notifyData));
         }
     }
 }
