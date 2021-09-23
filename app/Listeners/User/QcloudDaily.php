@@ -18,6 +18,7 @@
 
 namespace App\Listeners\User;
 
+use App\Common\Utils;
 use App\Models\Setting;
 use App\Settings\SettingsRepository;
 use App\Events\Setting\Saved;
@@ -88,8 +89,8 @@ class QcloudDaily
             }
         }
         $site_url = !empty($settings['site_url']) ? $settings['site_url'] : '';
-        if(empty($site_url)){
-            $site_url = $_SERVER['HTTP_HOST'];
+        if(empty($site_url) || $site_url != Utils::getSiteUrl()){
+            $site_url = Utils::getSiteUrl();
             $this->settings->set('site_url', $site_url, 'default');
             $settings['site_url'] = $site_url;
         }
