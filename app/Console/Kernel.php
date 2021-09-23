@@ -52,8 +52,7 @@ class Kernel extends ConsoleKernel
         AttachmentAttributeUpdateCommand::class,
         CreateCrawlerDataCommand::class,
         MonitorSystemTaskCommand::class,
-        CreateCrawlerOfficialAccountDataCommand::class,
-        RegisterNoticeCommand::class
+        CreateCrawlerOfficialAccountDataCommand::class
     ];
 
     /**
