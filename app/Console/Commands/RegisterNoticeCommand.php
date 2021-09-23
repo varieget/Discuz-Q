@@ -19,11 +19,8 @@ namespace App\Console\Commands;
 
 
 use App\Common\DzqConst;
-use App\Models\Group;
 use App\Models\User;
 use App\Notifications\Messages\Database\CustomMessage;
-use App\Notifications\Messages\Database\GroupMessage;
-use App\Notifications\Messages\Database\RegisterMessage;
 use App\Notifications\System;
 use App\Settings\SettingsRepository;
 use Discuz\Base\DzqCommand;
