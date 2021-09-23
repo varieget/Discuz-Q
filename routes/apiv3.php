@@ -195,8 +195,6 @@ $route->get('/offiaccount/jssdk', 'offiaccount.jssdk', ApiController\WechatV3\Of
 
 $route->get('/test', 'thread.test', ApiController\ThreadsV3\TestController::class);
 
-$route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);
-
 $route->get('/view.count', 'view.count', ApiController\ThreadsV3\ViewCountController::class);
 
 //上传文件临时参数
