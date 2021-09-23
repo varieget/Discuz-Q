@@ -44,7 +44,7 @@ return [
     'expend_renew'              => '站点续费支出',
     'expend_reward'             => '打赏主题支出',
     'expend_thread'             => '付费主题支出',
-    'expend_group'              => '加入用户组支出',
+    'expend_group'              => '付费升级用户组',
     'expend_artificial'         => '人工支出',
     'expend_question'           => '问答提问支出',
     'expend_onlooker'           => '问答围观支出',

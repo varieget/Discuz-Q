@@ -21,6 +21,8 @@ namespace App\Listeners\Group;
 use App\Events\Group\PaidGroup;
 use App\Models\GroupPaidUser;
 use App\Models\Group;
+use App\Models\GroupUser;
+use App\Models\GroupUserMq;
 use Illuminate\Support\Carbon;
 
 /**
@@ -36,6 +38,7 @@ class PaidGroupOrder
             $user_group_ids = $event->user->groups()->pluck('id')->all();
             $group_info = Group::findOrFail($event->group_id);
             $db = app('db');
+            $log = app('log');
             $db->beginTransaction();
             //以前的设计用户--用户组是 一对多 的关系，但是目前业务流程使用的是  一对一，所以这里暂且按照一个用户对应一个二维数组来处理。只有当站长开启付费时， checkoutsite 会判断用户是否过期来考虑是否增加用户未付费用户组身份
             //下面的判断可以理解为：用户续费当前用户组身份
@@ -50,13 +53,18 @@ class PaidGroupOrder
                     } else {
                         //其他情况，到期时间往后顺延
                         $delete_type = GroupPaidUser::DELETE_TYPE_RENEW;
-                        $expiration_time = Carbon::parse($group_paid_user_info->expiration_time)->addDay($group_info->days);
+                        $expiration_time = Carbon::parse($group_paid_user_info->expiration_time)->addDays($group_info->days);
                     }
                     //软删除原记录
                     $group_paid_user_info->update(['delete_type' => $delete_type]);
-                    $group_paid_user_info->delete();
+                    $res = $group_paid_user_info->delete();
+                    if($res === false){
+                        $db->rollBack();
+                        $log->info('软删除 group_paid_user 记录出错', [$event]);
+                        return;
+                    }
                 } else {
-                    $expiration_time = Carbon::now()->addDay($group_info->days);
+                    $expiration_time = Carbon::now()->addDays($group_info->days);
                 }
                 $group_paid_user = GroupPaidUser::creation(
                     $event->user->id,
@@ -66,19 +74,60 @@ class PaidGroupOrder
                     isset($event->operator->id) ? $event->operator->id : null
                 );
                 //添加新记录
-                $group_paid_user->save();
-                //同时修改用户组到期时间
-                $event->user->groups()->where('group_id', $event->group_id)->update(['expiration_time' => $expiration_time]);
+                $res = $group_paid_user->save();
+                if($res === false){
+                    $db->rollBack();
+                    $log->info('新增 group_paid_user 记录出错', [$event]);
+                    return;
+                }
                 //针对付费站点有到期时间的概念，增加 users 的 expired_at
-                $event->user->expired_at += 60 * 60 * 24 * $group_info->days;
-                $event->user->save();
-
-
-
-
+                $event->user->expired_at = Carbon::parse($event->user->expired_at)->addDays($group_info->days);
+                $res = $event->user->save();
+                if($res === false){
+                    $db->rollBack();
+                    $log->info('修改 users 的 expired_at 记录出错', [$event]);
+                    return;
+                }
+                //修改用户当前 group_user 中的 expiration_time 记录
+                $group_user = GroupUser::query()->where(['group_id' => $event->group_id, 'user_id' => $event->user->id])->first();
+                $group_user->expiration_time = Carbon::parse($group_user->expiration_time)->addDays($group_info->days);
+                $res = $group_user->save();
+                if($res === false){
+                    $db->rollBack();
+                    $log->info('修改 group_user 的 expiration_time 记录出错', [$event]);
+                    return;
+                }
             } else {
+                //对于没有 group_user 记录的情况有两种：1、完全全新的用户；2、在已有用户组的情况下购买其他用户组的情况
+                $remain_days = $group_info->days;
+                //增加 users 中 expired_at 的时间
+                $event->user->expired_at = Carbon::parse($event->user->expired_at)->addDays($remain_days);
+                $res = $event->user->save();
+                if($res === false){
+                    $db->rollBack();
+                    $log->info('修改 users 的 expired_at 记录出错', [$event]);
+                    return;
+                }
+                //1、先查 group_user_mqs ，看用户是否有对应用户组id记录，有的话还需要取出来，把剩余时间累加上
+                $group_user_mqs = GroupUserMq::query()->where(['user_id' => $event->user->id, 'group_id' => $group_info->id])->first();
+                if(!empty($group_user_mqs)){
+                    $remain_days += $group_user_mqs->remain_days;
+                }
+                //判断 group_user 中是否有用户的group数据，有的话，需要把这一行数据迁移到 group_user_mqs 中
+                $old_group_user = GroupUser::query()->where(['user_id' => $event->user->id, 'group_id' => $group_info->id])->first();
+                if(!empty($old_group_user)){
+                    //计算old用户组还剩多久，迁移到 group_user_mqs
+                    $old_remain_days = Carbon::parse($old_group_user->expiration_time)->diffInDays(Carbon::now(), false);
+                    $group_user_mqs = new GroupUserMq();
+                    $group_user_mqs->group_id = $group_info->id;
+                    $group_user_mqs->user_id = $event->user->id;
+                    $group_user_mqs->remain_days = $old_remain_days;
+                    $group_user_mqs->save();
+                    //将原来的group_user 数据删掉
+                    $old_group_user->delete();
+                }
                 //新增用户组
-                $expiration_time = Carbon::now()->addDay($group_info->days);
+                $expiration_time = Carbon::now()->addDays($remain_days);
                 $event->user->groups()->attach($group_info->id, ['expiration_time' => $expiration_time]);
                 $group_paid_user = GroupPaidUser::creation(
                     $event->user->id,
@@ -89,7 +138,6 @@ class PaidGroupOrder
                 );
                 $group_paid_user->save();
             }
-
             $db->commit();
         }
     }
