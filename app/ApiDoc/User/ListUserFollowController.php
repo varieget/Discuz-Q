@@ -23,12 +23,12 @@
  *                          @OA\Property(property = "group", type = "object",
  *                              @OA\Property(property = "groupIcon", type="string", description = "用户组icon"),
  *                              @OA\Property(property = "groupName", type="string", description = "用户组名称"),
- *                              @OA\Property(property = "pid", type="integer", description = "用户组id")
+ *                              @OA\Property(property = "groupId", type="integer", description = "用户组id")
  *                          ),
  *                          @OA\Property(property = "user", type = "object",
  *                              @OA\Property(property = "avatar", type="string", description = "用户头像url"),
  *                              @OA\Property(property = "nickName", type="string", description = "用户昵称"),
- *                              @OA\Property(property = "pid", type="integer", description = "用户id"),
+ *                              @OA\Property(property = "userId", type="integer", description = "用户id"),
  *                              @OA\Property(property = "userName", type="string", description = "用户名称")
  *                          ),
  *                          @OA\Property(property = "userFollow", type = "object",

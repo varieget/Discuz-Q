@@ -35,7 +35,7 @@
  *                   @OA\property(property="group",type="object",allOf ={
  *                       @OA\Schema(
  *                          @OA\Property(property="groupName",type="string", description = "用户组"),
- *                          @OA\Property(property="pid",type="integer", description = "用户id"))
+ *                          @OA\Property(property="groupId",type="integer", description = "用户组id"))
  *     }),
  *                   @OA\Property(property="hasPassword", type="boolean", description = "是否设置密码"),
  *                   @OA\Property(property="id", type="integer", description = "用户id"),
