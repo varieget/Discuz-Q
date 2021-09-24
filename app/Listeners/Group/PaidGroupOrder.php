@@ -97,8 +97,8 @@ class PaidGroupOrder
                 }
                 //修改用户当前 group_user 中的 expiration_time 记录
                 $group_user = GroupUser::query()->where(['group_id' => $event->group_id, 'user_id' => $event->user->id])->first();
-                $group_user->expiration_time = Carbon::parse($group_user->expiration_time)->addDays($group_info->days);
-                $res = $group_user->save();
+                $expiration_time = Carbon::parse($group_user->expiration_time)->addDays($group_info->days);
+                $res = GroupUser::query()->where(['user_id' => $event->user->id, 'group_id' => $event->group_id])->update(['expiration_time' => $expiration_time]);
                 if($res === false){
                     $db->rollBack();
                     $log->info('修改 group_user 的 expiration_time 记录出错', [$event]);
@@ -108,7 +108,7 @@ class PaidGroupOrder
                 //对于没有 group_user 记录的情况有两种：1、完全全新的用户；2、在已有用户组的情况下购买其他用户组的情况
                 $remain_days = $group_info->days;
                 //增加 users 中 expired_at 的时间
-                if(!empty($event->user->expired_at)){
+                if($event->user->expired_at > Carbon::now()){
                     $event->user->expired_at = Carbon::parse($event->user->expired_at)->addDays($remain_days);
                 }else{
                     $event->user->expired_at = Carbon::now()->addDays($remain_days);
@@ -124,8 +124,10 @@ class PaidGroupOrder
                 if(!empty($group_user_mqs)){
                     $remain_days += $group_user_mqs->remain_days;
                 }
-                //判断 group_user 中是否有用户的group数据，有的话，需要把这一行数据迁移到 group_user_mqs 中
-                $old_group_user = GroupUser::query()->where(['user_id' => $event->user->id, 'group_id' => $group_info->id])->first();
+                //如果用户当前身份不是所购买的用户组、免费用户组
+                $pay_group_ids = Group::query()->where('is_paid', Group::IS_PAID)->pluck('id')->toArray();
+                $old_group_user = GroupUser::query()->where('user_id', $event->user->id)
+                    ->where('group_id', '!=',$group_info->id)->whereIn('group_id', $pay_group_ids)->first();
                 if(!empty($old_group_user)){
                     //计算old用户组还剩多久，迁移到 group_user_mqs
                     $old_remain_days = Carbon::parse($old_group_user->expiration_time)->diffInDays(Carbon::now(), false);
@@ -133,11 +135,20 @@ class PaidGroupOrder
                     $group_user_mqs->group_id = $group_info->id;
                     $group_user_mqs->user_id = $event->user->id;
                     $group_user_mqs->remain_days = $old_remain_days;
-                    $group_user_mqs->save();
-                    //将原来的group_user 数据删掉
-                    $old_group_user->delete();
+                    $res = $group_user_mqs->save();
+                    if($res === false){
+                        $db->rollBack();
+                        $log->info('新增 group_user_mqs 记录出错', [$event]);
+                        return;
+                    }
                 }
-                //新增用户组
+                //先删除老的 group_user
+                $res = GroupUser::query()->where('user_id', $event->user->id)->delete();
+                if($res === false){
+                    $db->rollBack();
+                    $log->info('删除 老数据 group_user 记录出错', [$event]);
+                    return;
+                }
                 $expiration_time = Carbon::now()->addDays($remain_days);
                 $event->user->groups()->attach($group_info->id, ['expiration_time' => $expiration_time]);
                 $group_paid_user = GroupPaidUser::creation(
@@ -147,7 +158,13 @@ class PaidGroupOrder
                     isset($event->order->id) ? $event->order->id : 0,
                     isset($event->operator->id) ? $event->operator->id : null
                 );
-                $group_paid_user->save();
+                $res = $group_paid_user->save();
+                if($res === false){
+                    $db->rollBack();
+                    $log->info('新增 group_paid_user 记录出错', [$event]);
+                    return;
+                }
+
             }
             $db->commit();
             //发送通知

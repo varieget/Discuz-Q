@@ -175,7 +175,8 @@ class ProfileController extends DzqController
             'groupName' => $group['groups']['name'],
             'isTop' =>  $is_top,
             'expirationTime'    =>  $group['expiration_time'],
-            'color' =>  $group['groups']['color']
+            'color' =>  $group['groups']['color'],
+            'level' =>  $group['groups']['level']
         ];
     }
 
