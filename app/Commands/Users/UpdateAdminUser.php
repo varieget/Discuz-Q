@@ -446,8 +446,7 @@ class UpdateAdminUser
                     if (!$isNewPay){
                         $deleteGroups = $payGroupIds;
                     }else{
-                        $deletePayGroups = array_diff($payGroupIds, $newPayGroupIds);
-                        $deleteGroups = $deletePayGroups;
+                        $deleteGroups = array_diff($payGroupIds, $newPayGroupIds);
                     }
                     $this->deletePayGroups($user,$deleteGroups);
                 }
@@ -471,16 +470,9 @@ class UpdateAdminUser
                         $oneGroupUserMq->save();
                     }
                 }
-                foreach ($newPayMqGroupIds as $newHasGroupId) {
-                    if (!isset($payGroupMap[$newHasGroupId])) {
-                        continue;
-                    }
-                    $groupItem = $payGroupMap[$newHasGroupId];
-                    $remainDays += $groupItem->days;
-                }
             }
 
-            //新增付费用户组处理
+            //付费用户组处理
             foreach ($newPayGroupIds as $paidGroupId) {
                 $this->events->dispatch(
                     new PaidGroup($paidGroupId, $user, null, $this->actor)
@@ -514,6 +506,7 @@ class UpdateAdminUser
             ->where('user_id',$user->id)->delete();
         GroupPaidUser::query()->whereIn('group_id', $deleteGroupsIds)
             ->where('user_id',$user->id)
+            ->where("delete_type",0)
             ->update(['operator_id' => $this->actor->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
     }
 
