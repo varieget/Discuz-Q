@@ -63,7 +63,10 @@ class GroupExpiredNoticeCommand extends AbstractCommand
             $group = Group::query()->find(Group::MEMBER_ID);
             if(!empty($users->toArray())){
                 $notifyData = [
-                    'groupname' =>  $group->name
+                    'groupname' =>  $group->name,
+                    'raw'   =>  [
+                        'refeeType' =>  1           //普通用户组续费类型
+                    ]
                 ];
                 foreach ($users as $user){
                     $user->notify(new System(GroupExpiredNoticeCommand::class, $user, $notifyData));
@@ -87,7 +90,12 @@ class GroupExpiredNoticeCommand extends AbstractCommand
             ->get();
         if(!empty($users->toArray())){
             foreach ($users as $user){
-                $user->notify(new System(GroupExpiredNoticeCommand::class, $user, ['groupname' => $pay_groups[$user->group_id]]));
+                $user->notify(new System(GroupExpiredNoticeCommand::class, $user, [
+                    'groupname' => $pay_groups[$user->group_id],
+                    'raw'   =>  [
+                        'refeeType' =>  2           //付费用户组续费类型
+                    ]
+                ]));
             }
         }
         $this->info('执行站点续费和付费用户组还有3天到期通知');
