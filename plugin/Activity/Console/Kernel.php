@@ -25,6 +25,6 @@ class Kernel extends DzqKernel
 {
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('register:notice')->everyMinute();
+        //$schedule->command('register:notice')->everyMinute();
     }
 }
