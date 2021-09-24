@@ -27,6 +27,10 @@ class UsersOrderLogsListController extends DzqAdminController
             $query->where('orders.order_sn', $filter['orderSn']);
         }
 
+        if (isset($filter['type']) && is_numeric($filter['type'])) {
+            $query->where('orders.type', $filter['type']);
+        }
+
         if (isset($filter['status']) && is_numeric($filter['status'])) {
             $query->where('orders.status', $filter['status']);
         }

@@ -44,6 +44,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $is_commission
  * @property Collection $users
  * @property Collection $permissions
+ * @property int level
+ * @property string description
+ * @property string notice
  */
 class Group extends DzqModel
 {
@@ -89,6 +92,8 @@ class Group extends DzqModel
      * The group need paid
      */
     const IS_PAID = 1;
+
+    const PAID_GROUPS_NUM = 5;
 
     /**
      * {@inheritdoc}

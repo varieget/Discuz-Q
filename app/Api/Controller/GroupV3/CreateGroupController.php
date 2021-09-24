@@ -57,21 +57,51 @@ class CreateGroupController extends DzqAdminController
             'scale' => $this->inPut('scale'),
             'isSubordinate' => $this->inPut('isSubordinate'),
             'isCommission' => $this->inPut('isCommission'),
+            'level' => $this->inPut('level'),
+            'description' => $this->inPut('description'),
+            'notice' => $this->inPut('notice'),
         ];
 
-       // dump($group);die;
 
         if(empty($group['name'])){
             $this->outPut(ResponseCode::INVALID_PARAMETER, '');
         }
 
+        $this->dzqValidate($group, [
+            'name'=> 'required_without|max:200',
+            'description'=> 'max:200',
+            'notice'=> 'max:200',
+        ]);
+
+        if (!empty($group['isPaid']) && $group['isPaid']==Group::IS_PAID){
+            if ($group["default"] == "true"){
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，不可设置为默认组');
+            }
+            if ($group["fee"] <= 0){
+               $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，费用错误');
+            }
+            if ($group["days"] <= 0){
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，天数错误');
+            }
+            //检查level
+            if ($group["level"] <= 0){
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
+            }
+            //检查该等级是否存在
+            if(Group::query()->where('level',$group["level"])->first()){
+                $this->outPut(ResponseCode::RESOURCE_EXIST, '付费组，级别已存在');
+            }
+
+            //检查付费组个数
+            $payGroupNum = Group::query()->where('is_paid',Group::IS_PAID)->count();
+            if ($payGroupNum >= Group::PAID_GROUPS_NUM){
+                $this->outPut(ResponseCode::RESOURCE_EXIST, '付费组，个数已达上限');
+            }
+        }
+
         if(Group::query()->where('name',$group['name'])->first()){
             $this->outPut(ResponseCode::RESOURCE_EXIST, '');
         }
-
-        $this->dzqValidate($group, [
-            'name'=> 'required_without|max:200',
-        ]);
 
         $result = $this->bus->dispatch(
             new CreateGroup($actor, $group)
