@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace App\Listeners\User;
+namespace App\Listeners\SiteInfo;
 
 use App\Models\Order;
 use App\Models\Post;

@@ -44,8 +44,8 @@ class UserListener
         // 修改支付密码
         $events->listen(PayPasswordChanged::class, [$this, 'payPasswordChanged']);
 
-        $events->listen(AdminLogind::class, QcloudDaily::class);
-        $events->listen(AdminLogind::class, QcloudSiteInfoDaily::class);
+//        $events->listen(AdminLogind::class, QcloudDaily::class);
+//        $events->listen(AdminLogind::class, QcloudSiteInfoDaily::class);
 
         $events->listen(Forum::class, [$this, 'activeUsersStatistics']);
         $events->listen(Forum::class, [$this, 'startStatistics']);
