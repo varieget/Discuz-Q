@@ -92,7 +92,7 @@ abstract class TomBaseBusi
     public function jsonReturn($array)
     {
         $plugin = $this->body['_plugin'] ?? null;
-        $array['_plugin'] = $plugin;
+        !empty($plugin) && $array['_plugin'] = $plugin;
         $ret = [
             'tomId' => $this->tomId,
             'operation' => $this->operation,
