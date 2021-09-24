@@ -26,6 +26,7 @@ use App\Console\Commands\FinanceCreateCommand;
 use App\Console\Commands\InviteExpireCommand;
 use App\Console\Commands\QueryWechatOrderConmmand;
 use App\Console\Commands\QuestionClearCommand;
+use App\Console\Commands\RegisterNoticeCommand;
 use App\Console\Commands\ThreadRewardExpireCommand;
 use App\Console\Commands\RedPacketExpireCommand;
 use App\Console\Commands\TranscodeVideoCommand;
@@ -82,5 +83,6 @@ class Kernel extends ConsoleKernel
 
         //监听定时任务
         $schedule->command('task:start')->everyMinute();
+        $schedule->command('register:notice')->everyMinute();
     }
 }

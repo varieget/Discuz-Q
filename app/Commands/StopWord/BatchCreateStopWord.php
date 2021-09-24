@@ -187,13 +187,17 @@ class BatchCreateStopWord
                 if(empty($arrMap[4])){
                     $arrMap[4] = "undefined";
                 }
+                if(empty($arrMap[5])){
+                    $arrMap[5] = "undefined";
+                }
+                array_shift($arrMap);
                 list($ugc, $username, $signature, $dialog, $nickname) = $arrMap;
                 if (! in_array($ugc, StopWord::$allowTypes)) {
                     $replacement = $ugc;
                     $ugc = StopWord::REPLACE;
                 }
 
-                if (! in_array($username, [StopWord::MOD, StopWord::BANNED])) {
+                if (! in_array($username, [StopWord::BANNED])) {
                     $username = StopWord::IGNORE;
                 }
 
