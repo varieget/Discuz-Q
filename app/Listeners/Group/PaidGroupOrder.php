@@ -47,7 +47,9 @@ class PaidGroupOrder
             //下面的判断可以理解为：用户续费当前用户组身份
             if (in_array($event->group_id, $user_group_ids)) {
                 //已有用户组
-                $group_paid_user_info = GroupPaidUser::where('user_id', $event->user->id)->where('group_id', $event->group_id)->first();
+                $group_paid_user_info = GroupPaidUser::where('user_id', $event->user->id)
+                    ->where('group_id', $event->group_id)
+                    ->where('delete_type',0)->first();
                 if (isset($group_paid_user_info->expiration_time)) {
                     if (!empty($event->operator->id)) {
                         //管理员操作时重新设置过期时间不变
@@ -98,7 +100,8 @@ class PaidGroupOrder
                 //修改用户当前 group_user 中的 expiration_time 记录
                 $group_user = GroupUser::query()->where(['group_id' => $event->group_id, 'user_id' => $event->user->id])->first();
                 $group_user->expiration_time = Carbon::parse($group_user->expiration_time)->addDays($group_info->days);
-                $res = $group_user->save();
+                $res = GroupUser::query()->where(['group_id' => $event->group_id, 'user_id' => $event->user->id])
+                    ->update(["expiration_time"=>$group_user->expiration_time]);
                 if($res === false){
                     $db->rollBack();
                     $log->info('修改 group_user 的 expiration_time 记录出错', [$event]);
