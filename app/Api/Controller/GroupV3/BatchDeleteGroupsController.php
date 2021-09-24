@@ -77,8 +77,8 @@ class BatchDeleteGroupsController extends DzqAdminController
                 $group->delete();
             });
 
-            GroupPaidUser::query()->whereIn('group_id', $paidGroupIds)
-                ->update(['operator_id' => $this->actor->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
+            GroupPaidUser::query()->whereIn('group_id', $paidGroupIds)->where('delete_type', "=",'0')
+                ->update(['operator_id' => $this->user->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
 
             return $this->outPut(ResponseCode::SUCCESS, '');
         }else{
@@ -103,6 +103,7 @@ class BatchDeleteGroupsController extends DzqAdminController
                     //减少过期时间
                     $remainDays = GroupUserMq::query()->whereIn('group_id',$groupIdDeletes)->where('user_id',$user_id)->sum('remain_days');
                     User::query()->where('id',$user_id)->update(['expired_at'=>$dbMgr->raw("DATE_ADD(expired_at,interval ".-$remainDays." day)")]);
+
 
                     //设置新的用户组
                     $newFeeGroup = GroupUserMq::query()->select("group_id")
