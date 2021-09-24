@@ -26,6 +26,7 @@ use App\Events\Users\PayPasswordChanged;
 use App\Exceptions\TranslatorException;
 use App\Models\Group;
 use App\Models\GroupPaidUser;
+use App\Models\GroupUserMq;
 use App\Models\Order;
 use App\Models\User;
 use App\Common\ResponseCode;
@@ -411,6 +412,25 @@ class UpdateAdminUser
 
         // 当新旧用户组不一致时，更新用户组并发送通知
         if ($newGroups && $newGroups->toArray() != $oldGroups->keys()->toArray()) {
+
+            $payGroups = Group::query()->where('is_paid', Group::IS_PAID)->get();
+            $payGroupMap = [];
+            $payGroups->map(function ($item) use (&$payGroupMap){
+                $payGroupMap[$item->id] = $item;
+            });
+            $payGroupIds = $payGroups->pluck("id")->toArray();
+            $newPayGroupIds = array_intersect($newGroups->toArray(),$payGroupIds);
+            $isNewPay = false;
+            if(!empty($newPayGroupIds)){
+                $isNewPay = true;
+            }
+            $oldPayGroupIds = array_intersect($oldGroups->keys()->toArray(),$payGroupIds);
+            $isOldPay = false;
+            if(!empty($oldPayGroupIds)){
+                $isOldPay = true;
+            }
+
+
             // 更新用户组
             $user->groups()->sync($newGroups);
 
@@ -421,22 +441,50 @@ class UpdateAdminUser
 
             $deleteGroups = array_diff($oldGroups->keys()->toArray(), $newGroups->toArray());
             if ($deleteGroups) {
-                //删除付费用户组
-                $groupsPaid = Group::query()->whereIn('id', $deleteGroups)->where('is_paid', Group::IS_PAID)->pluck('id')->toArray();
-                if (!empty($groupsPaid)) {
-                    GroupPaidUser::query()->whereIn('group_id', $groupsPaid)
-                        ->where('user_id', $user->id)
-                        ->update(['operator_id' => $this->actor->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
+                if ($isOldPay){
+                    //删除付费用户组
+                    if (!$isNewPay){
+                        $deleteGroups = $payGroupIds;
+                    }else{
+                        $deletePayGroups = array_diff($payGroupIds, $newPayGroupIds);
+                        $deleteGroups = $deletePayGroups;
+                    }
+                    $this->deletePayGroups($user,$deleteGroups);
                 }
             }
-            $newPaidGroups = $user->groups()->where('is_paid', Group::IS_PAID)->get();
-            if ($newPaidGroups->count()) {
-                //新增付费用户组处理
-                foreach ($newPaidGroups as $paidGroupVal) {
-                    $this->events->dispatch(
-                        new PaidGroup($paidGroupVal->id, $user, null, $this->actor)
-                    );
+
+            if ($isNewPay){
+                $newPayMqs = GroupUserMq::query()->whereIn('group_id',$newPayGroupIds)->get();
+                $newPayMqGroupIds = $newPayMqs->pluck("group_id")->toArray();
+                $newNoPayMqGroupIds = array_diff($newPayGroupIds,$newPayMqGroupIds);
+                if ($newNoPayMqGroupIds != 0){
+                    foreach ($newNoPayMqGroupIds as $noGroupId){
+                        if (!isset($payGroupMap[$noGroupId])){
+                            continue;
+                        }
+
+                        $groupItem = $payGroupMap[$noGroupId];
+                        $oneGroupUserMq = new GroupUserMq();
+                        $oneGroupUserMq->group_id = $groupItem->id;
+                        $oneGroupUserMq->user_id = $user->id;
+                        $oneGroupUserMq->remain_days = $groupItem->days;
+                        $oneGroupUserMq->save();
+                    }
                 }
+                foreach ($newPayMqGroupIds as $newHasGroupId) {
+                    if (!isset($payGroupMap[$newHasGroupId])) {
+                        continue;
+                    }
+                    $groupItem = $payGroupMap[$newHasGroupId];
+                    $remainDays += $groupItem->days;
+                }
+            }
+
+            //新增付费用户组处理
+            foreach ($newPayGroupIds as $paidGroupId) {
+                $this->events->dispatch(
+                    new PaidGroup($paidGroupId, $user, null, $this->actor)
+                );
             }
 
             // 发送系统通知
@@ -448,6 +496,25 @@ class UpdateAdminUser
             // Tag 发送通知
             $user->notify(new System(GroupMessage::class, $user, $notifyData));
         }
+    }
+
+    protected function deletePayGroups(User $user, array $deleteGroupsIds){
+        if (empty($user) || empty($deleteGroupsIds)){
+            return;
+        }
+
+        $dbMgr = app("db");
+        $remainDays = GroupUserMq::query()->whereIn('group_id',$deleteGroupsIds)
+            ->where('user_id',$user->id)->sum('remain_days');
+        if ($remainDays != 0){
+            $user->expired_at = Carbon::parse($user->expired_at)->addDays(-$remainDays);
+            $user->save();
+        }
+        GroupUserMq::query()->whereIn('group_id',$deleteGroupsIds)
+            ->where('user_id',$user->id)->delete();
+        GroupPaidUser::query()->whereIn('group_id', $deleteGroupsIds)
+            ->where('user_id',$user->id)
+            ->update(['operator_id' => $this->actor->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
     }
 
     /**
