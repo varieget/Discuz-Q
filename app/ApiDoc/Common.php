@@ -820,7 +820,7 @@
  * @OA\Schema(
  *     schema="group_detail",
  *     title="用户组信息",
- *     @OA\Property(property = "pid", type = "integer", description = "用户组id"),
+ *     @OA\Property(property = "groupId", type = "integer", description = "用户组id"),
  *     @OA\Property(property = "groupName", type = "string", description = "用户组名称"),
  *     @OA\Property(property = "groupIcon", type = "string", description = "")
  * )
