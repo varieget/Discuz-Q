@@ -307,9 +307,12 @@ class UserRepository extends AbstractRepository
      * @param null $categoryId
      * @return bool
      */
-    public function canEssenceThread(User $user, $categoryId = null)
+    public function canEssenceThread(User $user, $thread)
     {
-        return $this->checkCategoryPermission($user, PermissionKey::THREAD_ESSENCE, $categoryId);
+        if (!$thread) {
+            return false;
+        }
+        return $this->checkCategoryPermission($user, PermissionKey::THREAD_ESSENCE, $thread['category_id']);
     }
 
     /**

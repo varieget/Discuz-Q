@@ -17,6 +17,7 @@
 
 namespace App\Common;
 
+use Discuz\Base\DzqCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -154,7 +155,7 @@ class Utils
         $trace = collect(debug_backtrace())->map(function ($trace) {
             return Arr::only($trace, ['file', 'line', 'function', 'class', 'type']);
         })->slice(0, 10);
-        $logger->info('in: '.$method.':'.PHP_EOL.json_encode($trace));
+        $logger->info('in: ' . $method . ':' . PHP_EOL . json_encode($trace));
     }
 
     /**
@@ -162,8 +163,9 @@ class Utils
      * @param $leftM
      * @param $rightM
      */
-    public static function compareMath($leftM, $rightM){
-        return  intval($leftM * 100) != intval($rightM * 100);
+    public static function compareMath($leftM, $rightM)
+    {
+        return intval($leftM * 100) != intval($rightM * 100);
     }
 
     public static function hideStr($str)
@@ -184,11 +186,11 @@ class Utils
     }
 
     //获取今天的开始和结束时间
-    public static function getTodayTime(){
+    public static function getTodayTime()
+    {
         return [
-            'begin'=>date("Y-m-d 00:00:00"),
-            'end'=>date("Y-m-d 23:59:59")
+            'begin' => date("Y-m-d 00:00:00"),
+            'end' => date("Y-m-d 23:59:59")
         ];
     }
-
 }

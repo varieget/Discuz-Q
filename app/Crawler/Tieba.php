@@ -58,6 +58,7 @@ class Tieba
                 if (empty($forum['id'])) {
                     continue;
                 }
+                $user['nickname'] = str_replace(" ", "", $user['nickname']);
                 $data[$k]['user'] = $user;
                 $data[$k]['forum'] = $forum;
                 //增加nickname
@@ -207,6 +208,7 @@ class Tieba
                 continue;
             }
             //用户信息
+            $user['nickname'] = str_replace(" ", "", $user['nickname']);
             $data[$key]['user'] = $user;
             //评论信息
             $data[$key]['comment'] = $commentDetail;

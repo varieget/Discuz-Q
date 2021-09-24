@@ -20,7 +20,7 @@ use App\Api\Controller as ApiController;
 //$route->post('/user/delete', 'user.delete', ApiController\UsersV3\DeleteUserController::class);
 //$route->post('/user/delete/wechat', 'user.delete.wechat', ApiController\UsersV3\UnbindWechatController::class);
 //$route->get('/models', 'models.get', ApiController\UsersV3\GetModelsController::class);
-
+//$route->get('/swagger', 'swagger', ApiController\SwaggerController::class);
 /*
 |--------------------------------------------------------------------------
 | 注册/登录
@@ -195,8 +195,6 @@ $route->get('/offiaccount/jssdk', 'offiaccount.jssdk', ApiController\WechatV3\Of
 
 $route->get('/test', 'thread.test', ApiController\ThreadsV3\TestController::class);
 
-$route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);
-
 $route->get('/view.count', 'view.count', ApiController\ThreadsV3\ViewCountController::class);
 
 //上传文件临时参数
@@ -211,4 +209,5 @@ $route->get('/check.user.get.redpacket', 'check.user.get.redpacket', ApiControll
 //用户组升级列表
 $route->get('/upgrade.group', 'upgrade.group', ApiController\GroupV3\ListPayGroupsController::class);
 
+$route->get('/plugin/list', 'plugin', ApiController\Plugin\PluginListController::class);
 

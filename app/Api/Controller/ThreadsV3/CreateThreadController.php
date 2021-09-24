@@ -22,9 +22,7 @@ use App\Common\Platform;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
-use App\Models\Permission;
 use App\Models\Post;
-use App\Models\Setting;
 use App\Models\SiteInfoDaily;
 use App\Models\Thread;
 use App\Models\ThreadTag;
@@ -32,11 +30,8 @@ use App\Models\ThreadTom;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
-use App\Settings\SettingsRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
-use Illuminate\Support\Arr;
 
 class CreateThreadController extends DzqController
 {
@@ -180,12 +175,9 @@ class CreateThreadController extends DzqController
         ];
         $price = floatval($price);
         $attachmentPrice = floatval($attachmentPrice);
-        if ($price > 0 || $attachmentPrice > 0) {
-            $this->checkThreadPrice($price, $attachmentPrice);
-        }
-
         $freeWords = floatval($freeWords);
         if ($price > 0 || $attachmentPrice > 0) {
+            $this->checkThreadPrice($price, $attachmentPrice);
             $price > 0 && $dataThread['price'] = $price;
             $attachmentPrice > 0 && $dataThread['attachment_price'] = $attachmentPrice;
             $freeWords > 0 && $dataThread['free_words'] = $freeWords;
@@ -222,23 +214,6 @@ class CreateThreadController extends DzqController
         $thread = Thread::find($thread->id);
         return $thread;
     }
-
-    /**
-     * @desc  todo 扩展属性权限判断,后面迁移到busi插件里
-     * @param $permission
-     * @param $msg
-     */
-    private function propertyExtendPermission($permission, $msg)
-    {
-        $permissions = Permission::getUserPermissions($this->user);
-        if (!in_array($permission, $permissions) && !$this->user->isAdmin()) {
-            //todo 联调关闭权限检查
-            if (!$this->CLOSE_BUSI_PERMISSION) {
-                $this->outPut(ResponseCode::UNAUTHORIZED, $msg);
-            }
-        }
-    }
-
 
     private function savePost($thread, $content)
     {
@@ -321,7 +296,6 @@ class CreateThreadController extends DzqController
     }
 
     public function increaseThreads(){
-        $user_agent = $this->request->getHeaderLine('User-Agent');
         $today = date("Y-m-d", time());
         $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
         if(empty($site_info_daily)){

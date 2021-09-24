@@ -84,7 +84,6 @@ class CreateOrderController extends DzqController
                 /** @var Thread $thread */
                 $thread = Thread::query()
                     ->where('id', $data['thread_id'])
-                    ->where('price', 0)                // 免费主题才可以打赏
                     ->where('is_approved', Thread::APPROVED)
                     ->whereNull('deleted_at')
                     ->first();
