@@ -12,7 +12,7 @@
  *         @OA\JsonContent(allOf ={
  *                 @OA\Schema(ref = "#/components/schemas/dzq_layout"),
  *                 @OA\Schema(title="内容分类列表",description="内容分类列表",@OA\Property(property = "Data", type = "array",@OA\Items(type = "object",
- *                     @OA\Property(property = "pid", type="integer", description = "分类id"),
+ *                     @OA\Property(property = "categoryId", type="integer", description = "分类id"),
  *                     @OA\Property(property = "name", type="string", description = "分类名称"),
  *                     @OA\Property(property = "description", type="string", description = "分类描述"),
  *                     @OA\Property(property = "icon", type="string", description = "图标"),
@@ -23,7 +23,7 @@
  *                     @OA\Property(property = "canCreateThread", type="boolean", description = "是否可以在此分类下创建帖子"),
  *                     @OA\Property(property = "searchIds", type = "array",@OA\Items(type = "integer")),
  *                     @OA\Property(property = "children", type = "array",@OA\Items(type = "object",
- *                         @OA\Property(property = "pid", type="integer", description = "分类id"),
+ *                         @OA\Property(property = "categoryId", type="integer", description = "分类id"),
  *                         @OA\Property(property = "name", type="string", description = "分类名称"),
  *                         @OA\Property(property = "description", type="string", description = "分类描述"),
  *                         @OA\Property(property = "icon", type="string", description = "图标"),

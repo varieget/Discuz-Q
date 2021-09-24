@@ -32,7 +32,7 @@
  *                      @OA\Property(property="isFirst", type="boolean", description="是否是帖子内容"),
  *                      @OA\Property(property="isLiked", type="boolean", description="是否点赞"),
  *                      @OA\Property(property="likeCount", type="integer", description="点赞数量"),
- *                      @OA\Property(property="pid", type="integer", description="评论id"),
+ *                      @OA\Property(property="postId", type="integer", description="评论id"),
  *                      @OA\Property(property="likePayCount", type="integer", description="点赞数量+采纳数量+付费数量"),
  *                      @OA\Property(property="redPacketAmount", type="number", description="红包金额"),
  *                      @OA\Property(property="replyCount", type="integer", description="回复数量"),

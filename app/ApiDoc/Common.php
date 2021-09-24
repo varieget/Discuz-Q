@@ -600,7 +600,10 @@
  *           @OA\Property(property = "title", type = "string", description = "消息通知标题"),
  *           @OA\Property(property = "content", type = "string", description = "消息通知内容"),
  *           @OA\Property(property = "raw", type = "object", description = "消息模板", allOf = {
- *              @OA\Schema(@OA\Property(property = "tplId", type = "integer", description = "消息模板id"))
+ *              @OA\Schema(
+ *                  @OA\Property(property = "tplId", type = "integer", description = "消息模板id"),
+ *                  @OA\Property(property = "refeeType", type = "integer", description = "续费通知类型；1：普通用户组续费类型、2：付费用户组续费类型")
+ *              )
  *           }),
  *           @OA\Property(property = "userId", type = "integer", description = "发送人-用户id"),
  *           @OA\Property(property = "username", type = "string", description = "发送人-用户名"),
@@ -820,7 +823,7 @@
  * @OA\Schema(
  *     schema="group_detail",
  *     title="用户组信息",
- *     @OA\Property(property = "pid", type = "integer", description = "用户组id"),
+ *     @OA\Property(property = "groupId", type = "integer", description = "用户组id"),
  *     @OA\Property(property = "groupName", type = "string", description = "用户组名称"),
  *     @OA\Property(property = "groupIcon", type = "string", description = "")
  * )

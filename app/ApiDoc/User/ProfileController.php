@@ -35,7 +35,13 @@
  *                   @OA\property(property="group",type="object",allOf ={
  *                       @OA\Schema(
  *                          @OA\Property(property="groupName",type="string", description = "用户组"),
- *                          @OA\Property(property="pid",type="integer", description = "用户id"))
+ *                          @OA\Property(property="pid",type="integer", description = "用户id"),
+ *                          @OA\Property(property="expirationTime",type="string", description = "到期时间"),
+ *                          @OA\Property(property="isTop",type="boolean", description = "是否为顶级付费用户组"),
+ *                          @OA\Property(property="color",type="string", description = "用户组颜色"),
+ *                          @OA\Property(property="level",type="integer", description = "用户组等级"),
+ *                      )
+ *                          @OA\Property(property="groupId",type="integer", description = "用户组id"))
  *     }),
  *                   @OA\Property(property="hasPassword", type="boolean", description = "是否设置密码"),
  *                   @OA\Property(property="id", type="integer", description = "用户id"),

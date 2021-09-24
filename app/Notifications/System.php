@@ -21,6 +21,7 @@ namespace App\Notifications;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\Messages\Database\GroupExpiredMessage;
+use App\Notifications\Messages\Database\CustomMessage;
 use App\Notifications\Messages\Database\GroupMessage;
 use App\Notifications\Messages\Database\GroupUpgradeMessage;
 use App\Notifications\Messages\Database\PostMessage;
@@ -56,6 +57,8 @@ class System extends AbstractNotification
      */
     public $tplId;
 
+    private $isCustomer = false;
+
     /**
      * @var Collection
      */
@@ -64,6 +67,10 @@ class System extends AbstractNotification
     public function __construct($message, User $actor, $data = [])
     {
         $this->message = app($message);
+
+        if($this->message instanceof CustomMessage){
+            $this->isCustomer = true;
+        }
 
         $this->actor = $actor;
         $this->data = $data;
@@ -121,6 +128,7 @@ class System extends AbstractNotification
 
     public function toWechat($notifiable)
     {
+        if ($this->isCustomer) return false;
         $message = $this->getMessage('wechat');
         $message->setData($this->getTplModel('wechat'), $this->actor, $this->data);
 
@@ -129,6 +137,7 @@ class System extends AbstractNotification
 
     public function toSms($notifiable)
     {
+        if ($this->isCustomer) return false;
         $message = $this->getMessage('sms');
         $message->setData($this->getTplModel('sms'), $this->actor, $this->data);
 
@@ -137,6 +146,7 @@ class System extends AbstractNotification
 
     public function toMiniProgram($notifiable)
     {
+        if ($this->isCustomer) return false;
         $message = $this->getMessage('miniProgram');
         $message->setData($this->getTplModel('miniProgram'), $this->actor, $this->data);
 
@@ -213,6 +223,17 @@ class System extends AbstractNotification
         elseif ($this->message instanceof GroupExpiredMessage){
             $this->tplId = [
                 'database'    => 'system.user.group.expired',
+            ];
+        }else{
+            $this->messageRelationship['database']      = app(CustomMessage::class);
+//            $this->messageRelationship['wechat']        = app(RegisterWechatMessage::class);
+//            $this->messageRelationship['sms']           = app(RegisterSmsMessage::class);
+//            $this->messageRelationship['miniProgram']   = app(RegisterMiniProgramMessage::class);
+            $this->tplId = [
+                'database'    => 'system.registered.passed',
+                'wechat'      => 'wechat.registered.passed',
+                'sms'         => 'sms.registered.passed',
+                'miniProgram' => 'miniprogram.registered.passed',
             ];
         }
     }

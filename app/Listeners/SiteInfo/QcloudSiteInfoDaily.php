@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-namespace App\Listeners\User;
+namespace App\Listeners\SiteInfo;
 
+use App\Common\Utils;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\SiteInfoDaily;
@@ -65,6 +66,10 @@ class QcloudSiteInfoDaily
             return;
         }
         $site_url = !empty($settings['site_url']) ? $settings['site_url'] : '';
+        if(empty($site_url) || $site_url != Utils::getSiteUrl()){
+            $site_url = Utils::getSiteUrl();
+            $this->settings->set('site_url', $site_url, 'default');
+        }
         $appfile = base_path('vendor/discuz/core/src/Foundation/Application.php');
         $current_version_time = date('Y-m-d H:i:s', filemtime($appfile));
         if(empty($settings['site_init_version'])){

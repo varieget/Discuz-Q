@@ -20,7 +20,7 @@ namespace App\Console\Commands;
 
 use App\Models\Group;
 use App\Models\User;
-use App\Notifications\Messages\Database\GroupUpgradeMessage;
+use App\Notifications\Messages\Database\GroupExpiredMessage;
 use App\Notifications\System;
 use Carbon\Carbon;
 use Discuz\Console\AbstractCommand;
@@ -69,7 +69,7 @@ class GroupExpiredNoticeCommand extends AbstractCommand
                     ]
                 ];
                 foreach ($users as $user){
-                    $user->notify(new System(GroupExpiredNoticeCommand::class, $user, $notifyData));
+                    $user->notify(new System(GroupExpiredMessage::class, $user, $notifyData));
                 }
             }
         }
@@ -86,11 +86,11 @@ class GroupExpiredNoticeCommand extends AbstractCommand
                 $join->on('group_user.user_id', '=', 'users.id')
                     ->whereIn('group_id', $pay_group_ids);
             })
-            ->whereBetween('users.expired_at', [$threeDaysAfter, $fourDaysAfter])
+            ->whereBetween('group_user.expiration_time', [$threeDaysAfter, $fourDaysAfter])
             ->get();
         if(!empty($users->toArray())){
             foreach ($users as $user){
-                $user->notify(new System(GroupExpiredNoticeCommand::class, $user, [
+                $user->notify(new System(GroupExpiredMessage::class, $user, [
                     'groupname' => $pay_groups[$user->group_id],
                     'raw'   =>  [
                         'refeeType' =>  2           //付费用户组续费类型
