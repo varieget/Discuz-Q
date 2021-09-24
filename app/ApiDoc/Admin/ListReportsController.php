@@ -26,7 +26,7 @@
  *                           @OA\Schema(ref = "#/components/schemas/report_detail")
  *                      })),
  *                      @OA\Schema(@OA\Property(property = "user", type = "object", description = "举报人信息", allOf = {
- *                           @OA\Schema(@OA\Property(property = "pid", type = "integer", description = "用户id")),
+ *                           @OA\Schema(@OA\Property(property = "userId", type = "integer", description = "用户id")),
  *                           @OA\Schema(@OA\Property(property = "userName", type = "string", description = "用户名"))
  *                      }))
  *                  }))
