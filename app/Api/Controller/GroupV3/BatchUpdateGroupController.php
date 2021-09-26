@@ -104,14 +104,17 @@ class BatchUpdateGroupController extends DzqAdminController
             }
         }
 
-        $groupQuery = Group::query()->where('is_paid',Group::IS_PAID);
-        if (!empty($payGroupIds)) {
-            $groupQuery->whereNotIn("id", $payGroupIds);
+        if (!empty($payGroupIds)){  //有付费组则必须是全部的付费组
+            $groupQuery = Group::query()->where('is_paid',Group::IS_PAID);
+            if (!empty($payGroupIds)) {
+                $groupQuery->whereNotIn("id", $payGroupIds);
+            }
+            $groupIdList = $groupQuery->select("id")->get();
+            if ($groupIdList->count()!=0){
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组数据不一致请刷新');
+            }
         }
-        $groupIdList = $groupQuery->select("id")->get();
-        if ($groupIdList->count()!=0){
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组数据不一致请刷新');
-        }
+
 
         foreach ($data as $value) {
             try {
