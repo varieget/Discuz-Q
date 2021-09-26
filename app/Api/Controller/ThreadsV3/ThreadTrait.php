@@ -46,6 +46,7 @@ use App\SmsMessages\SendCodeMessage;
 use Discuz\Qcloud\QcloudTrait;
 use Illuminate\Support\Arr;
 use App\Common\Utils;
+use function Qcloud\Cos\encodeKey;
 
 trait ThreadTrait
 {
@@ -755,7 +756,18 @@ trait ThreadTrait
                 $serializer = $this->app->make(AttachmentSerializer::class);
                 foreach ($content_attachments as $val) {
                     if ($val->is_remote) {
-                        $attachments[$val->id] = $serializer->getImgUrl($val);
+                        $imgUrl = "";
+                        if(app(SettingsRepository::class)->get('qcloud_cos_sign_url', 'qcloud', true)){
+                            $urlArr = explode("?",$serializer->getImgUrl($val));
+                            if(strpos($urlArr[0],$val->file_name) !== false){
+                                $urlArr[0] = str_replace($val->file_name,encodeKey($val->file_name),$urlArr[0]);
+                                $imgUrl = $urlArr[0]."?".$urlArr[1];
+                            }
+                        }else{
+                            $imgUrl = $serializer->getImgUrl($val);
+                            $imgUrl = str_replace($val->file_name,encodeKey($val->file_name),$imgUrl);
+                        }
+                        $attachments[$val->id] = $imgUrl;
                     }
                 }
             }
