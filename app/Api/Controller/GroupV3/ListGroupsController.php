@@ -88,7 +88,10 @@ class ListGroupsController extends DzqAdminController
                 'scale' => $lists['scale'],
                 'isSubordinate' => $lists['is_subordinate'],
                 'isCommission' => $lists['is_commission'],
-                'checked'           => in_array($lists['id'], $this->getCheckList()) ? 1 : 0
+                'checked'           => in_array($lists['id'], $this->getCheckList()) ? 1 : 0,
+                'level' => $lists['level'],
+                'description' => $lists['description'],
+                'notice' => $lists['notice']
             ];
         }
         $data = $this->camelData($data);
