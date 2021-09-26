@@ -112,7 +112,7 @@ class ActivityBusi extends TomBaseBusi
                 'activityEndTime' => 'required|date|after_or_equal:' . $this->getParams('activityStartTime'),
                 'registerStartTime' => 'date',
                 'registerEndTime' => 'date|after_or_equal:' . $this->getParams('registerStartTime'),
-                'totalNumber' => 'integer|min:0',
+                'totalNumber' => 'integer|min:0|max:10000',
             ]
         );
     }
