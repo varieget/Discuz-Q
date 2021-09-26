@@ -26,6 +26,6 @@ class Kernel extends DzqKernel
 
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('job:test')->everyMinute()->appendOutputTo('/data/logs/schedule.log')->emailOutputTo(['coralchu@tencent.com']);
+        $schedule->command('job:test')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
     }
 }
