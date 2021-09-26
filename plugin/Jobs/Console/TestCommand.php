@@ -15,18 +15,17 @@
  * limitations under the License.
  */
 
-namespace Plugin\Activity\Console;
+namespace Plugin\Jobs\Console;
 
 
 use Discuz\Base\DzqCommand;
 
 class TestCommand extends DzqCommand
 {
-
-    protected $signature = 'activity:test';
-    protected $description = '执行一个脚本命令,控制台执行[php disco activity:test]';
+    protected $signature = 'job:test';
+    protected $description = '执行一个脚本命令,控制台执行[php disco job:test]';
     protected function main()
     {
-        $this->info('Hello Discuz! Q Plugin Activity');
+        $this->info('Hello Discuz! Q Plugin Job');
     }
 }
