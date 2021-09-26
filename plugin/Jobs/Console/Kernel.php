@@ -15,18 +15,17 @@
  * limitations under the License.
  */
 
-namespace Plugin\Activity\Console;
+namespace Plugin\Jobs\Console;
 
 
-use Discuz\Base\DzqCommand;
+use Discuz\Base\DzqKernel;
+use Illuminate\Console\Scheduling\Schedule;
 
-class TestCommand extends DzqCommand
+class Kernel extends DzqKernel
 {
 
-    protected $signature = 'activity:test';
-    protected $description = '执行一个脚本命令,控制台执行[php disco activity:test]';
-    protected function main()
+    protected function schedule(Schedule $schedule)
     {
-        $this->info('Hello Discuz! Q Plugin Activity');
+        $schedule->command('job:test')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
     }
 }
