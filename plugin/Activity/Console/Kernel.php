@@ -23,8 +23,8 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class Kernel extends DzqKernel
 {
-    protected function schedule(Schedule $schedule)
+    public function schedule(Schedule $schedule)
     {
-        //$schedule->command('register:notice')->everyMinute();
+        $schedule->command('activity:test')->everyFiveMinutes()->appendOutputTo('/data/logs/schedule.log')->emailOutputTo(['coralchu@tencent.com']);
     }
 }
