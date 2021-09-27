@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\SettingsV3;
 
+use App\Common\ResponseCode;
 use App\Settings\SettingsRepository;
 use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Events\Dispatcher as Events;
@@ -34,6 +35,7 @@ class AdminForumSettingsController extends DzqAdminController
 
     public function main()
     {
-        $this->forumSettingMain(true);
+        $data = $this->forumSettingMain(true);
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }

@@ -92,7 +92,7 @@ class UserV3Serializer extends AbstractSerializer
             'showGroups'        => $gate->allows('showGroups', $model),     // 是否显示用户组
             'registerReason'    => $model->register_reason,                 // 注册原因
             'denyStatus'        => (bool) $model->denyStatus,
-            'canBeAsked'        => $model->id !== $this->actor->id && $model->can('canBeAsked'), // 是否允许被提问
+//            'canBeAsked'        => $model->id !== $this->actor->id && $model->can('canBeAsked'), // 是否允许被提问(已弃用指定人问答)
             'hasPassword'       => !empty($model->password) ? true : false,
             'isRenew'           => !empty($model->isRenew) ? true : false,
 
@@ -101,18 +101,9 @@ class UserV3Serializer extends AbstractSerializer
 //            'unreadNotifications' => $model->getUnreadNotificationCount(),
 //            'typeUnreadNotifications' => $model->getUnreadTypesNotificationCount()
         ];
-        $whitelist = [
-            '/api/follow/',
-            '/api/users/'.Arr::get($this->getRequest()->getQueryParams(), 'id', '').'/',
-            '/api/threads/'.Arr::get($this->getRequest()->getQueryParams(), 'id', '').'/'
-        ];
-        if (Str::contains($this->getRequest()->getUri()->getPath().'/', $whitelist)) {
-            //需要时再查询关注状态 存在n+1
-            $attributes['follow'] = $this->userFollow->findFollowDetail($this->actor->id, $model->id);
-        } else {
-            // 用户详情用到，所以增加这个字段
-            $attributes['follow'] = $this->userFollow->findFollowDetail($this->actor->id, $model->id);
-        }
+
+        // 用户详情用到，所以增加这个字段
+        $attributes['follow'] = $this->userFollow->findFollowDetail($this->actor->id, $model->id);
 
         // 限制字段 本人/权限 显示
         if ($this->actor->id === $model->id) {
