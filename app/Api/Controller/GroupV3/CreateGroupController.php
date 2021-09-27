@@ -84,7 +84,7 @@ class CreateGroupController extends DzqAdminController
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，天数错误');
             }
             //检查level
-            if ($group["level"] <= 0){
+            if ($group["level"] <= 0 || $group["level"] > 5){
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
             }
             //检查该等级是否存在

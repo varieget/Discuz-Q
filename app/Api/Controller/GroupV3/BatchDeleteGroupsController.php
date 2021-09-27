@@ -28,6 +28,7 @@ use App\Repositories\UserRepository;
 use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqLog;
 use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Carbon;
 
 class BatchDeleteGroupsController extends DzqAdminController
@@ -69,19 +70,32 @@ class BatchDeleteGroupsController extends DzqAdminController
         $groupIdDeletes = $groupDatas->pluck('id')->toArray();
         $result = $this->changeUserGroupId($groupIdDeletes);
         if ($result == 'true'){
-            $paidGroupIds=[];
-            $groupDatas->each(function ($group) use(&$paidGroupIds) {
-                if ($group->is_paid == Group::IS_PAID){
-                    $paidGroupIds[] = $group->id;
-                }
-                $group->delete();
+            /* @var DatabaseManager $dbMgr*/
+            $dbMgr = app('db');
+            $result = $dbMgr->transaction(function () use ($groupDatas,$dbMgr){
+                $paidGroupIds=[];
+                $groupDatas->each(function ($group) use(&$paidGroupIds,$dbMgr) {
+                    if ($group->is_paid == Group::IS_PAID){
+                        $paidGroupIds[] = $group->id;
+                    }
+                    $group->delete();
+
+                    //调整比该等级大的其他等级
+                    Group::query()->where("is_paid",Group::IS_PAID)
+                        ->where("level",">",$group->level)
+                        ->update(['level'=>$dbMgr->raw("level-1")]);
+                });
+                GroupPaidUser::query()->whereIn('group_id', $paidGroupIds)->where('delete_type', "=",'0')
+                    ->update(['operator_id' => $this->user->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
+
+                return true;
             });
+        }
 
-            GroupPaidUser::query()->whereIn('group_id', $paidGroupIds)->where('delete_type', "=",'0')
-                ->update(['operator_id' => $this->user->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
-
+        if ($result == "true"){
             return $this->outPut(ResponseCode::SUCCESS, '');
-        }else{
+        }
+        else{
             return $this->outPut(ResponseCode::INTERNAL_ERROR, $result);
         }
     }
