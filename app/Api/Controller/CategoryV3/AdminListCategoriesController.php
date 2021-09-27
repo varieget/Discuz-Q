@@ -44,7 +44,7 @@ class AdminListCategoriesController extends DzqAdminController
 
         $categories = Category::query()
             ->select([
-                'id as pid', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'
+                'id as pid', 'id as categoryId', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'
             ])
             ->orderBy('parentid', 'asc')
             ->orderBy('sort')
@@ -60,20 +60,20 @@ class AdminListCategoriesController extends DzqAdminController
             $sequenceCategories = explode(",", $sequenceCategories);
         }
         foreach ($categories as $category) {
-            $createThreadPermission = 'category' . $category['pid'] . '.createThread';
+            $createThreadPermission = 'category' . $category['categoryId'] . '.createThread';
             // 全局或单个分类创建权限
             if (in_array('createThread', $permissions) || in_array($createThreadPermission, $permissions) || $this->user->isAdmin()) {
                 $category['canCreateThread'] = true;
             } else {
                 $category['canCreateThread'] = false;
             }
-            if(in_array($category['pid'],$sequenceCategories)){
+            if(in_array($category['categoryId'],$sequenceCategories)){
                 $category['checked'] = true;
             }else{
                 $category['checked'] = false;
             }
 
-            $category['searchIds'] = (int)$category['pid'];
+            $category['searchIds'] = (int)$category['categoryId'];
 
             // 二级子类集合
             if ($category['parentid'] !== 0) {
@@ -81,16 +81,16 @@ class AdminListCategoriesController extends DzqAdminController
             }
 
             // 一级分类 --- 全局或单个分类查看权限
-            $viewPermission = 'category' . $category['pid'] . '.viewThreads';
+            $viewPermission = 'category' . $category['categoryId'] . '.viewThreads';
             if ($category['parentid'] == 0 && (in_array('viewThreads', $permissions) || in_array($viewPermission, $permissions) || $this->user->isAdmin())) {
                 $categoriesFather[] = $category;
             }
         }
         // 获取一级分类的二级子类
         foreach ($categoriesFather as $key => $value) {
-            if (isset($categoriesChild[$value['pid']])) {
-                $categoriesFather[$key]['searchIds'] = array_merge([$value['searchIds']], array_column($categoriesChild[$value['pid']], 'pid'));
-                $categoriesFather[$key]['children'] = $categoriesChild[$value['pid']];
+            if (isset($categoriesChild[$value['categoryId']])) {
+                $categoriesFather[$key]['searchIds'] = array_merge([$value['searchIds']], array_column($categoriesChild[$value['categoryId']], 'categoryId'));
+                $categoriesFather[$key]['children'] = $categoriesChild[$value['categoryId']];
             } else {
                 $categoriesFather[$key]['children'] = [];
             }

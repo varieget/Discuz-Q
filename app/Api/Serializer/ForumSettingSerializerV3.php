@@ -91,7 +91,7 @@ class ForumSettingSerializerV3 extends AbstractSerializer
         //分类帖子总数计算
         $categories = Category::query()
             ->select([
-                'id as pid', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'
+                'id as pid', 'id as categoryId', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'
             ])
             ->orderBy('parentid', 'asc')
             ->orderBy('sort')
@@ -104,7 +104,7 @@ class ForumSettingSerializerV3 extends AbstractSerializer
             $subActor = new Guest();
         }
         foreach ($categories as $category) {
-            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($subActor, $category['pid'])) {
+            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($subActor, $category['categoryId'])) {
                 $categoriesFather[] = $category;
             }
         }

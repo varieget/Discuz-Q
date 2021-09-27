@@ -40,7 +40,7 @@ class ListCategoriesController extends DzqController
     {
         $categories = Category::query()
             ->select([
-                'id as pid', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'
+                'id as pid', 'id as categoryId', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'
             ])
             ->orderBy('parentid', 'asc')
             ->orderBy('sort')
@@ -50,23 +50,23 @@ class ListCategoriesController extends DzqController
         $categoriesChild = [];
 
         foreach ($categories as $category) {
-            $category['canCreateThread'] = $this->userRepo->canCreateThread($this->user, $category['pid']);
-            $category['searchIds'] = [(int)$category['pid']];
+            $category['canCreateThread'] = $this->userRepo->canCreateThread($this->user, $category['categoryId']);
+            $category['searchIds'] = [(int)$category['categoryId']];
 
             // 二级子类集合
             if ($category['parentid'] !== 0) {
                 $categoriesChild[$category['parentid']][] = $category;
             }
 
-            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($this->user, $category['pid'])) {
+            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($this->user, $category['categoryId'])) {
                 $categoriesFather[] = $category;
             }
         }
         // 获取一级分类的二级子类
         foreach ($categoriesFather as $key => $value) {
-            if (isset($categoriesChild[$value['pid']])) {
-                $categoriesFather[$key]['searchIds'] = array_merge([$value['searchIds']], array_column($categoriesChild[$value['pid']], 'pid'));
-                $categoriesFather[$key]['children'] = $categoriesChild[$value['pid']];
+            if (isset($categoriesChild[$value['categoryId']])) {
+                $categoriesFather[$key]['searchIds'] = array_merge([$value['searchIds']], array_column($categoriesChild[$value['categoryId']], 'categoryId'));
+                $categoriesFather[$key]['children'] = $categoriesChild[$value['categoryId']];
             } else {
                 $categoriesFather[$key]['children'] = [];
             }
