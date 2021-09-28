@@ -170,6 +170,7 @@ class ProfileController extends DzqController
         //判断用户当前所在用户组是否是最高级别
         $level = $group['groups']['level'];
         $is_top = Group::query()->where('level', '>', $level)->doesntExist();
+        $hasPayGroup = Group::query()->where('level','>',0)->exists();
         return [
             'pid' => $group['group_id'],
             'groupId' => $group['group_id'],
@@ -179,7 +180,8 @@ class ProfileController extends DzqController
             'color' =>  $group['groups']['color'],
             'level' =>  $group['groups']['level'],
             'remainDays' => !empty($group['groups']['expiration_time']) ? Carbon::parse($group['groups']['expiration_time'])->diffInDays(Carbon::now()) : 0,
-            'description' => $group['groups']['description']
+            'description' => $group['groups']['description'],
+            'hasPayGroup' => $hasPayGroup
         ];
     }
 
