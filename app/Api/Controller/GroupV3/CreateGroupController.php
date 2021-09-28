@@ -69,7 +69,7 @@ class CreateGroupController extends DzqAdminController
 
         $this->dzqValidate($group, [
             'name'=> 'required_without|max:200',
-            'description'=> 'max:200',
+            'description'=> 'max:20',
             'notice'=> 'max:200',
         ]);
 
