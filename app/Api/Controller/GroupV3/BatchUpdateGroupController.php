@@ -65,7 +65,7 @@ class BatchUpdateGroupController extends DzqAdminController
         foreach ($data as $k=>$val) {
             $this->dzqValidate($val, [
                 'name'=> 'required_without|max:200',
-                'description'=> 'max:200',
+                'description'=> 'max:20',
                 'notice'=> 'max:200',
             ]);
 
@@ -88,10 +88,10 @@ class BatchUpdateGroupController extends DzqAdminController
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
                 }
 
-                if (in_array($val["level"],$payGroupLevel)){
+                if (array_key_exists($val["level"],$payGroupLevel)){
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
                 }
-                $payGroupLevel[]=$val["level"];
+                $payGroupLevel[$val["level"]]= $val;
                 $payGroupIds[] = $val["id"];
             }
 
@@ -104,6 +104,7 @@ class BatchUpdateGroupController extends DzqAdminController
             }
         }
 
+        $levelChange = [];
         if (!empty($payGroupIds)){  //有付费组则必须是全部的付费组
             $groupQuery = Group::query()->where('is_paid',Group::IS_PAID);
             if (!empty($payGroupIds)) {
@@ -112,6 +113,15 @@ class BatchUpdateGroupController extends DzqAdminController
             $groupIdList = $groupQuery->select("id")->get();
             if ($groupIdList->count()!=0){
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组数据不一致请刷新');
+            }
+            //检查level,不连续的整成连续
+            $payGroupLevelSort = collect($payGroupLevel)->sortKeys();
+            $curLevel = 1;
+            foreach ($payGroupLevelSort as $key=>$value){
+                if ($key != $curLevel){
+                    $levelChange[$value["id"]] = $curLevel;
+                }
+                $curLevel++;
             }
         }
 
@@ -162,6 +172,9 @@ class BatchUpdateGroupController extends DzqAdminController
 
                 if(isset($value['level'])){
                     $group->level = (int)$value['level'];
+                    if (isset($levelChange[$value["id"]])){
+                        $group->level = $levelChange[$value["id"]];
+                    }
                 }
 
                 if(isset($value['description'])){
