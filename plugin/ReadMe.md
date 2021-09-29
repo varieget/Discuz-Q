@@ -10,6 +10,7 @@ Discuz! Q框架已经支持非侵入式开发方式，本指南意在帮助开�
 在开始开发您的Discuz! Q应用之前，需要安装一个可正常访问的站点，阅读 **[安装文档](https://discuz.com/docs/Linux%20%E4%B8%BB%E6%9C%BA.html#nginx)** 依据步骤安装好站点环境。
 
 ### 项目结构
+后端主框架目录
 ````
 .
 ├── app ----------- 主业务逻辑
@@ -17,7 +18,7 @@ Discuz! Q框架已经支持非侵入式开发方式，本指南意在帮助开�
 ├── database ------ 数据表迁移 
 ├── framework ----- 框架文件
 ├── plugin -------- 插件目录
-├── public -------- 业务入口以及H5和Admin项目
+├── public -------- 业务入口以及H5和Admin的客户端项目
 ├── resources ----- 其他资源类
 ├── routes -------- 路由
 ├── storage ------- 本地文件及缓存文件
@@ -26,7 +27,10 @@ Discuz! Q框架已经支持非侵入式开发方式，本指南意在帮助开�
 ````
 请注意`plugin`目录，开发者在该目录下创建自己的插件应用。由于官方暂时未开放插件市场注册入口，开发者开发插件的时候务必遵循插件的开发规范。
 为了更好的描述插件开发流程，我们已经集成了`活动报名`贴作为开发示例，同时会阐述相关规范
+当前站点安装的所有插件应用均以独立文件夹的形式存放在该目录，每个插件的名称不允许重复
 首先看一下`plugin`的目录结构
+
+插件目录
 ````
 .
 ├── Activity ------------------ 活动报名贴
@@ -60,45 +64,44 @@ Discuz! Q框架已经支持非侵入式开发方式，本指南意在帮助开�
 
 
 #### 步骤1：添加插件目录和配置文件
-报名贴插件配置文件路径 `plugin/Activity/config.php`
+进入项目根目录找到`plugin`目录，新建一个文件目录，名称为你的插件应用的英文名称，`首字母大写`，该目录即是一个插件的所有业务代码逻辑的边界，以报名帖为例，新建了一个`Activity`目录。
+同时新建以下6个目录
+
+>`Console`    命令行逻辑
+
+>`Controller` 接口控制器
+
+>`Database`   插件数据表
+
+>`Model`      数据模型
+
+>`Routes`     接口路由
+
+>`View`       插件前端逻辑,包含各个模块的js,css，资源文件等
+
+在插件根目录新建`config.json`文件
+报名贴插件配置文件路径 `plugin/Activity/config.json`
+
+````json
+{
+    "name_cn":"活动报名",
+    "name_en":"activity",
+    "description":"帖子类型里添加报名插件",
+    "type":1,
+    "app_id":"612f4217ae890",
+    "version":"v1.0.1",
+    "status":1,
+    "icon":"https://discuz.chat/dzq-img/active.png",
+    "filter_enable":false,
+    "author":{
+        "name":"腾讯科技（深圳）有限公司",
+        "email":"coralchu@tencent.com"
+    },
+    "busi":"Plugin\\Activity\\ActivityBusi"
+}
 
 ````
-<?php
-return [
-    'name_cn' => '活动报名',
-    'name_en' => 'activity',
-    'description' => '帖子类型里添加报名插件',
-    'type' => 1,
-    'app_id' => '612f4217ae890',
-    'version' => 'v1.0.1',
-    'status' => 1,
-    'icon'=>'https://discuz.chat/dzq-img/active.png',
-    'filter_enable' => false,
-    'author' => [
-        'name' => '腾讯科技（深圳）有限公司',
-        'email' => 'coralchu@tencent.com'
-    ],
-    'routes' => [
-        'register/append' => [
-            'description' => '提交报名信息',
-            'method' => 'POST',
-            'controller' => \Plugin\Activity\Controller\AppendController::class
-        ],
-        'register/cancel' => [
-            'description' => '取消报名',
-            'method' => 'POST',
-            'controller' => \Plugin\Activity\Controller\CancelController::class
-        ],
-        'register/list' => [
-            'description' => '报名用户列表',
-            'method' => 'GET',
-            'controller' => \Plugin\Activity\Controller\ListController::class
-        ]
-    ],
-    'busi' => \Plugin\Activity\ActivityBusi::class
-];
-````
-`name_cn` 插件中文名称
+`name_cn` 插件中文名称（`大小写不敏感`）
 
 `name_en` 插件英文名称
 
@@ -106,15 +109,15 @@ return [
 
 `type` 插件类型，官方会持续开放各种类型的插件，目前帖子类型插件`type=1`
 
-`app_id` 插件的应用id
+`app_id` 插件的应用id（不重复id，开发者从插件市场注册统一下发，可使用uuid本地测试）
 
-`version` 版本号
+`version` 版本号，使用三段描述 [1-9]\\.[0-9]\\.[0-9]
 
 `status` 插件启用状态 1：启用 0：禁用
 
 `icon` 插件的应用图标
 
-`filter_enable` 帖子类型插件是否加入首页筛选【功能暂未开放】
+`filter_enable` 帖子类型插件特有字段，是否加入首页筛选【功能暂未开放】
 
 `author` 开发者信息
 
@@ -148,7 +151,7 @@ return [
  这里生成的是
  `2021_09_10_112512_create_plugin_activity_thread_activity.php` 和
   `2021_09_10_130011_create_plugin_activity_user.php`
-  
+ 
 **建表的时候务必遵循以下规范：**
 - 数据迁移类务必继承`DzqPluginMigration`，且表的前缀添加`plugin`+`插件英文名称`，报名帖前缀为`plugin_activity_`，招聘贴前缀为 `plugin_jobs_`
 - 插件应用的所有DDL操作，禁止涉及官方的表结构，只允许操作插件本身创建的表
@@ -157,21 +160,151 @@ return [
 
 结合以上规范，报名贴新建的表为：`plugin_activity_thread_activity` `plugin_activity_user`，在插件目录`Model`新建模型
 通过migration目录添加的插件数据表需要在控制台执行命令以创建数据表
+
+#####活动明细表
+```php
+<?php
+use Discuz\Base\DzqPluginMigration;
+use Illuminate\Database\Query\Expression;
+use Illuminate\Database\Schema\Blueprint;
+class CreatePluginActivityThreadActivity extends DzqPluginMigration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        $this->schema()->create('plugin_activity_thread_activity', function (Blueprint $table) {
+            $table->unsignedBigInteger('id', true)->comment('自增id');
+            $table->unsignedBigInteger('user_id')->comment('用户id');
+            $table->unsignedBigInteger('thread_id')->comment('帖子id');
+            $table->string('title', 100)->nullable(false)->comment('活动名称');
+            $table->text('content')->comment('活动内容');
+            $table->dateTime('activity_start_time')->comment('活动开始时间');
+            $table->dateTime('activity_end_time')->comment('活动结束时间');
+            $table->dateTime('register_start_time')->nullable(true)->comment('报名开始时间');
+            $table->dateTime('register_end_time')->nullable(true)->comment('报名结束时间');
+            $table->integer('total_number')->default(0)->comment('报名人数上限 0:不限制');
+            $table->string('address', 200)->nullable(false)->default('')->comment('地址信息');
+            $table->string('location', 200)->nullable(true)->default('')->comment('位置信息');
+            $table->decimal('longitude', 10, 7)->default(0.0000000)->nullable(false)->comment('经度');
+            $table->decimal('latitude', 10, 7)->default(0.0000000)->nullable(false)->comment('纬度');
+            $table->tinyInteger('status')->default(1)->comment('0:无效 1：有效');
+            $table->timestamp('created_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
+            $table->timestamp('updated_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        $this->schema()->dropIfExists('plugin_activity_thread_activity');
+    }
+}
+
+```
+#####报名表
+
+```php
+<?php
+
+use Discuz\Base\DzqPluginMigration;
+use Illuminate\Database\Query\Expression;
+use Illuminate\Database\Schema\Blueprint;
+
+class CreatePluginActivityUser extends DzqPluginMigration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        $this->schema()->create('plugin_activity_user', function (Blueprint $table) {
+            $table->unsignedBigInteger('id', true)->comment('自增id');
+            $table->unsignedBigInteger('thread_id')->nullable(false)->comment('主题id');
+            $table->unsignedBigInteger('activity_id')->nullable(false)->comment('活动id');
+            $table->unsignedBigInteger('user_id')->nullable(false)->comment('用户id');
+            $table->tinyInteger('status')->default(1)->comment('0:无效 1：有效');
+            $table->timestamp('created_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
+            $table->timestamp('updated_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
+            $table->index('thread_id');
+            $table->index(['activity_id','user_id']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        $this->schema()->dropIfExists('plugin_activity_users');
+    }
+}
+```
+
+
+
+
 #### 步骤3：创建插件数据表
 `php disco migrate:plugin --name=activity`
 *该功能需要站长执行（管理后台的插件管理面板正在开发中，开发完成以后，站长在安装插件的时候会自动执行数据迁移命令）*
+```text
+# php disco migrate:plugin --name=activity
+Migrating: 2021_09_10_112512_create_plugin_activity_thread_activity
+Migrated:  2021_09_10_112512_create_plugin_activity_thread_activity (0.01 seconds)
+Migrating: 2021_09_10_130011_create_plugin_activity_user
+Migrated:  2021_09_10_130011_create_plugin_activity_user (0.01 seconds)
+```
+
+数据库新建表成功后便可以在插件目录 `Model` 里添加数据模型，报名帖新增`ActivityUser.php` 和`ThreadActivity.php`两个ORM模型文件
+
+#####ActivityUser.php
+```php
+<?php
+
+namespace Plugin\Activity\Model;
+
+
+use Discuz\Base\DzqModel;
+
+class ActivityUser extends DzqModel
+{
+    protected $table = 'plugin_activity_user';
+
+}
+```
+#####ThreadActivity.php
+```php
+<?php
+
+namespace Plugin\Activity\Model;
+
+
+use Discuz\Base\DzqModel;
+
+class ThreadActivity extends DzqModel
+{
+    protected $table='plugin_activity_thread_activity';
+
+}
+```
+
 #### 步骤4：开发插件业务逻辑
 涉及到帖子结构的`增删查改`需要继承帖子类型的特有基础类`TomBaseBusi` 
-并实现其 `select` `create` `delete` `update` 四个方法，可以参考`ActivityBusi.php`，该busi文件实现了帖子中内容发布、变更。除此以外的操作需要开发者另新增接口实现，
-在报名贴需要在`plugin/Activity/config.php`里配置接口的路由名称，需要新增 `register/append 提交报名信息`  `register/cancel 取消报名` `register/list 报名用户列表` 
-前端访问的时候接口需要以`plugin/{插件英文名称}/api/`为前缀
+并实现其 `select` `create` `delete` `update` 四个方法，可以参考`ActivityBusi.php`，该busi文件实现了帖子中内容发布、变更。
+除此以外的操作需要开发者另新增接口实现。
 
-例如
-- 查看列表接口url：`https://discuz.chat/plugin/activity/api/register/list`
-- 参与报名接口url：`https://discuz.chat/plugin/activity/api/register/append`
-- 取消报名接口url：`https://discuz.chat/plugin/activity/api/register/cancel`
-
-新增接口控制器需要继承`DzqController`,例如
+新增接口控制器需要继承`DzqController`,例如获取报名用户列表
 
 ```
 <?php
@@ -217,12 +350,41 @@ class ListController extends DzqController
 }
 
 ```
+#### 步骤5：插件接口路由配置
 
-#### 步骤5：其他
-在插件目录`Console`里可以添加定时任务，参看活动报名插件内嵌的范例
+报名贴需要新增 `register/append 提交报名信息`  `register/cancel 取消报名` `register/list 报名用户列表` 三个接口
+进入`Routes`目录添加路由配置文件，该目录下可以任意定义`php文件`名称，也可以任意拆分成多个`php文件`，框架会自动扫描Routes目录下的所有可用路由配置。
+本示例在Routes目录下新建`Api.php`并配置如下路由表
+```php
+<?php
+/**@var Discuz\Http\RouteCollection $route*/
 
-命令行：
-````
+//提交报名信息
+$route->post('register/append', 'register.append', \Plugin\Activity\Controller\AppendController::class);
+//取消报名
+$route->post('register/cancel', 'register.cancel', \Plugin\Activity\Controller\CancelController::class);
+//报名用户列表
+$route->get('register/list', 'register.list', \Plugin\Activity\Controller\ListController::class);
+
+```
+
+接口调用规则：
+
+>配置自定义接口路由的时候，请注意，接口的访问`Method`只能选用get或post,其他http类型如`delete patch option`等不支持
+
+>前端在调用自定义插件接口的时候，需要以`plugin/{插件英文名称}/api/`为前缀以避免和其他插件的接口造成冲突
+
+例如:
+- 查看列表接口url：`https://discuz.chat/plugin/activity/api/register/list`
+- 参与报名接口url：`https://discuz.chat/plugin/activity/api/register/append`
+- 取消报名接口url：`https://discuz.chat/plugin/activity/api/register/cancel`
+
+#### 步骤6：计划任务
+大部分插件应用在步骤5已经完成了所有后台业务开发，然有些应用可能需要计划任务或者控制台命令以完成初始化或者定期批处理的操作。
+请在插件目录`Console`里定制你的脚本，参看活动报名插件内置的范例，
+
+新建一个 `TestCommand.php` 继承 `DzqCommand` 添加一个自定义命令
+````php
 <?php
 
 namespace Plugin\Activity\Console;
@@ -241,12 +403,12 @@ class TestCommand extends DzqCommand
     }
 }
 ````
-定时任务：
+同目录新建 `Kernel.php` 继承 `DzqKernel` 添加一个任务计划
+
 ```
 <?php
 
 namespace Plugin\Activity\Console;
-
 
 use Discuz\Base\DzqKernel;
 use Illuminate\Console\Scheduling\Schedule;
@@ -264,6 +426,8 @@ class Kernel extends DzqKernel
 
 即将推出，请期待
 
-#### 注意事项
-- 开发者务必遵循数据表开发规范，以避免插件间数据冲突
-- 插件托管市场建立以后，部分规范可能有少许调整
+### 注意事项
+
+***v3.0210926插件配置文件是config.php且不支持本指南中的路由配置方式，
+在v3.0211014之后支持本指南的接口路由配置方式，且配置文件变更为JSON格式。***
+
