@@ -73,8 +73,8 @@ class UserV3Serializer extends AbstractSerializer
 
         $canEdit = $gate->allows('edit', $model);
 
-        $attributes = $this->getCommonAttributes($model);
-        $attributes += [
+        $commonAttributes = $this->getCommonAttributes($model);
+        $attributes = [
             'originalAvatarUrl' => $this->getOriginalAvatar($model),
             'backgroundUrl'     => $model->background,
             'originalBackGroundUrl'     => $this->getOriginalBackGround($model),
@@ -101,6 +101,8 @@ class UserV3Serializer extends AbstractSerializer
 //            'unreadNotifications' => $model->getUnreadNotificationCount(),
 //            'typeUnreadNotifications' => $model->getUnreadTypesNotificationCount()
         ];
+
+        $attributes = array_merge_recursive($attributes, $commonAttributes);
 
         // 用户详情用到，所以增加这个字段
         $attributes['follow'] = $this->userFollow->findFollowDetail($this->actor->id, $model->id);

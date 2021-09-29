@@ -115,8 +115,8 @@ class ForumSettingSerializerV3 extends AbstractSerializer
         if ($dialog && $dialog = $dialog->toArray() && $dialog['dialog'] == '{BANNED}') {
             $disabledChat = true;
         }
-        $attributes = $this->getCommonAttributes($actor);
-        $attributes += [
+        $commonAttributes = $this->getCommonAttributes($actor);
+        $attributes = [
             // 站点设置
             'set_site' => [
                 'site_manage' => json_decode($this->settings->get('site_manage'), true),
@@ -201,6 +201,8 @@ class ForumSettingSerializerV3 extends AbstractSerializer
 
             'ucenter' => []
         ];
+
+        $attributes = array_merge_recursive($attributes, $commonAttributes);
 
         // 未开启vod服务 不可发布视频主题
         if (! ($attributes['qcloud']['qcloud_close'] && $attributes['qcloud']['qcloud_vod'])) {
