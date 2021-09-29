@@ -109,13 +109,13 @@ class ForumSettingField
             // - 微信 小程序
             'miniprogram_app_id' => $this->settings->get('miniprogram_app_id', 'wx_miniprogram') ?: '',
             'miniprogram_app_secret' => $this->settings->get('miniprogram_app_secret', 'wx_miniprogram') ?: '',
-            // - 微信 开放平台
-            'oplatform_app_id' => $this->settings->get('oplatform_app_id', 'wx_oplatform') ?: '',
-            'oplatform_app_secret' => $this->settings->get('oplatform_app_secret', 'wx_oplatform') ?: '',
-            // - 微信 PC
-            'oplatform_url' =>  $this->url->route('wechat.web.user.event') ?: '',
-            'oplatform_app_token' =>$this->settings->get('oplatform_app_token', 'wx_oplatform') ?: '',
-            'oplatform_app_aes_key' => $this->settings->get('oplatform_app_aes_key', 'wx_oplatform') ?: '',
+            // - 微信 开放平台(弃用)
+//            'oplatform_app_id' => $this->settings->get('oplatform_app_id', 'wx_oplatform') ?: '',
+//            'oplatform_app_secret' => $this->settings->get('oplatform_app_secret', 'wx_oplatform') ?: '',
+            // - 微信 PC(弃用)
+//            'oplatform_url' =>  $this->url->route('wechat.web.user.event') ?: '',
+//            'oplatform_app_token' =>$this->settings->get('oplatform_app_token', 'wx_oplatform') ?: '',
+//            'oplatform_app_aes_key' => $this->settings->get('oplatform_app_aes_key', 'wx_oplatform') ?: '',
         ];
     }
 

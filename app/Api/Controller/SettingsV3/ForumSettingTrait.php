@@ -51,8 +51,7 @@ trait ForumSettingTrait
         $this->hideSensitive($data);
         $this->events->dispatch(new Forum($this->request, $this->user));
 
-        $data = $this->camelData($data);
-        $this->outPut(ResponseCode::SUCCESS, '', $data);
+        return $this->camelData($data);
     }
 
     protected function hideSensitive(&$data)
