@@ -271,9 +271,14 @@ trait ThreadTrait
         $thread['price'] > 0 && $payType = Thread::PAY_THREAD;
         $thread['attachment_price'] > 0 && $payType = Thread::PAY_ATTACH;
         $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
+        //检查是否有编辑权限
+        /** @var UserRepository $userRepo */
+        $userRepo = app(UserRepository::class);
+        $canEdit =  $userRepo->canEditThread($loginUser, $thread);
+
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
-        } elseif ($payType != Thread::PAY_FREE && $canFreeViewTom) {
+        } elseif ($payType != Thread::PAY_FREE && ($canFreeViewTom||$canEdit)) {
             $paid = true;
         } else {
             $paid = $this->loginDataExists($this->loginUserData, ThreadHelper::EXIST_PAY_ORDERS, $threadId, function () use ($userId, $threadId) {
