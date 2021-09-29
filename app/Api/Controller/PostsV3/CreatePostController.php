@@ -133,6 +133,10 @@ class CreatePostController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '主题id不能为空');
         }
 
+        if (!isset($data['content'])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '评论内容不能为空');
+        }
+
         //针对创建评论，前端不传标签的情况，转化 \n 为  <p></p>  实现换行
         if (strpos($data['content'], "\n") !== false) {
             $data['content'] = preg_replace('/(.*)(\\n)/U', "<p>$1</p>", $data['content']);
@@ -169,10 +173,6 @@ class CreatePostController extends DzqController
                 $requestData['relationships']['attachments']['data'][$k]['id'] = (string)$val['id'];
                 $requestData['relationships']['attachments']['data'][$k]['type'] = $val['type'];
             }
-        }
-
-        if (empty($content) && empty($attachments)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '缺少必传参数');
         }
 
         $requestData['attributes'] = $data;

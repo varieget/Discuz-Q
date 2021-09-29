@@ -40,17 +40,27 @@ class PluginListController extends DzqController
             $permission = $permissions[$item['app_id']] ?? null;
             $appId = $item['app_id'];
             $appName = $item['name_en'];
-            unset($item['plugin_' . $appId]);
-            unset($item['busi']);
-            unset($item['routes']);
+            $pluginDirectories = $item['plugin_' . $appId];
             //当前登录用户权限
             $item['authority'] = [
                 'title' => '插入' . $item['name_cn'],
                 'permission' => PermissionKey::PLUGIN_INSERT_PERMISSION,
                 'canUsePlugin' => $isAdmin ? true : (empty($permission) ? false : ($permission['status'] ? true : false)),
             ];
+            $distPath = $pluginDirectories['view'].'/dist';
+            $pluginFiles = [];
+            if(file_exists($distPath)){
+                $distFiles = scandir($distPath);
+                foreach ($distFiles as $distFile) {
+                    if ($distFile == '.' || $distFile == '..') continue;
+                    $pluginFiles[] =Utils::getDzqDomain() . "/plugin/{$appName}/{$distFile}";
+                }
+            }
             //前端插件入口
-            $item['plugin_trigger'] = Utils::getDzqDomain() . "/plugin/{$appName}/index.js";
+            $item['plugin_files'] = $pluginFiles;
+            unset($item['plugin_' . $appId]);
+            unset($item['busi']);
+            unset($item['routes']);
         }
         $this->outPut(0, '', array_values($pluginList));
     }

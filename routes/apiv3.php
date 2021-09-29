@@ -106,7 +106,7 @@ $route->get('/follow.list', 'follow.list', ApiController\UsersV3\ListUserFollowC
 $route->post('/follow.create', 'follow.create', ApiController\UsersV3\CreateUserFollowController::class);
 $route->post('/follow.delete', 'follow.delete', ApiController\UsersV3\DeleteUserFollowController::class);
 
-$route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);
+//$route->get('/groups.resource', 'groups.resource', ApiController\GroupV3\ResourceGroupsController::class);//已弃用
 $route->get('/topics.list', 'topics.list', ApiController\TopicV3\TopicListController::class);
 $route->get('/users.list', 'users.list', ApiController\UsersV3\UsersListController::class);
 $route->post('/order.create', 'order.create', ApiController\OrderV3\CreateOrderController::class);
@@ -159,7 +159,7 @@ $route->get('/wallet/log', 'wallet.log.list', ApiController\WalletV3\ListUserWal
 $route->get('/wallet/cash', 'wallet.cash.list', ApiController\WalletV3\ListUserWalletCashController::class);
 $route->post('/users/sms.reset.pay.pwd', 'sms.reset.pay.pwd', ApiController\UsersV3\SmsResetPayPwdController::class);
 $route->post('/wallet/cash', 'wallet.cash.create', ApiController\WalletV3\CreateUserWalletCashController::class);
-$route->get('/favorites', 'favorites', ApiController\ThreadsV3\ListFavoritesController::class);
+//$route->get('/favorites', 'favorites', ApiController\ThreadsV3\ListFavoritesController::class);//无使用
 $route->post('/users/background', 'user.upload.background', ApiController\UsersV3\UploadBackgroundController::class);
 $route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
 $route->post('/users/update.mobile', 'update.mobile', ApiController\UsersV3\UpdateMobileController::class);
@@ -171,7 +171,7 @@ $route->post('/users/deny.create', 'user.deny', ApiController\UsersV3\CreateDeny
 $route->post('/users/deny.delete', 'user.delete.deny', ApiController\UsersV3\DeleteDenyUserController::class);
 
 $route->get('/tom.permissions', 'tom.permissions', ApiController\GroupV3\TomPermissionsController::class);
-$route->get('/threads.paid', 'threads.paid', ApiController\UsersV3\ListPaidThreadsController::class);
+//$route->get('/threads.paid', 'threads.paid', ApiController\UsersV3\ListPaidThreadsController::class);//无使用
 
 $route->post('/user/thread.stick','user.thread.stick',ApiController\ThreadsV3\ThreadUserStickController::class);
 
@@ -194,8 +194,6 @@ $route->get('/attachment.download', '/attachment.download', ApiController\Attach
 $route->get('/offiaccount/jssdk', 'offiaccount.jssdk', ApiController\WechatV3\OffIAccountJSSDKController::class);
 
 $route->get('/test', 'thread.test', ApiController\ThreadsV3\TestController::class);
-
-$route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);
 
 $route->get('/view.count', 'view.count', ApiController\ThreadsV3\ViewCountController::class);
 

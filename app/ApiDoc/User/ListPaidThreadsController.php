@@ -2,7 +2,7 @@
 /**
  * @OA\Get(
  *     path="/api/v3/threads.paid",
- *     summary="查询已经购买帖子列表",
+ *     summary="查询已经购买帖子列表(已弃用)",
  *     description="查询已经购买帖子列表",
  *     tags={"个人中心"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),

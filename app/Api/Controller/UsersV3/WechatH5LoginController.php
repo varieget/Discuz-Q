@@ -91,12 +91,12 @@ class WechatH5LoginController extends AuthBaseController
 
         if (! empty($wxuser->getId())) {
             if (!$this->requestLock($wxuser->getId())) {
-                $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, '当前访问过多，请稍后重试');
             }
         }
         if (! empty(Arr::get($wxuser->getRaw(), 'unionid'))) {
             if (!$this->requestLock(Arr::get($wxuser->getRaw(), 'unionid'))) {
-                $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, '当前访问过多，请稍后重试');
             }
         }
         $this->info('whether_enter_transition_process', [

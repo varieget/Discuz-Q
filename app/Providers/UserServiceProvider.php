@@ -18,6 +18,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\SiteInfo\SiteInfoListener;
 use App\Listeners\User\UserListener;
 use App\Listeners\Wallet\WalletListener;
 use App\Models\User;
@@ -36,9 +37,11 @@ class UserServiceProvider extends AbstractServiceProvider
 
         $events->subscribe(UserListener::class);
         $events->subscribe(WalletListener::class);
+        $events->subscribe(SiteInfoListener::class);
 
         User::observe(UserObserver::class);
         UserWechat::observe(UserWechatObserver::class);
         UserWalletCash::observe(UserWalletCashObserver::class);
+
     }
 }

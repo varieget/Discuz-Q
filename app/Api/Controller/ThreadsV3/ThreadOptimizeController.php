@@ -36,7 +36,7 @@ class ThreadOptimizeController extends DzqAdminController
                 $thread = $prefix."threads";
                 $threadTom = $prefix."thread_tom";
             }
-            $db->update("update {$thread} set is_display = {$isDisplay} where id in(select thread_id from {$threadTom} where tom_type in(104,106,107)) or price > 0 or attachment_price > 0 or is_anonymous = 1");
+            $db->update("update {$thread} set is_display = {$isDisplay} where id in(select thread_id from {$threadTom} where tom_type in('104','106','107')) or price > 0 or attachment_price > 0 or is_anonymous = 1");
             $threadOptimize = Setting::query()->where('key','thread_optimize')->first();
             if($threadOptimize){
                 $this->settings->set('thread_optimize', $isDisplay, 'default');
