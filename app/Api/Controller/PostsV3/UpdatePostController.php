@@ -121,6 +121,7 @@ class UpdatePostController extends DzqController
 
         $build = [
             'pid' => $postId,
+            'postId' => $postId,
             'threadId' => $threadId,
             'content' => str_replace(['<t><p>', '</p></t>'], ['', ''], $content),
             'likeCount' => $post['like_count'],
