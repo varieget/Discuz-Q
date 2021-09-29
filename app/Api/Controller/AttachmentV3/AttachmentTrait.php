@@ -20,6 +20,7 @@ namespace App\Api\Controller\AttachmentV3;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use Discuz\Contracts\Setting\SettingsRepository;
+use function Qcloud\Cos\encodeKey;
 
 trait AttachmentTrait
 {
@@ -152,5 +153,19 @@ trait AttachmentTrait
     {
         $fileContents = @file_get_contents($url, false, stream_context_set_default(['ssl' => ['verify_peer'=>false, 'verify_peer_name'=>false]]));
         return $fileContents;
+    }
+
+    //获取编码后url
+    public function getEncodeAttachmentUrl($model,$imgUrl){
+        if(app(SettingsRepository::class)->get('qcloud_cos_sign_url', 'qcloud', true)){
+            $urlArr = explode("?",$imgUrl);
+            if(strpos($urlArr[0],$model->file_name) !== false){
+                $urlArr[0] = str_replace($model->file_name,encodeKey($model->file_name),$urlArr[0]);
+                $url = $urlArr[0]."?".$urlArr[1];
+            }
+        }else{
+            $url = str_replace($model->file_name,encodeKey($model->file_name),$imgUrl);
+        }
+        return $url;
     }
 }
