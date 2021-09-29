@@ -161,7 +161,7 @@ Discuz! Q框架已经支持非侵入式开发方式，本指南意在帮助开�
 结合以上规范，报名贴新建的表为：`plugin_activity_thread_activity` `plugin_activity_user`，在插件目录`Model`新建模型
 通过migration目录添加的插件数据表需要在控制台执行命令以创建数据表
 
-#####活动明细表
+##### 活动明细表
 ```php
 <?php
 use Discuz\Base\DzqPluginMigration;
@@ -209,7 +209,7 @@ class CreatePluginActivityThreadActivity extends DzqPluginMigration
 }
 
 ```
-#####报名表
+##### 报名表
 
 ```php
 <?php
@@ -268,7 +268,7 @@ Migrated:  2021_09_10_130011_create_plugin_activity_user (0.01 seconds)
 
 数据库新建表成功后便可以在插件目录 `Model` 里添加数据模型，报名帖新增`ActivityUser.php` 和`ThreadActivity.php`两个ORM模型文件
 
-#####ActivityUser.php
+##### ActivityUser.php
 ```php
 <?php
 
@@ -283,7 +283,7 @@ class ActivityUser extends DzqModel
 
 }
 ```
-#####ThreadActivity.php
+##### ThreadActivity.php
 ```php
 <?php
 
