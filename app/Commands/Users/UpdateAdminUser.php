@@ -26,6 +26,7 @@ use App\Events\Users\PayPasswordChanged;
 use App\Exceptions\TranslatorException;
 use App\Models\Group;
 use App\Models\GroupPaidUser;
+use App\Models\GroupUser;
 use App\Models\GroupUserMq;
 use App\Models\Order;
 use App\Models\User;
@@ -430,10 +431,6 @@ class UpdateAdminUser
                 $isOldPay = true;
             }
 
-
-            // 更新用户组
-            $user->groups()->sync($newGroups);
-
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
                 '更改了用户【'. $user->username .'】的用户角色为【'. $groupName['name'] .'】'
@@ -443,34 +440,13 @@ class UpdateAdminUser
             if ($deleteGroups) {
                 if ($isOldPay){
                     //删除付费用户组
-                    if (!$isNewPay){
-                        $deleteGroups = $payGroupIds;
-                    }else{
-                        $deleteGroups = array_diff($payGroupIds, $newPayGroupIds);
-                    }
+                    $deleteGroups = $payGroupIds;
                     $this->deletePayGroups($user,$deleteGroups);
                 }
             }
 
-            if ($isNewPay){
-                $newPayMqs = GroupUserMq::query()->whereIn('group_id',$newPayGroupIds)->get();
-                $newPayMqGroupIds = $newPayMqs->pluck("group_id")->toArray();
-                $newNoPayMqGroupIds = array_diff($newPayGroupIds,$newPayMqGroupIds);
-                if ($newNoPayMqGroupIds != 0){
-                    foreach ($newNoPayMqGroupIds as $noGroupId){
-                        if (!isset($payGroupMap[$noGroupId])){
-                            continue;
-                        }
-
-                        $groupItem = $payGroupMap[$noGroupId];
-                        $oneGroupUserMq = new GroupUserMq();
-                        $oneGroupUserMq->group_id = $groupItem->id;
-                        $oneGroupUserMq->user_id = $user->id;
-                        $oneGroupUserMq->remain_days = $groupItem->days;
-                        $oneGroupUserMq->save();
-                    }
-                }
-            }
+            // 更新用户组
+            $user->groups()->sync($newGroups);
 
             //付费用户组处理
             foreach ($newPayGroupIds as $paidGroupId) {
@@ -495,13 +471,26 @@ class UpdateAdminUser
             return;
         }
 
-        $dbMgr = app("db");
+        $changeGroupUser = GroupUser::query()->whereIn('group_id',$deleteGroupsIds)->where('user_id',$user->id)->first();
+        $dtSeconds = 0;
+        if (!empty($changeGroupUser)){
+            $expired_at = $changeGroupUser->expiration_time;
+            if (!empty($expired_at)){
+                if ($expired_at>Carbon::now()){
+                    $dtSeconds = Carbon::now()->diffInSeconds(Carbon::parse( $expired_at));
+                }
+            }
+        }
+
         $remainDays = GroupUserMq::query()->whereIn('group_id',$deleteGroupsIds)
             ->where('user_id',$user->id)->sum('remain_days');
-        if ($remainDays != 0){
-            $user->expired_at = Carbon::parse($user->expired_at)->addDays(-$remainDays);
-            $user->save();
+        if ($remainDays != 0 || $dtSeconds != 0){
+            if (!empty($user->expired_at)){
+                $user->expired_at = Carbon::parse($user->expired_at)->subDays($remainDays)->subSeconds($dtSeconds);
+                $user->save();
+            }
         }
+
         GroupUserMq::query()->whereIn('group_id',$deleteGroupsIds)
             ->where('user_id',$user->id)->delete();
         GroupPaidUser::query()->whereIn('group_id', $deleteGroupsIds)
