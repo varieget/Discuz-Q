@@ -107,30 +107,42 @@ class BatchDeleteGroupsController extends DzqAdminController
             if (!empty($defualtGroup)){
                 $defualtGroupId = $defualtGroup->id;
             }
-            $changeUserIds = GroupUser::query()->select("user_id")->whereIn('group_id',$groupIdDeletes)->get();
 
             $dbMgr = app('db');
-            $dbResult = $dbMgr->transaction(function () use ($changeUserIds, $groupIdDeletes, $defualtGroupId, $dbMgr){
-                foreach ($changeUserIds as $key=>$item){
-                    $user_id = $item->user_id;
+            $dbResult = $dbMgr->transaction(function () use ( $groupIdDeletes, $defualtGroupId, $dbMgr){
+                $changeGroupUser = GroupUser::query()->whereIn('group_id',$groupIdDeletes)->get();
 
+                foreach ($changeGroupUser as $key=>$item){
+                    $userId = $item->user_id;
+                    $expired_at = $item->expiration_time;
+                    $dtSeconds = 0;
+                    if (!empty($expired_at)){
+                        if ($expired_at>Carbon::now()){
+                            $dtSeconds = Carbon::now()->diffInSeconds(Carbon::parse( $expired_at));
+                        }
+                    }
                     //减少过期时间
-                    $remainDays = GroupUserMq::query()->whereIn('group_id',$groupIdDeletes)->where('user_id',$user_id)->sum('remain_days');
-                    User::query()->where('id',$user_id)->update(['expired_at'=>$dbMgr->raw("DATE_ADD(expired_at,interval ".-$remainDays." day)")]);
+                    $remainDays = GroupUserMq::query()->whereIn('group_id',$groupIdDeletes)->where('user_id',$userId)->sum('remain_days');
+                    $userExpiredAt = User::query()->select("expired_at")->where('id',$userId)->first();
+                    if(!empty($userExpiredAt) && !empty($userExpiredAt->expired_at)){
+                        $userExpiredAtNew = Carbon::parse($userExpiredAt->expired_at)->subDays($remainDays)->subSeconds($dtSeconds);
 
-
+                        User::query()->where('id',$userId)->update(['expired_at'=>$userExpiredAtNew]);
+                    }
                     //设置新的用户组
-                    $newFeeGroup = GroupUserMq::query()->select("group_id")
+                    $newFeeGroup = GroupUserMq::query()->select(["group_id",'remain_days'])
                         ->leftJoin("groups as tb2","group_id","tb2.id")
                         ->where("tb2.is_paid",Group::IS_PAID)
-                        ->where('user_id', $user_id)
+                        ->where('user_id', $userId)
                         ->whereNotIn('group_id',$groupIdDeletes)
                         ->orderByDesc("tb2.level")->first();
                     if (empty($newFeeGroup)){
                         //设置为免费默认组
-                        GroupUser::query()->where('user_id',$user_id)->update(['group_id'=>$defualtGroupId]);
+                        GroupUser::query()->where('user_id',$userId)->update(['group_id'=>$defualtGroupId]);
                     }else{
-                        GroupUser::query()->where('user_id',$user_id)->update(['group_id'=> $newFeeGroup->group_id]);
+                        GroupUser::query()->where('user_id',$userId)
+                            ->update(['group_id'=> $newFeeGroup->group_id,'expiration_time'=>Carbon::now()->addDays($newFeeGroup->remain_days)]);
+                        GroupUserMq::query()->where("group_id", $newFeeGroup->group_id)->where("user_id",$userId)->delete();
                     }
                 }
                 return true;
