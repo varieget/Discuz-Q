@@ -29,7 +29,7 @@ trait WxshopTrait
 {
 
     public function getAccessToken($wxshopAppId){
-        $data = AccessToken::query()->where("app_id",$wxshopAppId)->first();
+        $data = AccessToken::query()->where("wx_app_id",$wxshopAppId)->first();
         if (!empty($data)){
             $dtTime = Carbon::parse($data->updated_at)->diffInSeconds(Carbon::now(),false);
             if ($dtTime < $data->expires_in){
@@ -40,7 +40,7 @@ trait WxshopTrait
 
         $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="."&secret=".;
 
-        return
+        return;
     }
 
     public function checkPermission($userRepo, $guestEnable = false)

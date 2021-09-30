@@ -15,12 +15,12 @@ class CreatePluginWxshopAccessTokens extends DzqPluginMigration
     {
         $this->schema()->create('plugin_wxshop_access_tokens', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true)->comment('自增id');
-            $table->string('app_id', 64)->nullable(false)->comment('商店appid');
+            $table->string('wx_app_id', 64)->nullable(false)->comment('商店appid');
             $table->string('access_token',256)->nullable(false)->comment('访问token');
             $table->unsignedBigInteger('expires_in')->nullable(false)->comment('过期时间');
             $table->timestamp('created_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->nullable(false)->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
-            $table->unique(['app_id'],'index_app_id');
+            $table->unique(['wx_app_id'],'index_app_id');
         });
     }
 
