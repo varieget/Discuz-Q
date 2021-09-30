@@ -27,7 +27,7 @@ use Illuminate\Contracts\Filesystem\Factory as Filesystem;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Support\Str;
 use Tobscure\JsonApi\Relationship;
-
+use  function Qcloud\Cos\encodeKey;;
 class AttachmentSerializer extends AbstractSerializer
 {
     use HasPaidContent;
@@ -149,8 +149,8 @@ class AttachmentSerializer extends AbstractSerializer
     {
         if ($user) $this->actor = $user;
         if ($model->is_remote) {
-            $url = $this->remoteUrl($model->full_path);
-            $blurUrl = $this->remoteUrl($model->blur_path);
+            $url = $this->getImgUrl($model,$model->full_path);
+            $blurUrl = $this->getImgUrl($model,$model->blur_path);
             $thumbUrl = $url . (strpos($url, '?') === false ? '?' : '&') . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
         } else {
             $url = $this->localUrl($model->full_path);
@@ -215,11 +215,18 @@ class AttachmentSerializer extends AbstractSerializer
     }
 
 
-    public function getImgUrl($model)
+    public function getImgUrl($model,$path = '')
     {
-        return $this->settings->get('qcloud_cos_sign_url', 'qcloud', true)
-            ? $this->filesystem->disk('attachment_cos')->temporaryUrl($model->full_path, Carbon::now()->addDay())
-            : $this->filesystem->disk('attachment_cos')->url($model->full_path);
+        if(empty($path)) $path = $model->full_path;
+        $url = $this->remoteUrl($path);
+        if ($model->is_remote) {
+            $attachmentName = $model->attachment;
+            if (strstr($model, '%')) {
+                $attachmentName = urldecode($attachmentName);
+            }
+            $url = str_replace($model->attachment, encodeKey($attachmentName), $url);
+        }
+        return $url;
     }
 
 
