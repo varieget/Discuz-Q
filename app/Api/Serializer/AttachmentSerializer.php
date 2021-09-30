@@ -18,7 +18,6 @@
 
 namespace App\Api\Serializer;
 
-use App\Api\Controller\AttachmentV3\AttachmentTrait;
 use App\Models\Attachment;
 use App\Traits\HasPaidContent;
 use Carbon\Carbon;
@@ -31,8 +30,6 @@ use Tobscure\JsonApi\Relationship;
 
 class AttachmentSerializer extends AbstractSerializer
 {
-    use AttachmentTrait;
-
     use HasPaidContent;
 
     /**
@@ -152,13 +149,7 @@ class AttachmentSerializer extends AbstractSerializer
     {
         if ($user) $this->actor = $user;
         if ($model->is_remote) {
-            if(strpos($model->full_path,'%') !== false){
-                $model->attachment = urldecode($model->attachment);
-            }
-            $imgUrl = $this->remoteUrl($model->full_path);
-
-            $url = $this->getEncodeAttachmentUrl($model,$imgUrl);
-
+            $url = $this->remoteUrl($model->full_path);
             $blurUrl = $this->remoteUrl($model->blur_path);
             $thumbUrl = $url . (strpos($url, '?') === false ? '?' : '&') . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
         } else {

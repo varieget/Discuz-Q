@@ -17,7 +17,6 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-use App\Api\Controller\AttachmentV3\AttachmentTrait;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
 use App\Common\CacheKey;
@@ -54,7 +53,6 @@ trait ThreadTrait
     use TomTrait;
     use QcloudTrait;
     use PostNoticesTrait;
-    use AttachmentTrait;
 
     private $loginUserData = [];
 
@@ -758,11 +756,17 @@ trait ThreadTrait
                 $serializer = $this->app->make(AttachmentSerializer::class);
                 foreach ($content_attachments as $val) {
                     if ($val->is_remote) {
-                        if(strpos($val->attachment,'%') !== false) {
-                            $val->attachment = urldecode($val->attachment);
+                        $imgUrl = "";
+                        if(app(SettingsRepository::class)->get('qcloud_cos_sign_url', 'qcloud', true)){
+                            $urlArr = explode("?",$serializer->getImgUrl($val));
+                            if(strpos($urlArr[0],$val->file_name) !== false){
+                                $urlArr[0] = str_replace($val->file_name,encodeKey($val->file_name),$urlArr[0]);
+                                $imgUrl = $urlArr[0]."?".$urlArr[1];
+                            }
+                        }else{
+                            $imgUrl = $serializer->getImgUrl($val);
+                            $imgUrl = str_replace($val->file_name,encodeKey($val->file_name),$imgUrl);
                         }
-                        $imgUrl = $serializer->getImgUrl($val);
-                        $imgUrl = $this->getEncodeAttachmentUrl($val,$imgUrl);
                         $attachments[$val->id] = $imgUrl;
                     }
                 }
