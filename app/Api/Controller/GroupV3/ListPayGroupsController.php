@@ -45,10 +45,12 @@ class ListPayGroupsController extends DzqController
         $res_groups = [];
         foreach ($pay_groups as $key => $val){
             $res_groups[$key] = [
+                'groupId' => $val->id,
                 'name'  =>  $val->name,
                 'color' =>  $val->color,
                 'icon'  =>  $val->icon,
                 'fee'   =>  $val->fee,
+                'amount'   =>  (double)$val->fee,
                 'level' =>  $val->level,
                 'days'  =>  $val->days,
                 'description'   =>  $val->description,
