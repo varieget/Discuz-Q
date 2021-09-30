@@ -54,11 +54,9 @@ class PaidGroupOrder
                     if (!empty($event->operator->id)) {
                         //管理员操作时重新设置过期时间不变
                         $delete_type = GroupPaidUser::DELETE_TYPE_ADMIN;
-                        $expiration_time = $group_paid_user_info->expiration_time;
                     } else {
                         //其他情况，到期时间往后顺延
                         $delete_type = GroupPaidUser::DELETE_TYPE_RENEW;
-                        $expiration_time = Carbon::parse($group_paid_user_info->expiration_time)->addDays($group_info->days);
                     }
                     //软删除原记录
                     $group_paid_user_info->update(['delete_type' => $delete_type]);
