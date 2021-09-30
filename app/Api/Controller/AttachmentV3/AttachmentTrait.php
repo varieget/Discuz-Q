@@ -144,7 +144,7 @@ trait AttachmentTrait
         $fileData = parse_url($cosUrl);
         $fileData = pathinfo($fileData['path']);
         $fileData['filePath'] = substr_replace($fileData['dirname'], '', strpos($fileData['dirname'], '/'), strlen('/')) . '/';
-        $fileData['attachmentName'] = $fileData['basename'];
+        $fileData['attachmentName'] =urldecode($fileData['basename']) ;
         return $fileData;
     }
 
