@@ -83,8 +83,12 @@ class UpdateThreadController extends DzqController
             && $thread->user
         ) {
             $messagePost = $post;
-            if (!empty($oldTitle)) {
-                $messagePost->content = strpos($oldContent, '<img') ? $oldTitle . '[图片]' : $oldTitle;
+            if (!empty($oldTitle) && $messagePost->is_first == Post::FIRST_YES) {
+                $tags = Post::getContentTags($oldContent);
+                $messagePost->content = $oldTitle . $tags;
+                $messagePost->content = Post::addTagToThreadContent($messagePost->thread_id, $messagePost->content);
+            } else {
+                $messagePost = Post::changeNotifitionPostContent($messagePost);
             }
 
             $thread->user->notify(new System(PostMessage::class, $this->user, [
@@ -131,6 +135,7 @@ class UpdateThreadController extends DzqController
         $parsedContent = $post->content;
         //发帖@用户
         $this->sendNews($thread, $post);
+        unset($post->isChange);
         //更新tom数据
         $tomJsons = $this->saveThreadTom($thread, $content, $post);
         $post->content = $parsedContent;

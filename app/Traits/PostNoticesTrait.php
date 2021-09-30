@@ -49,6 +49,8 @@ trait PostNoticesTrait
             return;
         }
         $message = $message ?: '无';
+        $oldContent = $post->content;
+        $post = Post::changeNotifitionPostContent($post);
 
         switch ($type) {
             case 'isApproved':  // 内容审核通知
@@ -58,6 +60,8 @@ trait PostNoticesTrait
                 $this->postIsDeleted($post, $actor, ['refuse' => $message]);
                 break;
         }
+        unset($post->isChange);
+        $post->content = $oldContent;
     }
 
     /**
@@ -115,7 +119,7 @@ trait PostNoticesTrait
             if ($post->is_approved == Post::UNAPPROVED) {
                 return;
             }
-            $user->notify(new Related($user, $post));
+            $user->notify(new Related($actor, $post));
         });
     }
 
@@ -128,7 +132,6 @@ trait PostNoticesTrait
      */
     private function postIsDeleted($post, $actor, array $attach)
     {
-        $post = Post::changeNotifitionPostContent($post);
         $data = [
             'message' => $post->formatContent(), // 解析表情
             'post' => $post,
