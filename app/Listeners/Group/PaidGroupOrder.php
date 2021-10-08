@@ -66,6 +66,7 @@ class PaidGroupOrder
                         $log->info('软删除 group_paid_user 记录出错', [$event]);
                         return;
                     }
+                    $expiration_time = Carbon::parse($group_paid_user_info->expiration_time)->addDays($group_info->days);
                 } else {
                     $expiration_time = Carbon::now()->addDays($group_info->days);
                 }
