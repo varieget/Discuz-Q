@@ -109,6 +109,15 @@ class ProfileController extends DzqController
                 ->whereNull('deleted_at')
                 ->where('is_draft', Thread::IS_NOT_DRAFT)
                 ->count();
+        }else{
+            //查看他人信息主题数需排除匿名贴,草稿，且需已审核的帖子
+            $user->thread_count = Thread::query()
+                ->whereNull('deleted_at')
+                ->whereNotNull('user_id')
+                ->where('user_id',$user_id)
+                ->where('is_draft', Thread::IS_NOT_DRAFT)
+                ->where('is_approved', Thread::BOOL_YES)
+                ->where('is_anonymous', Thread::IS_NOT_ANONYMOUS)->count();
         }
 
         $data = $this->getData($user);
