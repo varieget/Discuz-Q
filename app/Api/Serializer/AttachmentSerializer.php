@@ -221,9 +221,6 @@ class AttachmentSerializer extends AbstractSerializer
         $url = $this->remoteUrl($path);
         if ($model->is_remote) {
             $attachmentName = $model->attachment;
-            if (strstr($model, '%')) {
-                $attachmentName = urldecode($attachmentName);
-            }
             $url = str_replace($model->attachment, encodeKey($attachmentName), $url);
         }
         return $url;
