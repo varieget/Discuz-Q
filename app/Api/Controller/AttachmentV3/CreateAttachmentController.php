@@ -39,7 +39,6 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
-use s9e\TextFormatter\Utils;
 
 
 class CreateAttachmentController extends DzqController
