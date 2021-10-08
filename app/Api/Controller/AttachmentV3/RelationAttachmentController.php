@@ -24,6 +24,7 @@ use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Illuminate\Http\UploadedFile;
@@ -86,6 +87,13 @@ class RelationAttachmentController extends DzqController
         );
 
         $cosUrl = $data['cosUrl'];
+        $parseUrl = parse_url($cosUrl);
+        $host = $parseUrl['host'];
+        $path = $parseUrl['path'];
+        $domain = Request::capture()->getHost();
+        if (!(strstr($host, 'myqcloud.com') || strstr($host, $domain)) || !strstr($path, 'public/attachments')) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '域名不合法，请使用cos合法地址');
+        }
         if (in_array($data['type'], [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
             $fileInfo = $this->getImageInfo($cosUrl, $this->censor);
         } else {
