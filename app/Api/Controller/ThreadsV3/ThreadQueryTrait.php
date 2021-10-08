@@ -112,7 +112,7 @@ trait ThreadQueryTrait
         if (!empty($sort)) {
             switch ($sort) {
                 case Thread::SORT_BY_THREAD://按照发帖时间排序
-                    $threads->orderByDesc('th.issue_at');
+                    $threads->orderByDesc('th.created_at');
                     break;
                 case Thread::SORT_BY_POST://按照评论时间排序
                     $threads->orderByDesc('th.posted_at');
