@@ -43,29 +43,31 @@ class PaidGroupOrder
             $db = app('db');
             $log = app('log');
             $db->beginTransaction();
+            //已有用户组
+            $group_paid_user_info = GroupPaidUser::query()->where('user_id', $event->user->id)
+                ->where('delete_type',0)->first();
+            if (isset($group_paid_user_info->expiration_time)) {
+                if (!empty($event->operator->id)) {
+                    //管理员操作时重新设置过期时间不变
+                    $delete_type = GroupPaidUser::DELETE_TYPE_ADMIN;
+                } else {
+                    //其他情况，到期时间往后顺延
+                    $delete_type = GroupPaidUser::DELETE_TYPE_RENEW;
+                }
+                //软删除原记录
+                $group_paid_user_info->update(['delete_type' => $delete_type]);
+                $res = $group_paid_user_info->delete();
+                if($res === false){
+                    $db->rollBack();
+                    $log->info('软删除 group_paid_user 记录出错', [$event]);
+                    return;
+                }
+            }
+
             //以前的设计用户--用户组是 一对多 的关系，但是目前业务流程使用的是  一对一，所以这里暂且按照一个用户对应一个二维数组来处理。只有当站长开启付费时， checkoutsite 会判断用户是否过期来考虑是否增加用户未付费用户组身份
             //下面的判断可以理解为：用户续费当前用户组身份
             if (in_array($event->group_id, $user_group_ids)) {
-                //已有用户组
-                $group_paid_user_info = GroupPaidUser::where('user_id', $event->user->id)
-                    ->where('group_id', $event->group_id)
-                    ->where('delete_type',0)->first();
                 if (isset($group_paid_user_info->expiration_time)) {
-                    if (!empty($event->operator->id)) {
-                        //管理员操作时重新设置过期时间不变
-                        $delete_type = GroupPaidUser::DELETE_TYPE_ADMIN;
-                    } else {
-                        //其他情况，到期时间往后顺延
-                        $delete_type = GroupPaidUser::DELETE_TYPE_RENEW;
-                    }
-                    //软删除原记录
-                    $group_paid_user_info->update(['delete_type' => $delete_type]);
-                    $res = $group_paid_user_info->delete();
-                    if($res === false){
-                        $db->rollBack();
-                        $log->info('软删除 group_paid_user 记录出错', [$event]);
-                        return;
-                    }
                     $expiration_time = Carbon::parse($group_paid_user_info->expiration_time)->addDays($group_info->days);
                 } else {
                     $expiration_time = Carbon::now()->addDays($group_info->days);
@@ -131,7 +133,7 @@ class PaidGroupOrder
                     ->where('group_id', '!=',$group_info->id)->whereIn('group_id', $pay_group_ids)->first();
                 if(!empty($old_group_user)){
                     //计算old用户组还剩多久，迁移到 group_user_mqs
-                    $old_remain_days = Carbon::parse($old_group_user->expiration_time)->diffInDays(Carbon::now(), false);
+                    $old_remain_days = Carbon::parse(Carbon::now())->diffInDays($old_group_user->expiration_time, false);
                     $group_user_mqs = new GroupUserMq();
                     $group_user_mqs->group_id = $group_info->id;
                     $group_user_mqs->user_id = $event->user->id;
