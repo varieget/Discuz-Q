@@ -215,17 +215,11 @@ class AttachmentSerializer extends AbstractSerializer
     }
 
 
-    public function getImgUrl($model,$path = '')
+    public function getImgUrl($model, $path = '')
     {
-        if(empty($path)) $path = $model->full_path;
+        if (empty($path)) $path = $model->full_path;
         $url = $this->remoteUrl($path);
-        if ($model->is_remote) {
-            $attachmentName = $model->attachment;
-            if (strstr($model, '%')) {
-                $attachmentName = urldecode($attachmentName);
-            }
-            $url = str_replace($model->attachment, encodeKey($attachmentName), $url);
-        }
+        $model->is_remote && $url = str_replace($model->attachment, encodeKey($model->attachment), $url);
         return $url;
     }
 

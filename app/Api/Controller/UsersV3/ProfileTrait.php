@@ -72,6 +72,7 @@ trait ProfileTrait
     {
         return [
             'pid' => $group['group_id'],
+            'groupId' => $group['group_id'],
             'groupName' => $group['groups']['name']
         ];
     }

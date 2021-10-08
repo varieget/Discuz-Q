@@ -64,8 +64,8 @@ class AdminForumSettingSerializer extends AbstractSerializer
             $actor = $this->getActor();
         }
 
-        $attributes = $this->getCommonAttributes($actor);
-        $attributes += [
+        $commonAttributes = $this->getCommonAttributes($actor);
+        $attributes = [
             // 站点设置
             'set_site' => [],
 
@@ -94,6 +94,7 @@ class AdminForumSettingSerializer extends AbstractSerializer
 
             'ucenter' => []
         ];
+        $attributes = array_merge_recursive($attributes, $commonAttributes);
 
         return $attributes;
     }
