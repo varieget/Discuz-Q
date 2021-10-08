@@ -41,7 +41,7 @@ class ListPayGroupsController extends DzqController
         $ugroup = $userGroup[0];
 
         //获取所有付费用户组
-        $pay_groups = Group::query()->where('is_paid', 1)->get();
+        $pay_groups = Group::query()->where('is_paid', 1)->orderBy('level', 'asc')->get();
         $res_groups = [];
         foreach ($pay_groups as $key => $val){
             $res_groups[$key] = [

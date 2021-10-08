@@ -119,7 +119,7 @@ class PaidGroupOrder
                 $res = $event->user->save();
                 if($res === false){
                     $db->rollBack();
-                    $log->info('修改 users 的 expired_at 记录出错', [$event]);
+                    $log->error('修改 users 的 expired_at 记录出错', [$event]);
                     return;
                 }
                 //1、先查 group_user_mqs ，看用户是否有对应用户组id记录，有的话还需要取出来，把剩余时间累加上
@@ -135,13 +135,13 @@ class PaidGroupOrder
                     //计算old用户组还剩多久，迁移到 group_user_mqs
                     $old_remain_days = Carbon::parse(Carbon::now())->diffInDays($old_group_user->expiration_time, false);
                     $group_user_mqs = new GroupUserMq();
-                    $group_user_mqs->group_id = $group_info->id;
+                    $group_user_mqs->group_id = $old_group_user->group_id;
                     $group_user_mqs->user_id = $event->user->id;
                     $group_user_mqs->remain_days = $old_remain_days;
                     $res = $group_user_mqs->save();
                     if($res === false){
                         $db->rollBack();
-                        $log->info('新增 group_user_mqs 记录出错', [$event]);
+                        $log->error('新增 group_user_mqs 记录出错', [$event]);
                         return;
                     }
                 }
@@ -149,7 +149,7 @@ class PaidGroupOrder
                 $res = GroupUser::query()->where('user_id', $event->user->id)->delete();
                 if($res === false){
                     $db->rollBack();
-                    $log->info('删除 老数据 group_user 记录出错', [$event]);
+                    $log->error('删除 老数据 group_user 记录出错', [$event]);
                     return;
                 }
                 $expiration_time = Carbon::now()->addDays($remain_days);
@@ -164,7 +164,7 @@ class PaidGroupOrder
                 $res = $group_paid_user->save();
                 if($res === false){
                     $db->rollBack();
-                    $log->info('新增 group_paid_user 记录出错', [$event]);
+                    $log->error('新增 group_paid_user 记录出错', [$event]);
                     return;
                 }
 
