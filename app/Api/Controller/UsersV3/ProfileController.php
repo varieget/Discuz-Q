@@ -180,7 +180,7 @@ class ProfileController extends DzqController
             'color' =>  $group['groups']['color'],
             'amount'   =>  (double)$group['groups']['fee'],
             'level' =>  $group['groups']['level'],
-            'remainDays' => !empty($group['groups']['expiration_time']) ? Carbon::parse($group['groups']['expiration_time'])->diffInDays(Carbon::now()) : 0,
+            'remainDays' => !empty($group['expiration_time']) ? Carbon::parse($group['expiration_time'])->diffInDays(Carbon::now()) : 0,
             'description' => $group['groups']['description'],
             'hasPayGroup' => $hasPayGroup
         ];
