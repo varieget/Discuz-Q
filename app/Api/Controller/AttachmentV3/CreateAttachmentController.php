@@ -33,6 +33,7 @@ use App\Settings\SettingsRepository;
 use App\Validators\AttachmentValidator;
 use Discuz\Base\DzqController;
 use Discuz\Base\DzqLog;
+use Discuz\Common\Utils;
 use Discuz\Foundation\EventsDispatchTrait;
 use Discuz\Wechat\EasyWechatTrait;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -147,13 +148,13 @@ class CreateAttachmentController extends DzqController
                 $parseUrl = parse_url($fileUrl);
                 $pathInfo = pathinfo(strtolower($parseUrl['path'] ?? ''));
                 $ext = $pathInfo['extension'] ?? '';
-                $fileUrl = \Discuz\Common\Utils::ssrfDefBlack($fileUrl);
-                if (!in_array($ext, ['jpeg', 'jpg', 'bmp', 'png', 'gif']) || !$fileUrl) {
+                if (!in_array($ext, ['jpeg', 'jpg', 'bmp', 'png', 'gif'])) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '图片地址 ' . $fileUrl . ' 不合法。');
                 }
                 $file_type = Attachment::$allowTypes[$type];
                 $support_ext = Str::of($this->settings->get("support_{$file_type}_ext"))->explode(',')->toArray();
-                $url_content = $this->http_get_data($fileUrl);
+//                $url_content = $this->http_get_data($fileUrl);
+                $url_content = Utils::downLoadFile($fileUrl);
                 $fileName = basename($fileUrl);
                 $file_basename = explode('.', $fileName);
                 $file_ext = $file_basename[1];
