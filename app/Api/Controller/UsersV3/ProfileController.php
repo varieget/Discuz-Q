@@ -171,6 +171,22 @@ class ProfileController extends DzqController
         $level = $group['groups']['level'];
         $is_top = Group::query()->where('level', '>', $level)->doesntExist();
         $hasPayGroup = Group::query()->where('level','>',0)->exists();
+        // 计算剩余时间和展示类型
+        $type_time = 0;
+        $remain_time = 0;
+        if(!empty($group['expiration_time'])){      //天
+            $remain_time = Carbon::parse($group['expiration_time'])->diffInDays(Carbon::now());
+            if(empty($remain_time)){                //时
+                $type_time = 1;
+                $remain_time = Carbon::parse($group['expiration_time'])->diffInHours(Carbon::now());
+                if(empty($remain_time)){            //分
+                    $type_time = 2;
+                    $remain_time = Carbon::parse($group['expiration_time'])->diffInMinutes(Carbon::now());
+                }
+            }
+        }
+
+
         return [
             'pid' => $group['group_id'],
             'groupId' => $group['group_id'],
@@ -180,7 +196,9 @@ class ProfileController extends DzqController
             'color' =>  $group['groups']['color'],
             'amount'   =>  (double)$group['groups']['fee'],
             'level' =>  $group['groups']['level'],
-            'remainDays' => !empty($group['expiration_time']) ? Carbon::parse($group['expiration_time'])->diffInDays(Carbon::now()) : 0,
+            'remainDays'    =>  $remain_time,
+            'remainTime' => $remain_time,
+            'typeTime' => $type_time,
             'description' => $group['groups']['description'],
             'hasPayGroup' => $hasPayGroup
         ];
