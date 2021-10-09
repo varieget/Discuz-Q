@@ -100,7 +100,7 @@ trait ThreadTrait
             //修改创建时间为变更时间
             'issueAt' => date('Y-m-d H:i:s', strtotime($thread['issue_at'])),
             'updatedAt' => date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
-            'diffTime' => Utils::diffTime($thread['issue_at']),
+            'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
             'likeReward' => $likeRewardField,
