@@ -147,8 +147,8 @@ class CreateAttachmentController extends DzqController
                 $parseUrl = parse_url($fileUrl);
                 $pathInfo = pathinfo(strtolower($parseUrl['path'] ?? ''));
                 $ext = $pathInfo['extension'] ?? '';
-                $schema = $parseUrl['scheme'];
-                if (!in_array($ext, ['jpeg', 'jpg', 'bmp', 'png', 'gif']) || !in_array($schema, ['http', 'https'])) {
+                $fileUrl = \Discuz\Common\Utils::ssrfDefBlack($fileUrl);
+                if (!in_array($ext, ['jpeg', 'jpg', 'bmp', 'png', 'gif']) || !$fileUrl) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '图片地址 ' . $fileUrl . ' 不合法。');
                 }
                 $file_type = Attachment::$allowTypes[$type];
