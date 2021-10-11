@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +20,12 @@ namespace App\Api\Controller\SettingsV3;
 
 use App\Common\ResponseCode;
 use App\Settings\SettingsRepository;
-use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 
-class ForumSettingsController extends DzqController
+class AdminForumSettingsController extends DzqAdminController
 {
     use ForumSettingTrait;
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return true;
-    }
 
     public function __construct(SettingsRepository $settings, Events $events)
     {
@@ -40,7 +35,7 @@ class ForumSettingsController extends DzqController
 
     public function main()
     {
-        $data = $this->forumSettingMain();
+        $data = $this->forumSettingMain(true);
         $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }

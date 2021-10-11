@@ -80,6 +80,8 @@ class CreatePostController extends DzqController
         $this->bus = $bus;
     }
 
+    protected $paramsAlias = ['id' => 'threadId'];
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         if ($this->user->isGuest()) {

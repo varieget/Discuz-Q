@@ -17,36 +17,22 @@
 
 namespace App\Api\Controller\UsersV3;
 
-
-use App\Api\Serializer\UserProfileSerializer;
-use App\Api\Serializer\UserV2Serializer;
-use App\Common\CacheKey;
 use App\Common\ResponseCode;
-use App\Common\Utils;
 use App\Models\Dialog;
 use App\Models\Group;
-use App\Models\GroupUser;
 use App\Models\Order;
-use App\Models\Setting;
 use App\Models\Thread;
 use App\Models\User;
-use App\Models\UserWechat;
 use App\Repositories\UserRepository;
-use App\Settings\SettingsRepository;
 use Carbon\Carbon;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
-use Illuminate\Database\Eloquent\Collection;
 
 class ProfileController extends DzqController
 {
+    use ProfileTrait;
 
     public $providers = [
         \App\Providers\UserServiceProvider::class,
-    ];
-
-    //返回的数据一定包含的数据
-    public $include = [
     ];
 
     public $optionalInclude = ['groups', 'dialog'];
@@ -58,22 +44,23 @@ class ProfileController extends DzqController
 
     public function main()
     {
-        $user_serialize = $this->app->make(UserV2Serializer::class);
-        $user_serialize->setRequest($this->request);
         $user_id = $this->inPut('userId');
         $user = User::find($user_id);
-        if(!$user){
-            return $this->outPut(ResponseCode::INVALID_PARAMETER);
+        if (!$user) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
         $isSelf = $this->user->id === $user->id;
-        if($isSelf || $this->user->isAdmin()){
+        if ($isSelf || $this->user->isAdmin()) {
             $this->optionalInclude = array_merge($this->optionalInclude, ['wechat']);
         }
-        $include = !empty($this->inPut('include')) ? array_unique(array_merge($this->include, explode(',', $this->inPut('include')))) : $this->include;
+        $include = !empty($this->inPut('include'))
+            ? array_unique(array_merge($this->include, explode(',', $this->inPut('include'))))
+            : $this->include;
 
-        if(!empty($this->inPut('include'))){
-            if(array_diff($this->inPut('include'), $this->optionalInclude)){       //如果include 超出optionalinclude 就报错
-                return $this->outPut(ResponseCode::NET_ERROR);
+        if (!empty($this->inPut('include'))) {
+            if (array_diff($this->inPut('include'), $this->optionalInclude)) {
+                //如果include 超出optionalinclude 就报错
+                $this->outPut(ResponseCode::NET_ERROR);
             }
         }
 
@@ -93,8 +80,8 @@ class ProfileController extends DzqController
         }
 
         $key = array_search('dialog', $include);
-        if($key != false){
-            if(!$isSelf){
+        if ($key != false) {
+            if (!$isSelf) {
                 $actor = $this->user;
                 //添加会话关系
                 $dialog = Dialog::query()
@@ -104,14 +91,14 @@ class ProfileController extends DzqController
                     })
                     ->first();
                 $user->setRelation('dialog', $dialog);
-            }else{
+            } else {
                 unset($include[$key]);
             }
         }
         $user->loadMissing($include);
 
         // 判断用户是否禁用
-        if($user->status == User::enumStatus('ban')){
+        if ($user->status == User::enumStatus('ban')) {
             $user->load(['latelyLog' => function ($query) {
                 $query->select()->where('action', 'ban');
             }]);
@@ -122,47 +109,29 @@ class ProfileController extends DzqController
             $user->thread_count = Thread::query()
                 ->where('user_id', $user_id)
                 ->whereNull('deleted_at')
-                ->where('is_draft',Thread::IS_NOT_DRAFT)
+                ->where('is_draft', Thread::IS_NOT_DRAFT)
                 ->count();
+        }else{
+            //查看他人信息主题数需排除匿名贴,草稿，且需已审核的帖子
+            $user->thread_count = Thread::query()
+                ->whereNull('deleted_at')
+                ->whereNotNull('user_id')
+                ->where('user_id',$user_id)
+                ->where('is_draft', Thread::IS_NOT_DRAFT)
+                ->where('is_approved', Thread::BOOL_YES)
+                ->where('is_anonymous', Thread::IS_NOT_ANONYMOUS)->count();
         }
 
-        $data = $user_serialize->getDefaultAttributes($user);
-        $grounUser = [$user_id];
-        $groups = GroupUser::instance()->getGroupInfo($grounUser);
-        $groups = array_column($groups, null, 'user_id');
-        $data['group'] = $this->getGroupInfo($groups[$user_id]);
+        $data = $this->getData($user);
 
-        //用户是否绑定微信
-        $data['isBindWechat'] = !empty($user->wechat);
         $data['wxNickname'] = !empty($user->wechat) ? $user->wechat->nickname : '';
         $data['wxHeadImgUrl'] = !empty($user->wechat) ? $user->wechat->headimgurl : '';
         $data['expiredDays'] = false;
-        if(!empty($data['expiredAt'])){
-            $dateDiff = date_diff(date_create($data['expiredAt']),date_create(date('Y-m-d H:i:s')));
+        if (!empty($data['expiredAt'])) {
+            $dateDiff = date_diff(date_create($data['expiredAt']), date_create(date('Y-m-d H:i:s')));
             $data['expiredDays'] = $dateDiff->days;
         }
-        return $this->outPut(ResponseCode::SUCCESS,'', $data);
-    }
-
-
-    /**
-     * @param $cacheData
-     * @param null $limit
-     * @return Collection
-     */
-    public function search($limit, $cacheData = null)
-    {
-        $query = User::query()->selectRaw('id,username,avatar,liked_count as likedCount')
-            ->where('status', 0)
-            ->whereBetween('login_at', [Carbon::parse('-30 days'), Carbon::now()])
-            ->orderBy('thread_count', 'desc')
-            ->orderBy('login_at', 'desc');
-        // cache
-        if ($cacheData) {
-            $query->whereIn('id', $cacheData);
-        }
-
-        return $query->take($limit)->get();
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 
     private function getGroupInfo($group)

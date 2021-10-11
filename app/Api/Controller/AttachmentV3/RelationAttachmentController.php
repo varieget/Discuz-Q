@@ -24,6 +24,8 @@ use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Discuz\Common\Utils;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Illuminate\Http\UploadedFile;
@@ -86,6 +88,9 @@ class RelationAttachmentController extends DzqController
         );
 
         $cosUrl = $data['cosUrl'];
+        if (!Utils::isCosUrl($cosUrl)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '域名不合法，请使用cos合法地址');
+        }
         if (in_array($data['type'], [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
             $fileInfo = $this->getImageInfo($cosUrl, $this->censor);
         } else {

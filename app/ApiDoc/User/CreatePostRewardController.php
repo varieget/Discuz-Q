@@ -10,9 +10,9 @@
  *         required=true,
  *         description = "帖子打赏",
  *         @OA\JsonContent(
- *             @OA\Property(property="thread_id",type="integer", description ="帖子id")    ,
+ *             @OA\Property(property="threadId",type="integer", description ="帖子id")    ,
  *             @OA\Property(property="rewards",type="number", description ="打赏数量"),
- *             @OA\Property(property="post_id",type="integer", description ="评论id"),
+ *             @OA\Property(property="postId",type="integer", description ="评论id"),
  *             )
  *           ),
  * @OA\Response(response=200,

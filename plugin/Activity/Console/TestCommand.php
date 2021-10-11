@@ -27,6 +27,6 @@ class TestCommand extends DzqCommand
     protected $description = '执行一个脚本命令,控制台执行[php disco activity:test]';
     protected function main()
     {
-        echo 'Hello Discuz! Q Plugin';
+        $this->info('Hello Discuz! Q Plugin Activity');
     }
 }

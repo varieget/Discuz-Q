@@ -771,55 +771,56 @@ class Thread extends DzqModel
         return $isPaidAttachment;
     }
 
-    public function formatThread($thread)
-    {
-        $data = [
-            'pid' => $thread['id'],
-            'type' => $thread['type'],
-            'categoryId' => $thread['category_id'],
-            'title' => $thread['title'],
-            'price' => $thread['price'],
-            'attachmentPrice' => $thread['attachment_price'],
-            'postCount' => $thread['post_count'] - 1,
-            'viewCount' => $thread['view_count'],
-            'rewardedCount' => $thread['rewarded_count'],
-            'paidCount' => $thread['paid_count'],
-            'address' => $thread['address'],
-            'location' => $thread['location'],
-            'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
-            'diffCreatedAt' => Utils::diffTime($thread['created_at']),
-            'isRedPacket' => $thread['is_red_packet'],
-            'extension' => null
-        ];
-        switch ($thread['type']) {
-            case Thread::TYPE_OF_IMAGE:
-            case Thread::TYPE_OF_AUDIO:
-                $data['title'] = Post::instance()->getContentSummary($thread['id']);
-                break;
-            case Thread::TYPE_OF_VIDEO:
-                $data['title'] = Post::instance()->getContentSummary($thread['id']);
-                $data['extension'] = [
-                    Thread::EXT_VIDEO => ThreadVideo::instance()->getThreadVideo($thread['id'])
-                ];
-                break;
-            case Thread::TYPE_OF_GOODS:
-                $postId = true;
-                $data['title'] = Post::instance()->getContentSummary($thread['id'], $postId);;
-                $data['extension'] = [
-                    Thread::EXT_GOODS => PostGoods::instance()->getPostGoods($postId)
-                ];
-                break;
-            case Thread::TYPE_OF_QUESTION:
-                $data['title'] = Post::instance()->getContentSummary($thread['id']);
-                $data['extension'] = [
-                    Thread::EXT_QA => Question::instance()->getQuestions($thread['id'])
-                ];
-                break;
-            default:
-                break;
-        }
-        return $data;
-    }
+//    public function formatThread($thread)
+//    {
+//        $data = [
+//            'pid' => $thread['id'],
+//            'threadId' => $thread['id'],
+//            'type' => $thread['type'],
+//            'categoryId' => $thread['category_id'],
+//            'title' => $thread['title'],
+//            'price' => $thread['price'],
+//            'attachmentPrice' => $thread['attachment_price'],
+//            'postCount' => $thread['post_count'] - 1,
+//            'viewCount' => $thread['view_count'],
+//            'rewardedCount' => $thread['rewarded_count'],
+//            'paidCount' => $thread['paid_count'],
+//            'address' => $thread['address'],
+//            'location' => $thread['location'],
+//            'createdAt' => date('Y-m-d H:i:s', strtotime($thread['created_at'])),
+//            'diffCreatedAt' => Utils::diffTime($thread['created_at']),
+//            'isRedPacket' => $thread['is_red_packet'],
+//            'extension' => null
+//        ];
+//        switch ($thread['type']) {
+//            case Thread::TYPE_OF_IMAGE:
+//            case Thread::TYPE_OF_AUDIO:
+//                $data['title'] = Post::instance()->getContentSummary($thread['id']);
+//                break;
+//            case Thread::TYPE_OF_VIDEO:
+//                $data['title'] = Post::instance()->getContentSummary($thread['id']);
+//                $data['extension'] = [
+//                    Thread::EXT_VIDEO => ThreadVideo::instance()->getThreadVideo($thread['id'])
+//                ];
+//                break;
+//            case Thread::TYPE_OF_GOODS:
+//                $postId = true;
+//                $data['title'] = Post::instance()->getContentSummary($thread['id'], $postId);;
+//                $data['extension'] = [
+//                    Thread::EXT_GOODS => PostGoods::instance()->getPostGoods($postId)
+//                ];
+//                break;
+//            case Thread::TYPE_OF_QUESTION:
+//                $data['title'] = Post::instance()->getContentSummary($thread['id']);
+//                $data['extension'] = [
+//                    Thread::EXT_QA => Question::instance()->getQuestions($thread['id'])
+//                ];
+//                break;
+//            default:
+//                break;
+//        }
+//        return $data;
+//    }
 
     /**
      * @desc 获取本次查询要替换的特殊符号

@@ -23,6 +23,7 @@ use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use App\Settings\SettingsRepository;
 use Discuz\Base\DzqLog;
+use Discuz\Common\Utils;
 use Discuz\Wechat\EasyWechatTrait;
 use Endroid\QrCode\QrCode;
 use GuzzleHttp\Client;
@@ -92,7 +93,7 @@ class WechatPcRebindQrCodeController extends AuthBaseController
                 $conData = $this->parseUrlQuery($redirectUri);
                 $redirectUri = $conData['url'];
                 $locationUrl = $this->url->action(
-                    '/apiv3/users/wechat/h5.oauth?redirect='.$redirectUri,
+                    '/' . Utils::getApiName() . '/users/wechat/h5.oauth?redirect=' . $redirectUri,
                     ['sessionToken' => $sessionToken]
                 );
                 $locationUrlArr = explode('redirect=', $locationUrl);

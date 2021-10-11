@@ -244,6 +244,7 @@ return [
         'dialog_id'     => '会话',
         'message_text'  => '消息内容',
         'attachment_id' => '附件',
+        'totalNumber'  => '人数'
 
     ],
 ];

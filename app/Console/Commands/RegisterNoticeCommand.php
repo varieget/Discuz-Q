@@ -19,6 +19,7 @@ namespace App\Console\Commands;
 
 
 use App\Common\DzqConst;
+use App\Models\Thread;
 use App\Models\User;
 use App\Notifications\Messages\Database\CustomMessage;
 use App\Notifications\System;
@@ -50,6 +51,8 @@ class RegisterNoticeCommand extends DzqCommand
         foreach ($aUsers as $aUser) {
             $activity = $activities[$aUser['activity_id']] ?? null;
             if (empty($activity)) continue;
+            $thread = Thread::getOneActiveThread($activity['thread_id']);
+            if (empty($thread)) continue;
             $user = $users[$aUser['user_id']] ?? null;
             if (empty($user)) continue;
             $url = $settings->get('site_url') . '/thread/' . $activity['thread_id'];
@@ -66,6 +69,8 @@ class RegisterNoticeCommand extends DzqCommand
         $userIds = array_column($activities, 'user_id');
         $users = User::query()->whereIn('id', $userIds)->get()->keyBy('id');
         foreach ($activities as $activity) {
+            $thread = Thread::getOneActiveThread($activity['thread_id']);
+            if (empty($thread)) continue;
             $user = $users[$activity['user_id']] ?? null;
             if (empty($user)) continue;
             $url = $settings->get('site_url') . '/thread/' . $activity['thread_id'];
