@@ -33,6 +33,7 @@ use App\Settings\SettingsRepository;
 use App\Validators\AttachmentValidator;
 use Discuz\Base\DzqController;
 use Discuz\Base\DzqLog;
+use Discuz\Common\Utils;
 use Discuz\Foundation\EventsDispatchTrait;
 use Discuz\Wechat\EasyWechatTrait;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -106,11 +107,11 @@ class CreateAttachmentController extends DzqController
         curl_setopt ( $ch, CURLOPT_CUSTOMREQUEST, 'GET' );
         curl_setopt ( $ch, CURLOPT_SSL_VERIFYPEER, false );
         curl_setopt ( $ch, CURLOPT_URL, $url );
+        curl_setopt($ch,CURLOPT_FOLLOWLOCATION,false);
         ob_start ();
         curl_exec ( $ch );
-        $return_content = ob_get_contents ();
+        $return_content = ob_get_contents();
         ob_end_clean ();
-
         $return_code = curl_getinfo ( $ch, CURLINFO_HTTP_CODE );
         return $return_content;
     }
@@ -144,9 +145,16 @@ class CreateAttachmentController extends DzqController
         } else {
             //URL链接图处理
             if (!empty($fileUrl)) {
+                $parseUrl = parse_url($fileUrl);
+                $pathInfo = pathinfo(strtolower($parseUrl['path'] ?? ''));
+                $ext = $pathInfo['extension'] ?? '';
+                $url_content = Utils::downLoadFile($fileUrl);
+                if (!in_array($ext, ['jpeg', 'jpg', 'bmp', 'png', 'gif'])||!$url_content) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '图片地址 ' . $fileUrl . ' 不合法。');
+                }
                 $file_type = Attachment::$allowTypes[$type];
                 $support_ext = Str::of($this->settings->get("support_{$file_type}_ext"))->explode(',')->toArray();
-                $url_content = $this->http_get_data($fileUrl);
+//                $url_content = $this->http_get_data($fileUrl);
                 $fileName = basename($fileUrl);
                 $file_basename = explode('.', $fileName);
                 $file_ext = $file_basename[1];

@@ -91,7 +91,7 @@ class ForumSettingSerializerV3 extends AbstractSerializer
         //分类帖子总数计算
         $categories = Category::query()
             ->select([
-                'id as pid', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'
+                'id as pid', 'id as categoryId', 'name', 'description', 'icon', 'sort', 'property', 'thread_count as threadCount', 'parentid'
             ])
             ->orderBy('parentid', 'asc')
             ->orderBy('sort')
@@ -104,7 +104,7 @@ class ForumSettingSerializerV3 extends AbstractSerializer
             $subActor = new Guest();
         }
         foreach ($categories as $category) {
-            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($subActor, $category['pid'])) {
+            if ($category['parentid'] == 0 && $this->userRepo->canViewThreads($subActor, $category['categoryId'])) {
                 $categoriesFather[] = $category;
             }
         }
@@ -115,8 +115,8 @@ class ForumSettingSerializerV3 extends AbstractSerializer
         if ($dialog && $dialog = $dialog->toArray() && $dialog['dialog'] == '{BANNED}') {
             $disabledChat = true;
         }
-        $attributes = $this->getCommonAttributes($actor);
-        $attributes += [
+        $commonAttributes = $this->getCommonAttributes($actor);
+        $attributes = [
             // 站点设置
             'set_site' => [
                 'site_manage' => json_decode($this->settings->get('site_manage'), true),
@@ -130,6 +130,7 @@ class ForumSettingSerializerV3 extends AbstractSerializer
 //                'site_can_reward'     => (bool) $this->settings->get('site_can_reward'),
                 'usernameLoginIsdisplay' => $usernameLoginIsdisplay,
                 'open_api_log' => !empty($this->settings->get('open_api_log')) ? $this->settings->get('open_api_log') : '0',
+                'thread_tab' => (int) $this->settings->get('thread_tab', 'default'),   //首页导航选项 所有:1 推荐:2 精华:3 已关注:4
             ],
 
             // 注册设置
@@ -200,6 +201,8 @@ class ForumSettingSerializerV3 extends AbstractSerializer
 
             'ucenter' => []
         ];
+
+        $attributes = array_merge_recursive($attributes, $commonAttributes);
 
         // 未开启vod服务 不可发布视频主题
         if (! ($attributes['qcloud']['qcloud_close'] && $attributes['qcloud']['qcloud_vod'])) {

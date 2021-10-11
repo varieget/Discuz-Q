@@ -61,7 +61,8 @@ class RelatedMessage extends SimpleMessage
      */
     public function changeBuild(&$build)
     {
-        $result = $this->post->getSummaryContent(Post::NOTICE_LENGTH);
+        $oldContent = $this->post->content;
+        [$this->post, $result] = Post::changeOriginNotification($this->post);
 
         /**
          * 判断是否是楼中楼的回复
@@ -92,5 +93,6 @@ class RelatedMessage extends SimpleMessage
         $build['thread_username'] = $this->post->thread->user->username;
         $build['thread_title'] = $firstContent ?? $result['first_content'];
         $build['thread_created_at'] = $this->post->thread->formatDate('created_at');
+        $this->post->content = $oldContent;
     }
 }

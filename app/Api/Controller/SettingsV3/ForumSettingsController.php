@@ -17,6 +17,7 @@
 
 namespace App\Api\Controller\SettingsV3;
 
+use App\Common\ResponseCode;
 use App\Settings\SettingsRepository;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -39,6 +40,7 @@ class ForumSettingsController extends DzqController
 
     public function main()
     {
-        $this->forumSettingMain();
+        $data = $this->forumSettingMain();
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }
