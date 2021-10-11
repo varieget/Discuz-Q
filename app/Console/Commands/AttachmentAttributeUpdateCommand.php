@@ -21,6 +21,7 @@ namespace App\Console\Commands;
 use App\Models\Attachment;
 use Discuz\Console\AbstractCommand;
 use Discuz\Contracts\Setting\SettingsRepository;
+use Discuz\Common\Utils;
 use Discuz\Foundation\Application;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
@@ -81,7 +82,7 @@ class AttachmentAttributeUpdateCommand extends AbstractCommand
                             $remoteServer = substr($remoteServer,0,strlen($remoteServer)-1);
                         }
                         $remoteUrl = $remoteServer."/".$image->full_path;
-                        $fileData = @file_get_contents($remoteUrl,false, stream_context_create(['ssl'=>['verify_peer'=>false, 'verify_peer_name'=>false]]));
+                        $fileData = Utils::downLoadFile($remoteUrl);
                         if($fileData){
                             $extension =Str::afterLast($image['attachment'], '.');
                             $extensionSmall = strtolower($extension);
