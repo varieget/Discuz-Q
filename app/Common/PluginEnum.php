@@ -15,12 +15,13 @@
  * limitations under the License.
  */
 
-namespace Plugin\Jobs;
+namespace App\Common;
 
 
-use App\Modules\ThreadTom\TomBaseBusi;
-
-class JobBusi extends TomBaseBusi
+class PluginEnum
 {
-
+    const PLUGIN_THREAD = 1;//主体扩展对象插件
+    const PLUGIN_DATA_IMPORT = 2;//外部数据导入
+    const PLUGIN_AD = 3;//广告插件
+    const PLUGIN_BANNER = 4;//首页banner插件
 }

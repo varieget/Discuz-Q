@@ -60,7 +60,6 @@ class PluginListController extends DzqController
             $item['plugin_files'] = $pluginFiles;
             unset($item['plugin_' . $appId]);
             unset($item['busi']);
-            unset($item['routes']);
         }
         $this->outPut(0, '', array_values($pluginList));
     }
