@@ -146,6 +146,16 @@ class ThreadMigrationPlusCommand extends AbstractCommand
                                 'is_comment'    =>  $posts_bakv2s[$insert_id]['is_comment'],
                                 'is_approved'    =>  $posts_bakv2s[$insert_id]['is_approved'],
                             ];
+                            if(count($insert_post) > 50){
+                                //先插 posts
+                                $res = Post::query()->insert($insert_post);
+                                if($res === false){
+                                    $this->db->rollBack();
+                                    $this->info('插入posts出错');
+                                    break;
+                                }
+                                $insert_post = [];
+                            }
                         }
                         //先插 posts
                         $res = Post::query()->insert($insert_post);

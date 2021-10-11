@@ -23,10 +23,12 @@ use App\Common\PermissionKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Models\Group;
+use App\Models\GroupUser;
 use App\Models\Order;
 use App\Models\Thread;
 use App\Models\User;
 use App\Settings\SettingsRepository;
+use Carbon\Carbon;
 use Discuz\Common\Utils;
 use Discuz\Foundation\AbstractRepository;
 use Illuminate\Database\Eloquent\Builder;
@@ -739,6 +741,21 @@ class UserRepository extends AbstractRepository
             && ((strtotime($order->expired_at) > $now)
                 || (empty($order->expired_at) && empty($user->expired_at)))
         ){
+            //下面主要用来修复之前的老数据中 users 表中 expired_at 为空的情况 和 group_user 表中 expiration_time 为空的情况
+            //如果用户有订单数据，但是 user 中 expired_at 为空的话，这里修复数据
+            if(empty($user->expired_at)){
+                if(!empty($order->expired_at)){
+                    $user->expired_at = $order->expired_at;
+                }else{
+                    $user->expired_at = Carbon::now()->addDays(365 * 99);
+                }
+                $user->save();
+                $group_user = GroupUser::query()->where('user_id', $user->id)->first();
+                if(empty($group_user->expiration_time)){
+                    $group_user = $user->expired_at;
+                    $group_user->save();
+                }
+            }
             return true;
         }
 

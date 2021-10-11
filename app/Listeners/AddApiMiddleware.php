@@ -41,6 +41,6 @@ class AddApiMiddleware
         }
         $event->pipe->pipe($this->app->make(FakeHttpMethods::class));
         $event->pipe->pipe($this->app->make(OperationLogMiddleware::class));
-        $event->pipe->pipe($this->app->make(CheckPaidUserGroupMiddleware::class));
+//        $event->pipe->pipe($this->app->make(CheckPaidUserGroupMiddleware::class));
     }
 }

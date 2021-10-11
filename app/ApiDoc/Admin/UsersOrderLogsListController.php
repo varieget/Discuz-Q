@@ -72,6 +72,17 @@
  *             type="string"
  *         )
  *     ),
+ *     @OA\Parameter(
+ *         name="filter[type]",
+ *         in="query",
+ *         required=false,
+ *         description = "交易类型；
+ * 1：注册、2：打赏、3：付费主题、4：付费用户组、5：问答提问、6：问答围观、7：付费附件、8：站点续费、9：红包、10：悬赏、11：合并支付、20：文字贴红包、21：长文贴红包",
+ *         @OA\Schema(
+ *             type="string"
+ *         )
+ *     ),
+ *
  *     @OA\Response(
  *         response = 200,
  *         description = "订单记录列表",

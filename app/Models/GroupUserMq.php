@@ -22,28 +22,8 @@ use App\Common\CacheKey;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 
-class GroupUser extends DzqModel
+class GroupUserMq extends DzqModel
 {
 
-    protected $table = 'group_user';
 
-    public static $relationGroups = 'groups';
-
-    public function getUpdatedAtColumn(){
-        return null;
-    }
-
-
-    public function groups(){
-        return $this->hasOne(Group::class,'id','group_id');
-    }
-
-    public function getGroupInfo($userIds){
-        return  GroupUser::query()->whereIn('user_id',$userIds)
-            ->with(GroupUser::$relationGroups)->get()->toArray();
-    }
-    protected function clearCache()
-    {
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_GROUP_USER,$this->user_id);
-    }
 }

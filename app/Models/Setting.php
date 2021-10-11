@@ -49,6 +49,10 @@ class Setting extends DzqModel
      */
     public $incrementing = false;
 
+    const SITE_MODE_PUBLIC = 'public';
+
+    const SITE_MODE_PAY = 'pay';
+
     /**
      * {@inheritdoc}
      */

@@ -4,6 +4,7 @@ namespace App\Api\Controller\OrderV3;
 
 use App\Common\ResponseCode;
 use App\Common\Utils;
+use App\Models\Setting;
 use App\Repositories\UserRepository;
 use Exception;
 use App\Models\Group;
@@ -51,18 +52,12 @@ class CreateOrderController extends DzqController
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '订单金额错误！', '');
             }
         }
-
-        try {
-            app('validator')->validate($data, [
-                'amount'        => 'required_if:type,' . Order::ORDER_TYPE_REWARD . '|numeric|min:0.01',
-                'is_anonymous'    => 'required|int|in:0,1',
-                'type'   => 'required|int|min:1|max:11',
-                'thread_id'     => 'required_if:type,' . Order::ORDER_TYPE_REWARD . ',' . Order::ORDER_TYPE_THREAD . '|int'
-            ]);
-        } catch (\Exception $e) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '', $e->getMessage());
-        }
-
+        app('validator')->validate($data, [
+            'amount'        => 'required_if:type,' . Order::ORDER_TYPE_REWARD . '|min:0.01',
+            'is_anonymous'    => 'required|int|in:0,1',
+            'type'   => 'required|int|min:1|max:11',
+            'thread_id'     => 'required_if:type,' . Order::ORDER_TYPE_REWARD . ',' . Order::ORDER_TYPE_THREAD . '|int'
+        ]);
         $orderType = $data['type'];
         $order_zero_amount_allowed = false; //是否允许金额为0
 
@@ -136,15 +131,25 @@ class CreateOrderController extends DzqController
                 break;
             // 付费用户组
             case Order::ORDER_TYPE_GROUP:
-                $order_zero_amount_allowed = true;
+                $order_zero_amount_allowed = false;
                 $group_id = $data['group_id'];
-                if (in_array($group_id, Group::PRESET_GROUPS)) {
-                    throw new Exception(trans('order.order_group_forbidden'));
-                }
-
+                /*
                 if (!$this->settings->get('site_pay_group_close')) {
                     //权限购买开关未开启
                     throw new Exception(trans('order.order_pay_group_closed'));
+                }
+                //如果是付费站点，则不允许购买对应的预设禁止用户组
+                if($this->settings->get('site_mode') == Setting::SITE_MODE_PAY && in_array($group_id, Group::FORBIDDEN_PAY_GROUPS)){
+                    throw new Exception(trans('order.order_group_forbidden'));
+                }
+                //如果是公开站点，则不允许购买预设用户组
+                if ($this->settings->get('site_mode') == Setting::SITE_MODE_PUBLIC && in_array($group_id, Group::PRESET_GROUPS)) {
+                    throw new Exception(trans('order.order_group_forbidden'));
+                }
+                */
+                // 预设用户组不可购买，如果是普通会员，只能通过站点注册、续费购买
+                if(in_array($group_id, Group::PRESET_GROUPS)){
+                    throw new Exception(trans('order.order_group_forbidden'));
                 }
 
                 /** @var Group $group */
