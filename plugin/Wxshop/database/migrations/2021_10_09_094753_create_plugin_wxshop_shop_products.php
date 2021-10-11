@@ -1,10 +1,11 @@
 <?php
 
+
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Query\Expression;
 use Discuz\Base\DzqPluginMigration;
 
-class CreatePluginWxshopShopGoods extends DzqPluginMigration
+class CreatePluginWxshopShopProducts extends DzqPluginMigration
 {
     /**
      * Run the migrations.
@@ -13,11 +14,12 @@ class CreatePluginWxshopShopGoods extends DzqPluginMigration
      */
     public function up()
     {
-        $this->schema()->create('plugin_wxshop_shop_goods', function (Blueprint $table) {
+        $this->schema()->create('plugin_wxshop_shop_products', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true)->comment('自增id');
             $table->string('app_id', 64)->nullable(false)->comment('商店appid');
-            $table->string('product_id',10)->nullable(false)->comment('商品id');
+            $table->unsignedBigInteger('product_id')->nullable(false)->comment('商品id');
             $table->string('name', 128)->nullable(false)->comment('商品名');
+            $table->string('img_url', 128)->nullable(false)->comment('商品图片');
             $table->string('price',10)->nullable(false)->comment('价格');
             $table->string('in_url',128)->nullable(false)->comment('微信url，小程序，h5直接跳');
             $table->string('out_url',128)->nullable(false)->comment('外部url，扫码跳');
@@ -35,6 +37,6 @@ class CreatePluginWxshopShopGoods extends DzqPluginMigration
      */
     public function down()
     {
-        $this->schema()->dropIfExists('plugin_wxshop_shop_goods');
+        $this->schema()->dropIfExists('plugin_wxshop_shop_products');
     }
 }

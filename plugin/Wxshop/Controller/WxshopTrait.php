@@ -46,23 +46,37 @@ trait WxshopTrait
         return $this->config;
     }
 
+    /**
+     * @return ["wx_app_id","wx_app_secret","wx_qrcode"]
+     */
+    public function getSetting(){
+        if (empty($this->config)){
+            $this->config = require(__DIR__."/../config.php");
+        }
+
+        $settingData = PluginSettings::query()->where("app_id",$this->config["app_id"])->first();
+        if (empty($settingData)){
+           return false;
+        }
+        if (empty($settingData->value)){
+            return false;
+        }
+
+        $valueJson = json_decode($settingData->value,true);
+
+        return $valueJson;
+    }
+
     public function getAccessToken($wxshopAppId){
-        $config = $this->getConfig();
-        $settingData = PluginSettings::query()->where("app_id",$config["app_id"])->first();
+        $settingData = $this->getSetting();
         if (empty($settingData)){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"插件没配置");
         }
-        if (empty($settingData->value)){
+        if (!isset($settingData["wx_app_id"]) || !isset($settingData["wx_app_secret"])){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"插件没配置");
         }
 
-        $valueJson = json_decode($settingData->value);
-        if (!isset($valueJson->wx_app_id) || !isset($valueJson->wx_app_secret)){
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"插件没配置");
-        }
-
-        $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=".$valueJson->wx_app_id."&secret=".$valueJson->wx_app_secret;
-        $app = $this->miniProgram(["app_id"=>$valueJson->wx_app_id,"secret"=>$valueJson->wx_app_secret]);
+        $app = $this->miniProgram(["app_id"=>$settingData["wx_app_id"],"secret"=>$settingData["wx_app_secret"]]);
         $accessToken = $app->access_token->getToken(false);
         if (empty($accessToken["access_token"])){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"插件配置错误");

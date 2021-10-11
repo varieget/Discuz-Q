@@ -10,7 +10,7 @@ use Discuz\Base\DzqModel;
 /**
  * @property int $id
  * @property string $app_id
- * @property string $product_id
+ * @property int $product_id
  * @property string $name
  * @property string $img_url
  * @property string $price
