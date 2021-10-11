@@ -54,7 +54,7 @@ class ListCategoriesThreadController extends DzqController
 
         $categories = Category::query()
             ->select([
-                'id as pid', 'name', 'description', 'icon', 'thread_count as threadCount', 'parentid'
+                'id as pid', 'id as categoryId', 'name', 'description', 'icon', 'thread_count as threadCount', 'parentid'
             ])
             ->orderBy('parentid', 'asc')
             ->orderBy('sort')
@@ -64,7 +64,7 @@ class ListCategoriesThreadController extends DzqController
         $categoriesChild = [];
 
         foreach ($categories as $category) {
-            $canCreateThread = $this->userRepo->canCreateThread($this->user, $category['pid']);
+            $canCreateThread = $this->userRepo->canCreateThread($this->user, $category['categoryId']);
             $category['canCreateThread'] = $canCreateThread;
             $category['canEditThread']   = false;
 
@@ -81,12 +81,12 @@ class ListCategoriesThreadController extends DzqController
             // 非草稿
             if (isset($threadData) && !empty($threadData) && $threadData['is_draft'] == Thread::BOOL_NO) {
                 // 如果是作者本人，先判断有无 “自我编辑” 权限
-                if ($threadData->user_id == $this->user->id && 
-                    $this->userRepo->canEditMyThread($this->user,  $category['pid'])) {
+                if ($threadData->user_id == $this->user->id &&
+                    $this->userRepo->canEditMyThread($this->user,  $category['categoryId'])) {
                         $category['canEditThread'] = true;
                 }else {
                     // 不是本人 或 作者无自我编辑权限，判断有无 “编辑” 权限
-                    $category['canEditThread'] = $this->userRepo->canEditOthersThread($this->user,  $category['pid']);
+                    $category['canEditThread'] = $this->userRepo->canEditOthersThread($this->user,  $category['categoryId']);
                 }
             }
 
@@ -99,8 +99,8 @@ class ListCategoriesThreadController extends DzqController
 
         // 获取一级分类的二级子类
         foreach ($categoriesFather as $key => $value) {
-            if (isset($categoriesChild[$value['pid']])) {
-                $categoriesFather[$key]['children'] = $categoriesChild[$value['pid']];
+            if (isset($categoriesChild[$value['categoryId']])) {
+                $categoriesFather[$key]['children'] = $categoriesChild[$value['categoryId']];
             } else {
                 $categoriesFather[$key]['children'] = [];
             }

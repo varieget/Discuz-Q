@@ -20,6 +20,7 @@ namespace App\Api\Controller\AdminV3;
 use App\Api\Controller\ThreadsV3\ThreadTrait;
 use App\Api\Controller\ThreadsV3\ThreadListTrait;
 use App\Common\ResponseCode;
+use App\Models\Category;
 use App\Models\Post;
 use App\Models\UserActionLogs;
 use App\Repositories\UserRepository;
@@ -136,8 +137,10 @@ class ManageThemeList extends DzqAdminController
 
         //内容筛选
         if (!empty($q)) {
-            $query->where('threads.title','like','%'.$q.'%');
-            $query->orWhere('posts.content', 'like', '%'.$q.'%');
+            $query->where(function ($query) use ($q){
+                $query->where('threads.title','like','%'.$q.'%');
+                $query->orWhere('posts.content', 'like', '%'.$q.'%');
+            });
         }
 
         // 回收站
@@ -153,9 +156,19 @@ class ManageThemeList extends DzqAdminController
         }
 
         //类型筛选
-        $query->leftJoin('categories', 'categories.id', '=', 'threads.category_id');
-        if (!empty($categoryId)) {
-            $query->where('threads.category_id', $categoryId);
+        if (!empty($categoryId)){
+            //如果是父类则把子类也找出来
+            $categoryIds=[$categoryId];
+            $categoryIdDatas = Category::query()->select("id")->where('parentid',$categoryId)->get();
+            $ids = $categoryIdDatas->pluck("id")->toArray();
+            if (!empty($ids)){
+                $categoryIds = array_merge($categoryIds,$ids);
+            }
+
+            $query->leftJoin('categories', 'categories.id', '=', 'threads.category_id');
+            if (!empty($categoryIds)) {
+                $query->whereIn('threads.category_id', $categoryIds);
+            }
         }
 
         //话题Id

@@ -72,8 +72,8 @@ class RepliedMessage extends SimpleMessage
      */
     public function changeBuild(&$build)
     {
-        $this->post = Post::changeNotifitionPostContent($this->post);
-        $result = $this->post->getSummaryContent(Post::NOTICE_WITHOUT_LENGTH);
+        $oldContent = $this->post->content;
+        [$this->post, $result] = Post::changeOriginNotification($this->post);
 
         /**
          * 判断是否是楼中楼的回复
@@ -106,5 +106,6 @@ class RepliedMessage extends SimpleMessage
         }
 
         $build['thread_created_at'] = $this->post->thread->formatDate('created_at');
+        $this->post->content = $oldContent;
     }
 }

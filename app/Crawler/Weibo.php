@@ -43,6 +43,7 @@ class Weibo
                     continue;
                 }
                 //用户信息
+                $value['mblog']['user']['screen_name'] =  str_replace(" ", "", $value['mblog']['user']['screen_name']);
                 $forum['user'] = [
                     'avatar' => $value['mblog']['user']['avatar_hd'],//头像
                     'nickname' => $value['mblog']['user']['screen_name'],//昵称
@@ -135,7 +136,7 @@ class Weibo
         //用户信息
         $forum['user'] = [
             'avatar' => $result[0]['status']['user']['avatar_hd'],//头像
-            'nickname' => $result[0]['status']['user']['screen_name'],//昵称
+            'nickname' => str_replace(" ", "", $result[0]['status']['user']['screen_name']),//昵称
             'gender' => $result[0]['status']['user']['gender'],//性别
             'home_page' => $result[0]['status']['user']['profile_url'],//个人主页
             'description' => $result[0]['status']['user']['description'],//描述
@@ -216,6 +217,7 @@ class Weibo
         if (isset($html['data']['data']) || !empty($html['data']['data'])) {
             foreach ($html['data']['data'] as $key => $value) {
                 //评论信息
+                $value['user']['screen_name'] = str_replace(" ", "", $value['user']['screen_name']);
                 $comment[$key]['comment'] = [
                     'id' => $value['id'],//评论ID
                     'rootid' => $value['rootid'],//评论ID
@@ -254,6 +256,7 @@ class Weibo
         if (isset($html['data']) || !empty($html['data'])) {
             foreach ($html['data'] as $value) {
                 //评论信息
+                $value['user']['screen_name'] = str_replace(" ", "", $value['user']['screen_name']);
                 $comment[]['comment'] = [
                     'id' => $value['id'],//评论ID
                     'rootid' => $value['rootid'],//评论ID

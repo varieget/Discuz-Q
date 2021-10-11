@@ -73,6 +73,7 @@ use Illuminate\Support\Str;
  * @property string $identity
  * @property string $realname
  * @property int $bind_type
+ * @property int $groupId
  * @property bool $denyStatus
  * @property Collection $groups
  * @property userFollow $follow
@@ -1102,6 +1103,17 @@ class User extends DzqModel
         return self::query()->whereIn('id', $userIds)->get()->toArray();
     }
 
+    /**
+     * 添加用户所在组的属性
+     */
+    public function getGroupIdAttribute()
+    {
+        $groups = $this->groups->toArray();
+        if (!empty($groups)) {
+            return $groups[0]['id'];
+        }
+        return false;
+    }
     public function getUserName($userId)
     {
         $user = self::query()->find($userId);

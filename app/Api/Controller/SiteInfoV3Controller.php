@@ -19,6 +19,7 @@
 namespace App\Api\Controller;
 
 use App\Common\ResponseCode;
+use App\Events\SiteInfo\AdminSiteInfo;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Post;
@@ -30,26 +31,29 @@ use App\Repositories\UserRepository;
 use Discuz\Base\DzqAdminController;
 use Discuz\Foundation\Application;
 use Discuz\Foundation\Support\Decomposer;
-use Discuz\Qcloud\QcloudTrait;
+use Discuz\Qcloud\QcloudStatisticsTrait;
 use Exception;
+use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ResponseInterface;
 
 class SiteInfoV3Controller extends DzqAdminController
 {
-    use QcloudTrait;
+    use QcloudStatisticsTrait;
 
     /**
      * @var Application
      */
     protected $app;
+    protected $events;
 
     /**
      * @param Application $app
      */
-    public function __construct(Application $app)
+    public function __construct(Application $app, Events $events)
     {
         $this->app = $app;
+        $this->events = $events;
     }
 
     public function main()
@@ -104,6 +108,8 @@ class SiteInfoV3Controller extends DzqAdminController
                 Setting::modifyValue('site_id', Arr::get($data, 'site_id'));
                 Setting::modifyValue('site_secret', Arr::get($data, 'site_secret'));
             })->wait();
+            $this->uinStatis();
+            $this->events->dispatch(new AdminSiteInfo($this->user));
         } catch (Exception $e) {
             return $this->outPut(ResponseCode::NET_ERROR,$e);
         }

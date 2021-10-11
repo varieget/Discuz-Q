@@ -23,10 +23,10 @@ use App\Common\ResponseCode;
 use App\Models\Setting;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqLog;
 
-class OpenApiLogController extends DzqController
+class OpenApiLogController extends DzqAdminController
 {
     protected function checkRequestPermissions(UserRepository $userRepo)
     {

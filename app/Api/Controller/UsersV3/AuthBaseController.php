@@ -285,13 +285,13 @@ abstract class AuthBaseController extends DzqController
         if (! empty($unionid)) {
             if (!$this->requestLock($unionid)) {
                 $this->info('unionid_be_locked', ['unionid' =>  $unionid]);
-                $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, '当前访问过多，请稍后重试');
             }
         }
         if (! empty($openid)) {
             if (!$this->requestLock($openid)) {
                 $this->info('openid_be_locked', ['openid' =>  $openid]);
-                $this->outPut(ResponseCode::RESOURCE_IN_USE, '正在处理中,请稍后...');
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, '当前访问过多，请稍后重试');
             }
         }
         //获取小程序用户信息

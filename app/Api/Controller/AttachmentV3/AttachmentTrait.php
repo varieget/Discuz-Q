@@ -144,12 +144,13 @@ trait AttachmentTrait
         $fileData = parse_url($cosUrl);
         $fileData = pathinfo($fileData['path']);
         $fileData['filePath'] = substr_replace($fileData['dirname'], '', strpos($fileData['dirname'], '/'), strlen('/')) . '/';
-        $fileData['attachmentName'] = urldecode($fileData['basename']);
+        $fileData['attachmentName'] =urldecode($fileData['basename']) ;
         return $fileData;
     }
 
     public function getFileContents($url)
     {
+        return  \Discuz\Common\Utils::downLoadFile($url);
         $fileContents = @file_get_contents($url, false, stream_context_set_default(['ssl' => ['verify_peer'=>false, 'verify_peer_name'=>false]]));
         return $fileContents;
     }

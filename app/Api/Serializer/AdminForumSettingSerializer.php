@@ -1,0 +1,101 @@
+<?php
+
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+namespace App\Api\Serializer;
+
+use App\Common\SettingCache;
+use App\Settings\ForumSettingField;
+use App\Repositories\UserRepository;
+use App\Traits\ForumSettingSerializerTrait;
+use Discuz\Api\Serializer\AbstractSerializer;
+use App\Settings\SettingsRepository;
+use Psr\Http\Message\ServerRequestInterface as Request;
+
+class AdminForumSettingSerializer extends AbstractSerializer
+{
+    use ForumSettingSerializerTrait;
+
+    protected $type = 'forums';
+
+    protected $settings;
+
+    protected $forumField;
+
+    protected $userRepo;
+
+    /**
+     * @var SettingCache
+     */
+    protected $settingcache;
+
+    public function __construct(SettingsRepository $settings, ForumSettingField $forumField, SettingCache $settingcache, Request $request, UserRepository $userRepo)
+    {
+        $this->settings = $settings;
+        $this->forumField = $forumField;
+        $this->settingcache = $settingcache;
+        $this->request = $request;
+        $this->userRepo = $userRepo;
+    }
+
+    /**
+     * @param object $user
+     * @return array
+     */
+    public function getDefaultAttributes($user = null)
+    {
+        if ($user) {
+            $actor = $user;
+        } else {
+            $actor = $this->getActor();
+        }
+
+        $commonAttributes = $this->getCommonAttributes($actor);
+        $attributes = [
+            // 站点设置
+            'set_site' => [],
+
+            // 注册设置
+            'set_reg' => [],
+
+            // 第三方登录设置
+            'passport' => [],
+
+            // 支付设置
+            'paycenter' => [],
+
+            // 附件设置
+            'set_attach' => [],
+
+            // 腾讯云设置
+            'qcloud' => [],
+
+            // 提现设置
+            'set_cash' => [],
+
+            // 其它信息(非setting中的信息)
+            'other' => [],
+
+            'lbs' => [],
+
+            'ucenter' => []
+        ];
+        $attributes = array_merge_recursive($attributes, $commonAttributes);
+
+        return $attributes;
+    }
+}

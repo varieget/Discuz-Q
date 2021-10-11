@@ -32,48 +32,48 @@ class TomConfig
 
     public static $map = [
         self::TOM_TEXT => [
-            'enName' => 'Text',
-            'desc' => '文字',
+            'name_en' => 'Text',
+            'name_cn' => '文字',
             'service' => ''
         ],
         self::TOM_IMAGE => [
-            'enName' => 'Image',
-            'desc' => '图片',
+            'name_en' => 'Image',
+            'name_cn' => '图片',
             'service' => \App\Modules\ThreadTom\Busi\ImageBusi::class
         ],
         self::TOM_AUDIO => [
-            'enName' => 'Audio',
-            'desc' => '语音',
+            'name_en' => 'Audio',
+            'name_cn' => '语音',
             'service' => \App\Modules\ThreadTom\Busi\AudioBusi::class
         ],
         self::TOM_VIDEO => [
-            'enName' => 'Video',
-            'desc' => '视频',
+            'name_en' => 'Video',
+            'name_cn' => '视频',
             'service' => \App\Modules\ThreadTom\Busi\VideoBusi::class
         ],
         self::TOM_GOODS => [
-            'enName' => 'Goods',
-            'desc' => '商品',
+            'name_en' => 'Goods',
+            'name_cn' => '商品',
             'service' => \App\Modules\ThreadTom\Busi\GoodsBusi::class
         ],
         self::TOM_REDPACK => [
-            'enName' => 'RedPacket',
-            'desc' => '红包',
+            'name_en' => 'RedPacket',
+            'name_cn' => '红包',
             'service' => \App\Modules\ThreadTom\Busi\RedPackBusi::class
         ],
         self::TOM_REWARD => [
-            'enName' => 'Reward',
-            'desc' => '悬赏',
+            'name_en' => 'Reward',
+            'name_cn' => '悬赏',
             'service' => \App\Modules\ThreadTom\Busi\RewardBusi::class
         ],
         self::TOM_DOC => [
-            'enName' => 'Attachment',
-            'desc' => '文件附件',
+            'name_en' => 'Attachment',
+            'name_cn' => '文件附件',
             'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
         ],
         self::TOM_VOTE => [
-            'enName' => 'Vote',
-            'desc' => '投票',
+            'name_en' => 'Vote',
+            'name_cn' => '投票',
             'service' => \App\Modules\ThreadTom\Busi\VoteBusi::class
         ]
     ];

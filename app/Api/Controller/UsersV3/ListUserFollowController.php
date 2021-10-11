@@ -251,6 +251,7 @@ class ListUserFollowController extends DzqController
     {
         return [
             'pid' => $user['id'],
+            'userId' => $user['id'],
             'userName' => $user['username'],
             'avatar' => $user['avatar'],
             'nickName' => $user['nickname'],
@@ -261,6 +262,7 @@ class ListUserFollowController extends DzqController
     {
         return [
             'pid' => $group['group_id'],
+            'groupId' => $group['group_id'],
             'groupName' => $group['groups']['name'],
             'groupIcon' => $group['groups']['icon']
         ];

@@ -22,6 +22,7 @@ use App\Censor\Censor;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
+use App\Models\PluginGroupPermission;
 use App\Models\ThreadUserStickRecord;
 use App\Models\ThreadVideo;
 use App\Traits\PostNoticesTrait;
@@ -69,7 +70,7 @@ trait ThreadTrait
         if (!$canViewThreadVideo) {
             $contentField = $this->filterThreadVideo($contentField);
         }
-        if ($userStick == -1){
+        if ($userStick == -1) {
             $userStick = $this->getThreadUserStick($thread, $user);
         }
         $result = [
@@ -86,7 +87,7 @@ trait ThreadTrait
             'isApproved' => $thread['is_approved'],
             'isStick' => $thread['is_sticky'],
             'isDraft' => boolval($thread['is_draft']),
-            'isSite'=>boolval($thread['is_site']),
+            'isSite' => boolval($thread['is_site']),
             'isAnonymous' => $thread['is_anonymous'],
             'isFavorite' => $this->getFavoriteField($thread['id'], $loginUser),
             'price' => floatval($thread['price']),
@@ -99,7 +100,7 @@ trait ThreadTrait
             //修改创建时间为变更时间
             'issueAt' => date('Y-m-d H:i:s', strtotime($thread['issue_at'])),
             'updatedAt' => date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
-            'diffTime' => Utils::diffTime($thread['issue_at']),
+            'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
             'likeReward' => $likeRewardField,
@@ -113,7 +114,7 @@ trait ThreadTrait
             'ability' => $this->getAbilityField($loginUser, $thread),
             'content' => $contentField,
             'freewords' => $thread['free_words'],
-            'userStickStatus'=>$userStick
+            'userStickStatus' => $userStick
         ];
         if ($analysis) {
             $concatString = $thread['title'] . $post['content'];
@@ -226,11 +227,11 @@ trait ThreadTrait
     {
         $categories = Category::getCategories();
         $categories = array_column($categories, null, 'id');
-        $parentCategoryId   = !empty($categories[$categoryId]['parentid']) ? $categories[$categoryId]['parentid'] : 0;
-        $parentCategoryName = ! empty($parentCategoryId) ? $categories[$parentCategoryId]['name'] : '';
+        $parentCategoryId = !empty($categories[$categoryId]['parentid']) ? $categories[$categoryId]['parentid'] : 0;
+        $parentCategoryName = !empty($parentCategoryId) ? $categories[$parentCategoryId]['name'] : '';
         return [
-            'parentCategoryId'      => $parentCategoryId,
-            'parentCategoryName'    => $parentCategoryName
+            'parentCategoryId' => $parentCategoryId,
+            'parentCategoryName' => $parentCategoryName
         ];
     }
 
@@ -248,7 +249,7 @@ trait ThreadTrait
         return [
             'canEdit' => $userRepo->canEditThread($loginUser, $thread),
             'canDelete' => $userRepo->canHideThread($loginUser, $thread),
-            'canEssence' => $userRepo->canEssenceThread($loginUser, $thread['category_id']),
+            'canEssence' => $userRepo->canEssenceThread($loginUser, $thread),
             'canStick' => $userRepo->canStickThread($loginUser),
             'canReply' => $userRepo->canReplyThread($loginUser, $thread['category_id']),
             'canViewPost' => $userRepo->canViewThreadDetail($loginUser, $thread),
@@ -267,9 +268,14 @@ trait ThreadTrait
         $thread['price'] > 0 && $payType = Thread::PAY_THREAD;
         $thread['attachment_price'] > 0 && $payType = Thread::PAY_ATTACH;
         $canFreeViewTom = $this->canFreeViewTom($loginUser, $thread);
+        //检查是否有编辑权限
+        /** @var UserRepository $userRepo */
+        $userRepo = app(UserRepository::class);
+        $canEdit =  $userRepo->canEditThread($loginUser, $thread);
+
         if ($payType == Thread::PAY_FREE) {
             $paid = null;
-        } elseif ($payType != Thread::PAY_FREE && $canFreeViewTom) {
+        } elseif ($payType != Thread::PAY_FREE && ($canFreeViewTom||$canEdit)) {
             $paid = true;
         } else {
             $paid = $this->loginDataExists($this->loginUserData, ThreadHelper::EXIST_PAY_ORDERS, $threadId, function () use ($userId, $threadId) {
@@ -305,7 +311,7 @@ trait ThreadTrait
             'isEssence' => false,
             'isRedPack' => null,
             'isReward' => null,
-            'isVote'   => false
+            'isVote' => false
         ];
         if ($thread['price'] > 0 || $thread['attachment_price'] > 0) {
             $obj['isPrice'] = true;
@@ -321,7 +327,7 @@ trait ThreadTrait
             if (in_array(TomConfig::TOM_REWARD, $tags)) {
                 $obj['isReward'] = true;
             }
-            if (in_array(TomConfig::TOM_VOTE, $tags)){
+            if (in_array(TomConfig::TOM_VOTE, $tags)) {
                 $obj['isVote'] = true;
             }
         }
@@ -381,7 +387,7 @@ trait ThreadTrait
             $body = '';
             if (!empty($content['indexes'])) {
                 foreach ($content['indexes'] as $key => $val) {
-                    if ($val['tomId'] == TomConfig::TOM_IMAGE) {
+                    if ($val && $val['tomId'] == TomConfig::TOM_IMAGE) {
                         $body = $val['body'];
                     }
                 }
@@ -403,7 +409,7 @@ trait ThreadTrait
     {
         $groupResult = null;
         if (!empty($group) && $group['groups']['is_display']) {
-            if ( $thread['is_anonymous'] == Thread::IS_ANONYMOUS && $loginUser['id'] != $thread['user_id'] ){
+            if ($thread['is_anonymous'] == Thread::IS_ANONYMOUS && $loginUser['id'] != $thread['user_id']) {
                 return $groupResult;
             }
             $groupResult = [
@@ -471,11 +477,11 @@ trait ThreadTrait
         $sep = '__' . mt_rand(111111, 999999) . '__';
         $contentForCheck = $title . $sep . $text;
         $split = explode($sep, $censor->checkText($contentForCheck));
-        if(count($split)>=2){
+        if (count($split) >= 2) {
             $newTitle = $split[0];
             $newContent = $split[1];
-        }else{
-            $newTitle='';
+        } else {
+            $newTitle = '';
             $newContent = $split[0];
         }
         $isApproved = $censor->isMod;
@@ -550,8 +556,8 @@ trait ThreadTrait
             ThreadTopic::query()->where($attr)->firstOrCreate($attr);
 
             $html = sprintf('<span id="topic" value="%s">#%s#</span>', $topic->id, $topic->content);
-            if (!strpos($content['text'],$html)){
-                $content['text'] = str_replace($topicItem, $html,$content['text']);
+            if (!strpos($content['text'], $html)) {
+                $content['text'] = str_replace($topicItem, $html, $content['text']);
             }
         }
 
@@ -691,17 +697,18 @@ trait ThreadTrait
     }
 
 
-    private function getThreadUserStick($thread,$user){
-        if (empty($thread)|| empty($user)){
-            return  0;
-        }
-
-        $userThreadStick = ThreadUserStickRecord::query()->where('user_id',$user->id)->first();
-        if(empty($userThreadStick)){
+    private function getThreadUserStick($thread, $user)
+    {
+        if (empty($thread) || empty($user)) {
             return 0;
         }
 
-        if($userThreadStick->thread_id == $thread->id){
+        $userThreadStick = ThreadUserStickRecord::query()->where('user_id', $user->id)->first();
+        if (empty($userThreadStick)) {
+            return 0;
+        }
+
+        if ($userThreadStick->thread_id == $thread->id) {
             return 1;
         }
         return 0;
@@ -709,14 +716,14 @@ trait ThreadTrait
 
     private function changeContentIframeSrc($content)
     {
-        if(strpos($content, 'videoId') !== false){
+        if (strpos($content, 'videoId') !== false) {
             preg_match_all('/videoId-(\d+)/', $content, $videoIds_all);
         }
         $videoData = [];
-        if(!empty($videoIds_all[1])) {
+        if (!empty($videoIds_all[1])) {
             $content_videos = ThreadVideo::query()->whereIn('id', $videoIds_all[1])->get();
             if (!empty($content_videos)) {
-                $content_videos->map(function ($item) use(&$videoData) {
+                $content_videos->map(function ($item) use (&$videoData) {
                     $mediaUrl = explode("?", $item['media_url']);
                     $item->media_url = $mediaUrl[0];
                     $videoData[$item->id] = $item->getMediaUrl($item);
@@ -724,10 +731,10 @@ trait ThreadTrait
             }
         }
 
-        if(!empty($videoData)) {
+        if (!empty($videoData)) {
             foreach ($videoData as $key => $value) {
                 $oldIframe = 'iframe src="" alt="videoId-' . $key . '"';
-                $newIframe = 'iframe src="' . $value . '" alt="videoId-'. $key .'" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"';
+                $newIframe = 'iframe src="' . $value . '" alt="videoId-' . $key . '" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"';
                 $content = str_replace($oldIframe, $newIframe, $content);
             }
         }
@@ -739,31 +746,31 @@ trait ThreadTrait
         $xml = $content['text'];
         $attachments_body = $body;
         $attachments = [];
-        if(!empty($body)){
+        if (!empty($body)) {
             $attachments = array_combine(array_column($attachments_body, 'id'), array_column($attachments_body, 'url'));
         }
         $isset_attachment_ids = [];
         //这里增加 前端拖拽图片的图文混排的形式
-        if(strpos($xml, 'attachmentId') !== false){
+        if (strpos($xml, 'attachmentId') !== false) {
             preg_match_all('/attachmentId-(\d+)/', $xml, $attachmentIds_all);
         }
-        if(!empty($attachmentIds_all[1])){
+        if (!empty($attachmentIds_all[1])) {
             $content_attachments = Attachment::query()->whereIn('id', $attachmentIds_all[1])->get();
-            if(!empty($content_attachments)){
+            if (!empty($content_attachments)) {
                 $serializer = $this->app->make(AttachmentSerializer::class);
-                foreach ($content_attachments as $val){
-                    if($val->is_remote){
+                foreach ($content_attachments as $val) {
+                    if ($val->is_remote) {
                         $attachments[$val->id] = $serializer->getImgUrl($val);
                     }
                 }
             }
         }
 
-        if(!empty($attachments)){
+        if (!empty($attachments)) {
             preg_match_all('/<img.*?alt=[\"|\']?(.*?)[\"|\']?\s.*?>/i', $xml, $imagesSrc);
             if (!empty($imagesSrc[1])) {
                 foreach ($imagesSrc[1] as $key => $value) {
-                    $id = substr($value,strrpos($value,'-') + 1);
+                    $id = substr($value, strrpos($value, '-') + 1);
                     if (isset($attachments[$id])) {
                         $newImageSrc = '<img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '" />';
                         $xml = str_replace($imagesSrc[0][$key], $newImageSrc, $xml);
@@ -786,7 +793,7 @@ trait ThreadTrait
 
             $xml_attachments = $xml_attachments_ids = [];
             $serializer = $this->app->make(AttachmentSerializer::class);
-            if(!$canViewTom && !empty($attachments_body)){       //如果没有权限查看的，则图文混排中的图片还是取清晰的
+            if (!$canViewTom && !empty($attachments_body)) {       //如果没有权限查看的，则图文混排中的图片还是取清晰的
                 $attachments_ids = array_column($attachments_body, 'id');
                 $x_attachments = Attachment::query()->whereIn('id', $attachments_ids)->get();
                 $xml_attachments = $x_attachments->keyBy('id');
@@ -812,17 +819,18 @@ trait ThreadTrait
         //针对图文混排的情况，这里要去掉外部图片展示
 //                if (!empty($tom_image_key)) unset($content['indexes'][$tom_image_key]);
         $content['text'] = $xml;
-        if(!empty($isset_attachment_ids) && isset($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
-            foreach ($content['indexes'][TomConfig::TOM_IMAGE]['body'] as $k => $v){
-                if(in_array($v['id'], $isset_attachment_ids))       unset($content['indexes'][TomConfig::TOM_IMAGE]['body'][$k]);
+        if (!empty($isset_attachment_ids) && isset($content['indexes'][TomConfig::TOM_IMAGE]['body'])) {
+            foreach ($content['indexes'][TomConfig::TOM_IMAGE]['body'] as $k => $v) {
+                if (in_array($v['id'], $isset_attachment_ids)) unset($content['indexes'][TomConfig::TOM_IMAGE]['body'][$k]);
             }
         }
-        if(!empty($content['indexes'][TomConfig::TOM_IMAGE]) && !empty($content['indexes'][TomConfig::TOM_IMAGE]['body'])){
+        if (!empty($content['indexes'][TomConfig::TOM_IMAGE]) && !empty($content['indexes'][TomConfig::TOM_IMAGE]['body'])) {
             $content['indexes'][TomConfig::TOM_IMAGE]['body'] = array_values($content['indexes'][TomConfig::TOM_IMAGE]['body']);
         }
 
         return $content;
     }
+
     //检查发帖和更新帖子的内容权限
     private function checkThreadPluginAuth(UserRepository $userRepo)
     {
@@ -834,7 +842,7 @@ trait ThreadTrait
         $user = $this->user;
         if (empty($user)) $this->outPut(ResponseCode::USER_LOGIN_STATUS_NOT_NULL);
         if (($price > 0 || $attachmentPrice > 0) && !$userRepo->canInsertPayToThread($user)) {
-            $this->outPut(ResponseCode::UNAUTHORIZED, '没有插入付费权限');
+            $this->outPut(ResponseCode::UNAUTHORIZED, '没有添加付费项权限');
         }
         if (!empty($position) && !$userRepo->canInsertPositionToThread($user)) {
             $this->outPut(ResponseCode::UNAUTHORIZED, '没有插入位置信息权限');
@@ -844,19 +852,26 @@ trait ThreadTrait
         }
         if (!empty($content) && !empty($content['indexes'])) {
             $indexes = $content['indexes'];
-            if (is_array($indexes)) {
-                foreach ($indexes as $k => $v) {
-                    $pluginName = TomConfig::$map[$k]['enName'];
-                    $func = "canInsert{$pluginName}ToThread";
-                    if (method_exists($userRepo, $func) && !$userRepo->$func($user)) {
-                        $this->outPut(ResponseCode::UNAUTHORIZED, "没有插入" . TomConfig::$map[$k]['desc'] . "权限");
-                    }
+            if (!is_array($indexes)) return;
+            foreach ($indexes as $k => $v) {
+                $appId = $v['tomId'];
+                $config = TomConfig::$map[$appId] ?? null;
+                $isAllowed = true;
+                if (is_null($config)) {
+                    $pluginList = \Discuz\Common\Utils::getPluginList();
+                    $config = $pluginList[$appId] ?? null;
+                    (!is_null($config) && !PluginGroupPermission::hasPluginPermission($appId, $this->user->groupId)) && $isAllowed = false;
+                } else {
+                    $func = 'canInsert' . $config['name_en'] . 'ToThread';
+                    (method_exists($userRepo, $func) && !$userRepo->$func($user)) && $isAllowed = false;
                 }
+                !$isAllowed &&  $this->outPut(ResponseCode::UNAUTHORIZED, "没有插入'" . $config['name_cn'] . "'权限");
             }
         }
     }
 
-    public function truncateHTML($html_string, $length, $append = '', $is_html = true) {
+    public function truncateHTML($html_string, $length, $append = '', $is_html = true)
+    {
         $html_string = trim($html_string);
         $append = (mb_strlen(strip_tags($html_string)) > $length) ? $append : '';
         $i = 0;
@@ -865,19 +880,19 @@ trait ThreadTrait
         if ($is_html) {
             preg_match_all('/<[^>]+>([^<]*)/', $html_string, $tag_matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
 
-            foreach($tag_matches as $tag_match) {
+            foreach ($tag_matches as $tag_match) {
                 if ($tag_match[0][1] - $i >= $length) {
                     break;
                 }
-                $tag = mb_substr(strtok($tag_match[0][0]," \\\t\\\0\\\x0B>"), 1);
+                $tag = mb_substr(strtok($tag_match[0][0], " \\\t\\\0\\\x0B>"), 1);
                 if ($tag[0] != '/') {
-                    if(!in_array($tag, ['img'])){       //针对有些标签是单标签的情况，不需要成对出现
+                    if (!in_array($tag, ['img'])) {       //针对有些标签是单标签的情况，不需要成对出现
                         $tags[] = $tag;
                     }
-                }elseif (end($tags) == mb_substr($tag, 1)) {
+                } elseif (end($tags) == mb_substr($tag, 1)) {
                     array_pop($tags);
-                }else{      // </*> 匹配对应的tag标签，然后去掉 tags 中对应的标签
-                    while(end($tags) != substr($tag, 1)){
+                } else {      // </*> 匹配对应的tag标签，然后去掉 tags 中对应的标签
+                    while (end($tags) != substr($tag, 1)) {
                         array_pop($tags);
                     }
                     array_pop($tags);

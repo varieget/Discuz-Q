@@ -29,14 +29,17 @@ use App\Models\Dialog;
 use App\Models\DialogMessage;
 use App\Models\Group;
 use App\Repositories\UserRepository;
+use App\Settings\SettingsRepository;
 use App\Validators\AttachmentValidator;
 use Discuz\Base\DzqController;
 use Discuz\Base\DzqLog;
+use Discuz\Common\Utils;
 use Discuz\Foundation\EventsDispatchTrait;
 use Discuz\Wechat\EasyWechatTrait;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 
 
 class CreateAttachmentController extends DzqController
@@ -51,11 +54,14 @@ class CreateAttachmentController extends DzqController
 
     protected $uploader;
 
-    public function __construct(Dispatcher $events, AttachmentValidator $validator, AttachmentUploader $uploader)
+    protected $settings;
+
+    public function __construct(Dispatcher $events, AttachmentValidator $validator, AttachmentUploader $uploader, SettingsRepository $settings)
     {
         $this->events = $events;
         $this->validator = $validator;
         $this->uploader = $uploader;
+        $this->settings = $settings;
     }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -101,11 +107,11 @@ class CreateAttachmentController extends DzqController
         curl_setopt ( $ch, CURLOPT_CUSTOMREQUEST, 'GET' );
         curl_setopt ( $ch, CURLOPT_SSL_VERIFYPEER, false );
         curl_setopt ( $ch, CURLOPT_URL, $url );
+        curl_setopt($ch,CURLOPT_FOLLOWLOCATION,false);
         ob_start ();
         curl_exec ( $ch );
-        $return_content = ob_get_contents ();
+        $return_content = ob_get_contents();
         ob_end_clean ();
-
         $return_code = curl_getinfo ( $ch, CURLINFO_HTTP_CODE );
         return $return_content;
     }
@@ -139,22 +145,16 @@ class CreateAttachmentController extends DzqController
         } else {
             //URL链接图处理
             if (!empty($fileUrl)) {
-                /*
-                $return_content = $this->http_get_data($fileUrl);
-                if (empty($return_content)) {
-                    return $this->outPut(ResponseCode::INVALID_PARAMETER, 'URL有误');
+                $parseUrl = parse_url($fileUrl);
+                $pathInfo = pathinfo(strtolower($parseUrl['path'] ?? ''));
+                $ext = $pathInfo['extension'] ?? '';
+                $url_content = Utils::downLoadFile($fileUrl);
+                if (!in_array($ext, ['jpeg', 'jpg', 'bmp', 'png', 'gif'])||!$url_content) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '图片地址 ' . $fileUrl . ' 不合法。');
                 }
-                $fileName = basename($fileUrl);
-                $ext = pathinfo($fileName, PATHINFO_EXTENSION);
-                $file = $tmpFileWithExt = storage_path('/tmp') .'/' . $fileName.'_'.uniqid();
-                $fp = @fopen($tmpFileWithExt,"a"); //将文件绑定到流
-                fwrite($fp,$return_content); //写入文件
-                $imageSize = getimagesize($tmpFileWithExt);
-                $fileType = $imageSize['mime'];
-                $fileSize = filesize($tmpFileWithExt);
-                */
-//                $url_content = file_get_contents($fileUrl);
-                $url_content = $this->http_get_data($fileUrl);
+                $file_type = Attachment::$allowTypes[$type];
+                $support_ext = Str::of($this->settings->get("support_{$file_type}_ext"))->explode(',')->toArray();
+//                $url_content = $this->http_get_data($fileUrl);
                 $fileName = basename($fileUrl);
                 $file_basename = explode('.', $fileName);
                 $file_ext = $file_basename[1];
@@ -163,14 +163,13 @@ class CreateAttachmentController extends DzqController
                     $file_ext = substr($file_ext, 0, strpos($file_ext, '?'));
                     $fileName = $file_basename[0].'.'.$file_ext;
                 }
-                $ext = $file_ext ?? '';
+                $ext = in_array($file_ext, $support_ext) ? $file_ext : '';
                 $tmp_file_path = storage_path('tmp').'/'.$file_basename[0].'_'.uniqid().'.'.$ext;
                 while (file_exists($tmp_file_path)){
                     $tmp_file_path = storage_path('tmp').'/'.$file_basename[0].'_'.uniqid().'.'.$ext;
                 }
                 $tmp_file = fopen($tmp_file_path, 'w');
                 $file = $tmpFileWithExt = $real_file_path = realpath($tmp_file_path);
-//                file_put_contents($real_file_path, $url_content);
                 fwrite($tmp_file, $url_content);
                 fclose($tmp_file);
                 $fileType = mime_content_type($real_file_path);
@@ -217,7 +216,7 @@ class CreateAttachmentController extends DzqController
                 );
             }
 
-            if(strtolower($ext) != 'gif'){
+            if(strtolower($ext) != 'gif' && $fileType != 'image/gif'){
                 $this->events->dispatch(
                     new Uploading($actor, $file)
                 );

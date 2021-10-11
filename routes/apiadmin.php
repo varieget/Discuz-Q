@@ -64,7 +64,7 @@ $route->get('/export/users', 'export.users', ApiController\UsersV3\ExportUserCon
 $route->post('/users/avatar', 'user.upload.avatar', ApiController\UsersV3\UploadAvatarsController::class);
 $route->post('/delete/users/avatar', 'user.upload.avatar', ApiController\UsersV3\DeleteAvatarController::class);
 $route->get('/users', 'users.list', ApiController\UsersV3\ListUserScreenController::class);
-$route->get('/user', 'user.resource', ApiController\UsersV3\ProfileController::class);
+$route->get('/user', 'user.resource', ApiController\UsersV3\AdminProfileController::class);
 
 //内容过滤
 $route->post('/stopwords.batch', 'stopwords.batch', ApiController\StopWordsV3\BatchCreateStopWordsController::class);
@@ -72,7 +72,7 @@ $route->get('/stopwords.list', 'stopwords.list', ApiController\StopWordsV3\ListS
 $route->post('/stopwords.delete', 'stopwords.delete', ApiController\StopWordsV3\DeleteStopWordController::class);
 
 //管理端站点设置
-$route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);
+$route->get('/forum', 'forum.settings', ApiController\SettingsV3\AdminForumSettingsController::class);
 
 //消息模板
 $route->get('/notification/tpl', 'notification.tpl.list', ApiController\NotificationV3\ListNotificationTplV3Controller::class);
@@ -107,4 +107,13 @@ $route->post('/open.view.count', 'open.view.count', ApiController\SettingsV3\Ope
 $route->get('/emoji.list', 'emoji.list', ApiController\EmojiV3\ListAdminEmojiController::class);
 //一键开启/关闭帖子敏感数据
 $route->post('/thread.optimize', 'thread.optimize', ApiController\ThreadsV3\ThreadOptimizeController::class);
+
+//插件后台控制接口
+$route->post('/plugin/settings.save', 'plugin.settings.save', ApiController\Plugin\SettingController::class);
+$route->post('/plugin/permission.switch', 'plugin.permission.switch', ApiController\Plugin\GroupPermissionController::class);
+$route->get('/plugin/permissionlist', 'plugin.permissionlist', ApiController\Plugin\GetGroupPermissionsController::class);
+$route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingController::class);
+
+$route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);
+
 
