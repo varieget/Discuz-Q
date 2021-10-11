@@ -18,7 +18,6 @@ namespace App\Api\Controller\AnalysisV3;
 use App\Common\ResponseCode;
 use App\Exceptions\TranslatorException;
 use App\Models\PostGoods;
-use App\Models\Thread;
 use App\Traits\PostGoodsTrait;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\NotAuthenticatedException;
@@ -267,7 +266,7 @@ class ResourceAnalysisGoodsController extends DzqController
             $host = $urlInfo['host'];
             $isMatch = false;
             foreach ($this->allowDomain as $item) {
-                if (strstr($host, $item)) {
+                if (\Discuz\Common\Utils::endWith($host, $item)) {
                     $isMatch = true;
                     break;
                 }
