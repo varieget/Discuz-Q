@@ -268,6 +268,11 @@ class CreateOrderController extends DzqController
                 $payeeId = 0;
                 break;
 
+            // 充值
+            case Order::ORDER_TYPE_CHARGE:
+                $amount = sprintf('%.2f', $data['amount']);
+                break;
+
             default:
                 $this->info('参数type枚举错误,传参枚举type:({$orderType}),用户id:{$this->user->id}');
                 throw new Exception(trans('order.order_type_error'));

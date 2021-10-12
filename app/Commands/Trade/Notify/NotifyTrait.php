@@ -212,6 +212,11 @@ trait NotifyTrait
                      });
                     return $this->orderInfo;
 
+                // 充值
+                case Order::ORDER_TYPE_CHARGE:
+                    //充值人钱包明细记录
+
+
                 default:
                     break;
             }
@@ -268,6 +273,10 @@ trait NotifyTrait
                     $change_type = UserWalletLog::TYPE_INCOME_ATTACHMENT;
                     $change_type_lang = 'wallet.income_attachment';
                 }
+                break;
+            case Order::ORDER_TYPE_CHARGE:  //充值
+                $change_type = UserWalletLog::TYPE_CHARGE;
+                $change_type_lang = '';
                 break;
             default:
                 $change_type = $this->orderInfo->type;
