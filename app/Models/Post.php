@@ -842,25 +842,17 @@ class Post extends DzqModel
     public static function addTagToThreadContent($threadId, $content)
     {
         $tags = [];
+        $tagList = Thread::getTagList();
         ThreadTag::query()->where('thread_id', $threadId)->get()->each(function ($item) use (&$tags) {
             $tags[$item['tag']][] = $item->toArray();
         });
 
         if (!empty($tags)) {
-            if (isset($tags[ThreadTag::IMAGE]) && !strpos($content, "[图片]")) {
-                $content = $content . '[图片]';
-            }
-            if (isset($tags[ThreadTag::VIDEO]) && !strpos($content, "[视频]")) {
-                $content = $content . '[视频]';
-            }
-            if (isset($tags[ThreadTag::DOC]) && !strpos($content, "[附件]")) {
-                $content = $content . '[附件]';
-            }
-            if (isset($tags[ThreadTag::VOICE]) && !strpos($content, "[语音条]")) {
-                $content = $content . '[语音条]';
-            }
-            if (isset($tags[TomConfig::TOM_VOTE]) && !strpos($content, "[投票]")) {
-                $content = $content . '[投票]';
+            foreach ($tagList as $key => $value) {
+                $tagString = "[" . $value['name_cn'] . "]";
+                if (isset($tags[$key]) && strpos($content, $tagString) === false) {
+                    $content = $content . $tagString;
+                }
             }
         }
 
