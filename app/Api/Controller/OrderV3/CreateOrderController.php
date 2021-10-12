@@ -270,6 +270,10 @@ class CreateOrderController extends DzqController
 
             // 充值
             case Order::ORDER_TYPE_CHARGE:
+                //判断充值开关是否打开
+                if(empty($this->settings->get('site_charge'))){
+                    throw new Exception(trans('order.site_charge_is_close'));
+                }
                 $amount = sprintf('%.2f', $data['amount']);
                 break;
 
