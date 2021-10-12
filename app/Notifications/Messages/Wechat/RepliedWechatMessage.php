@@ -86,12 +86,14 @@ class RepliedWechatMessage extends SimpleMessage
                 // 审核通过后 发送回复人的主题通知
                 $subject = $threadTitle;
                 $userName = $this->post->user->username;
+                $nickName = $this->post->user->nickname;
                 break;
         }
 
         /**
          * 设置父类 模板数据
          * @parem $user_name 回复人的用户名
+         * @parem $nick_name 回复人的昵称
          * @parem $post_content 回复内容
          * @parem $reply_post 被回复内容
          * @parem $thread_id 主题ID
@@ -99,6 +101,7 @@ class RepliedWechatMessage extends SimpleMessage
          */
         $this->setTemplateData([
             '{$user_name}'           => $userName ?? $this->user->username,
+            '{$nick_name}'           => $nickName ?? $this->user->nickname,
             '{$post_content}'        => $this->strWords($postContent),
             '{$reply_post}'          => $this->strWords($subject ?? ''),
             '{$thread_id}'           => $this->post->thread_id,

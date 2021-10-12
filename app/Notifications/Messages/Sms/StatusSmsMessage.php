@@ -66,6 +66,7 @@ class StatusSmsMessage extends SimpleMessage
          * 设置父类 模板数据
          * @parem $user_id 用户ID
          * @parem $user_name 用户名
+         * @parem $nick_name 昵称
          * @parem $user_mobile 用户手机号
          * @parem $user_mobile_encrypt 用户手机号(带 * 的)
          * @parem $user_change_status 改变的用户状态
@@ -75,6 +76,7 @@ class StatusSmsMessage extends SimpleMessage
         $this->setTemplateData([
             '{$user_id}'              => $this->user->id,
             '{$user_name}'            => $this->user->username,
+            '{$nick_name}'            => $this->user->nickname,
             '{$user_mobile}'          => $this->user->getRawOriginal('mobile'),
             '{$user_mobile_encrypt}'  => $this->user->mobile,
             '{$user_change_status}'   => User::enumStatus($this->user->status, true),

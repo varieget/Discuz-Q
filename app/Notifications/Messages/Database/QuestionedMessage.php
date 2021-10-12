@@ -46,6 +46,7 @@ class QuestionedMessage extends SimpleMessage
             'user_id' => $this->user->id,      // 被提问人/提问人
             'thread_id' => $this->question->thread_id,   // 主题ID
             'thread_username' => $this->question->thread->isAnonymousName(), // 必传 主题用户名/匿名用户
+            'thread_nickname' => $this->question->thread->isAnonymousNickname(), // 必传 主题昵称/匿名用户
             'thread_title' => $this->question->thread->title,
             'content' => '',  // 兼容原数据
             'answer_content' => $this->question->getContentFormat(Question::CONTENT_LENGTH), // 回答的内容

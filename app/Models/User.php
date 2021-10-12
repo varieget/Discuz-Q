@@ -45,6 +45,7 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property int $sex
  * @property string $username
+ * @property string $nickname
  * @property string $mobile
  * @property string $password
  * @property string $pay_password

@@ -312,11 +312,14 @@ class Thread extends DzqModel
     {
         $special = app(SpecialCharServer::class);
 
-        if ($this->type == Thread::TYPE_OF_ALL && $this->title) {
-            $firstPost = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
-            $firstPost = $special->purify($firstPost);
-        }elseif ($this->type == Thread::TYPE_OF_ALL && !($this->title)) {
-            $firstPost = "";
+        if ($this->type == Thread::TYPE_OF_LONG || $this->type == Thread::TYPE_OF_ALL) {
+            $firstPost = '';
+            $content = !empty($this->title) ? $this->title :
+                $this->type == Thread::TYPE_OF_ALL ? Post::addTagToThreadContent($this->id, $this->firstPost->content).Post::getContentTags($this->firstPost->content) : '';
+            if (!empty($content)) {
+                $firstPost = $substr ? Str::of($content)->substr(0, $substr) : $content;
+                $firstPost = $special->purify($firstPost);
+            }
         } else {
             // 不是长文没有标题则使用首帖内容
             $this->firstPost->content = $substr ? Str::of($this->firstPost->content)->substr(0, $substr) : $this->firstPost->content;
@@ -597,13 +600,23 @@ class Thread extends DzqModel
     }
 
     /**
-     * 获取匿名用户名
+     * 获取匿名用户名(用户名)
      *
      * @return string
      */
     public function isAnonymousName()
     {
         return $this->is_anonymous ? (new Anonymous)->getUsername() : $this->user->username;
+    }
+
+    /**
+     * 获取匿名用户名(昵称)
+     *
+     * @return string
+     */
+    public function isAnonymousNickname()
+    {
+        return $this->is_anonymous ? (new Anonymous)->getUsername() : $this->user->nickname;
     }
 
     /**

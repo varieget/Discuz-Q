@@ -67,8 +67,10 @@ class QuestionedAnswerSmsMessage extends SimpleMessage
         /**
          * 设置父类 模板数据
          * @parem $user_id 回答人用户ID (可用于跳转到用户信息)
-         * @parem $user_name 回答人姓名
-         * @parem $be_user_name 被提问人
+         * @parem $user_name 回答人姓名（用户名）
+         * @parem $nick_name 回答人姓名（昵称）
+         * @parem $be_user_name 被提问人（用户名）
+         * @parem $be_nick_name 被提问人（昵称）
          * @parem $question_content 回答的内容
          * @parem $question_price 提问价格
          * @parem $question_created_at 提问创建时间
@@ -79,7 +81,9 @@ class QuestionedAnswerSmsMessage extends SimpleMessage
         $this->setTemplateData([
             '{$user_id}'             => $this->actor->id,
             '{$user_name}'           => $this->actor->username,
+            '{$nick_name}'           => $this->actor->nickname,
             '{$be_user_name}'        => $this->question->beUser->username,
+            '{$be_nick_name}'        => $this->question->beUser->nickname,
             '{$question_content}'    => $this->strWords($questionContent),
             '{$question_price}'      => $this->question->price,
             '{$question_created_at}' => $this->question->created_at,
