@@ -47,6 +47,7 @@ class StatusMessage extends SimpleMessage
         }
 
         return [
+            $this->actor->username,
             $this->actor->nickname,
             $refuse
         ];

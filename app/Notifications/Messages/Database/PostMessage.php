@@ -53,6 +53,7 @@ class PostMessage extends SimpleMessage
         $post = Arr::get($data, 'post', '');
 
         return [
+            $this->post->user->username,
             $this->post->user->nickname,
             $post->content,
             Arr::get($data, 'refuse', '无')

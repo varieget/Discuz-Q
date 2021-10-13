@@ -65,6 +65,7 @@ class RegisterSmsMessage extends SimpleMessage
          * 设置父类 模板数据
          * @parem $user_id 注册人id (可用于站点第几名注册)
          * @parem $user_name 注册人用户名
+         * @parem $nick_name 注册人昵称
          * @parem $user_mobile 注册人手机号
          * @parem $user_mobile_encrypt 注册人手机号(带 * 的)
          * @parem $user_group 注册人用户组
@@ -78,6 +79,7 @@ class RegisterSmsMessage extends SimpleMessage
         $this->setTemplateData([
             '{$user_id}'             => $this->actor->id,
             '{$user_name}'           => $this->actor->username,
+            '{$nick_name}'           => $this->actor->nickname,
             '{$user_mobile}'         => $this->actor->getRawOriginal('mobile'),
             '{$user_mobile_encrypt}' => $this->actor->mobile,
             '{$user_group}'          => $this->actor->groups->pluck('name')->join('、'),

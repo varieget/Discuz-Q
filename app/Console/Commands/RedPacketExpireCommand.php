@@ -221,6 +221,7 @@ class RedPacketExpireCommand extends AbstractCommand
                         'message' => $message,
                         'raw' => array_merge(Arr::only($order->toArray(), ['id', 'thread_id', 'type']), [
                             'actor_username' => $user->username,   // 发送人姓名
+                            'actor_nickname' => $user->nickname,   // 发送人姓名
                             'actual_amount' => $remainMoney,     // 获取作者实际金额
                         ]),
                     ];
