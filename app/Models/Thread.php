@@ -19,6 +19,7 @@
 namespace App\Models;
 
 use App\Common\Utils;
+use App\Common\PluginEnum;
 use App\Events\Thread\Hidden;
 use App\Events\Thread\Restored;
 use App\Modules\ThreadTom\TomConfig;
@@ -971,5 +972,20 @@ class Thread extends DzqModel
              ->leftJoin('thread_tom as tt','tt.thread_id','=','th.id')
              ->where(['tt.tom_type' => TomConfig::TOM_DOC , 'tt.status' => ThreadTom::STATUS_ACTIVE])
              ->first(['th.id','th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'th.is_draft', 'th.is_approved', 'tt.value']);
+    }
+
+    public static function getTagList()
+    {
+        $config = TomConfig::$map;
+        unset($config[TomConfig::TOM_TEXT]);
+        $pluginList = \Discuz\Common\Utils::getPluginList();
+        foreach ($pluginList as $key => $item) {
+            if ($item['type'] == PluginEnum::PLUGIN_THREAD) {
+                $config[$item['app_id']] = [
+                    'name_cn' => $item['name_cn']
+                ];
+            }
+        }
+        return $config;
     }
 }

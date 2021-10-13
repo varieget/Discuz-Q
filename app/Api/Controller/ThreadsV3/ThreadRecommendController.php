@@ -68,6 +68,7 @@ class ThreadRecommendController extends DzqController
         //获取主题标签
         $tags = [];
         $newTags = [];
+        $tagList = Thread::getTagList();
         ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->each(function ($item) use (&$tags, &$newTags) {
             $itemData = $item->toArray();
             $tags[$item['thread_id']][] = $itemData;
@@ -95,20 +96,11 @@ class ThreadRecommendController extends DzqController
             $threadTags = [];
             isset($tags[$threadid]) && $threadTags = $tags[$threadid];
             if (isset($newTags[$threadid])) {
-                if (isset($newTags[$threadid][ThreadTag::IMAGE]) && !strpos($title, "[图片]")) {
-                    $title = $title . '[图片]';
-                }
-                if (isset($newTags[$threadid][ThreadTag::VIDEO])) {
-                    $title = $title . '[视频]';
-                }
-                if (isset($newTags[$threadid][ThreadTag::DOC])) {
-                    $title = $title . '[附件]';
-                }
-                if (isset($newTags[$threadid][ThreadTag::VOICE])) {
-                    $title = $title . '[语音条]';
-                }
-                if (isset($newTags[$threadid][TomConfig::TOM_VOTE])) {
-                    $title = $title . '[投票]';
+                foreach ($tagList as $key => $value) {
+                    $tagString = "[" . $value['name_cn'] . "]";
+                    if (isset($newTags[$threadid][$key]) && strpos($title, $tagString) === false) {
+                        $title = $title . $tagString;
+                    }
                 }
             }
             $data [] = [
