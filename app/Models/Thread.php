@@ -173,6 +173,16 @@ class Thread extends DzqModel
     const ORDER_TITLE_END_WITH = '...';
 
     const DATA_PLATFORM_OF_SITE = 0;
+    const DATA_PLATFORM_OF_IMPORT = 1;
+
+    const AUTO_IMPORT_OF_YEAR = 1;
+    const AUTO_IMPORT_OF_MONTH = 2;
+    const AUTO_IMPORT_OF_WEEKS = 3;
+    const AUTO_IMPORT_OF_DAY = 4;
+
+    const AUTO_IMPORT_HAVE_NOT_BEGUN = 0;
+    const AUTO_IMPORT_HAVE_FINISHED = 1; // 当前年/月/周/天 已完成导入
+
     const CRAWLER_DATA_PLATFORM_OF_WEIBO = 1;
     const CRAWLER_DATA_PLATFORM_OF_TIEBA = 2;
     const CRAWLER_DATA_PLATFORM_OF_DOUBAN = 3;
