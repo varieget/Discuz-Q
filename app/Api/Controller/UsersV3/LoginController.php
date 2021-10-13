@@ -134,6 +134,7 @@ class LoginController extends AuthBaseController
                     $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
                     if(!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
                         $data['uid'] = !empty($user->id) ? $user->id : 0;
+                        $data['userId'] = !empty($user->id) ? $user->id : 0;//推荐使用
                         $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', array_merge($data, $userLoginToken));
                     }
                 }

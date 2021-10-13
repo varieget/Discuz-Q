@@ -28,7 +28,7 @@
  *              @OA\Property(property = "refreshToken", type = "string", description = "刷新 token"),
  *              @OA\Property(property = "isMissNickname", type = "boolean", description = "用户是否缺少昵称字段的填写,true:缺少,false:不缺少"),
  *              @OA\Property(property = "userStatus", type = "integer",enum={0,1,2,3,4,10}, description = "用户状态,0:正常 1:禁用 2:审核中 3:审核拒绝 4:审核忽略 10:待填写扩展审核字段"),
- *              @OA\Property(property = "uid", type = "integer", description = "用户id"),
+ *              @OA\Property(property = "userId", type = "integer", description = "用户id"),
  *           ))
  *       })
  *     )
