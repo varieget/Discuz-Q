@@ -68,55 +68,79 @@ class BatchDeleteGroupsController extends DzqAdminController
         $groupDatas = Group::query()->whereIn('id', $ids)->get();
 
         $groupIdDeletes = $groupDatas->pluck('id')->toArray();
-        $result = $this->changeUserGroupId($groupIdDeletes);
-        if ($result == 'true'){
+        $doResult = $this->changeUserGroupId($groupIdDeletes);
+        if ($doResult === true){
+            $paidGroupIds=[];
+
             /* @var DatabaseManager $dbMgr*/
             $dbMgr = app('db');
-            $result = $dbMgr->transaction(function () use ($groupDatas){
-                $paidGroupIds=[];
-                $groupDatas->each(function ($group) use(&$paidGroupIds) {
-
-                    $group->delete();
+            $dbMgr->beginTransaction();
+            try {
+                foreach ($groupDatas as $key=>$group){
+                    $result = $group->delete();
+                    if ($result === false){
+                        $dbMgr->rollBack();
+                        $doResult = "执行异常";
+                        DzqLog::error('delete_user_group_error', [], "group delete return false, group_id".$group->id);
+                        break;
+                    }
 
                     if ($group->is_paid == Group::IS_PAID){
                         $paidGroupIds[] = $group->id;
 
                         if ($group->level>0){
                             //调整比该等级大的其他等级
-                            Group::query()->where("is_paid",Group::IS_PAID)
+                            $result = Group::query()->where("is_paid",Group::IS_PAID)
                                 ->where("level",">",$group->level)->decrement("level");
+                            if ($result === false){
+                                $dbMgr->rollBack();
+                                $doResult = "执行异常";
+                                DzqLog::error('delete_user_group_error', [], "group decrement return false, group_id".$group->id);
+                                break;
+                            }
                         }
                     }
-                });
-
-                if (!empty($paidGroupIds)) {
-                    GroupPaidUser::query()->whereIn('group_id', $paidGroupIds)->where('delete_type', "=", '0')
-                        ->update(['operator_id' => $this->user->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
                 }
-                return true;
-            });
+                if ($doResult === true){
+                    $dbMgr->commit();
+                }
+            }catch (Throwable $e){
+                if ($doResult === true) {
+                    $dbMgr->rollBack();
+                }
+                if (empty($e->validator) || empty($e->validator->errors())) {
+                    $errorMsg = $e->getMessage();
+                } else {
+                    $errorMsg = $e->validator->errors()->first();
+                }
+                DzqLog::error('BatchDeleteGroupsController::', [], $errorMsg);
+            }
+
+            if ($doResult === true && !empty($paidGroupIds)) {
+                GroupPaidUser::query()->whereIn('group_id', $paidGroupIds)->where('delete_type', "=", '0')
+                    ->update(['operator_id' => $this->user->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
+            }
         }
 
-        if ($result == "true"){
+        if ($doResult === true){
             return $this->outPut(ResponseCode::SUCCESS, '');
         }
         else{
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, $result);
+            return $this->outPut(ResponseCode::INTERNAL_ERROR, $doResult);
         }
     }
 
     private function changeUserGroupId($groupIdDeletes){
-        try {
             $defualtGroup = Group::query()->select('id')->where("default",1)->first();
             $defualtGroupId = Group::MEMBER_ID;
             if (!empty($defualtGroup)){
                 $defualtGroupId = $defualtGroup->id;
             }
-
+            /** @var DatabaseManager $dbMgr */
             $dbMgr = app('db');
-            $dbResult = $dbMgr->transaction(function () use ( $groupIdDeletes, $defualtGroupId, $dbMgr){
+            $dbMgr->beginTransaction();
+            try {
                 $changeGroupUser = GroupUser::query()->whereIn('group_id',$groupIdDeletes)->get();
-
                 foreach ($changeGroupUser as $key=>$item){
                     $userId = $item->user_id;
                     $expired_at = $item->expiration_time;
@@ -131,8 +155,13 @@ class BatchDeleteGroupsController extends DzqAdminController
                     $userExpiredAt = User::query()->select("expired_at")->where('id',$userId)->first();
                     if(!empty($userExpiredAt) && !empty($userExpiredAt->expired_at)){
                         $userExpiredAtNew = Carbon::parse($userExpiredAt->expired_at)->subDays($remainDays)->subSeconds($dtSeconds);
-
-                        User::query()->where('id',$userId)->update(['expired_at'=>$userExpiredAtNew]);
+                        $result = User::query()->where('id',$userId)->update(['expired_at'=>$userExpiredAtNew]);
+                        if ($result === false){
+                            $dbMgr->rollBack();
+                            DzqLog::error('BatchDeleteGroupsController::changeUserGroupId', [],
+                                "update User expired_at return false. user.id=".$userId." expired_at=".$userExpiredAtNew);
+                            return "执行异常";
+                        }
                     }
                     //设置新的用户组
                     $newFeeGroup = GroupUserMq::query()->select(["group_id",'remain_days'])
@@ -143,30 +172,55 @@ class BatchDeleteGroupsController extends DzqAdminController
                         ->orderByDesc("tb2.level")->first();
                     if (empty($newFeeGroup)){
                         //设置为免费默认组
-                        GroupUser::query()->where('user_id',$userId)->update(['group_id'=>$defualtGroupId]);
+                        $result = GroupUser::query()->where('user_id',$userId)->update(['group_id'=>$defualtGroupId]);
+                        if ($result === false){
+                            $dbMgr->rollBack();
+                            DzqLog::error('BatchDeleteGroupsController::changeUserGroupId', [],
+                                "update GroupUser default return false. user.id=".$userId." group_id=".$defualtGroupId);
+                            return "执行异常";
+                        }
                     }else{
-                        GroupUser::query()->where('user_id',$userId)
-                            ->update(['group_id'=> $newFeeGroup->group_id,'expiration_time'=>Carbon::now()->addDays($newFeeGroup->remain_days)]);
-                        GroupUserMq::query()->where("group_id", $newFeeGroup->group_id)->where("user_id",$userId)->delete();
+                        $expiredCarbon = Carbon::now()->addDays($newFeeGroup->remain_days);
+                        $result = GroupUser::query()->where('user_id',$userId)
+                            ->update(['group_id'=> $newFeeGroup->group_id,'expiration_time'=>$expiredCarbon]);
+
+                        if ($result === false){
+                            $dbMgr->rollBack();
+                            DzqLog::error('BatchDeleteGroupsController::changeUserGroupId', [],
+                                "update GroupUser fee group return false. user.id=".$userId." group_id=".$newFeeGroup->group_i." expiration_time=".$expiredCarbon);
+                            return "执行异常";
+                        }
+
+                        $result = GroupUserMq::query()->where("group_id", $newFeeGroup->group_id)->where("user_id",$userId)->delete();
+                        if ($result === false){
+                            $dbMgr->rollBack();
+                            DzqLog::error('BatchDeleteGroupsController::changeUserGroupId', [],
+                                "delete  GroupUserMq  return false. user.id=".$userId." group_id=".$newFeeGroup->group_id);
+                            return "执行异常";
+                        }
                     }
                 }
+
+                $result = GroupUserMq::query()->whereIn('group_id',$groupIdDeletes)->delete();
+                if ($result === false){
+                    $dbMgr->rollBack();
+                    DzqLog::error('BatchDeleteGroupsController::changeUserGroupId', [],
+                        "delete  GroupUserMq  return false.  group_id=".json_encode($groupIdDeletes));
+                    return "执行异常";
+                }
+
+                $dbMgr->commit();
                 return true;
-            });
-            if (!$dbResult){
-                return false;
-            }
+            }catch (Throwable $e){
+                $dbMgr->rollBack();
 
-            GroupUserMq::query()->whereIn('group_id',$groupIdDeletes)->delete();
-            return true;
-        }catch (Throwable $e){
-            if (empty($e->validator) || empty($e->validator->errors())) {
-                $errorMsg = $e->getMessage();
-            } else {
-                $errorMsg = $e->validator->errors()->first();
+                if (empty($e->validator) || empty($e->validator->errors())) {
+                    $errorMsg = $e->getMessage();
+                } else {
+                    $errorMsg = $e->validator->errors()->first();
+                }
+                DzqLog::error('BatchDeleteGroupsController::changeUserGroupId', [], $errorMsg);
+                return $errorMsg;
             }
-            DzqLog::error('delete_user_group_error', [], $errorMsg);
-            return $errorMsg;
-        }
     }
-
 }
