@@ -87,7 +87,7 @@ class PaidGroupOrder
                     return;
                 }
                 //针对付费站点有到期时间的概念，增加 users 的 expired_at
-                if(!empty($event->user->expired_at)){
+                if($event->user->expired_at > Carbon::now()){
                     $event->user->expired_at = Carbon::parse($event->user->expired_at)->addDays($group_info->days);
                 }else{
                     $event->user->expired_at = Carbon::now()->addDays($group_info->days);
