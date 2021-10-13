@@ -223,6 +223,7 @@ abstract class AuthBaseController extends DzqController
         $result['avatarUrl']    = !empty($user->avatar) ? $user->avatar : '';
         $result['userStatus']   = !empty($user->status) ? $user->status : 0;
         $result['uid']          = !empty($user->id) ? $user->id : 0;
+        $result['userId']       = !empty($user->id) ? $user->id : 0;//推荐使用
 
         return $result;
     }
