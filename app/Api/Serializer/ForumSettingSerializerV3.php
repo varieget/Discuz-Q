@@ -30,6 +30,7 @@ use App\Traits\ForumSettingSerializerTrait;
 use Discuz\Api\Serializer\AbstractSerializer;
 use Discuz\Auth\Guest;
 use App\Settings\SettingsRepository;
+use Discuz\Foundation\Application;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Models\StopWord;
@@ -131,6 +132,7 @@ class ForumSettingSerializerV3 extends AbstractSerializer
                 'usernameLoginIsdisplay' => $usernameLoginIsdisplay,
                 'open_api_log' => !empty($this->settings->get('open_api_log')) ? $this->settings->get('open_api_log') : '0',
                 'thread_tab' => (int) $this->settings->get('thread_tab', 'default'),   //首页导航选项 所有:1 推荐:2 精华:3 已关注:4
+                'version' => 'v' . Application::VERSION
             ],
 
             // 注册设置
