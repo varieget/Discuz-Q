@@ -75,19 +75,25 @@ class BatchDeleteGroupsController extends DzqAdminController
             $result = $dbMgr->transaction(function () use ($groupDatas,$dbMgr){
                 $paidGroupIds=[];
                 $groupDatas->each(function ($group) use(&$paidGroupIds,$dbMgr) {
-                    if ($group->is_paid == Group::IS_PAID){
-                        $paidGroupIds[] = $group->id;
-                    }
+
                     $group->delete();
 
-                    //调整比该等级大的其他等级
-                    Group::query()->where("is_paid",Group::IS_PAID)
-                        ->where("level",">",$group->level)
-                        ->update(['level'=>$dbMgr->raw("level-1")]);
-                });
-                GroupPaidUser::query()->whereIn('group_id', $paidGroupIds)->where('delete_type', "=",'0')
-                    ->update(['operator_id' => $this->user->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
+                    if ($group->is_paid == Group::IS_PAID){
+                        $paidGroupIds[] = $group->id;
 
+                        if ($group->level>0){
+                            //调整比该等级大的其他等级
+                            Group::query()->where("is_paid",Group::IS_PAID)
+                                ->where("level",">",$group->level)
+                                ->update(['level'=>$dbMgr->raw("level-1")]);
+                        }
+                    }
+                });
+
+                if (!empty($paidGroupIds)) {
+                    GroupPaidUser::query()->whereIn('group_id', $paidGroupIds)->where('delete_type', "=", '0')
+                        ->update(['operator_id' => $this->user->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
+                }
                 return true;
             });
         }
