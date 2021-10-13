@@ -84,8 +84,7 @@ class BatchDeleteGroupsController extends DzqAdminController
                         if ($group->level>0){
                             //调整比该等级大的其他等级
                             Group::query()->where("is_paid",Group::IS_PAID)
-                                ->where("level",">",$group->level)
-                                ->update(['level'=>$dbMgr->raw("level-1")]);
+                                ->where("level",">",$group->level)->decrement("level");
                         }
                     }
                 });
