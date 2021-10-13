@@ -72,9 +72,9 @@ class BatchDeleteGroupsController extends DzqAdminController
         if ($result == 'true'){
             /* @var DatabaseManager $dbMgr*/
             $dbMgr = app('db');
-            $result = $dbMgr->transaction(function () use ($groupDatas,$dbMgr){
+            $result = $dbMgr->transaction(function () use ($groupDatas){
                 $paidGroupIds=[];
-                $groupDatas->each(function ($group) use(&$paidGroupIds,$dbMgr) {
+                $groupDatas->each(function ($group) use(&$paidGroupIds) {
 
                     $group->delete();
 
