@@ -31,12 +31,12 @@ class AddThreeTerminalStartToSiteTable extends Migration
     public function down()
     {
         $this->schema()->table('site_info_dailies', function (Blueprint $table) {
-            $table->unsignedBigInteger('pc_start_count');
-            $table->unsignedBigInteger('h5_start_count');
-            $table->unsignedBigInteger('mini_start_count');
-            $table->unsignedBigInteger('pc_start_peoples');
-            $table->unsignedBigInteger('h5_start_peoples');
-            $table->unsignedBigInteger('mini_start_peoples');
+            $table->unsignedBigInteger('pc_start_count')->change();
+            $table->unsignedBigInteger('h5_start_count')->change();
+            $table->unsignedBigInteger('mini_start_count')->change();
+            $table->unsignedBigInteger('pc_start_peoples')->change();
+            $table->unsignedBigInteger('h5_start_peoples')->change();
+            $table->unsignedBigInteger('mini_start_peoples')->change();
 
         });
     }
