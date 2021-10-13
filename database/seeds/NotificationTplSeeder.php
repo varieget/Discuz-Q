@@ -567,6 +567,31 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '',
                 'vars'      => '',
             ],
+            [
+                'status'    => 1,
+                'type'      => 0,
+                'notice_id' => $this->comparisonUnique('用户组升级通知', 0),
+                'type_name' => '用户组升级通知',
+                'title'     => '账号升级通知',
+                'content'   => '【{nickname}】恭喜你，成功升级为【{groupname}】！',
+                'vars'      => serialize([
+                    '{nickname}'     => '用户昵称',
+                    '{groupname}' => '升级用户组',
+                ]),
+            ],
+            [
+                'status'    => 1,
+                'type'      => 0,
+                'notice_id' => $this->comparisonUnique('站点续费用户组续费通知', 0),
+                'type_name' => '站点续费用户组续费通知',
+                'title'     => '续费通知',
+                'content'   => '【{nickname}】，您购买的【{groupname}】即将过期，过期后将无法享受当前权益，请及时续费。',
+                'vars'      => serialize([
+                    '{nickname}'     => '用户昵称',
+                    '{groupname}' => '老用户组'
+                ]),
+            ]
+
         ];
     }
 
