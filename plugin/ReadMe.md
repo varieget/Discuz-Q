@@ -413,6 +413,7 @@ class TestCommand extends DzqCommand
     }
 }
 ````
+
 `$signature` 定义的命令名称必须以插件英文名称作为前缀 `{插件英文名称}:{命令名称}`，活动报名插件添加了一个 `test` 自定义命令，那么`$signature` 就赋值为 `activity:test`
 如果要手动执行该命令，请在控制台输入`php disco activity:test`
 
