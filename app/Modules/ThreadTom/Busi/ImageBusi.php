@@ -53,6 +53,7 @@ class ImageBusi extends TomBaseBusi
         $attachments = DzqCache::hMGetCollection(CacheKey::LIST_THREADS_V3_ATTACHMENT, $imageIds, function ($imageIds) {
             return Attachment::query()->whereIn('id', $imageIds)->get()->keyBy('id');
         });
+
         $threadId = $this->threadId;
         $thread = DzqCache::hGet(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {
             return Thread::getOneThread($threadId, true);
@@ -60,7 +61,7 @@ class ImageBusi extends TomBaseBusi
 
         foreach ($attachments as $attachment) {
             if (!empty($thread)) {
-                $item = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
+                $item = $this->camelData($serializer->getBeautyAttachment($attachment));
                 if (!$this->canViewTom) {
                     $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
                 }

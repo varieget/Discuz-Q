@@ -145,7 +145,7 @@ class AttachmentSerializer extends AbstractSerializer
     }
 
 
-    public function getBeautyAttachment($model, $user = null)
+    public function getBeautyAttachment($model)
     {
         if ($model->is_remote) {
             $url = $this->getImgUrl($model,$model->full_path);
