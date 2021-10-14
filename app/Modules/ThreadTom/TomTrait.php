@@ -104,6 +104,14 @@ trait TomTrait
                 'name_en' => $item['name_en'],
                 'service' => $item['busi']
             ];
+            if (isset($item["tom_ids"])){
+                foreach ($item["tom_ids"] as $tomId){
+                    $config[$tomId] = [
+                        'name_en' => $item['name_en'],
+                        'service' => $item['busi']
+                    ];
+                }
+            }
         }
         return $config;
     }

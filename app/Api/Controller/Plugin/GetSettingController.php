@@ -30,7 +30,7 @@ class GetSettingController extends DzqAdminController
         $setting = PluginSettings::getSetting($appId);
         $data = [
             'setting'=>$setting,
-            'config'=>$pluginList[$appId]?:null
+            'config'=>$pluginList[$appId]??null
         ];
         $this->outPut(0,'',$data);
     }
