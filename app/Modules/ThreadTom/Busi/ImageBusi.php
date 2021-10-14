@@ -50,10 +50,9 @@ class ImageBusi extends TomBaseBusi
         $serializer = $this->app->make(AttachmentSerializer::class);
         $result = [];
         $imageIds = $this->getParams('imageIds');
-        $attachments = DzqCache::hMGetCollection(CacheKey::LIST_THREADS_V3_ATTACHMENT, $imageIds, function ($imageIds) {
-            return Attachment::query()->whereIn('id', $imageIds)->get()->keyBy('id');
+        $attachments = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT, $imageIds, function ($imageIds) {
+            return Attachment::query()->whereIn('id', $imageIds)->get()->keyBy('id')->toArray();
         });
-
         $threadId = $this->threadId;
         $thread = DzqCache::hGet(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {
             return Thread::getOneThread($threadId, true);

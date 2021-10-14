@@ -147,78 +147,62 @@ class AttachmentSerializer extends AbstractSerializer
 
     public function getBeautyAttachment($model)
     {
-        if ($model->is_remote) {
-            $url = $this->getImgUrl($model,$model->full_path);
-            $blurUrl = $this->getImgUrl($model,$model->blur_path);
+        if ($model['is_remote']) {
+            $url = $this->getImgUrl($model,Attachment::getFullPath($model));
+            $blurUrl = $this->getImgUrl($model,Attachment::getBlurPath($model));
             $thumbUrl = $url . (strpos($url, '?') === false ? '?' : '&') . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
         } else {
-            $url = $this->localUrl($model->full_path);
-            $blurUrl = $this->localUrl($model->blur_path);
-            $thumbUrl = $this->filesystem->disk('attachment')->exists($model->thumb_path) ? Str::replaceLast('.', '_thumb.', $url) : $url;
+            $url = $this->localUrl(Attachment::getFullPath($model));
+            $blurUrl = $this->localUrl(Attachment::getBlurPath($model));
+            $thumbUrl = $this->filesystem->disk('attachment')->exists(Attachment::getThumbPath($model)) ? Str::replaceLast('.', '_thumb.', $url) : $url;
         }
 
         $attributes = [
-            'id' => $model->id,
-            'order' => $model->order,
-            'type' => $model->type,
-            'type_id' => $model->type_id,
-            'isRemote' => $model->is_remote,
-            'isApproved' => $model->is_approved,
+            'id' => $model['id'],
+            'order' => $model['order'],
+            'type' => $model['type'],
+            'type_id' => $model['type_id'],
+            'isRemote' => $model['is_remote'],
+            'isApproved' => $model['is_approved'],
             'url' => $url,
             'blurUrl' => $blurUrl,
             'thumbUrl' => $thumbUrl,
-            'attachment' => $model->attachment,
-            'extension' => Str::afterLast($model->attachment, '.'),
-            'fileName' => $model->file_name,
-            'filePath' => $model->file_path,
-            'fileSize' => (int)$model->file_size,
-            'fileType' => $model->file_type,
-            'fileWidth' => $model->file_width,
-            'fileHeight' => $model->file_height,
+            'attachment' => $model['attachment'],
+            'extension' => Str::afterLast($model['attachment'], '.'),
+            'fileName' => $model['file_name'],
+            'filePath' => Attachment::getFilePath($model),
+            'fileSize' => (int)$model['file_size'],
+            'fileType' => $model['file_type'],
+            'fileWidth' => $model['file_width'],
+            'fileHeight' => $model['file_height'],
         ];
-
         // 图片缩略图地址
-        if (in_array($model->type, [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
-            if ($model->getAttribute('blur')) {
+        if (in_array($model['type'], [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
+            if ($model['is_remote']) {
+                //改为前端取分辨率大小
                 $attributes['thumbUrl'] = $url;
-            } else {
-                if ($model->is_remote) {
-                    //改为前端取分辨率大小
-                    $attributes['thumbUrl'] = $url;
 //                    $attributes['thumbUrl'] = $url . (strpos($url, '?') === false ? '?' : '&')
 //                        . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
-                } else {
-                    // 缩略图不存在时使用原图
-                    $attributes['thumbUrl'] = $this->filesystem->disk('attachment')->exists($model->thumb_path)
-                        ? Str::replaceLast('.', '_thumb.', $url)
-                        : $url;
-                }
-                strtolower(substr($url, -3, 3)) == 'gif' && $attributes['thumbUrl'] = $url;
+            } else {
+                // 缩略图不存在时使用原图
+                $attributes['thumbUrl'] = $this->filesystem->disk('attachment')->exists(Attachment::getThumbPath($model)) ? Str::replaceLast('.', '_thumb.', $url) : $url;
             }
-        } elseif ($model->type == Attachment::TYPE_OF_ANSWER) {
+            $p = parse_url(strtolower($url));
+            if(!empty($p['path']) && Str::endsWith($p['path'],'gif')){
+                $attributes['thumbUrl'] = $url;
+            }
+        } elseif ($model['type'] == Attachment::TYPE_OF_ANSWER) {
             $attributes['thumbUrl'] = $url;
         }
-
-        // 绑定首帖的附件，如果是付费或开启了预览，返回后端地址
-//        if (
-//            $model->type == Attachment::TYPE_OF_FILE && !empty($thread) &&
-//            (
-//                ($thread['price'] > 0 || $thread['attachment_price'] > 0) ||
-//                ($this->settings->get('qcloud_cos_doc_preview', 'qcloud') && $this->settings->get('qcloud_cos', 'qcloud'))
-//            )
-//        ) {
-//            $attributes['url'] = $this->url->to('/apiv3/attachments/' . $model->id) . '?t=' . Attachment::getFileToken($this->actor);
-//        }
-
         return $attributes;
     }
 
 
     public function getImgUrl($model, $path = '')
     {
-        if (empty($path)) $path = $model->full_path;
+        if (empty($path)) $path = Attachment::getFilePath($model) . $model['attachment'];
         $url = $this->remoteUrl($path);
-        $model->is_remote && $url = str_replace($model->attachment, encodeKey($model->attachment), $url);
+        $model['is_remote'] && $url = str_replace($model['attachment'], encodeKey($model['attachment']), $url);
         return $url;
     }
 

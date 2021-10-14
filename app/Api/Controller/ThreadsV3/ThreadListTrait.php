@@ -328,8 +328,7 @@ trait ThreadListTrait
 
     private function cacheAttachment($attachmentIds)
     {
-        //todo 附件集合对象改成数组对象
-        $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->keyBy('id');
+        $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->keyBy('id')->toArray();
         $attachments = $this->appendDefaultEmpty($attachmentIds, $attachments, null);
         app('cache')->put(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachments);
         return $attachments;

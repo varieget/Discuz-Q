@@ -50,8 +50,8 @@ class DocBusi extends TomBaseBusi
         $serializer = $this->app->make(AttachmentSerializer::class);
         $result = [];
         $docIds = $this->getParams('docIds');
-        $attachments = DzqCache::hMGetCollection(CacheKey::LIST_THREADS_V3_ATTACHMENT, $docIds, function ($docIds) {
-            return Attachment::query()->whereIn('id', $docIds)->get()->keyBy('id');
+        $attachments = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT, $docIds, function ($docIds) {
+            return Attachment::query()->whereIn('id', $docIds)->get()->keyBy('id')->toArray();
         });
         $threadId = $this->threadId;
         $thread = DzqCache::hGet(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {

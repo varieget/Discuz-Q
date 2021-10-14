@@ -191,12 +191,22 @@ class Attachment extends DzqModel
         return Str::finish($value, '/');
     }
 
+    public static function getFilePath($attachment)
+    {
+        return Str::finish($attachment['file_path'], '/');
+    }
+
     /**
      * @return string
      */
     public function getFullPathAttribute()
     {
         return $this->file_path . $this->attachment;
+    }
+
+    public static function getFullPath($attachment)
+    {
+        return self::getFilePath($attachment) . $attachment['attachment'];
     }
 
     /**
@@ -207,18 +217,27 @@ class Attachment extends DzqModel
         return $this->file_path . Str::replaceLast('.', '_thumb.', $this->attachment);
     }
 
+    public static function getThumbPath($attachment)
+    {
+        return self::getFilePath($attachment) . Str::replaceLast('.', '_thumb.', $attachment['attachment']);
+    }
+
     /**
      * @return string
      */
     public function getBlurPathAttribute()
     {
         $parts = explode('.', $this->attachment);
-
         $parts[0] = md5($parts[0]);
-
         return $this->file_path . implode('_blur.', $parts);
     }
 
+    public static function getBlurPath($attachment)
+    {
+        $parts = explode('.', $attachment['attachment']);
+        $parts[0] = md5($parts[0]);
+        return self::getFilePath($attachment) . implode('_blur.', $parts);
+    }
     /**
      * Define the relationship with the attachment's author.
      *
