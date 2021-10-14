@@ -234,6 +234,8 @@ class NotificationTpl extends Model
 
         $notificationData->error_msg = $buildError;
 
+        $notificationData->page_path = $notificationData->getRawOriginal('page_path');
+
         $notificationData->save();
 
         return true;
