@@ -1,7 +1,7 @@
 <?php
 /**
  * @OA\Get(
- *     path = "/apiv3/upgrade.group",
+ *     path = "/api/v3/upgrade.group",
  *     summary = "用户组升级列表",
  *     description = "获取付费用户组列表",
  *     tags = {"个人中心"},
