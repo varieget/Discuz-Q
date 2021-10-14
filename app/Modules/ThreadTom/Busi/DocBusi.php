@@ -59,7 +59,7 @@ class DocBusi extends TomBaseBusi
         });
         foreach ($attachments as $attachment) {
             if (!empty($thread)) {
-                $item = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
+                $item = $this->camelData($serializer->getBeautyAttachment($attachment, $this->user));
                 if (!$this->canViewTom) {
                     $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
                 }

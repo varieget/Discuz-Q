@@ -145,7 +145,7 @@ class AttachmentSerializer extends AbstractSerializer
     }
 
 
-    public function getBeautyAttachment($model, $thread, $user = null)
+    public function getBeautyAttachment($model, $user = null)
     {
         if ($user) $this->actor = $user;
         if ($model->is_remote) {

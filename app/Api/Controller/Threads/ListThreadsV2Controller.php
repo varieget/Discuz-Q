@@ -295,7 +295,7 @@ class ListThreadsV2Controller extends DzqController
         $result = [];
         foreach ($attachments as $attachment) {
 //            $result[] = $this->camelData($serializer->getDefaultAttributes($attachment, $this->user));
-            $result[] = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
+            $result[] = $this->camelData($serializer->getBeautyAttachment($attachment, $this->user));
         }
         return $result;
     }
