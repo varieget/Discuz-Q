@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Plugin\Wxshop\Controller;
+namespace Plugin\Shop\Controller;
 
 
 use App\Common\ResponseCode;
@@ -9,9 +9,9 @@ use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Plugin\Wxshop\Model\ShopProducts;
 
-class AddController extends DzqController
+class WxShopAddController extends DzqController
 {
-    use WxshopTrait;
+    use WxShopTrait;
     private $activity = null;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -30,7 +30,7 @@ class AddController extends DzqController
         $accssToken = $this->getAccessToken(0);
 
         foreach ($productIdList as $productId){
-            $productId = $productId;
+            $productId =  (string)$productId;
             $productInfo = $this->getProductInfo($accssToken, $productId);
             if (empty($productInfo)){
                 continue;
@@ -44,22 +44,23 @@ class AddController extends DzqController
             $price = $productInfo["min_price"]/100;
             $productIdTemp = $productInfo["product_id"];
             $inUrl = $productInfo["path"]; //微信内部url, plugin-private:
+            $qrBuf = $this->getProductQrCode($inUrl);
 
             $productOld = ShopProducts::query()->where("app_id",$appId)
                 ->where("product_id",$productId)->first();
             if (empty($productOld)){
                 $oneShopProduct = new ShopProducts();
                 $oneShopProduct->app_id = $appId;
-                $oneShopProduct->product_id = $productId;
-                $oneShopProduct->name = $name;
-                $oneShopProduct->img_url = $imgUrl;
+                $oneShopProduct->platform_id = $productId;
+                $oneShopProduct->title = $name;
+                $oneShopProduct->image_path = $imgUrl;
                 $oneShopProduct->price = (string)$price;
                 $oneShopProduct->in_url = $inUrl;
                 $oneShopProduct->out_url = "";
                 $oneShopProduct->save();
             }else{
-                $productOld->name = $name;
-                $productOld->img_url = $imgUrl;
+                $productOld->title = $name;
+                $productOld->image_path = $imgUrl;
                 $productOld->price = (string)$price;
                 $productOld->in_url = $inUrl;
                 $productOld->save();

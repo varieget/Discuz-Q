@@ -1,15 +1,15 @@
 <?php
 
 
-namespace Plugin\Wxshop\Controller;
+namespace Plugin\Shop\Controller;
 
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
-class ListController extends DzqController
+class WxShopListController extends DzqController
 {
-    use WxshopTrait;
+    use WxShopTrait;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -22,7 +22,10 @@ class ListController extends DzqController
         $page = $page ?: 1;
         $perPage = intval($this->inPut('perPage'));
         $perPage = $perPage ?: 10;
-        $accssToken = $this->getAccessToken(0);
+        list($result,$accssToken) = $this->getAccessToken();
+        if ($result !== 0){
+            $this->outPut($result,$accssToken);
+        }
         $data = $this->getShopList($accssToken,$page,$perPage);
         if (empty($data) || !isset($data["spus"])){
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"没有商品");
@@ -36,7 +39,11 @@ class ListController extends DzqController
             }
             $price = $one["min_price"]/100;
 
-            $oneGoods = $this->packProductDetail(0,$one["product_id"],$one["title"],$img,$price,"","");
+            $oneGoods = [];
+            $oneGoods["productId"] = (string)$one["product_id"];
+            $oneGoods["title"] = $one["title"];
+            $oneGoods["imagePath"] = $img;
+            $oneGoods["price"] = $price;
 
             $productList[] = $oneGoods;
         }

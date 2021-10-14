@@ -15,15 +15,19 @@
  * limitations under the License.
  */
 
-namespace Plugin\Wxshop\Controller;
+namespace Plugin\Shop\Controller;
 
 
 use App\Common\ResponseCode;
 use App\Models\PluginSettings;
+use App\Models\Setting;
+use Discuz\Base\DzqLog;
 use Discuz\Wechat\EasyWechatTrait;
 use GuzzleHttp\Client;
+use Illuminate\Contracts\Filesystem\Factory;
+use Illuminate\Support\Facades\App;
 
-trait WxshopTrait
+trait WxShopTrait
 {
     use EasyWechatTrait;
 
@@ -41,7 +45,7 @@ trait WxshopTrait
 
     public function getConfig(){
         if (empty($this->config)){
-            $this->config = require(__DIR__."/../config.php");
+            $this->config = require(__DIR__ . "/../config.php");
         }
         return $this->config;
     }
@@ -51,7 +55,7 @@ trait WxshopTrait
      */
     public function getSetting(){
         if (empty($this->config)){
-            $this->config = require(__DIR__."/../config.php");
+            $this->config = require(__DIR__ . "/../config.php");
         }
 
         $settingData = PluginSettings::query()->where("app_id",$this->config["app_id"])->first();
@@ -67,22 +71,29 @@ trait WxshopTrait
         return $valueJson;
     }
 
-    public function getAccessToken($wxshopAppId){
+    public function getWxApp(){
         $settingData = $this->getSetting();
         if (empty($settingData)){
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"插件没配置");
+            return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
         if (!isset($settingData["wx_app_id"]) || !isset($settingData["wx_app_secret"])){
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"插件没配置");
+            return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
 
-        $app = $this->miniProgram(["app_id"=>$settingData["wx_app_id"],"secret"=>$settingData["wx_app_secret"]]);
-        $accessToken = $app->access_token->getToken(false);
+        return [0, $this->miniProgram(["app_id"=>$settingData["wx_app_id"],"secret"=>$settingData["wx_app_secret"]])];
+    }
+
+    public function getAccessToken(){
+        list($result,$wxApp) = $this->getWxApp();
+        if ($result !== 0){
+            return [$result,$wxApp];
+        }
+        $accessToken = $wxApp->access_token->getToken(false);
         if (empty($accessToken["access_token"])){
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"插件配置错误");
+            return [ResponseCode::RESOURCE_NOT_FOUND,"插件配置错误"];
         }
 
-        return $accessToken["access_token"];
+        return [0,$accessToken["access_token"]];
     }
 
 
@@ -156,13 +167,41 @@ trait WxshopTrait
     public function packProductDetail($id,$productId,$name,$imgUrl,$price,$inUrl,$outUrl){
         $oneGoods=[
             "id"=>$id,
-            "productId"=>$productId,
-            "name"=>$name,
-            "imgUrl"=>$imgUrl,
+            "productId"=>(string)$productId,
+            "title"=>$name,
+            "imagePath"=>$imgUrl,
             "price"=>(string)$price,
-            "inUrl"=>$inUrl, //微信内部url, plugin-private://
-            "outUrl"=>$outUrl //二维码地址
         ];
         return $oneGoods;
+    }
+
+    public function getProductQrCode($path){
+        $pathNew = str_replace("plugin-private://","__plugin__/",$path);
+        list($result,$wxApp) = $this->getWxApp();
+        if ($result !== 0){
+            DzqLog::error('WxShopTrait::getProductQrCode', [], $wxApp);
+            return ["", false];
+        }
+
+        $qrResponse = $wxApp->app_code->get($pathNew);
+        if(is_array($qrResponse) && isset($qrResponse['errcode']) && isset($qrResponse['errmsg'])) {
+            DzqLog::error('WxShopTrait::getProductQrCode', [], $qrResponse['errmsg']);
+            return ["", false];
+        }
+        $pStartIndex = strpos($path,"productId=");
+        $productIdStr = substr($path, $pStartIndex+strlen("productId="));
+
+        $fileName = "wxshop_".$productIdStr."_".time().".jpg";
+        $qrBuf = $qrResponse->getBody()->getContents();
+        /** @var ShopFileSave $shopFileSave */
+        $shopFileSave = app("app")->make(ShopFileSave::class);
+
+        return $shopFileSave->saveFile($fileName,$qrBuf);
+    }
+
+    public function getQRUrl($isRemote, $path){
+        /** @var ShopFileSave $shopFileSave */
+        $shopFileSave = app("app")->make(ShopFileSave::class);
+        return $shopFileSave->getFilePath($isRemote, $path);
     }
 }
