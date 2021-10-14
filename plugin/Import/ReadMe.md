@@ -46,124 +46,45 @@
 
 ##### 2.3	编写平台抓取逻辑
 
-![平台抓取逻辑](https://dzqtest-cjw-1300044465.cos.ap-guangzhou.myqcloud.com/import.png)
-
 以`ImportWeiBoDataCommands.php`为例：
 
-进程锁文件：`public/importDataLock.conf`
-
-自动导入任务参数内容文件：`public/autoImportDataLock.conf`
-
-启用进程锁，是为了避免多进程爬取、导入数据，占用过多资源，导致系统崩溃。
-
-获取进程文件内容，确认当前是否被占用：
+接收命令参数：
 
 ```php
-$lockFileContent = $this->getLockFileContent($this->importDataLockFilePath);
-if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {
-		$this->insertLogs('----The content import process has been occupied,You cannot start a new process.----');
-    exit;
-}
+$optionData = [
+  	'topic' => $this->option('topic'),
+  	'number' => (int) $this->option('number'),
+  	'auto' => $this->option('auto'),
+  	'type' => $this->option('type') ?? 0,
+  	'interval' => $this->option('interval') ?? 0,
+  	'month' => $this->option('month') ?? 0,
+  	'week' => $this->option('week') ?? 0,
+ 	 	'day' => $this->option('day') ?? 0,
+  	'hour' => $this->option('hour') ?? 0,
+  	'minute' => $this->option('minute') ?? 0
+]; // 基础参数注解详见2.5
 
-// 其中公共方法getLockFileContent()，是获取指定文件中的内容，传入正确的文件路径即可调用
-```
-
-确认占用是否已超时，超时就释放：
-
-```php
-if ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
-		$this->insertLogs('----Execution timed out.The file lock has been deleted.----');
-    app('cache')->clear();
-    $this->changeLockFileContent($this->importDataLockFilePath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $lockFileContent['topic']);
-    exit;
-}
-
-/* 	其中公共方法changeLockFileContent()，功能是更新进程锁文件的内容，其入参有：
-		$lockPath 文件路径
-		$startCrawlerTime 数据爬取开始时间，记录该项是为了计算进程是否超时
-		$progress 数据爬取进程，数值范围1-100
-		$status   进程状态：0闲置中；1锁进程；2进程正常结束；3进程异常结束；4进程超时；5进程未抓到任何数据
-		$topic    爬取的关键字
-		$totalDataNumber 已导入的数据量
+/* 如平台需要cookie/token，或者其他，那么需要接收这些值
+	 $optionData就要增加参数：
+	 'cookie' => $this->option('cookie') ?? '',
+	 'token' => $this->option('token') ?? ''
 */
 ```
 
-锁进程(实为更新进程锁文件的内容)：
+抓取平台参数：
 
 ```php
-$startCrawlerTime = time();
-$this->changeLockFileContent($this->importDataLockFilePath, $startCrawlerTime, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_PROCESSING, $topic);
-```
-
-抓取平台(微博)数据，平台数据抓取方法方法`Weibo()`是各位开发人员需要编写的，其逻辑详见2.4：
-
-```PHP
-$platform = new Weibo();
-$data = $platform->main($topic, $number);
-```
-
-写入平台数据，调用DZQ提供的公共方法`insertCrawlerData`，应公共方法需适用各平台的导入，因此该方法的入参需统一格式，详见2.6.1：
-
-```php
-foreach ($data as $value) {
-		$theradId = $this->insertCrawlerData($topic, $categoryId, $value);
-		$totalImportDataNumber++;
-		$processPercent = $processPercent + $averageProcessPercent;
-		$this->changeLockFileContent($this->importDataLockFilePath, $startCrawlerTime, $processPercent, Thread::IMPORT_PROCESSING, $topic, $totalImportDataNumber);
-		$this->insertLogs('----Insert a new thread success.The thread id is ' . $theradId . '.The progress is ' . floor((string)$processPercent) . '%.----');
+public function getPlatformData($parameter)
+{
+  	$platform = new Weibo();  // Weibo()抓取逻辑详见2.4
+  	$data = $platform->main($parameter['topic'], $parameter['number']);
+  	return $data; // 这里的 $data 有格式规定，详见2.6.1
 }
-```
 
-更新内容数据缓存：
-
-```php
-Category::refreshThreadCountV3($this->categoryId);
-app('cache')->clear();
-```
-
-释放进程锁：
-
-```php
-$this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $topic, $totalImportDataNumber);
-```
-
-写入/记录自动导入参数：
-
-```php
-$auto = $this->option('auto');
-if ($auto) {
-    // 写入自动导入任务
-    $autoImportParameters = [
-      'topic' => $topic,
-      'number' => $number,
-      'type' => $this->option('type') ?? 0,
-      'interval' => $this->option('interval') ?? 0,
-      'month' => $this->option('month') ?? 0,
-      'week' => $this->option('week') ?? 0,
-      'day' => $this->option('day') ?? 0,
-      'hour' => $this->option('hour') ?? 0,
-      'minute' => $this->option('minute') ?? 0
-    ];
-    $checkResult = $this->checkAutoImportParameters($this->autoImportDataLockFilePath, $autoImportParameters, 'WeiBo');
-    if ($checkResult == 1) {
-      $this->insertLogs('----The automatic import task is written successfully.----');
-    } elseif ($checkResult == 2) {
-      $this->insertLogs('----The automatic import task is written successfully,and overwrites the previous task.----');
-    }
-    exit;
-}
-```
-
-判断是否处于自动导入周期：
-
-```php
-$fileData = $this->getAutoImportData($this->autoImportDataLockFilePath, $autoImportDataLockFileContent);
-if ($fileData && !empty($fileData['topic']) && !empty($fileData['number'])) {
-  $this->insertPlatformData($fileData['topic'], $fileData['number'], $categoryId, true);
-}
-exit;
-
-// 其中公共方法getAutoImportData()已封装了相关周期判断，传入正确的文件路径即可调用
+/* 如平台需要cookie/token，或者其他，那么需要向平台抓取方法中传递参数
+	 $data = $platform->main($parameter['topic'], $parameter['number'], $parameter['cookie']);
+	 与上一点对应。
+*/
 ```
 
 ##### 2.4	数据抓取
@@ -179,7 +100,7 @@ exit;
 ```php
 php disco importData:insertWeiBoData {--topic=} {--number=} {--auto=} {--type=} {--interval=} {--month=} {--week=} {--day=} {--hour=} {--minute=}
 
-// 如某些平台需要传入登录台才能抓取数据，那就要增加类似参数：{--cookie=} {--token=}，需要增加的参数以平台搜索需求为准，自行设计
+// 以上是基础参数，如某些平台需要传入登录态才能抓取数据，那就要增加类似参数：{--cookie=} {--token=}，增加的参数以平台搜索需求为准，请自行设计
 ```
 
 基础命令参数注解：
@@ -235,19 +156,11 @@ minute   0～60的正整数
 
 ##### 2.6     数据写入
 
-抓到平台数据，排列组成和既定的形式，传入公共方法`insertCrawlerData`（`app/Import/ImportDataTrait.php`）中。该公共方法，就是将抓取到数据转化为Discuz! Q内容。
+通过各平台抓取方法抓到平台数据，排列组成和既定的形式，传入公共方法`insertCrawlerData`（`app/Import/ImportDataTrait.php`）中，处理成Discuz内容。`insertCrawlerData`方法需要的数据来自各位开发者编写的命令行文件，来自方法`getPlatformData`，该方法名字不可更改。
 
-###### 2.6.1  insertCrawlerData入参规范
+###### 2.6.1  getPlatformData返参规范
 
-如使用`insertCrawlerData`方法，传入的参数应有：
-
-```
-$topic      # 关键词
-$categoryId # 内容分类ID
-$data       # 抓取到的数据
-```
-
-其中，$data的格式应为：
+`getPlatformData`方法返参格式应为：
 
 ```json
 [
@@ -294,7 +207,7 @@ $data       # 抓取到的数据
 ]
 ```
 
-$data示例：
+返参示例：
 
 ```json
 {
@@ -359,3 +272,50 @@ $data示例：
     }]
 }
 ```
+
+#### **3.	XXXX平台命令行文件示例** 
+
+```php
+<?php
+
+namespace Plugin\Import\Console;
+
+use App\Import\ImportDataTrait;
+use Discuz\Base\DzqCommand;
+use Plugin\Import\Platform\XXXX;
+
+class ImportXXXXDataCommands extends DzqCommand
+{
+    use ImportDataTrait;
+    protected $signature = 'importData:insertXXXXData {--topic=} {--number=} {--auto=} {--type=} {--interval=} {--month=} {--week=} {--day=} {--hour=} {--minute=} {--cookie=} {--userAgent=}';
+    protected $description = '执行一个脚本命令,控制台执行[php disco importData:insertXXXXData]';
+
+    protected function main()
+    {
+        $optionData = [
+            'topic' => $this->option('topic'),
+            'number' => (int) $this->option('number'),
+            'auto' => $this->option('auto'),
+            'type' => $this->option('type') ?? 0,
+            'interval' => $this->option('interval') ?? 0,
+            'month' => $this->option('month') ?? 0,
+            'week' => $this->option('week') ?? 0,
+            'day' => $this->option('day') ?? 0,
+            'hour' => $this->option('hour') ?? 0,
+            'minute' => $this->option('minute') ?? 0,
+            'cookie' => $this->option('cookie') ?? '',
+            'userAgent' => $this->option('userAgent') ?? '',
+        ];
+        $this->importDataMain($optionData);
+        exit;
+    }
+
+    public function getPlatformData($parameter)
+    {
+        $platform = new XXXX(); // 可参考Plugin\Import\Platform\Weibo
+        $data = $platform->main($parameter['topic'], $parameter['number'], $parameter['cookie'], $parameter['userAgent']);
+        return $data;
+    }
+}
+```
+

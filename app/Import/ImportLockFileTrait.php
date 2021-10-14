@@ -7,6 +7,7 @@ use App\Models\Thread;
 
 trait ImportLockFileTrait
 {
+
     public function getLockFileContent($lockPath)
     {
         if (!file_exists($lockPath)) {
@@ -42,7 +43,7 @@ trait ImportLockFileTrait
     }
 
     // 自动导入参数校验
-    public function checkAutoImportParameters($autoImportDataLockFilePath, $data, $platform)
+    public function checkAutoImportParameters($data, $platform)
     {
         if (empty($data['type'])) {
             throw new \Exception('缺少参数type');
@@ -86,19 +87,19 @@ trait ImportLockFileTrait
         }
 
         $status = 0;
-        if (file_exists($autoImportDataLockFilePath)) {
-            $autoImportDataLockFileContent = file_get_contents($autoImportDataLockFilePath);
+        if (file_exists($this->autoImportDataLockFilePath)) {
+            $autoImportDataLockFileContent = file_get_contents($this->autoImportDataLockFilePath);
             if (!empty($autoImportDataLockFileContent)) {
                 $status++;
             }
         } else {
-            touch($autoImportDataLockFilePath);
+            touch($this->autoImportDataLockFilePath);
         }
 
         $data['lastImportTime'] = 0;
         $data['lastImportStatus'] = Thread::AUTO_IMPORT_HAVE_NOT_BEGUN;
         $data['platform'] = $platform;
-        $writeAutoImportDataLockFile = fopen($autoImportDataLockFilePath, 'w');
+        $writeAutoImportDataLockFile = fopen($this->autoImportDataLockFilePath, 'w');
         fwrite($writeAutoImportDataLockFile, json_encode($data));
         $status++;
         return $status;
@@ -129,7 +130,7 @@ trait ImportLockFileTrait
     }
 
     // 比较自动导入时间，获取自动导入相关信息
-    public function getAutoImportData($autoImportDataLockFilePath, $fileData)
+    public function getAutoImportData($fileData)
     {
         $currentYear = (int)date('Y'); // 当前年份
         $currentMonth = (int)date('m'); // 当前月份
@@ -157,7 +158,7 @@ trait ImportLockFileTrait
                     }
                 }
             } else {
-                $this->changeLastImportFileContent($autoImportDataLockFilePath, $fileData['lastImportTime'], Thread::AUTO_IMPORT_HAVE_NOT_BEGUN);
+                $this->changeLastImportFileContent($fileData['lastImportTime'], Thread::AUTO_IMPORT_HAVE_NOT_BEGUN);
             }
         } elseif ($fileData['type'] == Thread::AUTO_IMPORT_OF_MONTH) {
             // 月-自动导入
@@ -175,7 +176,7 @@ trait ImportLockFileTrait
                     }
                 }
             } else {
-                $this->changeLastImportFileContent($autoImportDataLockFilePath, $fileData['lastImportTime'], Thread::AUTO_IMPORT_HAVE_NOT_BEGUN);
+                $this->changeLastImportFileContent($fileData['lastImportTime'], Thread::AUTO_IMPORT_HAVE_NOT_BEGUN);
             }
         } elseif ($fileData['type'] == Thread::AUTO_IMPORT_OF_WEEKS) {
             // 周-自动导入
@@ -193,7 +194,7 @@ trait ImportLockFileTrait
                     }
                 }
             } else {
-                $this->changeLastImportFileContent($autoImportDataLockFilePath, $fileData['lastImportTime'], Thread::AUTO_IMPORT_HAVE_NOT_BEGUN);
+                $this->changeLastImportFileContent($fileData['lastImportTime'], Thread::AUTO_IMPORT_HAVE_NOT_BEGUN);
             }
         } elseif ($fileData['type'] == Thread::AUTO_IMPORT_OF_DAY) {
             // 天-自动导入
@@ -211,7 +212,7 @@ trait ImportLockFileTrait
                     }
                 }
             } else {
-                $this->changeLastImportFileContent($autoImportDataLockFilePath, $fileData['lastImportTime'], Thread::AUTO_IMPORT_HAVE_NOT_BEGUN);
+                $this->changeLastImportFileContent($fileData['lastImportTime'], Thread::AUTO_IMPORT_HAVE_NOT_BEGUN);
             }
         }
         return [];
@@ -229,12 +230,12 @@ trait ImportLockFileTrait
     }
 
     // 更新 自动导入时间
-    public function changeLastImportFileContent($autoImportDataLockFilePath, $time, $lastImportStatus)
+    public function changeLastImportFileContent($time, $lastImportStatus)
     {
-        $data = $this->getLockFileContent($autoImportDataLockFilePath);
+        $data = $this->getLockFileContent($this->autoImportDataLockFilePath);
         $data['lastImportTime'] = $time;
         $data['lastImportStatus'] = $lastImportStatus;
-        $writeAutoImportDataLockFile = fopen($autoImportDataLockFilePath, 'w');
+        $writeAutoImportDataLockFile = fopen($this->autoImportDataLockFilePath, 'w');
         fwrite($writeAutoImportDataLockFile, json_encode($data));
         return true;
     }
