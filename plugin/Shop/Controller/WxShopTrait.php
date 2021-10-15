@@ -54,9 +54,7 @@ trait WxShopTrait
      * @return ["wx_app_id","wx_app_secret","wx_qrcode"]
      */
     public function getSetting(){
-        if (empty($this->config)){
-            $this->config = require(__DIR__ . "/../config.php");
-        }
+        $this->getConfig();
 
         $settingData = PluginSettings::query()->where("app_id",$this->config["app_id"])->first();
         if (empty($settingData)){

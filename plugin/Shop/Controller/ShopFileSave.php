@@ -13,8 +13,6 @@ use League\Flysystem\Filesystem;
 
 class ShopFileSave
 {
-    private const COS_PATH="public/shop";
-
     private $fileSystem;
 
     /** @var SettingsRepository $settings */
@@ -29,14 +27,14 @@ class ShopFileSave
         try {
             $path="shop/".$fileName;
             $isRemote=false;
-            // 开启 cos 时
+            // 开启 cos 时，cos放一份
             if($this->settings->get('qcloud_cos', 'qcloud')){
                 $this->fileSystem->disk('cos')->put("public/".$path, $qrBuff);
                 $isRemote = true;
             }
             $this->fileSystem->disk('public')->put($path, $qrBuff);
 
-            return ["public/".$path, $isRemote];
+            return [$path, $isRemote];
         } catch (Exception $e) {
             if (empty($e->validator) || empty($e->validator->errors())) {
                 $errorMsg = $e->getMessage();
@@ -52,14 +50,24 @@ class ShopFileSave
     public function getFilePath($isRemote, $path){
 
         if($isRemote && $this->settings->get('qcloud_cos', 'qcloud')){
-
-            $xx = $this->fileSystem->disk('cos');
-
-            $url = $this->fileSystem->disk('cos')->url($path);
-
-        }else{
-            $url = $this->filesystem->disk('public')->url($path);
+            $isExist = $this->fileSystem->disk('cos')->has("public/".$path);
+            if ($isExist){
+                return  $this->fileSystem->disk('cos')->url("public/".$path);
+            }
         }
-        return $url;
+
+        return $this->filesystem->disk('public')->url($path);
+    }
+
+    public function getCurrentUrl($urlOld){
+        $isRemote = true;
+        $qcloudIndex = strpos($urlOld,"myqcloud.com");
+        if (!$qcloudIndex){
+            $isRemote = false;
+        }
+        $pathIndex = strpos($urlOld,"public/shop");
+        $path = substr($urlOld,$pathIndex+strlen("public/"));
+
+        return $this->getFilePath($isRemote,$path);
     }
 }

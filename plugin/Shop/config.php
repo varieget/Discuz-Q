@@ -19,10 +19,15 @@ return [
             'method' => 'GET',
             'controller' => \Plugin\Shop\Controller\WxShopListController::class
         ],
-        'wxshop/add' => [
-            'description' => '选择的微信小商店商品',
-            'method' => 'POST',
+        'wxshop/info' => [
+            'description' => '微信小商店信息',
+            'method' => 'GET',
             'controller' => \Plugin\Shop\Controller\WxShopAddController::class
+        ],
+        'shop/uploadimage' => [
+            'description' => '小商店上传图片',
+            'method' => 'POST',
+            'controller' => \Plugin\Shop\Controller\ShopUploadImageController::class
         ]
     ],
     'busi' => \Plugin\Shop\ShopBusi::class,
