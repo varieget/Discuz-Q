@@ -268,6 +268,15 @@ class CreateOrderController extends DzqController
                 $payeeId = 0;
                 break;
 
+            // 充值
+            case Order::ORDER_TYPE_CHARGE:
+                //判断充值开关是否打开
+                if(empty($this->settings->get('site_charge'))){
+                    throw new Exception(trans('order.site_charge_is_close'));
+                }
+                $amount = sprintf('%.2f', $data['amount']);
+                break;
+
             default:
                 $this->info('参数type枚举错误,传参枚举type:({$orderType}),用户id:{$this->user->id}');
                 throw new Exception(trans('order.order_type_error'));
