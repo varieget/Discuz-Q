@@ -86,7 +86,7 @@ trait WxShopTrait
         if ($result !== 0){
             return [$result,$wxApp];
         }
-        $accessToken = $wxApp->access_token->getToken(false);
+        $accessToken = $wxApp->access_token->getToken(true);
         if (empty($accessToken["access_token"])){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件配置错误"];
         }
