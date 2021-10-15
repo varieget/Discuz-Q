@@ -28,11 +28,15 @@ class ShopFileSave
             $path="shop/".$fileName;
             $isRemote=false;
             // 开启 cos 时，cos放一份
+            DzqLog::info('ShopFileSave::saveFile', [], "1111");
             if($this->settings->get('qcloud_cos', 'qcloud')){
+                DzqLog::info('ShopFileSave::saveFile', [], "1112");
                 $this->fileSystem->disk('cos')->put("public/".$path, $qrBuff);
                 $isRemote = true;
             }
+            DzqLog::info('ShopFileSave::saveFile', [], "1113");
             $this->fileSystem->disk('public')->put($path, $qrBuff);
+            DzqLog::info('ShopFileSave::saveFile', [], "1114");
 
             return [$path, $isRemote];
         } catch (Exception $e) {
@@ -49,14 +53,21 @@ class ShopFileSave
 
     public function getFilePath($isRemote, $path){
 
+        DzqLog::info('ShopFileSave::getFilePath', [], "2111");
         if($isRemote && $this->settings->get('qcloud_cos', 'qcloud')){
+            DzqLog::info('ShopFileSave::getFilePath', [], "2112");
             $isExist = $this->fileSystem->disk('cos')->has("public/".$path);
             if ($isExist){
-                return  $this->fileSystem->disk('cos')->url("public/".$path);
+                DzqLog::info('ShopFileSave::getFilePath', [], "2113");
+                $url = $this->fileSystem->disk('cos')->url("public/".$path);
+                DzqLog::info('ShopFileSave::getFilePath', [], "2114");
+                return $url;
             }
         }
-
-        return $this->filesystem->disk('public')->url($path);
+        DzqLog::info('ShopFileSave::getFilePath', [], "2115");
+        $url = $this->filesystem->disk('public')->url($path);
+        DzqLog::info('ShopFileSave::getFilePath', [], "2116");
+        return $url;
     }
 
     public function getCurrentUrl($urlOld){
