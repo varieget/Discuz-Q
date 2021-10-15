@@ -19,7 +19,7 @@
  *           @OA\Property(property="groupId", type="integer",description="用户组id（必填type类型：4）"),
  *           @OA\Property(property="payeeId", type="integer",description="收款人id"),
  *           @OA\Property(property="type", type="integer",description="交易类型；
- * 1：注册、2：打赏、3：付费主题、4：付费用户组、5：问答提问、6：问答围观、7：付费附件、8：站点续费、9：红包、10：悬赏、11：合并支付、20：文字贴红包、21：长文贴红包（必填）"),
+ * 1：注册、2：打赏、3：付费主题、4：付费用户组、5：问答提问、6：问答围观、7：付费附件、8：站点续费、9：红包、10：悬赏、11：合并支付、20：文字贴红包、21：长文贴红包（必填）、30：充值"),
  *        )
  *     ),
  *
