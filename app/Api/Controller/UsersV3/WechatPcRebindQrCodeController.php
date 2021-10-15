@@ -93,7 +93,7 @@ class WechatPcRebindQrCodeController extends AuthBaseController
                 $conData = $this->parseUrlQuery($redirectUri);
                 $redirectUri = $conData['url'];
                 $locationUrl = $this->url->action(
-                    '/' . Utils::getApiName() . '/users/wechat/h5.oauth?redirect=' . $redirectUri,
+                    '/apiv3/users/wechat/h5.oauth?redirect='.$redirectUri,
                     ['sessionToken' => $sessionToken]
                 );
                 $locationUrlArr = explode('redirect=', $locationUrl);
