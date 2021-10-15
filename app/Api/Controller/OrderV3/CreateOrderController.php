@@ -55,7 +55,7 @@ class CreateOrderController extends DzqController
         app('validator')->validate($data, [
             'amount'        => 'required_if:type,' . Order::ORDER_TYPE_REWARD . '|min:0.01',
             'is_anonymous'    => 'required|int|in:0,1',
-            'type'   => 'required|int|min:1|max:11',
+            'type'   => 'required|int|min:1|max:30',
             'thread_id'     => 'required_if:type,' . Order::ORDER_TYPE_REWARD . ',' . Order::ORDER_TYPE_THREAD . '|int'
         ]);
         $orderType = $data['type'];
