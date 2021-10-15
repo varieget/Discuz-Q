@@ -296,16 +296,18 @@ class ListPostsController extends DzqController
         }
 
         $userData = $user->toArray();
+        unset($userData['username']);
         $data = array_merge($userData, [
-            'isReal'   => !empty($user->realname)
+            'isReal' => !empty($user->realname)
         ]);
         if ($user->relationLoaded('groups')) {
             $groupInfos = $user->groups->toArray();
-            $data['groups'] =  [
-                    'id' => $groupInfos[0]['id'],
-                    'name' => $groupInfos[0]['name'],
-                    'isDisplay' => $groupInfos[0]['is_display'],
-                ];
+            $isDisplay = $groupInfos[0]['is_display'];
+            $data['groups'] = [
+                'id' => $groupInfos[0]['id'],
+                'name' => $isDisplay ? $groupInfos[0]['name'] : '',
+                'isDisplay' => $isDisplay,
+            ];
         }
 
         return $data;
