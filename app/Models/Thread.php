@@ -325,8 +325,7 @@ class Thread extends DzqModel
 
         if ($this->type == Thread::TYPE_OF_LONG || $this->type == Thread::TYPE_OF_ALL) {
             $firstPost = '';
-            $content = !empty($this->title) ? $this->title :
-                $this->type == Thread::TYPE_OF_ALL ? Post::addTagToThreadContent($this->id, $this->firstPost->content).Post::getContentTags($this->firstPost->content) : '';
+            $content = !empty($this->title) ? $this->title : ($this->type == Thread::TYPE_OF_ALL ? Post::addTagToThreadContent($this->id, $this->firstPost->content) . Post::getContentTags($this->firstPost->content) : '');
             if (!empty($content)) {
                 $firstPost = $substr ? Str::of($content)->substr(0, $substr) : $content;
                 $firstPost = $special->purify($firstPost);

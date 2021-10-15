@@ -144,7 +144,7 @@ class WechatH5QrCodeController extends AuthBaseController
                 $sessionToken = $token->token;
             }
             $query = array_merge($query, ['sessionToken' => $sessionToken]);
-            $locationUrl = $this->url->action('/' . Utils::getApiName() . '/users/wechat/h5.oauth?redirect=' . $redirectUri, $query);
+            $locationUrl = $this->url->action('/apiv3/users/wechat/h5.oauth?redirect='.$redirectUri, $query);
             $locationUrlArr = explode('redirect=', $locationUrl);
             $locationUrl = $locationUrlArr[0].'redirect='.urlencode($locationUrlArr[1]);
             //去掉无参数时最后一个是 ? 的字符
