@@ -131,6 +131,7 @@ class ForumSettingSerializerV3 extends AbstractSerializer
                 'usernameLoginIsdisplay' => $usernameLoginIsdisplay,
                 'open_api_log' => !empty($this->settings->get('open_api_log')) ? $this->settings->get('open_api_log') : '0',
                 'thread_tab' => (int) $this->settings->get('thread_tab', 'default'),   //首页导航选项 所有:1 推荐:2 精华:3 已关注:4
+                'site_charge' => !empty($this->settings->get('site_charge', 'default')) ?  (int) $this->settings->get('site_charge', 'default') : 0,   //站点是否开启充值
             ],
 
             // 注册设置
