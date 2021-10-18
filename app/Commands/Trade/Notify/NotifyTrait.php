@@ -218,7 +218,7 @@ trait NotifyTrait
                     $payeeOrderDetail = $this->orderByDetailType();
                     //充值人钱包明细记录
                     UserWalletLog::createWalletLog(
-                        0,
+                        $this->orderInfo->user->id,
                         $this->orderInfo->amount,              // 变动可用金额
                         0,                           // 变动冻结金额
                         $payeeOrderDetail['change_type'],       // 180 自动充值
