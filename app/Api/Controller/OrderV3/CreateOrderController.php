@@ -275,6 +275,7 @@ class CreateOrderController extends DzqController
                     throw new Exception(trans('order.site_charge_is_close'));
                 }
                 $amount = sprintf('%.2f', $data['amount']);
+                $payeeId = 0;
                 break;
 
             default:
