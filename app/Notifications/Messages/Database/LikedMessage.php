@@ -62,7 +62,8 @@ class LikedMessage extends SimpleMessage
      */
     public function changeBuild(&$build)
     {
-        $result = $this->post->getSummaryContent(Post::NOTICE_WITHOUT_LENGTH);
+        $oldContent = $this->post->content;
+        [$this->post, $result] = Post::changeOriginNotification($this->post);
 
         /**
          * 判断是否是楼中楼的回复
@@ -84,7 +85,8 @@ class LikedMessage extends SimpleMessage
             // 不是长文没有标题则使用首帖内容
             $firstContent = $result['first_content'];
 
-            $build['post_content'] = $content == $firstContent ? '' : $content;
+            // $build['post_content'] = $content == $firstContent ? '' : $content;
+            $build['post_content'] = $content == $firstContent ? $firstContent : $content;
             $build['post_created_at'] = $this->post->formatDate('created_at');
         }
 
@@ -97,5 +99,6 @@ class LikedMessage extends SimpleMessage
             $build['thread_title'] = "";
         }
         $build['thread_created_at'] = $this->post->thread->formatDate('created_at');
+        $this->post->content = $oldContent;
     }
 }

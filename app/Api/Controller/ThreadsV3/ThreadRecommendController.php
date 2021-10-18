@@ -22,6 +22,7 @@ use App\Models\Category;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTag;
+use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
@@ -78,16 +79,23 @@ class ThreadRecommendController extends DzqController
         foreach ($threads as $thread) {
             $title = $thread['title'];
             $threadid = $thread['id'];
-            if (empty($title)) {
-                if (isset($posts[$threadid])) {
+            $contentTags = '';
+            if (isset($posts[$threadid])) {
+                $contentTags = Post::getContentTags($posts[$threadid]->content);
+                if (empty($title)) {
                     $title = Post::instance()->getContentSummary($posts[$threadid]);
                 }
             }
+            $title = str_replace(PHP_EOL, "", $title);
+            if (!empty($contentTags)) {
+                $title = $title . $contentTags;
+            }
+
             // $linkString .= $title;
             $threadTags = [];
             isset($tags[$threadid]) && $threadTags = $tags[$threadid];
             if (isset($newTags[$threadid])) {
-                if (isset($newTags[$threadid][ThreadTag::IMAGE])) {
+                if (isset($newTags[$threadid][ThreadTag::IMAGE]) && !strpos($title, "[图片]")) {
                     $title = $title . '[图片]';
                 }
                 if (isset($newTags[$threadid][ThreadTag::VIDEO])) {
@@ -98,6 +106,9 @@ class ThreadRecommendController extends DzqController
                 }
                 if (isset($newTags[$threadid][ThreadTag::VOICE])) {
                     $title = $title . '[语音条]';
+                }
+                if (isset($newTags[$threadid][TomConfig::TOM_VOTE])) {
+                    $title = $title . '[投票]';
                 }
             }
             $data [] = [

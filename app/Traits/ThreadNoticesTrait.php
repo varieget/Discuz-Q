@@ -66,8 +66,11 @@ trait ThreadNoticesTrait
         }
 
         $message = $message ?: '无';
+        $oldContent = $thread->firstPost->content;
         if (!empty($thread->title)) {
-            $thread->firstPost->content = strpos($thread->firstPost->content, '<img') ? $thread->title . '[图片]' : $thread->title;
+            $tags = Post::getContentTags($thread->firstPost->content);
+            $thread->firstPost->content = $thread->title . $tags;
+            $thread->firstPost->content = Post::addTagToThreadContent($thread->id, $thread->firstPost->content);
         }
 
         switch ($type) {
@@ -84,6 +87,7 @@ trait ThreadNoticesTrait
                 $this->sendIsDeleted($thread, $actor, ['refuse' => $message]);
                 break;
         }
+        $thread->firstPost->content = $oldContent;
     }
 
     /**

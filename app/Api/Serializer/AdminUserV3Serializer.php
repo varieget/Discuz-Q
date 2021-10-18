@@ -33,8 +33,8 @@ class AdminUserV3Serializer extends AbstractSerializer
      */
     public function getDefaultAttributes($model)
     {
-        $attributes = $this->getCommonAttributes($model);
-        $attributes += [];
+        $commonAttributes = $this->getCommonAttributes($model);
+        $attributes = [];
 
         // 限制字段 本人/权限 显示
         $attributes += [
@@ -52,6 +52,7 @@ class AdminUserV3Serializer extends AbstractSerializer
             'registerIp'    => $model->register_ip,
             'lastLoginIp'   => $model->last_login_ip
         ];
+        $attributes = array_merge_recursive($attributes, $commonAttributes);
 
         return $attributes;
     }

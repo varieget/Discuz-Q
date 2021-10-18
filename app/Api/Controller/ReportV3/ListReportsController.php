@@ -104,6 +104,7 @@ class ListReportsController extends DzqAdminController
     {
         return [
             'pid' => $user['id'],
+            'userId' => $user['id'],
             'userName' => $user['username'],
         ];
     }
@@ -112,6 +113,7 @@ class ListReportsController extends DzqAdminController
     {
         return [
             'pid' => $group['group_id'],
+            'groupId' => $group['group_id'],
             'groupName' => $group['groups']['name'],
             'groupIcon' => $group['groups']['icon']
         ];
