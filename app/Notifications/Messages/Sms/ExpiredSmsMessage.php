@@ -64,8 +64,10 @@ class ExpiredSmsMessage extends SimpleMessage
         /**
          * 设置父类 模板数据
          * @parem $user_id 提问人用户ID (可用于跳转到用户信息)
-         * @parem $user_name 提问人
-         * @parem $be_user_name 被提问人
+         * @parem $user_name 提问人（用户名）
+         * @parem $nick_name 提问人（昵称）
+         * @parem $be_user_name 被提问人（用户名）
+         * @parem $be_nick_name 被提问人（昵称）
          * @parem $question_price 提问价格 (解冻金额)
          * @parem $question_created_at 提问创建时间
          * @parem $question_expired_at 提问过期时间
@@ -75,7 +77,9 @@ class ExpiredSmsMessage extends SimpleMessage
         $this->setTemplateData([
             '{$user_id}'             => $this->question->user->id,
             '{$user_name}'           => $this->question->user->username,
+            '{$nick_name}'           => $this->question->user->nickname,
             '{$be_user_name}'        => $this->question->beUser->username,
+            '{$be_nick_name}'        => $this->question->beUser->nickname,
             '{$question_price}'      => $this->question->price,
             '{$question_created_at}' => $this->question->created_at,
             '{$question_expired_at}' => $this->question->expired_at,

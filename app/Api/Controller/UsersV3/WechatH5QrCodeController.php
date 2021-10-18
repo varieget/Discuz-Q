@@ -24,6 +24,7 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Discuz\Base\DzqLog;
+use Discuz\Common\Utils;
 use Endroid\QrCode\QrCode;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Discuz\Auth\AssertPermissionTrait;

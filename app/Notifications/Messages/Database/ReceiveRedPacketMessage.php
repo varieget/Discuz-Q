@@ -85,6 +85,7 @@ class ReceiveRedPacketMessage extends SimpleMessage
             'order_id' => 0,    // 订单 id
             'thread_id' => 0,   // 必传 可为0 主题关联 id
             'thread_username' => 0,
+            'thread_nickname' => 0,
             'thread_title' => 0,
             'content' => '',
             'thread_created_at' => '',
@@ -115,6 +116,7 @@ class ReceiveRedPacketMessage extends SimpleMessage
         $this->initData['order_type'] = $this->order->type; // 1：注册，2：打赏，3：付费主题，4：付费用户组
         $this->initData['thread_id'] = $this->order->thread->id ?? $this->order->id; // 必传
         $this->initData['thread_username'] = $this->order->thread->user->username ?? $this->data['raw']['actor_username']; // 必传主题用户名
+        $this->initData['thread_nickname'] = $this->order->thread->user->nickname ?? $this->data['raw']['thread_nickname']; // 必传主题昵称
         $this->initData['thread_title'] = $this->order->thread->title ?? $this->data['message'];
         $this->initData['thread_created_at'] = (string) $this->order->created_at;
         $this->initData['amount'] = $this->data['raw']['actual_amount']; // 支付金额 - 分成金额 (string精度问题)

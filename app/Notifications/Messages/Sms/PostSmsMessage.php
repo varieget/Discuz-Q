@@ -64,9 +64,11 @@ class PostSmsMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
-         * @parem $user_name 帖子创建人ID
-         * @parem $user_name 帖子创建人
+         * @parem $user_id 帖子创建人ID
+         * @parem $user_name 帖子创建人用户名
+         * @parem $nick_name 帖子创建人昵称
          * @parem $actor_name 当前操作人(一般为管理员)
+         * @parem $actor_nickname 当前操作人昵称(一般为管理员)
          * @parem $message_change 修改帖子的内容
          * @parem $thread_id 主题ID （可用于跳转参数）
          * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
@@ -76,7 +78,9 @@ class PostSmsMessage extends SimpleMessage
         $this->setTemplateData([
             '{$user_id}'        => $this->post->user->id,
             '{$user_name}'      => $this->post->user->username,
+            '{$nick_name}'      => $this->post->user->nickname,
             '{$actor_name}'     => $this->actor->username,
+            '{$actor_nickname}' => $this->actor->nickname,
             '{$message_change}' => $this->strWords(Arr::get($data, 'message', '')),
             '{$thread_id}'      => $this->post->thread->id,
             '{$thread_title}'   => $this->strWords($threadTitle),

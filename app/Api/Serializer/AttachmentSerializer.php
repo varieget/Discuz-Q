@@ -18,7 +18,6 @@
 
 namespace App\Api\Serializer;
 
-use App\Api\Controller\AttachmentV3\AttachmentTrait;
 use App\Models\Attachment;
 use App\Traits\HasPaidContent;
 use Carbon\Carbon;
@@ -28,11 +27,9 @@ use Illuminate\Contracts\Filesystem\Factory as Filesystem;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Support\Str;
 use Tobscure\JsonApi\Relationship;
-
+use  function Qcloud\Cos\encodeKey;;
 class AttachmentSerializer extends AbstractSerializer
 {
-    use AttachmentTrait;
-
     use HasPaidContent;
 
     /**
@@ -152,14 +149,8 @@ class AttachmentSerializer extends AbstractSerializer
     {
         if ($user) $this->actor = $user;
         if ($model->is_remote) {
-            if(strpos($model->full_path,'%') !== false){
-                $model->attachment = urldecode($model->attachment);
-            }
-            $imgUrl = $this->remoteUrl($model->full_path);
-
-            $url = $this->getEncodeAttachmentUrl($model,$imgUrl);
-
-            $blurUrl = $this->remoteUrl($model->blur_path);
+            $url = $this->getImgUrl($model,$model->full_path);
+            $blurUrl = $this->getImgUrl($model,$model->blur_path);
             $thumbUrl = $url . (strpos($url, '?') === false ? '?' : '&') . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
         } else {
             $url = $this->localUrl($model->full_path);
@@ -224,11 +215,12 @@ class AttachmentSerializer extends AbstractSerializer
     }
 
 
-    public function getImgUrl($model)
+    public function getImgUrl($model, $path = '')
     {
-        return $this->settings->get('qcloud_cos_sign_url', 'qcloud', true)
-            ? $this->filesystem->disk('attachment_cos')->temporaryUrl($model->full_path, Carbon::now()->addDay())
-            : $this->filesystem->disk('attachment_cos')->url($model->full_path);
+        if (empty($path)) $path = $model->full_path;
+        $url = $this->remoteUrl($path);
+        $model->is_remote && $url = str_replace($model->attachment, encodeKey($model->attachment), $url);
+        return $url;
     }
 
 

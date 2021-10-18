@@ -53,6 +53,8 @@ class ListGroupsController extends DzqAdminController
             ]);
         }
 
+        $this->checkDefault();
+
         $groups = Group::query()
             ->where('id', '<>', Group::UNPAID)
             ->when($isDefault, function (Builder $query) {
@@ -88,7 +90,10 @@ class ListGroupsController extends DzqAdminController
                 'scale' => $lists['scale'],
                 'isSubordinate' => $lists['is_subordinate'],
                 'isCommission' => $lists['is_commission'],
-                'checked'           => in_array($lists['id'], $this->getCheckList()) ? 1 : 0
+                'checked'           => in_array($lists['id'], $this->getCheckList()) ? 1 : 0,
+                'level' => $lists['level'],
+                'description' => $lists['description'],
+                'notice' => $lists['notice']
             ];
         }
         $data = $this->camelData($data);
@@ -102,6 +107,18 @@ class ListGroupsController extends DzqAdminController
         if (empty($groupsList)) return [];
         $groupsList = explode(',',$groupsList['group_ids']);
         return $groupsList;
+    }
+
+    public function checkDefault(){
+        $num = Group::query()->where("is_paid",Group::IS_PAID)->where("default",1)->count();
+        if ($num == 0){
+            return;
+        }
+        Group::query()->where("is_paid",Group::IS_PAID)->update(["default"=>0]);
+        $num = Group::query()->where("default",1)->count();
+        if ($num == 0){
+            Group::query()->where("id",Group::MEMBER_ID)->update(["default"=>1]);
+        }
     }
 
 }

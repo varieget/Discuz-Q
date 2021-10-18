@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Messages\Wechat;
 
+use App\Models\NotificationTiming;
 use App\Models\Order;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -54,6 +55,9 @@ class ThreadRewardedExpiredWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
+        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
+        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
+
         $message = Arr::get($this->data, 'message', '');
         $threadId = Arr::get($this->data, 'raw.thread_id', 0);
         $actualAmount = Arr::get($this->data, 'raw.actual_amount', 0); // 实际金额
@@ -64,6 +68,7 @@ class ThreadRewardedExpiredWechatMessage extends SimpleMessage
         });
 
         $actorName = Arr::get($this->data, 'raw.actor_username', '');  // 发送人姓名
+        $nickname = Arr::get($this->data, 'raw.actor_nickname', '');  // 发送人姓名
 
         // 主题ID为空时跳转到首页
         if (empty($threadId)) {
@@ -74,17 +79,21 @@ class ThreadRewardedExpiredWechatMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
-         * @parem $user_name
+         * @parem $username
+         * @parem $nickname
          * @parem $order_type_name
          * @parem $actual_amount
          * @parem $content
+         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$username}'            => $actorName,
+            '{$nickname}'            => $nickname,
             '{$order_type_name}'     => $orderName,
             '{$actual_amount}'       => $actualAmount,
             '{$content}'             => $this->strWords($message),
-            '{$thread_id}'           => $threadId
+            '{$thread_id}'           => $threadId,
+            '{$notification_num}'    => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
         // build data
         $expand = [

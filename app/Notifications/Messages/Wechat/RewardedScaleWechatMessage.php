@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Messages\Wechat;
 
+use App\Models\NotificationTiming;
 use App\Models\Order;
 use App\Models\Thread;
 use App\Models\User;
@@ -62,6 +63,9 @@ class RewardedScaleWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
+        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
+        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
+
         switch ($this->data['notify_type']) {
             default:
             case 'paid_site':
@@ -84,20 +88,24 @@ class RewardedScaleWechatMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
-         * @parem $user_name 支付人
+         * @parem $user_name 支付人（用户名）
+         * @parem $nick_name 支付人（昵称）
          * @parem $order_sn 订单编号
          * @parem $payment_sn 支付编号
          * @parem $order_type_name 订单支付类型 (注册/打赏/付费主题/付费附件)
          * @parem $boss_amount 上级实际分成金额
          * @parem $title 主题标题/注册站点 (如果是注册站点，该字段是"注册站点")
+         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$user_name}'       => $user->username,
+            '{$nick_name}'       => $user->nickname,
             '{$order_sn}'        => $this->order->order_sn,
             '{$payment_sn}'      => $this->order->payment_sn,
             '{$order_type_name}' => $orderTypeName,
             '{$boss_amount}'     => $this->order->calculateAuthorAmount(),
             '{$title}'           => $this->strWords($title),
+            '{$notification_num}'    => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
 
         // build data

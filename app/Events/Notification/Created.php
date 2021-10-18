@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +16,22 @@
  * limitations under the License.
  */
 
-namespace Plugin\Jobs\Console;
+namespace App\Events\Notification;
 
+use App\Models\NotificationTiming;
 
-use Discuz\Base\DzqCommand;
-
-class TestCommand extends DzqCommand
+class Created
 {
-    protected $signature = 'job:test';
-    protected $description = '执行一个脚本命令,控制台执行[php disco job:test]';
-    protected function main()
+    /**
+     * @var NotificationTiming
+     */
+    public $notificationTiming;
+
+    /**
+     * @param NotificationTiming $notificationTiming
+     */
+    public function __construct(NotificationTiming $notificationTiming)
     {
-        $this->info('Hello Discuz! Q Plugin Job');
+        $this->notificationTiming = $notificationTiming;
     }
 }

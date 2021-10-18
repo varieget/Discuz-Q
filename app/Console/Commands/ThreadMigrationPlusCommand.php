@@ -115,7 +115,7 @@ class ThreadMigrationPlusCommand extends AbstractCommand
                     if(!empty($need_insert_ids)){
                         $this->db->beginTransaction();
                         foreach ($need_insert_ids as $insert_id){
-                            $content = $posts_bakv2s[$insert_id]['content'];
+                            $content = $posts_bakv2s[$insert_id]->content;
                             try {
                                 if(!empty($content)){
                                     $content = self::s9eRender($content);
@@ -123,29 +123,39 @@ class ThreadMigrationPlusCommand extends AbstractCommand
                                 }
                             }catch (\Exception $e){
                                 //如果这里报错，说明处理到了升级过程中发的评论了，V3 格式，则保持原数据格式
-                                $content = $posts_bakv2s[$insert_id]['content'];
+                                $content = $posts_bakv2s[$insert_id]->content;
                             }
                             $insert_post[] = [
-                                'id'    =>  $posts_bakv2s[$insert_id]['id'],
-                                'user_id'    =>  $posts_bakv2s[$insert_id]['user_id'],
-                                'thread_id'    =>  $posts_bakv2s[$insert_id]['thread_id'],
-                                'reply_post_id'    =>  $posts_bakv2s[$insert_id]['reply_post_id'],
-                                'reply_user_id'    =>  $posts_bakv2s[$insert_id]['reply_user_id'],
-                                'comment_post_id'    =>  $posts_bakv2s[$insert_id]['comment_post_id'],
-                                'comment_user_id'    =>  $posts_bakv2s[$insert_id]['comment_user_id'],
+                                'id'    =>  $posts_bakv2s[$insert_id]->id,
+                                'user_id'    =>  $posts_bakv2s[$insert_id]->user_id,
+                                'thread_id'    =>  $posts_bakv2s[$insert_id]->thread_id,
+                                'reply_post_id'    =>  $posts_bakv2s[$insert_id]->reply_post_id,
+                                'reply_user_id'    =>  $posts_bakv2s[$insert_id]->reply_user_id,
+                                'comment_post_id'    =>  $posts_bakv2s[$insert_id]->comment_post_id,
+                                'comment_user_id'    =>  $posts_bakv2s[$insert_id]->comment_user_id,
                                 'content'    =>  $content,
-                                'ip'    =>  $posts_bakv2s[$insert_id]['ip'],
-                                'port'    =>  $posts_bakv2s[$insert_id]['port'],
-                                'reply_count'    =>  $posts_bakv2s[$insert_id]['reply_count'],
-                                'like_count'    =>  $posts_bakv2s[$insert_id]['like_count'],
-                                'created_at'    =>  $posts_bakv2s[$insert_id]['created_at'],
-                                'updated_at'    =>  $posts_bakv2s[$insert_id]['updated_at'],
-                                'deleted_at'    =>  $posts_bakv2s[$insert_id]['deleted_at'],
-                                'deleted_user_id'    =>  $posts_bakv2s[$insert_id]['deleted_user_id'],
-                                'is_first'    =>  $posts_bakv2s[$insert_id]['is_first'],
-                                'is_comment'    =>  $posts_bakv2s[$insert_id]['is_comment'],
-                                'is_approved'    =>  $posts_bakv2s[$insert_id]['is_approved'],
+                                'ip'    =>  $posts_bakv2s[$insert_id]->ip,
+                                'port'    =>  $posts_bakv2s[$insert_id]->port,
+                                'reply_count'    =>  $posts_bakv2s[$insert_id]->reply_count,
+                                'like_count'    =>  $posts_bakv2s[$insert_id]->like_count,
+                                'created_at'    =>  $posts_bakv2s[$insert_id]->created_at,
+                                'updated_at'    =>  $posts_bakv2s[$insert_id]->updated_at,
+                                'deleted_at'    =>  $posts_bakv2s[$insert_id]->deleted_at,
+                                'deleted_user_id'    =>  $posts_bakv2s[$insert_id]->deleted_user_id,
+                                'is_first'    =>  $posts_bakv2s[$insert_id]->is_first,
+                                'is_comment'    =>  $posts_bakv2s[$insert_id]->is_comment,
+                                'is_approved'    =>  $posts_bakv2s[$insert_id]->is_approved,
                             ];
+                            if(count($insert_post) > 50){
+                                //先插 posts
+                                $res = Post::query()->insert($insert_post);
+                                if($res === false){
+                                    $this->db->rollBack();
+                                    $this->info('插入posts出错');
+                                    break;
+                                }
+                                $insert_post = [];
+                            }
                         }
                         //先插 posts
                         $res = Post::query()->insert($insert_post);

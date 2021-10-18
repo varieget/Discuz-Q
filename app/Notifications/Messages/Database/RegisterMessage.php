@@ -49,6 +49,7 @@ class RegisterMessage extends SimpleMessage
     public function contentReplaceVars($data)
     {
         return [
+            $this->actor->username,
             $this->actor->nickname,
             $this->settings->get('site_name'),
             $this->actor->groups->pluck('name')->join('、'),

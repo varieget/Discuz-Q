@@ -17,10 +17,10 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-use App\Api\Controller\AttachmentV3\AttachmentTrait;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
 use App\Common\CacheKey;
+use App\Common\DzqRegex;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Models\PluginGroupPermission;
@@ -47,14 +47,12 @@ use App\SmsMessages\SendCodeMessage;
 use Discuz\Qcloud\QcloudTrait;
 use Illuminate\Support\Arr;
 use App\Common\Utils;
-use function Qcloud\Cos\encodeKey;
 
 trait ThreadTrait
 {
     use TomTrait;
     use QcloudTrait;
     use PostNoticesTrait;
-    use AttachmentTrait;
 
     private $loginUserData = [];
 
@@ -103,7 +101,7 @@ trait ThreadTrait
             //修改创建时间为变更时间
             'issueAt' => date('Y-m-d H:i:s', strtotime($thread['issue_at'])),
             'updatedAt' => date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
-            'diffTime' => Utils::diffTime($thread['issue_at']),
+            'diffTime' => Utils::diffTime($thread['created_at']),
             'user' => $userField,
             'group' => $groupField,
             'likeReward' => $likeRewardField,
@@ -605,7 +603,7 @@ trait ThreadTrait
 
     private function optimizeTopics($text)
     {
-        preg_match_all('/#((?![<|>|;|&]).)+?#/i', $text, $m1);
+        preg_match_all(DzqRegex::$topic, $text, $m1);
         $topics = $m1[0];
         $topics = array_values($topics);
         return $topics;
@@ -637,7 +635,7 @@ trait ThreadTrait
 
     private function renderTopic($text)
     {
-        preg_match_all('/#((?![<|>|;|&]).)+?#/i', $text, $topic);
+        preg_match_all(DzqRegex::$topic, $text, $topic);
         if (empty($topic)) {
             return $text;
         }
@@ -763,12 +761,7 @@ trait ThreadTrait
                 $serializer = $this->app->make(AttachmentSerializer::class);
                 foreach ($content_attachments as $val) {
                     if ($val->is_remote) {
-                        if(strpos($val->attachment,'%') !== false) {
-                            $val->attachment = urldecode($val->attachment);
-                        }
-                        $imgUrl = $serializer->getImgUrl($val);
-                        $imgUrl = $this->getEncodeAttachmentUrl($val,$imgUrl);
-                        $attachments[$val->id] = $imgUrl;
+                        $attachments[$val->id] = $serializer->getImgUrl($val);
                     }
                 }
             }

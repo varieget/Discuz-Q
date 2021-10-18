@@ -19,17 +19,14 @@ namespace App\Modules\ThreadTom;
 
 
 use App\Common\CacheKey;
+use App\Common\PluginEnum;
 use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Models\ThreadRedPacket;
 use App\Models\ThreadReward;
 use Discuz\Base\DzqCache;
-use App\Common\ResponseCode;
-use App\Models\Permission;
 use App\Models\ThreadTom;
-use App\Models\User;
 use Discuz\Base\DzqLog;
-use Discuz\Common\Utils;
 use Illuminate\Support\Arr;
 
 trait TomTrait
@@ -100,17 +97,11 @@ trait TomTrait
         $config = TomConfig::$map;
         $pluginList = \Discuz\Common\Utils::getPluginList();
         foreach ($pluginList as $item) {
-            $config[$item['app_id']] = [
-                'name_en' => $item['name_en'],
-                'service' => $item['busi']
-            ];
-            if (isset($item["tom_ids"])){
-                foreach ($item["tom_ids"] as $tomId){
-                    $config[$tomId] = [
-                        'name_en' => $item['name_en'],
-                        'service' => $item['busi']
-                    ];
-                }
+            if ($item['type'] == PluginEnum::PLUGIN_THREAD) {
+                $config[$item['app_id']] = [
+                    'name_en' => $item['name_en'],
+                    'service' => $item['busi']
+                ];
             }
         }
         return $config;

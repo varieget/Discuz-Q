@@ -33,6 +33,8 @@ class ResourceUserWalletAdminController extends DzqAdminController
     public $include = [
     ];
 
+    protected $paramsAlias = ['uid' => 'userId'];
+
     public function __construct(UserWalletRepository $wallet, SettingsRepository $setting)
     {
         $this->wallet = $wallet;
@@ -47,15 +49,15 @@ class ResourceUserWalletAdminController extends DzqAdminController
 
     public function main()
     {
-        $user_id = $this->inPut('uid');
+        $user_id = $this->inPut('uid');//推荐使用userId参数
 
-        if (empty($user_id)){
+        if (empty($user_id)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, 'ID为'.$user_id.'用户不存在');
         }
 
         $data = $this->wallet->findOrFail($user_id, $this->user);
 
-        $dat = User::query()->where('id','=', $user_id)->pluck('username')->toArray();
+        $dat = User::query()->where('id', '=', $user_id)->pluck('username')->toArray();
 
         $data->username = $dat[0];
 
@@ -63,8 +65,7 @@ class ResourceUserWalletAdminController extends DzqAdminController
 
         $data = $this->camelData($data);
 
-        return $this->outPut(ResponseCode::SUCCESS,'', $data);
-
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 
 

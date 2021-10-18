@@ -124,6 +124,7 @@ trait ForumSettingSerializerTrait
             // 其它信息(非setting中的信息)
             'other' => [
                 'thread_optimize' => (bool) $this->settings->get('thread_optimize', 'default'),   // 小程序一键开启和关闭状态
+                'thread_tab'                 => (int) $this->settings->get('thread_tab', 'default'),   //首页导航选项 所有:1 推荐:2 精华:3 已关注:4
             ],
 
             'lbs' => [

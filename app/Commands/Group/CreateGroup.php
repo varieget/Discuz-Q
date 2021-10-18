@@ -83,23 +83,27 @@ class CreateGroup
         $group->type = $this->data['type'];
         $group->color = $this->data['color'];
         $group->icon = $this->data['icon'];
-        $group->is_display =(bool) $this->data['isDisplay'];
+        $group->is_display = $this->checkBool($this->data['isDisplay']);
         $group->is_paid = (int)$this-> data['isPaid'];
-        $group->default =(bool) $this->data['default'];
+        $group->default =$this->checkBool($this->data['default']);
         $group->fee = (int)$this->data['fee'];
         $group->days =(int) $this->data['days'];
         $group->scale =(double) $this->data['scale'];
-        $group->is_subordinate = (bool)$this->data['isSubordinate'];
-        $group->is_commission =(bool) $this->data['isCommission'];
+        $group->is_subordinate = $this->checkBool($this->data['isSubordinate']);
+        $group->is_commission =$this->checkBool($this->data['isCommission']);
 
-        if ($group->is_paid) {
+
+        if ($group->is_paid == Group::IS_PAID) {
             $fee = $this->data['fee'];
             $group->fee = sprintf('%.2f', $fee);
-        }
 
-        if ($group->is_paid) {
-            $group->days = $this->data['days'];
+            $group->days = (int)$this->data['days'];
+
+            $group->level = (int)$this->data['level'];
         }
+        $group->description = $this->data['description'];
+        $group->notice = $this->data['notice'];
+
 
         $group->raise(new Created($group));
 
@@ -116,5 +120,18 @@ class CreateGroup
 
         $this->dispatchEventsFor($group, $this->actor);
         return $group;
+    }
+
+    private function checkBool($var){
+        if (is_string($var)){
+            if (empty($var)){
+                return false;
+            }
+            return 'false' == $var?false:true;
+        }else if (is_bool($var)){
+            return $var;
+        }else{
+            return true;
+        }
     }
 }

@@ -23,6 +23,7 @@ use App\Console\Commands\AttachmentAttributeUpdateCommand;
 use App\Console\Commands\AttachmentClearCommand;
 use App\Console\Commands\AvatarClearCommand;
 use App\Console\Commands\FinanceCreateCommand;
+use App\Console\Commands\GroupExpiredNoticeCommand;
 use App\Console\Commands\InviteExpireCommand;
 use App\Console\Commands\QueryWechatOrderConmmand;
 use App\Console\Commands\QuestionClearCommand;
@@ -52,7 +53,8 @@ class Kernel extends ConsoleKernel
         AttachmentAttributeUpdateCommand::class,
         CreateCrawlerDataCommand::class,
         MonitorSystemTaskCommand::class,
-        CreateCrawlerOfficialAccountDataCommand::class
+        CreateCrawlerOfficialAccountDataCommand::class,
+        GroupExpiredNoticeCommand::class
     ];
 
     /**
@@ -84,5 +86,8 @@ class Kernel extends ConsoleKernel
         //监听定时任务
         $schedule->command('task:start')->everyMinute();
         $schedule->command('register:notice')->everyMinute();
+
+        //用户组到期提醒
+        $schedule->command('group:expiredNotice')->daily();
     }
 }

@@ -48,6 +48,7 @@ class ThreadRewardedMessage extends SimpleMessage
             'order_id' => $this->order->id,    // 订单 id
             'thread_id' => $this->data['raw']['thread_id'],   // 必传 可为0 主题关联 id
             'thread_username' => $this->data['raw']['actor_username'],
+            'thread_nickname' => $this->data['raw']['actor_nickname'],
             'thread_title' => $this->data['raw']['content'],
             'content' => $this->data['raw']['content'],
             'thread_created_at' => $this->data['raw']['created_at'],

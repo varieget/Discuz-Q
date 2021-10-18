@@ -156,7 +156,8 @@ class SmsLoginController extends AuthBaseController
                         $data = [
                             'sessionToken'  => $token->token,
                             'nickname'      => $nickname,
-                            'uid'           => !empty($mobileCode->user->id) ? $mobileCode->user->id : 0
+                            'uid'           => !empty($mobileCode->user->id) ? $mobileCode->user->id : 0,
+                            'userId'        => !empty($mobileCode->user->id) ? $mobileCode->user->id : 0 //推荐使用
                         ];
                         $this->connection->commit();
                         $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', array_merge($data, $result));

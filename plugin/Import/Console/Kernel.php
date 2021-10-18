@@ -15,12 +15,16 @@
  * limitations under the License.
  */
 
-namespace Plugin\Jobs;
+namespace Plugin\Import\Console;
 
 
-use App\Modules\ThreadTom\TomBaseBusi;
+use Discuz\Base\DzqKernel;
+use Illuminate\Console\Scheduling\Schedule;
 
-class JobBusi extends TomBaseBusi
+class Kernel extends DzqKernel
 {
-
+    public function schedule(Schedule $schedule)
+    {
+        $schedule->command('importData:insertWeiBoData')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
+    }
 }

@@ -19,10 +19,12 @@ namespace App\Api\Controller\UsersV3;
 
 use App\Common\ResponseCode;
 use App\Models\Dialog;
+use App\Models\Group;
 use App\Models\Order;
 use App\Models\Thread;
 use App\Models\User;
 use App\Repositories\UserRepository;
+use Carbon\Carbon;
 use Discuz\Base\DzqController;
 
 class ProfileController extends DzqController
@@ -109,6 +111,15 @@ class ProfileController extends DzqController
                 ->whereNull('deleted_at')
                 ->where('is_draft', Thread::IS_NOT_DRAFT)
                 ->count();
+        }else{
+            //查看他人信息主题数需排除匿名贴,草稿，且需已审核的帖子
+            $user->thread_count = Thread::query()
+                ->whereNull('deleted_at')
+                ->whereNotNull('user_id')
+                ->where('user_id',$user_id)
+                ->where('is_draft', Thread::IS_NOT_DRAFT)
+                ->where('is_approved', Thread::BOOL_YES)
+                ->where('is_anonymous', Thread::IS_NOT_ANONYMOUS)->count();
         }
 
         $data = $this->getData($user);
@@ -122,4 +133,46 @@ class ProfileController extends DzqController
         }
         $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
+
+    private function getGroupInfo($group)
+    {
+        //判断用户当前所在用户组是否是最高级别
+        $level = $group['groups']['level'];
+        $is_top = Group::query()->where('level', '>', $level)->doesntExist();
+        $hasPayGroup = Group::query()->where('level','>',0)->exists();
+        // 计算剩余时间和展示类型
+        $type_time = 0;
+        $remain_time = 0;
+        if(!empty($group['expiration_time'])){      //天
+            $remain_time = Carbon::parse($group['expiration_time'])->diffInDays(Carbon::now());
+            if(empty($remain_time)){                //时
+                $type_time = 1;
+                $remain_time = Carbon::parse($group['expiration_time'])->diffInHours(Carbon::now());
+                if(empty($remain_time)){            //分
+                    $type_time = 2;
+                    $remain_time = Carbon::parse($group['expiration_time'])->diffInMinutes(Carbon::now());
+                }
+            }
+        }
+
+
+        return [
+            'pid' => $group['group_id'],
+            'groupId' => $group['group_id'],
+            'groupName' => $group['groups']['name'],
+            'isTop' =>  $is_top,
+            'expirationTime'    =>  $group['expiration_time'],
+            'color' =>  $group['groups']['color'],
+            'amount'   =>  (double)$group['groups']['fee'],
+            'level' =>  $group['groups']['level'],
+            'remainDays'    =>  $remain_time,
+            'remainTime' => $remain_time,
+            'typeTime' => $type_time,
+            'description' => $group['groups']['description'],
+            'hasPayGroup' => $hasPayGroup
+        ];
+    }
+
+
+
 }

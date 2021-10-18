@@ -127,6 +127,9 @@ trait TemplateVariables
         'system.question.asked'        => '问答提问通知', 'wechat.question.asked' => '问答提问通知',
         'system.question.answered'     => '问答回答通知', 'wechat.question.answered' => '问答回答通知',
         'system.question.expired'      => '问答过期通知', 'wechat.question.expired' => '问答过期通知',
+        'system.red_packet.gotten'     => '得到红包通知', 'wechat.red_packet.gotten' => '得到红包通知',
+        'system.question.rewarded'     => '悬赏问答通知', 'wechat.question.rewarded' => '悬赏问答通知',
+        'system.question.rewarded.expired' => '悬赏过期通知', 'wechat.question.rewarded.expired' => '悬赏过期通知',
     ];
 
     /**
@@ -200,6 +203,9 @@ trait TemplateVariables
         'red_packet.gotten'         => '得到红包通知',
         'question.rewarded'         => '悬赏问答通知',
         'question.rewarded.expired' => '悬赏过期通知',
+        'system.user.group.upgrade' => '用户组升级通知',
+        'system.user.group.expired' => '站点续费用户组续费通知',
+
     ];
 
     /**

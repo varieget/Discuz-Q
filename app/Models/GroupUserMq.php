@@ -15,17 +15,15 @@
  * limitations under the License.
  */
 
-namespace Plugin\Jobs\Console;
+namespace App\Models;
 
 
-use Discuz\Base\DzqKernel;
-use Illuminate\Console\Scheduling\Schedule;
+use App\Common\CacheKey;
+use Discuz\Base\DzqCache;
+use Discuz\Base\DzqModel;
 
-class Kernel extends DzqKernel
+class GroupUserMq extends DzqModel
 {
 
-    protected function schedule(Schedule $schedule)
-    {
-        $schedule->command('job:test')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
-    }
+
 }

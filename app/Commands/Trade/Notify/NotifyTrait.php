@@ -212,6 +212,25 @@ trait NotifyTrait
                      });
                     return $this->orderInfo;
 
+                // 充值
+                case Order::ORDER_TYPE_CHARGE:
+                    // 钱包明细记录类型
+                    $payeeOrderDetail = $this->orderByDetailType();
+                    //充值人钱包明细记录
+                    UserWalletLog::createWalletLog(
+                        0,
+                        $this->orderInfo->amount,              // 变动可用金额
+                        0,                           // 变动冻结金额
+                        $payeeOrderDetail['change_type'],       // 180 自动充值
+                        trans($payeeOrderDetail['change_type_lang']),
+                        null,                   // 关联提现ID
+                        $this->orderInfo->id    // 订单ID
+                    );
+                    // 增加用户余额
+                    $this->orderInfo->user->userWallet->available_amount += $this->orderInfo->amount;
+                    $this->orderInfo->user->userWallet->save();
+                    return $this->orderInfo;
+                    break;
                 default:
                     break;
             }
@@ -268,6 +287,10 @@ trait NotifyTrait
                     $change_type = UserWalletLog::TYPE_INCOME_ATTACHMENT;
                     $change_type_lang = 'wallet.income_attachment';
                 }
+                break;
+            case Order::ORDER_TYPE_CHARGE:  //充值
+                $change_type = UserWalletLog::TYPE_CHARGE;
+                $change_type_lang = 'wallet.charge_money';
                 break;
             default:
                 $change_type = $this->orderInfo->type;

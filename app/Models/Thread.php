@@ -19,6 +19,7 @@
 namespace App\Models;
 
 use App\Common\Utils;
+use App\Common\PluginEnum;
 use App\Events\Thread\Hidden;
 use App\Events\Thread\Restored;
 use App\Modules\ThreadTom\TomConfig;
@@ -172,6 +173,16 @@ class Thread extends DzqModel
     const ORDER_TITLE_END_WITH = '...';
 
     const DATA_PLATFORM_OF_SITE = 0;
+    const DATA_PLATFORM_OF_IMPORT = 1;
+
+    const AUTO_IMPORT_OF_YEAR = 1;
+    const AUTO_IMPORT_OF_MONTH = 2;
+    const AUTO_IMPORT_OF_WEEKS = 3;
+    const AUTO_IMPORT_OF_DAY = 4;
+
+    const AUTO_IMPORT_HAVE_NOT_BEGUN = 0;
+    const AUTO_IMPORT_HAVE_FINISHED = 1; // 当前年/月/周/天 已完成导入
+
     const CRAWLER_DATA_PLATFORM_OF_WEIBO = 1;
     const CRAWLER_DATA_PLATFORM_OF_TIEBA = 2;
     const CRAWLER_DATA_PLATFORM_OF_DOUBAN = 3;
@@ -312,11 +323,13 @@ class Thread extends DzqModel
     {
         $special = app(SpecialCharServer::class);
 
-        if ($this->type == Thread::TYPE_OF_ALL && $this->title) {
-            $firstPost = $substr ? Str::of($this->title)->substr(0, $substr) : $this->title;
-            $firstPost = $special->purify($firstPost);
-        }elseif ($this->type == Thread::TYPE_OF_ALL && !($this->title)) {
-            $firstPost = "";
+        if ($this->type == Thread::TYPE_OF_LONG || $this->type == Thread::TYPE_OF_ALL) {
+            $firstPost = '';
+            $content = !empty($this->title) ? $this->title : ($this->type == Thread::TYPE_OF_ALL ? Post::addTagToThreadContent($this->id, $this->firstPost->content) . Post::getContentTags($this->firstPost->content) : '');
+            if (!empty($content)) {
+                $firstPost = $substr ? Str::of($content)->substr(0, $substr) : $content;
+                $firstPost = $special->purify($firstPost);
+            }
         } else {
             // 不是长文没有标题则使用首帖内容
             $this->firstPost->content = $substr ? Str::of($this->firstPost->content)->substr(0, $substr) : $this->firstPost->content;
@@ -597,13 +610,23 @@ class Thread extends DzqModel
     }
 
     /**
-     * 获取匿名用户名
+     * 获取匿名用户名(用户名)
      *
      * @return string
      */
     public function isAnonymousName()
     {
         return $this->is_anonymous ? (new Anonymous)->getUsername() : $this->user->username;
+    }
+
+    /**
+     * 获取匿名用户名(昵称)
+     *
+     * @return string
+     */
+    public function isAnonymousNickname()
+    {
+        return $this->is_anonymous ? (new Anonymous)->getUsername() : $this->user->nickname;
     }
 
     /**
@@ -958,5 +981,20 @@ class Thread extends DzqModel
              ->leftJoin('thread_tom as tt','tt.thread_id','=','th.id')
              ->where(['tt.tom_type' => TomConfig::TOM_DOC , 'tt.status' => ThreadTom::STATUS_ACTIVE])
              ->first(['th.id','th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'th.is_draft', 'th.is_approved', 'tt.value']);
+    }
+
+    public static function getTagList()
+    {
+        $config = TomConfig::$map;
+        unset($config[TomConfig::TOM_TEXT]);
+        $pluginList = \Discuz\Common\Utils::getPluginList();
+        foreach ($pluginList as $key => $item) {
+            if ($item['type'] == PluginEnum::PLUGIN_THREAD) {
+                $config[$item['app_id']] = [
+                    'name_cn' => $item['name_cn']
+                ];
+            }
+        }
+        return $config;
     }
 }

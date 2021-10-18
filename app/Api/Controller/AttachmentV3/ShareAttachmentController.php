@@ -28,6 +28,7 @@ use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqController;
+use Discuz\Common\Utils;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
 class ShareAttachmentController extends DzqController

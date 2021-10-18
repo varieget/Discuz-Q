@@ -217,6 +217,12 @@ class ListUserWalletLogsController extends DzqController
                     case $walletLogType == 'income' && $log->change_type == UserWalletLog::TYPE_MERGE_REFUND:
                         $log->title = '合并订单收入';
                         break;
+                    case $log->change_type == UserWalletLog::TYPE_EXPEND_GROUP:     //购买用户组
+                        $log->title = '购买用户组';
+                        break;
+                    case $log->change_type == UserWalletLog::TYPE_CHARGE:       //自动充值
+                        $log->title = '微信充值';
+                        break;
                     default:
                         break;
                 }
@@ -301,6 +307,8 @@ class ListUserWalletLogsController extends DzqController
             //异常退款 end
             //提现失败 start
             UserWalletLog::TYPE_CASH_THAW,          //提现解冻，提现失败，12
+            //自动充值
+            UserWalletLog::TYPE_CHARGE,             //自动充值 180
         ];
 
         // 所有支出类型：
@@ -336,6 +344,9 @@ class ListUserWalletLogsController extends DzqController
                 //合并订单支出 start （这里还需要区分出 红包 + 悬赏）
                 UserWalletLog::TYPE_MERGE_FREEZE,           //	合并订单冻结，170
                 //合并订单支出 end
+                //购买用户组 start
+                UserWalletLog::TYPE_EXPEND_GROUP,           // 购买用户组，51
+                //购买用户组 end
             ];
         // 所有冻结类型：
         $freeze_type = [

@@ -20,8 +20,10 @@ namespace App\Notifications;
 
 use App\Models\Post;
 use App\Models\User;
+use App\Notifications\Messages\Database\GroupExpiredMessage;
 use App\Notifications\Messages\Database\CustomMessage;
 use App\Notifications\Messages\Database\GroupMessage;
+use App\Notifications\Messages\Database\GroupUpgradeMessage;
 use App\Notifications\Messages\Database\PostMessage;
 use App\Notifications\Messages\Database\RegisterMessage;
 use App\Notifications\Messages\Database\StatusMessage;
@@ -127,6 +129,10 @@ class System extends AbstractNotification
     public function toWechat($notifiable)
     {
         if ($this->isCustomer) return false;
+
+        $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
+        $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
+
         $message = $this->getMessage('wechat');
         $message->setData($this->getTplModel('wechat'), $this->actor, $this->data);
 
@@ -211,6 +217,16 @@ class System extends AbstractNotification
                 'wechat'      => 'wechat.registered.passed',
                 'sms'         => 'sms.registered.passed',
                 'miniProgram' => 'miniprogram.registered.passed',
+            ];
+        } // 付费用户组升级 通知
+        elseif ($this->message instanceof GroupUpgradeMessage){
+            $this->tplId = [
+                'database'    => 'system.user.group.upgrade',
+            ];
+        } // 付费用户组、站点续费 通知
+        elseif ($this->message instanceof GroupExpiredMessage){
+            $this->tplId = [
+                'database'    => 'system.user.group.expired',
             ];
         }else{
             $this->messageRelationship['database']      = app(CustomMessage::class);

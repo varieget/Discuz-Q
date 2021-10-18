@@ -59,15 +59,70 @@ class BatchUpdateGroupController extends DzqAdminController
         if(empty($data)) {
             return $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
+
+        $payGroupLevel = [];
+        $payGroupIds = [];
         foreach ($data as $k=>$val) {
             $this->dzqValidate($val, [
-                'name'=> 'required_without|max:200',
+                'name'=> 'required_without|max:10',
+                'description'=> 'max:20',
+                'notice'=> 'max:200',
             ]);
+
             $groupData = Group::query()->where('id', $val['id'])->first();
-            if(!$groupData){
-                return $this->outPut(ResponseCode::INVALID_PARAMETER);
+            if(empty($groupData)){
+                return $this->outPut(ResponseCode::INVALID_PARAMETER,"组不存在了");
+            }
+
+            if(isset($val["isPaid"]) &&  $val["isPaid"] != $groupData->is_paid){
+                return $this->outPut(ResponseCode::INVALID_PARAMETER,"付费组和免费组不可变换");
+            }
+
+            if ($groupData->is_paid == Group::IS_PAID){
+                $val["default"] = false; //固定
+
+                if (isset($val["fee"]) && $val["fee"] <= 0){
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，费用错误');
+                }
+                if (isset($val["days"]) && $val["days"] <= 0){
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，天数错误');
+                }
+                //检查level
+                if (isset($val["level"])){
+                    if ($val["level"] <= 0){
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
+                    }
+
+                    if (array_key_exists($val["level"],$payGroupLevel)){
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
+                    }
+                    $payGroupLevel[$val["level"]]= $val;
+                    $payGroupIds[] = $val["id"];
+                }
             }
         }
+
+        $levelChange = [];
+        if (!empty($payGroupIds)){  //有付费组则必须是全部的付费组
+            $groupQuery = Group::query()->where('is_paid',Group::IS_PAID);
+            if (!empty($payGroupIds)) {
+                $groupQuery->whereNotIn("id", $payGroupIds);
+            }
+            $groupIdList = $groupQuery->select("id")->get();
+            if ($groupIdList->count()!=0){
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组数据不一致请刷新');
+            }
+            //检查level,不连续的整成连续
+            $payGroupLevelSort = collect($payGroupLevel)->sortKeys();
+            $curLevel = 1;
+            foreach ($payGroupLevelSort as $key=>$value){
+                if ($key != $curLevel){
+                    $levelChange[$value["id"]] = $curLevel;
+                }
+                $curLevel++;
+            }
+        }
+
 
         foreach ($data as $value) {
             try {
@@ -102,6 +157,30 @@ class BatchUpdateGroupController extends DzqAdminController
                     if ($value['default']) {
                         $changeInviteGroupResult = $this->changeInviteGroup($value['id']);
                     }
+                }
+
+                if(isset($value['fee'])){
+                    $fee= $value['fee'];
+                    $group->fee = sprintf("%.2f",$fee);
+                }
+
+                if(isset($value['days'])){
+                    $group->days = (int)$value['days'];
+                }
+
+                if(isset($value['level'])){
+                    $group->level = (int)$value['level'];
+                    if (isset($levelChange[$value["id"]])){
+                        $group->level = $levelChange[$value["id"]];
+                    }
+                }
+
+                if(isset($value['description'])){
+                    $group->description = $value['description'];
+                }
+
+                if(isset($value['notice'])){
+                    $group->notice = $value['notice'];
                 }
 
                 $group->save();
