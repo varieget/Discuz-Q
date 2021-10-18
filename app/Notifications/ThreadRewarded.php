@@ -104,6 +104,9 @@ class ThreadRewarded extends AbstractNotification
 
     public function toWechat($notifiable)
     {
+        $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
+        $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
+
         $message = app(ThreadRewardedWechatMessage::class);
         $message->setData($this->getTplModel('wechat'), $this->user, $this->order, $this->data);
         return (new NotificationManager)->driver('wechat')->setNotification($message)->build();

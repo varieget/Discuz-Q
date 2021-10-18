@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Messages\Wechat;
 
+use App\Models\NotificationTiming;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\User;
@@ -64,6 +65,9 @@ class RepliedWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
+        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
+        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
+
         $content = $this->post->getSummaryContent(Post::NOTICE_LENGTH, true);
         $postContent = $content['content'];                                                 // 回复内容
         $threadTitle = $this->post->thread->getContentByType(Thread::CONTENT_LENGTH, true); // 主题标题/首帖内容
@@ -98,6 +102,7 @@ class RepliedWechatMessage extends SimpleMessage
          * @parem $reply_post 被回复内容
          * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
+         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$user_name}'           => $userName ?? $this->user->username,
@@ -106,6 +111,7 @@ class RepliedWechatMessage extends SimpleMessage
             '{$reply_post}'          => $this->strWords($subject ?? ''),
             '{$thread_id}'           => $this->post->thread_id,
             '{$thread_title}'        => $this->strWords($threadTitle),
+            '{$notification_num}'    => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
 
         // redirect_url TODO 判断 $replyPostId 是否是楼中楼 可跳转楼中楼详情页

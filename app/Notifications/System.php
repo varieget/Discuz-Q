@@ -129,6 +129,10 @@ class System extends AbstractNotification
     public function toWechat($notifiable)
     {
         if ($this->isCustomer) return false;
+
+        $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
+        $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
+
         $message = $this->getMessage('wechat');
         $message->setData($this->getTplModel('wechat'), $this->actor, $this->data);
 
