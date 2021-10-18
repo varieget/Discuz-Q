@@ -201,22 +201,19 @@ class Censor
                 if ($word->{$type} === StopWord::REPLACE) {
                     $content = preg_replace($find, $word->replacement, $content);
                 } else {
-                    if (preg_match($find, $content, $matches)) {
+                    if (preg_match($find, preg_replace('/<img.*?>/','',$content), $matches)) {
                         if ($word->{$type} === StopWord::MOD) {
                             // 记录触发的审核词
                             array_push($this->wordMod, head($matches));
 
                             $this->isMod = true;
                         } elseif ($word->{$type} === StopWord::BANNED) {
-                            $msg = app('translator')->has('validation.attributes.'.$type) ? trans('validation.attributes.'.$type).'内容含敏感词' : '内容含敏感词';
                             DzqLog::error('content_has_stop_word', [
                                 'content'   => $content,
                                 'type'      => $type,
-                                'msg'       => $msg,
                                 'word'      => $word
                             ]);
-                            Utils::outPut(ResponseCode::NET_ERROR, $msg);
-                            throw new CensorNotPassedException('内容含敏感词');
+                            Utils::outPut(ResponseCode::INVALID_PARAMETER, '内容含敏感词');
                         }
                     }
                 }

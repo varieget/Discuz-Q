@@ -667,7 +667,7 @@
  *         @OA\Property(property = "isMissNickname", type = "integer", description = "是否缺少昵称"),
  *         @OA\Property(property = "avatarUrl", type = "string", description = "头像url"),
  *         @OA\Property(property = "userStatus", type = "integer", description = "用户状态"),
- *         @OA\Property(property = "uid", type = "integer", description = "用户id"),
+ *         @OA\Property(property = "userId", type = "integer", description = "用户id"),
  *     ))
  * )
  *

@@ -20,6 +20,7 @@ namespace App\Traits;
 
 use App\Models\ThreadVideo;
 use Carbon\Carbon;
+use Discuz\Common\Utils;
 use Illuminate\Support\Str;
 use Vod\VodUploadClient;
 use Vod\Model\VodUploadRequest;
@@ -57,7 +58,7 @@ trait VideoCloudTrait
         $localFlie = Str::random(40).".".$ext;
         $absoluteUrl = storage_path('tmp/').$localFlie;
 
-        $fileData = $this->doCurlGetRequest($mediaUrl);
+        $fileData = Utils::downLoadFile($mediaUrl);
 
         if(!$fileData){
             $log->info('媒体文件不存在');

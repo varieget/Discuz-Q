@@ -7,7 +7,7 @@
  *     tags={"管理后台"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token_true"),
  *     @OA\Parameter(
- *        name="uid",
+ *        name="userId",
  *        in="query",
  *        required=true,
  *        description = "用户id",

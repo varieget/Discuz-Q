@@ -61,7 +61,8 @@ class LikedSmsMessage extends SimpleMessage
         /**
          * 设置父类 模板数据
          * @parem $user_id 点赞人用户ID
-         * @parem $user_name 点赞人姓名
+         * @parem $user_name 点赞人姓名(用户名)
+         * @parem $nick_name 点赞人姓名(昵称)
          * @parem $thread_id 主题ID （可用于跳转参数）
          * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
          * @parem $post_content 帖子内容
@@ -69,6 +70,7 @@ class LikedSmsMessage extends SimpleMessage
         $this->setTemplateData([
             '{$user_id}'      => $this->actor->id,
             '{$user_name}'    => $this->actor->username,
+            '{$nick_name}'    => $this->actor->nickname,
             '{$thread_id}'    => $this->post->thread->id,
             '{$thread_title}' => $this->strWords($threadTitle),
             '{$post_content}' => $this->strWords($this->post->content),

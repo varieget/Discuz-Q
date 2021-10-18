@@ -20,6 +20,7 @@ namespace App\Api\Controller\ThreadsV3;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
 use App\Common\CacheKey;
+use App\Common\DzqRegex;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use App\Models\PluginGroupPermission;
@@ -602,7 +603,7 @@ trait ThreadTrait
 
     private function optimizeTopics($text)
     {
-        preg_match_all('/#((?![<|>|;|&]).)+?#/i', $text, $m1);
+        preg_match_all(DzqRegex::$topic, $text, $m1);
         $topics = $m1[0];
         $topics = array_values($topics);
         return $topics;
@@ -634,7 +635,7 @@ trait ThreadTrait
 
     private function renderTopic($text)
     {
-        preg_match_all('/#((?![<|>|;|&]).)+?#/i', $text, $topic);
+        preg_match_all(DzqRegex::$topic, $text, $topic);
         if (empty($topic)) {
             return $text;
         }

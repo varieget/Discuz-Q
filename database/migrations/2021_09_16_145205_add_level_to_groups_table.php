@@ -25,7 +25,7 @@ class AddLevelToGroupsTable extends Migration
     public function down()
     {
         $this->schema()->table('groups', function (Blueprint $table) {
-            $table->unsignedInteger('level')->default(0)->after('fee')->comment('付费用户组等级');
+            $table->dropColumn('level');
         });
     }
 }

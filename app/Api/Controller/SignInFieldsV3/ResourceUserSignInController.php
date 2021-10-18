@@ -19,25 +19,25 @@ namespace App\Api\Controller\SignInFieldsV3;
 
 use App\Common\ResponseCode;
 use App\Models\UserSignInFields;
-use App\Repositories\UserRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqAdminController;
 
 class ResourceUserSignInController extends DzqAdminController
 {
+    protected $paramsAlias = ['uid' => 'userId'];
+
     public function main()
     {
-        $userId = $this->inPut('uid');
+        $userId = $this->inPut('uid');//推荐使用userId参数
 
-        if(empty($userId)){
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,'id不能为空');
+        if (empty($userId)) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, 'id不能为空');
         }
 
         $list = UserSignInFields::instance()->getUserRecordFields($userId);
 
         $data =$this->camelData($list);
 
-        return  $this->outPut(ResponseCode::SUCCESS,'',$data);
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 
 }

@@ -43,6 +43,7 @@ class LikedMessage extends SimpleMessage
             'user_id' => $this->actor->id,
             'thread_id' => 0, // 必传
             'thread_username' => '', // 必传主题用户名
+            'thread_nickname' => '', // 必传主题昵称
             'thread_title' => '',
             'thread_created_at' => '',
             'post_id' => $this->post->id,
@@ -93,6 +94,7 @@ class LikedMessage extends SimpleMessage
         // 主题数据
         $build['thread_id'] = $this->post->thread->id;
         $build['thread_username'] = $this->post->thread->user->username;
+        $build['thread_nickname'] = $this->post->thread->user->nickname;
         if($this->post->is_first){
             $build['thread_title'] = $firstContent ?? $result['first_content'];
         }else{

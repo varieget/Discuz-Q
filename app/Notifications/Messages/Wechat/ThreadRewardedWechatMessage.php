@@ -67,6 +67,7 @@ class ThreadRewardedWechatMessage extends SimpleMessage
         });
 
         $actorName = Arr::get($this->data, 'raw.actor_username', '');  // 发送人姓名
+        $nickname = Arr::get($this->data, 'raw.actor_nickname', '');  // 发送人姓名
 
         // 主题ID为空时跳转到首页
         if (empty($threadId)) {
@@ -77,13 +78,15 @@ class ThreadRewardedWechatMessage extends SimpleMessage
 
         /**
          * 设置父类 模板数据
-         * @parem $user_name
+         * @parem $username
+         * @parem $nickname
          * @parem $order_type_name
          * @parem $actual_amount
          * @parem $content
          */
         $this->setTemplateData([
             '{$username}'            => $actorName,
+            '{$nickname}'            => $nickname,
             '{$order_type_name}'     => $orderName,
             '{$actual_amount}'       => $actualAmount,
             '{$content}'             => $this->strWords($message),
