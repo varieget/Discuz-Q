@@ -301,6 +301,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你已经成为{sitename} 的{groupname} ，请你在发表言论时，遵守当地法律法规。祝你在这里玩的愉快。',
                 'vars'      => serialize([
                     '{username}'  => '用户名',
+                    '{nickname}'  => '昵称',
                     '{sitename}'  => '站点名称',
                     '{groupname}' => '用户组',
                 ]),
@@ -314,6 +315,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你的注册申请已审核通过。',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                 ]),
             ],
             [
@@ -325,6 +327,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你的注册申请审核不通过，原因：{reason}',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                     '{reason}'   => '原因',
                 ]),
             ],
@@ -337,6 +340,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你发布的内容 "{content}" 审核不通过，原因：{reason}',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                     '{content}'  => '内容',
                     '{reason}'   => '原因',
                 ]),
@@ -350,6 +354,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你发布的内容 "{content}" 审核通过',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                     '{content}'  => '内容',
                 ]),
             ],
@@ -362,6 +367,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你发布的内容 "{content} " 已删除，原因：{reason}',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                     '{content}'  => '内容',
                     '{reason}'   => '原因',
                 ]),
@@ -375,6 +381,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你发布的内容 "{content}" 已设为精华',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                     '{content}'  => '内容',
                 ]),
             ],
@@ -387,6 +394,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你发布的内容 "{content}" 已置顶',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                     '{content}'  => '内容',
                 ]),
             ],
@@ -399,6 +407,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你发布的内容 "{content}" 已被修改',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                     '{content}'  => '内容',
                 ]),
             ],
@@ -411,6 +420,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你的帐号已禁用，原因：{reason}',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                     '{reason}'   => '原因',
                 ]),
             ],
@@ -423,6 +433,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你的帐号已解除禁用',
                 'vars'      => serialize([
                     '{username}' => '用户名',
+                    '{nickname}' => '昵称',
                 ]),
             ],
             [
@@ -434,6 +445,7 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '{username}你好，你的角色由{oldgroupname}变更为{newgroupname}',
                 'vars'      => serialize([
                     '{username}'     => '用户名',
+                    '{nickname}'     => '昵称',
                     '{oldgroupname}' => '老用户组',
                     '{newgroupname}' => '新用户组',
                 ]),
@@ -555,6 +567,31 @@ class NotificationTplSeeder extends Seeder
                 'content'   => '',
                 'vars'      => '',
             ],
+            [
+                'status'    => 1,
+                'type'      => 0,
+                'notice_id' => $this->comparisonUnique('用户组升级通知', 0),
+                'type_name' => '用户组升级通知',
+                'title'     => '账号升级通知',
+                'content'   => '【{nickname}】恭喜你，成功升级为【{groupname}】！',
+                'vars'      => serialize([
+                    '{nickname}'     => '用户昵称',
+                    '{groupname}' => '升级用户组',
+                ]),
+            ],
+            [
+                'status'    => 1,
+                'type'      => 0,
+                'notice_id' => $this->comparisonUnique('站点续费用户组续费通知', 0),
+                'type_name' => '站点续费用户组续费通知',
+                'title'     => '续费通知',
+                'content'   => '【{nickname}】，您购买的【{groupname}】即将过期，过期后将无法享受当前权益，请及时续费。',
+                'vars'      => serialize([
+                    '{nickname}'     => '用户昵称',
+                    '{groupname}' => '老用户组'
+                ]),
+            ]
+
         ];
     }
 

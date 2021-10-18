@@ -95,7 +95,7 @@ class CreateAttachmentController extends DzqController
                 'groupId'   => $groupId,
                 'group'     => $group
             ]);
-            return $this->outPut(ResponseCode::INTERNAL_ERROR, '附件上传失败');
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '附件上传失败');
         }
 
         return call_user_func_array($typeMethodMap[$type], [$this->user]);
@@ -126,6 +126,12 @@ class CreateAttachmentController extends DzqController
         $order = (int) Arr::get($this->request->getParsedBody(), 'order', 0);
         $ipAddress = ip($this->request->getServerParams());
         $mediaId = Arr::get($this->request->getParsedBody(), 'mediaId', '');
+
+        $request = $this->request->getParsedBody();
+        if (isset($request['fileUrl']) && empty($request['fileUrl'])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '图片链接不可为空!');
+        }
+
         $fileUrl = Arr::get($this->request->getParsedBody(), 'fileUrl', '');
 
         ini_set('memory_limit',-1);
@@ -280,7 +286,7 @@ class CreateAttachmentController extends DzqController
                 ->where('id', $dialogMessageId)
                 ->update(['attachment_id' => $data['id'], 'message_text' => $message_text, 'status' => DialogMessage::NORMAL_MESSAGE]);
             if (!$updateDialogMessageResult) {
-                return $this->outPut(ResponseCode::INTERNAL_ERROR, '私信图片更新失败!');
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '私信图片更新失败!');
             } else {
                 $dialogMessage = DialogMessage::query()->where('id', $dialogMessageId)->first();
                 $dialog = Dialog::query()->where('id', $dialogMessage->dialog_id)->first();
@@ -291,12 +297,12 @@ class CreateAttachmentController extends DzqController
                         ->where('id', $dialogMessage->dialog_id)
                         ->update(['dialog_message_id' => $dialogMessage->id]);
                     if (!$updateDialogResult) {
-                        return $this->outPut(ResponseCode::INTERNAL_ERROR, '最新对话更新失败!');
+                        $this->outPut(ResponseCode::INTERNAL_ERROR, '最新对话更新失败!');
                     }
                 }
             }
         }
 
-        return $this->outPut(ResponseCode::SUCCESS, '', $data);
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }

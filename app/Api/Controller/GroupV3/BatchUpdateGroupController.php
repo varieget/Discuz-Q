@@ -69,11 +69,18 @@ class BatchUpdateGroupController extends DzqAdminController
                 'notice'=> 'max:200',
             ]);
 
+            $groupData = Group::query()->where('id', $val['id'])->first();
+            if(empty($groupData)){
+                return $this->outPut(ResponseCode::INVALID_PARAMETER,"组不存在了");
+            }
 
-            if (isset($val["isPaid"]) &&  $val["isPaid"] == Group::IS_PAID){
-                if (isset($val["default"]) &&  $val["default"] == "true"){
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，不可设置为默认组');
-                }
+            if(isset($val["isPaid"]) &&  $val["isPaid"] != $groupData->is_paid){
+                return $this->outPut(ResponseCode::INVALID_PARAMETER,"付费组和免费组不可变换");
+            }
+
+            if ($groupData->is_paid == Group::IS_PAID){
+                $val["default"] = false; //固定
+
                 if (isset($val["fee"]) && $val["fee"] <= 0){
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，费用错误');
                 }
@@ -81,26 +88,17 @@ class BatchUpdateGroupController extends DzqAdminController
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，天数错误');
                 }
                 //检查level
-                if (!isset($val["level"])){
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别字段没传');
-                }
-                if ($val["level"] <= 0){
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
-                }
+                if (isset($val["level"])){
+                    if ($val["level"] <= 0){
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
+                    }
 
-                if (array_key_exists($val["level"],$payGroupLevel)){
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
+                    if (array_key_exists($val["level"],$payGroupLevel)){
+                        $this->outPut(ResponseCode::INVALID_PARAMETER, '付费组，级别错误');
+                    }
+                    $payGroupLevel[$val["level"]]= $val;
+                    $payGroupIds[] = $val["id"];
                 }
-                $payGroupLevel[$val["level"]]= $val;
-                $payGroupIds[] = $val["id"];
-            }
-
-            $groupData = Group::query()->where('id', $val['id'])->first();
-            if(empty($groupData)){
-                return $this->outPut(ResponseCode::INVALID_PARAMETER,"组不存在了");
-            }
-            if(isset($val["isPaid"]) &&  $val["isPaid"] != $groupData->is_paid){
-                return $this->outPut(ResponseCode::INVALID_PARAMETER,"付费组和免费组不可变换");
             }
         }
 

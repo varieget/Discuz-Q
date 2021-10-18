@@ -69,7 +69,8 @@ class RelatedSmsMessage extends SimpleMessage
         /**
          * 设置父类 模板数据
          * @parem $user_id 发送人用户ID
-         * @parem $user_name 发送人姓名
+         * @parem $user_name 发送人姓名（用户名）
+         * @parem $nick_name 发送人姓名（昵称）
          * @parem $post_content @源帖子内容
          * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
@@ -77,6 +78,7 @@ class RelatedSmsMessage extends SimpleMessage
         $this->setTemplateData([
             '{$user_id}'      => $this->actor->id,
             '{$user_name}'    => $this->actor->username,
+            '{$nick_name}'    => $this->actor->nickname,
             '{$post_content}' => $this->strWords($postContent),
             '{$thread_id}'    => $this->post->thread_id,
             '{$thread_title}' => $this->strWords($threadTitle),

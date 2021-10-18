@@ -85,6 +85,7 @@ class RewardedMessage extends SimpleMessage
             'order_id' => 0,    // 订单 id
             'thread_id' => 0,   // 必传 可为0 主题关联 id
             'thread_username' => 0,
+            'thread_nickname' => 0,
             'thread_title' => 0,
             'content' => '',
             'thread_created_at' => '',
@@ -124,12 +125,14 @@ class RewardedMessage extends SimpleMessage
             if (in_array($this->order->type, [2, 3])) {
                 $this->initData['thread_id'] = $this->order->thread->id;
                 $this->initData['thread_username'] = $this->order->thread->user->username;
+                $this->initData['thread_nickname'] = $this->order->thread->user->nickname;
                 $this->initData['thread_title'] = $this->order->thread->title;
                 $this->build();
             }
         } else {
             $this->initData['thread_id'] = $this->order->thread->id; // 必传
             $this->initData['thread_username'] = $this->order->thread->user->username; // 必传主题用户名
+            $this->initData['thread_nickname'] = $this->order->thread->user->nickname; // 必传主题昵称
             $this->initData['thread_title'] = $this->order->thread->title;
             $this->initData['thread_created_at'] = $this->order->thread->formatDate('created_at');
             if ($this->order->type == Order::ORDER_TYPE_ONLOOKER) {
@@ -153,6 +156,7 @@ class RewardedMessage extends SimpleMessage
         $this->initData['user_id'] = $this->question->user->id; // 解冻退回用户
         $this->initData['thread_id'] = $this->question->thread->id;
         $this->initData['thread_username'] = $this->question->thread->user->username;
+        $this->initData['thread_nickname'] = $this->question->thread->user->nickname;
         $this->initData['thread_title'] = $this->question->thread->title;
         $this->initData['thread_created_at'] = $this->question->thread->formatDate('created_at');
         $this->initData['amount'] = $this->question->price; // 解冻退还金额

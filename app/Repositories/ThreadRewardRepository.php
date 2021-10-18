@@ -76,6 +76,7 @@ class ThreadRewardRepository extends AbstractRepository
                 'message' => $threadContent,
                 'raw' => array_merge(Arr::only($orderArr, ['id', 'thread_id', 'type']), [
                     'actor_username' => $actorUser->username,   // 发送人姓名
+                    'actor_nickname' => $actorUser->nickname,   // 发送人姓名
                     'actual_amount' => $rewards,     // 获取作者实际金额
                     'content' => $threadContent,
                     'created_at' => (string) $order->created_at

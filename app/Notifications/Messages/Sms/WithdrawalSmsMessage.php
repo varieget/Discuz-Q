@@ -62,7 +62,8 @@ class WithdrawalSmsMessage extends SimpleMessage
         /**
          * 设置父类 模板数据
          * @parem $user_id 提现用户ID
-         * @parem $user_name 提现用户
+         * @parem $user_name 提现用户（用户名）
+         * @parem $nick_name 提现用户（昵称）
          * @parem $cash_sn 提现交易编号
          * @parem $cash_charge 提现手续费
          * @parem $cash_actual_amount 提现实际到账金额
@@ -76,6 +77,7 @@ class WithdrawalSmsMessage extends SimpleMessage
         $this->setTemplateData([
             '{$user_id}'            => $this->cash->user->id,
             '{$user_name}'          => $this->cash->user->username,
+            '{$nick_name}'          => $this->cash->user->nickname,
             '{$cash_sn}'            => $this->cash->cash_sn,
             '{$cash_charge}'        => $this->cash->cash_charge,
             '{$cash_actual_amount}' => $this->cash->cash_actual_amount,

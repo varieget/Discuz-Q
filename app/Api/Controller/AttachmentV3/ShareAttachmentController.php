@@ -105,7 +105,7 @@ class ShareAttachmentController extends DzqController
         $attachmentShare->save();
 
         $this->outPut(ResponseCode::SUCCESS, '', [
-            'url' => $this->url->to('/' . Utils::getApiName() . '/attachment.download') . '?sign=' . $sign . '&attachmentsId=' . $data['attachmentsId']
+            'url' => $this->url->to('/apiv3/attachment.download') . '?sign=' . $sign . '&attachmentsId=' . $data['attachmentsId']
         ]);
     }
     //生成唯一标识

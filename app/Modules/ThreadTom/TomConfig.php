@@ -43,7 +43,7 @@ class TomConfig
         ],
         self::TOM_AUDIO => [
             'name_en' => 'Audio',
-            'name_cn' => '语音',
+            'name_cn' => '语音条',
             'service' => \App\Modules\ThreadTom\Busi\AudioBusi::class
         ],
         self::TOM_VIDEO => [
@@ -68,7 +68,7 @@ class TomConfig
         ],
         self::TOM_DOC => [
             'name_en' => 'Attachment',
-            'name_cn' => '文件附件',
+            'name_cn' => '附件',
             'service' => \App\Modules\ThreadTom\Busi\DocBusi::class
         ],
         self::TOM_VOTE => [

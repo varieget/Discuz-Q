@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Messages\Wechat;
 
+use App\Models\NotificationTiming;
 use App\Models\Order;
 use App\Models\Thread;
 use Discuz\Notifications\Messages\SimpleMessage;
@@ -58,6 +59,9 @@ class RewardedWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
+        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
+        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
+
         // 获取支付类型
         $orderTypeName = Order::enumType($this->order->type, function ($args) {
             return $args['value'];
@@ -93,23 +97,27 @@ class RewardedWechatMessage extends SimpleMessage
         /**
          * 设置父类 模板数据
          * @parem $user_id 支付人用户ID
-         * @parem $user_name 支付人
+         * @parem $user_name 支付人（用户名）
+         * @parem $nick_name 支付人（昵称）
          * @parem $order_sn 订单编号
          * @parem $payment_sn 支付编号
          * @parem $order_type_name 订单支付类型 (打赏/付费主题/付费用户组/问答回答收入/问答围观收入/付费附件)
          * @parem $actual_amount 实际获得金额
          * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
+         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$user_id}'         => $this->order->user->id,
             '{$user_name}'       => $this->order->user->username,
+            '{$nick_name}'       => $this->order->user->nickname,
             '{$order_sn}'        => $this->order->order_sn,
             '{$payment_sn}'      => $this->order->payment_sn,
             '{$order_type_name}' => $orderTypeName,
             '{$actual_amount}'   => $actualAmount,
             '{$thread_id}'       => $this->order->thread->id,
             '{$thread_title}'    => $this->strWords($threadTitle),
+            '{$notification_num}'    => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
 
         // build data
