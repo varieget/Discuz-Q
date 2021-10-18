@@ -97,6 +97,7 @@ return [
         '{$site_mode}'            => '站点模式（付费/免费 (用于提示用户"付费加入该站点")）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信用户状态通知' => [
@@ -110,6 +111,7 @@ return [
         '{$reason}'               => '原因（默认字符串"无"）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信用户角色调整通知' => [
@@ -122,6 +124,7 @@ return [
         '{$group_change}'         => '新用户组名',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信内容状态通知' => [
@@ -137,6 +140,7 @@ return [
         '{$reason}'               => '原因（默认字符串"无"）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信内容点赞通知' => [
@@ -148,6 +152,7 @@ return [
         '{$post_content}'         => '帖子内容',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信内容回复通知' => [
@@ -159,6 +164,7 @@ return [
         '{$thread_title}'         => '主题标题/首帖内容（如果有标题则是标题内容，没有则是首帖内容）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信内容@通知' => [
@@ -170,6 +176,7 @@ return [
         '{$thread_title}'         => '主题标题/首帖内容（如果有标题则是标题内容，没有则是首帖内容）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信内容支付通知' => [
@@ -184,6 +191,7 @@ return [
         '{$thread_title}'         => '主题标题/首帖内容（如果有标题则是标题内容，没有则是首帖内容）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信分成收入通知' => [
@@ -196,6 +204,7 @@ return [
         '{$title}'                => '主题标题/"注册站点"（如果是注册站点，该值是"注册站点"）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信提现通知' => [
@@ -213,6 +222,7 @@ return [
         '{$cash_created_at}'      => '提现创建时间',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信问答提问或过期通知' => [
@@ -228,6 +238,7 @@ return [
         '{$thread_title}'         => '主题标题/首帖内容（如果有标题则是标题内容，没有则是首帖内容）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     '微信问答回答通知' => [
@@ -244,6 +255,7 @@ return [
         '{$thread_title}'         => '主题标题/首帖内容（如果有标题则是标题内容，没有则是首帖内容）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
     '得到红包通知' => [
         '{$username}'              => '支付用户名',
@@ -254,6 +266,7 @@ return [
         '{$thread_id}'            => '主题ID（可用于跳转参数）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
     '悬赏问答通知' => [
         '{$username}'              => '支付用户名',
@@ -264,6 +277,7 @@ return [
         '{$thread_id}'             => '主题ID（可用于跳转参数）',
         '{$notify_time}'           => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'           => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'      => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
     '悬赏过期通知' => [
         '{$username}'              => '支付用户名',
@@ -274,6 +288,7 @@ return [
         '{$thread_id}'            => '主题ID（可用于跳转参数）',
         '{$notify_time}'          => '通知时间（时间格式: 20xx-xx-xx xx:xx:xx）',
         '{$site_domain}'          => '站点域名（https://xxxxxx.com）',
+        '{$notification_num}'     => '通知条数（该参数仅限于配置了延迟推送的微信模板通知中使用）',
     ],
 
     // 路由跳转转义语言包

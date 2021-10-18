@@ -136,12 +136,20 @@ class UpdateNotificationTplV3Controller extends DzqAdminController
             $notificationTpl->page_path = Arr::get($attributes, 'pagePath');
         }
 
+        if (isset($attributes['pushType'])) {
+            $notificationTpl->push_type = Arr::get($attributes, 'pushType');
+        }
+
+        if (isset($attributes['delayTime'])) {
+            $notificationTpl->delay_time = Arr::get($attributes, 'delayTime');
+        }
+
         $notificationTpl->save();
 
         return $notificationTpl;
     }
 
-    protected function checkData($data)
+    protected function checkData(&$data)
     {
         foreach ($data as $value) {
             if ((isset($value['id']) && !is_numeric($value['id'])) ||
@@ -150,6 +158,11 @@ class UpdateNotificationTplV3Controller extends DzqAdminController
                 $this->outPut(ResponseCode::INVALID_PARAMETER);
             }
         }
+        if (!empty($data[1]) && isset($data[1]['pushType']) && isset($data[1]['delayTime'])) {
+            $data[1]['pushType'] = $data[1]['pushType'] == NotificationTpl::PUSH_TYPE_DELAY ? NotificationTpl::PUSH_TYPE_DELAY : NotificationTpl::PUSH_TYPE_NOW;
+            $data[1]['delayTime'] = (int)abs($data[1]['delayTime']) <= NotificationTpl::MAX_DELAY_TIME ? (int)abs($data[1]['delayTime']) : NotificationTpl::MAX_DELAY_TIME;
+        }
+
         return true;
     }
 }
