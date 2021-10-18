@@ -23,13 +23,17 @@ class ShopUploadImageController extends DzqController
         if (empty($file)){
             return $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
-        $baseName = pathinfo($file,PATHINFO_BASENAME);
-        $ext = pathinfo($file,PATHINFO_EXTENSION);
-        $baseNameTemp = $baseName."_".time().".".$ext;
+
+        $fileContent = $file->getStream();
+        $filePathTemp = $fileContent->getMetadata('uri');
+        $fileName = $file->getClientFilename();
+        $ext = pathinfo($fileName,PATHINFO_EXTENSION);
+        $fileName = md5($fileName).time().".".$ext;
+        $fileType = $file->getClientMediaType();
 
         /** @var ShopFileSave $shopFileSave */
         $shopFileSave = $this->app->make(ShopFileSave::class);
-        list($path,$isRemote) = $shopFileSave->saveFile($baseNameTemp,$file);
+        list($path,$isRemote) = $shopFileSave->saveFile($fileName,$fileContent);
         $pathUrl = $shopFileSave->getFilePath($isRemote,$path);
         $result = [];
         $result["url"] = $pathUrl;

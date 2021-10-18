@@ -15,6 +15,8 @@ class ShopBusi extends TomBaseBusi
 
     public function create()
     {
+        $type = $this->getParams('type');
+
         if ($this->tomId == TomConfig::TOM_GOODS){
             return $this->jsonReturn($this->body);
         }else{
@@ -63,34 +65,6 @@ class ShopBusi extends TomBaseBusi
         }
 
         return $this->jsonReturn(["products"=>$products]);
-    }
-
-    private function selectWxShop2(){
-        $config = $this->getConfig();
-        $appId = $config["app_id"];
-
-        $qrCode = "";
-        $setting = $this->getSetting();
-        if ($setting && isset($setting["wx_qrcode"])){
-            $qrCode = $setting["wx_qrcode"];
-        }
-
-        $result = [];
-        $productIds = $this->getParams('productIds');
-        $productDataList = ShopProducts::query()->where("app_id",$appId)->whereIn("id",$productIds)->get();
-
-
-        /** @var ShopProducts $product */
-        foreach ($productDataList as $product){
-            $outUrl = $qrCode;
-            if (!empty($product->out_url)){
-                $outUrl = $product->out_url;
-            }
-            $oneProduct = $this->packProductDetail($product->id,$product->product_id,$product->name,
-                $product->img_url,$product->price,$product->in_url, $outUrl);
-            $result[]=$oneProduct;
-        }
-        return $this->jsonReturn($result);
     }
 
 

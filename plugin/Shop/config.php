@@ -22,7 +22,7 @@ return [
         'wxshop/info' => [
             'description' => '微信小商店信息',
             'method' => 'GET',
-            'controller' => \Plugin\Shop\Controller\WxShopAddController::class
+            'controller' => \Plugin\Shop\Controller\WxShopInfoController::class
         ],
         'shop/uploadimage' => [
             'description' => '小商店上传图片',

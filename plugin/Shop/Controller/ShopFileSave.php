@@ -29,7 +29,8 @@ class ShopFileSave
             $isRemote=false;
             // 开启 cos 时，cos放一份
             if($this->settings->get('qcloud_cos', 'qcloud')){
-                $this->fileSystem->disk('cos')->put("public/".$path, $qrBuff);
+                $qrBuffTemp = clone $qrBuff;
+                $this->fileSystem->disk('cos')->put("public/".$path, $qrBuffTemp);
                 $isRemote = true;
             }
             $this->fileSystem->disk('public')->put($path, $qrBuff);

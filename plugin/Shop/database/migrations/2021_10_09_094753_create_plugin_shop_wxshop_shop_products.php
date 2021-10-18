@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Query\Expression;
 use Discuz\Base\DzqPluginMigration;
 
-class CreatePluginWxshopShopProducts extends DzqPluginMigration
+class CreatePluginShopWxshopShopProducts extends DzqPluginMigration
 {
     /**
      * Run the migrations.
@@ -14,7 +14,7 @@ class CreatePluginWxshopShopProducts extends DzqPluginMigration
      */
     public function up()
     {
-        $this->schema()->create('plugin_wxshop_shop_products', function (Blueprint $table) {
+        $this->schema()->create('plugin_shop_wxshop_shop_products', function (Blueprint $table) {
             $table->unsignedBigInteger('id', true)->comment('自增id');
             $table->string('app_id', 64)->nullable(false)->comment('商店appid');
             $table->string('product_id',128)->nullable(false)->comment('微信小商店商品id');
