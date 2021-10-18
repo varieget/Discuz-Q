@@ -23,7 +23,5 @@ use Discuz\Base\DzqModel;
  */
 class ShopProducts  extends DzqModel
 {
-
-
-    protected $table = "plugin_wxshop_shop_products";
+    protected $table = "plugin_shop_wxshop_products";
 }

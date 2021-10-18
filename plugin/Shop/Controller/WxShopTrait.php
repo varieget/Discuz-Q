@@ -45,7 +45,8 @@ trait WxShopTrait
 
     public function getConfig(){
         if (empty($this->config)){
-            $this->config = require(__DIR__ . "/../config.php");
+            //$this->config = require(__DIR__ . "/../config.php");
+            $this->config["app_id"] = "61540fef8f4de8";
         }
         return $this->config;
     }
