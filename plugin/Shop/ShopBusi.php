@@ -13,9 +13,23 @@ class ShopBusi extends TomBaseBusi
 {
     use WxShopTrait;
 
+    public const TYPE_ORIGIN = 10;
+    public const TYPE_WX_SHOP = 11;
+
+
     public function create()
     {
-        $type = $this->getParams('type');
+        $products = $this->getParams('products');
+        foreach ($products as $item){
+            if(!isset($item["type"])){
+                continue;
+            }
+            if ($item["type"] == TYPE_ORIGIN){
+
+            }
+
+        }
+
 
         if ($this->tomId == TomConfig::TOM_GOODS){
             return $this->jsonReturn($this->body);
