@@ -381,7 +381,7 @@ class UpdateAdminUser
 
     //记录拒绝原因
     private function setRefuseMessage(User &$user,$refuseMessage){
-        if ($user->status == User::STATUS_REFUSE) {
+        if ($user->status == User::STATUS_REFUSE || $user->status == User::STATUS_BAN) {
             $user->reject_reason = $refuseMessage;
             $user->save();
         }
