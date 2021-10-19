@@ -81,7 +81,13 @@ class ListPostsController extends DzqController
         $posts = $this->search($filters, $perPage, $page, $sort);
         $posts['pageData'] = $posts['pageData']->map(function ($post) {
             return $this->getPost($post, true);
-        })->sortByDesc('rewards')->values()->toArray();
+        });
+        $sortBy = 'sortBy';
+        if (!empty($sort)) {
+            $sortBy = Str::startsWith($sort, '-') ? 'sortByDesc' : 'sortBy';
+        }
+        $posts['pageData'] = $this->postsSortOperate($posts['pageData'],$sortBy);
+
         $posts['pageData'] = $this->getLastThreeComments($posts['pageData']);
 
         $this->outPut(ResponseCode::SUCCESS, '', $posts);
@@ -311,5 +317,17 @@ class ListPostsController extends DzqController
         }
 
         return $data;
+    }
+
+    protected function postsSortOperate($postsPageData,$sortBy){
+        $postsNotRewards = $postsPageData->where('rewards', "0.0")->$sortBy("createdAt");
+        $postsRewards = $postsPageData->filter(function ($value) {
+            return $value['rewards'] > 0;
+        })->sortByDesc("rewards");
+        $pageData = $postsNotRewards->values()->toArray();
+        if($postsRewards->isNotEmpty()){
+            $pageData = $postsRewards->merge($postsNotRewards)->values()->toArray();
+        }
+        return $pageData;
     }
 }
