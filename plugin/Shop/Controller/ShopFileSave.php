@@ -23,14 +23,14 @@ class ShopFileSave
         $this->settings = $settings;
     }
 
-    public function saveFile($fileName,$qrBuff){
+    public function saveFile($fileName,string $qrBuff){
         try {
             $path="shop/".$fileName;
             $isRemote=false;
             // 开启 cos 时，cos放一份
             if($this->settings->get('qcloud_cos', 'qcloud')){
-                $qrBuffTemp = clone $qrBuff;
-                $this->fileSystem->disk('cos')->put("public/".$path, $qrBuffTemp);
+                //$qrBuffTemp = clone $qrBuff;
+                $this->fileSystem->disk('cos')->put("public/".$path, $qrBuff);
                 $isRemote = true;
             }
             $this->fileSystem->disk('public')->put($path, $qrBuff);

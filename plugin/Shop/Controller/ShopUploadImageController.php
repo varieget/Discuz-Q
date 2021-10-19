@@ -7,6 +7,7 @@ use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Support\Arr;
+use Laminas\Diactoros\Stream;
 
 class ShopUploadImageController extends DzqController
 {
@@ -24,16 +25,15 @@ class ShopUploadImageController extends DzqController
             return $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
+        /** @var Stream $fileContent */
         $fileContent = $file->getStream();
-        $filePathTemp = $fileContent->getMetadata('uri');
         $fileName = $file->getClientFilename();
         $ext = pathinfo($fileName,PATHINFO_EXTENSION);
         $fileName = md5($fileName).time().".".$ext;
-        $fileType = $file->getClientMediaType();
 
         /** @var ShopFileSave $shopFileSave */
         $shopFileSave = $this->app->make(ShopFileSave::class);
-        list($path,$isRemote) = $shopFileSave->saveFile($fileName,$fileContent);
+        list($path,$isRemote) = $shopFileSave->saveFile($fileName,$fileContent->getContents());
         $pathUrl = $shopFileSave->getFilePath($isRemote,$path);
         $result = [];
         $result["url"] = $pathUrl;
