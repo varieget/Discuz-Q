@@ -60,8 +60,8 @@ class CheckCdn
         $settings = $event->settings->where('tag', 'qcloud')->pluck('value', 'key')->toArray();
 
         if (Arr::hasAny($settings, [
-//            'qcloud_cdn',
-            'qcloud_cdn_domain',
+            'qcloud_cdn_speed_domain',
+            'qcloud_cdn_main_domain',
             'qcloud_cdn_origins',
             'qcloud_cdn_server_name',
         ])) {
@@ -69,8 +69,8 @@ class CheckCdn
             $settings = array_merge((array) $this->settings->tag('qcloud'), $settings);
 
             $this->validator->make($settings, [
-//                'qcloud_cdn' => 'string|in:0,1',
-                'qcloud_cdn_domain' => 'string|required',
+                'qcloud_cdn_speed_domain' => 'string|required',
+                'qcloud_cdn_main_domain' => 'string|required',
                 'qcloud_cdn_origins' => 'required',
                 'qcloud_cdn_server_name' => 'string|required',
             ])->validate();
@@ -84,7 +84,7 @@ class CheckCdn
             }
 
             $isAdd = false;
-            if (empty($this->settings->get('qcloud_cdn_domain', 'qcloud'))) {
+            if (empty($this->settings->get('qcloud_cdn_speed_domain', 'qcloud'))) {
                 $isAdd = true;
             }
             $this->saveCdnDomain($settings, $isAdd);
@@ -93,32 +93,31 @@ class CheckCdn
 
     public function saveCdnDomain($settings, $isAdd)
     {
-        $cdnDomain = isset($settings['qcloud_cdn_domain']) ? $settings['qcloud_cdn_domain'] : '';
+        $speedDomain = isset($settings['qcloud_cdn_speed_domain']) ? $settings['qcloud_cdn_speed_domain'] : '';
+        $mainDomain = isset($settings['qcloud_cdn_main_domain']) ? $settings['qcloud_cdn_main_domain'] : '';
         $cdnOrigins = isset($settings['qcloud_cdn_origins']) ? $settings['qcloud_cdn_origins'] : [];
         $cdnServerName = isset($settings['qcloud_cdn_server_name']) ? $settings['qcloud_cdn_server_name'] : '';
 
         if (!$isAdd) {
-            $this->startCdnDomain($cdnDomain);
-            $this->updateCdnDomain($cdnDomain, $cdnOrigins, $cdnServerName);
+            $this->startCdnDomain($speedDomain);
+            $this->updateCdnDomain($speedDomain, $cdnOrigins, $cdnServerName);
         } else {
-//            $this->deleteCdnDomain($cdnDomain);
-            $this->addCdnDomain($cdnDomain, $cdnOrigins, $cdnServerName);
-            $domainAlias = 'www.'.$cdnDomain;
-            $this->createDomainAlias($domainAlias, $cdnDomain);
+            $this->addCdnDomain($speedDomain, $cdnOrigins, $cdnServerName);
 
-            // 添加解析
-//            $domains = $this->describeDomains($cdnDomain);
-//            $cname = '';
-//            if (isset($domains['TotalNumber']) && $domains['TotalNumber'] == 1) {
-//                $cname = $domains[0]['Cname'];
-//            }
-//            $this->createRecord($cdnDomain, $cname);
+            // 添加域名、解析
+            $this->createDomain($mainDomain);
+            $domains = $this->describeDomains($speedDomain);
+            $cname = '';
+            if (isset($domains['TotalNumber']) && $domains['TotalNumber'] == 1) {
+                $cname = $domains['Domains'][0]['Cname'];
+            }
+            $this->createRecord($mainDomain, $cname);
         }
 
         if (isset($settings['qcloud_cdn']) && (bool)$settings['qcloud_cdn'] == true) { //开启了cdn
-            $this->startCdnDomain($cdnDomain);
+            $this->startCdnDomain($speedDomain);
         } else {
-            $this->stopCdnDomain($cdnDomain);
+            $this->stopCdnDomain($speedDomain);
         }
     }
 }

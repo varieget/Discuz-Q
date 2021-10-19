@@ -28,6 +28,7 @@ use TencentCloud\Common\Profile\HttpProfile;
 use TencentCloud\Common\Exception\TencentCloudSDKException;
 use TencentCloud\Dnspod\V20210323\DnspodClient;
 use TencentCloud\Dnspod\V20210323\Models\CreateDomainAliasRequest;
+use TencentCloud\Dnspod\V20210323\Models\CreateDomainRequest;
 use TencentCloud\Dnspod\V20210323\Models\CreateRecordRequest;
 
 trait DnspodTrait
@@ -66,9 +67,13 @@ trait DnspodTrait
             $this->initDnspodClient();
 
             switch ($type) {
-                case 'createDomainAlias':
-                    $req = new CreateDomainAliasRequest();
-                    $action = 'CreateDomainAlias';
+//                case 'createDomainAlias':
+//                    $req = new CreateDomainAliasRequest();
+//                    $action = 'CreateDomainAlias';
+//                    break;
+                case 'create':
+                    $req = new CreateDomainRequest();
+                    $action = 'CreateDomain';
                     break;
                 case 'createRecord':
                     $req = new CreateRecordRequest();
@@ -92,15 +97,22 @@ trait DnspodTrait
         }
     }
 
-    public function createDomainAlias($domainAlias = '', $domain = '')
+//    public function createDomainAlias($domainAlias = '', $domain = '')
+//    {
+//        return $this->commonDnspodDomain('createDomainAlias', [
+//            'DomainAlias' => $domainAlias, //域名别名
+//            'Domain' => $domain // 主域名
+//        ], '创建域名别名错误');
+//    }
+
+    public function createDomain($domain = '')
     {
-        return $this->commonDnspodDomain('createDomainAlias', [
-            'DomainAlias' => $domainAlias, //域名别名
+        return $this->commonDnspodDomain('create', [
             'Domain' => $domain // 主域名
-        ], '创建域名别名错误');
+        ], '添加域名错误');
     }
 
-    public function createRecord($domain = '', $value = '', $recordType = 'CNAME', $recordLine = '默认', $subDomain = '@')
+    public function createRecord($domain = '', $value = '', $recordType = 'CNAME', $recordLine = '默认', $subDomain = 'www')
     {
         return $this->commonDnspodDomain('update', [
             'Domain' => $domain, // 域名

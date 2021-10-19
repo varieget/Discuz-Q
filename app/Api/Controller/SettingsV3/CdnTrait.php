@@ -78,10 +78,10 @@ trait CdnTrait
                     $req = new UpdateDomainConfigRequest();
                     $action = 'UpdateDomainConfig';
                     break;
-                case 'delete':
-                    $req = new DeleteCdnDomainRequest();
-                    $action = 'DeleteCdnDomain';
-                    break;
+//                case 'delete':
+//                    $req = new DeleteCdnDomainRequest();
+//                    $action = 'DeleteCdnDomain';
+//                    break;
                 case 'start':
                     $req = new StartCdnDomainRequest();
                     $action = 'StartCdnDomain';
@@ -122,6 +122,29 @@ trait CdnTrait
                 'OriginType' => 'ip',
                 'ServerName' => $serverName // 回源HOST
             ],
+            'Cache' => [
+                'SimpleCache' => [
+                    'CacheRules' => [
+                        [
+                            'CacheType' => 'all',
+                            'CacheContents' => ['*'],
+                            'CacheTime' => 2592000 // 30 * 24 * 60 * 60
+                        ],[
+                            'CacheType' => 'file',
+                            'CacheContents' => ['php','jsp','asp','aspx'],
+                            'CacheTime' => 0
+                        ],[
+                            'CacheType' => 'directory',
+                            'CacheContents' => ['/apiv3'],
+                            'CacheTime' => 0
+                        ],[
+                            'CacheType' => 'directory',
+                            'CacheContents' => ['/api'],
+                            'CacheTime' => 0
+                        ]
+                    ]
+                ]
+            ]
         ], '新增腾讯云CDN配置错误');
     }
 
@@ -138,10 +161,10 @@ trait CdnTrait
         ], '修改腾讯云CDN配置错误');
     }
 
-    public function deleteCdnDomain($domain)
-    {
-        return $this->commonCdnDomain('delete', ['Domain' => $domain], '删除加速域名错误');
-    }
+//    public function deleteCdnDomain($domain)
+//    {
+//        return $this->commonCdnDomain('delete', ['Domain' => $domain], '删除加速域名错误');
+//    }
 
     public function startCdnDomain($domain)
     {
@@ -160,5 +183,4 @@ trait CdnTrait
             'Value' => [$value],
         ], '查询域名基本信息错误');
     }
-
 }
