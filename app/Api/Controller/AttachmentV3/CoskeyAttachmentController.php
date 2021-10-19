@@ -24,7 +24,7 @@ use App\Common\Utils;
 use App\Models\Attachment;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
-use Psr\Http\Message\ServerRequestInterface;
+use Illuminate\Support\Str;
 use QCloud\COSSTS\Sts;
 use QCloud\COSSTS\Scope;
 
@@ -62,7 +62,7 @@ class CoskeyAttachmentController extends DzqController
         $cosParam = $this->configuration($settings);
         $type = $this->inPut('type'); //0 附件 1图片 2视频 3音频 4消息图片
         $fileName = $this->inPut('fileName');
-        $fileSize = $this->inPut('fileSize');
+        $attachment = $this->inPut('attachment');
 
         if (empty($settings['qcloud_cos'])) {
             $this->outPut(ResponseCode::INTERNAL_ERROR, '请去管理员后台开启腾讯云对象存储');
@@ -100,16 +100,24 @@ class CoskeyAttachmentController extends DzqController
             $this->outPut(ResponseCode::INTERNAL_ERROR, '缺少必要参数：文件名');
         }
 
-        if (empty($fileSize)) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR, '缺少必要参数：文件大小');
+        if (empty($attachment)) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '缺少必要参数：加密字符串');
         }
 
-        $this->checkAttachmentSize($fileSize);
-        if (strrpos($fileName,".")) {
+        if (strrpos($fileName,".") && strrpos($attachment,".")) {
             $fileExt = substr($fileName, strrpos($fileName,".") + 1);
+            $attachmentExt = substr($attachment, strrpos($attachment,".") + 1);
+            if ($fileExt != $attachmentExt) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '文件后缀名不一致！');
+            }
             $this->checkAttachmentExt($type, $fileExt);
         } else {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '上传文件后缀名有错误');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件后缀名错误！');
+        }
+
+        $attachmentData = Attachment::query()->where('attachment', $attachment)->first();
+        if (!empty($attachmentData)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '该加密字符串已被占用，请重新加密！');
         }
 
         $siteUrl = Utils::getSiteUrl();
@@ -122,6 +130,7 @@ class CoskeyAttachmentController extends DzqController
 
         $config = $this->appendix($cosParam);
         $tempKeys = $this->sts->getTempKeys($config);
+        $this->createAttachment($type, $attachment, $fileName);
 
         $this->outPut(ResponseCode::SUCCESS,'', $tempKeys);
     }
@@ -153,7 +162,7 @@ class CoskeyAttachmentController extends DzqController
     // 文件上传
     private function appendix($cosParam)
     {
-        $fileName = $this->inPut('fileName');
+        $fileName = $this->inPut('attachment');
         $config = array();
 
         $allowPrefix = '/public/attachments/' . date('Y/m/d') . '/';
@@ -164,5 +173,25 @@ class CoskeyAttachmentController extends DzqController
             new Scope("name/cos:PostObject", $this->bucket, $this->region, $allowPrefix . $fileName)
         );
         return array_merge($cosParam, ['policy' => $this->sts->getPolicy($config)]);
+    }
+
+    private function createAttachment($type, $attachmentName, $fileName)
+    {
+        $attachment = new Attachment();
+        $attachment->uuid = Str::uuid();;
+        $attachment->user_id = $this->user->id;
+        $attachment->type = $type;
+        $attachment->is_approved = Attachment::UNAPPROVED;
+        $attachment->attachment = $attachmentName;
+        $attachment->file_path = 'public/attachments/' . date('Y/m/d') . '/';
+        $attachment->file_name = $fileName;
+        $attachment->file_size = 0;
+        $attachment->file_width = 0;
+        $attachment->file_height = 0;
+        $attachment->file_type = '';
+        $attachment->is_remote = Attachment::YES_REMOTE;
+        $attachment->ip = ip($this->request->getServerParams());
+        $attachment->save();
+        return $attachment->id;
     }
 }
