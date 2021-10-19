@@ -70,16 +70,18 @@ class CheckCdn
 
             $this->validator->make($settings, [
 //                'qcloud_cdn' => 'string|in:0,1',
-                'qcloud_cdn_domain' => 'string|required_if:qcloud_cdn,1',
-                'qcloud_cdn_origins' => 'array|required_if:qcloud_cdn,1',
-                'qcloud_cdn_server_name' => 'string|required_if:qcloud_cdn,1',
+                'qcloud_cdn_domain' => 'string|required',
+                'qcloud_cdn_origins' => 'required',
+                'qcloud_cdn_server_name' => 'string|required',
             ])->validate();
 
-            $event->settings->put('qcloud_qcloud_cdn_origins', [
-                'key' => 'qcloud_cdn_origins',
-                'value' => json_encode($settings['qcloud_cdn_origins']),
-                'tag' => 'qcloud'
-            ]);
+            if (is_array($settings['qcloud_cdn_origins'])) {
+                $event->settings->put('qcloud_qcloud_cdn_origins', [
+                    'key' => 'qcloud_cdn_origins',
+                    'value' => json_encode($settings['qcloud_cdn_origins']),
+                    'tag' => 'qcloud'
+                ]);
+            }
 
             $isAdd = false;
             if (empty($this->settings->get('qcloud_cdn_domain', 'qcloud'))) {
