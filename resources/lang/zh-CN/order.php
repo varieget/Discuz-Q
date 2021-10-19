@@ -43,5 +43,5 @@ return [
     'not_find_site_expire_site_price'       => '站点续费相关配置(站点过期时间、站点价格)不全',
 
     'site_charge_is_close'  =>  '站点暂不允许充值',
-    'site_charge' => '钱包充值'
+    'site_charge' => '钱包订单'
 ];
