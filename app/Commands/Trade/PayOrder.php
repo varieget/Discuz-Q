@@ -230,6 +230,9 @@ class PayOrder
             case Order::ORDER_TYPE_MERGE:
                 $order_info->body = trans('order.order_type_merge');
                 break;
+            case Order::ORDER_TYPE_CHARGE:
+                $order_info->body = trans('order.site_charge');
+                break;
             default:
                 $order_info->body = '';
                 break;
