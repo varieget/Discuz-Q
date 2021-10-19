@@ -75,6 +75,7 @@ class SetSettingValidator extends AbstractValidator
             'qcloud_cos' => Arr::has($this->data, 'qcloud_cos') ? [new QcloudMasterSwitch()] : [],
             'qcloud_captcha' => Arr::has($this->data, 'qcloud_captcha') ? [new QcloudMasterSwitch()] : [],
             'site_price' => 'required_if:site_mode,pay|nullable|gte:0.1',
+            'qcloud_cdn' => Arr::has($this->data, 'qcloud_cdn') ? [new QcloudMasterSwitch()] : [],
         ];
 
         // 腾讯云验证码特殊处理
