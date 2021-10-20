@@ -22,6 +22,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
+use App\Listeners\Setting\CheckCdn;
 use App\Models\AdminActionLog;
 use App\Models\Setting;
 use App\Repositories\UserRepository;
@@ -180,10 +181,16 @@ class SetSettingsController extends DzqAdminController
                 }
 
                 $value = !empty($value) ? 1 : 0;
-                if (!empty($value)) {
-                    $this->startCdnDomain($speedDomain);
+                if (is_array($cdnOrigins)) {
+                    $originsIp = $cdnOrigins[0];
                 } else {
-                    $this->stopCdnDomain($speedDomain);
+                    $originsIp = json_decode($cdnOrigins)[0];
+                }
+                $checkCdn = app()->make(CheckCdn::class);
+                if (!empty($value)) {
+                    $checkCdn->switchCdnStatus($speedDomain, true, $mainDomain, $originsIp);
+                } else {
+                    $checkCdn->switchCdnStatus($speedDomain, false, $mainDomain, $originsIp);
                 }
             }
             $this->settings->set($key, $value, $tag);

@@ -25,6 +25,7 @@ use Discuz\Contracts\Setting\SettingsRepository;
 use TencentCloud\Cdn\V20180606\Models\AddCdnDomainRequest;
 use TencentCloud\Cdn\V20180606\Models\DeleteCdnDomainRequest;
 use TencentCloud\Cdn\V20180606\Models\DescribeDomainsRequest;
+use TencentCloud\Cdn\V20180606\Models\PurgePathCacheRequest;
 use TencentCloud\Cdn\V20180606\Models\StartCdnDomainRequest;
 use TencentCloud\Cdn\V20180606\Models\StopCdnDomainRequest;
 use TencentCloud\Cdn\V20180606\Models\UpdateDomainConfigRequest;
@@ -78,10 +79,10 @@ trait CdnTrait
                     $req = new UpdateDomainConfigRequest();
                     $action = 'UpdateDomainConfig';
                     break;
-//                case 'delete':
-//                    $req = new DeleteCdnDomainRequest();
-//                    $action = 'DeleteCdnDomain';
-//                    break;
+                case 'delete':
+                    $req = new DeleteCdnDomainRequest();
+                    $action = 'DeleteCdnDomain';
+                    break;
                 case 'start':
                     $req = new StartCdnDomainRequest();
                     $action = 'StartCdnDomain';
@@ -93,6 +94,10 @@ trait CdnTrait
                 case 'describe':
                     $req = new DescribeDomainsRequest();
                     $action = 'DescribeDomains';
+                    break;
+                case 'purge':
+                    $req = new PurgePathCacheRequest();
+                    $action = 'PurgePathCache';
                     break;
                 default:
                     $req = new UpdateDomainConfigRequest();
@@ -120,7 +125,8 @@ trait CdnTrait
             'Origin' => [
                 'Origins' => $origins,// 源站地址
                 'OriginType' => 'ip',
-                'ServerName' => $serverName // 回源HOST
+                'ServerName' => $serverName, // 回源HOST
+                'OriginPullProtocol' => 'follow'
             ],
             'Cache' => [
                 'SimpleCache' => [
@@ -141,6 +147,18 @@ trait CdnTrait
                             'CacheType' => 'directory',
                             'CacheContents' => ['/api'],
                             'CacheTime' => 0
+                        ],[
+                            'CacheType' => 'directory',
+                            'CacheContents' => ['/api/backAdmin'],
+                            'CacheTime' => 0
+                        ],[
+                            'CacheType' => 'directory',
+                            'CacheContents' => ['/static-admin'],
+                            'CacheTime' => 0
+                        ],[
+                            'CacheType' => 'directory',
+                            'CacheContents' => ['/admin'],
+                            'CacheTime' => 0
                         ]
                     ]
                 ]
@@ -156,15 +174,16 @@ trait CdnTrait
             'Origin' => [
                 'Origins' => $origins,// 源站地址
                 'OriginType' => $originType,
-                'ServerName' => $serverName // 回源HOST
+                'ServerName' => $serverName, // 回源HOST
+                'OriginPullProtocol' => 'follow'
             ],
         ], '修改腾讯云CDN配置错误');
     }
 
-//    public function deleteCdnDomain($domain)
-//    {
-//        return $this->commonCdnDomain('delete', ['Domain' => $domain], '删除加速域名错误');
-//    }
+    public function deleteCdnDomain($domain)
+    {
+        return $this->commonCdnDomain('delete', ['Domain' => $domain], '删除加速域名错误');
+    }
 
     public function startCdnDomain($domain)
     {
@@ -182,5 +201,30 @@ trait CdnTrait
             'Name' => 'domain',
             'Value' => [$value],
         ], '查询域名基本信息错误');
+    }
+
+    public function getCdnDomainStatus($speedDomain)
+    {
+        $domains = $this->describeDomains($speedDomain);
+        DzqLog::info('getCdnDomainStatus', $domains);
+        if ($domains['TotalNumber'] != 0) {
+            return $domains['Domains'][0]['Status'];
+        }
+        return 'deleted';
+    }
+
+    public function purgeCdnPathCache()
+    {
+        $speedDomain = $this->settings->get('qcloud_cdn_speed_domain', 'qcloud');
+        $cdnDomainStatus = $this->getCdnDomainStatus($speedDomain);
+        if (!empty($speedDomain) && $cdnDomainStatus == 'online') {
+            return $this->commonCdnDomain('purge', [
+                'Paths' => [
+                    'http://'.$speedDomain,
+                    'https://'.$speedDomain
+                ],
+                'FlushType' => 'delete'
+            ], '刷新CDN缓存错误');
+        }
     }
 }

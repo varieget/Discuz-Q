@@ -30,6 +30,8 @@ use TencentCloud\Dnspod\V20210323\DnspodClient;
 use TencentCloud\Dnspod\V20210323\Models\CreateDomainAliasRequest;
 use TencentCloud\Dnspod\V20210323\Models\CreateDomainRequest;
 use TencentCloud\Dnspod\V20210323\Models\CreateRecordRequest;
+use TencentCloud\Dnspod\V20210323\Models\DescribeRecordListRequest;
+use TencentCloud\Dnspod\V20210323\Models\ModifyRecordStatusRequest;
 
 trait DnspodTrait
 {
@@ -79,6 +81,14 @@ trait DnspodTrait
                     $req = new CreateRecordRequest();
                     $action = 'CreateRecord';
                     break;
+                case 'describe':
+                    $req = new DescribeRecordListRequest();
+                    $action = 'DescribeRecordList';
+                    break;
+                case 'modifyRecordStatus':
+                    $req = new ModifyRecordStatusRequest();
+                    $action = 'ModifyRecordStatus';
+                    break;
                 default:
                     $req = new CreateRecordRequest();
                     $action = 'CreateRecord';
@@ -105,21 +115,48 @@ trait DnspodTrait
 //        ], '创建域名别名错误');
 //    }
 
-    public function createDomain($domain = '')
+    public function createDomain($mainDomain = '')
     {
         return $this->commonDnspodDomain('create', [
-            'Domain' => $domain // 主域名
+            'Domain' => $mainDomain // 主域名
         ], '添加域名错误');
     }
 
-    public function createRecord($domain = '', $value = '', $recordType = 'CNAME', $recordLine = '默认', $subDomain = 'www')
+    public function createRecord($mainDomain = '', $value = '', $recordType = '', $recordLine = '默认', $subDomain = 'www')
     {
         return $this->commonDnspodDomain('update', [
-            'Domain' => $domain, // 域名
+            'Domain' => $mainDomain, // 域名
             'RecordType' => $recordType, // 记录类型，通过 API 记录类型获得，大写英文，比如：A 。
             'RecordLine' => $recordLine, // 记录线路，通过 API 记录线路获得，中文，比如：默认。
             'Value' => $value, // 记录值，如 IP : 200.200.200.200， CNAME : cname.dnspod.com.， MX : mail.dnspod.com.。
             'SubDomain' => $subDomain // 主机记录，如 www，如果不传，默认为 @。
         ], '添加域名解析记录错误');
+    }
+
+    public function describeRecordList($mainDomain)
+    {
+        return $this->commonDnspodDomain('describe', [
+            'Domain' => $mainDomain
+        ], '获取域名解析记录错误');
+    }
+
+    public function getRecordId($mainDomain = '', $value = '', $type = '', $name = 'www')
+    {
+        $recordList = $this->describeRecordList($mainDomain);
+        foreach ($recordList['RecordList'] as $val) {
+            if ($val['Value'] == $value && $val['Type'] == $type && $val['Name'] == $name) {
+                return $val['RecordId'];
+            }
+        }
+        return '';
+    }
+
+    public function modifyRecordStatus($mainDomain, $recordId, $status)
+    {
+        return $this->commonDnspodDomain('modifyRecordStatus', [
+            'Domain' => $mainDomain,
+            'RecordId' => $recordId,
+            'Status' => $status // ENABLE、DISABLE
+        ], '修改记录状态错误');
     }
 }
