@@ -22,6 +22,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
+use App\Listeners\Setting\CheckCdn;
 use App\Models\AdminActionLog;
 use App\Models\Setting;
 use App\Repositories\UserRepository;
@@ -45,6 +46,8 @@ class SetSettingsController extends DzqAdminController
     use CosTrait;
 
     use QcloudTrait;
+
+    use CdnTrait;
 
     public function suffixClearCache($user)
     {
@@ -168,8 +171,27 @@ class SetSettingsController extends DzqAdminController
                     $this->outPut(ResponseCode::INVALID_PARAMETER,'请输入正确的付费模式过期天数：0~1000000');
                 }
             }
-            if($key == 'qcloud_cdn'){
+            if ($key == 'qcloud_cdn') {
+                $speedDomain = $this->settings->get('qcloud_cdn_speed_domain', 'qcloud');
+                $mainDomain = $this->settings->get('qcloud_cdn_main_domain', 'qcloud');
+                $cdnOrigins = $this->settings->get('qcloud_cdn_origins', 'qcloud');
+                $serverName = $this->settings->get('qcloud_cdn_server_name', 'qcloud');
+                if (empty($speedDomain) || empty($mainDomain) || empty($cdnOrigins) || empty($serverName)) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '请先完善CDN配置');
+                }
+
                 $value = !empty($value) ? 1 : 0;
+                if (is_array($cdnOrigins)) {
+                    $originsIp = $cdnOrigins[0];
+                } else {
+                    $originsIp = json_decode($cdnOrigins)[0];
+                }
+                $checkCdn = app()->make(CheckCdn::class);
+                if (!empty($value)) {
+                    $checkCdn->switchCdnStatus($speedDomain, true, $mainDomain, $originsIp);
+                } else {
+                    $checkCdn->switchCdnStatus($speedDomain, false, $mainDomain, $originsIp);
+                }
             }
             $this->settings->set($key, $value, $tag);
             //针对腾讯云配置，设置初始时间
