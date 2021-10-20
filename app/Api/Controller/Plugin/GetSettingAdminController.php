@@ -17,24 +17,18 @@
 
 namespace App\Api\Controller\Plugin;
 
-use App\Repositories\UserRepository;
-use Discuz\Base\DzqController;
+use Discuz\Base\DzqAdminController;
 
-class GetSettingController extends DzqController
+class GetSettingAdminController extends DzqAdminController
 {
     use GetSettingTrait;
-
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return true;
-    }
 
     public function main()
     {
         $appId = $this->inPut('appId');
         $this->dzqValidate(['appId' => $appId], ['appId' => 'required|string']);
 
-        $data = $this->getResult($appId, false);
+        $data = $this->getResult($appId, true);
 
         $this->outPut(0,'',$data);
     }

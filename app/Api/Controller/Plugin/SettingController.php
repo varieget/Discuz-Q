@@ -42,10 +42,42 @@ class SettingController extends DzqAdminController
         $pluginSetting->app_id = $appId;
         $pluginSetting->app_name = $name;
         $pluginSetting->type = $type;
+
+        $result = $this->checkValue($value);
+        if (!$result){
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
         $pluginSetting->value = json_encode($value, 256);
         if (!$pluginSetting->save()) {
             $this->outPut(ResponseCode::DB_ERROR);
         }
         $this->outPut(0);
+    }
+
+    /**
+     * @param $value
+     * {
+     *  "key":{"value":"","isPublic":1}
+     * }
+     */
+    private function checkValue(&$value){
+        /** @var PluginFileSave $shopFileSave */
+        $shopFileSave = $this->app->make(PluginFileSave::class);
+        foreach ($value as $key=>&$item){
+            if (!is_array($item)){
+                return false;
+            }
+            if(!isset($item["value"])){
+                return false;
+            }
+            $urlTemp = parse_url($item["value"]);
+            if (isset($urlTemp["scheme"]) && isset($urlTemp["host"])){
+               $isResouce = $shopFileSave->checkSiteResource($item["value"]);
+               if ($isResouce){
+                   $item["isResource"] = 1;
+               }
+            }
+        }
+        return true;
     }
 }
