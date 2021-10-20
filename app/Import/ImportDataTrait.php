@@ -184,11 +184,11 @@ trait ImportDataTrait
         $averageProcessPercent = 95 / count($data);
         $totalImportDataNumber = 0;
         foreach ($data as $value) {
-            $theradId = $this->insertCrawlerData($topic, $categoryId, $value);
+            $threadId = $this->insertCrawlerData($topic, $categoryId, $value);
             $totalImportDataNumber++;
             $processPercent = $processPercent + $averageProcessPercent;
             $this->changeLockFileContent($this->importDataLockFilePath, $startCrawlerTime, $processPercent, Thread::IMPORT_PROCESSING, $topic, $totalImportDataNumber);
-            $this->insertLogs('----Insert a new thread success.The thread id is ' . $theradId . '.The progress is ' . floor((string)$processPercent) . '%.----');
+            $this->insertLogs('----Insert a new thread success.The thread id is ' . $threadId . '.The progress is ' . floor((string)$processPercent) . '%.----');
         }
         Category::refreshThreadCountV3($this->categoryId);
         $this->changeLockFileContent($this->importDataLockFilePath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $topic, $totalImportDataNumber);
@@ -682,7 +682,7 @@ trait ImportDataTrait
             if (!isset($value['user']) || empty($value['user']) ||
                 !isset($value['comment']['text']['text']) ||
                 empty($value['comment']['text']['text'])) {
-                throw new \Exception('数据格式有误');
+                continue;
             }
 
             [$oldUsernameData, $oldNicknameData, $userData] = $this->insertUser($oldUsernameData, $oldNicknameData, $value['user']);
