@@ -77,7 +77,7 @@ trait WxShopTrait
             DzqLog::error("gjz 001 ",[],"100002");
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
-        DzqLog::error("gjz 001 ",[],"100003");
+        DzqLog::error("gjz 001 ",[],"100003=".json_encode($settingData));
         if (!isset($settingData["wxAppId"])
             || !isset($settingData["wxAppId"]["value"])
             || !isset($settingData["wxAppSecret"])
