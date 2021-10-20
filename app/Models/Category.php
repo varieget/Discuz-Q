@@ -279,10 +279,6 @@ class Category extends DzqModel
 
     public function getValidCategoryIds(User $user, $categoryids = [])
     {
-        $groups = $user->groups->toArray();
-        if (empty($groups)) {
-            return false;
-        }
         $permissions = Permission::getUserPermissions($user);
         $categories = self::getCategories();
         $cids = array_column($categories, 'id');
