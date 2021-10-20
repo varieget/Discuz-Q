@@ -2,7 +2,6 @@
 
 namespace App\Notifications\Messages\Wechat;
 
-use App\Models\NotificationTiming;
 use App\Models\User;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -56,9 +55,6 @@ class StatusWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
-        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
-        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
-
         $reason = '无';
         if (Arr::has($data, 'refuse')) {
             if (! empty($data['refuse'])) {
@@ -76,7 +72,6 @@ class StatusWechatMessage extends SimpleMessage
          * @parem $user_change_status 改变的用户状态
          * @parem $user_original_status 原用户状态
          * @parem $reason 原因
-         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$user_id}'              => $this->user->id,
@@ -87,7 +82,6 @@ class StatusWechatMessage extends SimpleMessage
             '{$user_change_status}'   => User::enumStatus($this->user->status, true),
             '{$user_original_status}' => User::enumStatus($this->user->getRawOriginal('status'), true),
             '{$reason}'               => $reason,
-            '{$notification_num}'     => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
 
         // build data

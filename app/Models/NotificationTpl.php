@@ -42,8 +42,6 @@ use s9e\RegexpBuilder\Builder;
  * @property string $page_path
  * @property int $is_error
  * @property string $error_msg
- * @property int $push_type
- * @property int $delay_time
  */
 class NotificationTpl extends Model
 {
@@ -63,14 +61,6 @@ class NotificationTpl extends Model
     const REDIRECT_TYPE_TO_NO          = 0;
     const REDIRECT_TYPE_TO_H5          = 1;
     const REDIRECT_TYPE_TO_MINIPROGRAM = 2;
-
-    /**
-     * 消息推送类型(0:即时推送,1:间隔推送)
-     */
-    const PUSH_TYPE_NOW = 0;
-    const PUSH_TYPE_DELAY = 1;
-
-    const MAX_DELAY_TIME = 60 * 60 * 24; // 间隔推送最大延迟时间(86400秒)
 
     public $timestamps = false;
 
@@ -94,8 +84,6 @@ class NotificationTpl extends Model
         'page_path',
         'is_error',
         'error_msg',
-        'push_type',
-        'delay_time',
     ];
 
     /**
@@ -348,23 +336,4 @@ class NotificationTpl extends Model
         return $data->toArray();
     }
 
-    public static function getPushType($noticeId)
-    {
-        $pushType = self::query()->where('notice_id', $noticeId)->first('push_type');
-        if (!empty($pushType)) {
-            return $pushType->toArray()['push_type'];
-        } else {
-            return false;
-        }
-    }
-
-    public static function getDelayTime($noticeId)
-    {
-        $delayTime = self::query()->where(['notice_id' => $noticeId])->first('delay_time');
-        if (!empty($delayTime)) {
-            return $delayTime->toArray()['delay_time'];
-        } else {
-            return false;
-        }
-    }
 }

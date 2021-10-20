@@ -2,7 +2,6 @@
 
 namespace App\Notifications\Messages\Wechat;
 
-use App\Models\NotificationTiming;
 use App\Models\User;
 use App\Models\UserWalletCash;
 use Discuz\Notifications\Messages\SimpleMessage;
@@ -26,8 +25,6 @@ class WithdrawalWechatMessage extends SimpleMessage
      */
     protected $actor;
 
-    protected $data;
-
     /**
      * @var UrlGenerator
      */
@@ -40,13 +37,12 @@ class WithdrawalWechatMessage extends SimpleMessage
 
     public function setData(...$parameters)
     {
-        [$firstData, $actor, $cash, $data] = $parameters;
+        [$firstData, $actor, $cash] = $parameters;
         // set parent tpl data
         $this->firstData = $firstData;
 
         $this->actor = $actor;
         $this->cash = $cash;
-        $this->data = $data;
 
         $this->template();
     }
@@ -63,9 +59,6 @@ class WithdrawalWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
-        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
-        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
-
         /**
          * 设置父类 模板数据
          * @parem $user_id 提现用户ID
@@ -80,7 +73,6 @@ class WithdrawalWechatMessage extends SimpleMessage
          * @parem $remark 备注或原因 (默认"无")
          * @parem $trade_no 交易号
          * @parem $cash_created_at 提现创建时间
-         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$user_id}'            => $this->cash->user->id,
@@ -95,7 +87,6 @@ class WithdrawalWechatMessage extends SimpleMessage
             '{$remark}'             => $this->cash->remark ?: '无',
             '{$trade_no}'           => $this->cash->trade_no,
             '{$cash_created_at}'    => $this->cash->created_at,
-            '{$notification_num}'   => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
 
         // build data

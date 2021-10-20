@@ -61,8 +61,6 @@ trait NotificationTrait
                 'disabled'           => $model->type === NotificationTpl::SYSTEM_NOTICE && in_array($model->notice_id, $this->disabledId),
                 'isError'           => $model->is_error,
                 'errorMsg'          => $model->error_msg,
-                'pushType'          => $model->push_type,
-                'delayTime'         => $model->delay_time,
             ];
             if ($model->type == NotificationTpl::MINI_PROGRAM_NOTICE) {
                 // 小程序通知模板统一，触发点的提示语

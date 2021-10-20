@@ -2,7 +2,6 @@
 
 namespace App\Notifications\Messages\Wechat;
 
-use App\Models\NotificationTiming;
 use App\Models\Order;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -68,8 +67,6 @@ class ReceiveRedPacketWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
-        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
-        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
 
         $message = Arr::get($this->data, 'message', '');
         $threadId = Arr::get($this->data, 'raw.thread_id', 0);
@@ -97,7 +94,6 @@ class ReceiveRedPacketWechatMessage extends SimpleMessage
          * @parem $order_type_name
          * @parem $actual_amount
          * @parem $content
-         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$username}'           => $actorName,
@@ -105,8 +101,7 @@ class ReceiveRedPacketWechatMessage extends SimpleMessage
             '{$order_type_name}'     => $orderName,
             '{$actual_amount}'       => $actualAmount,
             '{$content}'             => $this->strWords($message),
-            '{$thread_id}'           => $threadId,
-            '{$notification_num}'    => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
+            '{$thread_id}'           => $threadId
         ]);
         // build data
         $expand = [

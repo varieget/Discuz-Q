@@ -2,7 +2,6 @@
 
 namespace App\Notifications\Messages\Wechat;
 
-use App\Models\NotificationTiming;
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Contracts\Routing\UrlGenerator;
 
@@ -48,9 +47,6 @@ class GroupWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
-        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
-        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
-
         /**
          * 设置父类 模板数据
          * @parem $user_id 被更改人的用户ID
@@ -60,7 +56,6 @@ class GroupWechatMessage extends SimpleMessage
          * @parem $user_mobile_encrypt 被更改人的手机号(带 * 的)
          * @parem $group_original 原用户组名
          * @parem $group_change 新用户组名
-         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$user_id}'             => $this->user->id,
@@ -70,7 +65,6 @@ class GroupWechatMessage extends SimpleMessage
             '{$user_mobile_encrypt}' => $this->user->mobile,
             '{$group_original}'      => $data['old']->pluck('name')->join('、'),
             '{$group_change}'        => $data['new']->pluck('name')->join('、'),
-            '{$notification_num}'    => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
 
         // build data
