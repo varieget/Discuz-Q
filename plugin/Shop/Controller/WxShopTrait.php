@@ -52,7 +52,7 @@ trait WxShopTrait
     }
 
     /**
-     * @return ["wx_app_id","wx_app_secret","wx_qrcode"]
+     * @return ["wxAppId","wxAppSecret","wxQrcode"]
      */
     public function getSetting(){
         $this->getConfig();
@@ -75,11 +75,14 @@ trait WxShopTrait
         if (empty($settingData)){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
-        if (!isset($settingData["wx_app_id"]) || !isset($settingData["wx_app_secret"])){
+        if (!isset($settingData["wxAppId"])
+            || !isset($settingData["wxAppId"]["value"])
+            || !isset($settingData["wxAppSecret"])
+            || !isset($settingData["wxAppSecret"]["value"])){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
 
-        return [0, $this->miniProgram(["app_id"=>$settingData["wx_app_id"],"secret"=>$settingData["wx_app_secret"]])];
+        return [0, $this->miniProgram(["app_id"=>$settingData["wxAppId"]["value"],"secret"=>$settingData["wxAppSecret"]["value"]])];
     }
 
     public function getAccessToken(){

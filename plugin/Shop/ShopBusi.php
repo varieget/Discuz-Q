@@ -5,7 +5,6 @@ namespace Plugin\Shop;
 
 
 use App\Modules\ThreadTom\TomBaseBusi;
-use App\Modules\ThreadTom\TomConfig;
 use Plugin\Shop\Controller\WxShopTrait;
 use Plugin\Shop\Model\ShopProducts;
 
@@ -94,17 +93,18 @@ class ShopBusi extends TomBaseBusi
     }
 
 
-    private function selectWxShop(ShopProducts &$product){
+    private function selectWxShop( &$product){
         $qrCode = "";
         $setting = $this->getSetting();
-        if ($setting && isset($setting["wx_qrcode"])){
-            $qrCode = $setting["wx_qrcode"];
+        if ($setting && isset($setting["wxQrcode"]) && isset($setting["wxQrcode"]["value"])){
+            $qrCode = $setting["wxQrcode"]["value"];
         }
 
-        if (!empty($product->detail_qrcode)){
-            $product->detail_qrcode = $this->getQRUrl($product->is_remote,$product->detail_qrcode);
+        $xx = $product["detailQrcode"];
+        if (!empty($product["detailQrcode"])){
+            $product["detailQrcode"] = $this->getQRUrl($product["isRemote"],$product["detailQrcode"]);
         }else{
-            $product->detail_qrcode = $qrCode;
+            $product["detailQrcode"] = $qrCode;
         }
 
         return $product;
@@ -114,7 +114,7 @@ class ShopBusi extends TomBaseBusi
         $resultData = false;
 
         $config = $this->getSetting();
-        $wxAppId = $config["wx_app_id"];
+        $wxAppId = $config["wxAppId"]["value"];
         list($result,$accssToken) = $this->getAccessToken();
         if ($result !== 0){
             return $resultData;
@@ -172,7 +172,8 @@ class ShopBusi extends TomBaseBusi
             $resultData = $productOld;
         }
 
-        return $resultData;
+        $resultDataTemp = $this->camelData($resultData);
+        return $resultDataTemp;
     }
 
 }
