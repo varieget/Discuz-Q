@@ -2,11 +2,5 @@
 
 /**@var Discuz\Http\RouteCollection $route*/
 
-//拉取商品信息
+//拉取微信小商店商品列表
 $route->get('wxshop/list', 'wxshop.list', \Plugin\Shop\Controller\WxShopListController::class);
-//拉取商店信息
-$route->get('wxshop/info', 'wxshop.info', \Plugin\Shop\Controller\WxShopInfoController::class);
-//上传图片
-$route->post('shop/uploadimage', 'shop.uploadimage', \Plugin\Shop\Controller\ShopUploadImageController::class);
-
-

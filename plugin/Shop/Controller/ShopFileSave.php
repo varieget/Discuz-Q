@@ -25,15 +25,15 @@ class ShopFileSave
 
     public function saveFile($fileName,string $qrBuff){
         try {
-            $path="shop/".$fileName;
+            $path="public/shop/".$fileName;
             $isRemote=false;
             // 开启 cos 时，cos放一份
             if($this->settings->get('qcloud_cos', 'qcloud')){
                 //$qrBuffTemp = clone $qrBuff;
-                $this->fileSystem->disk('cos')->put("public/".$path, $qrBuff);
+                $this->fileSystem->disk('cos')->put($path, $qrBuff);
                 $isRemote = true;
             }
-            $this->fileSystem->disk('public')->put($path, $qrBuff);
+            $this->fileSystem->disk('local')->put($path, $qrBuff);
 
             return [$path, $isRemote];
         } catch (Exception $e) {
@@ -50,25 +50,26 @@ class ShopFileSave
 
     public function getFilePath($isRemote, $path){
         if($isRemote && $this->settings->get('qcloud_cos', 'qcloud')){
-            $isExist = $this->fileSystem->disk('cos')->has("public/".$path);
+            $isExist = $this->fileSystem->disk('cos')->has($path);
             if ($isExist){
-                $url = $this->fileSystem->disk('cos')->url("public/".$path);
+                $url = $this->fileSystem->disk('cos')->url($path);
                 return $url;
             }
         }
-        $url = $this->fileSystem->disk('public')->url($path);
+        $url = $this->fileSystem->disk('local')->url($path);
         return $url;
     }
 
     public function getCurrentUrl($urlOld){
         $isRemote = true;
-        $qcloudIndex = strpos($urlOld,"myqcloud.com");
-        if (!$qcloudIndex){
+        $urlOldArray = parse_url($urlOld);
+        if (false !== strpos($urlOldArray["host"],"myqcloud.com") ){
             $isRemote = false;
         }
-        $pathIndex = strpos($urlOld,"public/shop");
-        $path = substr($urlOld,$pathIndex+strlen("public/"));
-
-        return $this->getFilePath($isRemote,$path);
+        $path = $urlOldArray["path"];
+        if ( 0 == strpos($urlOldArray["path"],"/")){
+            $path = substr($urlOldArray["path"],1);
+        }
+        return $this->getFilePath($isRemote, $path);
     }
 }

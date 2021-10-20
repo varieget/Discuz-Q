@@ -20,7 +20,8 @@ class ShopBusi extends TomBaseBusi
     public function create()
     {
         $products = $this->getParams('products');
-        foreach ($products as &$item){
+        $productsNew = [];
+        foreach ($products as $item){
             if(!isset($item["type"])){
                 continue;
             }
@@ -35,15 +36,20 @@ class ShopBusi extends TomBaseBusi
                     $item["data"] = $pData;
                 }
             }
+            $productsNew[] = $item;
+            if (count($productsNew)>=10){
+                break;
+            }
         }
-        $productData["products"] = $products;
+        $productData["products"] = $productsNew;
         return $this->jsonReturn($productData);
     }
 
     public function update()
     {
         $products = $this->getParams('products');
-        foreach ($products as &$item){
+        $productsNew = [];
+        foreach ($products as $item){
             if(!isset($item["type"])){
                 continue;
             }
@@ -58,8 +64,12 @@ class ShopBusi extends TomBaseBusi
                     $item["data"] = $pData;
                 }
             }
+            $productsNew[] = $item;
+            if (count($productsNew)>=10){
+                break;
+            }
         }
-        $productData["products"] = $products;
+        $productData["products"] = $productsNew;
         return $this->jsonReturn($productData);
     }
 
