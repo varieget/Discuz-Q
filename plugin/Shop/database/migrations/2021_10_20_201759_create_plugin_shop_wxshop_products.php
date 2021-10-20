@@ -1,11 +1,9 @@
 <?php
 
-
+use Discuz\Database\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Query\Expression;
-use Discuz\Base\DzqPluginMigration;
 
-class CreatePluginShopWxshopProducts extends DzqPluginMigration
+class CreatePluginShopWxshopProducts extends Migration
 {
     /**
      * Run the migrations.
