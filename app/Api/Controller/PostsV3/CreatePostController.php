@@ -21,6 +21,7 @@ use App\Api\Controller\ThreadsV3\ThreadHelper;
 use App\Api\Controller\ThreadsV3\ThreadTrait;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Api\Serializer\PostSerializer;
+use App\Censor\Censor;
 use App\Commands\Post\CreatePost;
 use App\Common\CacheKey;
 use App\Common\Platform;
@@ -138,6 +139,9 @@ class CreatePostController extends DzqController
         if (!isset($data['content'])) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '评论内容不能为空');
         }
+        //敏感词处理
+        $censor = app(Censor::class);
+        $data['content'] = $censor->checkText($data['content']);
 
         //针对创建评论，前端不传标签的情况，转化 \n 为  <p></p>  实现换行
         if (strpos($data['content'], "\n") !== false) {
