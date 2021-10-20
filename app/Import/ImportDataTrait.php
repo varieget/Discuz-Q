@@ -101,7 +101,7 @@ trait ImportDataTrait
     {
         $topic = $optionData['topic'];
         $number = $optionData['number'];
-        if ($number < 0 || $number > 1000 || floor($number) != $number) {
+        if ($number < 0 || $number > 100 || floor($number) != $number) {
             throw new \Exception('number参数错误');
         }
         if (!empty($number) && empty($topic)) {
@@ -142,6 +142,9 @@ trait ImportDataTrait
             }
             return true;
         } else {
+            if (empty($number)) {
+                throw new \Exception('number数值必须大于0！');
+            }
             if (file_exists($this->importDataLockFilePath)) {
                 $lockFileContent = $this->getLockFileContent($this->importDataLockFilePath);
                 if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {

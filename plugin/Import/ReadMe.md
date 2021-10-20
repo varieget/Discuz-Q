@@ -59,7 +59,7 @@ $optionData = [
   	'interval' => $this->option('interval') ?? 0,
   	'month' => $this->option('month') ?? 0,
   	'week' => $this->option('week') ?? 0,
- 	 	'day' => $this->option('day') ?? 0,
+ 	'day' => $this->option('day') ?? 0,
   	'hour' => $this->option('hour') ?? 0,
   	'minute' => $this->option('minute') ?? 0
 ]; // 基础参数注解详见2.5
@@ -121,7 +121,7 @@ minute   分
 基础命令参数数值规范：
 
 ```
-number   1~1000的正整数
+number   1~100的正整数
 auto   	 0,1
 type     1,2,3,4
 interval 大于0的正整数
@@ -137,7 +137,7 @@ minute   0～60的正整数
 ```
 (1). 即时导入：php disco importData:insertWeiBoData --topic=xxx --number=5
 (2). 设置自动导入：
-	php disco importData:insertWeiBoData --topic=xxx --number=5 --auto=1 --type=4 --interval=1 --hour=10 --minute=15 # 每一天10:15自动导入
+  php disco importData:insertWeiBoData --topic=xxx --number=5 --auto=1 --type=4 --interval=1 --hour=10 --minute=15 # 每一天10:15自动导入
 	
   php disco importData:insertWeiBoData --topic=xxx --number=5 --auto=1 --type=4 --interval=2 --hour=10 --minute=15 # 每2天10:15自动导入
   
