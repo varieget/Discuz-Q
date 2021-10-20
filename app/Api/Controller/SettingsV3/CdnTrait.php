@@ -39,7 +39,7 @@ trait CdnTrait
     /**
      * @var SettingsRepository
      */
-    public $settings;
+    protected $settings;
 
     public $client;
 

@@ -46,6 +46,8 @@ class SetSettingsController extends DzqAdminController
 
     use QcloudTrait;
 
+    use CdnTrait;
+
     public function suffixClearCache($user)
     {
         DzqCache::delKey(CacheKey::SETTINGS);
@@ -168,8 +170,21 @@ class SetSettingsController extends DzqAdminController
                     $this->outPut(ResponseCode::INVALID_PARAMETER,'请输入正确的付费模式过期天数：0~1000000');
                 }
             }
-            if($key == 'qcloud_cdn'){
+            if ($key == 'qcloud_cdn') {
+                $speedDomain = $this->settings->get('qcloud_cdn_speed_domain', 'qcloud');
+                $mainDomain = $this->settings->get('qcloud_cdn_main_domain', 'qcloud');
+                $cdnOrigins = $this->settings->get('qcloud_cdn_origins', 'qcloud');
+                $serverName = $this->settings->get('qcloud_cdn_server_name', 'qcloud');
+                if (empty($speedDomain) || empty($mainDomain) || empty($cdnOrigins) || empty($serverName)) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '请先完善CDN配置');
+                }
+
                 $value = !empty($value) ? 1 : 0;
+                if (!empty($value)) {
+                    $this->startCdnDomain($speedDomain);
+                } else {
+                    $this->stopCdnDomain($speedDomain);
+                }
             }
             $this->settings->set($key, $value, $tag);
             //针对腾讯云配置，设置初始时间

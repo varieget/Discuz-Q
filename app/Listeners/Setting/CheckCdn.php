@@ -34,7 +34,7 @@ class CheckCdn
     /**
      * @var SettingsRepository
      */
-    public $settings;
+    protected $settings;
 
     /**
      * @var Validator

@@ -36,7 +36,7 @@ trait DnspodTrait
     /**
      * @var SettingsRepository
      */
-    public $settings;
+    protected $settings;
 
     public $client;
 
