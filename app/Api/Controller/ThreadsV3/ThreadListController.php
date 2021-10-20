@@ -36,7 +36,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
     use ThreadQueryTrait;
 
-    const PRELOAD_PAGES = 5;//预加载的页数，从第2页开始预加载
+    const PRELOAD_PAGES = 3;//预加载的页数，从第2页开始预加载
 
     private $categoryIds = [];
 
@@ -82,7 +82,7 @@ class ThreadListController extends DzqController
             $page = 1;
             $perPage = 10;
         }
-        $sqlLog = false;
+        $sqlLog = true;
         $sqlLog && $this->openQueryLog();
         $threads = $this->getOriginThreads($scope, $filter, $page, $perPage);
         $threadIds = $threads['pageData'];
@@ -166,29 +166,26 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        $isPreload =is_numeric(($page - 2)/self::PRELOAD_PAGES +1) ;
-        if ($page == 1 || !$isPreload) {
+        $needPreload = Utils::isPositiveInteger(($page - 2) / self::PRELOAD_PAGES + 1);
+        if ($page > 1 && $needPreload) {//预加载
+            return $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+        } else {//读缓存
             return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-//            $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-        }else{
-            $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         }
-        return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
     }
 
     private function loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        if ($page != 1) {
-            return false;
-        }
-        return DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-            $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
+        $ret =  DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
+            $threads = $this->preloadPaginiation($page,self::PRELOAD_PAGES, $perPage, $threadsBuilder);
+            dd($threads);
             $this->initDzqGlobalData($threads);
             array_walk($threads, function (&$v) {
                 $v['pageData'] = array_column($v['pageData'], 'id');
             });
             return $threads;
         }, true);
+        return $ret;
     }
 
     private function loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
