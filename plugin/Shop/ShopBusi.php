@@ -5,6 +5,7 @@ namespace Plugin\Shop;
 
 
 use App\Modules\ThreadTom\TomBaseBusi;
+use Discuz\Base\DzqLog;
 use Plugin\Shop\Controller\WxShopTrait;
 use Plugin\Shop\Model\ShopProducts;
 
@@ -113,19 +114,27 @@ class ShopBusi extends TomBaseBusi
     private function doProduct($productId){
         $resultData = false;
 
+        DzqLog::error("aaa",[],"100001");
+
         $config = $this->getSetting();
         $wxAppId = $config["wxAppId"]["value"];
+        DzqLog::error("aaa",[],"100002");
         list($result,$accssToken) = $this->getAccessToken();
+        DzqLog::error("aaa",[],"100003");
         if ($result !== 0){
+            DzqLog::error("aaa",[],"100004");
             return $resultData;
         }
+        DzqLog::error("aaa",[],"100005");
 
         $productId =  (string)$productId;
         $productInfo = $this->getProductInfo($accssToken, $productId);
+        DzqLog::error("aaa",[],"100006");
         if (empty($productInfo)){
+            DzqLog::error("aaa",[],"100007");
             return $resultData;
         }
-
+        DzqLog::error("aaa",[],"100008");
         $imgUrl = "";
         if (count($productInfo["head_img"])>0){
             $imgUrl=$productInfo["head_img"][0];

@@ -71,30 +71,38 @@ trait WxShopTrait
     }
 
     public function getWxApp(){
+        DzqLog::error("gjz 001 ",[],"100001");
         $settingData = $this->getSetting();
         if (empty($settingData)){
+            DzqLog::error("gjz 001 ",[],"100002");
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
+        DzqLog::error("gjz 001 ",[],"100003");
         if (!isset($settingData["wxAppId"])
             || !isset($settingData["wxAppId"]["value"])
             || !isset($settingData["wxAppSecret"])
             || !isset($settingData["wxAppSecret"]["value"])){
+            DzqLog::error("gjz 001 ",[],"100004");
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
-
+        DzqLog::error("gjz 001 ",[],"100005");
         return [0, $this->miniProgram(["app_id"=>$settingData["wxAppId"]["value"],"secret"=>$settingData["wxAppSecret"]["value"]])];
     }
 
     public function getAccessToken(){
+        DzqLog::error("gjz 002 ",[],"100001");
         list($result,$wxApp) = $this->getWxApp();
         if ($result !== 0){
+            DzqLog::error("gjz 002 ",[],"100002");
             return [$result,$wxApp];
         }
+        DzqLog::error("gjz 002 ",[],"100003");
         $accessToken = $wxApp->access_token->getToken(true);
         if (empty($accessToken["access_token"])){
+            DzqLog::error("gjz 002 ",[],"100004");
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件配置错误"];
         }
-
+        DzqLog::error("gjz 002 ",[],"100005");
         return [0,$accessToken["access_token"]];
     }
 
