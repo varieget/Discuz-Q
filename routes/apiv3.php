@@ -210,4 +210,4 @@ $route->get('/check.user.get.redpacket', 'check.user.get.redpacket', ApiControll
 $route->get('/upgrade.group', 'upgrade.group', ApiController\GroupV3\ListPayGroupsController::class);
 
 $route->get('/plugin/list', 'plugin', ApiController\Plugin\PluginListController::class);
-
+$route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingController::class);
