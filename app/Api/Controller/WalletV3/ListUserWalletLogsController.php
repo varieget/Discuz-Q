@@ -220,6 +220,9 @@ class ListUserWalletLogsController extends DzqController
                     case $log->change_type == UserWalletLog::TYPE_EXPEND_GROUP:     //购买用户组
                         $log->title = '购买用户组';
                         break;
+                    case $log->change_type == UserWalletLog::TYPE_CHARGE:       //自动充值
+                        $log->title = '微信充值';
+                        break;
                     default:
                         break;
                 }
@@ -304,6 +307,8 @@ class ListUserWalletLogsController extends DzqController
             //异常退款 end
             //提现失败 start
             UserWalletLog::TYPE_CASH_THAW,          //提现解冻，提现失败，12
+            //自动充值
+            UserWalletLog::TYPE_CHARGE,             //自动充值 180
         ];
 
         // 所有支出类型：

@@ -41,4 +41,7 @@ return [
     'abnormal_question_order_return_money'  => '问答帖订单异常返现',
 
     'not_find_site_expire_site_price'       => '站点续费相关配置(站点过期时间、站点价格)不全',
+
+    'site_charge_is_close'  =>  '站点暂不允许充值',
+    'site_charge' => '钱包订单'
 ];

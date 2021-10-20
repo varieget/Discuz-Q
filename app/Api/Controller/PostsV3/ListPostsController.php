@@ -81,7 +81,13 @@ class ListPostsController extends DzqController
         $posts = $this->search($filters, $perPage, $page, $sort);
         $posts['pageData'] = $posts['pageData']->map(function ($post) {
             return $this->getPost($post, true);
-        })->sortByDesc('rewards')->values()->toArray();
+        });
+        $sortBy = 'sortBy';
+        if (!empty($sort)) {
+            $sortBy = Str::startsWith($sort, '-') ? 'sortByDesc' : 'sortBy';
+        }
+        $posts['pageData'] = $this->postsSortOperate($posts['pageData'],$sortBy);
+
         $posts['pageData'] = $this->getLastThreeComments($posts['pageData']);
 
         $this->outPut(ResponseCode::SUCCESS, '', $posts);
@@ -296,18 +302,32 @@ class ListPostsController extends DzqController
         }
 
         $userData = $user->toArray();
+        unset($userData['username']);
         $data = array_merge($userData, [
-            'isReal'   => !empty($user->realname)
+            'isReal' => !empty($user->realname)
         ]);
         if ($user->relationLoaded('groups')) {
             $groupInfos = $user->groups->toArray();
-            $data['groups'] =  [
-                    'id' => $groupInfos[0]['id'],
-                    'name' => $groupInfos[0]['name'],
-                    'isDisplay' => $groupInfos[0]['is_display'],
-                ];
+            $isDisplay = $groupInfos[0]['is_display'];
+            $data['groups'] = [
+                'id' => $groupInfos[0]['id'],
+                'name' => $isDisplay ? $groupInfos[0]['name'] : '',
+                'isDisplay' => $isDisplay,
+            ];
         }
 
         return $data;
+    }
+
+    protected function postsSortOperate($postsPageData,$sortBy){
+        $postsNotRewards = $postsPageData->where('rewards', "0.0")->$sortBy("createdAt");
+        $postsRewards = $postsPageData->filter(function ($value) {
+            return $value['rewards'] > 0;
+        })->sortByDesc("rewards");
+        $pageData = $postsNotRewards->values()->toArray();
+        if($postsRewards->isNotEmpty()){
+            $pageData = $postsRewards->merge($postsNotRewards)->values()->toArray();
+        }
+        return $pageData;
     }
 }

@@ -170,6 +170,8 @@ class UserWalletLog extends Model
 
     const TYPE_MERGE_ORDER_ABNORMAL_REFUND = 172; // 合并订单异常退款
 
+    const TYPE_CHARGE = 180;        // 自动充值
+
     /**
      * 创建钱包动账记录
      *

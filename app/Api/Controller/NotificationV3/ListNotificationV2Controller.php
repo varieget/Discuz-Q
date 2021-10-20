@@ -122,6 +122,16 @@ class ListNotificationV2Controller extends DzqController
                                 $item->thread_username = $thread->isAnonymousName();
                                 $item->thread_user_groups = '';
                             }
+                            //悬赏贴用户对象调整
+                            if($item->type === 'threadrewarded'){
+                                $item->user_name = $threadUser->username;
+                                $item->user_avatar = $threadUser->avatar;
+                                $item->realname = $threadUser->realname;
+                                $item->nickname = $threadUser->nickname;
+                                $itemData = $item->data;
+                                $itemData['user_id'] = $threadUser->id;
+                                $item->data = $itemData;
+                            }
                         }
                     }
                 }

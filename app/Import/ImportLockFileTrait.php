@@ -45,6 +45,14 @@ trait ImportLockFileTrait
     // 自动导入参数校验
     public function checkAutoImportParameters($data, $platform)
     {
+        if (empty($data['topic'])) {
+            throw new \Exception('缺少参数topic');
+        }
+
+        if (empty($data['number'])) {
+            throw new \Exception('缺少参数number');
+        }
+
         if (empty($data['type'])) {
             throw new \Exception('缺少参数type');
         }
@@ -123,7 +131,7 @@ trait ImportLockFileTrait
         if ($key == 'hour' && $number > 24) {
             throw new \Exception('小时数值不符合范围规范');
         }
-        if ($key == 'minute' && $number > 24) {
+        if ($key == 'minute' && $number > 60) {
             throw new \Exception('分钟数值不符合范围规范');
         }
         return true;

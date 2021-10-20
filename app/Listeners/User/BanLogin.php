@@ -33,29 +33,16 @@ class BanLogin
         $user = $event->user;
         switch ($user->status) {
             case 1:
-                Utils::outPut(ResponseCode::USER_BAN);
-//                throw new PermissionDeniedException('ban_user');
+                Utils::outPut(ResponseCode::USER_BAN,'',['reason'=>$user->reject_reason]);
                 break;
 //            case 2:
 //                Utils::outPut(ResponseCode::JUMP_TO_AUDIT);
 //                break;
             case 3:
-                Utils::outPut(ResponseCode::VALIDATE_REJECT,ResponseCode::$codeMap[ResponseCode::VALIDATE_REJECT],User::getUserReject($user->id));
-//                $response = [
-//                    'errors' => [
-//                        [
-//                            'status' => '401',
-//                            'code' => 'validate_reject',
-//                            'data' => User::getUserReject($user->id)
-//                        ]
-//                    ]
-//                ];
-//                return DiscuzResponseFactory::JsonResponse($response)->withStatus(401);
-//                throw new PermissionDeniedException('validate_reject');
+                Utils::outPut(ResponseCode::VALIDATE_REJECT,'',User::getUserReject($user->id));
                 break;
             case 4:
                 Utils::outPut(ResponseCode::VALIDATE_IGNORE);
-//                throw new PermissionDeniedException('validate_ignore');
                 break;
         }
     }

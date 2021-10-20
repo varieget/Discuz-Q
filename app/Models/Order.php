@@ -91,6 +91,8 @@ class Order extends DzqModel
 
     const ORDER_TYPE_LONG = 21; //长文帖红包
 
+    const ORDER_TYPE_CHARGE = 30;  //充值
+
     /**
      * 订单状态
      */

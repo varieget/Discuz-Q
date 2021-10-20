@@ -14,8 +14,8 @@
  *          @OA\JsonContent(
  *              @OA\Property(property="type",type="integer",description = "附件类型(0帖子附件，1帖子图片，2帖子视频，3帖子音频，4消息图片)",
  *          enum={0,1,2,3,4},),
- *              @OA\Property(property="fileName",type="string",description = "文件别名，含后缀"),
- *              @OA\Property(property="fileSize",type="integer",description = "单位为B(字节)"),
+ *              @OA\Property(property="fileName",type="string",description = "原始文件名，含后缀"),
+ *              @OA\Property(property="attachment",type="string",description = "加密文件名，含后缀"),
  *          )
  *     ),
  *

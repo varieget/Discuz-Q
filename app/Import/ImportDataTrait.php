@@ -101,7 +101,7 @@ trait ImportDataTrait
     {
         $topic = $optionData['topic'];
         $number = $optionData['number'];
-        if ($number < 0 || $number > 1000 || floor($number) != $number) {
+        if ($number < 0 || $number > 100 || floor($number) != $number) {
             throw new \Exception('number参数错误');
         }
         if (!empty($number) && empty($topic)) {
@@ -142,6 +142,9 @@ trait ImportDataTrait
             }
             return true;
         } else {
+            if (empty($number)) {
+                throw new \Exception('number数值必须大于0！');
+            }
             if (file_exists($this->importDataLockFilePath)) {
                 $lockFileContent = $this->getLockFileContent($this->importDataLockFilePath);
                 if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {
@@ -184,11 +187,11 @@ trait ImportDataTrait
         $averageProcessPercent = 95 / count($data);
         $totalImportDataNumber = 0;
         foreach ($data as $value) {
-            $theradId = $this->insertCrawlerData($topic, $categoryId, $value);
+            $threadId = $this->insertCrawlerData($topic, $categoryId, $value);
             $totalImportDataNumber++;
             $processPercent = $processPercent + $averageProcessPercent;
             $this->changeLockFileContent($this->importDataLockFilePath, $startCrawlerTime, $processPercent, Thread::IMPORT_PROCESSING, $topic, $totalImportDataNumber);
-            $this->insertLogs('----Insert a new thread success.The thread id is ' . $theradId . '.The progress is ' . floor((string)$processPercent) . '%.----');
+            $this->insertLogs('----Insert a new thread success.The thread id is ' . $threadId . '.The progress is ' . floor((string)$processPercent) . '%.----');
         }
         Category::refreshThreadCountV3($this->categoryId);
         $this->changeLockFileContent($this->importDataLockFilePath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $topic, $totalImportDataNumber);
@@ -682,7 +685,7 @@ trait ImportDataTrait
             if (!isset($value['user']) || empty($value['user']) ||
                 !isset($value['comment']['text']['text']) ||
                 empty($value['comment']['text']['text'])) {
-                throw new \Exception('数据格式有误');
+                continue;
             }
 
             [$oldUsernameData, $oldNicknameData, $userData] = $this->insertUser($oldUsernameData, $oldNicknameData, $value['user']);

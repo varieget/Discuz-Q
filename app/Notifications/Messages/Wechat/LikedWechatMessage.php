@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Messages\Wechat;
 
+use App\Models\NotificationTiming;
 use App\Models\Post;
 use App\Models\Thread;
 use Discuz\Notifications\Messages\SimpleMessage;
@@ -22,6 +23,8 @@ class LikedWechatMessage extends SimpleMessage
      */
     protected $post;
 
+    protected $data;
+
     /**
      * @var UrlGenerator
      */
@@ -34,12 +37,13 @@ class LikedWechatMessage extends SimpleMessage
 
     public function setData(...$parameters)
     {
-        [$firstData, $actor, $post] = $parameters;
+        [$firstData, $actor, $post, $data] = $parameters;
         // set parent tpl data
         $this->firstData = $firstData;
 
         $this->actor = $actor;
         $this->post = $post;
+        $this->data = $data;
 
         $this->template();
     }
@@ -56,6 +60,9 @@ class LikedWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
+        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
+        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
+
         $threadTitle = $this->post->thread->getContentByType(Thread::CONTENT_LENGTH, true);
 
         /**
@@ -66,6 +73,7 @@ class LikedWechatMessage extends SimpleMessage
          * @parem $thread_id 主题ID （可用于跳转参数）
          * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
          * @parem $post_content 帖子内容
+         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$user_id}'             => $this->actor->id,
@@ -74,6 +82,7 @@ class LikedWechatMessage extends SimpleMessage
             '{$thread_id}'           => $this->post->thread->id,
             '{$thread_title}'        => $this->strWords($threadTitle),
             '{$post_content}'        => $this->strWords($this->post->content),
+            '{$notification_num}'    => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
 
         /**

@@ -55,7 +55,7 @@ class CreateOrderController extends DzqController
         app('validator')->validate($data, [
             'amount'        => 'required_if:type,' . Order::ORDER_TYPE_REWARD . '|min:0.01',
             'is_anonymous'    => 'required|int|in:0,1',
-            'type'   => 'required|int|min:1|max:11',
+            'type'   => 'required|int|min:1|max:30',
             'thread_id'     => 'required_if:type,' . Order::ORDER_TYPE_REWARD . ',' . Order::ORDER_TYPE_THREAD . '|int'
         ]);
         $orderType = $data['type'];
@@ -265,6 +265,16 @@ class CreateOrderController extends DzqController
             case Order::ORDER_TYPE_MERGE:
                 // 创建订单
                 $amount = sprintf('%.2f', $data['amount']); // 设置红包+悬赏价格
+                $payeeId = 0;
+                break;
+
+            // 充值
+            case Order::ORDER_TYPE_CHARGE:
+                //判断充值开关是否打开
+                if(empty($this->settings->get('site_charge'))){
+                    throw new Exception(trans('order.site_charge_is_close'));
+                }
+                $amount = sprintf('%.2f', $data['amount']);
                 $payeeId = 0;
                 break;
 

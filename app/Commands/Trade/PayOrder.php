@@ -230,6 +230,9 @@ class PayOrder
             case Order::ORDER_TYPE_MERGE:
                 $order_info->body = trans('order.order_type_merge');
                 break;
+            case Order::ORDER_TYPE_CHARGE:
+                $order_info->body = trans('order.site_charge');
+                break;
             default:
                 $order_info->body = '';
                 break;
@@ -266,8 +269,7 @@ class PayOrder
             case Order::PAYMENT_TYPE_WECHAT_JS: //微信网页、公众号
             case Order::PAYMENT_TYPE_WECHAT_MINI: //微信小程序支付
                 $config = $this->setting->tag('wxpay'); //配置信息
-                // $config['notify_url'] = $this->url->to('/api/trade/notify/wechat');
-            $config['notify_url'] = $this->url->to('/' . Utils::getApiName() . '/trade/notify/wechat');
+                $config['notify_url'] = $this->url->to('/api/trade/notify/wechat');
                 switch ($this->payment_type) {
                     case Order::PAYMENT_TYPE_WECHAT_NATIVE: //微信扫码支付
                         $pay_gateway          = GatewayConfig::WECAHT_PAY_NATIVE;
