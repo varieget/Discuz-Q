@@ -36,7 +36,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
     use ThreadQueryTrait;
 
-    const PRELOAD_PAGES = 20;//预加载的页数
+    const PRELOAD_PAGES = 5;//预加载的页数，从第2页开始预加载
 
     private $categoryIds = [];
 
@@ -46,10 +46,8 @@ class ThreadListController extends DzqController
         $filter = $this->inPut('filter') ?: [];
         $categoryIds = $filter['categoryids'] ?? [];
         $complex = $filter['complex'] ?? null;
-        $user = $this->user;
-
-        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         $scope = $this->inPut('scope');
+        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         if ($scope != DzqConst::SCOPE_PAID) {
             if (!$this->categoryIds) {
                 if (empty($complex) ||
@@ -59,7 +57,7 @@ class ThreadListController extends DzqController
                 }
                 //自己的主题去除分类权限控制
                 if ($complex == Thread::MY_OR_HIS_THREAD) {
-                    if ($user->id !== $filter['toUserId'] && !empty($filter['toUserId'])) {
+                    if ($this->user->id !== $filter['toUserId'] && !empty($filter['toUserId'])) {
                         throw new PermissionDeniedException('没有浏览权限');
                     }
                     $this->categoryIds = [];
@@ -168,7 +166,11 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        if ($page == 1) {
+        $isPreload =is_numeric(($page - 2)/self::PRELOAD_PAGES +1) ;
+        if ($page == 1 || !$isPreload) {
+            return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+//            $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+        }else{
             $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         }
         return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
