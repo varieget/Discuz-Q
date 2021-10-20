@@ -123,7 +123,7 @@ trait ImportLockFileTrait
         if ($key == 'hour' && $number > 24) {
             throw new \Exception('小时数值不符合范围规范');
         }
-        if ($key == 'minute' && $number > 24) {
+        if ($key == 'minute' && $number > 60) {
             throw new \Exception('分钟数值不符合范围规范');
         }
         return true;
