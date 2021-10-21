@@ -103,7 +103,6 @@ class QcloudSiteInfoDaily
         $json = [
             'site_id' => $settings['site_id'] ?? '',
             'site_secret' => !empty($settings['site_secret']) ? $settings['site_secret'] : '',
-            'site_ip'   =>  !empty($site_url) ? gethostbyname($site_url) : '',
             'site_url'  =>  $settings['site_url'],
             'site_name' =>  !empty($settings['site_name']) ? $settings['site_name'] : '',
             'site_charge'    =>  !empty($settings['site_price']) ? 1 : 0,

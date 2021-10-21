@@ -218,7 +218,7 @@ class Weibo
                     'rootid' => $value['rootid'],//评论ID
                     'forumId' => $mid, // 帖子ID
                     'nickname' => $value['user']['screen_name'],//昵称
-                    'created_at' => date('Y-m-d H:i:s', strtotime($value['created_at'])),//评论时间
+                    'createdAt' => date('Y-m-d H:i:s', strtotime($value['created_at'])),//评论时间
                     'text' => $this->dealText($value['text']),//评论内容
                 ];
                 //评论用户信息
