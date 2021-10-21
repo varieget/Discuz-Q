@@ -84,7 +84,8 @@ class AdminForumSettingSerializer extends AbstractSerializer
             // 腾讯云设置
             'qcloud' => [
                 'qcloud_cdn' => (bool) $this->settings->get('qcloud_cdn', 'qcloud'),
-                'qcloud_cdn_domain' => $this->settings->get('qcloud_cdn_domain', 'qcloud'), // 加速域名
+                'qcloud_cdn_speed_domain' => $this->settings->get('qcloud_cdn_speed_domain', 'qcloud'), // 加速域名
+                'qcloud_cdn_main_domain' => $this->settings->get('qcloud_cdn_main_domain', 'qcloud'), // 主域名
                 'qcloud_cdn_origins' => json_decode($this->settings->get('qcloud_cdn_origins', 'qcloud')), // 源站地址
                 'qcloud_cdn_server_name' => $this->settings->get('qcloud_cdn_server_name', 'qcloud'), // 回源HOST
             ],

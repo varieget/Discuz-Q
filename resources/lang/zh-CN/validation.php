@@ -244,7 +244,13 @@ return [
         'dialog_id'     => '会话',
         'message_text'  => '消息内容',
         'attachment_id' => '附件',
-        'totalNumber'  => '人数'
+        'totalNumber'  => '人数',
+
+        // 腾讯云CDN
+        'qcloud_cdn_speed_domain' => '加速域名',
+        'qcloud_cdn_main_domain' => '主域名',
+        'qcloud_cdn_origins' => '源站地址',
+        'qcloud_cdn_server_name' => '回源HOST',
 
     ],
 ];

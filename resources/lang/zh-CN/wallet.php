@@ -86,5 +86,5 @@ return [
     'merge_refund' => '合并订单退款',
     'merge_order_abnormal_refund' => '合并订单异常退款',
 
-    'charge_money'      =>  '微信充值'
+    'charge_money'      =>  '自动充值'
 ];
