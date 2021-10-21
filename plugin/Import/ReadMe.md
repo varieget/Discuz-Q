@@ -154,6 +154,14 @@ minute   0～60的正整数
   php disco importData:insertWeiBoData --topic=xxx --number=5 --auto=1 --type=1 --interval=2 --month=12 --day=12 --hour=10 # 每2年的12月12号10:00自动导入
 ```
 
+如之前设置了定时导入，现在想停止定时导入，可执行下方的命令：
+
+```
+php disco autoImport:stop
+```
+
+
+
 ##### 2.6     数据写入
 
 通过各平台抓取方法抓到平台数据，排列组成和既定的形式，传入公共方法`insertCrawlerData`（`app/Import/ImportDataTrait.php`）中，处理成Discuz内容。`insertCrawlerData`方法需要的数据来自各位开发者编写的命令行文件，来自方法`getPlatformData`，该方法名字不可更改。
@@ -173,9 +181,9 @@ minute   0～60的正整数
             "createdAt" : "创建时间"
             "text" : {
                 "title" : "标题"
-                "text" : "文章内容，混排中的图片不做特殊处理，无需解析到images字段中"
+                "text" : "文章内容，混排中的图片不做特殊处理，无需解析到images字段中，话题应展示为：#话题/标签#"
                 "position" : "定位位置"
-                "topicList" : "#话题/标签#"
+                "topicList" : "数组，['话题名', '话题名']"
             }
             "images" : "数组，非图文混排的图片链接"
             "media" : {
@@ -183,8 +191,8 @@ minute   0～60的正整数
                 "audio" : "音频链接"
             }
             "contentMedia" : {
-                "videos" : "数组，内容混排中的视频链接"
-                "audio" : "数组，内容混排中的音频链接"
+                "videos" : "数组，内容混排中iframe的视频链接"
+                "audio" : "数组，内容混排中iframe的音频链接"
             }
             "attachments" : "数组，附件链接"
         },
