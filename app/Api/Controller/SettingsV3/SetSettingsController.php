@@ -171,6 +171,11 @@ class SetSettingsController extends DzqAdminController
                     $this->outPut(ResponseCode::INVALID_PARAMETER,'请输入正确的付费模式过期天数：0~1000000');
                 }
             }
+            if($key == 'inner_net_ip'){
+                if (is_array($value)) {
+                    $value = json_encode($value, 256);
+                }
+            }
             if ($key == 'qcloud_cdn') {
                 $speedDomain = $this->settings->get('qcloud_cdn_speed_domain', 'qcloud');
                 $mainDomain = $this->settings->get('qcloud_cdn_main_domain', 'qcloud');
