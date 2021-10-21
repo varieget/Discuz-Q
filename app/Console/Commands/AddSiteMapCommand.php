@@ -123,6 +123,8 @@ class AddSiteMapCommand extends AbstractCommand
         $x_user .= "</urlset>";
         fwrite($user_file, $x_user);
         fclose($user_file);
+        $user_file_path_gz = $user_file_path.'.gz';
+        $this->gz_file($user_file_path, $user_file_path_gz);
         $this->info('完成生成站点地图sitemap');
     }
 
