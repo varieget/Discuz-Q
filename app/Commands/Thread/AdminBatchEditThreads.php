@@ -118,7 +118,7 @@ class AdminBatchEditThreads
                     if ($thread->is_sticky) {
                         $stickCount = ThreadStickSort::query()->count();
                         if($stickCount >= ThreadStickSort::THREAD_STICK_COUNT_LIMIT){
-                            \Discuz\Common\Utils::outPut(ResponseCode::THREAD_STICK_COUNT_LIMIT);
+                            \Discuz\Common\Utils::outPut(ResponseCode::NET_ERROR,'置顶贴最多只允许设置20条');
                         }
                         if(empty($stickSort)){
                             $stickSort = new ThreadStickSort();

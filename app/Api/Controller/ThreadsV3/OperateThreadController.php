@@ -140,7 +140,7 @@ class OperateThreadController extends DzqController
             if( (bool)$isSticky ){
                 $stickCount = ThreadStickSort::query()->count();
                 if($stickCount >= ThreadStickSort::THREAD_STICK_COUNT_LIMIT){
-                    $this->outPut(ResponseCode::THREAD_STICK_COUNT_LIMIT);
+                    $this->outPut(ResponseCode::NET_ERROR,'置顶贴最多只允许设置20条');
                 }
             }
             $attributes['isSticky'] = $isSticky;
