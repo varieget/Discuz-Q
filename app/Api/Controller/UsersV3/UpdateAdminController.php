@@ -61,6 +61,8 @@ class UpdateAdminController extends DzqAdminController
 
         $requestData = [];
         if(!empty($username)){
+            $checkController = app(CheckController::class);
+            $checkController->checkName('username', $username, $id);
             $requestData['username'] = $username;
         }
 
