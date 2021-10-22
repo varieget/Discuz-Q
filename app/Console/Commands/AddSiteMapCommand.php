@@ -27,6 +27,9 @@ class AddSiteMapCommand extends AbstractCommand
     protected $signature = 'add:SiteMap';
     protected $description = '定时增加sitemap站点地图';
 
+    const PAGE_SIZE = 10000;
+    const LIMIT = 50000;
+
     public function handle()
     {
         $db = app('db');
@@ -52,11 +55,7 @@ class AddSiteMapCommand extends AbstractCommand
                 $categories[] = $val;
             }
         }
-        //写sitemap文件
-        $sitemap_file = fopen($sitemap_file_path, "w");
-        $x_sitemap = $this->sitemap($site_url, $date, $categories);
-        fwrite($sitemap_file, $x_sitemap);
-        fclose($sitemap_file);
+
         //创建 sitemaps 目录
         if(!is_dir($sitemaps_dir)){
             mkdir($sitemaps_dir, 0666);
@@ -64,6 +63,7 @@ class AddSiteMapCommand extends AbstractCommand
         //生成 index.xml 文件
         $index_file_path = $sitemaps_dir.'/index.xml';
         $index_file = fopen($index_file_path, "w");
+        //找出所有话题
         $x_index = $this->index($site_url, $date, $categories);
         fwrite($index_file, $x_index);
         fclose($index_file);
@@ -71,30 +71,55 @@ class AddSiteMapCommand extends AbstractCommand
         $this->gz_file($index_file_path, $index_file_path_gz);
         $h_month_before = Carbon::now()->subDays(15);
         $h_year_before = Carbon::now()->subDays(180);
+        $categories_c = [];
         //生成 categroy_idxxxx.xml 文件
         foreach ($categories as $val){
-            $category_id_x_path = $sitemaps_dir.'categroy_id_'.$val.'.xml';
+            $i = $count = 0;
+            $c_ids = explode('_', $val);
+            $val_c = $val.'_'.$count;
+            $categories_c[] = $val_c;
+            $category_id_x_path = $sitemaps_dir.'categroy_id_'.$val_c.'.xml';
             $c_x_path = fopen($category_id_x_path, 'w');
             $pre_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                         <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
-            //半个月内的帖子
-            $c_ids = explode('_', $val);
-            $thread_ids = $db->table('threads')->whereIn('category_id', $c_ids)->where('created_at', '>', $h_month_before)->orderBy('created_at', 'desc')->pluck('id')->toArray();
-            $changefreg = 'daily';
-            if(!empty($thread_ids)){
-                $pre_xml .= $this->threads($site_url, $date, $thread_ids, $changefreg);
-            }
-            //半个月以上，半年以内 weekly
-            $thread_ids = $db->table('threads')->whereIn('category_id', $c_ids)->WhereBetween('created_at', [$h_year_before, $h_month_before])->orderBy('created_at', 'desc')->pluck('id')->toArray();
-            $changefreg = 'weekly';
-            if(!empty($thread_ids)){
-                $pre_xml .= $this->threads($site_url, $date, $thread_ids, $changefreg);
-            }
-            //半年以上
-            $thread_ids = $db->table('threads')->whereIn('category_id', $c_ids)->Where('created_at', '<', $h_year_before)->orderBy('created_at', 'desc')->pluck('id')->toArray();
-            $changefreg = 'monthly';
-            if(!empty($thread_ids)){
-                $pre_xml .= $this->threads($site_url, $date, $thread_ids, $changefreg);
+            $threads = $db->table('threads')->whereIn('category_id', $c_ids)->offset($i * self::PAGE_SIZE)->limit(self::PAGE_SIZE)->orderBy('created_at', 'desc')->get(['id', 'created_at']);
+            while (!empty($threads->toArray())){
+                if($i * self::PAGE_SIZE > self::LIMIT * ($count + 1)){
+                    //先把上一个文件收尾
+                    $pre_xml .= "</urlset>";
+                    fwrite($c_x_path, $pre_xml);
+                    fclose($c_x_path);
+                    $category_id_x_path_gz = $category_id_x_path.'.gz';
+                    $this->gz_file($category_id_x_path, $category_id_x_path_gz);
+                    // 然后开始下一个5万条帖子的文件
+                    $count ++;
+                    $val_c = $val.'_'.$count;
+                    $categories_c[] = $val_c;
+                    $category_id_x_path = $sitemaps_dir.'categroy_id_'.$val_c.'.xml';
+                    $c_x_path = fopen($category_id_x_path, 'w');
+                    $pre_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                        <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
+
+                }
+                foreach ($threads as $vo){
+                    switch ($vo->created_at){
+                        case $vo->created_at > $h_month_before:
+                            $changefreg = 'daily';
+                            break;
+                        case $vo->created_at < $h_month_before && $vo->created_at > $h_year_before:
+                            $changefreg = 'weekly';
+                            break;
+                        case $vo->created_at < $h_year_before:
+                            $changefreg = 'monthly';
+                            break;
+                        default:
+                            $changefreg = 'yearly';
+                            break;
+                    }
+                    $pre_xml .= $this->threads($site_url, $date, [$vo->id], $changefreg);
+                }
+                $i ++;
+                $threads = $db->table('threads')->whereIn('category_id', $c_ids)->offset($i * self::PAGE_SIZE)->limit(self::PAGE_SIZE)->orderBy('created_at', 'desc')->get(['id', 'created_at']);
             }
             $pre_xml .= "</urlset>";
             fwrite($c_x_path, $pre_xml);
@@ -123,6 +148,36 @@ class AddSiteMapCommand extends AbstractCommand
         fclose($user_file);
         $user_file_path_gz = $user_file_path.'.gz';
         $this->gz_file($user_file_path, $user_file_path_gz);
+
+        //生成topic.xml
+        $topic_ids = $db->table("topics")->pluck("id")->toArray();
+        $topic_file_path = $sitemaps_dir.'/topics.xml';
+        $topic_file = fopen($topic_file_path, "w");
+        $x_topic = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                        <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
+        if(!empty($topic_ids)){
+            $t_xml = '';
+            foreach ($topic_ids as $vt){
+                $t_xml .= "<url>
+                         <loc>{$site_url}/topic/topic-detail/{$vt}</loc>
+                         <lastmod>{$date}</lastmod>
+                         <changefreq>daily</changefreq>
+                         <priority>1</priority>
+                    </url>";
+            }
+            $x_topic .= $t_xml;
+        }
+        $x_topic .= "</urlset>";
+        fwrite($topic_file, $x_topic);
+        fclose($topic_file);
+        $topic_file_path_gz = $topic_file_path.'.gz';
+        $this->gz_file($topic_file_path, $topic_file_path_gz);
+
+        //写sitemap文件
+        $sitemap_file = fopen($sitemap_file_path, "w");
+        $x_sitemap = $this->sitemap($site_url, $date, $categories_c);
+        fwrite($sitemap_file, $x_sitemap);
+        fclose($sitemap_file);
         $this->info('完成生成站点地图sitemap');
     }
 
@@ -131,22 +186,28 @@ class AddSiteMapCommand extends AbstractCommand
         $xml = "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">
                    <!-- 首页主入口的xml、用户users.xml 为预设，只需每日更新lastmod值 -->
                    <sitemap>
-                      <loc>{$site_url}/sitemaps/index.xml</loc>
+                      <loc>{$site_url}/sitemaps/index.xml.gz</loc>
                       <lastmod>{$date}</lastmod>
                    </sitemap>
                    <sitemap>
-                      <loc>{$site_url}/sitemaps/users.xml</loc>
+                      <loc>{$site_url}/sitemaps/users.xml.gz</loc>
                       <lastmod>{$date}</lastmod>
                    </sitemap>";
 
         foreach ($categories as $val){
             /* 循环输出分类的xml */
             $c_xml = "<sitemap>
-                          <loc>{$site_url}/sitemaps/categroy_id_{$val}.xml</loc>
+                          <loc>{$site_url}/sitemaps/categroy_id_{$val}.xml.gz</loc>
                           <lastmod>{$date}</lastmod>
                        </sitemap>";
             $xml .= $c_xml;
         }
+        //增加话题xml
+        $xml .= "<sitemap>
+                      <loc>{$site_url}/sitemaps/topics.xml.gz</loc>
+                      <lastmod>{$date}</lastmod>
+                   </sitemap>";
+        //连上结尾
         $xml .= "</sitemapindex>";
         return $xml;
     }
