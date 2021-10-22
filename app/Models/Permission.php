@@ -95,8 +95,8 @@ class Permission extends DzqModel
      */
     public static function getUserPermissions($user)
     {
-        $groupIds = [];
-        !$user->isGuest() && $groupIds = array_column($user->groups->toArray(), 'id');
+        $groups = $user->groups->toArray();
+        $groupIds = array_column($groups, 'id');
         $groupKey = md5(serialize($groupIds));
         $cache = app('cache');
         $key = CacheKey::GROUP_PERMISSIONS;
