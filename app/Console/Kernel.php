@@ -88,5 +88,7 @@ class Kernel extends ConsoleKernel
 
         //用户组到期提醒
         $schedule->command('group:expiredNotice')->daily();
+        //sitemap
+        $schedule->command('add:Sitemap')->at('03:00');
     }
 }
