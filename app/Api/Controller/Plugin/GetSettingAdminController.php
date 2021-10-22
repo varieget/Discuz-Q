@@ -21,14 +21,14 @@ use Discuz\Base\DzqAdminController;
 
 class GetSettingAdminController extends DzqAdminController
 {
-    use GetSettingTrait;
+    use PluginTrait;
 
     public function main()
     {
         $appId = $this->inPut('appId');
         $this->dzqValidate(['appId' => $appId], ['appId' => 'required|string']);
 
-        $data = $this->getResult($appId, true);
+        $data = $this->getOneSettingAndConfig($appId, true);
 
         $this->outPut(0,'',$data);
     }

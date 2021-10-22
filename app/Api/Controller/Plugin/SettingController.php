@@ -23,18 +23,28 @@ use Discuz\Base\DzqAdminController;
 
 class SettingController extends DzqAdminController
 {
+    use PluginTrait;
+
     public function main()
     {
         $appId = $this->inPut('appId');
         $name = $this->inPut('appName');
         $type = $this->inPut('type');
-        $value = $this->inPut('value');
+        $privateValue = $this->inPut('privateValue');
+        $publicValue = $this->inPut('publicValue');
         $this->dzqValidate($this->inPut(), [
             'appId' => 'required|string|max:100',
             'appName' => 'required|string|max:100',
             'type' => 'required|integer',
-            'value' => 'required|array'
+            'privateValue' => 'required|array',
+            'publicValue' => 'required|array'
         ]);
+
+        $intersectKeys = array_intersect_key($privateValue,$publicValue);
+        if (!empty($intersectKeys)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER,"key重复");
+        }
+
         $pluginSetting = PluginSettings::query()->where(['app_id' => $appId])->first();
         if (empty($pluginSetting)) {
             $pluginSetting = new PluginSettings();
@@ -43,41 +53,18 @@ class SettingController extends DzqAdminController
         $pluginSetting->app_name = $name;
         $pluginSetting->type = $type;
 
-        $result = $this->checkValue($value);
+        $result = $this->getInSetting($privateValue,$publicValue);
         if (!$result){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
-        $pluginSetting->value = json_encode($value, 256);
+        $pluginSetting->private_value = json_encode($privateValue, 256);
+        $pluginSetting->public_value = json_encode($publicValue, 256);
+
         if (!$pluginSetting->save()) {
             $this->outPut(ResponseCode::DB_ERROR);
         }
         $this->outPut(0);
     }
 
-    /**
-     * @param $value
-     * {
-     *  "key":{"value":"","isPublic":1}
-     * }
-     */
-    private function checkValue(&$value){
-        /** @var PluginFileSave $shopFileSave */
-        $shopFileSave = $this->app->make(PluginFileSave::class);
-        foreach ($value as $key=>&$item){
-            if (!is_array($item)){
-                return false;
-            }
-            if(!isset($item["value"])){
-                return false;
-            }
-            $urlTemp = parse_url($item["value"]);
-            if (isset($urlTemp["scheme"]) && isset($urlTemp["host"])){
-               $isResouce = $shopFileSave->checkSiteResource($item["value"]);
-               if ($isResouce){
-                   $item["isResource"] = 1;
-               }
-            }
-        }
-        return true;
-    }
+
 }

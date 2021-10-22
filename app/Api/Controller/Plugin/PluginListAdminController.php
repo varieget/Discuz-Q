@@ -17,26 +17,25 @@
 
 namespace App\Api\Controller\Plugin;
 
+use App\Common\PermissionKey;
+use App\Common\Utils;
+use App\Models\PluginGroupPermission;
 use App\Repositories\UserRepository;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqController;
 
-class GetSettingController extends DzqController
+class PluginListAdminController extends DzqAdminController
 {
     use PluginTrait;
 
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return true;
-    }
-
     public function main()
     {
-        $appId = $this->inPut('appId');
-        $this->dzqValidate(['appId' => $appId], ['appId' => 'required|string']);
+        $groupId = $this->user->groupId;
+        $isAdmin = $this->user->isAdmin();
 
-        $data = $this->getOneSettingAndConfig($appId, false);
+        $result = $this->getAllSettingAndConfig($groupId, $isAdmin,true);
 
-        $this->outPut(0,'',$data);
+        $this->outPut(0, '', array_values($result));
+
     }
-
 }
