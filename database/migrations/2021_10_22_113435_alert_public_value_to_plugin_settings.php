@@ -15,7 +15,7 @@ class AlertPublicValueToPluginSettings extends Migration
         $this->schema()->table('plugin_settings', function (Blueprint $table) {
             //
             $table->renameColumn("value","public_value");
-            $table->text("private_value")->comment("私有数据");
+            $table->text("private_value")->comment("私有数据")->after("type");
         });
     }
 
