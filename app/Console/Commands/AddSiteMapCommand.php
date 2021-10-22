@@ -19,9 +19,7 @@
 namespace App\Console\Commands;
 
 
-use App\Models\NotificationTpl;
 use Carbon\Carbon;
-use Discuz\Base\DzqLog;
 use Discuz\Console\AbstractCommand;
 
 class AddSiteMapCommand extends AbstractCommand
@@ -113,7 +111,7 @@ class AddSiteMapCommand extends AbstractCommand
         foreach ($users as $vo){
             $update_day = substr($vo->updated_at, 0, 10);
             $x_x_user = "<url>
-                          <loc>http://{$site_url}/user/{$vo->id}</loc>
+                          <loc>{$site_url}/user/{$vo->id}</loc>
                           <lastmod>{$update_day}</lastmod>
                           <changefreq>weekly</changefreq>
                           <priority>0.8</priority>
@@ -133,23 +131,23 @@ class AddSiteMapCommand extends AbstractCommand
         $xml = "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">
                    <!-- 首页主入口的xml、用户users.xml 为预设，只需每日更新lastmod值 -->
                    <sitemap>
-                      <loc>http://{$site_url}/sitemaps/index.xml.gz</loc>
+                      <loc>{$site_url}/sitemaps/index.xml</loc>
                       <lastmod>{$date}</lastmod>
                    </sitemap>
                    <sitemap>
-                      <loc>http://{$site_url}/sitemaps/users.xml.gz</loc>
+                      <loc>{$site_url}/sitemaps/users.xml</loc>
                       <lastmod>{$date}</lastmod>
                    </sitemap>";
 
         foreach ($categories as $val){
             /* 循环输出分类的xml */
             $c_xml = "<sitemap>
-                          <loc>http://{$site_url}/sitemaps/categroy_id_{$val}.xml.gz</loc>
+                          <loc>{$site_url}/sitemaps/categroy_id_{$val}.xml</loc>
                           <lastmod>{$date}</lastmod>
                        </sitemap>";
             $xml .= $c_xml;
         }
-        $xml .= "</sitemapindex>;";
+        $xml .= "</sitemapindex>";
         return $xml;
     }
 
@@ -158,35 +156,35 @@ class AddSiteMapCommand extends AbstractCommand
                     <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">
                     <!-- 首页 -->
                     <url>
-                     <loc>http://{$site_url}/</loc>
+                     <loc>{$site_url}/</loc>
                      <lastmod>{$date}</lastmod>
                      <changefreq>daily</changefreq>
                      <priority>1</priority>
                     </url>
                     <!-- 潮流话题 -->
                     <url>
-                     <loc>http://{$site_url}/search/result-topic</loc>
+                     <loc>{$site_url}/search/result-topic</loc>
                      <lastmod>{$date}</lastmod>
                      <changefreq>daily</changefreq>
                      <priority>0.8</priority>
                     </url>
                     <!-- 热门内容 -->
                     <url>
-                     <loc>http://{$site_url}/search/result-post</loc>
+                     <loc>{$site_url}/search/result-post</loc>
                      <lastmod>{$date}</lastmod>
                      <changefreq>daily</changefreq>
                      <priority>0.8</priority>
                     </url>
                     <!-- 发现页 -->
                     <url>
-                     <loc>http://{$site_url}/search</loc>
+                     <loc>{$site_url}/search</loc>
                      <lastmod>{$date}</lastmod>
                      <changefreq>weekly</changefreq>
                      <priority>0.5</priority>
                     </url>
                     <!-- 活跃用户 -->
                     <url>
-                     <loc>http://{$site_url}/search/result-user</loc>
+                     <loc>{$site_url}/search/result-user</loc>
                      <lastmod>{$date}</lastmod>
                      <changefreq>weekly</changefreq>
                      <priority>0.5</priority>
@@ -194,14 +192,14 @@ class AddSiteMapCommand extends AbstractCommand
                     <!-- ↑↑站点的主入口链接相对固定，所以上面部分是模板中固定的部分↑↑ -->
                     <!-- ↓↓以下是需要拼装的部分，遍历所有分类URL，循环输出；所有分类的评率设为daily，权重设为1↓↓ -->
                     <url>
-                     <loc>http://{$site_url}/?categoryId=all&sequence=0</loc>
+                     <loc>{$site_url}/?categoryId=all&amp;sequence=0</loc>
                      <lastmod>{$date}</lastmod>
                      <changefreq>daily</changefreq>
                      <priority>1</priority>
                     </url>";
         foreach ($categories as $val){
             $c_xml = "<url>
-                         <loc>http://{$site_url}/?categoryId={$val}&sequence=0</loc>
+                         <loc>{$site_url}/?categoryId={$val}&amp;sequence=0</loc>
                          <lastmod>{$date}</lastmod>
                          <changefreq>daily</changefreq>
                          <priority>1</priority>
@@ -216,7 +214,7 @@ class AddSiteMapCommand extends AbstractCommand
         $xml = '';
         foreach ($thread_ids as $vo){
             $t_xml = "<url>
-                          <loc>http://{$site_url}/thread/{$vo}</loc>
+                          <loc>{$site_url}/thread/{$vo}</loc>
                           <lastmod>$date</lastmod>
                           <changefreq>{$changefreg}</changefreq>
                           <priority>0.5</priority>
