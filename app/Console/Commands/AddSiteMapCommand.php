@@ -58,7 +58,7 @@ class AddSiteMapCommand extends AbstractCommand
 
         //创建 sitemaps 目录
         if(!is_dir($sitemaps_dir)){
-            mkdir($sitemaps_dir, 0666);
+            mkdir($sitemaps_dir, 0755);
         }
         //生成 index.xml 文件
         $index_file_path = $sitemaps_dir.'/index.xml';
@@ -175,6 +175,7 @@ class AddSiteMapCommand extends AbstractCommand
 
         //写sitemap文件
         $sitemap_file = fopen($sitemap_file_path, "w");
+        chmod($sitemap_file_path, 0755);
         $x_sitemap = $this->sitemap($site_url, $date, $categories_c);
         fwrite($sitemap_file, $x_sitemap);
         fclose($sitemap_file);
@@ -290,6 +291,7 @@ class AddSiteMapCommand extends AbstractCommand
         $fp = gzopen ($gz_name, 'w9');
         gzwrite ($fp, file_get_contents($file));
         gzclose($fp);
+        chmod($gz_name, 0755);
     }
 
 
