@@ -35,10 +35,11 @@ use App\Models\ThreadTom;
 use App\Models\ThreadVideo;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
+use Illuminate\Database\ConnectionInterface;
 
 trait ThreadListTrait
 {
-    private function getFullThreadData($threads, $isList = false)
+    private function getFullThreadData($threads)
     {
         $loginUserId = $this->user->id;
         $userIds = array_unique(array_column($threads, 'user_id'));
@@ -64,7 +65,7 @@ trait ThreadListTrait
         $concatString = '';
         $loginUserData = $this->getLoginUserData($loginUserId, $threadIds, $postIds);
 
-        $userThreadStickIds = $this->getUserThreadStickId($userIds);
+        $userThreadStickIds = ThreadUserStickRecord::query()->whereIn('user_id',$userIds)->get()->pluck('thread_id','user_id')->toArray();
 
         foreach ($threads as $thread) {
             $threadId = $thread['id'];
@@ -83,23 +84,12 @@ trait ThreadListTrait
             $userStick = 0;
             if(!empty($userThreadStickIds[$userId])){
                 $userStick = $threadId == $userThreadStickIds[$userId]?1:0;
-            };
-
+            }
             $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags, $loginUserData,$userStick);
-
         }
         list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($concatString);
         foreach ($result as &$item) {
             $item['title'] = str_replace($searches, $replaces, $item['title']);
-//            $text = str_replace($searches, $replaces, $item['content']['text']);
-            if ($isList) {
-                $maxText = 5000;
-                //todo 等待前端解决表情导致文字内容过长的问题
-//                if (mb_strlen($text) > $maxText) {
-//                    $text = mb_substr($text, 0, $maxText) . '...';
-//                }
-            }
-//            $item['content']['text'] = $text;
         }
         return $result;
     }
@@ -393,20 +383,5 @@ trait ThreadListTrait
         $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $userId)->get()->toArray();
         DzqCache::hMSet($key1, $postUsers, 'post_id', false, $postIds, null);
         DzqCache::hMSet($key2, $favorite, 'thread_id', false, $threadIds, null);
-    }
-
-    //个人中心置顶
-    private function getUserThreadStickId($userIds)
-    {
-        $ret = [];
-        $userStickRows = ThreadUserStickRecord::query()->whereIn('user_id',$userIds)->get()->toArray();
-        if (!empty($userStickRows)){
-            for ($i=0;$i<count($userStickRows);$i++){
-                $uId = $userStickRows[$i]['user_id'];
-                $thread_id = $userStickRows[$i]['thread_id'];
-                $ret[$uId] =$thread_id;
-            }
-        }
-        return $ret;
     }
 }

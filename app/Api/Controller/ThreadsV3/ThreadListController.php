@@ -178,7 +178,6 @@ class ThreadListController extends DzqController
     {
         $ret =  DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
             $threads = $this->preloadPaginiation($page,self::PRELOAD_PAGES, $perPage, $threadsBuilder);
-            dd($threads);
             $this->initDzqGlobalData($threads);
             array_walk($threads, function (&$v) {
                 $v['pageData'] = array_column($v['pageData'], 'id');
