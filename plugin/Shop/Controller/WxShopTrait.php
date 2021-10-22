@@ -57,17 +57,12 @@ trait WxShopTrait
     public function getSetting(){
         $this->getConfig();
 
-        $settingData = PluginSettings::query()->where("app_id",$this->config["app_id"])->first();
+        $settingData = PluginSettings::getSetting($this->config["app_id"]);
         if (empty($settingData)){
            return false;
         }
-        if (empty($settingData->value)){
-            return false;
-        }
 
-        $valueJson = json_decode($settingData->value,true);
-
-        return $valueJson;
+        return $settingData;
     }
 
     public function getWxApp(){
@@ -79,14 +74,12 @@ trait WxShopTrait
         }
         DzqLog::error("gjz 001 ",[],"100003=".json_encode($settingData));
         if (!isset($settingData["wxAppId"])
-            || !isset($settingData["wxAppId"]["value"])
-            || !isset($settingData["wxAppSecret"])
-            || !isset($settingData["wxAppSecret"]["value"])){
+            || !isset($settingData["wxAppSecret"])){
             DzqLog::error("gjz 001 ",[],"100004");
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
         DzqLog::error("gjz 001 ",[],"100005");
-        return [0, $this->miniProgram(["app_id"=>$settingData["wxAppId"]["value"],"secret"=>$settingData["wxAppSecret"]["value"]])];
+        return [0, $this->miniProgram(["app_id"=>$settingData["wxAppId"],"secret"=>$settingData["wxAppSecret"]])];
     }
 
     public function getAccessToken(){

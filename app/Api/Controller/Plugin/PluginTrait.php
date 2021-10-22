@@ -8,7 +8,6 @@ use App\Common\PermissionKey;
 use App\Common\Utils;
 use App\Models\PluginGroupPermission;
 use App\Models\PluginSettings;
-use App\Settings\SettingsRepository;
 
 trait PluginTrait
 {

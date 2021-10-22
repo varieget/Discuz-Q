@@ -97,11 +97,10 @@ class ShopBusi extends TomBaseBusi
     private function selectWxShop( &$product){
         $qrCode = "";
         $setting = $this->getSetting();
-        if ($setting && isset($setting["wxQrcode"]) && isset($setting["wxQrcode"]["value"])){
-            $qrCode = $setting["wxQrcode"]["value"];
+        if ($setting && isset($setting["wxQrcode"]) && isset($setting["wxQrcode"])){
+            $qrCode = $setting["wxQrcode"];
         }
 
-        $xx = $product["detailQrcode"];
         if (!empty($product["detailQrcode"])){
             $product["detailQrcode"] = $this->getQRUrl($product["isRemote"],$product["detailQrcode"]);
         }else{
@@ -117,7 +116,7 @@ class ShopBusi extends TomBaseBusi
         DzqLog::error("aaa",[],"100001");
 
         $config = $this->getSetting();
-        $wxAppId = $config["wxAppId"]["value"];
+        $wxAppId = $config["wxAppId"];
         DzqLog::error("aaa",[],"100002");
         list($result,$accssToken) = $this->getAccessToken();
         DzqLog::error("aaa",[],"100003");
