@@ -13,7 +13,7 @@ class AddAdditionalInfoToActivity extends DzqPluginMigration
     public function up()
     {
         $this->schema()->table('plugin_activity_thread_activity', function (Blueprint $table) {
-            $table->unsignedInteger('additional_info_type')->default(0)->comment('报名必填信息，类型累加；1：姓名、2：手机号、4：微信号、8：地址');
+            $table->string('additional_info_type')->default('{}')->comment('报名必填信息；1：姓名、2：手机号、3：微信号、4：地址；数据形式：{1,2,3,4}');
         });
     }
 

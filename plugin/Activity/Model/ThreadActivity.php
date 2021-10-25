@@ -26,39 +26,30 @@ class ThreadActivity extends DzqModel
 
     const ADDITIONAL_INFO_TYPE_NAME = 1;
     const ADDITIONAL_INFO_TYPE_MOBILE = 2;
-    const ADDITIONAL_INFO_TYPE_N_M = 3;
-    const ADDITIONAL_INFO_TYPE_WEIXIN = 4;
-    const ADDITIONAL_INFO_TYPE_N_W = 5;
-    const ADDITIONAL_INFO_TYPE_M_W = 6;
-    const ADDITIONAL_INFO_TYPE_N_M_W = 7;
-    const ADDITIONAL_INFO_TYPE_AD = 8;
-    const ADDITIONAL_INFO_TYPE_AD_N = 9;
-    const ADDITIONAL_INFO_TYPE_AD_M = 10;
-    const ADDITIONAL_INFO_TYPE_AD_N_M = 11;
-    const ADDITIONAL_INFO_TYPE_AD_W = 12;
-    const ADDITIONAL_INFO_TYPE_AD_N_W = 13;
-    const ADDITIONAL_INFO_TYPE_AD_M_W = 14;
-    const ADDITIONAL_INFO_TYPE_AD_N_M_W = 15;
+    const ADDITIONAL_INFO_TYPE_WEIXIN = 3;
+    const ADDITIONAL_INFO_TYPE_AD = 4;
 
     public static function allowInfoType(){
         return  [
-            0,
             self::ADDITIONAL_INFO_TYPE_NAME,
             self::ADDITIONAL_INFO_TYPE_MOBILE,
-            self::ADDITIONAL_INFO_TYPE_N_M,
             self::ADDITIONAL_INFO_TYPE_WEIXIN,
-            self::ADDITIONAL_INFO_TYPE_N_W,
-            self::ADDITIONAL_INFO_TYPE_M_W,
-            self::ADDITIONAL_INFO_TYPE_N_M_W,
-            self::ADDITIONAL_INFO_TYPE_AD,
-            self::ADDITIONAL_INFO_TYPE_AD_N,
-            self::ADDITIONAL_INFO_TYPE_AD_M,
-            self::ADDITIONAL_INFO_TYPE_AD_N_M,
-            self::ADDITIONAL_INFO_TYPE_AD_W,
-            self::ADDITIONAL_INFO_TYPE_AD_N_W,
-            self::ADDITIONAL_INFO_TYPE_AD_M_W,
-            self::ADDITIONAL_INFO_TYPE_AD_N_M_W,
+            self::ADDITIONAL_INFO_TYPE_AD
         ];
     }
+
+    public static $addition_map = [
+        self::ADDITIONAL_INFO_TYPE_NAME =>  '姓名',
+        self::ADDITIONAL_INFO_TYPE_MOBILE => '手机号',
+        self::ADDITIONAL_INFO_TYPE_WEIXIN => '微信号',
+        self::ADDITIONAL_INFO_TYPE_AD => '地址'
+    ];
+
+    public static $addition_info_map = [
+        'name'  =>  self::ADDITIONAL_INFO_TYPE_NAME,
+        'mobile'  =>  self::ADDITIONAL_INFO_TYPE_MOBILE,
+        'weixin'  =>  self::ADDITIONAL_INFO_TYPE_WEIXIN,
+        'address'  =>  self::ADDITIONAL_INFO_TYPE_AD,
+    ];
 
 }

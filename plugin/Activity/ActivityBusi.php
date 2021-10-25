@@ -117,7 +117,7 @@ class ActivityBusi extends TomBaseBusi
                 'registerStartTime' => 'date',
                 'registerEndTime' => 'date|after_or_equal:' . $this->getParams('registerStartTime'),
                 'totalNumber' => 'integer|min:0|max:10000',
-                'additionalInfoType' => Rule::in(ThreadActivity::allowInfoType())
+                'additionalInfoType.*' => Rule::in(ThreadActivity::allowInfoType())
             ]
         );
     }
@@ -140,7 +140,7 @@ class ActivityBusi extends TomBaseBusi
             'register_start_time' => $registerStartTime,
             'register_end_time' => $registerEndTime,
             'total_number' => $totalNumber,
-            'additional_info_type'  =>  $this->getParams('additionalInfoType')
+            'additional_info_type'  =>  json_encode($this->getParams('additionalInfoType'))
 
         ];
         $position = $this->getParams('position');
@@ -207,7 +207,7 @@ class ActivityBusi extends TomBaseBusi
             'createdAt' => date('Y-m-d H:i:s', strtotime($activity['created_at'])),
             'updatedAt' => date('Y-m-d H:i:s', strtotime($activity['updated_at'])),
             'registerUsers' => $registerUsers,
-            'additionalInfoType' => $activity['additional_info_type'],
+            'additionalInfoType' => json_decode($activity['additional_info_type'], 1),
             'activityUser' => $activityUsers
         ];
     }
