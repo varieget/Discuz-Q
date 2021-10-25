@@ -121,7 +121,7 @@ class CreateAttachmentController extends DzqController
 
         $fileUrl = Arr::get($this->request->getParsedBody(), 'fileUrl', '');
 
-        ini_set('memory_limit',-1);
+//        ini_set('memory_limit',-1);
 
         if (!empty($mediaId)) {
             $app = $this->offiaccount();
