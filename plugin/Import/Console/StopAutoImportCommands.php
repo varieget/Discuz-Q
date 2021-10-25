@@ -14,7 +14,7 @@ class StopAutoImportCommands extends DzqCommand
         $publicPath = public_path();
         $autoImportDataLockFilePath = $publicPath . DIRECTORY_SEPARATOR . 'autoImportDataLock.conf';
         if (file_exists($autoImportDataLockFilePath)) {
-            unlink($autoImportDataLockFilePath);
+            @unlink($autoImportDataLockFilePath);
             $this->info('----The automatic import task has been stopped.----');
         } else {
             $this->info("----The automatic import task doesn't exist.----");
