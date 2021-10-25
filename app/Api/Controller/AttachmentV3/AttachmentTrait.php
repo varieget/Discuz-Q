@@ -138,7 +138,7 @@ trait AttachmentTrait
         $imageInfo = $this->getFileContents($newCosUrl);
         $censor->checkImage($cosUrl, true);
         if (!$imageInfo) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息！');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息');
         }
         $imageInfo = json_decode($imageInfo, true);
         $fileData = $this->getFileData($cosUrl);
@@ -157,7 +157,7 @@ trait AttachmentTrait
     {
         $documentInfo = $this->getFileContents($cosUrl);
         if(!$documentInfo) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息！');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息');
         }
         $fileData = $this->getFileData($cosUrl);
         return [

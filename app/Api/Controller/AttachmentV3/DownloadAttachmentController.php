@@ -106,7 +106,7 @@ class DownloadAttachmentController extends DzqController
             if($downloadNum > 0 && !($share->exists())){
                 if($dayLimitCount >= $downloadNum){
                     app('log')->info("requestId：{$this->requestId},超过今天可下载附件的最大次数");
-                    return $this->outPut(ResponseCode::DOWNLOAD_NUMS_IS_TOPLIMIT);
+                    $this->outPut(ResponseCode::DOWNLOAD_NUMS_IS_TOPLIMIT);
                 }
             }
         }
@@ -143,11 +143,11 @@ class DownloadAttachmentController extends DzqController
 
             if (empty($attachmentShare)) {
                 app('log')->info("requestId：{$this->requestId},分享记录不存在");
-                return $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+                $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
             }
             if(strtotime($attachmentShare->expired_at) < time()){
                 app('log')->info("requestId：{$this->requestId},下载资源已失效");
-                return $this->outPut(ResponseCode::DOWNLOAD_RESOURCE_IS_INVALID);
+                $this->outPut(ResponseCode::DOWNLOAD_RESOURCE_IS_INVALID);
             }
 
             $s1 = date_create(date('Y-m-d',time()));
