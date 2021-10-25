@@ -54,7 +54,7 @@ trait ForumSettingSerializerTrait
 //                'site_install' => $this->settings->get('site_install'), // 安装时间
                 'site_record' => $this->settings->get('site_record'),
 //                'site_cover' => $this->settings->get('site_cover') ?: '',
-//                'site_record_code' => $this->settings->get('site_record_code') ?: '',
+                'site_record_code' => $this->settings->get('site_record_code') ?: '',
                 'site_master_scale' => $this->settings->get('site_master_scale'), // 站长比例
                 'site_pay_group_close' => $this->settings->get('site_pay_group_close'), // 用户组购买开关
 //                'site_minimum_amount' => $this->settings->get('site_minimum_amount'),
