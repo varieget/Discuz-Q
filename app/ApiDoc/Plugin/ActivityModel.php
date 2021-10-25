@@ -17,7 +17,7 @@
  *             @OA\Property(property = "longitude", type = "string", description = "经度"),
  *             @OA\Property(property = "latitude", type = "string", description = "纬度")
  *         ),
- *        @OA\Property(property = "additionalInfoType", type = "array",default=0, description = "报名必填附加项；1：姓名、2：手机号、3：微信号、4：地址）"),
+ *        @OA\Property(property = "additionalInfoType", type = "array", description = "报名必填附加项；1：姓名、2：手机号、3：微信号、4：地址", @OA\Items()),
  *     ),
  *     @OA\Property(property = "输出", type = "object", description = "活动报名插件出参",
  *         @OA\Property(property = "activityId", type = "integer", description = "活动id"),
