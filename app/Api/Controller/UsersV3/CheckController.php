@@ -66,7 +66,7 @@ class CheckController extends DzqController
         }
     }
 
-    public function checkName($name = '', $content = '')
+    public function checkName($name = '', $content = '', $id = '')
     {
         $msg = $name == 'username' ? '用户名' : '昵称';
         //去除字符串中空格
@@ -81,7 +81,11 @@ class CheckController extends DzqController
             $this->outPut(ResponseCode::NAME_LENGTH_ERROR, $msg.'长度超过15个字符');
         }
         //重名校验
-        $exists = User::query()->where($name, $content)->exists();
+        $query = User::query()->where($name, $content);
+        if (!empty($id)) {
+            $query->where('id', '<>', $id);
+        }
+        $exists = $query->exists();
         if (!empty($exists)) {
             $this->outPut(ResponseCode::USERNAME_HAD_EXIST, $msg.'已经存在');
         }

@@ -26,5 +26,6 @@ class Kernel extends DzqKernel
     public function schedule(Schedule $schedule)
     {
         $schedule->command('importData:insertWeiBoData')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
+        $schedule->command('importData:insertDiscuzData')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
     }
 }

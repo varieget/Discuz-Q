@@ -48,6 +48,8 @@ class CreateAttachmentController extends DzqController
 
     use EasyWechatTrait;
 
+    use AttachmentTrait;
+
     protected $events;
 
     protected $validator;
@@ -101,21 +103,6 @@ class CreateAttachmentController extends DzqController
         return call_user_func_array($typeMethodMap[$type], [$this->user]);
     }
 
-    public function http_get_data($url) {
-
-        $ch = curl_init ();
-        curl_setopt ( $ch, CURLOPT_CUSTOMREQUEST, 'GET' );
-        curl_setopt ( $ch, CURLOPT_SSL_VERIFYPEER, false );
-        curl_setopt ( $ch, CURLOPT_URL, $url );
-        curl_setopt($ch,CURLOPT_FOLLOWLOCATION,false);
-        ob_start ();
-        curl_exec ( $ch );
-        $return_content = ob_get_contents();
-        ob_end_clean ();
-        $return_code = curl_getinfo ( $ch, CURLINFO_HTTP_CODE );
-        return $return_content;
-    }
-
     public function main()
     {
         $actor = $this->user;
@@ -134,7 +121,7 @@ class CreateAttachmentController extends DzqController
 
         $fileUrl = Arr::get($this->request->getParsedBody(), 'fileUrl', '');
 
-        ini_set('memory_limit',-1);
+//        ini_set('memory_limit',-1);
 
         if (!empty($mediaId)) {
             $app = $this->offiaccount();
@@ -148,47 +135,45 @@ class CreateAttachmentController extends DzqController
                 $fileType = $imageSize['mime'];
                 $fileSize = filesize($tmpFileWithExt);
             }
-        } else {
+        } elseif (!empty($fileUrl)) {
             //URL链接图处理
-            if (!empty($fileUrl)) {
-                $parseUrl = parse_url($fileUrl);
-                $pathInfo = pathinfo(strtolower($parseUrl['path'] ?? ''));
-                $ext = $pathInfo['extension'] ?? '';
-                $url_content = Utils::downLoadFile($fileUrl);
-                if (!in_array($ext, ['jpeg', 'jpg', 'bmp', 'png', 'gif'])||!$url_content) {
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '图片地址 ' . $fileUrl . ' 不合法。');
-                }
-                $file_type = Attachment::$allowTypes[$type];
-                $support_ext = Str::of($this->settings->get("support_{$file_type}_ext"))->explode(',')->toArray();
-//                $url_content = $this->http_get_data($fileUrl);
-                $fileName = basename($fileUrl);
-                $file_basename = explode('.', $fileName);
-                $file_ext = $file_basename[1];
-                //判断file_ext 后面是否跟了 “？” ，需要做特殊判断
-                if(strpos($file_ext, '?') !== false){
-                    $file_ext = substr($file_ext, 0, strpos($file_ext, '?'));
-                    $fileName = $file_basename[0].'.'.$file_ext;
-                }
-                $ext = in_array($file_ext, $support_ext) ? $file_ext : '';
-                $tmp_file_path = storage_path('tmp').'/'.$file_basename[0].'_'.uniqid().'.'.$ext;
-                while (file_exists($tmp_file_path)){
-                    $tmp_file_path = storage_path('tmp').'/'.$file_basename[0].'_'.uniqid().'.'.$ext;
-                }
-                $tmp_file = fopen($tmp_file_path, 'w');
-                $file = $tmpFileWithExt = $real_file_path = realpath($tmp_file_path);
-                fwrite($tmp_file, $url_content);
-                fclose($tmp_file);
-                $fileType = mime_content_type($real_file_path);
-                $fileSize = filesize($real_file_path);
-
-            } else {
-                $fileName = $file->getClientFilename();
-                $fileSize = $file->getSize();
-                $fileType = $file->getClientMediaType();
-                $ext = pathinfo($fileName, PATHINFO_EXTENSION);
-                $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
-                $tmpFileWithExt = $tmpFile . ($ext ? ".$ext" : '');
+            $fileType = $this->getAttachmentMimeType($fileUrl);
+            $allowedMimeType = $this->getAllowedMimeType($type);
+            if (!in_array($fileType, $allowedMimeType)) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, $fileType . ' 类型文件不允许上传');
             }
+            $urlContent = Utils::downLoadFile($fileUrl);
+            if (!$urlContent) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件内容');
+            }
+
+            $ext = $this->getFileExt($type, $fileType);
+            $fileName = urldecode(basename($fileUrl));
+            if (strpos($fileName, '?') !== false) {
+                $fileName = substr($fileName, 0, strpos($fileName, '?'));
+                if (strpos($fileName, '/') !== false) {
+                    $fileName = substr($fileName, strrpos($fileName, '/') + 1, strlen($fileName));
+                }
+            }
+            if (strpos($fileName, '.') === false) {
+                $fileName  = $fileName . '.' . $ext;
+            }
+            $tmp_file_path = storage_path('tmp').'/'.$fileName.'_'.uniqid().'.'.$ext;
+            while (file_exists($tmp_file_path)){
+                $tmp_file_path = storage_path('tmp').'/'.$fileName.'_'.uniqid().'.'.$ext;
+            }
+            $tmp_file = fopen($tmp_file_path, 'w');
+            $file = $tmpFileWithExt = $real_file_path = realpath($tmp_file_path);
+            fwrite($tmp_file, $urlContent);
+            fclose($tmp_file);
+            $fileSize = filesize($real_file_path);
+        } else {
+            $fileName = $file->getClientFilename();
+            $fileSize = $file->getSize();
+            $fileType = $file->getClientMediaType();
+            $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+            $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
+            $tmpFileWithExt = $tmpFile . ($ext ? ".$ext" : '');
         }
 
         //上传临时目录之前验证

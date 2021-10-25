@@ -218,7 +218,6 @@ class RewardBusi extends TomBaseBusi
                 if($threadReward){
                     if(
                         $threadReward->type != $input['type'] ||
-                        $threadReward->user_id != $this->user['id'] ||
                         Utils::compareMath($threadReward->money, $input['price'])
                     ){
                         return  [

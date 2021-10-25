@@ -125,9 +125,7 @@ class ForumSettingSerializerV3 extends AbstractSerializer
                 'site_url' => $siteUrl,
                 'site_install' => $this->settings->get('site_install'), // 安装时间
                 'site_cover' => $this->settings->get('site_cover') ?: '',
-                'site_record_code' => $this->settings->get('site_record_code') ?: '',
                 'site_minimum_amount' => $this->settings->get('site_minimum_amount'),
-                'site_open_sort' => $this->settings->get('site_open_sort') == '' ? 0 : (int)$this->settings->get('site_open_sort'),
 //                'site_can_reward'     => (bool) $this->settings->get('site_can_reward'),
                 'usernameLoginIsdisplay' => $usernameLoginIsdisplay,
                 'open_api_log' => !empty($this->settings->get('open_api_log')) ? $this->settings->get('open_api_log') : '0',
