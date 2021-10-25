@@ -108,23 +108,23 @@ class CoskeyAttachmentController extends DzqController
             $fileExt = substr($fileName, strrpos($fileName,".") + 1);
             $attachmentExt = substr($attachment, strrpos($attachment,".") + 1);
             if ($fileExt != $attachmentExt) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER, '文件后缀名不一致！');
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '文件后缀名不一致');
             }
             $this->checkAttachmentExt($type, $fileExt);
         } else {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件后缀名错误！');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件后缀名错误');
         }
 
         $attachmentData = Attachment::query()->where('attachment', $attachment)->first();
         if (!empty($attachmentData)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '该加密字符串已被占用，请重新加密！');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '该加密字符串已被占用，请重新加密');
         }
 
         $siteUrl = Utils::getSiteUrl();
         if (empty($settings['qcloud_cors_origin']) || !in_array($siteUrl, json_decode($settings['qcloud_cors_origin']))) {
             $putBucketCorsResult = $this->putBucketCors();
             if (!$putBucketCorsResult) {
-                $this->outPut(ResponseCode::INTERNAL_ERROR, '对象存储跨域设置失败，请去管理后台重新开启腾讯云对象存储！');
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '对象存储跨域设置失败，请去管理后台重新开启腾讯云对象存储');
             }
         }
 
