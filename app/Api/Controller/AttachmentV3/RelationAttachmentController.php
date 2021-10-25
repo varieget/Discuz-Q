@@ -103,7 +103,7 @@ class RelationAttachmentController extends DzqController
                      'attachment' => $fileInfo['attachmentName'], 'file_name' => $data['fileName'], 'file_path' => $fileInfo['filePath']])
             ->first();
         if (!$attachment) {
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '文件匹配错误！');
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '文件匹配错误');
         }
 
         $this->checkAttachmentExt($data['type'], $fileInfo['ext']);

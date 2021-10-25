@@ -116,7 +116,7 @@ class CreateAttachmentController extends DzqController
 
         $request = $this->request->getParsedBody();
         if (isset($request['fileUrl']) && empty($request['fileUrl'])) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '图片链接不可为空!');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '图片链接不可为空');
         }
 
         $fileUrl = Arr::get($this->request->getParsedBody(), 'fileUrl', '');
@@ -136,15 +136,15 @@ class CreateAttachmentController extends DzqController
                 $fileSize = filesize($tmpFileWithExt);
             }
         } elseif (!empty($fileUrl)) {
+            $urlContent = Utils::downLoadFile($fileUrl);
+            if (!$urlContent) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件内容');
+            }
             //URL链接图处理
             $fileType = $this->getAttachmentMimeType($fileUrl);
             $allowedMimeType = $this->getAllowedMimeType($type);
             if (!in_array($fileType, $allowedMimeType)) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER, $fileType . ' 类型文件不允许上传');
-            }
-            $urlContent = Utils::downLoadFile($fileUrl);
-            if (!$urlContent) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件内容');
             }
 
             $ext = $this->getFileExt($type, $fileType);
@@ -221,7 +221,7 @@ class CreateAttachmentController extends DzqController
 
             $width = 0;
             $height = 0;
-            if(in_array($type,[1,4,5])){
+            if(in_array($type, [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE, Attachment::TYPE_OF_ANSWER])){
                 list($width, $height) = getimagesize($tmpFileWithExt);
             }
 
@@ -271,7 +271,7 @@ class CreateAttachmentController extends DzqController
                 ->where('id', $dialogMessageId)
                 ->update(['attachment_id' => $data['id'], 'message_text' => $message_text, 'status' => DialogMessage::NORMAL_MESSAGE]);
             if (!$updateDialogMessageResult) {
-                $this->outPut(ResponseCode::INTERNAL_ERROR, '私信图片更新失败!');
+                $this->outPut(ResponseCode::INTERNAL_ERROR, '私信图片更新失败');
             } else {
                 $dialogMessage = DialogMessage::query()->where('id', $dialogMessageId)->first();
                 $dialog = Dialog::query()->where('id', $dialogMessage->dialog_id)->first();
@@ -282,7 +282,7 @@ class CreateAttachmentController extends DzqController
                         ->where('id', $dialogMessage->dialog_id)
                         ->update(['dialog_message_id' => $dialogMessage->id]);
                     if (!$updateDialogResult) {
-                        $this->outPut(ResponseCode::INTERNAL_ERROR, '最新对话更新失败!');
+                        $this->outPut(ResponseCode::INTERNAL_ERROR, '最新对话更新失败');
                     }
                 }
             }
