@@ -87,7 +87,7 @@ class ThreadListController extends DzqController
         $threads = $this->getOriginThreads($scope, $filter, $page, $perPage);
         $threadIds = $threads['pageData'];
         $pageData = $this->getCacheThreads($threadIds);
-        $threads['pageData'] = $this->getFullThreadData($pageData, true);
+        $threads['pageData'] = $this->getFullThreadData($pageData);
         $sqlLog && $this->info('query_sql_log', app(ConnectionInterface::class)->getQueryLog());
         $this->outPut(0, '', $threads);
     }
