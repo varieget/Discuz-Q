@@ -24,6 +24,7 @@ use App\Common\ResponseCode;
 use App\Models\User;
 use App\Modules\ThreadTom\TomBaseBusi;
 use Discuz\Base\DzqCache;
+use Illuminate\Validation\Rule;
 use Plugin\Activity\Model\ActivityUser;
 use Plugin\Activity\Model\ThreadActivity;
 
@@ -69,6 +70,9 @@ class ActivityBusi extends TomBaseBusi
             'status' => DzqConst::BOOL_YES
         ])->first();
         if (empty($activity)) $this->outPut(ResponseCode::INVALID_PARAMETER, '活动不存在');
+        //如果有人报名了，则不能编辑
+        $isRegistered = ActivityUser::query()->where(['activity_id' => $activityId, 'status' => DzqConst::BOOL_YES])->exists();
+        if($isRegistered)   $this->outPut(ResponseCode::INVALID_PARAMETER, '已有人报名，不可编辑活动内容');
         $rawAttr = $this->getActivityRawAttr();
         $activity->setRawAttributes($rawAttr);
         if ($activity->save()) {
@@ -113,6 +117,7 @@ class ActivityBusi extends TomBaseBusi
                 'registerStartTime' => 'date',
                 'registerEndTime' => 'date|after_or_equal:' . $this->getParams('registerStartTime'),
                 'totalNumber' => 'integer|min:0|max:10000',
+                'additionalInfoType' => Rule::in(ThreadActivity::allowInfoType())
             ]
         );
     }
@@ -134,7 +139,9 @@ class ActivityBusi extends TomBaseBusi
             'activity_end_time' => $activityEndTime,
             'register_start_time' => $registerStartTime,
             'register_end_time' => $registerEndTime,
-            'total_number' => $totalNumber
+            'total_number' => $totalNumber,
+            'additional_info_type'  =>  $this->getParams('additionalInfoType')
+
         ];
         $position = $this->getParams('position');
         if (!empty($position)) {
@@ -169,6 +176,15 @@ class ActivityBusi extends TomBaseBusi
             ];
         }
         $isRegistered = $activityUser->where('user_id', $this->user->id)->exists();
+        $activityUsers = $activityUser->get(['user_id', 'additional_info']);
+        if(!empty($activityUsers)){
+            foreach ($activityUsers as $val){
+                $val->userId = $val->user_id;
+                $val->additionalInfo = json_decode($val->additional_info, 1);
+                unset($val->user_id);
+                unset($val->additional_info);
+            }
+        }
         return [
             'activityId' => $activityId,
             'title' => $activity['title'],
@@ -190,7 +206,9 @@ class ActivityBusi extends TomBaseBusi
             'isMemberFull' => $activity['total_number'] == 0 ? false : $activity['total_number'] <= $currentNumber,
             'createdAt' => date('Y-m-d H:i:s', strtotime($activity['created_at'])),
             'updatedAt' => date('Y-m-d H:i:s', strtotime($activity['updated_at'])),
-            'registerUsers' => $registerUsers
+            'registerUsers' => $registerUsers,
+            'additionalInfoType' => $activity['additional_info_type'],
+            'activityUser' => $activityUsers
         ];
     }
 }

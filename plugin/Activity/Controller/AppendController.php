@@ -23,6 +23,7 @@ use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Plugin\Activity\Model\ActivityUser;
+use Plugin\Activity\Model\ThreadActivity;
 
 class AppendController extends DzqController
 {
@@ -49,11 +50,73 @@ class AppendController extends DzqController
         if(!empty($activityUser)){
             $this->outPut(ResponseCode::RESOURCE_IN_USE,'您已经报名，不能重复报名');
         }
+        $additional_info = $this->inPut('additionalInfo') ?? [];
+        if(empty($additional_info)){
+            $additional_info = [
+                'name'  =>  '',
+                'mobile'    =>  '',
+                'weixin'    =>  '',
+                'address'   =>  ''
+            ];
+        }
+        if(!empty($this->activity->additional_info_type)){
+            $error_msg = '';
+            switch ($this->activity->additional_info_type){
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_NAME && empty($additional_info['name']):
+                    $error_msg = ' 姓名 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_MOBILE && empty($additional_info['mobile']):
+                    $error_msg = ' 手机号 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_N_M && (empty($additional_info['name']) || empty($additional_info['mobile'])):
+                    $error_msg = ' 姓名、手机号 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_WEIXIN && empty($additional_info['weixin']):
+                    $error_msg = ' 微信号 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_N_W && (empty($additional_info['name']) || empty($additional_info['weixin'])):
+                    $error_msg = ' 姓名、微信号 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_M_W && (empty($additional_info['mobile']) || empty($additional_info['weixin'])):
+                    $error_msg = ' 手机号、微信号 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_N_M_W && (empty($additional_info['name']) || empty($additional_info['mobile']) || empty($additional_info['weixin'])):
+                    $error_msg = ' 姓名、手机号、微信号 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_AD && empty($additional_info['address']):
+                    $error_msg = ' 地址 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_AD_N && (empty($additional_info['name']) || empty($additional_info['address'])):
+                    $error_msg = ' 姓名、地址 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_AD_M && (empty($additional_info['mobile']) || empty($additional_info['address'])):
+                    $error_msg = ' 手机号、地址 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_AD_N_M && (empty($additional_info['name']) || empty($additional_info['mobile']) || empty($additional_info['address'])):
+                    $error_msg = ' 姓名、手机号、地址 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_AD_W && (empty($additional_info['weixin']) || empty($additional_info['address'])):
+                    $error_msg = ' 微信、地址 ';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_AD_N_W && (empty($additional_info['name']) || empty($additional_info['weixin']) || empty($additional_info['address'])):
+                    $error_msg = ' 姓名、微信、地址';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_AD_M_W && (empty($additional_info['mobile']) || empty($additional_info['weixin']) || empty($additional_info['address'])):
+                    $error_msg = ' 手机号、微信、地址';
+                    break;
+                case ThreadActivity::ADDITIONAL_INFO_TYPE_AD_N_M_W && (empty($additional_info['name']) || empty($additional_info['mobile']) || empty($additional_info['weixin']) || empty($additional_info['address'])):
+                    $error_msg = ' 姓名、手机号、微信、地址 ';
+                    break;
+            }
+            $this->outPut(ResponseCode::RESOURCE_IN_USE,'缺少必填信息：'.$error_msg);
+        }
+
         $activityUser = new ActivityUser();
         $activityUser->thread_id = $activity->thread_id;
         $activityUser->activity_id = $activity->id;
         $activityUser->user_id = $this->user->id;
         $activityUser->status = DzqConst::BOOL_YES;
+        $activityUser->additional_info = json_encode($additional_info);
         if(!$activityUser->save()){
             $this->outPut(ResponseCode::DB_ERROR);
         }
