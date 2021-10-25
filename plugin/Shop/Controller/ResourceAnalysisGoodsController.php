@@ -13,14 +13,13 @@
  * limitations under the License.
  */
 
-namespace App\Api\Controller\AnalysisV3;
+namespace Plugin\Shop\Controller;
 
 use App\Common\ResponseCode;
 use App\Exceptions\TranslatorException;
 use App\Models\PostGoods;
-use App\Models\Thread;
-use App\Traits\PostGoodsTrait;
 use App\Repositories\UserRepository;
+use App\Traits\PostGoodsTrait;
 use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 use Discuz\Base\DzqLog;
