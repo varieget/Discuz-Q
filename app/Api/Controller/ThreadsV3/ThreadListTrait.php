@@ -18,8 +18,7 @@
 namespace App\Api\Controller\ThreadsV3;
 
 use App\Common\CacheKey;
-use App\Models\Category;
-use App\Models\Permission;
+use App\Common\Utils;
 use App\Models\PostUser;
 use App\Models\ThreadUser;
 use App\Models\ThreadUserStickRecord;
@@ -35,7 +34,6 @@ use App\Models\ThreadTom;
 use App\Models\ThreadVideo;
 use App\Models\User;
 use App\Modules\ThreadTom\TomConfig;
-use Illuminate\Database\ConnectionInterface;
 
 trait ThreadListTrait
 {
@@ -64,9 +62,10 @@ trait ThreadListTrait
         $result = [];
         $concatString = '';
         $loginUserData = $this->getLoginUserData($loginUserId, $threadIds, $postIds);
-
-        $userThreadStickIds = ThreadUserStickRecord::query()->whereIn('user_id',$userIds)->get()->pluck('thread_id','user_id')->toArray();
-
+        $userStickIds = [];
+        if (Utils::getAppKey('thread_complex') == Thread::MY_OR_HIS_THREAD) {
+            $userStickIds = ThreadUserStickRecord::query()->whereIn('thread_id', $threadIds)->select('thread_id')->pluck('thread_id')->toArray();
+        }
         foreach ($threads as $thread) {
             $threadId = $thread['id'];
             $userId = $thread['user_id'];
@@ -80,12 +79,7 @@ trait ThreadListTrait
             $threadTags = [];
             isset($tags[$threadId]) && $threadTags = $tags[$threadId];
             $concatString .= ($thread['title'] . $post['content']);
-
-            $userStick = 0;
-            if(!empty($userThreadStickIds[$userId])){
-                $userStick = $threadId == $userThreadStickIds[$userId]?1:0;
-            }
-            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags, $loginUserData,$userStick);
+            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags, $loginUserData,$userStickIds);
         }
         list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($concatString);
         foreach ($result as &$item) {

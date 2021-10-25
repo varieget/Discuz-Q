@@ -56,7 +56,7 @@ trait ThreadTrait
 
     private $loginUserData = [];
 
-    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [], $loginUserData = [], $userStick = -1)
+    public function packThreadDetail($user, $group, $thread, $post, $tomInputIndexes, $analysis = false, $tags = [], $loginUserData = [], $userStickIds = [])
     {
         $loginUser = $this->user;
         $this->loginUserData = $loginUserData;
@@ -71,9 +71,6 @@ trait ThreadTrait
         if (!$canViewThreadVideo) {
             $contentField = $this->filterThreadVideo($contentField);
         }
-        if ($userStick == -1) {
-            $userStick = $this->getThreadUserStick($thread, $user);
-        }
         $result = [
             'threadId' => $thread['id'],
             'postId' => $post['id'],
@@ -85,7 +82,7 @@ trait ThreadTrait
             'parentCategoryName' => $this->getParentCategory($thread['category_id'])['parentCategoryName'],
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
-            'isApproved' => $thread['is_approved'],
+            'isApproved' =>boolval($thread['is_approved']) ,
             'isStick' => $thread['is_sticky'],
             'isDraft' => boolval($thread['is_draft']),
             'isSite' => boolval($thread['is_site']),
@@ -115,7 +112,7 @@ trait ThreadTrait
             'ability' => $this->getAbilityField($loginUser, $thread),
             'content' => $contentField,
             'freewords' => $thread['free_words'],
-            'userStickStatus' => $userStick
+            'userStickStatus' => in_array($thread['id'], $userStickIds) ? true : false
         ];
         if ($analysis) {
             $concatString = $thread['title'] . $post['content'];
