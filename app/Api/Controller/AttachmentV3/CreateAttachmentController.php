@@ -103,21 +103,6 @@ class CreateAttachmentController extends DzqController
         return call_user_func_array($typeMethodMap[$type], [$this->user]);
     }
 
-    public function http_get_data($url) {
-
-        $ch = curl_init ();
-        curl_setopt ( $ch, CURLOPT_CUSTOMREQUEST, 'GET' );
-        curl_setopt ( $ch, CURLOPT_SSL_VERIFYPEER, false );
-        curl_setopt ( $ch, CURLOPT_URL, $url );
-        curl_setopt($ch,CURLOPT_FOLLOWLOCATION,false);
-        ob_start ();
-        curl_exec ( $ch );
-        $return_content = ob_get_contents();
-        ob_end_clean ();
-        $return_code = curl_getinfo ( $ch, CURLINFO_HTTP_CODE );
-        return $return_content;
-    }
-
     public function main()
     {
         $actor = $this->user;
