@@ -139,6 +139,8 @@ class User extends DzqModel
      */
     const NAME_ID_NUMBER_MATCH = 0;
 
+    const SUPER_ADMINISTRATOR = 1;
+
     public static $statusMap = [
         self::STATUS_NORMAL => '正常',
         self::STATUS_BAN => '禁用',
