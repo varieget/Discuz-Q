@@ -98,7 +98,7 @@ $route->post('/thread/video', 'threads.video', ApiController\ThreadsV3\CreateThr
 $route->get('/forum', 'forum.settings', ApiController\SettingsV3\ForumSettingsController::class);
 
 $route->post('/thread.share','thread.share',ApiController\ThreadsV3\ThreadShareController::class);
-$route->post('/goods/analysis', 'goods.analysis', ApiController\AnalysisV3\ResourceAnalysisGoodsController::class);
+$route->post('/goods/analysis', 'goods.analysis', \Plugin\Shop\Controller\ResourceAnalysisGoodsController::class);
 
 $route->post('/attachments', 'attachments.create', ApiController\AttachmentV3\CreateAttachmentController::class);
 $route->get('/emoji', 'emoji.list', ApiController\EmojiV3\ListEmojiController::class);
