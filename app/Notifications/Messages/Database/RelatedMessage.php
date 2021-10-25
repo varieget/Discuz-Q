@@ -85,7 +85,8 @@ class RelatedMessage extends SimpleMessage
             // 不是长文没有标题则使用首帖内容
             $firstContent = $result['first_content'];
 
-            $build['post_content'] = $content == $firstContent ? '' : $content ;
+            // $build['post_content'] = $content == $firstContent ? '' : $content ;
+            $build['post_content'] = $content ?: $firstContent;
             $build['post_created_at'] = $this->post->formatDate('created_at');
         }
 
