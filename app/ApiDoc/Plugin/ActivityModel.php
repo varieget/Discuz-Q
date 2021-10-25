@@ -16,8 +16,8 @@
  *             @OA\Property(property = "location", type = "string", description = "位置信息"),
  *             @OA\Property(property = "longitude", type = "string", description = "经度"),
  *             @OA\Property(property = "latitude", type = "string", description = "纬度")
- *         )
- *        @OA\Property(property = "additionalInfoType", type = "integer", description = "报名必填附加项；1：姓名、2：手机号、4：微信号、8：地址（当发帖人勾选多个时，将对应数字相加）"),
+ *         ),
+ *        @OA\Property(property = "additionalInfoType", type = "integer",default=0, description = "报名必填附加项；1：姓名、2：手机号、4：微信号、8：地址（当发帖人勾选多个时，将对应数字相加）"),
  *     ),
  *     @OA\Property(property = "输出", type = "object", description = "活动报名插件出参",
  *         @OA\Property(property = "activityId", type = "integer", description = "活动id"),
