@@ -18,6 +18,7 @@
 
 namespace App\Commands\Users;
 
+use App\Common\ResponseCode;
 use App\Exceptions\UploadException;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -25,6 +26,7 @@ use App\User\AvatarUploader;
 use App\Validators\AvatarValidator;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Common\Utils;
 use Intervention\Image\ImageManager;
 use Psr\Http\Message\UploadedFileInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
@@ -104,8 +106,10 @@ class UploadAvatar
         $user = User::query()->where('id',$this->userId)->first();
 
         $ext = pathinfo($this->avatar->getClientFilename(), PATHINFO_EXTENSION);
+        if (!in_array(strtolower($ext), ['jpeg', 'jpg', 'gif', 'png'])) {
+            Utils::outPut(ResponseCode::INVALID_PARAMETER, '文件后缀名不合法');
+        }
         $ext = $ext ? ".$ext" : '';
-
         $tmpFile = tempnam(storage_path('/tmp'), 'avatar');
         $tmpFileWithExt = $tmpFile . $ext;
 
