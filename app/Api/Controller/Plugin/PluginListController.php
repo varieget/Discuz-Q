@@ -59,7 +59,7 @@ class PluginListController extends DzqController
                     foreach ($files as $file) {
                         $fileName = $file->getFilename();
                         $extension = strtolower($file->getExtension());
-                        $fileUrl = sprintf(Utils::getDzqDomain() . "/plugin/%s/%s", $appName, $dirName . DIRECTORY_SEPARATOR . $fileName);
+                        $fileUrl = Utils::getDzqDomain() . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR . $appName . DIRECTORY_SEPARATOR . $dirName . DIRECTORY_SEPARATOR . $fileName;
                         if ($extension == 'js') {
                             $pluginFiles[$dirName]['js'][] = $fileUrl;
                         } else if ($extension == 'css') {
