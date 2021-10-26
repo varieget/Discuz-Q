@@ -21,6 +21,7 @@ use App\Commands\Thread\EditThread;
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Thread;
+use App\Models\ThreadStickSort;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
@@ -136,6 +137,12 @@ class OperateThreadController extends DzqController
             $attributes['isEssence'] = $isEssence;
         }
         if ($isSticky || $isSticky === false) {
+            if( (bool)$isSticky ){
+                $stickCount = ThreadStickSort::query()->count();
+                if($stickCount >= ThreadStickSort::THREAD_STICK_COUNT_LIMIT){
+                    $this->outPut(ResponseCode::NET_ERROR,'置顶贴最多只允许设置20条');
+                }
+            }
             $attributes['isSticky'] = $isSticky;
         }
         if ($isFavorite || $isFavorite === false) {

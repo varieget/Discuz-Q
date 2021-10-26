@@ -45,8 +45,8 @@ class GroupMessage extends SimpleMessage
         return [
             $this->actor->username,
             $this->actor->nickname,
-            $oldGroup->pluck('name')->join('、'),
-            $newGroup->pluck('name')->join('、')
+            collect($oldGroup)->pluck('name')->join('、'),
+            collect($newGroup)->pluck('name')->join('、')
         ];
     }
 

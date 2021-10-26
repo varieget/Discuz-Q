@@ -17,12 +17,14 @@
 
 namespace App\Api\Controller\CategoryV3;
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\AdminActionLog;
 use App\Models\Category;
 use Discuz\Base\DzqAdminController;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
 
 class CreateCategoriesController extends DzqAdminController
 {
@@ -69,5 +71,9 @@ class CreateCategoriesController extends DzqAdminController
             );
         }
         $this->outPut(ResponseCode::SUCCESS, '');
+    }
+
+    public function suffixClearCache($user){
+        DzqCache::delKey(CacheKey::CATEGORIES);
     }
 }

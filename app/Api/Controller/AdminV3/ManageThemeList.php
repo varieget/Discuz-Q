@@ -78,6 +78,7 @@ class ManageThemeList extends DzqAdminController
         //是否审核and是否草稿
         $query->where('threads.is_draft', Thread::IS_NOT_DRAFT);
         $query->where('posts.is_first', Post::FIRST_YES);
+        $query->whereNotNull('threads.user_id');
 
         // 数据来源筛选
         if (is_numeric($source)) {
