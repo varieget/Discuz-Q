@@ -82,7 +82,7 @@ trait ThreadTrait
             'parentCategoryName' => $this->getParentCategory($thread['category_id'])['parentCategoryName'],
             'title' => $thread['title'],
             'viewCount' => empty($thread['view_count']) ? 0 : $thread['view_count'],
-            'isApproved' =>boolval($thread['is_approved']) ,
+            'isApproved' => $thread['is_approved'],
             'isStick' => $thread['is_sticky'],
             'isDraft' => boolval($thread['is_draft']),
             'isSite' => boolval($thread['is_site']),
