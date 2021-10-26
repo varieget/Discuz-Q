@@ -45,6 +45,18 @@
  *             @OA\Property(property = "avatar", type = "string", description = "头像"),
  *             @OA\Property(property = "nickname", type = "string", description = "昵称"),
  *         )),
+ *         @OA\Property(property = "additionalInfoType", type = "array", description = "报名必填项类型",@OA\Items()),
+ *         @OA\Property(property = "activityUser", type = "array", description = "报名人信息",@OA\Items(
+                @OA\Property(property = "userId", type = "integer", description = "用户id"),
+ *              @OA\Property(property = "additionalInfo", type = "array", description = "报名信息",@OA\Items(
+                    @OA\Property(property = "name", type = "string", description = "姓名"),
+ *                  @OA\Property(property = "mobile", type = "string", description = "手机号"),
+ *                  @OA\Property(property = "weixin", type = "string", description = "微信号"),
+ *                  @OA\Property(property = "address", type = "string", description = "地址"),
+ *              )),
+ *              @OA\Property(property = "nickname", type = "string", description = "昵称"),
+ *         )),
+ *         @OA\Property(property = "isInitiator", type = "integer", description = "是否是发起人")
  *     )
  * )
  */

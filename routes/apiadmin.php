@@ -115,5 +115,7 @@ $route->get('/plugin/permissionlist', 'plugin.permissionlist', ApiController\Plu
 $route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingController::class);
 
 $route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);
+//参加活动人员导出
+
 
 

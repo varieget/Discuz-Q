@@ -18,10 +18,15 @@
 namespace Plugin\Activity\Model;
 
 
+use App\Models\User;
 use Discuz\Base\DzqModel;
 
 class ActivityUser extends DzqModel
 {
     protected $table = 'plugin_activity_user';
+
+    public function user(){
+        $this->belongsTo(User::class);
+    }
 
 }
