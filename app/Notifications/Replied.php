@@ -18,6 +18,7 @@
 
 namespace App\Notifications;
 
+use App\Models\NotificationTiming;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\Messages\Database\RepliedMessage;
@@ -89,10 +90,19 @@ class Replied extends AbstractNotification
         return (new NotificationManager)->driver('database')->setNotification($message)->build();
     }
 
-    public function toWechat($notifiable)
+    public function toWechat($notifiable, $noticeTimingId = 0)
     {
         $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
         $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
+
+        NotificationTiming::updateSendData($noticeTimingId, [
+            'userId' => $this->actor->id,
+            'contentData' =>[
+                'id' => $this->post->id,
+                'table' => get_class(new Post())
+            ],
+            'data' => $this->data
+        ]);
 
         $message = app(RepliedWechatMessage::class);
         $message->setData($this->getTplModel('wechat'), $this->actor, $this->post, $this->data);

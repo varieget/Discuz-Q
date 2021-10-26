@@ -15,6 +15,7 @@
 
 namespace App\Notifications;
 
+use App\Models\NotificationTiming;
 use App\Models\User;
 use App\Models\UserWalletCash;
 use App\Notifications\Messages\Database\WithdrawalMessage;
@@ -89,10 +90,19 @@ class Withdrawal extends AbstractNotification
         return (new NotificationManager)->driver('database')->setNotification($message)->build();
     }
 
-    public function toWechat($notifiable)
+    public function toWechat($notifiable, $noticeTimingId)
     {
         $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
         $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
+
+        NotificationTiming::updateSendData($noticeTimingId, [
+            'userId' => $this->actor->id,
+            'contentData' =>[
+                'id' => $this->cash->id,
+                'table' => get_class(new UserWalletCash())
+            ],
+            'data' => $this->data
+        ]);
 
         $message = app(WithdrawalWechatMessage::class);
         $message->setData($this->getTplModel('wechat'), $this->actor, $this->cash, $this->data);
