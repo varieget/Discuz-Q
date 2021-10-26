@@ -72,6 +72,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('abnormalOrder:clear')->everyMinute()->withoutOverlapping();
         $schedule->command('transcode:update')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('attachment:update')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('sendNotificationsRegularly:send')->everyMinute()->withoutOverlapping();
 
         // 维护清理
 //        $schedule->command('clear:attachment')->daily();
@@ -81,6 +82,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('clear:session_token')->everyMinute();
         $schedule->command('crawlerData:create')->everyMinute();
         $schedule->command('crawlerOfficialAccountData:create')->everyMinute();
+        $schedule->command('notificationTiming:clear')->daily();
 
         //监听定时任务
         $schedule->command('task:start')->everyMinute();

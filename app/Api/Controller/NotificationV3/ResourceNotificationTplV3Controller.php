@@ -11,7 +11,7 @@ use Discuz\Wechat\EasyWechatTrait;
 
 class ResourceNotificationTplV3Controller extends DzqAdminController
 {
-    use NotificationTrait;
+    use NotificationTimingTrait;
     use EasyWechatTrait;
 
     public function main()
