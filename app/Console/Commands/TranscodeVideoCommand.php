@@ -79,7 +79,6 @@ class TranscodeVideoCommand extends AbstractCommand
             ->whereNull('th.deleted_at')
             ->whereNotNull('th.user_id')
             ->where('th.is_draft', Thread::IS_NOT_DRAFT)
-            ->where('th.is_display', Thread::BOOL_YES)
             ->where('tv.status', ThreadVideo::VIDEO_STATUS_TRANSCODING)
             ->where('tv.type', ThreadVideo::TYPE_OF_VIDEO)
             ->where('tv.thread_id','!=',0)
