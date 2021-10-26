@@ -26,7 +26,7 @@ class ActivityUser extends DzqModel
     protected $table = 'plugin_activity_user';
 
     public function user(){
-        $this->belongsTo(User::class);
+        return  $this->belongsTo(User::class);
     }
 
 }
