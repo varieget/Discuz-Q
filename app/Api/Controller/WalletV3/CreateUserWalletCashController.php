@@ -74,7 +74,9 @@ class CreateUserWalletCashController extends DzqController
         $cash_sum_limit = (float)Arr::get($cash_setting, 'cash_sum_limit', 5000);//每日总提现额
         $cash_max_sum = (float)Arr::get($cash_setting, 'cash_max_sum', 5000);//每次最大金额
         $cash_min_sum = (float)Arr::get($cash_setting, 'cash_min_sum', 0);//每次最小金额
+        $receive_account = $this->inPut('receiveAccount') ?? '';      //收款账号
 
+        if(empty($receive_account))     return $this->outPut(ResponseCode::INVALID_PARAMETER, '收款账号必填');
         if (empty($cashApplyAmount) || !is_numeric($cashApplyAmount)) {
             return $this->outPut(ResponseCode::INVALID_PARAMETER, '请输入正确的提现金额！');
         }
@@ -86,12 +88,13 @@ class CreateUserWalletCashController extends DzqController
         }
 
         if ($cash_interval_time != 0) {
-            $time_before = Carbon::now()->addDays(-$cash_interval_time);
             //提现间隔时间
-            $cash_record = UserWalletCash::where('created_at', '>=', $time_before)->where('user_id', $this->user->id)->first();
-            if (!empty($cash_record)) {
+            $cash_record = UserWalletCash::query()->orderBy('id','desc')->where('user_id', $this->user->id)->first();
+            $time_after = Carbon::parse($cash_record->created_at)->addDays($cash_interval_time);
+            $can_cash_time = Carbon::parse($time_after)->diffInDays(Carbon::now());
+            if ($can_cash_time > 0) {
                 $log->error("提现处于限制间隔天数内 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                return $this->outPut(ResponseCode::NET_ERROR, '提现处于限制间隔天数内');
+                return $this->outPut(ResponseCode::NET_ERROR, $can_cash_time.'天后可提现');
             }
         }
         //今日已申提现总额
@@ -136,7 +139,8 @@ class CreateUserWalletCashController extends DzqController
                 $cashApplyAmount,
                 '',
                 0,              //创建申请提现时，默认为0，具体为什么值，待后台审核通过之后扣款才修改该值
-                ''
+                '',
+                $receive_account
             );
             //冻结钱包金额
             $user_wallet->available_amount = $user_wallet->available_amount - $cashApplyAmount;
