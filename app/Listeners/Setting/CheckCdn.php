@@ -142,37 +142,39 @@ class CheckCdn
         }
     }
 
-    public function modifyIpRecordStatus($mainDomain, $ipValue, $status)
+    public function modifyIpRecordStatus($mainDomain, $ipValue, $status, $subDomain)
     {
-        $ipRecordId = $this->getRecordId($mainDomain, $ipValue, 'A');
+        $ipRecordId = $this->getRecordId($mainDomain, $ipValue, 'A', $subDomain);
         $this->modifyRecordStatus($mainDomain, $ipRecordId, $status);
     }
 
-    public function modifyCnameRecordStatus($mainDomain, $cnameValue, $status)
+    public function modifyCnameRecordStatus($mainDomain, $cnameValue, $status, $subDomain)
     {
-        $cnameRecordId = $this->getRecordId($mainDomain, $cnameValue, 'CNAME');
+        $cnameRecordId = $this->getRecordId($mainDomain, $cnameValue, 'CNAME', $subDomain);
         $this->modifyRecordStatus($mainDomain, $cnameRecordId, $status);
     }
 
     public function switchCdnStatus($speedDomain, $status, $mainDomain, $ipValue)
     {
         $cdnDomainStatus = $this->getCdnDomainStatus($speedDomain);
+        $subDomain = $this->getSubDomain($speedDomain, $mainDomain);
+
         if ($status === true) {
             if ($cdnDomainStatus == 'offline') {
                 $this->startCdnDomain($speedDomain);
             }
 
             // 开启cname的解析
-            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'DISABLE');
-            $this->modifyCnameRecordStatus($mainDomain, $this->getCdnCname($speedDomain), 'ENABLE');
+            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'DISABLE', $subDomain);
+            $this->modifyCnameRecordStatus($mainDomain, $this->getCdnCname($speedDomain), 'ENABLE', $subDomain);
         } else {
             if ($cdnDomainStatus == 'online') {
                 $this->stopCdnDomain($speedDomain);
             }
 
             // 开启ip地址的解析
-            $this->modifyCnameRecordStatus($mainDomain, $this->getCdnCname($speedDomain), 'DISABLE');
-            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'ENABLE');
+            $this->modifyCnameRecordStatus($mainDomain, $this->getCdnCname($speedDomain), 'DISABLE', $subDomain);
+            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'ENABLE', $subDomain);
         }
         $this->purgeCdnPathCache(); // 刷新cdn
     }
