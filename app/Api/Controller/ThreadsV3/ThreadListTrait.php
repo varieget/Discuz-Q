@@ -57,7 +57,7 @@ trait ThreadListTrait
         $tags = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
             return ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
         }, 'thread_id', true);
-        $inPutToms = $this->cacheThreadDetail($threadIds, $postIds, $posts,$toms);
+        $inPutToms = $this->cacheThreadDetail($threadIds, $postIds, $posts, $toms);
 
         $this->setGlobalCache();
         $result = [];
@@ -80,7 +80,7 @@ trait ThreadListTrait
             $threadTags = [];
             isset($tags[$threadId]) && $threadTags = $tags[$threadId];
             $concatString .= ($thread['title'] . $post['content']);
-            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags, $loginUserData,$userStickIds);
+            $result[] = $this->packThreadDetail($user, $groupUser, $thread, $post, $tomInput, false, $threadTags, $loginUserData, $userStickIds);
         }
         list($searches, $replaces) = ThreadHelper::getThreadSearchReplace($concatString);
         foreach ($result as &$item) {
@@ -129,7 +129,7 @@ trait ThreadListTrait
             CacheKey::LIST_THREADS_V3_THREADS => DzqCache::get(CacheKey::LIST_THREADS_V3_THREADS),
             CacheKey::LIST_THREADS_V3_VIDEO => DzqCache::get(CacheKey::LIST_THREADS_V3_VIDEO),
         ];
-        Utils::setAppKey(CacheKey::APP_CACHE,$cache);
+        Utils::setAppKey(CacheKey::APP_CACHE, $cache);
     }
 
     private function getGroupUserInfo($userIds)
@@ -172,15 +172,16 @@ trait ThreadListTrait
         $posts = $this->cachePosts($threadIds);
         $postIds = array_column($posts, 'id');
         $userIds = array_unique(array_column($threads, 'user_id'));
-        $this->cacheThreads($threadIds,$threads);
+        $this->cacheThreads($threadIds, $threads);
         $this->cacheUsers($userIds);
         $this->cacheGroupUser($userIds);
         $this->cacheTags($threadIds);
         $toms = $this->cacheToms($threadIds);
-        $this->cacheThreadDetail($threadIds, $postIds, $posts,$toms);
+        $this->cacheThreadDetail($threadIds, $postIds, $posts, $toms);
     }
 
-    private function cacheThreadDetail($threadIds, $postIds, $posts,$toms){
+    private function cacheThreadDetail($threadIds, $postIds, $posts, $toms)
+    {
         $attachmentIds = [];
         $threadVideoIds = [];
         $inPutToms = $this->buildInputToms($toms, $attachmentIds, $threadVideoIds, true);
@@ -258,10 +259,9 @@ trait ThreadListTrait
 
     private function cacheUsers($userIds)
     {
-        $users = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
+        return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
             return User::instance()->getUsers($userIds);
         }, 'id');
-        return $users;
 //        $users = User::instance()->getUsers($userIds);
 //        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_USERS, $users, 'id');
 //        return $users;
@@ -269,10 +269,9 @@ trait ThreadListTrait
 
     private function cacheGroupUser($userIds)
     {
-        $groupUsers = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_GROUP_USER, $userIds, function ($userIds) {
+        return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_GROUP_USER, $userIds, function ($userIds) {
             return GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
         }, 'user_id');
-        return $groupUsers;
 //        $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
 //        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_GROUP_USER, $groupUsers, 'user_id');
 //        return $groupUsers;
@@ -280,30 +279,27 @@ trait ThreadListTrait
 
     private function cacheTags($threadIds)
     {
-        $tags = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
+        return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
             return ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
         }, 'thread_id');
-        return $tags;
 //        $tags = ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
 //        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_TAGS, $tags, 'thread_id', true, $threadIds);
     }
 
-    private function cacheThreads($threadIds,$threads)
+    private function cacheThreads($threadIds, $threads)
     {
-        $threads = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ()use($threads) {
+        return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function () use ($threads) {
             return $threads;
-        },'id');
-        return $threads;
+        }, 'id');
 //        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_THREADS, $threads, 'id');
 //        return $threads;
     }
 
     private function cachePosts($threadIds)
     {
-        $posts = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_POSTS, $threadIds, function ($threadIds) {
+        return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_POSTS, $threadIds, function ($threadIds) {
             return Post::instance()->getPosts($threadIds);
         }, 'thread_id');
-        return $posts;
 
 //        $posts = Post::instance()->getPosts($threadIds);
 //        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_POSTS, $posts, 'thread_id');
@@ -312,10 +308,9 @@ trait ThreadListTrait
 
     private function cacheToms($threadIds)
     {
-        $toms = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TOMS, $threadIds, function ($threadIds) {
+        return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TOMS, $threadIds, function ($threadIds) {
             return ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
-        }, 'thread_id',true);
-        return $toms;
+        }, 'thread_id', true);
 //        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
 //        $toms = DzqCache::hMSet(CacheKey::LIST_THREADS_V3_TOMS, $toms, 'thread_id', true, $threadIds);
 //        return $toms;
@@ -339,10 +334,9 @@ trait ThreadListTrait
 //            $attachments = $this->appendDefaultEmpty($attachmentIds, $attachments, null);
 //            return $attachments;
 //        });
-        $attachments = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachmentIds, function ($attachmentIds) {
+        return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachmentIds, function ($attachmentIds) {
             return Attachment::query()->whereIn('id', $attachmentIds)->get()->toArray();
         }, 'id');
-        return $attachments;
 //        $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->keyBy('id')->toArray();
 //        $attachments = $this->appendDefaultEmpty($attachmentIds, $attachments, null);
 //        app('cache')->put(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachments);
@@ -351,10 +345,9 @@ trait ThreadListTrait
 
     private function cacheVideo($threadVideoIds)
     {
-        $threadVideos = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_VIDEO,$threadVideoIds,function($threadVideoIds){
+        return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_VIDEO, $threadVideoIds, function ($threadVideoIds) {
             return ThreadVideo::query()->whereIn('id', $threadVideoIds)->get()->toArray();
-        },'id');
-        return $threadVideos;
+        }, 'id');
 //        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->get()->toArray();
 //        $threadVideos = DzqCache::hMSet(CacheKey::LIST_THREADS_V3_VIDEO, $threadVideos, 'id', false, $threadVideoIds, null);
 //        return $threadVideos;
@@ -363,10 +356,9 @@ trait ThreadListTrait
 
     private function cachePostUsers($threadIds, $postIds, $posts)
     {
-        $likedUsers = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_POST_USERS,$threadIds,function ()use($threadIds, $postIds, $posts){
-            return  ThreadHelper::getThreadLikedDetail($threadIds, $postIds, $posts);
+        return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_POST_USERS, $threadIds, function () use ($threadIds, $postIds, $posts) {
+            return ThreadHelper::getThreadLikedDetail($threadIds, $postIds, $posts);
         });
-        return $likedUsers;
 //        $likedUsers = ThreadHelper::getThreadLikedDetail($threadIds, $postIds, $posts);
 //        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_POST_USERS, $likedUsers);
 //        return $likedUsers;
