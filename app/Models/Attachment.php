@@ -121,6 +121,8 @@ class Attachment extends DzqModel
      * @param bool $isApproved 是否合法
      * @param string $ip ip 地址
      * @param int $order 文件顺序
+     * @param int $width
+     * @param int $height
      * @return static
      */
     public static function build(
@@ -135,8 +137,8 @@ class Attachment extends DzqModel
         $isApproved,
         $ip,
         $order = 0,
-        $width,
-        $height
+        $width = 0,
+        $height = 0
     )
     {
         $attachment = new static;
