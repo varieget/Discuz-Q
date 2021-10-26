@@ -171,15 +171,15 @@ class ThreadListController extends DzqController
     {
         $bPreload = Utils::isPositiveInteger(($page - 2) / $this->preloadPages + 1);
         if ($page > 1 && $bPreload) {//预加载
-            return $this->loadPreloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+            return $this->preloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         } else {//读缓存
             return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         }
     }
 
-    private function loadPreloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
+    private function preloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        $ret =  DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
+        return DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
             $threads = $this->preloadPaginiation($page, $this->preloadPages, $perPage, $threadsBuilder);
             $this->initDzqGlobalData($threads);
             array_walk($threads, function (&$v) {
@@ -187,24 +187,10 @@ class ThreadListController extends DzqController
             });
             return $threads;
         }, true);
-        return $ret;
     }
 
     private function loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-
-//        $ret =  DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-//            $threads = $this->preloadPaginiation($page,1, $perPage, $threadsBuilder);
-//            $this->initDzqGlobalData($threads);
-//            array_walk($threads, function (&$v) {
-//                $v['pageData'] = array_column($v['pageData'], 'id');
-//            });
-//            return $threads;
-//        }, true);
-//        return $ret;
-//
-//
-//
         return DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
             $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
             $threadList = $threads['pageData'];

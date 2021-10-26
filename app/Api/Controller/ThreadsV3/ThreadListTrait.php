@@ -185,8 +185,8 @@ trait ThreadListTrait
         $attachmentIds = [];
         $threadVideoIds = [];
         $inPutToms = $this->buildInputToms($toms, $attachmentIds, $threadVideoIds, true);
-        $this->cacheAttachment($attachmentIds);
-        $this->cacheVideo($threadVideoIds);
+        !empty($attachmentIds) && $this->cacheAttachment($attachmentIds);
+        !empty($threadVideoIds) && $this->cacheVideo($threadVideoIds);
         $this->cachePostUsers($threadIds, $postIds, $posts);
         return $inPutToms;
     }
