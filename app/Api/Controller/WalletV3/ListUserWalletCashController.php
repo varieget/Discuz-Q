@@ -79,6 +79,12 @@ class ListUserWalletCashController extends DzqController
         $sort = (new Parameters($this->request->getQueryParams()))->getSort($this->sortFields) ?: $this->sort;
 
         $cash_records = $this->getCashRecords($this->user, $filter, $perPage, $page, $sort);
+        $cash_records['pageData']->load('userWalletCash')->map(function ($log){
+            $log->receive_account = '';
+            if(!empty($log->userWalletCash)){
+                $log->receive_account = !empty($log->userWalletCash->trade_no) ? $log->userWalletCash->trade_no : $log->userWalletCash->receive_account;
+            }
+        });
         $data = $this->camelData($cash_records);
 
         $data = $this->filterData($data);

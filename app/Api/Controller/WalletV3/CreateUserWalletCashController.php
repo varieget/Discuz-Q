@@ -58,6 +58,7 @@ class CreateUserWalletCashController extends DzqController
     public function main()
     {
         $cashApplyAmount = $this->inPut('cashApplyAmount');
+        $receive_account = $this->inPut('receiveAccount') ?? '';      //收款账号
         $log = app('payLog');
         $log_data = [
             "cashApplyAmount" => $cashApplyAmount,
@@ -74,7 +75,6 @@ class CreateUserWalletCashController extends DzqController
         $cash_sum_limit = (float)Arr::get($cash_setting, 'cash_sum_limit', 5000);//每日总提现额
         $cash_max_sum = (float)Arr::get($cash_setting, 'cash_max_sum', 5000);//每次最大金额
         $cash_min_sum = (float)Arr::get($cash_setting, 'cash_min_sum', 0);//每次最小金额
-        $receive_account = $this->inPut('receiveAccount') ?? '';      //收款账号
 
         if(empty($receive_account))     return $this->outPut(ResponseCode::INVALID_PARAMETER, '收款账号必填');
         if (empty($cashApplyAmount) || !is_numeric($cashApplyAmount)) {
