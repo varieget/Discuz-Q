@@ -53,20 +53,14 @@ class ImageBusi extends TomBaseBusi
         $attachments = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT, $imageIds, function ($imageIds) {
             return Attachment::query()->whereIn('id', $imageIds)->get()->keyBy('id')->toArray();
         });
-        $threadId = $this->threadId;
-        $thread = DzqCache::hGet(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {
-            return Thread::getOneThread($threadId, true);
-        });
 
         foreach ($attachments as $attachment) {
-            if (!empty($thread)) {
-                $item = $this->camelData($serializer->getBeautyAttachment($attachment));
-                if (!$this->canViewTom) {
-                    $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
-                }
-                unset($item['blurUrl']);
-                $result[] = $item;
+            $item = $this->camelData($serializer->getBeautyAttachment($attachment));
+            if (!$this->canViewTom) {
+                $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
             }
+            unset($item['blurUrl']);
+            $result[] = $item;
         }
         return $this->jsonReturn($result);
     }

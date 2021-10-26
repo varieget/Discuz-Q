@@ -57,8 +57,9 @@ trait ThreadListTrait
         $tags = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
             return ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
         }, 'thread_id', true);
+        $inPutToms = $this->cacheThreadDetail($threadIds, $postIds, $posts,$toms);
+
         $this->setGlobalCache();
-        $inPutToms = $this->buildIPutToms($toms);
         $result = [];
         $concatString = '';
         $loginUserData = $this->getLoginUserData($loginUserId, $threadIds, $postIds);
@@ -127,13 +128,8 @@ trait ThreadListTrait
             CacheKey::LIST_THREADS_V3_ATTACHMENT => DzqCache::get(CacheKey::LIST_THREADS_V3_ATTACHMENT),
             CacheKey::LIST_THREADS_V3_THREADS => DzqCache::get(CacheKey::LIST_THREADS_V3_THREADS),
             CacheKey::LIST_THREADS_V3_VIDEO => DzqCache::get(CacheKey::LIST_THREADS_V3_VIDEO),
-
-//            CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $loginUserId),
-//            CacheKey::LIST_THREADS_V3_THREAD_USERS . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_THREAD_USERS . $loginUserId),
-//            CacheKey::LIST_THREADS_V3_POST_LIKED . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_POST_LIKED . $loginUserId),
-//            CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $loginUserId => DzqCache::get(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $loginUserId)
         ];
-        app()->instance(CacheKey::APP_CACHE, $cache);
+        Utils::setAppKey(CacheKey::APP_CACHE,$cache);
     }
 
     private function getGroupUserInfo($userIds)
@@ -157,12 +153,12 @@ trait ThreadListTrait
      */
     private function appendDefaultEmpty($ids, &$array, $value = null)
     {
-        foreach ($ids as $id) {
-            if (!isset($array[$id])) {
-                $array[$id] = $value;
-            }
-        }
-        return $array;
+//        foreach ($ids as $id) {
+//            if (!isset($array[$id])) {
+//                $array[$id] = $value;
+//            }
+//        }
+//        return $array;
     }
 
     /**
@@ -171,24 +167,27 @@ trait ThreadListTrait
      */
     private function initDzqGlobalData($threadsList)
     {
-        $threads = $this->getAllThreadsList($threadsList);
+        $threads = $this->getThreadsList($threadsList);
         $threadIds = array_column($threads, 'id');
         $posts = $this->cachePosts($threadIds);
         $postIds = array_column($posts, 'id');
         $userIds = array_unique(array_column($threads, 'user_id'));
-        $this->cacheThreads($threads);
+        $this->cacheThreads($threadIds,$threads);
         $this->cacheUsers($userIds);
         $this->cacheGroupUser($userIds);
         $this->cacheTags($threadIds);
         $toms = $this->cacheToms($threadIds);
+        $this->cacheThreadDetail($threadIds, $postIds, $posts,$toms);
+    }
+
+    private function cacheThreadDetail($threadIds, $postIds, $posts,$toms){
         $attachmentIds = [];
         $threadVideoIds = [];
-        $this->buildIPutToms($toms, $attachmentIds, $threadVideoIds, true);
+        $inPutToms = $this->buildInputToms($toms, $attachmentIds, $threadVideoIds, true);
         $this->cacheAttachment($attachmentIds);
         $this->cacheVideo($threadVideoIds);
         $this->cachePostUsers($threadIds, $postIds, $posts);
-        $posts = array_column($posts, null, 'thread_id');
-        $this->cacheSearchReplace($threads, $posts);
+        return $inPutToms;
     }
 
     /**
@@ -200,20 +199,20 @@ trait ThreadListTrait
      */
     private function initDzqUserData($loginUserId, $cacheKey, $filterKey, $preloadCount)
     {
-        $data = DzqCache::hGet($cacheKey, $filterKey);
-        if (!$data) {
-            return;
-        }
-        $pages = array_column($data, 'pageData');
-        $threadIds = [];
-        foreach ($pages as $ids) {
-            $threadIds = array_merge($threadIds, $ids);
-        }
-        $this->cacheUserOrders($loginUserId, $threadIds, $preloadCount);
-        $this->cachePostLikedAndFavor($loginUserId, $threadIds, $preloadCount);
+//        $data = DzqCache::hGet($cacheKey, $filterKey);
+//        if (!$data) {
+//            return;
+//        }
+//        $pages = array_column($data, 'pageData');
+//        $threadIds = [];
+//        foreach ($pages as $ids) {
+//            $threadIds = array_merge($threadIds, $ids);
+//        }
+//        $this->cacheUserOrders($loginUserId, $threadIds, $preloadCount);
+//        $this->cachePostLikedAndFavor($loginUserId, $threadIds, $preloadCount);
     }
 
-    private function getAllThreadsList($threadsByPage)
+    private function getThreadsList($threadsByPage)
     {
         $threads = [];
         foreach ($threadsByPage as $listItems) {
@@ -225,7 +224,7 @@ trait ThreadListTrait
         return $threads;
     }
 
-    private function buildIPutToms($tomData, &$attachmentIds = [], &$threadVideoIds = [], $withIds = false)
+    private function buildInputToms($tomData, &$attachmentIds = [], &$threadVideoIds = [], $withIds = false)
     {
         $inPutToms = [];
         foreach ($tomData as $threadId => $toms) {
@@ -259,123 +258,167 @@ trait ThreadListTrait
 
     private function cacheUsers($userIds)
     {
-        $users = User::instance()->getUsers($userIds);
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_USERS, $users, 'id');
+        $users = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
+            return User::instance()->getUsers($userIds);
+        }, 'id');
         return $users;
+//        $users = User::instance()->getUsers($userIds);
+//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_USERS, $users, 'id');
+//        return $users;
     }
 
     private function cacheGroupUser($userIds)
     {
-        $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_GROUP_USER, $groupUsers, 'user_id');
+        $groupUsers = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_GROUP_USER, $userIds, function ($userIds) {
+            return GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
+        }, 'user_id');
         return $groupUsers;
+//        $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
+//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_GROUP_USER, $groupUsers, 'user_id');
+//        return $groupUsers;
     }
 
     private function cacheTags($threadIds)
     {
-        $tags = ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_TAGS, $tags, 'thread_id', true, $threadIds);
+        $tags = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
+            return ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
+        }, 'thread_id');
+        return $tags;
+//        $tags = ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
+//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_TAGS, $tags, 'thread_id', true, $threadIds);
     }
 
-    private function cacheThreads($threads)
+    private function cacheThreads($threadIds,$threads)
     {
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_THREADS, $threads, 'id');
+        $threads = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ()use($threads) {
+            return $threads;
+        },'id');
         return $threads;
+//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_THREADS, $threads, 'id');
+//        return $threads;
     }
 
     private function cachePosts($threadIds)
     {
-        $posts = Post::instance()->getPosts($threadIds);
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_POSTS, $posts, 'thread_id');
+        $posts = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_POSTS, $threadIds, function ($threadIds) {
+            return Post::instance()->getPosts($threadIds);
+        }, 'thread_id');
         return $posts;
+
+//        $posts = Post::instance()->getPosts($threadIds);
+//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_POSTS, $posts, 'thread_id');
+//        return $posts;
     }
 
     private function cacheToms($threadIds)
     {
-        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
-        $toms = DzqCache::hMSet(CacheKey::LIST_THREADS_V3_TOMS, $toms, 'thread_id', true, $threadIds);
+        $toms = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TOMS, $threadIds, function ($threadIds) {
+            return ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
+        }, 'thread_id',true);
         return $toms;
+//        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
+//        $toms = DzqCache::hMSet(CacheKey::LIST_THREADS_V3_TOMS, $toms, 'thread_id', true, $threadIds);
+//        return $toms;
     }
 
     private function cacheSearchReplace($threads, $posts)
     {
-        $linkString = '';
-        foreach ($threads as $thread) {
-            $threadId = $thread['id'];
-            $post = $posts[$threadId] ?? '';
-            $linkString .= ($thread['title'] . (!empty($post) ? $post['content'] : ''));
-        }
-        $sReplaces = Thread::instance()->getReplaceStringV3($linkString);
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_SEARCH_REPLACE, $sReplaces);
-        return $sReplaces;
+//        $linkString = '';
+//        foreach ($threads as $thread) {
+//            $threadId = $thread['id'];
+//            $post = $posts[$threadId] ?? '';
+//            $linkString .= ($thread['title'] . (!empty($post) ? $post['content'] : ''));
+//        }
+//        return Thread::instance()->getReplaceStringV3($linkString);
     }
 
     private function cacheAttachment($attachmentIds)
     {
-        $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->keyBy('id')->toArray();
-        $attachments = $this->appendDefaultEmpty($attachmentIds, $attachments, null);
-        app('cache')->put(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachments);
+//        $attachments = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT,$attachmentIds,function ($attachmentIds){
+//            $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->keyBy('id')->toArray();
+//            $attachments = $this->appendDefaultEmpty($attachmentIds, $attachments, null);
+//            return $attachments;
+//        });
+        $attachments = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachmentIds, function ($attachmentIds) {
+            return Attachment::query()->whereIn('id', $attachmentIds)->get()->toArray();
+        }, 'id');
         return $attachments;
+//        $attachments = Attachment::query()->whereIn('id', $attachmentIds)->get()->keyBy('id')->toArray();
+//        $attachments = $this->appendDefaultEmpty($attachmentIds, $attachments, null);
+//        app('cache')->put(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachments);
+//        return $attachments;
     }
 
     private function cacheVideo($threadVideoIds)
     {
-        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->get()->toArray();
-        $threadVideos = DzqCache::hMSet(CacheKey::LIST_THREADS_V3_VIDEO, $threadVideos, 'id', false, $threadVideoIds, null);
+        $threadVideos = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_VIDEO,$threadVideoIds,function($threadVideoIds){
+            return ThreadVideo::query()->whereIn('id', $threadVideoIds)->get()->toArray();
+        },'id');
         return $threadVideos;
+//        $threadVideos = ThreadVideo::query()->whereIn('id', $threadVideoIds)->get()->toArray();
+//        $threadVideos = DzqCache::hMSet(CacheKey::LIST_THREADS_V3_VIDEO, $threadVideos, 'id', false, $threadVideoIds, null);
+//        return $threadVideos;
     }
 
 
     private function cachePostUsers($threadIds, $postIds, $posts)
     {
-        $likedUsers = ThreadHelper::getThreadLikedDetail($threadIds, $postIds, $posts);
-        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_POST_USERS, $likedUsers);
+        $likedUsers = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_POST_USERS,$threadIds,function ()use($threadIds, $postIds, $posts){
+            return  ThreadHelper::getThreadLikedDetail($threadIds, $postIds, $posts);
+        });
         return $likedUsers;
+//        $likedUsers = ThreadHelper::getThreadLikedDetail($threadIds, $postIds, $posts);
+//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_POST_USERS, $likedUsers);
+//        return $likedUsers;
     }
 
     private function cacheUserOrders($userId, $threadIds, $preloadCount)
     {
-        $key1 = CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId;
-        $key2 = CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $userId;
-//        $d1 = DzqCache::get($key1);
-//        $d2 = DzqCache::get($key2);
-//        if (is_array($d1) && count($d1) >= $preloadCount && is_array($d2) && count($d1) >= $preloadCount) {
-//            return;
+//        $key1 = CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $userId;
+//        $key2 = CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $userId;
+//        $orders = Order::query()
+//            ->where([
+//                'user_id' => $userId,
+//                'status' => Order::ORDER_STATUS_PAID
+//            ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT, Order::ORDER_TYPE_REWARD])
+//            ->whereIn('thread_id', $threadIds)->get()->toArray();
+//        $orderPay = [];
+//        $orderReward = [];
+//        foreach ($orders as $order) {
+//            if ($order['type'] == Order::ORDER_TYPE_THREAD || $order['type'] == Order::ORDER_TYPE_ATTACHMENT) {
+//                $orderPay[] = $order;
+//            } else if ($order['type'] == Order::ORDER_TYPE_REWARD) {
+//                $orderReward[] = $order;
+//            }
 //        }
-        $orders = Order::query()
-            ->where([
-                'user_id' => $userId,
-                'status' => Order::ORDER_STATUS_PAID
-            ])->whereIn('type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT, Order::ORDER_TYPE_REWARD])
-            ->whereIn('thread_id', $threadIds)->get()->toArray();
-        $orderPay = [];
-        $orderReward = [];
-        foreach ($orders as $order) {
-            if ($order['type'] == Order::ORDER_TYPE_THREAD || $order['type'] == Order::ORDER_TYPE_ATTACHMENT) {
-                $orderPay[] = $order;
-            } else if ($order['type'] == Order::ORDER_TYPE_REWARD) {
-                $orderReward[] = $order;
-            }
-        }
-        DzqCache::hMSet($key1, $orderPay, 'thread_id', false, $threadIds, null);
-        DzqCache::hMSet($key2, $orderReward, 'thread_id', false, $threadIds, null);
+//        DzqCache::hMGet($key1,$threadIds,function ()use($orderPay){
+//            return $orderPay;
+//        },'thread_id');
+//        DzqCache::hMGet($key2,$threadIds,function ()use($orderReward){
+//            return $orderReward;
+//        },'thread_id');
+//        DzqCache::hMSet($key1, $orderPay, 'thread_id', false, $threadIds, null);
+//        DzqCache::hMSet($key2, $orderReward, 'thread_id', false, $threadIds, null);
     }
 
     //点赞收藏
-    private function cachePostLikedAndFavor($userId, $threadIds, $preloadCount)
+    private function cachePostLikedAndFavor($userId, $threadIds)
     {
-        $key1 = CacheKey::LIST_THREADS_V3_POST_LIKED . $userId;
-        $key2 = CacheKey::LIST_THREADS_V3_THREAD_USERS . $userId;
-//        $d1 = DzqCache::get($key1);
-//        $d2 = DzqCache::get($key2);
-//        if (is_array($d1) && count($d1) >= $preloadCount && is_array($d2) && count($d1) >= $preloadCount) {
-//            return;
-//        }
-        $posts = Post::instance()->getPosts($threadIds);
-        $postIds = array_column($posts, 'id');
-        $postUsers = PostUser::query()->where('user_id', $userId)->whereIn('post_id', $postIds)->get()->toArray();
-        $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $userId)->get()->toArray();
-        DzqCache::hMSet($key1, $postUsers, 'post_id', false, $postIds, null);
-        DzqCache::hMSet($key2, $favorite, 'thread_id', false, $threadIds, null);
+//        $key1 = CacheKey::LIST_THREADS_V3_POST_LIKED . $userId;
+//        $key2 = CacheKey::LIST_THREADS_V3_THREAD_USERS . $userId;
+//        $posts = Post::instance()->getPosts($threadIds);
+//        $postIds = array_column($posts, 'id');
+//
+//        DzqCache::hMGet($key1,$postIds,function ()use($userId,$postIds){
+//            return PostUser::query()->where('user_id', $userId)->whereIn('post_id', $postIds)->get()->toArray();
+//        });
+//        DzqCache::hMGet($key2,$threadIds,function ()use($userId,$threadIds){
+//            return ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $userId)->get()->toArray();
+//        });
+
+//        $postUsers = PostUser::query()->where('user_id', $userId)->whereIn('post_id', $postIds)->get()->toArray();
+//        $favorite = ThreadUser::query()->whereIn('thread_id', $threadIds)->where('user_id', $userId)->get()->toArray();
+//        DzqCache::hMSet($key1, $postUsers, 'post_id', false, $postIds, null);
+//        DzqCache::hMSet($key2, $favorite, 'thread_id', false, $threadIds, null);
     }
 }

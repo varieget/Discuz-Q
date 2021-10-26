@@ -36,10 +36,9 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
     use ThreadQueryTrait;
 
-    const PRELOAD_PAGES = 3;//预加载的页数，从第2页开始预加载
-
-    private $categoryIds = [];
-
+    private $preloadPages = 3;///预加载的页数，从第2页开始每次预加载n页
+    private $categoryIds = [];//不能删除
+    private $threadsFirstPage = [];//存储第一页数据
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -121,14 +120,18 @@ class ThreadListController extends DzqController
      */
     private function getCacheThreads($threadIds)
     {
-        $pageData = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ($threadIds) {
-            return Thread::query()->whereIn('id', $threadIds)->get()->toArray();
-        }, 'id');
-        $threads = [];
-        foreach ($threadIds as $threadId) {
-            $threads[] = $pageData[$threadId] ?? null;
+        if (!empty($this->threadsFirstPage)) {
+            return $this->threadsFirstPage;
+        } else {
+            $pageData = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ($threadIds) {
+                return Thread::query()->whereIn('id', $threadIds)->get()->toArray();
+            }, 'id');
+            $threads = [];
+            foreach ($threadIds as $threadId) {
+                $threads[] = $pageData[$threadId] ?? null;
+            }
+            return $threads;
         }
-        return $threads;
     }
 
 
@@ -166,18 +169,18 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        $needPreload = Utils::isPositiveInteger(($page - 2) / self::PRELOAD_PAGES + 1);
-        if ($page > 1 && $needPreload) {//预加载
-            return $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+        $bPreload = Utils::isPositiveInteger(($page - 2) / $this->preloadPages + 1);
+        if ($page > 1 && $bPreload) {//预加载
+            return $this->loadPreloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         } else {//读缓存
             return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         }
     }
 
-    private function loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
+    private function loadPreloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
         $ret =  DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-            $threads = $this->preloadPaginiation($page,self::PRELOAD_PAGES, $perPage, $threadsBuilder);
+            $threads = $this->preloadPaginiation($page, $this->preloadPages, $perPage, $threadsBuilder);
             $this->initDzqGlobalData($threads);
             array_walk($threads, function (&$v) {
                 $v['pageData'] = array_column($v['pageData'], 'id');
@@ -189,9 +192,24 @@ class ThreadListController extends DzqController
 
     private function loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
+
+//        $ret =  DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
+//            $threads = $this->preloadPaginiation($page,1, $perPage, $threadsBuilder);
+//            $this->initDzqGlobalData($threads);
+//            array_walk($threads, function (&$v) {
+//                $v['pageData'] = array_column($v['pageData'], 'id');
+//            });
+//            return $threads;
+//        }, true);
+//        return $ret;
+//
+//
+//
         return DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
             $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
-            $threads['pageData'] = array_column($threads['pageData'], 'id');
+            $threadList = $threads['pageData'];
+            $this->threadsFirstPage = $threadList;
+            $threads['pageData'] = array_column($threadList, 'id');
             return $threads;
         });
     }
