@@ -45,28 +45,29 @@ trait ThreadQueryTrait
         $administrator = $this->user->isAdmin();
         $threads = $this->getBaseThreadsBuilder();
         if (!empty($complex)) {
+            \App\Common\Utils::setAppKey('thread_complex', $complex);
             switch ($complex) {
                 case Thread::MY_DRAFT_THREAD:
                     $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT, false)
                         ->where('th.user_id', $loginUserId)
                         ->orderByDesc('th.id');
-                    $threads = $threads->join('posts as post', 'post.thread_id', '=', 'th.id');
+                    $threads->join('posts as post', 'post.thread_id', '=', 'th.id');
                     break;
                 case Thread::MY_LIKE_THREAD:
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
-                    $threads = $threads->leftJoin('posts as post', 'post.thread_id', '=', 'th.id')
+                    $threads->leftJoin('posts as post', 'post.thread_id', '=', 'th.id')
                         ->where(['post.is_first' => Post::FIRST_YES, 'post.is_approved' => Post::APPROVED_YES])
                         ->leftJoin('post_user as postu', 'postu.post_id', '=', 'post.id')
                         ->where(['postu.user_id' => $userId])
                         ->orderByDesc('postu.created_at');
                     break;
                 case Thread::MY_COLLECT_THREAD:
-                    $threads = $threads->leftJoin('thread_user as thu', 'thu.thread_id', '=', 'th.id')
+                    $threads->leftJoin('thread_user as thu', 'thu.thread_id', '=', 'th.id')
                         ->where(['thu.user_id' => $loginUserId])
                         ->orderByDesc('thu.created_at');
                     break;
                 case Thread::MY_BUY_THREAD:
-                    $threads = $threads->leftJoin('orders as order', 'order.thread_id', '=', 'th.id')
+                    $threads->leftJoin('orders as order', 'order.thread_id', '=', 'th.id')
                         ->whereIn('order.type', [Order::ORDER_TYPE_THREAD, Order::ORDER_TYPE_ATTACHMENT])
                         ->where(['order.user_id' => $loginUserId, 'order.status' => Order::ORDER_STATUS_PAID])
                         ->orderByDesc('order.updated_at');
@@ -78,18 +79,11 @@ trait ThreadQueryTrait
                         $threads = $threads->where('th.is_anonymous', Thread::IS_NOT_ANONYMOUS);
                     }
                     empty($filter['toUserId']) ? $userId = $loginUserId : $userId = intval($filter['toUserId']);
-
                     //个人中心置顶
-                    {
-                        $threads = $threads->leftJoin('thread_sticks as thstick', function($thjoin){
-                            $thjoin->on('th.id', '=', 'thstick.thread_id')->on('th.user_id', '=', 'thstick.user_id');
-                        })->addSelect('thstick.status')
-                            ->orderByDesc('thstick.status');  //置顶，该sql放第一位
-
-                    }
-
-                    $threads = $threads->where('th.user_id', $userId)
-                        ->orderByDesc('th.id');
+                    $threads->leftJoin('thread_sticks as thstick', function ($thjoin) {
+                        $thjoin->on('th.id', '=', 'thstick.thread_id')->on('th.user_id', '=', 'thstick.user_id');
+                    })->addSelect('thstick.status')->orderByDesc('thstick.status');  //置顶，该sql放第一位
+                    $threads->where('th.user_id', $userId)->orderByDesc('th.id');
                     break;
             }
             $withLoginUser = true;
@@ -194,7 +188,7 @@ trait ThreadQueryTrait
             $query->whereIn('th.category_id', $allowCategoryIds);
         }
         //并集threadId
-        if(!empty($categoryIds)|| !empty($groupIds) || !empty($userIds) || !empty($threadIds) || !empty($topicIds)){
+        if (!empty($categoryIds) || !empty($groupIds) || !empty($userIds) || !empty($threadIds) || !empty($topicIds)) {
             $queryMerge = Thread::query()->select('th.id')->from('threads as th')
                 ->leftJoin('group_user as g1', 'g1.user_id', '=', 'th.user_id')
                 ->leftJoin('thread_topic as topic', 'topic.thread_id', '=', 'th.id');
@@ -204,20 +198,20 @@ trait ThreadQueryTrait
             if (!empty($groupIds)) {
                 $queryMerge->orWhereIn('g1.group_id', $groupIds);
             }
-            if(!empty($userIds)){
+            if (!empty($userIds)) {
                 $queryMerge->orWhereIn('th.user_id', $userIds);
             }
-            if(!empty($threadIds)){
+            if (!empty($threadIds)) {
                 $queryMerge->orWhereIn('th.id', $threadIds);
             }
             if (!empty($topicIds)) {
                 $queryMerge->orWhereIn('topic.topic_id', $topicIds);
             }
-            $mergeIds = array_column($queryMerge->get()->toArray(),'id');
-            $query->whereIn('th.id',$mergeIds);
+            $mergeIds = array_column($queryMerge->get()->toArray(), 'id');
+            $query->whereIn('th.id', $mergeIds);
         }
         //需剔除的threadId
-        if(!empty($blockUserIds) || !empty($blockThreadIds) || !empty($blockTopicIds)){
+        if (!empty($blockUserIds) || !empty($blockThreadIds) || !empty($blockTopicIds)) {
             $queryRemove = Thread::query()->select('threads.id');
             if (!empty($blockUserIds)) {
                 $queryRemove->orWhereIn('threads.user_id', $blockUserIds);
@@ -226,14 +220,14 @@ trait ThreadQueryTrait
                 $queryRemove->orWhereIn('threads.id', $blockThreadIds);
             }
             if (!empty($blockTopicIds)) {
-                $thIds = ThreadTopic::query()->distinct(true)->whereIn('topic_id',$blockTopicIds)->get("thread_id")->toArray();
-                $thIds = array_column($thIds,'thread_id');
+                $thIds = ThreadTopic::query()->distinct(true)->whereIn('topic_id', $blockTopicIds)->get("thread_id")->toArray();
+                $thIds = array_column($thIds, 'thread_id');
                 $queryRemove->orWhereIn('threads.id', $thIds);
             }
-            $removeIds = array_column($queryRemove->get()->toArray(),'id');
-            $query->whereNotIn('th.id',$removeIds);
+            $removeIds = array_column($queryRemove->get()->toArray(), 'id');
+            $query->whereNotIn('th.id', $removeIds);
         }
-        if(!empty($filter['categoryids'])){
+        if (!empty($filter['categoryids'])) {
             $query->whereIn('th.category_id', $filter['categoryids']);
         }
         $query->orderBy('th.created_at', 'desc');
@@ -330,7 +324,7 @@ trait ThreadQueryTrait
             ->whereNull('th.deleted_at')
             ->whereNotNull('th.user_id')
             ->where('th.is_draft', $isDraft);
-        if(Utils::requestFrom() == Platform::MinProgram){
+        if (Utils::requestFrom() == Platform::MinProgram) {
             $threads->where('th.is_display', Thread::BOOL_YES);
         }
         if ($filterApprove) {

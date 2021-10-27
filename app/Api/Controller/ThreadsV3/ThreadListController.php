@@ -36,20 +36,17 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
     use ThreadQueryTrait;
 
-    const PRELOAD_PAGES = 20;//预加载的页数
-
-    private $categoryIds = [];
-
+    private $preloadPages = 3;///预加载的页数，从第2页开始每次预加载n页
+    private $categoryIds = [];//不能删除
+    private $threadsFirstPage = [];//存储第一页数据
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
         $filter = $this->inPut('filter') ?: [];
         $categoryIds = $filter['categoryids'] ?? [];
         $complex = $filter['complex'] ?? null;
-        $user = $this->user;
-
-        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         $scope = $this->inPut('scope');
+        $this->categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
         if ($scope != DzqConst::SCOPE_PAID) {
             if (!$this->categoryIds) {
                 if (empty($complex) ||
@@ -59,7 +56,7 @@ class ThreadListController extends DzqController
                 }
                 //自己的主题去除分类权限控制
                 if ($complex == Thread::MY_OR_HIS_THREAD) {
-                    if ($user->id !== $filter['toUserId'] && !empty($filter['toUserId'])) {
+                    if ($this->user->id !== $filter['toUserId'] && !empty($filter['toUserId'])) {
                         throw new PermissionDeniedException('没有浏览权限');
                     }
                     $this->categoryIds = [];
@@ -84,12 +81,12 @@ class ThreadListController extends DzqController
             $page = 1;
             $perPage = 10;
         }
-        $sqlLog = false;
+        $sqlLog = true;
         $sqlLog && $this->openQueryLog();
         $threads = $this->getOriginThreads($scope, $filter, $page, $perPage);
         $threadIds = $threads['pageData'];
         $pageData = $this->getCacheThreads($threadIds);
-        $threads['pageData'] = $this->getFullThreadData($pageData, true);
+        $threads['pageData'] = $this->getFullThreadData($pageData);
         $sqlLog && $this->info('query_sql_log', app(ConnectionInterface::class)->getQueryLog());
         $this->outPut(0, '', $threads);
     }
@@ -123,14 +120,18 @@ class ThreadListController extends DzqController
      */
     private function getCacheThreads($threadIds)
     {
-        $pageData = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ($threadIds) {
-            return Thread::query()->whereIn('id', $threadIds)->get()->toArray();
-        }, 'id');
-        $threads = [];
-        foreach ($threadIds as $threadId) {
-            $threads[] = $pageData[$threadId] ?? null;
+        if (!empty($this->threadsFirstPage)) {
+            return $this->threadsFirstPage;
+        } else {
+            $pageData = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function ($threadIds) {
+                return Thread::query()->whereIn('id', $threadIds)->get()->toArray();
+            }, 'id');
+            $threads = [];
+            foreach ($threadIds as $threadId) {
+                $threads[] = $pageData[$threadId] ?? null;
+            }
+            return $threads;
         }
-        return $threads;
     }
 
 
@@ -168,19 +169,18 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        if ($page == 1) {
-            $this->loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+        $bPreload = Utils::isPositiveInteger(($page - 2) / $this->preloadPages + 1);
+        if ($page > 1 && $bPreload) {//预加载
+            return $this->preloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
+        } else {//读缓存
+            return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         }
-        return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
     }
 
-    private function loadAllPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
+    private function preloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        if ($page != 1) {
-            return false;
-        }
         return DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $cacheKey, $filter, $page, $perPage) {
-            $threads = $this->preloadPaginiation(self::PRELOAD_PAGES, $perPage, $threadsBuilder);
+            $threads = $this->preloadPaginiation($page, $this->preloadPages, $perPage, $threadsBuilder);
             $this->initDzqGlobalData($threads);
             array_walk($threads, function (&$v) {
                 $v['pageData'] = array_column($v['pageData'], 'id');
@@ -193,7 +193,9 @@ class ThreadListController extends DzqController
     {
         return DzqCache::hM2Get($cacheKey, $filterKey, $page, function () use ($threadsBuilder, $filter, $page, $perPage) {
             $threads = $this->pagination($page, $perPage, $threadsBuilder, true);
-            $threads['pageData'] = array_column($threads['pageData'], 'id');
+            $threadList = $threads['pageData'];
+            $this->threadsFirstPage = $threadList;
+            $threads['pageData'] = array_column($threadList, 'id');
             return $threads;
         });
     }

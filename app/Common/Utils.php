@@ -193,4 +193,17 @@ class Utils
             'end' => date("Y-m-d 23:59:59")
         ];
     }
+
+    public static function setAppKey($key, $value)
+    {
+        return app()->instance($key, $value);
+    }
+
+    public static function getAppKey($key)
+    {
+        if (app()->has($key)) {
+            return app()->get($key);
+        }
+        return null;
+    }
 }
