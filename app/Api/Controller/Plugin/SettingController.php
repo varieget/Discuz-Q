@@ -36,9 +36,11 @@ class SettingController extends DzqAdminController
             'appId' => 'required|string|max:100',
             'appName' => 'required|string|max:100',
             'type' => 'required|integer',
-            'privateValue' => 'required|array',
-            'publicValue' => 'required|array'
         ]);
+
+        if (!is_array($privateValue) || !is_array($privateValue)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
 
         $intersectKeys = array_intersect_key($privateValue,$publicValue);
         if (!empty($intersectKeys)){
@@ -57,6 +59,10 @@ class SettingController extends DzqAdminController
         if (!$result){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
+
+        $this->pluginSetting($appId,$privateValue,$publicValue);
+
+
         $pluginSetting->private_value = json_encode($privateValue, 256);
         $pluginSetting->public_value = json_encode($publicValue, 256);
 
@@ -66,5 +72,18 @@ class SettingController extends DzqAdminController
         $this->outPut(0);
     }
 
+    private function pluginSetting($appId, &$privateValue,&$publicValue){
+        $pluginList = \Discuz\Common\Utils::getPluginList();
+        if (empty($pluginList[$appId]) || empty($pluginList[$appId]['settingBusi'])){
+            return;
+        }
 
+        $busiClass = $pluginList[$appId]['settingBusi'];
+        $busi = new \ReflectionClass($busiClass);
+        $busiObj = $busi->newInstanceArgs([]);
+        if(!method_exists($busiObj,"setSetting")){
+            return;
+        }
+        $busiObj->setSetting($privateValue, $publicValue);
+    }
 }

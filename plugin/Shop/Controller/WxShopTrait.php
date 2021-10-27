@@ -20,12 +20,9 @@ namespace Plugin\Shop\Controller;
 
 use App\Common\ResponseCode;
 use App\Models\PluginSettings;
-use App\Models\Setting;
 use Discuz\Base\DzqLog;
 use Discuz\Wechat\EasyWechatTrait;
 use GuzzleHttp\Client;
-use Illuminate\Contracts\Filesystem\Factory;
-use Illuminate\Support\Facades\App;
 
 trait WxShopTrait
 {
@@ -33,6 +30,9 @@ trait WxShopTrait
 
     protected $config;
     protected $httpClient;
+    protected $wxApp;
+    protected $accessToken;
+    protected $settingData;
 
     public function checkPermission($userRepo, $guestEnable = false)
     {
@@ -51,59 +51,67 @@ trait WxShopTrait
         return $this->config;
     }
 
+    private function getWxShopHttpClient(){
+        if (empty($this->httpClient)){
+            $this->httpClient = new Client([]);
+        }
+        return $this->httpClient;
+    }
     /**
-     * @return ["wxAppId","wxAppSecret","wxQrcode"]
+     * @return
      */
     public function getSetting(){
+        if (!empty($this->settingData)){
+            return $this->settingData;
+        }
         $this->getConfig();
 
         $settingData = PluginSettings::getSetting($this->config["app_id"]);
         if (empty($settingData)){
            return false;
         }
-
-        return $settingData;
+        $this->settingData = $settingData;
+        return $this->settingData;
     }
 
     public function getWxApp(){
-        DzqLog::error("gjz 001 ",[],"100001");
+        if (!empty($this->wxApp)){
+            return [0,$this->wxApp];
+        }
         $settingData = $this->getSetting();
         if (empty($settingData)){
-            DzqLog::error("gjz 001 ",[],"100002");
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
-        DzqLog::error("gjz 001 ",[],"100003=".json_encode($settingData));
         if (!isset($settingData["wxAppId"])
             || !isset($settingData["wxAppSecret"])){
-            DzqLog::error("gjz 001 ",[],"100004");
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
-        DzqLog::error("gjz 001 ",[],"100005");
-        return [0, $this->miniProgram(["app_id"=>$settingData["wxAppId"],"secret"=>$settingData["wxAppSecret"]])];
+        $this->wxApp = $this->miniProgram(["app_id"=>$settingData["wxAppId"],"secret"=>$settingData["wxAppSecret"]]);
+        return [0, $this->wxApp];
     }
 
     public function getAccessToken(){
-        DzqLog::error("gjz 002 ",[],"100001");
+        if (!empty($this->accessToken)){
+            return [0,$this->accessToken];
+        }
+
         list($result,$wxApp) = $this->getWxApp();
         if ($result !== 0){
-            DzqLog::error("gjz 002 ",[],"100002");
             return [$result,$wxApp];
         }
-        DzqLog::error("gjz 002 ",[],"100003");
         $accessToken = $wxApp->access_token->getToken(true);
         if (empty($accessToken["access_token"])){
-            DzqLog::error("gjz 002 ",[],"100004");
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件配置错误"];
         }
-        DzqLog::error("gjz 002 ",[],"100005");
-        return [0,$accessToken["access_token"]];
+        $this->accessToken = $accessToken["access_token"];
+        return [0,$this->accessToken];
     }
 
 
     private function getShopList($accessToken,$page,$perPage)
     {
         $url = "https://api.weixin.qq.com/product/spu/get_list?access_token=".$accessToken;
-        $one = new Client([]);
+        $one = $this->getWxShopHttpClient();
 
         $body = [ "status"=>5,
             "page"=>$page,
@@ -134,9 +142,7 @@ trait WxShopTrait
     {
         $url = "https://api.weixin.qq.com/product/spu/get?access_token=".$accessToken;
 
-        if(empty($this->httpClient)){
-            $this->httpClient = new Client([]);
-        }
+        $httpClientTemp = $this->getWxShopHttpClient();
 
         $body = [ "product_id"=>$productId,
             "out_product_id"=>"",
@@ -148,7 +154,7 @@ trait WxShopTrait
             "body"=>$bodyStr
         ];
 
-        $response = $this->httpClient->request("post", $url, $options);
+        $response = $httpClientTemp->request("post", $url, $options);
 
         $statusCode = $response->getStatusCode();
         if ($statusCode != 200){
@@ -196,6 +202,7 @@ trait WxShopTrait
 
         $fileName = "wxshop_".$productIdStr."_".time().".jpg";
         $qrBuf = $qrResponse->getBody()->getContents();
+
         /** @var ShopFileSave $shopFileSave */
         $shopFileSave = app("app")->make(ShopFileSave::class);
 
@@ -206,5 +213,61 @@ trait WxShopTrait
         /** @var ShopFileSave $shopFileSave */
         $shopFileSave = app("app")->make(ShopFileSave::class);
         return $shopFileSave->getFilePath($isRemote, $path);
+    }
+
+    public function getSchemeProduct($path)
+    {
+        list($ret2,$accessToken) = $this->getAccessToken();
+        $settingData = $this->getSetting();
+        if (empty($settingData["wxScheme"])){
+            return "";
+        }
+
+        $wxAppId = $settingData["wxAppId"];
+        $wxAppSecret = $settingData["wxAppSecret"];
+
+        $pathNew = str_replace("plugin-private://","__plugin__/",$path);
+        $post_data['jump_wxa']['path'] = $pathNew;
+        $post_data['jump_wxa']['query'] = '2';
+        $postBody = json_encode($post_data);
+
+        return $this->getScheme($wxAppId,$wxAppSecret,$accessToken,$postBody);
+    }
+
+    public function getScheme($appid,$secret,$accessToken,string $body)
+    {
+        $httpClientTemp = $this->getWxShopHttpClient();
+        if (empty($accessToken)){
+            $url = 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid='.$appid.'&secret='.$secret;
+
+            $response = $httpClientTemp->request("get", $url, []);
+            $statusCode = $response->getStatusCode();
+            if ($statusCode != 200){
+                return "";
+            }
+            $contentData = $response->getBody()->getContents();
+            if (empty($contentData)){
+                return "";
+            }
+            $result = json_decode($contentData,true);
+            $accessToken = $result['access_token'];
+        }
+
+        $options = [];
+        if (!empty($body)){
+            $options["body"] = $body;
+        }
+        $post_url = 'https://api.weixin.qq.com/wxa/generatescheme?access_token='.$accessToken;
+        $response = $httpClientTemp->request("post", $post_url, $options);
+        $statusCode = $response->getStatusCode();
+        if ($statusCode != 200){
+            return "";
+        }
+        $contentData = $response->getBody()->getContents();
+        if (empty($contentData)){
+            return "";
+        }
+        $result = json_decode($contentData,true);
+        return isset($result['openlink']) ? $result['openlink'] : "";
     }
 }

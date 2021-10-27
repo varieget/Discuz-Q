@@ -17,6 +17,7 @@ class ShopBusi extends TomBaseBusi
     public const TYPE_WX_SHOP = 11;
 
 
+
     public function create()
     {
         $products = $this->getParams('products');
@@ -113,27 +114,20 @@ class ShopBusi extends TomBaseBusi
     private function doProduct($productId){
         $resultData = false;
 
-        DzqLog::error("aaa",[],"100001");
-
         $config = $this->getSetting();
         $wxAppId = $config["wxAppId"];
-        DzqLog::error("aaa",[],"100002");
+        $wxAppSecret = $config["wxAppSecret"];
+
         list($result,$accssToken) = $this->getAccessToken();
-        DzqLog::error("aaa",[],"100003");
         if ($result !== 0){
-            DzqLog::error("aaa",[],"100004");
             return $resultData;
         }
-        DzqLog::error("aaa",[],"100005");
 
         $productId =  (string)$productId;
         $productInfo = $this->getProductInfo($accssToken, $productId);
-        DzqLog::error("aaa",[],"100006");
         if (empty($productInfo)){
-            DzqLog::error("aaa",[],"100007");
             return $resultData;
         }
-        DzqLog::error("aaa",[],"100008");
         $imgUrl = "";
         if (count($productInfo["head_img"])>0){
             $imgUrl=$productInfo["head_img"][0];
@@ -150,6 +144,8 @@ class ShopBusi extends TomBaseBusi
             //拉取二维码
             list($qrPath,$isRemote) = $this->getProductQrCode($path);
 
+
+
             $oneShopProduct = new ShopProducts();
             $oneShopProduct->app_id = $wxAppId;
             $oneShopProduct->product_id = $productId;
@@ -160,6 +156,8 @@ class ShopBusi extends TomBaseBusi
             $oneShopProduct->detail_url = $path;
             $oneShopProduct->detail_qrcode = $qrPath;
             $oneShopProduct->is_remote = $isRemote?1:0;
+            $oneShopProduct->detail_scheme = $this->getSchemeProduct($path);
+
             $oneShopProduct->save();
 
             $resultData = $oneShopProduct;
@@ -173,6 +171,8 @@ class ShopBusi extends TomBaseBusi
                 list($qrPath,$isRemote) = $this->getProductQrCode($path);
                 $productOld->detail_qrcode = $qrPath;
                 $productOld->is_remote = $isRemote?1:0;
+
+                $productOld->detail_scheme = $this->getSchemeProduct($path);
             }
 
             $productOld->save();
@@ -183,5 +183,7 @@ class ShopBusi extends TomBaseBusi
         $resultDataTemp = $this->camelData($resultData);
         return $resultDataTemp;
     }
+
+
 
 }
