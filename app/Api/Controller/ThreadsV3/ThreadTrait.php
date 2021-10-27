@@ -879,7 +879,7 @@ trait ThreadTrait
         $tags = [];
 
         if ($is_html) {
-            preg_match_all('/<[^>]+>([^<]*)/', $html_string, $tag_matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
+            $this->preg_match_all_mb('/<[^>]+>([^<]*)/', $html_string, $tag_matches);
 
             foreach ($tag_matches as $tag_match) {
                 if ($tag_match[0][1] - $i >= $length) {
@@ -903,6 +903,18 @@ trait ThreadTrait
         }
 
         return mb_substr($html_string, 0, $length = min(mb_strlen($html_string), $length + $i)) . (count($tags = array_reverse($tags)) ? '</' . implode('></', $tags) . '>' : '') . $append;
+    }
+
+    public function preg_match_all_mb($pattern, $subject, array &$matches = null){
+        preg_match_all($pattern, $subject, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER);
+        $strlen0 = 0;
+        foreach ($matches as &$match){
+            $matchDt = $match[1][1]-$match[0][1];
+            $match[0][1] = $strlen0;
+            $match[1][1] = $match[0][1]+$matchDt;
+
+            $strlen0 += mb_strlen($match[0][0]);
+        }
     }
 }
 
