@@ -111,8 +111,9 @@ trait CdnTrait
 
             return json_decode($resp->toJsonString(), true);
         } catch (TencentCloudSDKException $e) {
-            $errorData = ['errorCode' => $e->getErrorCode(), 'errorMsg' => $e->getMessage()];
+            $errorData = ['errorCode' => $e->getErrorCode(), 'errorMsg' => $e->getMessage(), 'type' => $type, 'params' => $params];
             DzqLog::error('cdntrait_api_error', $errorData);
+            unset($errorData['params']);
             Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, $e->getMessage(), $errorData);
         }
     }

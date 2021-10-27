@@ -106,8 +106,9 @@ trait DnspodTrait
 
             return json_decode($resp->toJsonString(), true);
         } catch (TencentCloudSDKException $e) {
-            $errorData = ['errorCode' => $e->getErrorCode(), 'errorMsg' => $e->getMessage()];
+            $errorData = ['errorCode' => $e->getErrorCode(), 'errorMsg' => $e->getMessage(), 'type' => $type, 'params' => $params];
             DzqLog::error('dnspodtrait_api_error', $errorData);
+            unset($errorData['params']);
             Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, $e->getMessage(), $errorData);
         }
     }
@@ -129,6 +130,11 @@ trait DnspodTrait
 
     public function createRecord($mainDomain = '', $value = '', $recordType = '', $subDomain = 'www', $status = 'ENABLE', $recordLine = '默认')
     {
+        $recordId = $this->getRecordId($mainDomain, $value, $recordType, $subDomain);
+        if (!empty($recordId)) {
+            return [];
+        }
+
         return $this->commonDnspodDomain('createRecord', [
             'Domain' => $mainDomain, // 域名
             'RecordType' => $recordType, // 记录类型，通过 API 记录类型获得，大写英文，比如：A 。
@@ -146,19 +152,23 @@ trait DnspodTrait
         ], '获取域名解析记录错误');
     }
 
-    public function getRecordId($mainDomain = '', $value = '', $type = '', $name = 'www')
+    public function getRecordId($mainDomain = '', $value = '', $type = '', $name = 'www'): int
     {
         $recordList = $this->describeRecordList($mainDomain);
         foreach ($recordList['RecordList'] as $val) {
-            if (rtrim($val['Value'], '.') == $value && $val['Type'] == $type && $val['Name'] == $name) {
+            if (rtrim($val['Value'], '.') == rtrim($value, '.') && $val['Type'] == $type && $val['Name'] == $name) {
                 return $val['RecordId'];
             }
         }
-        return '';
+        return 0;
     }
 
-    public function modifyRecordStatus($mainDomain, $recordId, $status)
+    public function modifyRecordStatus($mainDomain, int $recordId, $status)
     {
+        if (empty($recordId)) {
+            return [];
+        }
+
         return $this->commonDnspodDomain('modifyRecordStatus', [
             'Domain' => $mainDomain,
             'RecordId' => $recordId,
@@ -169,6 +179,16 @@ trait DnspodTrait
     public function getDomainList()
     {
         return $this->commonDnspodDomain('getDomainList', [], '获取域名列表错误');
+    }
+
+    public function getDomainArr(): array
+    {
+        $domainList = $this->getDomainList();
+        $arr = [];
+        foreach ($domainList['DomainList'] as $k => $value) {
+            array_push($arr, $value['Name']);
+        };
+        return $arr;
     }
 
     // 获取主机记录

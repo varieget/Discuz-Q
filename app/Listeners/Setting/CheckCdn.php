@@ -120,15 +120,20 @@ class CheckCdn
             $this->updateCdnDomain($speedDomain, $cdnOrigins, $cdnServerName);
             $this->purgeCdnPathCache();
         } else {
+            // 添加cdn域名
             $this->addCdnDomain($speedDomain, $cdnOrigins, $cdnServerName);
 
-            // 添加域名、解析
-            $this->createDomain($mainDomain);
+            if (empty($this->getDomainArr()) || !in_array($mainDomain, $this->getDomainArr())) {
+                // 添加dnspod主域名
+                $this->createDomain($mainDomain);
+            }
 
             $subDomain = $this->getSubDomain($speedDomain, $mainDomain);
 
+            // 添加cname解析
             $this->createRecord($mainDomain, $this->getCdnCname($speedDomain), 'CNAME', $subDomain, 'ENABLE');
 
+            // 添加ip地址解析
             $this->createRecord($mainDomain, $this->getRemoteIp($cdnOrigins), 'A', $subDomain, 'DISABLE');
         }
 
