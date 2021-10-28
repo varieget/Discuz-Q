@@ -18,8 +18,6 @@
 
 namespace App\Notifications;
 
-use App\Models\NotificationTiming;
-use App\Models\Post;
 use App\Models\Question;
 use App\Models\User;
 use App\Notifications\Messages\Database\QuestionedMessage;
@@ -123,19 +121,10 @@ class Questioned extends AbstractNotification
         return (new NotificationManager)->driver('database')->setNotification($message)->build();
     }
 
-    public function toWechat($notifiable, $noticeTimingId)
+    public function toWechat($notifiable)
     {
         $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
         $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
-
-        NotificationTiming::updateSendData($noticeTimingId, [
-            'userId' => $this->user->id,
-            'contentData' =>[
-                'id' => $this->question->id,
-                'table' => get_class(new Question())
-            ],
-            'data' => $this->data
-        ]);
 
         $message = $this->getMessage('wechat');
         $message->setData($this->getTplModel('wechat'), $this->user, $this->question, $this->data);

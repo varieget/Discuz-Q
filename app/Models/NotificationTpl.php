@@ -70,7 +70,7 @@ class NotificationTpl extends Model
     const PUSH_TYPE_NOW = 0;
     const PUSH_TYPE_DELAY = 1;
 
-    const MAX_DELAY_TIME = 60 * 60 * 24 * 30; // 间隔推送最大延迟时间(86400 * 30 秒)
+    const MAX_DELAY_TIME = 60 * 60 * 24; // 间隔推送最大延迟时间(86400秒)
 
     public $timestamps = false;
 

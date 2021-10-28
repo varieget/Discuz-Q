@@ -34,7 +34,6 @@ class CreateNotificationTiming extends Migration
             $table->string('notice_id')->comment('模板唯一标识ID');
             $table->unsignedBigInteger('user_id')->comment('接收通知的用户id');
             $table->unsignedInteger('number')->default(0)->comment('通知条数');
-            $table->text('data')->comment('通知数据');
             $table->timestamp('created_at')->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
             $table->timestamp('expired_at')->nullable()->comment('过期时间');

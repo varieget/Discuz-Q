@@ -61,6 +61,7 @@ class NotificationTiming extends DzqModel
 
     public static function createNotificationTiming($noticeId, $userId, $expiredAt = null): NotificationTiming
     {
+//        dd($expiredAt);
         $currentNotification = self::create($noticeId, $userId, $expiredAt, 1);
         $currentNotification->save();
         $currentNotification->raise(new Created($currentNotification));
@@ -70,6 +71,7 @@ class NotificationTiming extends DzqModel
     public static function getLastNotification($noticeId, $userId): array
     {
         $lastNotification = self::query()->where(['notice_id' => $noticeId, 'user_id' => $userId])->exists();
+//        dump($lastNotification);
         if (!empty($lastNotification)) {
             $lastNotification = self::query()
                 ->where(['notice_id' => $noticeId, 'user_id' => $userId])
@@ -82,6 +84,7 @@ class NotificationTiming extends DzqModel
             $lastNotification->save();
             $lastNotification->raise(new Created($lastNotification));
         }
+//        dd($lastNotification);
         return $lastNotification->toArray();
     }
 
@@ -114,23 +117,10 @@ class NotificationTiming extends DzqModel
             ->update(['expired_at' => Carbon::now()]);
     }
 
-    public static function addNotificationNumber($id, $isCount = true): int
+    public static function addNotificationNumber($id): int
     {
-        if (!$isCount) {
-            return 0;
-        }
         return self::query()
             ->where('id', $id)
             ->increment('number', 1);
-    }
-
-    public static function updateSendData($noticeTimingId = 0, $updateData = []): int
-    {
-        if (is_numeric($noticeTimingId) && is_array($updateData)) {
-            return self::query()
-                ->where('id', $noticeTimingId)
-                ->update(['data' => json_encode($updateData)]);
-        }
-        return 0;
     }
 }

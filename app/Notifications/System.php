@@ -18,7 +18,6 @@
 
 namespace App\Notifications;
 
-use App\Models\NotificationTiming;
 use App\Models\Post;
 use App\Models\User;
 use App\Notifications\Messages\Database\GroupExpiredMessage;
@@ -127,17 +126,12 @@ class System extends AbstractNotification
         return (new NotificationManager)->driver('database')->setNotification($message)->build();
     }
 
-    public function toWechat($notifiable, $noticeTimingId)
+    public function toWechat($notifiable)
     {
         if ($this->isCustomer) return false;
 
         $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
         $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
-
-        NotificationTiming::updateSendData($noticeTimingId, [
-            'userId' => $this->actor->id,
-            'data' => $this->data
-        ]);
 
         $message = $this->getMessage('wechat');
         $message->setData($this->getTplModel('wechat'), $this->actor, $this->data);

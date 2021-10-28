@@ -15,8 +15,6 @@
 
 namespace App\Notifications;
 
-use App\Models\NotificationTiming;
-use App\Models\Order;
 use App\Models\User;
 use App\Models\UserWalletLog;
 use App\Notifications\Messages\Database\ThreadRewardedMessage;
@@ -104,19 +102,10 @@ class ThreadRewarded extends AbstractNotification
 
     }
 
-    public function toWechat($notifiable, $noticeTimingId)
+    public function toWechat($notifiable)
     {
         $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
         $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
-
-        NotificationTiming::updateSendData($noticeTimingId, [
-            'userId' => $this->user->id,
-            'contentData' =>[
-                'id' => $this->order->id,
-                'table' => get_class(new Order())
-            ],
-            'data' => $this->data
-        ]);
 
         $message = app(ThreadRewardedWechatMessage::class);
         $message->setData($this->getTplModel('wechat'), $this->user, $this->order, $this->data);
