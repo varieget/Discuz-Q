@@ -74,7 +74,7 @@ class AppendController extends DzqController
         $activityUser->activity_id = $activity->id;
         $activityUser->user_id = $this->user->id;
         $activityUser->status = DzqConst::BOOL_YES;
-        $activityUser->additional_info = json_encode($additional_info);
+        $activityUser->additional_info = json_encode($additional_info, JSON_UNESCAPED_UNICODE);
         if(!$activityUser->save()){
             $this->outPut(ResponseCode::DB_ERROR);
         }
