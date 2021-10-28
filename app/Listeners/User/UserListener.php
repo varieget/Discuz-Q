@@ -133,8 +133,10 @@ class UserListener
         if(empty($get_query_params['dzqPf'])){
             return;
         }
-        $start_peoples_dzqSid = app('cache')->get('start_peoples_dzqSid');
-        if(empty($start_peoples_dzqSid))    $start_peoples_dzqSid = [];
+//        $start_peoples_dzqSid = app('cache')->get('start_peoples_dzqSid');
+//        if(empty($start_peoples_dzqSid))    $start_peoples_dzqSid = [];
+        $start_peoples_uid = app('cache')->get('start_peoples_uid');
+        if(empty($start_peoples_uid))    $start_peoples_uid = [];
         $today = date("Y-m-d", time());
         $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
         if(empty($site_info_daily)){
@@ -162,7 +164,7 @@ class UserListener
                 break;
         }
         $site_info_daily->start_count += 1;
-        if(!in_array($get_query_params['dzqSid'], $start_peoples_dzqSid)){
+        if( $event->user->id  && !in_array($event->user->id, $start_peoples_uid)){
             $tomorrow = date("Y-m-d",strtotime("+1 day"));
             $cache_time = strtotime($tomorrow) - time();
             switch ($get_query_params['dzqPf']){
@@ -179,9 +181,9 @@ class UserListener
             $site_info_daily->start_peoples += 1;
         }
         $site_info_daily->save();
-        if($event->user->id && !in_array($event->user->id, $start_peoples_dzqSid) && !empty($cache_time)){
-            array_push($start_peoples_dzqSid, $get_query_params['dzqSid']);
-            app('cache')->put('start_peoples_dzqSid' , $start_peoples_dzqSid, $cache_time);
+        if($event->user->id && !in_array($event->user->id, $start_peoples_uid) && !empty($cache_time) ){
+            array_push($start_peoples_uid, $event->user->id);
+            app('cache')->put('start_peoples_uid' , $start_peoples_uid, $cache_time);
         }
     }
 }
