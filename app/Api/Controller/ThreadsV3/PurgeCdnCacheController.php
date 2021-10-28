@@ -12,8 +12,9 @@ class PurgeCdnCacheController extends DzqAdminController
     public function main()
     {
         $response = $this->purgeCdnPathCache();
-        $msg = '';
-        $response == false && $msg = 'CDN缓存刷新失败';
-        $this->outPut(ResponseCode::SUCCESS, $msg, [$response]);
+        if ($response == false) {
+            $this->outPut(ResponseCode::EXTERNAL_API_ERROR, 'CDN缓存刷新失败');
+        }
+        $this->outPut(ResponseCode::SUCCESS, '', [$response]);
     }
 }
