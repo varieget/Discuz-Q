@@ -22,9 +22,10 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
+use App\Listeners\Setting\CheckCdn;
 use App\Models\AdminActionLog;
 use App\Models\Setting;
-use App\Repositories\UserRepository;
+use App\Models\User;
 use App\Validators\SetSettingValidator;
 use Carbon\Carbon;
 use Discuz\Auth\Exception\PermissionDeniedException;
@@ -45,6 +46,8 @@ class SetSettingsController extends DzqAdminController
     use CosTrait;
 
     use QcloudTrait;
+
+    use CdnTrait;
 
     public function suffixClearCache($user)
     {
@@ -168,8 +171,33 @@ class SetSettingsController extends DzqAdminController
                     $this->outPut(ResponseCode::INVALID_PARAMETER,'请输入正确的付费模式过期天数：0~1000000');
                 }
             }
-            if($key == 'qcloud_cdn'){
-                $value = !empty($value) ? 1 : 0;
+            if ($key == 'inner_net_ip') {
+                $this->checkInnerNetIp($value);
+                $value = json_encode($value, 256);
+            }
+            if ($key == 'qcloud_cdn') {
+                $speedDomain = $this->settings->get('qcloud_cdn_speed_domain', 'qcloud');
+                $mainDomain = $this->settings->get('qcloud_cdn_main_domain', 'qcloud');
+                $cdnOrigins = $this->settings->get('qcloud_cdn_origins', 'qcloud');
+                $serverName = $this->settings->get('qcloud_cdn_server_name', 'qcloud');
+                if (empty($speedDomain) || empty($mainDomain) || empty($cdnOrigins) || empty($serverName)) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '请先完善CDN配置');
+                }
+
+                $cdnStatus = !empty($value) ? 1 : 0;
+                $checkCdn = app()->make(CheckCdn::class);
+
+                if (is_array($cdnOrigins)) {
+                    $originsIp = $checkCdn->getRemoteIp($cdnOrigins);
+                } else {
+                    $originsIp = $checkCdn->getRemoteIp(json_decode($cdnOrigins));
+                }
+
+                if (!empty($cdnStatus)) {
+                    $checkCdn->switchCdnStatus($speedDomain, true, $mainDomain, $originsIp);
+                } else {
+                    $checkCdn->switchCdnStatus($speedDomain, false, $mainDomain, $originsIp);
+                }
             }
             $this->settings->set($key, $value, $tag);
             //针对腾讯云配置，设置初始时间
@@ -300,5 +328,43 @@ class SetSettingsController extends DzqAdminController
             }
         }
         return $settingData;
+    }
+
+    private function checkInnerNetIp($value)
+    {
+        if ($this->user->id != User::SUPER_ADMINISTRATOR) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '该功能只有超管可编辑');
+        }
+        if (!is_array($value)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '参数必须为数组');
+        }
+        foreach ($value as $key => $ipNet) {
+            $ipArr = explode('/', $ipNet);
+            if (count($ipArr) != 2) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '第'.($key+1).'个参数格式错误');
+            }
+            if ($this->isIp($ipArr[0]) == false) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '第'.($key+1).'个参数ip地址格式不正确');
+            }
+            if (($ipArr[1] < 8) || ($ipArr[1] > 30)) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, '第'.($key+1).'个参数掩码位不正确（请输入8～30的掩码位）');
+            }
+        }
+    }
+
+    //检测IP地址的函数
+    public function isIp($ip): bool
+    {
+        $arr = explode('.', $ip);
+        if (count($arr) != 4) {
+            return false;
+        } else {
+            for ($i = 0;$i < 4;$i++) {
+                if (($arr[$i] < 0) || ($arr[$i] > 255)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

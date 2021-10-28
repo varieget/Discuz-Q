@@ -58,9 +58,12 @@ class UpdateAdminController extends DzqAdminController
         $status = $this->inPut('status');
         $expire_at = $this->inPut('expiredAt');
         $groupId = $this->inPut('groupId');
+        $rejectReason = $this->inPut('rejectReason');
 
         $requestData = [];
         if(!empty($username)){
+            $checkController = app(CheckController::class);
+            $checkController->checkName('username', $username, $id);
             $requestData['username'] = $username;
         }
 
@@ -98,6 +101,9 @@ class UpdateAdminController extends DzqAdminController
         }
         if(!empty($groupId)){
             $requestData['groupId'] = $groupId;
+        }
+        if(!empty($rejectReason)){
+            $requestData['rejectReason'] = $rejectReason;
         }
 
         $this->dzqValidate($requestData, [

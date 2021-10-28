@@ -68,8 +68,8 @@ class GroupWechatMessage extends SimpleMessage
             '{$nick_name}'           => $this->user->nickname,
             '{$user_mobile}'         => $this->user->getRawOriginal('mobile'),
             '{$user_mobile_encrypt}' => $this->user->mobile,
-            '{$group_original}'      => $data['old']->pluck('name')->join('、'),
-            '{$group_change}'        => $data['new']->pluck('name')->join('、'),
+            '{$group_original}'      => collect($data['old'])->pluck('name')->join('、'),
+            '{$group_change}'        => collect($data['new'])->pluck('name')->join('、'),
             '{$notification_num}'    => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
 

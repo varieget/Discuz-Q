@@ -294,6 +294,14 @@
  *    @OA\Schema(type="array",@OA\Items(type="integer"))
  *),
  *@OA\Parameter(
+ *    parameter="threadlist_search",
+ *    name="filter[search]",
+ *    in="query",
+ *    required=false,
+ *    description = "搜索关键词",
+ *    @OA\Schema(type="string",default="")
+ *),
+ *@OA\Parameter(
  *     parameter="threadlist_sort",
  *    name="filter[sort]",
  *    in="query",
@@ -389,6 +397,7 @@
  *     @OA\Property(property = "paid", type = "boolean", description = "是否已支付"),
  *     @OA\Property(property = "isLike", type = "boolean", description = "当前用户是否点赞"),
  *     @OA\Property(property = "isReward", type = "boolean", description = "当前用户是否打赏"),
+ *     @OA\Property(property = "issueAt", type = "string", description = "帖子首次发布、草稿箱发布、审核通过发布，重新编辑内容发布，四种变更的时间记录"),
  *     @OA\Property(property = "createdAt", type = "string", description = "创建时间"),
  *     @OA\Property(property = "updatedAt", type = "string", description = "更新时间"),
  *     @OA\Property(property = "diffTime", type = "string",default="5秒前", description = "显示统一规则下的时间差"),
@@ -445,6 +454,14 @@
  *        @OA\Property(property = "canReply", type = "boolean", description = "是否可回复"),
  *        @OA\Property(property = "canStick", type = "boolean", description = "是否可设置置顶"),
  *        @OA\Property(property = "canViewPost", type = "boolean", description = "是否可查看详情"),
+ *     ),
+ *     @OA\Property(property = "orderInfo", type = "object", description = "订单信息",
+ *          @OA\Property(property = "amount", type = "string", description = "金额"),
+ *          @OA\Property(property = "isAnonymous", type = "boolean", description = "是否匿名"),
+ *          @OA\Property(property = "redAmount", type = "string", description = "红包金额"),
+ *          @OA\Property(property = "rewardAmount", type = "string", description = "悬赏金额"),
+ *          @OA\Property(property = "title", type = "string", description = "标题"),
+ *          @OA\Property(property = "type", type = "integer", description = "类型")
  *     ),
  *     @OA\Property(property = "content", type = "object", description = "帖子正文内容",allOf={
  *         @OA\Schema(@OA\Property(property = "text", type = "string", description = "帖子正文内容")),

@@ -30,13 +30,16 @@ use TencentCloud\Dnspod\V20210323\DnspodClient;
 use TencentCloud\Dnspod\V20210323\Models\CreateDomainAliasRequest;
 use TencentCloud\Dnspod\V20210323\Models\CreateDomainRequest;
 use TencentCloud\Dnspod\V20210323\Models\CreateRecordRequest;
+use TencentCloud\Dnspod\V20210323\Models\DescribeDomainListRequest;
+use TencentCloud\Dnspod\V20210323\Models\DescribeRecordListRequest;
+use TencentCloud\Dnspod\V20210323\Models\ModifyRecordStatusRequest;
 
 trait DnspodTrait
 {
     /**
      * @var SettingsRepository
      */
-    public $settings;
+    protected $settings;
 
     public $client;
 
@@ -61,7 +64,7 @@ trait DnspodTrait
         return $this->client;
     }
 
-    protected function commonDnspodDomain($type, $params, $errorMsg)
+    protected function commonDnspodDomain($type, $params, $errorMsg = '')
     {
         try {
             $this->initDnspodClient();
@@ -71,13 +74,25 @@ trait DnspodTrait
 //                    $req = new CreateDomainAliasRequest();
 //                    $action = 'CreateDomainAlias';
 //                    break;
-                case 'create':
+                case 'createDomain':
                     $req = new CreateDomainRequest();
                     $action = 'CreateDomain';
                     break;
                 case 'createRecord':
                     $req = new CreateRecordRequest();
                     $action = 'CreateRecord';
+                    break;
+                case 'describeRecordList':
+                    $req = new DescribeRecordListRequest();
+                    $action = 'DescribeRecordList';
+                    break;
+                case 'modifyRecordStatus':
+                    $req = new ModifyRecordStatusRequest();
+                    $action = 'ModifyRecordStatus';
+                    break;
+                case 'getDomainList':
+                    $req = new DescribeDomainListRequest();
+                    $action = 'DescribeDomainList';
                     break;
                 default:
                     $req = new CreateRecordRequest();
@@ -91,9 +106,10 @@ trait DnspodTrait
 
             return json_decode($resp->toJsonString(), true);
         } catch (TencentCloudSDKException $e) {
-            $errorData = ['errorCode' => $e->getErrorCode(), 'errorMsg' => $e->getMessage()];
+            $errorData = ['errorCode' => $e->getErrorCode(), 'errorMsg' => $e->getMessage(), 'type' => $type, 'params' => $params];
             DzqLog::error('dnspodtrait_api_error', $errorData);
-            Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, $errorMsg, $errorData);
+            unset($errorData['params']);
+            Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, $e->getMessage(), $errorData);
         }
     }
 
@@ -105,21 +121,79 @@ trait DnspodTrait
 //        ], '创建域名别名错误');
 //    }
 
-    public function createDomain($domain = '')
+    public function createDomain($mainDomain = '')
     {
-        return $this->commonDnspodDomain('create', [
-            'Domain' => $domain // 主域名
+        return $this->commonDnspodDomain('createDomain', [
+            'Domain' => $mainDomain // 主域名
         ], '添加域名错误');
     }
 
-    public function createRecord($domain = '', $value = '', $recordType = 'CNAME', $recordLine = '默认', $subDomain = 'www')
+    public function createRecord($mainDomain = '', $value = '', $recordType = '', $subDomain = 'www', $status = 'ENABLE', $recordLine = '默认')
     {
-        return $this->commonDnspodDomain('update', [
-            'Domain' => $domain, // 域名
+        $recordId = $this->getRecordId($mainDomain, $value, $recordType, $subDomain);
+        if (!empty($recordId)) {
+            return [];
+        }
+
+        return $this->commonDnspodDomain('createRecord', [
+            'Domain' => $mainDomain, // 域名
             'RecordType' => $recordType, // 记录类型，通过 API 记录类型获得，大写英文，比如：A 。
             'RecordLine' => $recordLine, // 记录线路，通过 API 记录线路获得，中文，比如：默认。
             'Value' => $value, // 记录值，如 IP : 200.200.200.200， CNAME : cname.dnspod.com.， MX : mail.dnspod.com.。
-            'SubDomain' => $subDomain // 主机记录，如 www，如果不传，默认为 @。
+            'SubDomain' => $subDomain, // 主机记录，如 www，如果不传，默认为 @。
+            'Status' => $status // 默认为 ENABLE ，如果传入 DISABLE，解析不会生效
         ], '添加域名解析记录错误');
+    }
+
+    public function describeRecordList($mainDomain)
+    {
+        return $this->commonDnspodDomain('describeRecordList', [
+            'Domain' => $mainDomain
+        ], '获取域名解析记录错误');
+    }
+
+    public function getRecordId($mainDomain = '', $value = '', $type = '', $name = 'www'): int
+    {
+        $recordList = $this->describeRecordList($mainDomain);
+        foreach ($recordList['RecordList'] as $val) {
+            if (rtrim($val['Value'], '.') == rtrim($value, '.') && $val['Type'] == $type && $val['Name'] == $name) {
+                return $val['RecordId'];
+            }
+        }
+        return 0;
+    }
+
+    public function modifyRecordStatus($mainDomain, int $recordId, $status)
+    {
+        if (empty($recordId)) {
+            return [];
+        }
+
+        return $this->commonDnspodDomain('modifyRecordStatus', [
+            'Domain' => $mainDomain,
+            'RecordId' => $recordId,
+            'Status' => $status // ENABLE、DISABLE
+        ], '修改记录状态错误');
+    }
+
+    public function getDomainList()
+    {
+        return $this->commonDnspodDomain('getDomainList', [], '获取域名列表错误');
+    }
+
+    public function getDomainArr(): array
+    {
+        $domainList = $this->getDomainList();
+        $arr = [];
+        foreach ($domainList['DomainList'] as $k => $value) {
+            array_push($arr, $value['Name']);
+        };
+        return $arr;
+    }
+
+    // 获取主机记录
+    public function getSubDomain($speedDomain = '', $mainDomain = ''): string
+    {
+        return rtrim(str_replace($mainDomain, '', $speedDomain), '.');
     }
 }

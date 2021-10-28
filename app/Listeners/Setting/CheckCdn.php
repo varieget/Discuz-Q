@@ -20,7 +20,9 @@ namespace App\Listeners\Setting;
 
 use App\Api\Controller\SettingsV3\CdnTrait;
 use App\Api\Controller\SettingsV3\DnspodTrait;
+use App\Common\ResponseCode;
 use App\Events\Setting\Saving;
+use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Factory as Validator;
@@ -29,12 +31,13 @@ use Illuminate\Validation\ValidationException;
 class CheckCdn
 {
     use CdnTrait;
+
     use DnspodTrait;
 
     /**
      * @var SettingsRepository
      */
-    public $settings;
+    protected $settings;
 
     /**
      * @var Validator
@@ -83,41 +86,119 @@ class CheckCdn
                 ]);
             }
 
-            $isAdd = false;
-            if (empty($this->settings->get('qcloud_cdn_speed_domain', 'qcloud'))) {
-                $isAdd = true;
-            }
-            $this->saveCdnDomain($settings, $isAdd);
+            $this->saveCdnDomain($settings);
         }
     }
 
-    public function saveCdnDomain($settings, $isAdd)
+    public function saveCdnDomain($settings)
     {
         $speedDomain = isset($settings['qcloud_cdn_speed_domain']) ? $settings['qcloud_cdn_speed_domain'] : '';
         $mainDomain = isset($settings['qcloud_cdn_main_domain']) ? $settings['qcloud_cdn_main_domain'] : '';
         $cdnOrigins = isset($settings['qcloud_cdn_origins']) ? $settings['qcloud_cdn_origins'] : [];
+        if (!is_array($cdnOrigins)) {
+            $cdnOrigins = json_decode($cdnOrigins);
+        }
         $cdnServerName = isset($settings['qcloud_cdn_server_name']) ? $settings['qcloud_cdn_server_name'] : '';
 
-        if (!$isAdd) {
+        $serverName = $_SERVER['SERVER_NAME'];
+        if (isset($settings['qcloud_cdn_speed_domain']) && $speedDomain != $serverName) {
+            Utils::outPut(ResponseCode::INVALID_PARAMETER, '加速域名与本站点域名不符');
+        }
+
+
+//        $this->stopCdnDomain($speedDomain);
+//        $this->deleteCdnDomain($speedDomain);
+//        dd('已完成域名删除');
+
+        $cdnDomainStatus = $this->getCdnDomainStatus($speedDomain);
+        if ($cdnDomainStatus == 'processing') {
+            Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, 'CDN正在部署中，请稍后操作');
+        }
+
+        if ($cdnDomainStatus != 'deleted') {
             $this->startCdnDomain($speedDomain);
             $this->updateCdnDomain($speedDomain, $cdnOrigins, $cdnServerName);
+            $this->purgeCdnPathCache();
         } else {
+            // 添加cdn域名
             $this->addCdnDomain($speedDomain, $cdnOrigins, $cdnServerName);
 
-            // 添加域名、解析
-            $this->createDomain($mainDomain);
-            $domains = $this->describeDomains($speedDomain);
-            $cname = '';
-            if (isset($domains['TotalNumber']) && $domains['TotalNumber'] == 1) {
-                $cname = $domains['Domains'][0]['Cname'];
+            if (empty($this->getDomainArr()) || !in_array($mainDomain, $this->getDomainArr())) {
+                // 添加dnspod主域名
+                $this->createDomain($mainDomain);
             }
-            $this->createRecord($mainDomain, $cname);
+
+            $subDomain = $this->getSubDomain($speedDomain, $mainDomain);
+
+            // 添加cname解析
+            $this->createRecord($mainDomain, $this->getCdnCname($speedDomain), 'CNAME', $subDomain, 'ENABLE');
+
+            // 添加ip地址解析
+            $this->createRecord($mainDomain, $this->getRemoteIp($cdnOrigins), 'A', $subDomain, 'DISABLE');
         }
 
-        if (isset($settings['qcloud_cdn']) && (bool)$settings['qcloud_cdn'] == true) { //开启了cdn
-            $this->startCdnDomain($speedDomain);
-        } else {
-            $this->stopCdnDomain($speedDomain);
+        if (isset($settings['qcloud_cdn'])) {
+            app('log')->info('qcloud_cdn_status', ['qcloud_cdn' => $settings['qcloud_cdn']]);
+            if ((bool)$settings['qcloud_cdn'] == true) {  //开启了cdn
+                $this->switchCdnStatus($speedDomain, true, $mainDomain, $this->getRemoteIp($cdnOrigins));
+            } else {
+                $this->switchCdnStatus($speedDomain, false, $mainDomain, $this->getRemoteIp($cdnOrigins));
+            }
         }
+    }
+
+    public function modifyIpRecordStatus($mainDomain, $ipValue, $status, $subDomain)
+    {
+        $ipRecordId = $this->getRecordId($mainDomain, $ipValue, 'A', $subDomain);
+        $this->modifyRecordStatus($mainDomain, $ipRecordId, $status);
+    }
+
+    public function modifyCnameRecordStatus($mainDomain, $cnameValue, $status, $subDomain)
+    {
+        $cnameRecordId = $this->getRecordId($mainDomain, $cnameValue, 'CNAME', $subDomain);
+        $this->modifyRecordStatus($mainDomain, $cnameRecordId, $status);
+    }
+
+    public function switchCdnStatus($speedDomain, $status, $mainDomain, $ipValue)
+    {
+        $cdnDomainStatus = $this->getCdnDomainStatus($speedDomain);
+        $subDomain = $this->getSubDomain($speedDomain, $mainDomain);
+
+        if ($status === true) {
+            if ($cdnDomainStatus == 'offline') {
+                $this->startCdnDomain($speedDomain);
+            }
+
+            // 开启cname的解析
+            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'DISABLE', $subDomain);
+            $this->modifyCnameRecordStatus($mainDomain, $this->getCdnCname($speedDomain), 'ENABLE', $subDomain);
+        } else {
+            if ($cdnDomainStatus == 'online') {
+                $this->stopCdnDomain($speedDomain);
+            }
+
+            // 开启ip地址的解析
+            $this->modifyCnameRecordStatus($mainDomain, $this->getCdnCname($speedDomain), 'DISABLE', $subDomain);
+            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'ENABLE', $subDomain);
+        }
+        $this->purgeCdnPathCache(); // 刷新cdn
+    }
+
+    public function getCdnCname($speedDomain): string
+    {
+        $domains = $this->describeDomains($speedDomain);
+        $cname = '';
+        if (isset($domains['TotalNumber']) && $domains['TotalNumber'] == 1) {
+            $cname = $domains['Domains'][0]['Cname'];
+        }
+        return $cname;
+    }
+
+    public function getRemoteIp($cdnOrigins = []): string
+    {
+        if (!empty($cdnOrigins)) {
+            return $cdnOrigins[0];
+        }
+        return '';
     }
 }

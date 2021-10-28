@@ -11,6 +11,7 @@
  *@OA\Parameter(ref = "#/components/parameters/threadlist_scope"),
  *@OA\Parameter(ref = "#/components/parameters/threadlist_essence"),
  *@OA\Parameter(ref = "#/components/parameters/threadlist_types"),
+ *@OA\Parameter(ref = "#/components/parameters/threadlist_search"),
  *@OA\Parameter(ref = "#/components/parameters/threadlist_sort"),
  *@OA\Parameter(ref = "#/components/parameters/threadlist_attention"),
  *@OA\Parameter(ref = "#/components/parameters/threadlist_complex"),

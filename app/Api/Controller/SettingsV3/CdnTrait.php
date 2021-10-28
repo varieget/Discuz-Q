@@ -25,6 +25,7 @@ use Discuz\Contracts\Setting\SettingsRepository;
 use TencentCloud\Cdn\V20180606\Models\AddCdnDomainRequest;
 use TencentCloud\Cdn\V20180606\Models\DeleteCdnDomainRequest;
 use TencentCloud\Cdn\V20180606\Models\DescribeDomainsRequest;
+use TencentCloud\Cdn\V20180606\Models\PurgePathCacheRequest;
 use TencentCloud\Cdn\V20180606\Models\StartCdnDomainRequest;
 use TencentCloud\Cdn\V20180606\Models\StopCdnDomainRequest;
 use TencentCloud\Cdn\V20180606\Models\UpdateDomainConfigRequest;
@@ -39,7 +40,7 @@ trait CdnTrait
     /**
      * @var SettingsRepository
      */
-    public $settings;
+    protected $settings;
 
     public $client;
 
@@ -64,35 +65,39 @@ trait CdnTrait
         return $this->client;
     }
 
-    protected function commonCdnDomain($type, $params, $errorMsg)
+    protected function commonCdnDomain($type, $params, $errorMsg = '')
     {
         try {
             $this->initCdnClient();
 
             switch ($type) {
-                case 'add':
+                case 'addCdnDomain':
                     $req = new AddCdnDomainRequest();
                     $action = 'AddCdnDomain';
                     break;
-                case 'update':
+                case 'updateCdnDomain':
                     $req = new UpdateDomainConfigRequest();
                     $action = 'UpdateDomainConfig';
                     break;
-//                case 'delete':
-//                    $req = new DeleteCdnDomainRequest();
-//                    $action = 'DeleteCdnDomain';
-//                    break;
-                case 'start':
+                case 'deleteCdnDomain':
+                    $req = new DeleteCdnDomainRequest();
+                    $action = 'DeleteCdnDomain';
+                    break;
+                case 'startCdnDomain':
                     $req = new StartCdnDomainRequest();
                     $action = 'StartCdnDomain';
                     break;
-                case 'stop':
+                case 'stopCdnDomain':
                     $req = new StopCdnDomainRequest();
                     $action = 'StopCdnDomain';
                     break;
-                case 'describe':
+                case 'describeDomains':
                     $req = new DescribeDomainsRequest();
                     $action = 'DescribeDomains';
+                    break;
+                case 'purgeCdnPathCache':
+                    $req = new PurgePathCacheRequest();
+                    $action = 'PurgePathCache';
                     break;
                 default:
                     $req = new UpdateDomainConfigRequest();
@@ -106,21 +111,23 @@ trait CdnTrait
 
             return json_decode($resp->toJsonString(), true);
         } catch (TencentCloudSDKException $e) {
-            $errorData = ['errorCode' => $e->getErrorCode(), 'errorMsg' => $e->getMessage()];
+            $errorData = ['errorCode' => $e->getErrorCode(), 'errorMsg' => $e->getMessage(), 'type' => $type, 'params' => $params];
             DzqLog::error('cdntrait_api_error', $errorData);
-            Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, $errorMsg, $errorData);
+            unset($errorData['params']);
+            Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, $e->getMessage(), $errorData);
         }
     }
 
     public function addCdnDomain(string $domain, array $origins, string $serverName)
     {
-        return $this->commonCdnDomain('add', [
+        return $this->commonCdnDomain('addCdnDomain', [
             'Domain' => $domain, // 加速域名
             'ServiceType' => 'web', // 加速域名业务类型 web：静态加速 download：下载加速 media：流媒体点播加速
             'Origin' => [
                 'Origins' => $origins,// 源站地址
                 'OriginType' => 'ip',
-                'ServerName' => $serverName // 回源HOST
+                'ServerName' => $serverName, // 回源HOST
+                'OriginPullProtocol' => 'follow'
             ],
             'Cache' => [
                 'SimpleCache' => [
@@ -141,6 +148,18 @@ trait CdnTrait
                             'CacheType' => 'directory',
                             'CacheContents' => ['/api'],
                             'CacheTime' => 0
+                        ],[
+                            'CacheType' => 'directory',
+                            'CacheContents' => ['/api/backAdmin'],
+                            'CacheTime' => 0
+                        ],[
+                            'CacheType' => 'directory',
+                            'CacheContents' => ['/static-admin'],
+                            'CacheTime' => 0
+                        ],[
+                            'CacheType' => 'directory',
+                            'CacheContents' => ['/admin'],
+                            'CacheTime' => 0
                         ]
                     ]
                 ]
@@ -150,37 +169,64 @@ trait CdnTrait
 
     public function updateCdnDomain(string $domain, array $origins, string $serverName, $serviceType = 'web', $originType = 'ip')
     {
-        return $this->commonCdnDomain('update', [
+        return $this->commonCdnDomain('updateCdnDomain', [
             'Domain' => $domain, // 加速域名
             'ServiceType' => $serviceType, // 加速域名业务类型 web：静态加速 download：下载加速 media：流媒体点播加速
             'Origin' => [
                 'Origins' => $origins,// 源站地址
                 'OriginType' => $originType,
-                'ServerName' => $serverName // 回源HOST
+                'ServerName' => $serverName, // 回源HOST
+                'OriginPullProtocol' => 'follow'
             ],
         ], '修改腾讯云CDN配置错误');
     }
 
-//    public function deleteCdnDomain($domain)
-//    {
-//        return $this->commonCdnDomain('delete', ['Domain' => $domain], '删除加速域名错误');
-//    }
+    public function deleteCdnDomain($domain)
+    {
+        return $this->commonCdnDomain('deleteCdnDomain', ['Domain' => $domain], '删除加速域名错误');
+    }
 
     public function startCdnDomain($domain)
     {
-        return $this->commonCdnDomain('start', ['Domain' => $domain], '开启加速域名错误');
+        return $this->commonCdnDomain('startCdnDomain', ['Domain' => $domain], '开启加速域名错误');
     }
 
     public function stopCdnDomain($domain)
     {
-        return $this->commonCdnDomain('stop', ['Domain' => $domain,], '停用加速域名错误');
+        return $this->commonCdnDomain('stopCdnDomain', ['Domain' => $domain,], '停用加速域名错误');
     }
 
     public function describeDomains($value)
     {
-        return $this->commonCdnDomain('describe', [
+        return $this->commonCdnDomain('describeDomains', [
             'Name' => 'domain',
             'Value' => [$value],
         ], '查询域名基本信息错误');
+    }
+
+    public function getCdnDomainStatus($speedDomain)
+    {
+        $domains = $this->describeDomains($speedDomain);
+        DzqLog::info('getCdnDomainStatus', $domains);
+        if ($domains['TotalNumber'] != 0) {
+            return $domains['Domains'][0]['Status'];
+        }
+        return 'deleted';
+    }
+
+    public function purgeCdnPathCache()
+    {
+        $speedDomain = $this->settings->get('qcloud_cdn_speed_domain', 'qcloud');
+        $cdnDomainStatus = $this->getCdnDomainStatus($speedDomain);
+        if (!empty($speedDomain) && $cdnDomainStatus == 'online') {
+            return $this->commonCdnDomain('purgeCdnPathCache', [
+                'Paths' => [
+                    'http://'.$speedDomain,
+                    'https://'.$speedDomain
+                ],
+                'FlushType' => 'delete'
+            ], '刷新CDN缓存错误');
+        }
+        return false;
     }
 }

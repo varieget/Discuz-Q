@@ -20,6 +20,7 @@ namespace App\Api\Controller\AttachmentV3;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
 use Discuz\Contracts\Setting\SettingsRepository;
+use Symfony\Component\Mime\MimeTypes;
 
 trait AttachmentTrait
 {
@@ -57,17 +58,22 @@ trait AttachmentTrait
         return $qcloudSettings;
     }
 
-    public function checkAttachmentExt($type, $fileExt)
+    public function getAllowedExt($type)
     {
         $settings = $this->getSettings();
         if (in_array($type, [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
-            $ext = $settings['support_img_ext'];
+            return explode(',', $settings['support_img_ext']);
         } else {
-            $ext = $settings['support_file_ext'];
+            return explode(',', $settings['support_file_ext']);
         }
+    }
 
-        if (!in_array($fileExt, explode(',', $ext))) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR, "暂时不支持{$fileExt}类型文件，仅支持{$ext}类型文件");
+    public function checkAttachmentExt($type, $fileExt)
+    {
+        $allowedExt = $this->getAllowedExt($type);
+        if (!in_array($fileExt, $allowedExt)) {
+            $extString = implode(',', $allowedExt);
+            $this->outPut(ResponseCode::INTERNAL_ERROR, "暂时不支持{$fileExt}类型文件，仅支持{$extString}类型文件");
         }
 
         return $fileExt;
@@ -80,6 +86,32 @@ trait AttachmentTrait
         if ($fileSize > $maxSize) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, "您的文件尺寸超过了站点所支持的最大尺寸({$settings['support_max_size']}MB)");
         }
+    }
+
+    public function getAllowedMimeType($type)
+    {
+        $allowedExt = $this->getAllowedExt($type);
+        $allowedMimeType = [];
+        $mimeTypes = new MimeTypes();
+        foreach ($allowedExt as $value) {
+            $allowedMimeType = array_merge($allowedMimeType, $mimeTypes->getMimeTypes($value));
+        }
+        return array_unique($allowedMimeType);
+    }
+
+    public function getFileExt($type, $mimeType)
+    {
+        $fileExt = '';
+        $allowedExt = $this->getAllowedExt($type);
+        $allowedExt = array_flip($allowedExt);
+        $mimeTypes = new MimeTypes();
+        $ext = $mimeTypes->getExtensions($mimeType);
+        foreach ($ext as $key => $value) {
+            if (isset($allowedExt[$value])) {
+                $fileExt = $value;
+            }
+        }
+        return $fileExt;
     }
 
     public function getAttachmentMimeType($cosUrl)
@@ -106,7 +138,7 @@ trait AttachmentTrait
         $imageInfo = $this->getFileContents($newCosUrl);
         $censor->checkImage($cosUrl, true);
         if (!$imageInfo) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息！');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息');
         }
         $imageInfo = json_decode($imageInfo, true);
         $fileData = $this->getFileData($cosUrl);
@@ -125,7 +157,7 @@ trait AttachmentTrait
     {
         $documentInfo = $this->getFileContents($cosUrl);
         if(!$documentInfo) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息！');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息');
         }
         $fileData = $this->getFileData($cosUrl);
         return [

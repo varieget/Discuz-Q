@@ -514,6 +514,7 @@ class ListUserWalletLogsController extends DzqController
                 'changeDesc'    =>  !empty($val['changeDesc']) ? $val['changeDesc'] : '',
                 'status'        =>  !empty($val['order']['status']) ? $val['order']['status'] : '',
                 'createdAt'     =>  !empty($val['createdAt']) ? $val['createdAt'] : 0,
+                'receiveAccount' => !empty($val['receiveAccount']) ? $val['receiveAccount'] : ''
             ];
             $data['pageData'][$key] =  $pageData;
         }

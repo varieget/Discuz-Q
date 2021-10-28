@@ -67,6 +67,7 @@ class UsersCashLogsListController extends DzqAdminController
             $usersWalletCashLogs['pageData'][$key]['cash_sn'] = (string) $value['cash_sn'];
             $usersWalletCashLogs['pageData'][$key]['wechat']['mp_openid'] = $userWechatData[$value['user_id']]['mp_openid'] ?? "";
             $usersWalletCashLogs['pageData'][$key]['wechat']['min_openid'] = $userWechatData[$value['user_id']]['min_openid'] ?? "";
+            $usersWalletCashLogs['pageData'][$key]['trade_no'] = !empty($value['trade_no']) ? $value['trade_no'] : $value['receive_account'];
         }
         $usersWalletCashLogs['pageData'] = $this->camelData($usersWalletCashLogs['pageData']) ?? [];
 
