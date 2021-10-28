@@ -140,7 +140,7 @@ class ActivityBusi extends TomBaseBusi
             'register_start_time' => $registerStartTime,
             'register_end_time' => $registerEndTime,
             'total_number' => $totalNumber,
-            'additional_info_type'  =>  json_encode($this->getParams('additionalInfoType'))
+            'additional_info_type'  =>  json_encode($this->getParams('additionalInfoType'), JSON_UNESCAPED_UNICODE)
 
         ];
         $position = $this->getParams('position');
