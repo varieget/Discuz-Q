@@ -183,9 +183,6 @@ trait ForumSettingSerializerTrait
         } else {
             $attributes['qcloud']['qcloud_vod_token'] = '';
         }
-        if ($actor->id == User::SUPER_ADMINISTRATOR) {
-            $attributes['other']['inner_net_ip'] = json_decode($this->settings->get('inner_net_ip', 'default'),true);
-        }
 
         return $attributes;
     }
