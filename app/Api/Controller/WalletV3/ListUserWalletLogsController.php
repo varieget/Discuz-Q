@@ -110,7 +110,7 @@ class ListUserWalletLogsController extends DzqController
 
         $walletLogs = $this->search($this->user, $filter, $sort, $page, $perPage);
         $walletLogType = $this->walletLogType;
-        $walletLogs['pageData']->load('order.thread.firstPost')->load('userWalletCash')
+        $walletLogs['pageData']->load('order.thread.firstPost')
             ->map(function (UserWalletLog $log) use($walletLogType) {
                 /*
                 if ($log->order && $log->order->thread) {
@@ -225,11 +225,6 @@ class ListUserWalletLogsController extends DzqController
                         break;
                     default:
                         break;
-                }
-
-                $log->receive_account = '';
-                if(!empty($log->userWalletCash)){
-                    $log->receive_account = !empty($log->userWalletCash->trade_no) ? $log->userWalletCash->trade_no : $log->userWalletCash->receive_account;
                 }
 
             });
@@ -519,7 +514,6 @@ class ListUserWalletLogsController extends DzqController
                 'changeDesc'    =>  !empty($val['changeDesc']) ? $val['changeDesc'] : '',
                 'status'        =>  !empty($val['order']['status']) ? $val['order']['status'] : '',
                 'createdAt'     =>  !empty($val['createdAt']) ? $val['createdAt'] : 0,
-                'receiveAccount' => !empty($val['receiveAccount']) ? $val['receiveAccount'] : ''
             ];
             $data['pageData'][$key] =  $pageData;
         }
