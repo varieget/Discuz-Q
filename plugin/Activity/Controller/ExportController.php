@@ -30,7 +30,14 @@ class ExportController extends DzqController
     use ActivityTrait;
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $this->checkPermission($userRepo,true);
+        $check = $this->checkPermission($userRepo,true);
+        if(!$check)     return  $check;
+        //还需要本人或者超管才能有权限
+        if($this->activity->user_id == $this->user->id || $this->user->isAdmin() ){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     public function main()
