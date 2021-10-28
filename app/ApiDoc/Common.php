@@ -299,7 +299,7 @@
  *    in="query",
  *    required=false,
  *    description = "搜索关键词",
- *    @OA\Schema(type="string",default='')
+ *    @OA\Schema(type="string",default="")
  *),
  *@OA\Parameter(
  *     parameter="threadlist_sort",
