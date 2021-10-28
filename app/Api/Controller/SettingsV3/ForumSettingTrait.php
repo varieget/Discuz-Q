@@ -23,6 +23,7 @@ use App\Api\Serializer\ForumSettingSerializerV3;
 use App\Common\ResponseCode;
 use App\Common\Utils;
 use App\Events\Users\Forum;
+use App\Models\User;
 
 trait ForumSettingTrait
 {
@@ -63,5 +64,9 @@ trait ForumSettingTrait
         isset($data['passport']['offiaccount_app_secret']) && $data['passport']['offiaccount_app_secret'] = Utils::hideStr($data['passport']['offiaccount_app_secret']);
         isset($data['passport']['miniprogram_app_secret']) && $data['passport']['miniprogram_app_secret'] = Utils::hideStr($data['passport']['miniprogram_app_secret']);
         isset($data['paycenter']['api_key']) && $data['paycenter']['api_key'] = Utils::hideStr($data['paycenter']['api_key']);
+
+        if ($this->user->id != User::SUPER_ADMINISTRATOR) {
+            isset($data['other']['inner_net_ip']) && $data['other']['inner_net_ip'] = Utils::hideStr($data['other']['inner_net_ip']);
+        }
     }
 }
