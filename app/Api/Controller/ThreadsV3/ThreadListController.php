@@ -36,7 +36,7 @@ class ThreadListController extends DzqController
     use ThreadListTrait;
     use ThreadQueryTrait;
 
-    private $preloadPages = 3;///预加载的页数，从第2页开始每次预加载n页
+    private $preloadPages = 5;///预加载的页数，从第2页开始每次预加载n页
     private $categoryIds = [];//不能删除
     private $threadsFirstPage = [];//存储第一页数据
 
@@ -81,7 +81,7 @@ class ThreadListController extends DzqController
             $page = 1;
             $perPage = 10;
         }
-        $sqlLog = true;
+        $sqlLog = false;
         $sqlLog && $this->openQueryLog();
         $threads = $this->getOriginThreads($scope, $filter, $page, $perPage);
         $threadIds = $threads['pageData'];
