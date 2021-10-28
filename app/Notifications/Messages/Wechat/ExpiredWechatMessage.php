@@ -2,7 +2,6 @@
 
 namespace App\Notifications\Messages\Wechat;
 
-use App\Models\NotificationTiming;
 use App\Models\Question;
 use App\Models\Thread;
 use App\Models\User;
@@ -26,8 +25,6 @@ class ExpiredWechatMessage extends SimpleMessage
      */
     protected $user;
 
-    protected $data;
-
     /**
      * @var UrlGenerator
      */
@@ -40,13 +37,12 @@ class ExpiredWechatMessage extends SimpleMessage
 
     public function setData(...$parameters)
     {
-        [$firstData, $user, $question, $data] = $parameters;
+        [$firstData, $user, $question] = $parameters;
         // set parent tpl data
         $this->firstData = $firstData;
 
         $this->user = $user;
         $this->question = $question;
-        $this->data = $data;
 
         $this->template();
     }
@@ -63,9 +59,6 @@ class ExpiredWechatMessage extends SimpleMessage
 
     public function contentReplaceVars($data)
     {
-        $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
-        $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
-
         $threadTitle = $this->question->thread->getContentByType(Thread::CONTENT_LENGTH, true);
 
         /**
@@ -80,7 +73,6 @@ class ExpiredWechatMessage extends SimpleMessage
          * @parem $question_expired_at 提问过期时间
          * @parem $thread_id 主题ID
          * @parem $thread_title 主题标题/首帖内容 (如果有title是title，没有则是首帖内容)
-         * @parem $notification_num 通知条数
          */
         $this->setTemplateData([
             '{$user_id}'             => $this->question->user->id,
@@ -93,7 +85,6 @@ class ExpiredWechatMessage extends SimpleMessage
             '{$question_expired_at}' => $this->question->expired_at,
             '{$thread_id}'           => $this->question->thread_id,
             '{$thread_title}'        => $this->strWords($threadTitle),
-            '{$notification_num}'    => NotificationTiming::getLastNotificationNum($noticeId, $receiveUserId),
         ]);
 
         // build data

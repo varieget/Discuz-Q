@@ -91,9 +91,6 @@ class Liked extends AbstractNotification
 
     public function toWechat($notifiable)
     {
-        $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
-        $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
-
         $message = app(LikedWechatMessage::class);
         $message->setData($this->getTplModel('wechat'), $this->actor, $this->post, $this->data);
 

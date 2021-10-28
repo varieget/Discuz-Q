@@ -105,9 +105,6 @@ class ReceiveRedPacket extends AbstractNotification
 
     public function toWechat($notifiable)
     {
-        $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
-        $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
-
         $message = app(ReceiveRedPacketWechatMessage::class);
         $message->setData($this->getTplModel('wechat'), $this->user, $this->model, $this->data);
         return (new NotificationManager)->driver('wechat')->setNotification($message)->build();
