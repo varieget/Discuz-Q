@@ -118,4 +118,4 @@ $route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLo
 $route->get('/thread.stick.sort', 'thread.stick.sort', ApiController\ThreadsV3\ThreadStickSortController::class);
 $route->post('/stick.sort.set', 'stick.sort.set', ApiController\ThreadsV3\ThreadStickSortSetController::class);
 
-
+$route->get('/purge.cdn.cache', 'purge.cdn.cache', ApiController\ThreadsV3\PurgeCdnCacheController::class);
