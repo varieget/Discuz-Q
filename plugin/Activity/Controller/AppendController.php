@@ -23,6 +23,7 @@ use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Plugin\Activity\Model\ActivityUser;
+use Plugin\Activity\Model\ThreadActivity;
 
 class AppendController extends DzqController
 {
@@ -49,11 +50,31 @@ class AppendController extends DzqController
         if(!empty($activityUser)){
             $this->outPut(ResponseCode::RESOURCE_IN_USE,'您已经报名，不能重复报名');
         }
+        $additional_info = $this->inPut('additionalInfo') ?? [];
+        $judge_additional_info = [];
+        if(!empty($additional_info)){
+            foreach ($additional_info as $key => $val){
+                $judge_additional_info[] = ThreadActivity::$addition_info_map[$key];
+            }
+        }
+        if(!empty($this->activity->additional_info_type)){
+            $additional_info_type = json_decode($this->activity->additional_info_type, 1);
+            $error_judge = array_diff($additional_info_type, $judge_additional_info);
+            $error_msg = '';
+            if(!empty($error_judge)){
+                foreach ($error_judge as $val){
+                    $error_msg .= ThreadActivity::$addition_map[$val].' ';
+                }
+            }
+            if(!empty($error_msg))      $this->outPut(ResponseCode::RESOURCE_IN_USE,'缺少必填信息：'.$error_msg);
+        }
+
         $activityUser = new ActivityUser();
         $activityUser->thread_id = $activity->thread_id;
         $activityUser->activity_id = $activity->id;
         $activityUser->user_id = $this->user->id;
         $activityUser->status = DzqConst::BOOL_YES;
+        $activityUser->additional_info = json_encode($additional_info, JSON_UNESCAPED_UNICODE);
         if(!$activityUser->save()){
             $this->outPut(ResponseCode::DB_ERROR);
         }

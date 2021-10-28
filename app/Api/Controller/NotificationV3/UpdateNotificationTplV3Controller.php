@@ -30,7 +30,7 @@ use Discuz\Base\DzqAdminController;
 
 class UpdateNotificationTplV3Controller extends DzqAdminController
 {
-    use NotificationTimingTrait;
+    use NotificationTrait;
 
     public function main()
     {

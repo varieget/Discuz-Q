@@ -194,6 +194,34 @@ class Utils
         ];
     }
 
+
+    //execl 导出
+    public static function localexport($cell,$title,$data)
+    {
+
+        set_time_limit(0);
+        ini_set('memory_limit', '128M');
+        header('Content-Type: application/vnd.ms-execl');
+        header('Content-Disposition: attachment;filename="' . $title . '.csv"');
+
+        //以写入追加的方式打开
+        $fp = fopen('php://output', 'a');
+
+        foreach ($cell as $key => $item) {
+            $celldata[$key] = iconv('UTF-8', 'GBK//IGNORE', $item);
+        }
+        //将标题写到标准输出中
+        fputcsv($fp, $celldata);
+        foreach ($data as $row) {
+            foreach ($row as $key => $item) {
+                //这里必须转码，不然会乱码
+                $row[$key] = iconv('UTF-8', 'GBK//IGNORE', $item);
+            }
+            fputcsv($fp, $row);
+        }
+        return ['file' => $title];
+    }
+
     public static function setAppKey($key, $value)
     {
         return app()->instance($key, $value);
