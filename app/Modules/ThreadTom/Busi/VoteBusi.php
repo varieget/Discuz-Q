@@ -143,16 +143,17 @@ class VoteBusi extends TomBaseBusi
     public function select()
     {
         $voteIds = $this->getParams('voteIds');
-        $votes = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_VOTES, $voteIds, function ($voteIds) {
-            return ThreadVote::query()->whereIn('id', $voteIds)->whereNull('deleted_at')->get()->toArray();
-        });
+        $votes = ThreadVote::query()->whereIn('id', $voteIds)->whereNull('deleted_at')->get()->toArray();
         $res = [];
         if(!empty($votes)){
             $res = array_map(function ($item){
+                /*
                 $subitems = DzqCache::hGet(CacheKey::LIST_THREADS_V3_VOTE_SUBITEMS, $item['id'], function ($thread_vote_id) {
                     return ThreadVoteSubitem::query()->where('thread_vote_id', $thread_vote_id)->whereNull('deleted_at')->get();
                 });
                 $res_subitems = $subitems->toArray();
+                */
+                $res_subitems = ThreadVoteSubitem::query()->where('thread_vote_id', $item['id'])->whereNull('deleted_at')->get()->toArray();
                 //判断该用户是否投票
                 $isVoted = false;
                 $vote_ids = [];
