@@ -17,23 +17,17 @@
 
 namespace App\Api\Controller\ThreadsV3;
 
-
 use App\Common\ResponseCode;
-use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
-class ThreadStickController extends DzqController
+class ThreadStickSortController extends DzqController
 {
     use ThreadStickTrait;
 
-    protected function checkRequestPermissions(UserRepository $userRepo)
-    {
-        return true;
-    }
-
     public function main()
     {
-        $data = $this->getData();
+        $isAdmin = true;
+        $data = $this->getData($isAdmin);
         $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }

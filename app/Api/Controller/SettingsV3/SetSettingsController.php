@@ -185,14 +185,16 @@ class SetSettingsController extends DzqAdminController
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '请先完善CDN配置');
                 }
 
-                $value = !empty($value) ? 1 : 0;
-                if (is_array($cdnOrigins)) {
-                    $originsIp = $cdnOrigins[0];
-                } else {
-                    $originsIp = json_decode($cdnOrigins)[0];
-                }
+                $cdnStatus = !empty($value) ? 1 : 0;
                 $checkCdn = app()->make(CheckCdn::class);
-                if (!empty($value)) {
+
+                if (is_array($cdnOrigins)) {
+                    $originsIp = $checkCdn->getRemoteIp($cdnOrigins);
+                } else {
+                    $originsIp = $checkCdn->getRemoteIp(json_decode($cdnOrigins));
+                }
+
+                if (!empty($cdnStatus)) {
                     $checkCdn->switchCdnStatus($speedDomain, true, $mainDomain, $originsIp);
                 } else {
                     $checkCdn->switchCdnStatus($speedDomain, false, $mainDomain, $originsIp);

@@ -61,8 +61,8 @@ class GroupMiniProgramMessage extends SimpleMessage
             '{$user_name}'           => $this->user->username,
             '{$user_mobile}'         => $this->user->getRawOriginal('mobile'),
             '{$user_mobile_encrypt}' => $this->user->mobile,
-            '{$group_original}'      => $data['old']->pluck('name')->join('、'),
-            '{$group_change}'        => $data['new']->pluck('name')->join('、'),
+            '{$group_original}'      => collect($data['old'])->pluck('name')->join('、'),
+            '{$group_change}'        => collect($data['new'])->pluck('name')->join('、'),
         ]);
 
         // build data

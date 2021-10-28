@@ -17,12 +17,14 @@
 
 namespace App\Api\Controller\CategoryV3;
 
+use App\Common\CacheKey;
 use App\Models\Category;
 use App\Common\ResponseCode;
 use App\Library\Json;
 use Discuz\Base\DzqAdminController;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
 
 class BatchUpdateCategoriesController extends DzqAdminController
 {
@@ -77,5 +79,9 @@ class BatchUpdateCategoriesController extends DzqAdminController
         }
 
         return $this->outPut(ResponseCode::SUCCESS, '', '');
+    }
+
+    public function suffixClearCache($user){
+        DzqCache::delKey(CacheKey::CATEGORIES);
     }
 }

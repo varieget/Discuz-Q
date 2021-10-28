@@ -143,11 +143,6 @@ class VoteBusi extends TomBaseBusi
     public function select()
     {
         $voteIds = $this->getParams('voteIds');
-        /*
-        $votes = DzqCache::hMGetCollection(CacheKey::LIST_THREADS_V3_VOTES, $voteIds, function ($voteIds) {
-            return ThreadVote::query()->whereIn('id', $voteIds)->whereNull('deleted_at')->get();
-        });
-        */
         $votes = ThreadVote::query()->whereIn('id', $voteIds)->whereNull('deleted_at')->get()->toArray();
         $res = [];
         if(!empty($votes)){

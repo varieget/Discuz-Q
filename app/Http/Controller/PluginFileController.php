@@ -35,10 +35,25 @@ class PluginFileController implements RequestHandlerInterface
         $pluginName = $query['plugin_name'];
         $config = $pluginList[$pluginName];
         $plugin = $config['plugin_' . $config['app_id']];
-        $filePath = $plugin['view'] . DIRECTORY_SEPARATOR . 'dist' . DIRECTORY_SEPARATOR . $query['file_path'];
+        $filePath = $plugin['view'] . DIRECTORY_SEPARATOR . 'dist' . DIRECTORY_SEPARATOR . $query['module_name'] . DIRECTORY_SEPARATOR . $query['file_path'];
         $files = Finder::create()->in($plugin['view'])->files();
         foreach ($files as $file) {
             if ($file->getPathname() == $filePath) {
+                $ext = strtolower($file->getExtension());
+                switch ($ext){
+                    case 'js':
+                        header('Content-type:application/javascript');
+                        break;
+                    case 'css':
+                        header('Content-type:text/css');
+                        break;
+                    case 'jpeg':
+                        header('Content-type:image/jpeg');
+                        break;
+                    case 'json':
+                        header('Content-type: application/json');
+                        break;
+                }
                 exit(file_get_contents($filePath));
                 break;
             } else {
