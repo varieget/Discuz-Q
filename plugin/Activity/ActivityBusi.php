@@ -177,16 +177,6 @@ class ActivityBusi extends TomBaseBusi
         }
 
         $isRegistered = $activityUser->where('user_id', $this->user->id)->exists();
-        $activityUsers = $activityUser->get(['user_id', 'additional_info']);
-        if(!empty($activityUsers)){
-            foreach ($activityUsers as $val){
-                $val->userId = $val->user_id;
-                $val->additionalInfo = json_decode($val->additional_info, 1);
-                $val->nickname = $val->user->nickname;
-                unset($val->user_id);
-                unset($val->additional_info);
-            }
-        }
         return [
             'activityId' => $activityId,
             'title' => $activity['title'],
@@ -209,9 +199,7 @@ class ActivityBusi extends TomBaseBusi
             'createdAt' => date('Y-m-d H:i:s', strtotime($activity['created_at'])),
             'updatedAt' => date('Y-m-d H:i:s', strtotime($activity['updated_at'])),
             'registerUsers' => $registerUsers,
-            'additionalInfoType' => json_decode($activity['additional_info_type'], 1),
-            'activityUser' => $activityUsers,
-            'isInitiator'   =>  $activity['user_id'] == $this->user->id
+            'additionalInfoType' => json_decode($activity['additional_info_type'], 1)
         ];
     }
 }
