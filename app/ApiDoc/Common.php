@@ -294,6 +294,14 @@
  *    @OA\Schema(type="array",@OA\Items(type="integer"))
  *),
  *@OA\Parameter(
+ *    parameter="threadlist_search",
+ *    name="filter[search]",
+ *    in="query",
+ *    required=false,
+ *    description = "搜索关键词",
+ *    @OA\Schema(type="string",default='')
+ *),
+ *@OA\Parameter(
  *     parameter="threadlist_sort",
  *    name="filter[sort]",
  *    in="query",
