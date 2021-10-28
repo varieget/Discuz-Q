@@ -89,7 +89,7 @@ trait ImportLockFileTrait
         }
 
         foreach ($data as $key => $value) {
-            if ($key != 'topic' && !empty($value)) {
+            if (($key != 'topic' && $key != 'cookie' && $key != 'token' && $key != 'userAgent') && !empty($value)) {
                 $this->checkPositiveInteger($key, $value);
             }
         }
