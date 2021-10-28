@@ -91,10 +91,19 @@ class RelationAttachmentController extends DzqController
         if (!Utils::isCosUrl($cosUrl)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '域名不合法，请使用cos合法地址');
         }
+
         if (in_array($data['type'], [Attachment::TYPE_OF_IMAGE, Attachment::TYPE_OF_DIALOG_MESSAGE])) {
             $fileInfo = $this->getImageInfo($cosUrl, $this->censor);
         } else {
             $fileInfo = $this->getDocumentInfo($cosUrl);
+        }
+
+        $attachment = Attachment::query()
+            ->where(['user_id' => $this->user->id, 'type' => $data['type'], 'is_approved' => Attachment::UNAPPROVED,
+                     'attachment' => $fileInfo['attachmentName'], 'file_name' => $data['fileName'], 'file_path' => $fileInfo['filePath']])
+            ->first();
+        if (!$attachment) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '文件匹配错误');
         }
 
         $this->checkAttachmentExt($data['type'], $fileInfo['ext']);
@@ -152,20 +161,11 @@ class RelationAttachmentController extends DzqController
             @unlink($tmpFileWithExt);
         }
 
-        $attachment = new Attachment();
-        $attachment->uuid = Str::uuid();
-        $attachment->user_id = $this->user->id;
-        $attachment->type = $data['type'];
         $attachment->is_approved = Attachment::APPROVED;
-        $attachment->attachment = $fileInfo['attachmentName'];
-        $attachment->file_path = $fileInfo['filePath'];
-        $attachment->file_name = $data['fileName'];
         $attachment->file_size = $fileInfo['fileSize'];
         $attachment->file_width = $fileInfo['width'];
         $attachment->file_height = $fileInfo['height'];
         $attachment->file_type = $mimeType;
-        $attachment->is_remote = Attachment::YES_REMOTE;
-        $attachment->ip = ip($this->request->getServerParams());
         $attachment->save();
         $attachment->url = $cosUrl;
         $attachment->thumbUrl = $fileInfo['thumbUrl'] ?: '';

@@ -27,7 +27,6 @@ use App\Console\Commands\GroupExpiredNoticeCommand;
 use App\Console\Commands\InviteExpireCommand;
 use App\Console\Commands\QueryWechatOrderConmmand;
 use App\Console\Commands\QuestionClearCommand;
-use App\Console\Commands\RegisterNoticeCommand;
 use App\Console\Commands\ThreadRewardExpireCommand;
 use App\Console\Commands\RedPacketExpireCommand;
 use App\Console\Commands\TranscodeVideoCommand;
@@ -73,6 +72,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('abnormalOrder:clear')->everyMinute()->withoutOverlapping();
         $schedule->command('transcode:update')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('attachment:update')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('sendNotificationsRegularly:send')->everyMinute()->withoutOverlapping();
 
         // 维护清理
 //        $schedule->command('clear:attachment')->daily();
@@ -82,6 +82,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('clear:session_token')->everyMinute();
         $schedule->command('crawlerData:create')->everyMinute();
         $schedule->command('crawlerOfficialAccountData:create')->everyMinute();
+        $schedule->command('notificationTiming:clear')->daily();
 
         //监听定时任务
         $schedule->command('task:start')->everyMinute();
@@ -89,5 +90,7 @@ class Kernel extends ConsoleKernel
 
         //用户组到期提醒
         $schedule->command('group:expiredNotice')->daily();
+        //sitemap
+        $schedule->command('add:Sitemap')->at('03:00');
     }
 }

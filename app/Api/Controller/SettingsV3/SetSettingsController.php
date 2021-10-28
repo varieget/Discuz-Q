@@ -22,6 +22,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Events\Setting\Saved;
 use App\Events\Setting\Saving;
+use App\Listeners\Setting\CheckCdn;
 use App\Models\AdminActionLog;
 use App\Models\Setting;
 use App\Repositories\UserRepository;
@@ -45,6 +46,8 @@ class SetSettingsController extends DzqAdminController
     use CosTrait;
 
     use QcloudTrait;
+
+    use CdnTrait;
 
     public function suffixClearCache($user)
     {
@@ -168,6 +171,35 @@ class SetSettingsController extends DzqAdminController
                     $this->outPut(ResponseCode::INVALID_PARAMETER,'请输入正确的付费模式过期天数：0~1000000');
                 }
             }
+            if($key == 'inner_net_ip'){
+                if (is_array($value)) {
+                    $value = json_encode($value, 256);
+                }
+            }
+            if ($key == 'qcloud_cdn') {
+                $speedDomain = $this->settings->get('qcloud_cdn_speed_domain', 'qcloud');
+                $mainDomain = $this->settings->get('qcloud_cdn_main_domain', 'qcloud');
+                $cdnOrigins = $this->settings->get('qcloud_cdn_origins', 'qcloud');
+                $serverName = $this->settings->get('qcloud_cdn_server_name', 'qcloud');
+                if (empty($speedDomain) || empty($mainDomain) || empty($cdnOrigins) || empty($serverName)) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '请先完善CDN配置');
+                }
+
+                $cdnStatus = !empty($value) ? 1 : 0;
+                $checkCdn = app()->make(CheckCdn::class);
+
+                if (is_array($cdnOrigins)) {
+                    $originsIp = $checkCdn->getRemoteIp($cdnOrigins);
+                } else {
+                    $originsIp = $checkCdn->getRemoteIp(json_decode($cdnOrigins));
+                }
+
+                if (!empty($cdnStatus)) {
+                    $checkCdn->switchCdnStatus($speedDomain, true, $mainDomain, $originsIp);
+                } else {
+                    $checkCdn->switchCdnStatus($speedDomain, false, $mainDomain, $originsIp);
+                }
+            }
             $this->settings->set($key, $value, $tag);
             //针对腾讯云配置，设置初始时间
             switch ($key){
@@ -210,6 +242,11 @@ class SetSettingsController extends DzqAdminController
                 case 'qcloud_secret_id':
                     if($value && empty($this->settings->get('qcloud_secret_init_time'))){
                         $this->settings->set('qcloud_secret_init_time', $now, $tag);
+                    }
+                    break;
+                case 'qcloud_cdn':
+                    if($value && empty($this->settings->get('qcloud_secret_init_time'))){
+                        $this->settings->set('qcloud_cdn_init_time', $now, $tag);
                     }
                     break;
                 default:
@@ -281,7 +318,7 @@ class SetSettingsController extends DzqAdminController
     {
         foreach ($settingData as &$item) {
             $key = $item['key'];
-            if (!empty($item['value'])) {
+            if (!empty($item['value']) && is_string($item['value'])) {
                 $value = $item['value'];
             } else {
                 continue;

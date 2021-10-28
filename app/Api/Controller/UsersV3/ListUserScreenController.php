@@ -144,6 +144,7 @@ class ListUserScreenController extends DzqAdminController
                                 ->keyBy('user_id')
                                 ->toArray();
         $userDatas = $userDatas->map(function (User $user) use ($ordersRegisterPaid){
+            $user->original_group_id = $user->getRawOriginal('group_id');
             $user->paid = false;
             if ($user->group_id == Group::ADMINISTRATOR_ID) {
                 $user->paid = true;
@@ -167,8 +168,7 @@ class ListUserScreenController extends DzqAdminController
             return $user;
         });
         $userDatas = $userDatas->toArray();
-
-        $groupIds = array_column($userDatas, 'group_id');
+        $groupIds = array_column($userDatas, 'original_group_id');
 
         $userGroupDatas = Group::query()->whereIn('id', $groupIds)->get()->toArray();
         $userGroupDatas = array_column($userGroupDatas, null, 'id');
@@ -186,7 +186,7 @@ class ListUserScreenController extends DzqAdminController
                 'status' => $value['status'],
                 'createdAt' => $value['created_at'],
                 'updatedAt' => $value['updated_at'],
-                'groupName' => $userGroupDatas[$value['group_id']]['name'] ?? '',
+                'groupName' => $userGroupDatas[$value['original_group_id']]['name'] ?? '',
                 'expirationTime' =>$value['expiration_time'],
                 'extFields' =>  UserSignInFields::instance()->getUserSignInFields($value['userId']),
                 'paid'=>$value['paid']

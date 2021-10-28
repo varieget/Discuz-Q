@@ -21,6 +21,7 @@ namespace App\Commands\Thread;
 use App\Censor\Censor;
 use App\Events\Post\Saved;
 use App\Events\Thread\Deleting;
+use App\Models\ThreadStickSort;
 use App\Repositories\SequenceRepository;
 use App\Events\Thread\Saving;
 use App\Events\Thread\ThreadWasApproved;
@@ -113,8 +114,19 @@ class EditThread
             if ($thread->is_sticky != $attributes['isSticky']) {
                 $thread->is_sticky = $attributes['isSticky'];
                 $thread->updated_at = Carbon::now();
+                $stickSort = ThreadStickSort::query()->where('thread_id',$thread->id)->first();
                 if ($thread->is_sticky) {
+                    if(empty($stickSort)){
+                        $stickSort = new ThreadStickSort();
+                        $stickSort->thread_id = $thread->id;
+                        $stickSort->sort = 0;
+                        $stickSort->save();
+                    }
                     $this->threadNotices($thread, $this->actor, 'isSticky', $attributes['message'] ?? '');
+                }else{
+                    if(!empty($stickSort)){
+                        $stickSort->delete();
+                    }
                 }
             }
         }

@@ -45,6 +45,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string cash_type
  * @property string cash_mobile
  * @property Carbon $created_at
+ * @property string receive_account
  */
 class UserWalletCash extends Model
 {
@@ -129,6 +130,7 @@ class UserWalletCash extends Model
      * @param $remark
      * @param $cash_type
      * @param $cash_mobile
+     * @param $receive_account
      * @return UserWalletCash [type]                 [description]
      */
     public static function createCash(
@@ -139,7 +141,8 @@ class UserWalletCash extends Model
         $cash_apply_amount,
         $remark,
         $cash_type,
-        $cash_mobile
+        $cash_mobile,
+        $receive_account = ''
     ) {
         $cash = new static;
         $cash->user_id = $user_id;
@@ -154,6 +157,7 @@ class UserWalletCash extends Model
         $cash->error_code = '';
         $cash->error_message = '';
         $cash->cash_status = 1; // 待审核
+        $cash->receive_account = $receive_account;
         $cash->save();
         return $cash;
     }

@@ -15,6 +15,8 @@
 
 namespace App\Notifications;
 
+use App\Models\NotificationTiming;
+use App\Models\Order;
 use App\Models\User;
 use App\Notifications\Messages\Database\RewardedMessage;
 use App\Notifications\Messages\MiniProgram\ExpiredMiniProgramMessage;
@@ -115,10 +117,19 @@ class Rewarded extends AbstractNotification
         return (new NotificationManager)->driver('database')->setNotification($message)->build();
     }
 
-    public function toWechat($notifiable)
+    public function toWechat($notifiable, $noticeTimingId)
     {
         $this->data['receiveUserId'] = !empty($notifiable->id) ? $notifiable->id : 0;
         $this->data['noticeId'] = collect($this->getTplModel('wechat'))->get('notice_id');
+
+        NotificationTiming::updateSendData($noticeTimingId, [
+            'userId' => $this->user->id,
+            'contentData' =>[
+                'id' => !empty($this->model->id) ? $this->model->id : 0,
+                'table' => get_class(new Order())
+            ],
+            'data' => $this->data
+        ]);
 
         $message = $this->getMessage('wechat');
         $message->setData($this->getTplModel('wechat'), $this->user, $this->model, $this->data);

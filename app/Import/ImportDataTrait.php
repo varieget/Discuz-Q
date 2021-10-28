@@ -101,7 +101,7 @@ trait ImportDataTrait
     {
         $topic = $optionData['topic'];
         $number = $optionData['number'];
-        if ($number < 0 || $number > 1000 || floor($number) != $number) {
+        if ($number < 0 || $number > 100 || floor($number) != $number) {
             throw new \Exception('number参数错误');
         }
         if (!empty($number) && empty($topic)) {
@@ -142,6 +142,9 @@ trait ImportDataTrait
             }
             return true;
         } else {
+            if (empty($number)) {
+                throw new \Exception('number数值必须大于0！');
+            }
             if (file_exists($this->importDataLockFilePath)) {
                 $lockFileContent = $this->getLockFileContent($this->importDataLockFilePath);
                 if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {
@@ -184,11 +187,11 @@ trait ImportDataTrait
         $averageProcessPercent = 95 / count($data);
         $totalImportDataNumber = 0;
         foreach ($data as $value) {
-            $theradId = $this->insertCrawlerData($topic, $categoryId, $value);
+            $threadId = $this->insertCrawlerData($topic, $categoryId, $value);
             $totalImportDataNumber++;
             $processPercent = $processPercent + $averageProcessPercent;
             $this->changeLockFileContent($this->importDataLockFilePath, $startCrawlerTime, $processPercent, Thread::IMPORT_PROCESSING, $topic, $totalImportDataNumber);
-            $this->insertLogs('----Insert a new thread success.The thread id is ' . $theradId . '.The progress is ' . floor((string)$processPercent) . '%.----');
+            $this->insertLogs('----Insert a new thread success.The thread id is ' . $threadId . '.The progress is ' . floor((string)$processPercent) . '%.----');
         }
         Category::refreshThreadCountV3($this->categoryId);
         $this->changeLockFileContent($this->importDataLockFilePath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $topic, $totalImportDataNumber);
@@ -430,7 +433,7 @@ trait ImportDataTrait
     {
         foreach ($mediaUrl as $value) {
             $data = $this->insertMedia($value, $type, $userId, $threadId);
-            $videoId = $data['videoId'];
+            $videoId = $data['videoId'] ?? 0;
             if ($videoId) {
                 $content = str_replace($value . '"', '" alt="videoId-' . $videoId . '" ', $content);
             }
@@ -465,11 +468,25 @@ trait ImportDataTrait
         $imageIds = [];
         $actor = User::query()->where('id', $userId)->first();
         $ipAddress = '';
+        $imgExt = $this->settings->get('support_img_ext', 'default', 0);
+        $attachmentExt = $this->settings->get('support_file_ext', 'default', 0);
+        $allowExt = $type === Attachment::TYPE_OF_IMAGE ? explode(',', $imgExt) : explode(',', $attachmentExt);
+
         foreach ($imagesSrc as $key => $value) {
+            $value = htmlspecialchars_decode($value);
+            $originFileName = '';
+
             set_time_limit(0);
             $mimeType = $this->getAttachmentMimeType($value);
             $fileExt = substr($mimeType, strpos($mimeType, "/") + strlen("/"));
+            if (!in_array($fileExt, $allowExt)) {
+                $originFileName = $this->getContentDispositionFileName($value);
+                if (empty($originFileName)) continue;
+                $fileExt = substr($originFileName, strrpos($originFileName,".") + 1);
+                if (!in_array($fileExt, $allowExt)) continue;
+            }
             $fileName = Str::random(40) . '.' . $fileExt;
+
             $file = $this->getFileContents($value);
             $imageSize = strlen($file);
             $maxSize = $this->settings->get('support_max_size', 'default', 0) * 1024 * 1024;
@@ -505,7 +522,7 @@ trait ImportDataTrait
                     $type,
                     $this->uploader->fileName,
                     $this->uploader->getPath(),
-                    $imageFile->getClientOriginalName(),
+                    $originFileName ?: $imageFile->getClientOriginalName(),
                     $imageFile->getSize(),
                     $imageFile->getClientMimeType(),
                     $this->settings->get('qcloud_cos', 'qcloud') ? 1 : 0,
@@ -682,7 +699,7 @@ trait ImportDataTrait
             if (!isset($value['user']) || empty($value['user']) ||
                 !isset($value['comment']['text']['text']) ||
                 empty($value['comment']['text']['text'])) {
-                throw new \Exception('数据格式有误');
+                continue;
             }
 
             [$oldUsernameData, $oldNicknameData, $userData] = $this->insertUser($oldUsernameData, $oldNicknameData, $value['user']);
@@ -712,5 +729,47 @@ trait ImportDataTrait
         $this->info($logString);
         app('log')->info($logString);
         return true;
+    }
+
+    private function getContentDispositionFileName($url)
+    {
+        $fileName = '';
+        $responseHeader = $this->getResponseHeader($url);
+        if (empty($responseHeader)) return $fileName;
+
+        $responseHeader = explode(';', $responseHeader);
+        foreach ($responseHeader as $value) {
+            if (strpos($value, "filename=") !== false) {
+                $fileName = substr($value,strrpos($value,'=') + 1, strlen($value));
+                $fileName = str_replace('"', '', $fileName);
+            }
+        }
+
+        $originEncoding = mb_detect_encoding($fileName, array("ASCII", "UTF-8", "GB2312", "GBK", "BIG5"));
+        if ($originEncoding != 'UTF-8') {
+            $fileName = mb_convert_encoding($fileName, 'UTF-8', $originEncoding);
+        }
+
+        return $fileName;
+    }
+
+    private function getResponseHeader($url)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36'); // 模拟用户使用的浏览器
+        curl_setopt($ch, CURLINFO_HEADER_OUT, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_NOBODY, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);       //链接超时时间
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);       //设置超时时间
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);  //对于web页等有重定向的，要加上这个设置，才能真正访问到页面
+        curl_setopt($ch,CURLOPT_COOKIE, '');
+        $responseHeader = curl_exec($ch);
+        curl_close($ch);
+        return $responseHeader;
     }
 }

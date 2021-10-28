@@ -22,6 +22,7 @@ use App\Common\Utils;
 use App\Models\PluginGroupPermission;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Symfony\Component\Finder\Finder;
 
 class PluginListController extends DzqController
 {
@@ -47,13 +48,26 @@ class PluginListController extends DzqController
                 'permission' => PermissionKey::PLUGIN_INSERT_PERMISSION,
                 'canUsePlugin' => $isAdmin ? true : (empty($permission) ? false : ($permission['status'] ? true : false)),
             ];
-            $distPath = $pluginDirectories['view'].'/dist';
+            $distPath = $pluginDirectories['view'] . DIRECTORY_SEPARATOR . 'dist';
             $pluginFiles = [];
-            if(file_exists($distPath)){
-                $distFiles = scandir($distPath);
-                foreach ($distFiles as $distFile) {
-                    if ($distFile == '.' || $distFile == '..') continue;
-                    $pluginFiles[] =Utils::getDzqDomain() . "/plugin/{$appName}/{$distFile}";
+            if (is_dir($distPath)) {
+                $dirs = Finder::create()->in($distPath)->directories();
+                foreach ($dirs as $dir) {
+                    $dirPath = $dir->getPathname();
+                    $dirName = $dir->getFilename();
+                    $files = Finder::create()->in($dirPath)->files();
+                    foreach ($files as $file) {
+                        $fileName = $file->getFilename();
+                        $extension = strtolower($file->getExtension());
+                        $fileUrl = Utils::getDzqDomain() . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR . $appName . DIRECTORY_SEPARATOR . $dirName . DIRECTORY_SEPARATOR . $fileName;
+                        if ($extension == 'js') {
+                            $pluginFiles[$dirName]['js'][] = $fileUrl;
+                        } else if ($extension == 'css') {
+                            $pluginFiles[$dirName]['css'][] = $fileUrl;
+                        } else {
+                            $pluginFiles[$dirName]['assets'][] = $fileUrl;
+                        }
+                    }
                 }
             }
             //前端插件入口
