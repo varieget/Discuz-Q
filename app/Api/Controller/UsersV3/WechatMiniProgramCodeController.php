@@ -65,6 +65,11 @@ class WechatMiniProgramCodeController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '跳转小程序路由路径不能为空');
         }
 
+        $pathArr = explode('?path=', $path);
+        if (count($pathArr) == 2) {
+            $path = $pathArr[0].'?path='.urlencode($pathArr[1]);
+        }
+
         $paramData = [
             'path'=>$path,
             'width'=>$width,
