@@ -80,6 +80,7 @@ class ListUserWalletCashController extends DzqController
 
         $cash_records = $this->getCashRecords($this->user, $filter, $perPage, $page, $sort);
         $data = $this->camelData($cash_records);
+
         $data = $this->filterData($data);
 
         return $this->outPut(ResponseCode::SUCCESS,'', $data);
@@ -133,14 +134,14 @@ class ListUserWalletCashController extends DzqController
 
     public function filterData($data){
         foreach ($data['pageData'] as $key => $val) {
-//            if(empty($val['cashType']))    $val['tradeNo'] = '线下打款';
+            if(empty($val['cash_type']))    $val['tradeNo'] = '线下打款';
             $pageData = [
                 'tradeNo'           =>  !empty($val['tradeNo']) ? $val['tradeNo'] : 0,
                 'remark'            =>  !empty($val['remark']) ? $val['remark'] : '',
                 'cashApplyAmount'   =>  !empty($val['cashApplyAmount']) ? $val['cashApplyAmount'] : 0,
                 'tradeTime'         =>  !empty($val['tradeTime']) ? $val['tradeTime'] : 0,
                 'cashStatus'        =>  !empty($val['cashStatus']) ? $val['cashStatus'] : 0,
-                'receiveAccount'    =>  !empty($val['tradeNo']) ? $val['tradeNo'] : $val['receiveAccount']
+
             ];
             $data['pageData'][$key] =  $pageData;
         }
