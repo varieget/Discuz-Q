@@ -16,7 +16,8 @@
  *             @OA\Property(property = "location", type = "string", description = "位置信息"),
  *             @OA\Property(property = "longitude", type = "string", description = "经度"),
  *             @OA\Property(property = "latitude", type = "string", description = "纬度")
- *         )
+ *         ),
+ *        @OA\Property(property = "additionalInfoType", type = "array", description = "报名必填附加项；1：姓名、2：手机号、3：微信号、4：地址", @OA\Items()),
  *     ),
  *     @OA\Property(property = "输出", type = "object", description = "活动报名插件出参",
  *         @OA\Property(property = "activityId", type = "integer", description = "活动id"),
@@ -44,6 +45,18 @@
  *             @OA\Property(property = "avatar", type = "string", description = "头像"),
  *             @OA\Property(property = "nickname", type = "string", description = "昵称"),
  *         )),
+ *         @OA\Property(property = "additionalInfoType", type = "array", description = "报名必填项类型",@OA\Items()),
+ *         @OA\Property(property = "activityUser", type = "array", description = "报名人信息",@OA\Items(
+                @OA\Property(property = "userId", type = "integer", description = "用户id"),
+ *              @OA\Property(property = "additionalInfo", type = "array", description = "报名信息",@OA\Items(
+                    @OA\Property(property = "name", type = "string", description = "姓名"),
+ *                  @OA\Property(property = "mobile", type = "string", description = "手机号"),
+ *                  @OA\Property(property = "weixin", type = "string", description = "微信号"),
+ *                  @OA\Property(property = "address", type = "string", description = "地址"),
+ *              )),
+ *              @OA\Property(property = "nickname", type = "string", description = "昵称"),
+ *         )),
+ *         @OA\Property(property = "isInitiator", type = "integer", description = "是否是发起人")
  *     )
  * )
  */
