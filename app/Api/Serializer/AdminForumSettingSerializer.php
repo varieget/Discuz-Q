@@ -94,7 +94,9 @@ class AdminForumSettingSerializer extends AbstractSerializer
             'set_cash' => [],
 
             // 其它信息(非setting中的信息)
-            'other' => [],
+            'other' => [
+                'inner_net_ip' => json_decode($this->settings->get('inner_net_ip', 'default'), true)
+            ],
 
             'lbs' => [],
 
