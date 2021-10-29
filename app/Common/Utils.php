@@ -196,13 +196,14 @@ class Utils
 
 
     //execl 导出
-    public static function localexport($cell,$title,$data)
+    public static function localexport($title,$filename,$data)
     {
-
+/*
         set_time_limit(0);
         ini_set('memory_limit', '128M');
-        header('Content-Type: application/vnd.ms-execl');
-        header('Content-Disposition: attachment;filename="' . $title . '.csv"');
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+//        header('Content-Type: application/vnd.ms-execl');
+        header('Content-Disposition: attachment;filename="' . $title . '.xlsx"');
 
         //以写入追加的方式打开
         $fp = fopen('php://output', 'a');
@@ -220,6 +221,19 @@ class Utils
             fputcsv($fp, $row);
         }
         return ['file' => $title];
+*/
+        ob_get_clean();
+        ob_start();
+        echo implode("\t", $title),"\n";
+        foreach ($data as $val){
+            echo implode("\t", $val), "\n";
+        }
+        header('Content-Disposition: attachment; filename='.$filename.'.xlsx');
+        header('Accept-Ranges:bytes');
+        header('Content-Length:' . ob_get_length());
+        header('Content-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        ob_end_flush();
+        
     }
 
     public static function setAppKey($key, $value)
