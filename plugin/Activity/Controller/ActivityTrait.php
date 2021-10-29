@@ -25,8 +25,6 @@ use Plugin\Activity\Model\ThreadActivity;
 
 trait ActivityTrait
 {
-    public $activity;
-
     public function checkPermission($userRepo, $guestEnable = false)
     {
         $activityId = intval($this->inPut('activityId'));
