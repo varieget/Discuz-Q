@@ -230,6 +230,7 @@ trait ThreadListTrait
         $inPutToms = [];
         foreach ($tomData as $threadId => $toms) {
             foreach ($toms as $tom) {
+                if(empty($tom['value']))        continue;
                 $value = json_decode($tom['value'], true);
                 if ($withIds) {
                     switch ($tom['tom_type']) {
