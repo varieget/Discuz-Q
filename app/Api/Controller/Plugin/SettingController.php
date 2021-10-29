@@ -47,33 +47,11 @@ class SettingController extends DzqAdminController
             $this->outPut(ResponseCode::INVALID_PARAMETER,"key重复");
         }
 
-        $result = $this->getInSetting($privateValue,$publicValue);
-        if (!$result){
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
-        }
-
-        $this->pluginSetting($appId,$privateValue,$publicValue);
-
         $setResult = $this->app->make(PluginSettings::class)->setData($appId, $name, $type, $privateValue, $publicValue);
 
         if (!$setResult) {
             $this->outPut(ResponseCode::DB_ERROR);
         }
         $this->outPut(0);
-    }
-
-    private function pluginSetting($appId, &$privateValue,&$publicValue){
-        $pluginList = \Discuz\Common\Utils::getPluginList();
-        if (empty($pluginList[$appId]) || empty($pluginList[$appId]['settingBusi'])){
-            return;
-        }
-
-        $busiClass = $pluginList[$appId]['settingBusi'];
-        $busi = new \ReflectionClass($busiClass);
-        $busiObj = $busi->newInstanceArgs([]);
-        if(!method_exists($busiObj,"setSetting")){
-            return;
-        }
-        $busiObj->setSetting($privateValue, $publicValue);
     }
 }

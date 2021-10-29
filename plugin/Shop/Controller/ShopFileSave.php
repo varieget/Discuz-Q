@@ -29,7 +29,6 @@ class ShopFileSave
             $isRemote=false;
             // 开启 cos 时，cos放一份
             if($this->settings->get('qcloud_cos', 'qcloud')){
-                //$qrBuffTemp = clone $qrBuff;
                 $this->fileSystem->disk('cos')->put($path, $qrBuff);
                 $isRemote = true;
             }
@@ -58,18 +57,5 @@ class ShopFileSave
         }
         $url = $this->fileSystem->disk('local')->url($path);
         return $url;
-    }
-
-    public function getCurrentUrl($urlOld){
-        $isRemote = true;
-        $urlOldArray = parse_url($urlOld);
-        if (false !== strpos($urlOldArray["host"],"myqcloud.com") ){
-            $isRemote = false;
-        }
-        $path = $urlOldArray["path"];
-        if ( 0 == strpos($urlOldArray["path"],"/")){
-            $path = substr($urlOldArray["path"],1);
-        }
-        return $this->getFilePath($isRemote, $path);
     }
 }

@@ -56,27 +56,4 @@ class PluginFileSave
         $url = $this->fileSystem->disk('local')->url($path);
         return $url;
     }
-
-    public function getCurrentUrl($urlOld){
-        $isRemote = false;
-        $urlOldArray = parse_url($urlOld);
-        if (false !== strpos($urlOldArray["host"],"myqcloud.com") ){
-            $isRemote = true;
-        }
-        $path = $urlOldArray["path"];
-        return $this->getFilePath($isRemote, $path);
-    }
-
-    /**
-     * @param $url
-     * @return bool
-     */
-    public function checkSiteResource($url){
-        $urlTemp = $this->getCurrentUrl($url);
-        if ($urlTemp == $url){
-            return true;
-        }else{
-            return false;
-        }
-    }
 }
