@@ -17,16 +17,142 @@
 
 namespace App\Models;
 
+use App\Common\CacheKey;
+use Carbon\Carbon;
 use Discuz\Base\DzqModel;
+use Discuz\Cache\CacheManager;
+use Illuminate\Support\Arr;
 
+
+/**
+ * @property int $id
+ * @property string $app_id
+ * @property string $app_name
+ * @property int $type
+ * @property string $private_value
+ * @property string $public_value
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class PluginSettings extends DzqModel
 {
     protected $table = 'plugin_settings';
 
-    public static function getSetting($appId)
+    protected $settings = null;
+
+    /**
+     * @var CacheManager
+     */
+    protected $cache;
+
+    public function __construct()
     {
-        $setting = PluginSettings::query()->where(['app_id' => $appId])->first();
+        $this->settings = [];
+        $this->cache = app("cache");
+    }
+
+
+    public function allData(){
+        if (!empty($this->settings)) {
+            return $this->settings;
+        }
+
+        $settings = $this->cache->sear(
+            CacheKey::PLUGIN_SETTINGS,
+            function () {
+                return $this->getAllFromDatabase();
+            }
+        );
+
+        $this->settings = $settings;
+
+        return $this->settings;
+    }
+
+    protected function getAllFromDatabase()
+    {
+        $settings = PluginSettings::all()->keyBy("app_id")->toArray();
+        return $settings;
+    }
+
+    public function getData($appId){
+        return Arr::get($this->allData(),  $appId);
+    }
+
+    public function setData($appId, $name, $type, $privateValue, $publicValue){
+
+        $pluginSetting = PluginSettings::query()->where(['app_id' => $appId])->first();
+        if (empty($pluginSetting)) {
+            $pluginSetting = new PluginSettings();
+        }
+        $pluginSetting->app_id = $appId;
+        $pluginSetting->app_name = $name;
+        $pluginSetting->type = $type;
+
+        $pluginSetting->private_value = json_encode($privateValue, 256);
+        $pluginSetting->public_value = json_encode($publicValue, 256);
+
+        if (!$pluginSetting->save()) {
+            return false;
+        }
+
+        $this->cache->delete(CacheKey::PLUGIN_SETTINGS);
+        $this->allData();
+        return true;
+    }
+
+    public function getSettingRecord($appId)
+    {
+        $setting = $this->getData($appId);;
         if (empty($setting)) return [];
-        return json_decode($setting['value'], true);
+
+        if(!empty($setting['private_value'])){
+            $setting['private_value'] = json_decode($setting['private_value'], true);
+        }else{
+            $setting['private_value'] = [];
+        }
+        if(!empty($setting['public_value'])){
+            $setting['public_value'] = json_decode($setting['public_value'], true);
+        }else{
+            $setting['public_value'] = [];
+        }
+
+        return $setting;
+    }
+
+    public function getSetting($appId)
+    {
+        $setting = $this->getData($appId);
+        if (empty($setting)) return [];
+
+        $result = [];
+        if(!empty($setting['private_value'])){
+            $privateValue = json_decode($setting['private_value'], true);
+            $result = $privateValue;
+        }
+        if(!empty($setting['public_value'])){
+            $publicValue = json_decode($setting['public_value'], true);
+            $result = array_merge($result,$publicValue);
+        }
+
+        return $result;
+    }
+
+    public function getAllSettingRecord()
+    {
+        $appSettingMap = $this->allData();
+        foreach ($appSettingMap as $key=>&$setting){
+            if(!empty($setting['private_value'])){
+                $setting['private_value'] = json_decode($setting['private_value'], true);
+            }else{
+                $setting['private_value'] = [];
+            }
+            if(!empty($setting['public_value'])){
+                $setting['public_value'] = json_decode($setting['public_value'], true);
+            }else{
+                $setting['public_value'] = [];
+            }
+        }
+        return $appSettingMap;
     }
 }

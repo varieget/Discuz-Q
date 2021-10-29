@@ -113,6 +113,10 @@ $route->post('/plugin/settings.save', 'plugin.settings.save', ApiController\Plug
 $route->post('/plugin/permission.switch', 'plugin.permission.switch', ApiController\Plugin\GroupPermissionController::class);
 $route->get('/plugin/permissionlist', 'plugin.permissionlist', ApiController\Plugin\GetGroupPermissionsController::class);
 $route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingController::class);
+$route->get('/plugin/list', 'plugin.list', ApiController\Plugin\PluginListAdminController::class);
+$route->post('/plugin/uploadimage', 'plugin.uploadimage', ApiController\Plugin\PluginUploadImageController::class);
+$route->post('/plugin/deleteimage', 'plugin.deleteimage', ApiController\Plugin\PluginDeleteImageController::class);
+
 
 $route->post('/open.api.log', 'open.api.log', ApiController\SettingsV3\OpenApiLogController::class);
 

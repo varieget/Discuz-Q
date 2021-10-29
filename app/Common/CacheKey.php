@@ -120,6 +120,8 @@ class CacheKey
 
     const PLUGIN_LOCAL_CONFIG = 'plugin_local_config';//存储本地插件配置信息
 
+    const PLUGIN_SETTINGS = 'plugin_settings';
+
     const OAC_REQUEST_TIME = 'oac_request_time';//记录开源应用中心的请求时间以关闭定时任务
 
     public static $fileStore = [

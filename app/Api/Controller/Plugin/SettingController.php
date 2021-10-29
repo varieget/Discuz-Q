@@ -23,29 +23,57 @@ use Discuz\Base\DzqAdminController;
 
 class SettingController extends DzqAdminController
 {
+    use PluginTrait;
+
     public function main()
     {
         $appId = $this->inPut('appId');
         $name = $this->inPut('appName');
         $type = $this->inPut('type');
-        $value = $this->inPut('value');
+        $privateValue = $this->inPut('privateValue');
+        $publicValue = $this->inPut('publicValue');
         $this->dzqValidate($this->inPut(), [
             'appId' => 'required|string|max:100',
             'appName' => 'required|string|max:100',
             'type' => 'required|integer',
-            'value' => 'required|array'
         ]);
-        $pluginSetting = PluginSettings::query()->where(['app_id' => $appId])->first();
-        if (empty($pluginSetting)) {
-            $pluginSetting = new PluginSettings();
+
+        if (!is_array($privateValue) || !is_array($privateValue)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
-        $pluginSetting->app_id = $appId;
-        $pluginSetting->app_name = $name;
-        $pluginSetting->type = $type;
-        $pluginSetting->value = json_encode($value, 256);
-        if (!$pluginSetting->save()) {
+
+        $intersectKeys = array_intersect_key($privateValue,$publicValue);
+        if (!empty($intersectKeys)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER,"key重复");
+        }
+
+        $result = $this->getInSetting($privateValue,$publicValue);
+        if (!$result){
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
+
+        $this->pluginSetting($appId,$privateValue,$publicValue);
+
+        $setResult = $this->app->make(PluginSettings::class)->setData($appId, $name, $type, $privateValue, $publicValue);
+
+        if (!$setResult) {
             $this->outPut(ResponseCode::DB_ERROR);
         }
         $this->outPut(0);
+    }
+
+    private function pluginSetting($appId, &$privateValue,&$publicValue){
+        $pluginList = \Discuz\Common\Utils::getPluginList();
+        if (empty($pluginList[$appId]) || empty($pluginList[$appId]['settingBusi'])){
+            return;
+        }
+
+        $busiClass = $pluginList[$appId]['settingBusi'];
+        $busi = new \ReflectionClass($busiClass);
+        $busiObj = $busi->newInstanceArgs([]);
+        if(!method_exists($busiObj,"setSetting")){
+            return;
+        }
+        $busiObj->setSetting($privateValue, $publicValue);
     }
 }

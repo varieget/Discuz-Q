@@ -15,25 +15,27 @@
  * limitations under the License.
  */
 
-namespace App\Modules\ThreadTom\Busi;
+namespace App\Api\Controller\Plugin;
 
-use App\Modules\ThreadTom\TomBaseBusi;
+use App\Common\PermissionKey;
+use App\Common\Utils;
+use App\Models\PluginGroupPermission;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqAdminController;
+use Discuz\Base\DzqController;
 
-class GoodsBusi extends TomBaseBusi
+class PluginListAdminController extends DzqAdminController
 {
+    use PluginTrait;
 
-    public function create()
+    public function main()
     {
-        return $this->jsonReturn($this->body);
-    }
+        $groupId = $this->user->groupId;
+        $isAdmin = $this->user->isAdmin();
 
-    public function update()
-    {
-        return $this->jsonReturn($this->body);
-    }
+        $result = $this->getAllSettingAndConfig($groupId, $isAdmin,true);
 
-    public function select()
-    {
-        return $this->jsonReturn($this->body);
+        $this->outPut(0, '', array_values($result));
+
     }
 }
