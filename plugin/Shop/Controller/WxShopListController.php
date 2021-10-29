@@ -13,8 +13,12 @@ class WxShopListController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $this->checkPermission($userRepo);
+        if (!$this->user->isAdmin()){
+            return false;
+        }
+        return true;
     }
+
 
     public function main()
     {
@@ -37,7 +41,7 @@ class WxShopListController extends DzqController
             if (count($one["head_img"])>0){
                 $img=$one["head_img"][0];
             }
-            $price = $one["min_price"]/100;
+            $price = $one["min_price"]/100.0;
 
             $oneGoods = [];
             $oneGoods["productId"] = (string)$one["product_id"];
@@ -57,6 +61,7 @@ class WxShopListController extends DzqController
         $queryFirst['page'] = 1;
         $queryPre['page'] = $page <= 1 ? 1 : $page - 1;
         $queryNext['page'] = $page + 1;
+
 
 
         $dataResult = [

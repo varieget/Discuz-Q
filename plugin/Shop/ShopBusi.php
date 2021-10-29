@@ -4,8 +4,9 @@
 namespace Plugin\Shop;
 
 
+use App\Common\Utils;
+use App\Models\PluginSettings;
 use App\Modules\ThreadTom\TomBaseBusi;
-use Discuz\Base\DzqLog;
 use Plugin\Shop\Controller\WxShopTrait;
 use Plugin\Shop\Model\ShopProducts;
 
@@ -26,9 +27,7 @@ class ShopBusi extends TomBaseBusi
             if(!isset($item["type"])){
                 continue;
             }
-            if ($item["type"] == self::TYPE_ORIGIN){
-
-            }else if ($item["type"] == self::TYPE_WX_SHOP){
+            if (self::TYPE_WX_SHOP == $item["type"]){
                 if (!isset($item["data"]) || !isset($item["data"]["productId"])){
                     continue;
                 }
@@ -54,9 +53,7 @@ class ShopBusi extends TomBaseBusi
             if(!isset($item["type"])){
                 continue;
             }
-            if ($item["type"] == self::TYPE_ORIGIN){
-
-            }else if ($item["type"] == self::TYPE_WX_SHOP){
+            if (self::TYPE_WX_SHOP == $item["type"]){
                 if (!isset($item["data"]) || !isset($item["data"]["productId"])){
                     continue;
                 }
@@ -81,9 +78,7 @@ class ShopBusi extends TomBaseBusi
             if(!isset($item["type"])){
                 continue;
             }
-            if ($item["type"] == self::TYPE_ORIGIN){
-
-            }else if ($item["type"] == self::TYPE_WX_SHOP){
+            if (self::TYPE_WX_SHOP == $item["type"]){
                 if (!isset($item["data"])){
                     continue;
                 }
@@ -113,10 +108,10 @@ class ShopBusi extends TomBaseBusi
 
     private function doProduct($productId){
         $resultData = false;
+        Utils::setAppKey("plugin_appid",$this->tomId);
 
-        $config = $this->getSetting();
+        $config = app()->make(PluginSettings::class)->getSetting($this->tomId);
         $wxAppId = $config["wxAppId"];
-        $wxAppSecret = $config["wxAppSecret"];
 
         list($result,$accssToken) = $this->getAccessToken();
         if ($result !== 0){
@@ -133,7 +128,7 @@ class ShopBusi extends TomBaseBusi
             $imgUrl=$productInfo["head_img"][0];
         }
         $name = $productInfo["title"];
-        $price = $productInfo["min_price"]/100;
+        $price = $productInfo["min_price"]/100.0;
         $productIdTemp = $productInfo["product_id"];
         $path = $productInfo["path"]; //微信内部url, plugin-private:
 
@@ -143,8 +138,6 @@ class ShopBusi extends TomBaseBusi
         if (empty($productOld)){
             //拉取二维码
             list($qrPath,$isRemote) = $this->getProductQrCode($path);
-
-
 
             $oneShopProduct = new ShopProducts();
             $oneShopProduct->app_id = $wxAppId;
@@ -180,10 +173,19 @@ class ShopBusi extends TomBaseBusi
             $resultData = $productOld;
         }
 
-        $resultDataTemp = $this->camelData($resultData);
+        $resultDataTemp = [];
+        $resultDataTemp["id"] =  $resultData["id"];
+        $resultDataTemp["appId"] =  $resultData["app_id"];
+        $resultDataTemp["productId"] =  $resultData["product_id"];
+        $resultDataTemp["title"] =  $resultData["title"];
+        $resultDataTemp["imagePath"] =  $resultData["image_path"];
+        $resultDataTemp["price"] =  $resultData["price"];
+        $resultDataTemp["path"] =  $resultData["path"];
+        $resultDataTemp["detailUrl"] =  $resultData["detail_url"];
+        $resultDataTemp["detailQrcode"] =  $resultData["detail_qrcode"];
+        $resultDataTemp["detailScheme"] =  $resultData["detail_scheme"];
+        $resultDataTemp["isRemote"] =  $resultData["is_remote"];
+
         return $resultDataTemp;
     }
-
-
-
 }

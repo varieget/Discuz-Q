@@ -47,14 +47,6 @@ class SettingController extends DzqAdminController
             $this->outPut(ResponseCode::INVALID_PARAMETER,"key重复");
         }
 
-        $pluginSetting = PluginSettings::query()->where(['app_id' => $appId])->first();
-        if (empty($pluginSetting)) {
-            $pluginSetting = new PluginSettings();
-        }
-        $pluginSetting->app_id = $appId;
-        $pluginSetting->app_name = $name;
-        $pluginSetting->type = $type;
-
         $result = $this->getInSetting($privateValue,$publicValue);
         if (!$result){
             $this->outPut(ResponseCode::INVALID_PARAMETER);
@@ -62,11 +54,9 @@ class SettingController extends DzqAdminController
 
         $this->pluginSetting($appId,$privateValue,$publicValue);
 
+        $setResult = $this->app->make(PluginSettings::class)->setData($appId, $name, $type, $privateValue, $publicValue);
 
-        $pluginSetting->private_value = json_encode($privateValue, 256);
-        $pluginSetting->public_value = json_encode($publicValue, 256);
-
-        if (!$pluginSetting->save()) {
+        if (!$setResult) {
             $this->outPut(ResponseCode::DB_ERROR);
         }
         $this->outPut(0);

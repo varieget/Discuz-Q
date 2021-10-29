@@ -32,7 +32,7 @@ trait PluginTrait
         $permissions = PluginGroupPermission::query()
             ->where('group_id', $groupId)->get()->keyBy('app_id')->toArray();
 
-        $appSettingMap = PluginSettings::getAllSettingRecord();
+        $appSettingMap = app()->make(PluginSettings::class)->getAllSettingRecord();
 
         foreach ($pluginList as &$item) {
             $permission = $permissions[$item['app_id']] ?? null;
@@ -128,34 +128,21 @@ trait PluginTrait
             unset($privateValueData["resourceKeys"]);
         }
 
-        if ($isFromAdmin){ //管理后台
-            $setting["private_value"] = $privateValueData;
-            $setting["public_value"] = $publicValueData;
-            return $this->camelData($setting);
-        }else{  // 用户端
-           return $publicValueData;
-        }
-    }
-
-
-
-
-
-
-    private function checkResource(&$setting){
-        foreach ($setting as $key=>&$value){
-            if(!is_array($value)){
-                continue;
+        foreach ($privateValueData as $key=>$value){
+            if (is_string($value)){
+                $privateValueData[$key] = Utils::hideStr($value);
             }
-            if (!isset($value["isResource"]) || $value["isResource"] == 0){
-                continue;
-            }
-            //检查最新的url
-            $url = $this->getCurrentUrl($value["value"]);
-            $value["value"] = $url;
         }
-    }
 
+        $data = [];
+        $data["id"] = $setting["id"];
+        $data["appId"] = $setting["app_id"];
+        $data["appName"] = $setting["app_name"];
+        $data["type"] = $setting["type"];
+        $data["publicValue"] = $publicValueData;
+        $data["privateValue"] = $privateValueData;
+        return $data;
+    }
 
     public function getCurrentUrl($urlOld){
         /** @var PluginFileSave $shopFileSave */

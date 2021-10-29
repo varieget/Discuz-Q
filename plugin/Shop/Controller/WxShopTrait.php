@@ -19,6 +19,7 @@ namespace Plugin\Shop\Controller;
 
 
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Models\PluginSettings;
 use Discuz\Base\DzqLog;
 use Discuz\Wechat\EasyWechatTrait;
@@ -34,23 +35,6 @@ trait WxShopTrait
     protected $accessToken;
     protected $settingData;
 
-    public function checkPermission($userRepo, $guestEnable = false)
-    {
-//        if (!$this->user->isAdmin()){
-//            return false;
-//        }
-        return true;
-    }
-
-
-    public function getConfig(){
-        if (empty($this->config)){
-            $config = json_decode(file_get_contents(__DIR__ . "/../config.json"), true);
-            $this->config = $config;
-        }
-        return $this->config;
-    }
-
     private function getWxShopHttpClient(){
         if (empty($this->httpClient)){
             $this->httpClient = new Client([]);
@@ -64,9 +48,12 @@ trait WxShopTrait
         if (!empty($this->settingData)){
             return $this->settingData;
         }
-        $this->getConfig();
 
-        $settingData = PluginSettings::getSetting($this->config["app_id"]);
+        $appid = Utils::getAppKey("plugin_appid");
+        if (empty($appid)){
+            return false;
+        }
+        $settingData = app()->make(PluginSettings::class)->getSetting($appid);
         if (empty($settingData)){
            return false;
         }

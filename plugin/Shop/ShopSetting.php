@@ -28,4 +28,5 @@ class ShopSetting
         $publicValue["wxScheme"] = $scheme;
     }
 
+
 }
