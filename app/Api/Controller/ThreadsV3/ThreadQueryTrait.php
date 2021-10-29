@@ -170,6 +170,7 @@ trait ThreadQueryTrait
             });
         }
         $this->buildThreadSort($threads, $sort);
+        $threads->distinct('th.id');
         return $threads;
     }
 
