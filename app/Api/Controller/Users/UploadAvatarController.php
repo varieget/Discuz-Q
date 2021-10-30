@@ -18,20 +18,20 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Api\Serializer\UserSerializer;
 use App\Commands\Users\UploadAvatar;
-use Discuz\Api\Controller\AbstractResourceController;
+use App\Common\CacheKey;
+use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqCache;
+use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class UploadAvatarController extends AbstractResourceController
+class UploadAvatarController extends DzqController
 {
-    /**
-     * {@inheritdoc}
-     */
-    public $serializer = UserSerializer::class;
+    public function prefixClearCache($user)
+    {
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $user->id);
+    }
 
     /**
      * @var Dispatcher
@@ -46,17 +46,42 @@ class UploadAvatarController extends AbstractResourceController
         $this->bus = $bus;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $id = Arr::get($request->getQueryParams(), 'id');
-        $file = Arr::get($request->getUploadedFiles(), 'avatar');
-        $actor = $request->getAttribute('actor');
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return true;
+    }
 
-        return $this->bus->dispatch(
+    public function main()
+    {
+        $uploadFile = $this->request->getUploadedFiles();
+        if (empty($uploadFile)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '');
+        }
+        $file = $uploadFile['avatar'];
+        $actor = $this->user;
+        $id = $actor->id;
+
+        if (empty($id) || empty($file)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '');
+        }
+
+        $actor = $this->user;
+        $result = $this->bus->dispatch(
             new UploadAvatar($id, $file, $actor)
         );
+        $originalAvatar = $result->getOriginalAvatarPath();
+        $result = [
+            'id' => $result->id,
+            'username' => $result->username,
+            'avatarUrl' => $result->avatar,
+            'originalAvatarUrl'=>$originalAvatar,
+            'updatedAt' => optional($result->updated_at)->format('Y-m-d H:i:s'),
+            'createdAt' => optional($result->created_at)->format('Y-m-d H:i:s'),
+        ];
+
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

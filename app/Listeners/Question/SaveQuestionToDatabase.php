@@ -2,10 +2,13 @@
 
 /**
  * Copyright (C) 2020 Tencent Cloud.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,8 +65,7 @@ class SaveQuestionToDatabase
         ConnectionInterface $connection,
         SettingsRepository $settings,
         BusDispatcher $bus
-    )
-    {
+    ) {
         $this->events = $eventDispatcher;
         $this->questionValidator = $questionValidator;
         $this->connection = $connection;
@@ -83,7 +85,6 @@ class SaveQuestionToDatabase
         $data = $event->data;
 
         if ($post->thread->type == Thread::TYPE_OF_QUESTION) {
-
             $isDraft = Arr::get($data, 'attributes.is_draft');
             $isLikeData = Arr::get($data, 'attributes');
 
@@ -97,47 +98,47 @@ class SaveQuestionToDatabase
 
                     if (! empty($orderId = Arr::get($questionData, 'order_id', null))) {
                         $orderData = Order::query()->where('order_sn', $orderId)->firstOrFail();
-                        if($orderData->amount > 0 && $orderData->status !== 1){
+                        if ($orderData->amount > 0 && $orderData->status !== 1) {
                             throw new Exception(trans('post.post_question_order_pay_status_fail'));
                         }
 
-                        if($questionData['price'] != $orderData->amount){
+                        if ($questionData['price'] != $orderData->amount) {
                             $questionData['price'] = $orderData->amount;
                             app('log')->info('用户'.$actor->username . '(ID为' . $actor->id . ')存在拦截请求、篡改数据行为，金额传参与实付金额不匹配。订单ID为：' . $orderData->order_sn . ',帖子ID为：' . $post->thread_id);
                         }
                     }
 
-                    if(!isset($questionData['type'])){
+                    if (!isset($questionData['type'])) {
                         $questionData['type'] = 1;
                         // throw new Exception(trans('post.post_reward_does_not_have_type'));
                     }
 
-                    if($questionData['type'] == 1){
-                        if(!isset($questionData['be_user_id']) || empty($questionData['be_user_id'])){
+                    if ($questionData['type'] == 1) {
+                        if (!isset($questionData['be_user_id']) || empty($questionData['be_user_id'])) {
                             throw new Exception(trans('post.thread_reward_answer_id_is_null'));
                         }
                     }
 
-                    if(isset($questionData['type']) && $questionData['type'] == 0){
+                    if (isset($questionData['type']) && $questionData['type'] == 0) {
                         // reward thread
-                        if(!is_numeric($questionData['price'])){
+                        if (!is_numeric($questionData['price'])) {
                             throw new Exception(trans('post.thread_reward_money_type_fail'));
                         }
 
-                        if($questionData['price'] < 0.1){
+                        if ($questionData['price'] < 0.1) {
                             throw new Exception(trans('post.thread_reward_money_min_limit_fail'));
                         }
 
-                        if($questionData['price'] > 10000){
+                        if ($questionData['price'] > 10000) {
                             throw new Exception(trans('post.thread_reward_money_max_limit_fail'));
                         }
 
-                        if(!isset($questionData['expired_at']) || empty($questionData['expired_at'])){
+                        if (!isset($questionData['expired_at']) || empty($questionData['expired_at'])) {
                             throw new Exception(trans('post.thread_reward_expired_time_is_null'));
                         }
 
-                        $min_time = date("Y-m-d H:i:s", strtotime("+1 days",time()));
-                        if($questionData['expired_at'] < $min_time){
+                        $min_time = date('Y-m-d H:i:s', strtotime('+1 days', time()));
+                        if ($questionData['expired_at'] < $min_time) {
                             throw new Exception(trans('post.thread_reward_expired_time_limit_fail'));
                         }
                     }
@@ -155,11 +156,11 @@ class SaveQuestionToDatabase
                     } else {
                         $price = $orderData->amount;
                     }
-                }else{
-                     $price = Arr::get($questionData, 'price', 0);
+                } else {
+                    $price = Arr::get($questionData, 'price', 0);
                 }
 
-                if($questionData['type'] == 1 && !$isDraft) {
+                if ($questionData['type'] == 1 && !$isDraft) {
                     $this->questionValidator->valid($questionData);
                 }
 
@@ -174,8 +175,7 @@ class SaveQuestionToDatabase
                 // Start Transaction
                 $this->connection->beginTransaction();
                 try {
-
-                    if($questionData['type'] == 1){
+                    if ($questionData['type'] == 1) {
                         /**
                          * Create Question
                          *
@@ -197,9 +197,9 @@ class SaveQuestionToDatabase
                         }
                     }
 
-                    if(empty($question)){
+                    if (empty($question)) {
                         $answer_id = 0;
-                    }else{
+                    } else {
                         $answer_id = $question->be_user_id ? $question->be_user_id : 0;
                     }
 
@@ -249,14 +249,14 @@ class SaveQuestionToDatabase
                                 'change_type' => UserWalletLog::TYPE_QUESTION_FREEZE,
                             ])->first();
 
-                                // question thread type = 1 for a specific people
-                                if($questionData['type'] == 1){
-                                    $walletLog->question_id = $questionId;
-                                }
-
-                                $walletLog->save();
+                            // question thread type = 1 for a specific people
+                            if ($questionData['type'] == 1) {
+                                $walletLog->question_id = $questionId;
                             }
+
+                            $walletLog->save();
                         }
+                    }
 
                     $this->connection->commit();
                 } catch (Exception $e) {
@@ -266,7 +266,7 @@ class SaveQuestionToDatabase
                 }
 
                 // 延迟执行事件
-                if(!empty($question)){
+                if (!empty($question)) {
                     $this->dispatchEventsFor($question, $actor);
                 }
                 $this->events->dispatch($threadReward);

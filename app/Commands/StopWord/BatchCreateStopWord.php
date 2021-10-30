@@ -28,10 +28,10 @@ use Discuz\Foundation\EventsDispatchTrait;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
-
 class BatchCreateStopWord
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     /**
@@ -65,18 +65,17 @@ class BatchCreateStopWord
      */
     public function handle()
     {
-
         $this->assertRegistered($this->actor);
         $this->assertCan($this->actor, 'create');
 
         $overwrite = Arr::get($this->data, 'overwrite', false);
 
         $limitCount = collect(Arr::get($this->data, 'words'))->count();
-        if($limitCount>StopWord::LIMITCOUNT){
-            \Discuz\Common\Utils::outPut(ResponseCode::INVALID_PARAMETER,'最多导入'.StopWord::LIMITCOUNT.'条');
+        if ($limitCount>StopWord::LIMITCOUNT) {
+            \Discuz\Common\Utils::outPut(ResponseCode::INVALID_PARAMETER, '最多导入'.StopWord::LIMITCOUNT.'条');
         }
 
-        if($overwrite){
+        if ($overwrite) {
             return collect(Arr::get($this->data, 'words'))
                 ->map(function ($word) {
                     return $this->parseWord($word);
@@ -97,29 +96,29 @@ class BatchCreateStopWord
                     });
                 })
                 ->countBy();
-        }else{
+        } else {
             $existCollection = StopWord::query()->distinct(true)->get('find')->toArray();
-            $exist = array_column($existCollection,'find');
+            $exist = array_column($existCollection, 'find');
             collect(Arr::get($this->data, 'words'))
                 ->map(function ($word) {
                     return $this->parseWord($word);
                 })
                 ->filter()
                 ->unique('find')
-                ->whereNotIn('find',$exist)
-                ->when(true,function ($collection) {
-                    foreach ($collection->chunk(1000) as $k=>$val){
+                ->whereNotIn('find', $exist)
+                ->when(true, function ($collection) {
+                    foreach ($collection->chunk(1000) as $k=>$val) {
                         StopWord::query()->insert($val->toArray());
                     }
                 });
 
-           $createCount = collect(Arr::get($this->data, 'words'))
+            $createCount = collect(Arr::get($this->data, 'words'))
                 ->map(function ($word) {
                     return $this->parseWord($word);
                 })
                 ->filter()
                 ->unique('find')
-                ->whereNotIn('find',$exist)
+                ->whereNotIn('find', $exist)
                 ->count();
             $totalCount = collect(Arr::get($this->data, 'words'))->count();
             return collect([
@@ -172,24 +171,24 @@ class BatchCreateStopWord
                 $nickname = StopWord::IGNORE;
             } else {
                 $arrMap = array_map('trim', explode('|', $replacement));
-                if(empty($arrMap[0])){
-                    $arrMap[0] = "undefined";
+                if (empty($arrMap[0])) {
+                    $arrMap[0] = 'undefined';
                 }
-                if(empty($arrMap[1])){
-                    $arrMap[1] = "undefined";
+                if (empty($arrMap[1])) {
+                    $arrMap[1] = 'undefined';
                 }
-                if(empty($arrMap[2])){
-                    $arrMap[2] = "undefined";
+                if (empty($arrMap[2])) {
+                    $arrMap[2] = 'undefined';
                 }
-                if(empty($arrMap[3])){
-                    $arrMap[3] = "undefined";
+                if (empty($arrMap[3])) {
+                    $arrMap[3] = 'undefined';
                 }
-                if(empty($arrMap[4])){
-                    $arrMap[4] = "undefined";
+                if (empty($arrMap[4])) {
+                    $arrMap[4] = 'undefined';
                 }
-                if($arrMap[0] == '**'){
-                    if(empty($arrMap[5])){
-                        $arrMap[5] = "undefined";
+                if ($arrMap[0] == '**') {
+                    if (empty($arrMap[5])) {
+                        $arrMap[5] = 'undefined';
                     }
                     array_shift($arrMap);
                 }
@@ -209,10 +208,10 @@ class BatchCreateStopWord
             }
 
             $user_id = $this->actor->id;
-            $created_at = date("Y-m-d h:i:s");
-            $updated_at = date("Y-m-d h:i:s");
+            $created_at = date('Y-m-d h:i:s');
+            $updated_at = date('Y-m-d h:i:s');
             // 返回一组可用数据
-            return compact('ugc', 'username', 'signature', 'dialog', 'nickname', 'find', 'replacement','user_id','created_at','updated_at');
+            return compact('ugc', 'username', 'signature', 'dialog', 'nickname', 'find', 'replacement', 'user_id', 'created_at', 'updated_at');
         } else {
             return [];
         }

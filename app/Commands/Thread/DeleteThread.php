@@ -34,6 +34,7 @@ use Illuminate\Support\Arr;
 class DeleteThread
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     /**
@@ -84,7 +85,7 @@ class DeleteThread
         //如果是草稿，则不做处理
         $isDraft = Arr::get($events->data, 'attributes.is_draft', 0);
 
-       if ($isDraft) {
+        if ($isDraft) {
             $this->assertCan($this->actor, 'delete', $thread);
         }
 

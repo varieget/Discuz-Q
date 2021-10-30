@@ -24,8 +24,6 @@ use App\Formatter\Formatter;
 use Carbon\Carbon;
 use Discuz\Base\DzqModel;
 use Discuz\Foundation\EventGeneratorTrait;
-use Illuminate\Contracts\Cache\Repository as Cache;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
@@ -69,7 +67,6 @@ class Question extends DzqModel
 
     const TYPE_OF_EXPIRED = 2; // 已过期
 
-
     /**
      * 摘要长度
      */
@@ -79,6 +76,7 @@ class Question extends DzqModel
      * 摘要结尾
      */
     const SUMMARY_END_WITH = '...';
+
     /**
      * 通知内容展示长度(字)
      */
@@ -315,13 +313,13 @@ class Question extends DzqModel
         if (empty($question)) {
             return false;
         }
-        $buserIds = array($question['be_user_id']);
+        $buserIds = [$question['be_user_id']];
         $groups = GroupUser::instance()->getGroupInfo($buserIds);
         $groups = array_column($groups, null, 'be_user_id');
 
         $users = User::instance()->getUsers($buserIds);
         $users = array_column($users, null, 'id');
-        $users = !empty($users[1]['realname']) ? $users[1]['realname'] : array();
+        $users = !empty($users[1]['realname']) ? $users[1]['realname'] : [];
 
         return [
             'threadId' => $question['thread_id'],
@@ -342,6 +340,7 @@ class Question extends DzqModel
             'answeredAt' => $question['answered_at']
         ];
     }
+
     private function getContentSummary($content)
     {
         $content = strip_tags($content);
@@ -351,10 +350,9 @@ class Question extends DzqModel
         return $content;
     }
 
-
     private function getGroupInfo($groups)
     {
-        if(empty($groups)){
+        if (empty($groups)) {
             return [];
         }
 
@@ -363,7 +361,6 @@ class Question extends DzqModel
             'isDisplay' => $groups[0]['groups']['is_display'],
         ];
     }
-
 
     private function getIsReal($realname)
     {

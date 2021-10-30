@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +17,6 @@
  */
 
 namespace App\Notifications\Messages\Database;
-
 
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Notifications\Messages\SimpleMessage;
@@ -56,15 +56,14 @@ class CustomMessage extends SimpleMessage
     public function contentReplaceVars($data)
     {
         return [];
-
     }
 
     public function render()
     {
         $build = [
-            'title' => Arr::get($this->data,'title','系统通知'),
-            'content' => Arr::get($this->data,'content',''),
-            'threadId'=>Arr::get($this->data,'threadId',null)
+            'title' => Arr::get($this->data, 'title', '系统通知'),
+            'content' => Arr::get($this->data, 'content', ''),
+            'threadId'=>Arr::get($this->data, 'threadId', null)
         ];
         Arr::set($build, 'raw.tpl_id', $this->firstData->id);
         return $build;

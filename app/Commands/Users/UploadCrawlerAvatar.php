@@ -104,7 +104,7 @@ class UploadCrawlerAvatar
      */
     public function __invoke()
     {
-        $user = User::query()->where('id',$this->userId)->first();
+        $user = User::query()->where('id', $this->userId)->first();
         $ext = pathinfo($this->avatar->getClientFilename(), PATHINFO_EXTENSION);
         $ext = $ext ? ".$ext" : '';
 

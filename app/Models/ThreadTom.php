@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +18,14 @@
 
 namespace App\Models;
 
-
 use Discuz\Base\DzqModel;
 
 class ThreadTom extends DzqModel
 {
     protected $table = 'thread_tom';
 
-
     const STATUS_ACTIVE = 0;
+
     const STATUS_DELETE = -1;
 
     public static function deleteTom($threadId, $tomId, $key)

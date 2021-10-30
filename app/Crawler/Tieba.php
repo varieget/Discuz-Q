@@ -1,5 +1,21 @@
 <?php
 
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace App\Crawler;
 
 class Tieba
@@ -58,7 +74,7 @@ class Tieba
                 if (empty($forum['id'])) {
                     continue;
                 }
-                $user['nickname'] = str_replace(" ", "", $user['nickname']);
+                $user['nickname'] = str_replace(' ', '', $user['nickname']);
                 $data[$k]['user'] = $user;
                 $data[$k]['forum'] = $forum;
                 //增加nickname
@@ -87,7 +103,7 @@ class Tieba
         ];
         if ($content) {
             //头像
-            $avatar = $this->dealMatchStr("/<img src=\"(.*)\" alt=\"\">/i", $content);
+            $avatar = $this->dealMatchStr('/<img src="(.*)" alt="">/i', $content);
             $userInfo['avatar'] = trim($avatar);
             if (!empty($avatar)) {
                 $userId = substr($avatar, strpos($avatar, '/item/'));
@@ -208,7 +224,7 @@ class Tieba
                 continue;
             }
             //用户信息
-            $user['nickname'] = str_replace(" ", "", $user['nickname']);
+            $user['nickname'] = str_replace(' ', '', $user['nickname']);
             $data[$key]['user'] = $user;
             //评论信息
             $data[$key]['comment'] = $commentDetail;
@@ -244,11 +260,11 @@ class Tieba
             $userInfo['avatar'] = trim($avatar);
 
             //昵称
-            $nickname = $this->dealMatchStr("/img username=\"(.*)\" class=\"\"/i", $content);
+            $nickname = $this->dealMatchStr('/img username="(.*)" class=""/i', $content);
             $userInfo['nickname'] = trim($nickname);
 
             //主页
-            $homePage = $this->dealMatchStr("/class=\"p_author_face \" href=\"(.*)\">/i", $content);
+            $homePage = $this->dealMatchStr('/class="p_author_face " href="(.*)">/i', $content);
             $userInfo['home_page'] = 'https://tieba.baidu.com' . trim($homePage);
             if ($homePage) {
                 $userId = substr($homePage, strpos($homePage, 'id='));
@@ -260,7 +276,6 @@ class Tieba
 //                $userInfo['nickname'] = $user['nickname'];
 //                $userInfo['gender'] = $user['gender'];
 //            }
-
         }
         return $userInfo;
     }
@@ -283,7 +298,7 @@ class Tieba
             ],
         ];
         //评论ID
-        $commentInfo['id'] = $this->dealMatchStr("/<div id=\"post_content_(.*)\" class=\"d_post_content j_d_post_content/i", $content);
+        $commentInfo['id'] = $this->dealMatchStr('/<div id="post_content_(.*)" class="d_post_content j_d_post_content/i', $content);
 
         //评论内容
         $commentText = $this->dealMatchStr("/class=\"d_post_content j_d_post_content \" style=\"display:;\">(.*)<\/div><br>/i", $content);
@@ -324,13 +339,13 @@ class Tieba
     private function curlGet($url, $headers = [], $port = 80)
     {
         $ch = curl_init();
-        $header = array();
+        $header = [];
         $header[] = 'Content-Type:application/x-www-form-urlencoded';
         curl_setopt($ch, CURLOPT_URL, $url);
         if ($port !== 80) {
             curl_setopt($ch, CURLOPT_PORT, $port);
         }
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36');
         curl_setopt($ch, CURLOPT_HEADER, 0);//设定是否输出页面内容
         if ($headers) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -346,5 +361,4 @@ class Tieba
 
         return $filecontent;
     }
-
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -17,10 +18,8 @@
 
 namespace App\Commands\SignInFields;
 
-
 use App\Models\AdminSignInFields;
 use App\Models\User;
-
 
 class CreateAdminSignIn
 {
@@ -86,7 +85,7 @@ class CreateAdminSignIn
                 if (empty($adminSignIn)) {
                     continue;
                 }
-            }else{
+            } else {
                 $adminSignIn = new AdminSignInFields();
             }
             foreach ($attribute as $key => $value) {

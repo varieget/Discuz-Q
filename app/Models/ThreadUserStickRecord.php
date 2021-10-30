@@ -18,9 +18,7 @@
 
 namespace App\Models;
 
-use App\Common\CacheKey;
 use Carbon\Carbon;
-use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 
 /**
@@ -38,6 +36,6 @@ class ThreadUserStickRecord extends DzqModel
     protected $table = 'thread_sticks';
 
     const STATUS_NO = 0;
-    const STATUS_YES = 1;
 
+    const STATUS_YES = 1;
 }

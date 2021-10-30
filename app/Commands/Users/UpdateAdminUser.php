@@ -33,7 +33,6 @@ use App\Models\User;
 use App\Common\ResponseCode;
 use App\Models\UserActionLogs;
 use App\Models\AdminActionLog;
-use App\Models\UserSignInFields;
 use App\Notifications\Messages\Database\GroupMessage;
 use App\Notifications\System;
 use App\Repositories\UserRepository;
@@ -56,6 +55,7 @@ use Illuminate\Validation\ValidationException;
 class UpdateAdminUser
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     /**
@@ -146,9 +146,9 @@ class UpdateAdminUser
 
         $canEdit = true;
         $isSelf = $this->actor->id === $user->id;
-        if(!empty(Arr::get($this->data, 'data.attributes'))){
+        if (!empty(Arr::get($this->data, 'data.attributes'))) {
             $attributes = Arr::get($this->data, 'data.attributes');
-        }else{
+        } else {
             $attributes = $this->data;
         }
         // 下列部分方法使用地址引用的方式修改了该值，以便验证用户参数
@@ -361,18 +361,18 @@ class UpdateAdminUser
 
         // 审核后系统通知事件
         $this->events->dispatch(new ChangeUserStatus($user, $logMsg));
-        $this->setRefuseMessage($user,$logMsg);
+        $this->setRefuseMessage($user, $logMsg);
 
         // 记录用户状态操作日志
         UserActionLogs::writeLog($this->actor, $user, User::enumStatus($status), $logMsg);
 
-        $status_desc = array(
+        $status_desc = [
             '0' => '正常',
             '1' => '禁用',
             '2' => '审核中',
             '3' => '审核拒绝',
             '4' => '审核忽略'
-        );
+        ];
         AdminActionLog::createAdminActionLog(
             $this->actor->id,
             '更改了用户【'. $user->username .'】的用户状态为【'. $status_desc[$status] .'】'
@@ -380,7 +380,8 @@ class UpdateAdminUser
     }
 
     //记录拒绝原因
-    private function setRefuseMessage(User &$user,$refuseMessage){
+    private function setRefuseMessage(User &$user, $refuseMessage)
+    {
         if ($user->status == User::STATUS_REFUSE || $user->status == User::STATUS_BAN) {
             $user->reject_reason = $refuseMessage;
             $user->save();
@@ -413,21 +414,20 @@ class UpdateAdminUser
 
         // 当新旧用户组不一致时，更新用户组并发送通知
         if ($newGroups && $newGroups->toArray() != $oldGroups->keys()->toArray()) {
-
             $payGroups = Group::query()->where('is_paid', Group::IS_PAID)->get();
             $payGroupMap = [];
-            $payGroups->map(function ($item) use (&$payGroupMap){
+            $payGroups->map(function ($item) use (&$payGroupMap) {
                 $payGroupMap[$item->id] = $item;
             });
-            $payGroupIds = $payGroups->pluck("id")->toArray();
-            $newPayGroupIds = array_intersect($newGroups->toArray(),$payGroupIds);
+            $payGroupIds = $payGroups->pluck('id')->toArray();
+            $newPayGroupIds = array_intersect($newGroups->toArray(), $payGroupIds);
             $isNewPay = false;
-            if(!empty($newPayGroupIds)){
+            if (!empty($newPayGroupIds)) {
                 $isNewPay = true;
             }
-            $oldPayGroupIds = array_intersect($oldGroups->keys()->toArray(),$payGroupIds);
+            $oldPayGroupIds = array_intersect($oldGroups->keys()->toArray(), $payGroupIds);
             $isOldPay = false;
-            if(!empty($oldPayGroupIds)){
+            if (!empty($oldPayGroupIds)) {
                 $isOldPay = true;
             }
 
@@ -438,10 +438,10 @@ class UpdateAdminUser
 
             $deleteGroups = array_diff($oldGroups->keys()->toArray(), $newGroups->toArray());
             if ($deleteGroups) {
-                if ($isOldPay){
+                if ($isOldPay) {
                     //删除付费用户组
                     $deleteGroups = $payGroupIds;
-                    $this->deletePayGroups($user,$deleteGroups);
+                    $this->deletePayGroups($user, $deleteGroups);
                 }
             }
 
@@ -466,36 +466,37 @@ class UpdateAdminUser
         }
     }
 
-    protected function deletePayGroups(User $user, array $deleteGroupsIds){
-        if (empty($user) || empty($deleteGroupsIds)){
+    protected function deletePayGroups(User $user, array $deleteGroupsIds)
+    {
+        if (empty($user) || empty($deleteGroupsIds)) {
             return;
         }
 
-        $changeGroupUser = GroupUser::query()->whereIn('group_id',$deleteGroupsIds)->where('user_id',$user->id)->first();
+        $changeGroupUser = GroupUser::query()->whereIn('group_id', $deleteGroupsIds)->where('user_id', $user->id)->first();
         $dtSeconds = 0;
-        if (!empty($changeGroupUser)){
+        if (!empty($changeGroupUser)) {
             $expired_at = $changeGroupUser->expiration_time;
-            if (!empty($expired_at)){
-                if ($expired_at>Carbon::now()){
-                    $dtSeconds = Carbon::now()->diffInSeconds(Carbon::parse( $expired_at));
+            if (!empty($expired_at)) {
+                if ($expired_at>Carbon::now()) {
+                    $dtSeconds = Carbon::now()->diffInSeconds(Carbon::parse($expired_at));
                 }
             }
         }
 
-        $remainDays = GroupUserMq::query()->whereIn('group_id',$deleteGroupsIds)
-            ->where('user_id',$user->id)->sum('remain_days');
-        if ($remainDays != 0 || $dtSeconds != 0){
-            if (!empty($user->expired_at)){
+        $remainDays = GroupUserMq::query()->whereIn('group_id', $deleteGroupsIds)
+            ->where('user_id', $user->id)->sum('remain_days');
+        if ($remainDays != 0 || $dtSeconds != 0) {
+            if (!empty($user->expired_at)) {
                 $user->expired_at = Carbon::parse($user->expired_at)->subDays($remainDays)->subSeconds($dtSeconds);
                 $user->save();
             }
         }
 
-        GroupUserMq::query()->whereIn('group_id',$deleteGroupsIds)
-            ->where('user_id',$user->id)->delete();
+        GroupUserMq::query()->whereIn('group_id', $deleteGroupsIds)
+            ->where('user_id', $user->id)->delete();
         GroupPaidUser::query()->whereIn('group_id', $deleteGroupsIds)
-            ->where('user_id',$user->id)
-            ->where("delete_type",0)
+            ->where('user_id', $user->id)
+            ->where('delete_type', 0)
             ->update(['operator_id' => $this->actor->id, 'deleted_at' => Carbon::now(), 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
     }
 
@@ -519,11 +520,10 @@ class UpdateAdminUser
             ->where('status', Order::ORDER_STATUS_PAID)
             ->orderBy('id', 'desc')
             ->first();
-        if(!empty($order)){
+        if (!empty($order)) {
             $order->expired_at = Carbon::parse($expiredAt);
             $order->save();
         }
-
     }
 
     /**
@@ -580,7 +580,6 @@ class UpdateAdminUser
 
         return $validate;
     }
-
 
     protected function changeNickname(User $user, bool $canEdit, bool $isSelf, array $attributes, array &$validate)
     {

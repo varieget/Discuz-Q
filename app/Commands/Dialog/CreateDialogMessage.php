@@ -99,7 +99,7 @@ class CreateDialogMessage
             throw new PermissionDeniedException('已被屏蔽，不能发起私信对话');
         }
 
-        $read_status = Arr::get($this->attributes, 'read_status',0);
+        $read_status = Arr::get($this->attributes, 'read_status', 0);
 
         $attachment_id = Arr::get($this->attributes, 'attachment_id', 0);
 

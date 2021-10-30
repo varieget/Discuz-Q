@@ -19,74 +19,43 @@
 namespace App\Api\Controller\Wallet;
 
 use App\Api\Serializer\UserWalletCashSerializer;
-use Discuz\Api\Controller\AbstractListController;
-use Discuz\Auth\Exception\PermissionDeniedException;
+
+use App\Common\ResponseCode;
+use App\Models\User;
+use App\Repositories\UserRepository;
+use App\Repositories\UserWalletCashRepository;
+use Discuz\Base\DzqController;
+use Discuz\Http\UrlGenerator;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Contracts\Routing\UrlGenerator;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use App\Models\User;
-use App\Repositories\UserWalletCashRepository;
-use Discuz\Auth\AssertPermissionTrait;
+use Tobscure\JsonApi\Parameters;
 
-class ListUserWalletCashController extends AbstractListController
+class ListUserWalletCashController extends DzqController
 {
-    use AssertPermissionTrait;
-
-    /**
-     * {@inheritdoc}
-     */
-    public $serializer = UserWalletCashSerializer::class;
-
-    /**
-     * @var Dispatcher
-     */
     protected $bus;
 
-    /**
-     * @var UrlGenerator
-     */
     protected $url;
 
-    /**
-     * @var UserWalletCashRepository
-     */
     protected $cash;
 
-    /**
-     * @var int
-     */
     protected $total;
 
-    /**
-     * {@inheritdoc}
-     */
     public $sort = [
-        'created_at' => 'desc',
+        'created_at'    =>  'desc'
     ];
 
-    /**
-     * {@inheritdoc}
-     */
     public $sortFields = [
         'created_at',
-        'updated_at',
+        'updated_at'
     ];
 
-    /**
-     * {@inheritdoc}
-     */
     public $optionalInclude = [
         'user',
         'userWallet',
         'wechat'
     ];
 
-    /**
-     * @param Dispatcher $bus
-     */
     public function __construct(Dispatcher $bus, UrlGenerator $url, UserWalletCashRepository $cash)
     {
         $this->bus = $bus;
@@ -94,62 +63,43 @@ class ListUserWalletCashController extends AbstractListController
         $this->cash = $cash;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function data(ServerRequestInterface $request, Document $document)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor  = $request->getAttribute('actor');
-        $this->assertRegistered($actor);
-        $filter = $this->extractFilter($request);
-        $sort   = $this->extractSort($request);
-        $limit  = $this->extractLimit($request);
-        $offset = $this->extractOffset($request);
-        //如果用户不是管理员，那么就只能看自己的提现记录
-        if(!$actor->isAdmin() && !empty($filter['user'])){
-            if($filter['user'] != $actor->id){
-                throw new PermissionDeniedException;
-            }
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
-        $cash_records = $this->getCashRecords($actor, $filter, $limit, $offset, $sort);
-
-        $document->addPaginationLinks(
-            $this->url->route('wallet.cash.list'),
-            $request->getQueryParams(),
-            $offset,
-            $limit,
-            $this->total
-        );
-        $document->setMeta([
-            'total' => $this->total,
-            'pageCount' => ceil($this->total / $limit),
-        ]);
-
-        $include = $this->extractInclude($request);
-
-        return $cash_records->load($include);
+        return true;
     }
 
-    /**
-     * @param  $actor
-     * @param  $filter
-     * @param  $limit
-     * @param  $offset
-     * @param  $sort
-     * @return Order
-     */
-    private function getCashRecords($actor, $filter, $limit = 0, $offset = 0, $sort = [])
+    public function main()
     {
-        $cash_user         = (int) Arr::get($filter, 'user'); //提现用户
-        $cash_sn         = Arr::get($filter, 'cash_sn'); //提现流水号
-        $cash_status     = Arr::get($filter, 'cash_status'); //提现状态
-        $cash_username   = Arr::get($filter, 'username'); //提现人
-        $cash_type       = Arr::get($filter, 'cash_type'); //提现方式
-        $cash_mobile     = Arr::get($filter, 'cash_mobile'); //提现到的手机号码
-        $cash_start_time = Arr::get($filter, 'start_time'); //申请时间范围：开始
-        $cash_end_time   = Arr::get($filter, 'end_time'); //申请时间范围：结束
+        $user_wallet_serializer = $this->app->make(UserWalletCashSerializer::class);
+        $user_wallet_serializer->setRequest($this->request);
+        $filter     = $this->inPut('filter') ?: [];
+        $page       = $this->inPut('page') ?: 1;
+        $perPage    = $this->inPut('perPage') ?: 5;
+        $sort = (new Parameters($this->request->getQueryParams()))->getSort($this->sortFields) ?: $this->sort;
 
-        $query = $this->cash->query()->whereVisibleTo($actor);
+        $cash_records = $this->getCashRecords($this->user, $filter, $perPage, $page, $sort);
+        $data = $this->camelData($cash_records);
+        $data = $this->filterData($data);
+
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
+    }
+
+    private function getCashRecords($actor, $filter, $perPage = 0, $page = 0, $sort = [])
+    {
+        $cash_user       = $actor->id; //提现用户
+        $cash_sn         = Arr::get($filter, 'cashSn'); //提现流水号
+        $cash_status     = Arr::get($filter, 'cashStatus'); //提现状态
+        $cash_username   = Arr::get($filter, 'username'); //提现人
+        $cash_type       = Arr::get($filter, 'cashType'); //提现方式
+        $cash_mobile     = Arr::get($filter, 'cashMobile'); //提现到的手机号码
+        $cash_start_time = Arr::get($filter, 'startTime'); //申请时间范围：开始
+        $cash_end_time   = Arr::get($filter, 'endTime'); //申请时间范围：结束
+
+        $query = $this->cash->query();
         $query->when($cash_user, function ($query) use ($cash_user) {
             $query->where('user_id', $cash_user);
         });
@@ -158,7 +108,7 @@ class ListUserWalletCashController extends AbstractListController
         });
 
         $query->when(!is_null($cash_status), function ($query) use ($cash_status) {
-            $query->where('cash_status', $cash_status);
+            $query->whereIn('cash_status', (array) $cash_status);
         });
 
         $query->when(!is_null($cash_type), function ($query) use ($cash_type) {
@@ -180,9 +130,24 @@ class ListUserWalletCashController extends AbstractListController
         foreach ((array) $sort as $field => $order) {
             $query->orderBy(Str::snake($field), $order);
         }
-        $this->total = $query->count();
-        $query->skip($offset)->take($limit);
+        return $this->pagination($page, $perPage, $query);
+    }
 
-        return $query->get();
+    public function filterData($data)
+    {
+        foreach ($data['pageData'] as $key => $val) {
+//            if(empty($val['cashType']))    $val['tradeNo'] = '线下打款';
+            $pageData = [
+                'tradeNo'           =>  !empty($val['tradeNo']) ? $val['tradeNo'] : 0,
+                'remark'            =>  !empty($val['remark']) ? $val['remark'] : '',
+                'cashApplyAmount'   =>  !empty($val['cashApplyAmount']) ? $val['cashApplyAmount'] : 0,
+                'tradeTime'         =>  !empty($val['tradeTime']) ? $val['tradeTime'] : 0,
+                'cashStatus'        =>  !empty($val['cashStatus']) ? $val['cashStatus'] : 0,
+                'receiveAccount'    =>  !empty($val['tradeNo']) ? $val['tradeNo'] : $val['receiveAccount']
+            ];
+            $data['pageData'][$key] =  $pageData;
+        }
+
+        return $data;
     }
 }

@@ -31,7 +31,6 @@ use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Common\Utils;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
-use Illuminate\Support\Arr;
 
 /**
  * @property Dispatcher events
@@ -99,7 +98,7 @@ class SaveLikesToDatabase
                     $post->refreshLikeCount()->save();
 
                     //根据点赞数获取红包
-                    $this->bus->dispatch(new CountLikedMakeRedPacket($event->post->thread->user,$event->post->user,$event->actor,$event->post));
+                    $this->bus->dispatch(new CountLikedMakeRedPacket($event->post->thread->user, $event->post->user, $event->actor, $event->post));
 
                     // 如果被点赞的用户不是当前用户，则通知被点赞的人
                     if ($post->user->id != $actor->id) {

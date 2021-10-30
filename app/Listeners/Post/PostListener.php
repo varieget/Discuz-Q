@@ -31,8 +31,6 @@ use App\Listeners\User\CheckPublish;
 use App\Models\Post;
 use App\Models\PostGoods;
 use App\Models\PostMod;
-use App\Models\Setting;
-use App\Models\SiteInfoDaily;
 use App\Models\Thread;
 use App\Models\ThreadTopic;
 use App\Models\UserActionLogs;
@@ -45,12 +43,11 @@ use Discuz\Auth\AssertPermissionTrait;
 use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface as Request;
-
 
 class PostListener
 {
     use AssertPermissionTrait;
+
     use PostNoticesTrait;
 
     /**
@@ -100,7 +97,8 @@ class PostListener
         $events->listen(Saved::class, [$this, 'postGoods']);
     }
 
-    public function whenDeleteThread(Deleting $event){
+    public function whenDeleteThread(Deleting $event)
+    {
         $actor = $event->actor;
         $actor->refreshUserLiked();
         $actor->save();
@@ -189,7 +187,6 @@ class PostListener
             $this->bus->dispatch(
                 new Saved($post, $post->user, $event->data)
             );
-
         } elseif ($post->is_approved === Post::IGNORED) {
             $action = 'ignore';
         } else {
@@ -276,11 +273,11 @@ class PostListener
     {
         $post = $event->post;
         //是否草稿
-        if($post->thread->is_draft == 1){
+        if ($post->thread->is_draft == 1) {
             return;
         }
 
-        if (isset($event->data['attributes']['isLiked'])){
+        if (isset($event->data['attributes']['isLiked'])) {
             return;
         }
 
@@ -298,7 +295,7 @@ class PostListener
     public function threadTopic(Saved $event)
     {
         $inputData = $event->data;
-        if(!isset($inputData['attributes']['isLiked'])){
+        if (!isset($inputData['attributes']['isLiked'])) {
             ThreadTopic::setThreadTopic($event->post);
         }
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -17,20 +18,14 @@
 
 namespace App\Listeners\User;
 
-
 use App\Common\AuthUtils;
 use App\Common\ResponseCode;
-use App\Common\Utils;
-use App\Events\Users\Logind;
 use App\Events\Users\TransitionBind;
 use App\Models\SessionToken;
 use App\Models\UserWechat;
 use Discuz\Base\DzqLog;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
-use Psr\Http\Message\ServerRequestInterface;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Foundation\Application;
 
@@ -41,7 +36,6 @@ use Discuz\Foundation\Application;
  */
 class TransitionBindListener
 {
-
     /**
      * @var SettingsRepository
      */
@@ -70,14 +64,14 @@ class TransitionBindListener
      */
     public function handle($event)
     {
-        DzqLog::info('begin_transition_bind_process',[
+        DzqLog::info('begin_transition_bind_process', [
             'user'          => $event->user,
             'sessionToken'  => $event->data['sessionToken']
         ], DzqLog::LOG_LOGIN);
         $user = $event->user;
         //用户已绑定微信用户不允许再次绑定微信用户
         if ($user->wechat) {
-            DzqLog::info('user_is_bound_wechat',[
+            DzqLog::info('user_is_bound_wechat', [
                 'user'      => $user,
                 'wechat'    => $user->wechat
             ], DzqLog::LOG_LOGIN);
@@ -85,11 +79,11 @@ class TransitionBindListener
         }
         $sessionToken = SessionToken::get($event->data['sessionToken']);
         DzqLog::info('get_session_token', ['sessionToken' => $sessionToken], DzqLog::LOG_LOGIN);
-        if(empty($sessionToken) || ! $sessionToken) {
+        if (empty($sessionToken) || ! $sessionToken) {
             // 长时间未操作，授权超时，重新授权
             \Discuz\Common\Utils::outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
         }
-        if(! $sessionToken->payload || empty($sessionToken->payload)) {
+        if (! $sessionToken->payload || empty($sessionToken->payload)) {
             // 授权信息未查询到，需要重新授权
             \Discuz\Common\Utils::outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
         }
@@ -99,7 +93,7 @@ class TransitionBindListener
         try {
             $wechatUser = UserWechat::query()->where('id', $userWechatId)->lockForUpdate()->first();
             DzqLog::info('get_wechat_user', ['wechatUser' => $wechatUser], DzqLog::LOG_LOGIN);
-            if(! $wechatUser) {
+            if (! $wechatUser) {
                 $this->db->commit();
                 // 授权信息未查询到，需要重新授权
                 \Discuz\Common\Utils::outPut(ResponseCode::AUTH_INFO_HAD_EXPIRED);
@@ -111,7 +105,7 @@ class TransitionBindListener
             DzqLog::info('updated_wechat_user', ['wechatUser' => $wechatUser], DzqLog::LOG_LOGIN);
 
             //user 中绑定字段维护
-            if(empty($user->nickname) || strlen($user->nickname)) {
+            if (empty($user->nickname) || strlen($user->nickname)) {
                 $user->changeNickname($wechatUser->nickname);
             }
             $user->bind_type = $user->bind_type + AuthUtils::WECHAT;
@@ -130,5 +124,4 @@ class TransitionBindListener
 
         return $user;
     }
-
 }

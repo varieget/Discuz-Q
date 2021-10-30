@@ -2,10 +2,13 @@
 
 /**
  * Copyright (C) 2020 Tencent Cloud.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +22,6 @@ use Carbon\Carbon;
 use Discuz\Base\DzqModel;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Arr;
 
@@ -45,11 +47,15 @@ use Illuminate\Support\Arr;
 class PostGoods extends DzqModel
 {
     use EventGeneratorTrait;
+
     use ScopeVisibilityTrait;
 
     public static $key;
+
     const STATUS_YES = 0;
+
     const STATUS_NO = 1;
+
     /**
      * {@inheritdoc}
      */
@@ -117,8 +123,7 @@ class PostGoods extends DzqModel
         int $status,
         string $readyContent,
         string $detailContent
-    )
-    {
+    ) {
         $goods = new static;
 
         $goods->user_id = $user_id;
@@ -255,9 +260,12 @@ class PostGoods extends DzqModel
         return $this->belongsTo(Post::class);
     }
 
-    public function getPostGoods($postId){
+    public function getPostGoods($postId)
+    {
         $postGood = self::query()->where(['post_id'=>$postId,'status'=>self::STATUS_YES])->first();
-        if(empty($postGood))return false;
+        if (empty($postGood)) {
+            return false;
+        }
         return [
             'platformId'=>$postGood['platform_id'],
             'title'=>$postGood['title'],

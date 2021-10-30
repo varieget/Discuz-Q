@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,6 @@
 
 namespace Plugin\Activity\Controller;
 
-
 use App\Common\DzqConst;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -27,11 +27,11 @@ use Plugin\Activity\Model\ThreadActivity;
 
 class ListController extends DzqController
 {
-
     use ActivityTrait;
+
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $this->checkPermission($userRepo,true);
+        return $this->checkPermission($userRepo, true);
     }
 
     public function main()

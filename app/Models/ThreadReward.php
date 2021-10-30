@@ -20,7 +20,6 @@ namespace App\Models;
 
 use App\Events\ThreadReward\Created;
 use Discuz\Base\DzqModel;
-use Illuminate\Database\Eloquent\Model;
 use Discuz\Foundation\EventGeneratorTrait;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -96,6 +95,6 @@ class ThreadReward extends DzqModel
                 'remain_money as remainMoney',
                 'expired_at as expiredAt'
             ])
-            ->get()->pluck(null,'threadId')->toArray();
+            ->get()->pluck(null, 'threadId')->toArray();
     }
 }

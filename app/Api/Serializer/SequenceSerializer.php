@@ -19,14 +19,9 @@
 namespace App\Api\Serializer;
 
 use App\Models\Sequence;
-use App\Models\Category;
-use App\Models\Group;
 use App\Models\User;
 use App\Models\Topic;
-use App\Models\Thread;
 use Discuz\Api\Serializer\AbstractSerializer;
-use Tobscure\JsonApi\Relationship;
-use Illuminate\Database\Eloquent\Builder;
 
 class SequenceSerializer extends AbstractSerializer
 {
@@ -59,10 +54,10 @@ class SequenceSerializer extends AbstractSerializer
      */
     public function usersList($user_ids)
     {
-        if(!empty($user_ids)){
+        if (!empty($user_ids)) {
             $usersCheckList = User::query()->whereIn('id', explode(',', $user_ids))->orderBy('id')->get();
-        }else{
-            $usersCheckList = array();
+        } else {
+            $usersCheckList = [];
         }
         return $usersCheckList;
     }
@@ -73,10 +68,10 @@ class SequenceSerializer extends AbstractSerializer
      */
     public function topicsList($topic_ids)
     {
-        if(!empty($topic_ids)){
+        if (!empty($topic_ids)) {
             $topicsCheckList = Topic::query()->whereIn('id', explode(',', $topic_ids))->orderBy('id')->get();
-        }else{
-            $topicsCheckList = array();
+        } else {
+            $topicsCheckList = [];
         }
         return $topicsCheckList;
     }

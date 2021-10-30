@@ -87,22 +87,21 @@ class BatchDeleteReport
                 new Deleting($report, $this->actor)
             );
 
-            if($report['post_id'] !== 0){
+            if ($report['post_id'] !== 0) {
                 $postDetail = Post::query()->where('id', $report['post_id'])->first();
                 $action_desc = '删除举报评论/回复【'. $postDetail['content'] .'】为已处理';
-            }else{
+            } else {
                 $threadDetail = Thread::query()->where('id', $report['thread_id'])->first();
-                if($threadDetail['title'] !== '' && !empty($threadDetail['title'])){
+                if ($threadDetail['title'] !== '' && !empty($threadDetail['title'])) {
                     $action_desc = '删除举报用户主题帖【'. $threadDetail['title'] .'】为已处理';
-                }else{
+                } else {
                     $action_desc = '删除举报用户主题帖，ID为【'. $report->thread_id .'】为已处理';
                 }
-
             }
 
             $report->delete();
 
-            if($action_desc !== '' && !empty($action_desc)) {
+            if ($action_desc !== '' && !empty($action_desc)) {
                 AdminActionLog::createAdminActionLog(
                     $this->actor->id,
                     $action_desc

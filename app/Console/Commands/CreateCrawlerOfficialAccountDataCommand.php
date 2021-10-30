@@ -1,8 +1,24 @@
 <?php
 
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace App\Console\Commands;
 
-use App\Api\Controller\AttachmentV3\AttachmentTrait;
+use App\Api\Controller\Attachment\AttachmentTrait;
 use App\Api\Controller\Crawler\CrawlerTrait;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Censor\Censor;
@@ -87,14 +103,20 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
     //微信内容div正则
     private $wxContentDiv = '/<div class="rich_media_content " id="js_content" style="visibility: hidden;">(.*?)<\/div>/s';
 
-    public function __construct(SettingsRepository  $settings, ImageManager $image,
-                                AttachmentUploader $uploader, AttachmentSerializer $attachmentSerializer,
-                                Filesystem $filesystem, Events $events,
-                                Censor $censor, UserValidator $userValidator,
-                                ConnectionInterface $connection, UserRepository $userRepo,
-                                AvatarValidator $avatarValidator, NewFilesystem $newFilesystem)
-    {
-
+    public function __construct(
+        SettingsRepository  $settings,
+        ImageManager $image,
+        AttachmentUploader $uploader,
+        AttachmentSerializer $attachmentSerializer,
+        Filesystem $filesystem,
+        Events $events,
+        Censor $censor,
+        UserValidator $userValidator,
+        ConnectionInterface $connection,
+        UserRepository $userRepo,
+        AvatarValidator $avatarValidator,
+        NewFilesystem $newFilesystem
+    ) {
         $this->events = $events;
         $this->censor = $censor;
         $this->image  = $image;
@@ -107,7 +129,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         $this->userValidator = $userValidator;
         $this->avatarValidator = $avatarValidator;
         $this->attachmentSerializer = $attachmentSerializer;
-        $this->crawlerAvatarUploader = new CrawlerAvatarUploader($this->censor, $this->newFilesystem , $this->settings);
+        $this->crawlerAvatarUploader = new CrawlerAvatarUploader($this->censor, $this->newFilesystem, $this->settings);
         parent::__construct();
     }
 
@@ -124,7 +146,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
             if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {
                 $this->info('----The content import process has been occupied,You cannot start a new process.----');
                 exit;
-            } else if ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
+            } elseif ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
                 $this->insertLogs('----Execution timed out.The file lock has been deleted.----');
                 app('cache')->clear();
                 $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $lockFileContent['topic']);
@@ -154,31 +176,31 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         $dataNumber = $importThreadProcessPercent = 0;
         $averageProcessPercent = 95 / count($officialAccountUrl);
 
-        $this->insertLogs("----The official account's total data number is [" . count($officialAccountUrl) . "].Start importing crawler data.----");
+        $this->insertLogs("----The official account's total data number is [" . count($officialAccountUrl) . '].Start importing crawler data.----');
         foreach ($officialAccountUrl as $url) {
             try {
                 $this->connection->beginTransaction();
-                $this->insertLogs("----The official account url is [" . $url . "].----");
+                $this->insertLogs('----The official account url is [' . $url . '].----');
                 $urlContents = $this->getFileContents($url);
                 $articleBasicInfo = $this->getArticleBasicInfo($urlContents);
                 $articleBasicInfo['wechatName'] = str_replace(' ', '', $articleBasicInfo['wechatName']);
-                $articleBasicInfo['title'] = str_replace("'", "", $articleBasicInfo['title']);
+                $articleBasicInfo['title'] = str_replace("'", '', $articleBasicInfo['title']);
                 $articleBasicInfo['contentUrl'] = str_replace('#rd', '', $articleBasicInfo['contentUrl']);
 
                 $this->insertLogs("----Insert user's data start.----");
                 $userId = $this->insertUser($articleBasicInfo['wechatName']);
-                $this->insertLogs("----Insert user's data end,The user id is " . $userId . ".----");
+                $this->insertLogs("----Insert user's data end,The user id is " . $userId . '.----');
 
                 $this->insertLogs("----Insert thread's data start.----");
                 $newThread = $this->insertThread($articleBasicInfo, $userId);
                 $this->insertThreadTom($newThread->id, ThreadTag::TEXT);
-                $this->insertLogs("----Insert thread's data end,The thread id is " . $newThread->id . ".----");
+                $this->insertLogs("----Insert thread's data end,The thread id is " . $newThread->id . '.----');
 
                 $this->insertLogs("----Insert post's data start.----");
                 $urlContents = $this->getFileContents($articleBasicInfo['contentUrl']);
                 $content = $this->getArticleContent($articleBasicInfo['contentUrl'], $urlContents, $userId, $newThread->id);
                 $newPost = $this->insertPost($content, $newThread);
-                $this->insertLogs("----Insert post's data end,The post id is " . $newPost->id . ".----");
+                $this->insertLogs("----Insert post's data end,The post id is " . $newPost->id . '.----');
 
                 $this->connection->commit();
 
@@ -199,7 +221,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         }
 
         $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $this->topic, $dataNumber);
-        $this->insertLogs("----Importing crawler data success.The importing'data total number is " . $dataNumber . ".----");
+        $this->insertLogs("----Importing crawler data success.The importing'data total number is " . $dataNumber . '.----');
         app('cache')->clear();
         exit;
     }
@@ -214,15 +236,15 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         ];
         $basicInfo = [];
         foreach ($item as $k => $v) {
-            if($k == 'msg_title'){
+            if ($k == 'msg_title') {
                 $pattern = '/ var '.$k.' = (.*?)\.html\(false\);/s';
             } else {
                 $pattern = '/ var ' . $k . ' = "(.*?)";/s';
             }
             preg_match_all($pattern, $urlContents, $matches);
-            if(array_key_exists(1, $matches) && !empty($matches[1][0])){
+            if (array_key_exists(1, $matches) && !empty($matches[1][0])) {
                 $basicInfo[$v] = $this->transformHtml($matches[1][0]);
-            }else{
+            } else {
                 $basicInfo[$v] = '';
             }
         }
@@ -273,7 +295,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
             return false;
         }
         $tmpFile = tempnam(storage_path('/tmp'), 'avatar');
-        $ext = substr($avatarUrl,strpos($avatarUrl,"wx_fmt=") + strlen("wx_fmt="));
+        $ext = substr($avatarUrl, strpos($avatarUrl, 'wx_fmt=') + strlen('wx_fmt='));
 
         if (!in_array($ext, ['gif', 'png', 'jpg', 'jpeg', 'jpe', 'heic'])) {
             return false;
@@ -320,20 +342,20 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
     {
         $content_html_pattern = $this->wxContentDiv;
         preg_match_all($content_html_pattern, $urlContents, $html_matchs);
-        if(empty(array_filter($html_matchs))) {
+        if (empty(array_filter($html_matchs))) {
             return '未获取到相关内容';
         }
         $content = $html_matchs[0][0];
         //去除掉hidden隐藏
-        $content = str_replace('style="visibility: hidden;"','', $content);
-        $content = preg_replace("/<(\/?mpprofile.*?)>/si",'', $content);
-        $content = preg_replace("/<(\/?svg.*?)>/si",'', $content);
-        $content = preg_replace("/<(\/?g.*?)>/si",'', $content);
-        $content = preg_replace("/<(\/?path.*?)>/si",'', $content);
-        $content = preg_replace("/<(\/?figure.*?)>/si",'', $content);
-        $content = preg_replace("/<(\/?mpvideosnap.*?)>/si",'', $content); //  过滤视频号
-        $content = preg_replace("/<(\/?mp-miniprogram.*?)>/si",'', $content); //  过滤小程序
-        $content = preg_replace("/<(\/?qqmusic.*?)>/si",'', $content); //  过滤qq音乐
+        $content = str_replace('style="visibility: hidden;"', '', $content);
+        $content = preg_replace("/<(\/?mpprofile.*?)>/si", '', $content);
+        $content = preg_replace("/<(\/?svg.*?)>/si", '', $content);
+        $content = preg_replace("/<(\/?g.*?)>/si", '', $content);
+        $content = preg_replace("/<(\/?path.*?)>/si", '', $content);
+        $content = preg_replace("/<(\/?figure.*?)>/si", '', $content);
+        $content = preg_replace("/<(\/?mpvideosnap.*?)>/si", '', $content); //  过滤视频号
+        $content = preg_replace("/<(\/?mp-miniprogram.*?)>/si", '', $content); //  过滤小程序
+        $content = preg_replace("/<(\/?qqmusic.*?)>/si", '', $content); //  过滤qq音乐
         $content = $this->changeArticleImg($content, $userId);
         $content = $this->changeArticleVideo($url, $content, $userId, $threadId);
         //添加微信样式
@@ -347,11 +369,11 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         preg_match_all('/<img.*?data-src=[\"|\']?(.*?)[\"|\']?\s.*?>/i', $content, $imagesSrc);
         if (!empty($imagesSrc[1])) {
             foreach ($imagesSrc[1] as $key => $value) {
-                $this->insertLogs("----Upload the thread' image attachment start,the image url is [" . $value . "].----");
+                $this->insertLogs("----Upload the thread' image attachment start,the image url is [" . $value . '].----');
                 [$attachmentId, $attachmentUrl] = $this->importArticleImg($value, $userId);
-                $this->insertLogs("----Upload the thread' image attachment end,the attachment id is " . $attachmentId . ".----");
+                $this->insertLogs("----Upload the thread' image attachment end,the attachment id is " . $attachmentId . '.----');
 
-                if($attachmentId) {
+                if ($attachmentId) {
                     $newImageUrl = '<img src="' . $attachmentUrl . '" alt="attachmentId-' . $attachmentId . '" />';
                     $content = str_replace($imagesSrc[0][$key], $newImageUrl, $content);
                 }
@@ -361,11 +383,12 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         return $content;
     }
 
-    private function importArticleImg($url, $userId){
-        $refer = "https://mmbiz.qpic.cn/";
+    private function importArticleImg($url, $userId)
+    {
+        $refer = 'https://mmbiz.qpic.cn/';
         $opt = [
             'https'=>[
-                'header'=>"Referer: " . $refer
+                'header'=>'Referer: ' . $refer
             ],
             'ssl' => ['verify_peer'=>false, 'verify_peer_name'=>false]
         ];
@@ -378,7 +401,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
             return '';
         }
 
-        $fileExt = substr($url,strpos($url,"wx_fmt=") + strlen("wx_fmt="));
+        $fileExt = substr($url, strpos($url, 'wx_fmt=') + strlen('wx_fmt='));
         $allowExt = $this->settings->get('support_img_ext', 'default');
         if (!in_array($fileExt, explode(',', $allowExt))) {
             return '';
@@ -397,7 +420,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
             true
         );
         // 帖子图片自适应旋转
-        if(strtolower($fileExt) != 'gif' && extension_loaded('exif')) {
+        if (strtolower($fileExt) != 'gif' && extension_loaded('exif')) {
             $this->image->make($tmpFileWithExt)->orientate()->save();
         }
 
@@ -419,7 +442,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         $attachment->file_height = $height;
         $attachment->file_type = $mimeType;
         $attachment->is_remote = $this->uploader->isRemote();
-        $attachment->ip = "";
+        $attachment->ip = '';
         $attachment->save();
         $attachmentUrl = $this->getAttachmentUrl($attachment);
         return [$attachment->id, $attachmentUrl];
@@ -466,9 +489,9 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
     private function importVideo($videoData, $userId, $threadId)
     {
         $newVideoData = [];
-        foreach($videoData as $key => $value) {
+        foreach ($videoData as $key => $value) {
             if ($key == 'video' && !empty($value)) {
-                foreach($value as $articleVideo) {
+                foreach ($value as $articleVideo) {
                     if (!empty($articleVideo['vid'])) {
                         $articleVideo['videoType'] = ThreadVideo::TYPE_OF_VIDEO;
                         $newVideoData[] = $articleVideo;
@@ -476,7 +499,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
                 }
             }
             if ($key == 'voice' && !empty($value)) {
-                foreach($value as $articleVoice) {
+                foreach ($value as $articleVoice) {
                     if (!empty($articleVoice['vid'])) {
                         $articleVoice['videoType'] = ThreadVideo::TYPE_OF_AUDIO;
                         $newVideoData[] = $articleVoice;
@@ -487,15 +510,15 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
 
         foreach ($newVideoData as $key => $value) {
             if (!empty($value['url'])) {
-                $this->insertLogs("----Upload the thread video start,the video url is [" . $value['url'] . "].----");
+                $this->insertLogs('----Upload the thread video start,the video url is [' . $value['url'] . '].----');
                 if ($value['videoType'] == ThreadVideo::TYPE_OF_AUDIO) {
                     $mimeType = $this->getAttachmentMimeType($value['url']);
-                    $ext = substr($mimeType,strrpos($mimeType,'/') + 1);
+                    $ext = substr($mimeType, strrpos($mimeType, '/') + 1);
                     $videoId = $this->videoUpload($userId, $threadId, $value['url'], $this->settings, $ext);
                 } else {
                     $videoId = $this->videoUpload($userId, $threadId, $value['url'], $this->settings);
                 }
-                $this->insertLogs("----Upload the thread video end,the video id is " . $videoId . ".----");
+                $this->insertLogs('----Upload the thread video end,the video id is ' . $videoId . '.----');
                 if ($videoId) {
                     $video = ThreadVideo::query()->where('id', $videoId)->first();
                     $video->type = $value['videoType'];
@@ -537,13 +560,13 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
 
     private function transformHtml($string)
     {
-        $string = str_replace('&quot;','"',$string);
-        $string = str_replace('&amp;','&',$string);
-        $string = str_replace('amp;','',$string);
-        $string = str_replace('&lt;','<',$string);
-        $string = str_replace('&gt;','>',$string);
-        $string = str_replace('&nbsp;',' ',$string);
-        $string = str_replace("\\", '',$string);
+        $string = str_replace('&quot;', '"', $string);
+        $string = str_replace('&amp;', '&', $string);
+        $string = str_replace('amp;', '', $string);
+        $string = str_replace('&lt;', '<', $string);
+        $string = str_replace('&gt;', '>', $string);
+        $string = str_replace('&nbsp;', ' ', $string);
+        $string = str_replace('\\', '', $string);
         return $string;
     }
 
@@ -574,7 +597,7 @@ class CreateCrawlerOfficialAccountDataCommand extends AbstractCommand
         $user->thread_count = Thread::query()
             ->where('user_id', $userId)
             ->whereNull('deleted_at')
-            ->where('is_draft',Thread::IS_NOT_DRAFT)
+            ->where('is_draft', Thread::IS_NOT_DRAFT)
             ->where('is_display', Thread::BOOL_YES)
             ->where('is_approved', Thread::APPROVED)
             ->count();

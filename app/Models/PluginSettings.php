@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +23,6 @@ use Carbon\Carbon;
 use Discuz\Base\DzqModel;
 use Discuz\Cache\CacheManager;
 use Illuminate\Support\Arr;
-
 
 /**
  * @property int $id
@@ -48,11 +48,11 @@ class PluginSettings extends DzqModel
     public function __construct()
     {
         $this->settings = [];
-        $this->cache = app("cache");
+        $this->cache = app('cache');
     }
 
-
-    public function allData(){
+    public function allData()
+    {
         if (!empty($this->settings)) {
             return $this->settings;
         }
@@ -71,16 +71,17 @@ class PluginSettings extends DzqModel
 
     protected function getAllFromDatabase()
     {
-        $settings = PluginSettings::all()->keyBy("app_id")->toArray();
+        $settings = PluginSettings::all()->keyBy('app_id')->toArray();
         return $settings;
     }
 
-    public function getData($appId){
-        return Arr::get($this->allData(),  $appId);
+    public function getData($appId)
+    {
+        return Arr::get($this->allData(), $appId);
     }
 
-    public function setData($appId, $name, $type, $privateValue, $publicValue){
-
+    public function setData($appId, $name, $type, $privateValue, $publicValue)
+    {
         $pluginSetting = PluginSettings::query()->where(['app_id' => $appId])->first();
         if (empty($pluginSetting)) {
             $pluginSetting = new PluginSettings();
@@ -103,17 +104,20 @@ class PluginSettings extends DzqModel
 
     public function getSettingRecord($appId)
     {
-        $setting = $this->getData($appId);;
-        if (empty($setting)) return [];
+        $setting = $this->getData($appId);
+        ;
+        if (empty($setting)) {
+            return [];
+        }
 
-        if(!empty($setting['private_value'])){
+        if (!empty($setting['private_value'])) {
             $setting['private_value'] = json_decode($setting['private_value'], true);
-        }else{
+        } else {
             $setting['private_value'] = [];
         }
-        if(!empty($setting['public_value'])){
+        if (!empty($setting['public_value'])) {
             $setting['public_value'] = json_decode($setting['public_value'], true);
-        }else{
+        } else {
             $setting['public_value'] = [];
         }
 
@@ -123,16 +127,18 @@ class PluginSettings extends DzqModel
     public function getSetting($appId)
     {
         $setting = $this->getData($appId);
-        if (empty($setting)) return [];
+        if (empty($setting)) {
+            return [];
+        }
 
         $result = [];
-        if(!empty($setting['private_value'])){
+        if (!empty($setting['private_value'])) {
             $privateValue = json_decode($setting['private_value'], true);
             $result = $privateValue;
         }
-        if(!empty($setting['public_value'])){
+        if (!empty($setting['public_value'])) {
             $publicValue = json_decode($setting['public_value'], true);
-            $result = array_merge($result,$publicValue);
+            $result = array_merge($result, $publicValue);
         }
 
         return $result;
@@ -141,15 +147,15 @@ class PluginSettings extends DzqModel
     public function getAllSettingRecord()
     {
         $appSettingMap = $this->allData();
-        foreach ($appSettingMap as $key=>&$setting){
-            if(!empty($setting['private_value'])){
+        foreach ($appSettingMap as $key=>&$setting) {
+            if (!empty($setting['private_value'])) {
                 $setting['private_value'] = json_decode($setting['private_value'], true);
-            }else{
+            } else {
                 $setting['private_value'] = [];
             }
-            if(!empty($setting['public_value'])){
+            if (!empty($setting['public_value'])) {
                 $setting['public_value'] = json_decode($setting['public_value'], true);
-            }else{
+            } else {
                 $setting['public_value'] = [];
             }
         }

@@ -18,16 +18,17 @@
 
 namespace App\Console\Commands;
 
-
 use Carbon\Carbon;
 use Discuz\Console\AbstractCommand;
 
 class AddSiteMapCommand extends AbstractCommand
 {
     protected $signature = 'add:SiteMap';
+
     protected $description = '定时增加sitemap站点地图';
 
     const PAGE_SIZE = 10000;
+
     const LIMIT = 50000;
 
     public function handle()
@@ -36,7 +37,7 @@ class AddSiteMapCommand extends AbstractCommand
         $this->info('开始生成站点地图sitemap');
         $date = date('Y-m-d', time());
         $site_url = $db->table('settings')->where('key', 'site_url')->value('value');
-        if(empty($site_url)){
+        if (empty($site_url)) {
             //如果数据库里面没有站点url的话，则不生成sitemap
             return;
         }
@@ -46,23 +47,23 @@ class AddSiteMapCommand extends AbstractCommand
         //查出多少个分类
         $category_ids = $db->table('categories')->where('parentid', 0)->pluck('id')->toArray();
         $categories = [];
-        foreach ($category_ids as $val){
+        foreach ($category_ids as $val) {
             $sub_c_ids = $db->table('categories')->where('parentid', $val)->orderBy('sort')->orderBy('id')->pluck('id')->toArray();
-            if(!empty($sub_c_ids)){
+            if (!empty($sub_c_ids)) {
                 $sub_c_ids = implode('_', $sub_c_ids);
                 $categories[] = $val.'_'.$sub_c_ids;
-            }else{
+            } else {
                 $categories[] = $val;
             }
         }
 
         //创建 sitemaps 目录
-        if(!is_dir($sitemaps_dir)){
+        if (!is_dir($sitemaps_dir)) {
             mkdir($sitemaps_dir, 0755);
         }
         //生成 index.xml 文件
         $index_file_path = $sitemaps_dir.'/index.xml';
-        $index_file = fopen($index_file_path, "w");
+        $index_file = fopen($index_file_path, 'w');
         //找出所有话题
         $x_index = $this->index($site_url, $date, $categories);
         fwrite($index_file, $x_index);
@@ -73,20 +74,20 @@ class AddSiteMapCommand extends AbstractCommand
         $h_year_before = Carbon::now()->subDays(180);
         $categories_c = [];
         //生成 categroy_idxxxx.xml 文件
-        foreach ($categories as $val){
+        foreach ($categories as $val) {
             $i = $count = 0;
             $c_ids = explode('_', $val);
             $val_c = $val.'_'.$count;
             $categories_c[] = $val_c;
             $category_id_x_path = $sitemaps_dir.'categroy_id_'.$val_c.'.xml';
             $c_x_path = fopen($category_id_x_path, 'w');
-            $pre_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                        <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
+            $pre_xml = '<?xml version="1.0" encoding="UTF-8"?>
+                        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
             $threads = $db->table('threads')->whereIn('category_id', $c_ids)->offset($i * self::PAGE_SIZE)->limit(self::PAGE_SIZE)->orderBy('created_at', 'desc')->get(['id', 'created_at']);
-            while (!empty($threads->toArray())){
-                if($i * self::PAGE_SIZE > self::LIMIT * ($count + 1)){
+            while (!empty($threads->toArray())) {
+                if ($i * self::PAGE_SIZE > self::LIMIT * ($count + 1)) {
                     //先把上一个文件收尾
-                    $pre_xml .= "</urlset>";
+                    $pre_xml .= '</urlset>';
                     fwrite($c_x_path, $pre_xml);
                     fclose($c_x_path);
                     $category_id_x_path_gz = $category_id_x_path.'.gz';
@@ -97,12 +98,11 @@ class AddSiteMapCommand extends AbstractCommand
                     $categories_c[] = $val_c;
                     $category_id_x_path = $sitemaps_dir.'categroy_id_'.$val_c.'.xml';
                     $c_x_path = fopen($category_id_x_path, 'w');
-                    $pre_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                        <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
-
+                    $pre_xml = '<?xml version="1.0" encoding="UTF-8"?>
+                        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
                 }
-                foreach ($threads as $vo){
-                    switch ($vo->created_at){
+                foreach ($threads as $vo) {
+                    switch ($vo->created_at) {
                         case $vo->created_at > $h_month_before:
                             $changefreg = 'daily';
                             break;
@@ -121,7 +121,7 @@ class AddSiteMapCommand extends AbstractCommand
                 $i ++;
                 $threads = $db->table('threads')->whereIn('category_id', $c_ids)->offset($i * self::PAGE_SIZE)->limit(self::PAGE_SIZE)->orderBy('created_at', 'desc')->get(['id', 'created_at']);
             }
-            $pre_xml .= "</urlset>";
+            $pre_xml .= '</urlset>';
             fwrite($c_x_path, $pre_xml);
             fclose($c_x_path);
             $category_id_x_path_gz = $category_id_x_path.'.gz';
@@ -130,10 +130,10 @@ class AddSiteMapCommand extends AbstractCommand
         // user.xml 文件
         $users = $db->table('users')->where('updated_at', '>', $h_year_before)->orderBy('updated_at', 'desc')->get(['id', 'updated_at']);
         $user_file_path = $sitemaps_dir.'/user.xml';
-        $user_file = fopen($user_file_path, "w");
-        $x_user = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                        <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
-        foreach ($users as $vo){
+        $user_file = fopen($user_file_path, 'w');
+        $x_user = '<?xml version="1.0" encoding="UTF-8"?>
+                        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+        foreach ($users as $vo) {
             $update_day = substr($vo->updated_at, 0, 10);
             $x_x_user = "<url>
                           <loc>{$site_url}/user/{$vo->id}</loc>
@@ -143,21 +143,21 @@ class AddSiteMapCommand extends AbstractCommand
                        </url>";
             $x_user .= $x_x_user;
         }
-        $x_user .= "</urlset>";
+        $x_user .= '</urlset>';
         fwrite($user_file, $x_user);
         fclose($user_file);
         $user_file_path_gz = $user_file_path.'.gz';
         $this->gz_file($user_file_path, $user_file_path_gz);
 
         //生成topic.xml
-        $topic_ids = $db->table("topics")->pluck("id")->toArray();
+        $topic_ids = $db->table('topics')->pluck('id')->toArray();
         $topic_file_path = $sitemaps_dir.'/topics.xml';
-        $topic_file = fopen($topic_file_path, "w");
-        $x_topic = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-                        <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
-        if(!empty($topic_ids)){
+        $topic_file = fopen($topic_file_path, 'w');
+        $x_topic = '<?xml version="1.0" encoding="UTF-8"?>
+                        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+        if (!empty($topic_ids)) {
             $t_xml = '';
-            foreach ($topic_ids as $vt){
+            foreach ($topic_ids as $vt) {
                 $t_xml .= "<url>
                          <loc>{$site_url}/topic/topic-detail/{$vt}</loc>
                          <lastmod>{$date}</lastmod>
@@ -167,14 +167,14 @@ class AddSiteMapCommand extends AbstractCommand
             }
             $x_topic .= $t_xml;
         }
-        $x_topic .= "</urlset>";
+        $x_topic .= '</urlset>';
         fwrite($topic_file, $x_topic);
         fclose($topic_file);
         $topic_file_path_gz = $topic_file_path.'.gz';
         $this->gz_file($topic_file_path, $topic_file_path_gz);
 
         //写sitemap文件
-        $sitemap_file = fopen($sitemap_file_path, "w");
+        $sitemap_file = fopen($sitemap_file_path, 'w');
         chmod($sitemap_file_path, 0755);
         $x_sitemap = $this->sitemap($site_url, $date, $categories_c);
         fwrite($sitemap_file, $x_sitemap);
@@ -182,8 +182,8 @@ class AddSiteMapCommand extends AbstractCommand
         $this->info('完成生成站点地图sitemap');
     }
 
-
-    public function sitemap($site_url, $date, $categories){
+    public function sitemap($site_url, $date, $categories)
+    {
         $xml = "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">
                    <!-- 首页主入口的xml、用户users.xml 为预设，只需每日更新lastmod值 -->
                    <sitemap>
@@ -195,7 +195,7 @@ class AddSiteMapCommand extends AbstractCommand
                       <lastmod>{$date}</lastmod>
                    </sitemap>";
 
-        foreach ($categories as $val){
+        foreach ($categories as $val) {
             /* 循环输出分类的xml */
             $c_xml = "<sitemap>
                           <loc>{$site_url}/sitemaps/categroy_id_{$val}.xml.gz</loc>
@@ -209,11 +209,12 @@ class AddSiteMapCommand extends AbstractCommand
                       <lastmod>{$date}</lastmod>
                    </sitemap>";
         //连上结尾
-        $xml .= "</sitemapindex>";
+        $xml .= '</sitemapindex>';
         return $xml;
     }
 
-    public function index($site_url, $date, $categories){
+    public function index($site_url, $date, $categories)
+    {
         $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
                     <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">
                     <!-- 首页 -->
@@ -259,7 +260,7 @@ class AddSiteMapCommand extends AbstractCommand
                      <changefreq>daily</changefreq>
                      <priority>1</priority>
                     </url>";
-        foreach ($categories as $val){
+        foreach ($categories as $val) {
             $c_xml = "<url>
                          <loc>{$site_url}/?categoryId={$val}&amp;sequence=0</loc>
                          <lastmod>{$date}</lastmod>
@@ -268,13 +269,14 @@ class AddSiteMapCommand extends AbstractCommand
                     </url>";
             $xml .= $c_xml;
         }
-        $xml .= "</urlset>";
+        $xml .= '</urlset>';
         return  $xml;
     }
 
-    public function threads($site_url, $date, $thread_ids, $changefreg){
+    public function threads($site_url, $date, $thread_ids, $changefreg)
+    {
         $xml = '';
-        foreach ($thread_ids as $vo){
+        foreach ($thread_ids as $vo) {
             $t_xml = "<url>
                           <loc>{$site_url}/thread/{$vo}</loc>
                           <lastmod>$date</lastmod>
@@ -287,13 +289,11 @@ class AddSiteMapCommand extends AbstractCommand
     }
 
     /*将文件添加至GZ文件*/
-    public function gz_file($file,$gz_name){
-        $fp = gzopen ($gz_name, 'w9');
-        gzwrite ($fp, file_get_contents($file));
+    public function gz_file($file, $gz_name)
+    {
+        $fp = gzopen($gz_name, 'w9');
+        gzwrite($fp, file_get_contents($file));
         gzclose($fp);
         chmod($gz_name, 0755);
     }
-
-
-
 }

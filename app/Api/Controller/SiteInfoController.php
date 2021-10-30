@@ -18,69 +18,49 @@
 
 namespace App\Api\Controller;
 
-use App\Api\Serializer\SiteInfoSerializer;
+use App\Common\ResponseCode;
+use App\Events\SiteInfo\AdminSiteInfo;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\User;
 use App\Models\UserWalletCash;
-use Discuz\Api\Controller\AbstractResourceController;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Contracts\Setting\SettingsRepository;
+use App\Models\Setting;
+use Discuz\Base\DzqAdminController;
 use Discuz\Foundation\Application;
 use Discuz\Foundation\Support\Decomposer;
-use Discuz\Qcloud\QcloudTrait;
+use Discuz\Qcloud\QcloudStatisticsTrait;
 use Exception;
+use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class SiteInfoController extends AbstractResourceController
+class SiteInfoController extends DzqAdminController
 {
-    use AssertPermissionTrait;
-    use QcloudTrait;
-
-    /**
-     * {@inheritdoc}
-     */
-    public $serializer = SiteInfoSerializer::class;
+    use QcloudStatisticsTrait;
 
     /**
      * @var Application
      */
     protected $app;
 
-    /**
-     * @var SettingsRepository
-     */
-    protected $settings;
+    protected $events;
 
     /**
      * @param Application $app
-     * @param SettingsRepository $settings
      */
-    public function __construct(Application $app, SettingsRepository $settings)
+    public function __construct(Application $app, Events $events)
     {
         $this->app = $app;
-        $this->settings = $settings;
+        $this->events = $events;
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @throws PermissionDeniedException
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    public function main()
     {
-        $this->assertCan($request->getAttribute('actor'), 'viewSiteInfo');
-
-        $decomposer = new Decomposer($this->app, $request);
-
-        $port = $request->getUri()->getPort();
-        $siteUrl = $request->getUri()->getScheme() . '://' . $request->getUri()->getHost().(in_array($port, [80, 443, null]) ? '' : ':'.$port);
+        $decomposer = new Decomposer($this->app, $this->request);
+        $port = $this->request->getUri()->getPort();
+        $siteUrl = $this->request->getUri()->getScheme() . '://' . $this->request->getUri()->getHost().(in_array($port, [80, 443, null]) ? '' : ':'.$port);
 
         // 提现分成
         $cashCharge = UserWalletCash::query()->where('cash_status', UserWalletCash::STATUS_PAID)->sum('cash_charge');
@@ -91,10 +71,28 @@ class SiteInfoController extends AbstractResourceController
         // 站长分成
         $masterAmount = Order::query()->where('status', Order::ORDER_STATUS_PAID)->sum('master_amount');
 
+        // 待审核用户数
+        $user = User::query();
+        $user->join('group_user', 'users.id', '=', 'group_user.user_id');
+        $unapprovedUsers = $user->where('status', 2)->count();
+
+        // 待审核主题数
+        $unapprovedThreads = Thread::where('is_approved', Thread::UNAPPROVED)
+            ->where('is_draft', 0)->whereNull('deleted_at')->whereNotNull('user_id')->count();
+
+        // 待审核回复数
+        $unapprovedPosts = Post::where('is_approved', Post::UNAPPROVED)
+            ->whereNull('deleted_at')->whereNotNull('user_id')->where('is_first', false)->count();
+
+        // 待审核提申请现数
+        $unapprovedMoneys = UserWalletCash::where('cash_status', UserWalletCash::STATUS_REVIEW)
+                          ->join('users', 'user_wallet_cash.user_id', '=', 'users.id')
+                          ->count();
+
         $data = [
             'url' => $siteUrl,
-            'site_id' => $this->settings->get('site_id'),
-            'site_name' => $this->settings->get('site_name'),
+            'site_id' => Setting::getValue('site_id'),
+            'site_name' => Setting::getValue('site_name'),
             'site_income' => (float) Order::query()->where('status', Order::ORDER_STATUS_PAID)->sum('amount'),
             'site_owner_income' => $cashCharge + $amount + $masterAmount,
             'threads' => Thread::query()->count(),
@@ -107,12 +105,29 @@ class SiteInfoController extends AbstractResourceController
         try {
             $this->report($data)->then(function (ResponseInterface $response) {
                 $data = json_decode($response->getBody()->getContents(), true);
-                $this->settings->set('site_id', Arr::get($data, 'site_id'));
-                $this->settings->set('site_secret', Arr::get($data, 'site_secret'));
+                Setting::modifyValue('site_id', Arr::get($data, 'site_id'));
+                Setting::modifyValue('site_secret', Arr::get($data, 'site_secret'));
             })->wait();
+            $this->uinStatis();
+            $this->events->dispatch(new AdminSiteInfo($this->user));
         } catch (Exception $e) {
+            $this->outPut(ResponseCode::NET_ERROR, $e);
         }
 
-        return $decomposer->getSiteinfo();
+        $dec = $this->camelData($decomposer->getSiteinfo());
+
+        $data = [
+            'unapprovedUsers' => $unapprovedUsers,
+            'unapprovedThreads' => $unapprovedThreads,
+            'unapprovedPosts' => $unapprovedPosts,
+            'unapprovedMoneys' => $unapprovedMoneys,
+        ];
+
+        $build = [
+               'siteinfo'=>$dec,
+               'unapproved' =>$data
+         ];
+
+        $this->outPut(ResponseCode::SUCCESS, '', $build);
     }
 }

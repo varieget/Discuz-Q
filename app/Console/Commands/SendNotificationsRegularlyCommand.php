@@ -18,7 +18,7 @@
 
 namespace App\Console\Commands;
 
-use App\Api\Controller\NotificationV3\NotificationTimingTrait;
+use App\Api\Controller\Notification\NotificationTimingTrait;
 use App\Models\NotificationTiming;
 use App\Models\User;
 use App\Notifications\System;

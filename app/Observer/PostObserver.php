@@ -169,7 +169,9 @@ class PostObserver
     private function setPostedAt(Post $post)
     {
         $postedAt = null;
-        if ($post->is_first) return;
+        if ($post->is_first) {
+            return;
+        }
         $lastPost = Post::query()
             ->where([
                 'thread_id' => $post->thread_id,
@@ -184,5 +186,4 @@ class PostObserver
         $post->thread->posted_at = $postedAt;
         $post->thread->save();
     }
-
 }

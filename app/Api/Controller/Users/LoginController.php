@@ -18,116 +18,138 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Api\Serializer\TokenSerializer;
-use App\Commands\Users\GenJwtToken;
+use App\Common\AuthUtils;
+use App\Common\ResponseCode;
 use App\Events\Users\Logind;
-use App\Models\User;
+use App\Events\Users\TransitionBind;
+use App\Models\SessionToken;
 use App\Passport\Repositories\UserRepository;
-use App\User\Bind;
-use App\User\Bound;
-use Discuz\Api\Controller\AbstractResourceController;
-use Discuz\Foundation\Application;
-use Discuz\Socialite\Exception\SocialiteException;
-use Exception;
+use App\Settings\SettingsRepository;
+use Discuz\Base\DzqLog;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
-use Illuminate\Support\Arr;
 use Illuminate\Validation\Factory as Validator;
-use Illuminate\Validation\ValidationException;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
+use Discuz\Foundation\Application;
 
-class LoginController extends AbstractResourceController
+class LoginController extends AuthBaseController
 {
-    public $serializer = TokenSerializer::class;
+    public $bus;
 
-    protected $users;
+    public $app;
 
-    protected $bus;
+    public $events;
 
-    protected $app;
+    public $type;
 
-    protected $validator;
+    public $validator;
 
-    /**
-     * @var Events
-     */
-    protected $events;
+    public $setting;
 
-    /**
-     * @var Bind $bind
-     */
-    protected $bind;
-
-    /**
-     * @var Bound
-     */
-    protected $bound;
-
-    public $include = ['users'];
-
-    public function __construct(UserRepository $users, Dispatcher $bus, Application $app, Validator $validator, Events $events, Bind $bind, Bound $bound)
-    {
-        $this->users = $users;
-        $this->bus = $bus;
-        $this->app = $app;
-        $this->validator = $validator;
-        $this->events = $events;
-        $this->bind = $bind;
-        $this->bound = $bound;
+    public function __construct(
+        Dispatcher          $bus,
+        Application         $app,
+        Events              $events,
+        Validator           $validator,
+        SettingsRepository  $settingsRepository
+    ) {
+        $this->bus          = $bus;
+        $this->app          = $app;
+        $this->events       = $events;
+        $this->validator    = $validator;
+        $this->setting      = $settingsRepository;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param Document $document
-     * @return array|mixed
-     * @throws ValidationException
-     * @throws SocialiteException
-     * @throws Exception
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    protected function checkRequestPermissions(\App\Repositories\UserRepository $userRepo)
     {
-        $data = Arr::get($request->getParsedBody(), 'data.attributes', []);
+        return true;
+    }
 
-        $this->validator->make($data, [
-            'mobileToken' => 'filled',
-            'username' => 'required',
-            'password' => 'required',
-        ])->validate();
+    public function main()
+    {
+        $this->info('begin_username_login_process');
+        $paramData = [
+            'username'      => $this->inPut('username'),
+            'password'      => $this->inPut('password'),
+            'type'          => $this->inPut('type'),
+            'sessionToken'  => $this->inPut('sessionToken'),
+        ];
 
-        $response = $this->bus->dispatch(
-            new GenJwtToken($data)
-        );
+        try {
+            $this->validator->make($paramData, [
+                'username' => 'required',
+                'password' => 'required',
+            ])->validate();
 
-        $accessToken = json_decode($response->getBody());
+            $type = $this->inPut('type');
+            $response = $this->genJwtToken($paramData);
+            if ($response->getStatusCode() != 200) {
+                $this->outPut(ResponseCode::LOGIN_FAILED, '登录失败');
+            }
+            $accessToken = json_decode($response->getBody(), true);
 
-        if ($response->getStatusCode() === 200) {
-            /** @var User $user */
             $user = $this->app->make(UserRepository::class)->getUser();
 
-            $rebind = Arr::get($data, 'rebind', 0);
-
-            // 绑定公众号信息
-            if ($token = Arr::get($data, 'token')) {
-                $this->bind->withToken($token, $user, $rebind);
-            }
-
-            // 绑定小程序信息
-            $js_code = Arr::get($data, 'js_code');
-            $iv = Arr::get($data, 'iv');
-            $encryptedData = Arr::get($data, 'encryptedData');
-            if ($js_code && $iv  && $encryptedData) {
-                $this->bind->bindMiniprogram($js_code, $iv, $encryptedData, $rebind, $user);
-            }
-
-            // 绑定手机号
-            if ($mobileToken = Arr::get($data, 'mobileToken')) {
-                $this->bind->mobile($mobileToken, $user);
-            }
-
             $this->events->dispatch(new Logind($user));
-        }
 
-        return $accessToken;
+            $wechat = (bool)$this->setting->get('offiaccount_close', 'wx_offiaccount');
+            $miniWechat = (bool)$this->setting->get('miniprogram_close', 'wx_miniprogram');
+            $sms = (bool)$this->setting->get('qcloud_sms', 'qcloud');
+            $this->info('login_user', [
+                'user'          =>  $user,
+                'accessToken'   =>  $accessToken,
+                'sms'           =>  $sms,
+                'wechat'        =>  $wechat,
+                'miniWechat'    =>  $miniWechat
+            ]);
+            $userLoginToken = $this->addUserInfo($user, $this->camelData($accessToken));
+            //短信，微信，小程序均未开启
+            if (! $sms && !$wechat && !$miniWechat) {
+                $this->outPut(ResponseCode::SUCCESS, '', $userLoginToken);
+            }
+
+            //过渡时期微信绑定用户名密码登录的用户
+            $sessionToken = $this->inPut('sessionToken');
+            if ($sessionToken && strlen($sessionToken) != 0 && (bool)$this->setting->get('is_need_transition')) {
+                $this->info('begin_transition_process', [
+                    'user'          => $user,
+                    'sessionToken'  => $sessionToken
+                ]);
+                $this->events->dispatch(new TransitionBind($user, ['sessionToken' => $sessionToken]));
+                $this->outPut(ResponseCode::SUCCESS, '', $userLoginToken);
+            }
+
+            if ($type == 'mobilebrowser_username_login') {
+                //手机浏览器登录，需要做绑定前准备
+                $token = SessionToken::generate(SessionToken::WECHAT_MOBILE_BIND, $accessToken, $user->id);
+                $token->save();
+                $data = [
+                    'sessionToken'  => $token->token,
+                    'nickname'      => $user->nickname
+                ];
+                $this->info('mobilebrowser_username_login', [
+                    'token' => $token,
+                    'data'  => $data,
+                    'user'  => $user
+                ]);
+                if ($wechat || $miniWechat) { //开了微信，
+                    //未绑定微信
+                    $bindTypeArr = AuthUtils::getBindTypeArrByCombinationBindType($user->bind_type);
+                    if (!in_array(AuthUtils::WECHAT, $bindTypeArr)) {
+                        $data['uid'] = !empty($user->id) ? $user->id : 0;
+                        $data['userId'] = !empty($user->id) ? $user->id : 0;//推荐使用
+                        $this->outPut(ResponseCode::NEED_BIND_WECHAT, '', array_merge($data, $userLoginToken));
+                    }
+                }
+                if (! $wechat && ! $miniWechat && $sms && !$user->mobile) {//开了短信配置未绑定手机号
+                    $this->outPut(ResponseCode::NEED_BIND_PHONE, '', array_merge($data, $userLoginToken));
+                }
+                $this->outPut(ResponseCode::SUCCESS, '', $userLoginToken);
+            }
+            $this->outPut(ResponseCode::SUCCESS, '', $userLoginToken);
+        } catch (\Exception $e) {
+            unset($paramData['password']);
+            DzqLog::error('username_login_api_error', $paramData, $e->getMessage());
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名登录接口异常');
+        }
     }
 }

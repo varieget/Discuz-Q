@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -34,13 +35,18 @@ class UserSignInFields extends DzqModel
     protected $table = 'user_sign_in_fields';
 
     const STATUS_DELETE = 0; //废弃
+
     const STATUS_AUDIT = 1;//待审核
+
     const STATUS_REJECT = 2;//已驳回
+
     const STATUS_PASS = 3;//审核通过
 
     public function getUserSignInFields($userId)
     {
-        if (empty($userId)) throw new PermissionDeniedException('用户id错误');
+        if (empty($userId)) {
+            throw new PermissionDeniedException('用户id错误');
+        }
         $extList = self::query()
             ->select(['id', 'user_id', 'name', 'type', 'fields_ext', 'fields_desc', 'remark', 'sort', 'status', 'required'])
             ->where('user_id', $userId)
@@ -64,7 +70,9 @@ class UserSignInFields extends DzqModel
      */
     public function userSaveUserSignInFields($userId, $attributes)
     {
-        if (empty($userId)) throw new PermissionDeniedException('用户id错误');
+        if (empty($userId)) {
+            throw new PermissionDeniedException('用户id错误');
+        }
         $settings = app(SettingsRepository::class);
         $register_validate = $settings->get('register_validate');
         if ($register_validate) {
@@ -121,7 +129,9 @@ class UserSignInFields extends DzqModel
      */
     public function adminSaveUserSignInFields($userId, $attributes)
     {
-        if (empty($userId)) throw new PermissionDeniedException('用户id错误');
+        if (empty($userId)) {
+            throw new PermissionDeniedException('用户id错误');
+        }
         $isAuditPass = true;
         $data = [];
         foreach ($attributes as $attribute) {
@@ -178,5 +188,4 @@ class UserSignInFields extends DzqModel
         });
         return $reason;
     }
-
 }

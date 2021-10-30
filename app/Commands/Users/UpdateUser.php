@@ -29,7 +29,6 @@ use App\Models\GroupPaidUser;
 use App\Models\User;
 use App\Models\UserActionLogs;
 use App\Models\AdminActionLog;
-use App\Models\UserSignInFields;
 use App\Notifications\Messages\Database\GroupMessage;
 use App\Notifications\System;
 use App\Repositories\UserRepository;
@@ -52,6 +51,7 @@ use Illuminate\Validation\ValidationException;
 class UpdateUser
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     /**
@@ -142,9 +142,9 @@ class UpdateUser
 
         $canEdit = $this->actor->can('edit', $user);
         $isSelf = $this->actor->id === $user->id;
-        if(!empty(Arr::get($this->data, 'data.attributes'))){
+        if (!empty(Arr::get($this->data, 'data.attributes'))) {
             $attributes = Arr::get($this->data, 'data.attributes');
-        }else{
+        } else {
             $attributes = $this->data;
         }
         // 下列部分方法使用地址引用的方式修改了该值，以便验证用户参数
@@ -394,18 +394,18 @@ class UpdateUser
 
         // 审核后系统通知事件
         $this->events->dispatch(new ChangeUserStatus($user, $logMsg));
-        $this->setRefuseMessage($user,$logMsg);
+        $this->setRefuseMessage($user, $logMsg);
 
         // 记录用户状态操作日志
         UserActionLogs::writeLog($this->actor, $user, User::enumStatus($status), $logMsg);
 
-        $status_desc = array(
+        $status_desc = [
             '0' => '正常',
             '1' => '禁用',
             '2' => '审核中',
             '3' => '审核拒绝',
             '4' => '审核忽略'
-        );
+        ];
         AdminActionLog::createAdminActionLog(
             $this->actor->id,
             '更改了用户【'. $user->username .'】的用户状态为【'. $status_desc[$status] .'】'
@@ -413,7 +413,8 @@ class UpdateUser
     }
 
     //记录拒绝原因
-    private function setRefuseMessage(User &$user,$refuseMessage){
+    private function setRefuseMessage(User &$user, $refuseMessage)
+    {
         if ($user->status == User::STATUS_REFUSE) {
             $user->reject_reason = $refuseMessage;
             $user->save();

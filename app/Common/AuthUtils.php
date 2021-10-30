@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -24,19 +25,21 @@ namespace App\Common;
  */
 class AuthUtils
 {
-
     /**
      * 用户登录类型，用户名密码
      */
     const DEFAULT = 0;
+
     /**
      * 微信
      */
     const WECHAT = 1;
+
     /**
      * qq
      */
     const QQ = 2;
+
     /**
      * 手机号
      */
@@ -62,16 +65,16 @@ class AuthUtils
     public static function getCombinationBindType($phoneType = 0, $wechatType = 0, $qqType = 0, $other = 0)
     {
         $combinationBindType = 0;
-        if($phoneType > 0) {
+        if ($phoneType > 0) {
             $combinationBindType += $phoneType;
         }
-        if($wechatType > 0 ) {
+        if ($wechatType > 0) {
             $combinationBindType += $wechatType;
         }
-        if($qqType > 0) {
+        if ($qqType > 0) {
             $combinationBindType += $qqType;
         }
-        if($other >0) {
+        if ($other >0) {
             $combinationBindType += $other;
         }
         return $combinationBindType;
@@ -87,8 +90,10 @@ class AuthUtils
         $loginTye = self::getLoginTypeArr();
         $bindTypeArr = [];
         foreach ($loginTye as $type) {
-            if($type == 0) break;
-            if($combinationBindType - $type >= 0) {
+            if ($type == 0) {
+                break;
+            }
+            if ($combinationBindType - $type >= 0) {
                 $combinationBindType -= $type;
                 array_push($bindTypeArr, $type);
                 continue;
@@ -108,5 +113,4 @@ class AuthUtils
         $binType = array_sum($bindTypeArr);
         return $binType;
     }
-
 }
