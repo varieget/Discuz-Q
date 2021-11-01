@@ -195,29 +195,21 @@ class Utils
     }
 
     //execl 导出
-    public static function localexport($cell, $title, $data)
+    public static function localexport($title,$filename,$data)
     {
-        set_time_limit(0);
-        ini_set('memory_limit', '128M');
-        header('Content-Type: application/vnd.ms-execl');
-        header('Content-Disposition: attachment;filename="' . $title . '.csv"');
-
-        //以写入追加的方式打开
-        $fp = fopen('php://output', 'a');
-
-        foreach ($cell as $key => $item) {
-            $celldata[$key] = iconv('UTF-8', 'GBK//IGNORE', $item);
+        ob_get_clean();
+        ob_start();
+        echo implode("\t", $title),"\n";
+        foreach ($data as $val){
+            echo implode("\t", $val), "\n";
         }
-        //将标题写到标准输出中
-        fputcsv($fp, $celldata);
-        foreach ($data as $row) {
-            foreach ($row as $key => $item) {
-                //这里必须转码，不然会乱码
-                $row[$key] = iconv('UTF-8', 'GBK//IGNORE', $item);
-            }
-            fputcsv($fp, $row);
-        }
-        return ['file' => $title];
+        header('Content-Disposition: attachment; filename='.$filename.'.xlsx');
+        header('Accept-Ranges:bytes');
+        header('Content-Length:' . ob_get_length());
+        header('Content-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        ob_end_flush();
+        ob_end_clean();
+
     }
 
     public static function setAppKey($key, $value)
