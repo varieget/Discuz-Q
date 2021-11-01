@@ -198,7 +198,7 @@ class UpdateUsersController extends DzqController
         $data = $this->camelData($result);
         $returnData = [];
         $returnData['id'] = $data['id'];
-        $returnData['username'] = $data['username'];
+//        $returnData['username'] = $data['username'];
         $returnData['nickname'] = $data['nickname'];
         $returnData['mobile'] = $data['mobile'];
         $returnData['threadCount'] = $data['threadCount'];

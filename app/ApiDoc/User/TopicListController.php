@@ -28,7 +28,7 @@
  *                    @OA\Schema(title="话题列表",description="话题列表", @OA\Property(property="pageData",type="array", @OA\Items(type="object",
  *                          @OA\Property(property = "topicId", type = "integer", description = "话题id"),
  *                          @OA\Property(property = "userId", type = "integer", description = "话题创建人id"),
- *                          @OA\Property(property = "username", type = "string", description = "话题创建人名称"),
+ *                          @OA\Property(property = "nickname", type = "string", description = "话题创建人昵称"),
  *                          @OA\Property(property = "viewCount", type = "integer", description = "话题查看数量"),
  *                          @OA\Property(property = "threadCount", type = "integer", description = "话题引用帖子数量"),
  *                          @OA\Property(property = "recommended", type = "integer", description = "是否推荐；true：推荐、false：不推荐"),

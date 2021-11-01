@@ -35,11 +35,8 @@
  *                @OA\Property(property="mobile",type="string", description ="手机号"),
  *                @OA\Property(property="nickname",type="string",description="昵称"),
  *                @OA\Property(property="questionCount",type="string", description ="提问数"),
- *                 @OA\Property(property="signature",type = "string", description = "签名"),
- *                  @OA\Property(property="threadCount",type="integer", description = "帖子数"),
- *                   @OA\Property(property="username",type="string", description = "用户名")))
- *
- *
+ *                @OA\Property(property="signature",type = "string", description = "签名"),
+ *                @OA\Property(property="threadCount",type="integer", description = "帖子数")))
  *     })
  *     )
  * )
