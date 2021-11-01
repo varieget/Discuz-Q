@@ -97,10 +97,6 @@ $route->get('/stopWords/export', 'stopWords.export', ApiController\StopWords\Exp
 //监听定时任务
 $route->get('/monitor/system/task', 'monitor.system.task', ApiController\System\MonitorSystemTaskController::class);
 
-// 数据爬取
-$route->get('/create.crawler', 'create.crawler', ApiController\Crawler\CreateCrawlerDataController::class);
-$route->get('/check.crawler.process', 'check.crawler.process', ApiController\Crawler\CheckCrawlerProcessController::class);
-
 $route->post('/open.view.count', 'open.view.count', ApiController\Settings\OpenViewCountController::class);
 
 // 表情列表
