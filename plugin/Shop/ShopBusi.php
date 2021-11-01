@@ -4,9 +4,12 @@
 namespace Plugin\Shop;
 
 
+use App\Common\CacheKey;
 use App\Common\Utils;
 use App\Models\PluginSettings;
 use App\Modules\ThreadTom\TomBaseBusi;
+use Discuz\Base\DzqCache;
+use Illuminate\Database\Eloquent\Model;
 use Plugin\Shop\Controller\WxShopTrait;
 use Plugin\Shop\Model\ShopProducts;
 
@@ -17,10 +20,58 @@ class ShopBusi extends TomBaseBusi
     public const TYPE_ORIGIN = 10;
     public const TYPE_WX_SHOP = 11;
 
+    public function setSetting($privateValue,$publicValue)
+    {
+        Utils::setAppKey("plugin_appid",$this->tomId);
+
+        //判断isOpen变化了，则清帖子缓存
+        $settingNew = array_merge($privateValue,$publicValue);
+        $settingOld = $this->getSetting();
+
+        if ($settingOld["isOpen"] == $settingNew["isOpen"]){
+            return;
+        }
+
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_ATTENTION);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEARCH);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_PAID_HOMEPAGE);
+    }
+
+    public function filter(&$threadsBuilder)
+    {
+        Utils::setAppKey("plugin_appid",$this->tomId);
+        $setting = $this->getSetting();
+        if (isset($setting["isOpen"]) && $setting["isOpen"] == 1){
+            return;
+        }
+        $sqlStr = $threadsBuilder->toSql();
+        if (str_contains($sqlStr,"thread_tag")){
+
+            $startPos = strpos($sqlStr," `thread_tag` as `");
+            if ($startPos === false){
+               $threadsBuilder->where("thread_tag.tag","!=",$this->tomId);
+            }else{
+                $startPos += strlen(" `thread_tag` as `");
+                $endPos = strpos($sqlStr,"` ", $startPos);
+                $tableName = substr($sqlStr,$startPos,$endPos-$startPos);
+                $threadsBuilder->where($tableName.".tag","!=",$this->tomId);
+            }
+        }else{
+            $threadsBuilder->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
+                ->where('tag.tag', "!=", $this->tomId);
+        }
+    }
 
 
     public function create()
     {
+        Utils::setAppKey("plugin_appid",$this->tomId);
+
         $products = $this->getParams('products');
         $productsNew = [];
         foreach ($products as $item){
@@ -47,6 +98,8 @@ class ShopBusi extends TomBaseBusi
 
     public function update()
     {
+        Utils::setAppKey("plugin_appid",$this->tomId);
+
         $products = $this->getParams('products');
         $productsNew = [];
         foreach ($products as $item){
@@ -73,6 +126,12 @@ class ShopBusi extends TomBaseBusi
 
     public function select()
     {
+        Utils::setAppKey("plugin_appid",$this->tomId);
+        $setting = $this->getSetting();
+        if (!isset($setting["isOpen"]) || $setting["isOpen"] == 0){
+            return;
+        }
+
         $products = $this->getParams('products');
         foreach ($products as &$item){
             if(!isset($item["type"])){
@@ -98,7 +157,7 @@ class ShopBusi extends TomBaseBusi
         }
 
         if (!empty($product["detailQrcode"])){
-            $product["detailQrcode"] = $this->getQRUrl($product["isRemote"],$product["detailQrcode"]);
+            $product["detailQrcode"] = $this->getQRUrl($product["isRemote"]??0,$product["detailQrcode"]);
         }else{
             $product["detailQrcode"] = $qrCode;
         }
@@ -108,7 +167,6 @@ class ShopBusi extends TomBaseBusi
 
     private function doProduct($productId){
         $resultData = false;
-        Utils::setAppKey("plugin_appid",$this->tomId);
 
         $config = app()->make(PluginSettings::class)->getSetting($this->tomId);
         $wxAppId = $config["wxAppId"];
