@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +18,6 @@
 
 namespace App\Api\Controller\Plugin;
 
-use App\Common\PermissionKey;
-use App\Common\Utils;
-use App\Models\PluginGroupPermission;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
@@ -37,7 +35,7 @@ class PluginListController extends DzqController
         $groupId = $this->user->groupId;
         $isAdmin = $this->user->isAdmin();
 
-        $result = $this->getAllSettingAndConfig($groupId, $isAdmin,false);
+        $result = $this->getAllSettingAndConfig($groupId, $isAdmin, false);
 
         $this->outPut(0, '', array_values($result));
     }

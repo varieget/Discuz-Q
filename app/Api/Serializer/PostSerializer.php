@@ -74,8 +74,8 @@ class PostSerializer extends BasicPostSerializer
             throw new Exception(trans('post.thread_id_not_null'));
         }
 
-        $redPacketTom = ThreadTom::query()->where('thread_id',$thread_id)
-                          ->where('tom_type',TomConfig::TOM_REDPACK)
+        $redPacketTom = ThreadTom::query()->where('thread_id', $thread_id)
+                          ->where('tom_type', TomConfig::TOM_REDPACK)
                             ->first();
 
         $redPacketAmount = 0;

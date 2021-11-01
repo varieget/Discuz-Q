@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,33 +18,34 @@
 
 namespace App\Models;
 
-
 use App\Common\CacheKey;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 
 class GroupUser extends DzqModel
 {
-
     protected $table = 'group_user';
 
     public static $relationGroups = 'groups';
 
-    public function getUpdatedAtColumn(){
+    public function getUpdatedAtColumn()
+    {
         return null;
     }
 
-
-    public function groups(){
-        return $this->hasOne(Group::class,'id','group_id');
+    public function groups()
+    {
+        return $this->hasOne(Group::class, 'id', 'group_id');
     }
 
-    public function getGroupInfo($userIds){
-        return  GroupUser::query()->whereIn('user_id',$userIds)
+    public function getGroupInfo($userIds)
+    {
+        return  GroupUser::query()->whereIn('user_id', $userIds)
             ->with(GroupUser::$relationGroups)->get()->toArray();
     }
+
     protected function clearCache()
     {
-        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_GROUP_USER,$this->user_id);
+        DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_GROUP_USER, $this->user_id);
     }
 }

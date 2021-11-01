@@ -76,10 +76,9 @@ class ChangeLastActived
 
             //清除用户登录失败次数
             UserLoginFailLog::reSetFailCountByUserId($user->id);
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             DzqLog::error('change_last_actived_error', [], $e->getMessage());
             Utils::outPut(ResponseCode::INTERNAL_ERROR, '改变用户登录状态失败');
         }
-
     }
 }

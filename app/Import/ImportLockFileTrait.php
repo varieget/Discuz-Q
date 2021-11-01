@@ -1,5 +1,20 @@
 <?php
 
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 namespace App\Import;
 
@@ -7,7 +22,6 @@ use App\Models\Thread;
 
 trait ImportLockFileTrait
 {
-
     public function getLockFileContent($lockPath)
     {
         if (!file_exists($lockPath)) {
@@ -65,8 +79,10 @@ trait ImportLockFileTrait
             throw new \Exception('缺少参数hour');
         }
 
-        if (!in_array($data['type'],
-            [Thread::AUTO_IMPORT_OF_YEAR, Thread::AUTO_IMPORT_OF_MONTH, Thread::AUTO_IMPORT_OF_WEEKS, Thread::AUTO_IMPORT_OF_DAY])) {
+        if (!in_array(
+            $data['type'],
+            [Thread::AUTO_IMPORT_OF_YEAR, Thread::AUTO_IMPORT_OF_MONTH, Thread::AUTO_IMPORT_OF_WEEKS, Thread::AUTO_IMPORT_OF_DAY]
+        )) {
             throw new \Exception(' 未知类型type');
         }
 
@@ -151,8 +167,7 @@ trait ImportLockFileTrait
             // 年-自动导入
             if ($currentMonth == $fileData['month'] &&
                 $currentDay == $fileData['day'] &&
-                $currentHour == $fileData['hour'])
-            {
+                $currentHour == $fileData['hour']) {
                 if (empty($fileData['lastImportTime'])) {
                     if ($this->checkMinutes($fileData)) {
                         return $fileData;
@@ -160,9 +175,9 @@ trait ImportLockFileTrait
                 } else {
                     if ((int)date('Y', $fileData['lastImportTime']) + $fileData['interval'] == $currentYear &&
                         $fileData['lastImportStatus'] == Thread::AUTO_IMPORT_HAVE_NOT_BEGUN) {
-                            if ($this->checkMinutes($fileData)) {
-                                return $fileData;
-                            }
+                        if ($this->checkMinutes($fileData)) {
+                            return $fileData;
+                        }
                     }
                 }
             } else {

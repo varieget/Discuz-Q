@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,18 +35,27 @@ use Illuminate\Support\Str;
 abstract class TomBaseBusi
 {
     const RED_LIMIT_TIME = 1;           //红包帖创建时间间隔
+
     const NEED_PAY = false;
 
-
     public $tomId = null;
+
     public $operation = null;
+
     public $body = [];
+
     public $permissions = [];
+
     public $threadId = null;
+
     public $postId = null;
+
     public $user = null;
+
     public $key = null;
+
     public $app = null;
+
     public $db = null;
 
     public $canViewTom = true;
@@ -138,7 +148,9 @@ abstract class TomBaseBusi
 
     public function camelData($arr, $ucfirst = false)
     {
-        if (is_object($arr) && is_callable([$arr, 'toArray'])) $arr = $arr->toArray();
+        if (is_object($arr) && is_callable([$arr, 'toArray'])) {
+            $arr = $arr->toArray();
+        }
         if (!is_array($arr)) {
             //如果非数组原样返回
             return $arr;
@@ -146,7 +158,9 @@ abstract class TomBaseBusi
         $temp = [];
         foreach ($arr as $key => $value) {
             $key1 = Str::camel($key);           // foo_bar  --->  fooBar
-            if ($ucfirst) $key1 = Str::ucfirst($key1);
+            if ($ucfirst) {
+                $key1 = Str::ucfirst($key1);
+            }
             $value1 = self::camelData($value);
             $temp[$key1] = $value1;
         }
@@ -167,5 +181,4 @@ abstract class TomBaseBusi
             ->select(['payment_sn', 'order_sn', 'amount', 'type', 'id', 'status'])
             ->first();
     }
-
 }

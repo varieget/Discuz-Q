@@ -34,52 +34,52 @@ trait VideoCloudTrait
 {
     protected $url = 'vod.tencentcloudapi.com';
 
-    private function videoUpload($userId,$threadId,$mediaUrl,$setting,$ext = ''){
-
+    private function videoUpload($userId, $threadId, $mediaUrl, $setting, $ext = '')
+    {
         if (!$setting->get('qcloud_vod', 'qcloud')) {
             return false;
         }
 
         $log = app('log');
-        if(empty($mediaUrl) || empty($userId) || empty($threadId) || empty($setting)){
+        if (empty($mediaUrl) || empty($userId) || empty($threadId) || empty($setting)) {
             $log->info('视频上传参数不能为空');
             return false;
         }
         if (empty($ext)) {
             if (strpos($mediaUrl, '?') !== false) {
-                $media = explode("?",$mediaUrl);
+                $media = explode('?', $mediaUrl);
                 $media = $media[0];
-                $ext = substr($media,strrpos($media,'.')+1);
+                $ext = substr($media, strrpos($media, '.')+1);
             } else {
-                $ext = substr($mediaUrl,strrpos($mediaUrl,'.')+1);
+                $ext = substr($mediaUrl, strrpos($mediaUrl, '.')+1);
             }
         }
 
-        $localFlie = Str::random(40).".".$ext;
+        $localFlie = Str::random(40).'.'.$ext;
         $absoluteUrl = storage_path('tmp/').$localFlie;
 
         $fileData = Utils::downLoadFile($mediaUrl);
 
-        if(!$fileData){
+        if (!$fileData) {
             $log->info('媒体文件不存在');
             return false;
         }
-        $tempFlie = @file_put_contents($absoluteUrl,$fileData);
-        if(!$tempFlie){
+        $tempFlie = @file_put_contents($absoluteUrl, $fileData);
+        if (!$tempFlie) {
             $log->info('下载视频失败');
             return false;
         }
 
         $secretId = $setting->get('qcloud_secret_id', 'qcloud');
         $secretKey = $setting->get('qcloud_secret_key', 'qcloud');
-        $region = $setting->get('qcloud_cos_bucket_area','qcloud');
+        $region = $setting->get('qcloud_cos_bucket_area', 'qcloud');
 
-        if(empty($secretId) || empty($secretKey)){
+        if (empty($secretId) || empty($secretKey)) {
             unlink($absoluteUrl);
             $log->info('云点播配置不能为空');
             return false;
         }
-        if(!file_exists($absoluteUrl)){
+        if (!file_exists($absoluteUrl)) {
             $log->info('本地临时文件不能为空');
             return false;
         }
@@ -96,16 +96,16 @@ trait VideoCloudTrait
             return false;
         }
         $fileId = $rsp->FileId;
-        $mediaUrl = !empty($this->getMediaUrl($rsp->MediaUrl,$setting)) ? $this->getMediaUrl($rsp->MediaUrl,$setting) : "";
+        $mediaUrl = !empty($this->getMediaUrl($rsp->MediaUrl, $setting)) ? $this->getMediaUrl($rsp->MediaUrl, $setting) : '';
         //删除临时文件
         unlink($absoluteUrl);
         //保存数据库
-        $videoId = $this->save($fileId,$mediaUrl,$userId,$threadId,$log);
+        $videoId = $this->save($fileId, $mediaUrl, $userId, $threadId, $log);
         //执行转码任务
-        $process = $this->processMedia($fileId,$log,$setting);
-        if($videoId && $process){
+        $process = $this->processMedia($fileId, $log, $setting);
+        if ($videoId && $process) {
             return $videoId;
-        }else{
+        } else {
             $log->info('videoId返回失败');
             return false;
         }
@@ -114,8 +114,9 @@ trait VideoCloudTrait
     /**
      * @desc 封装curl的调用接口，get的请求方式
      */
-    private function doCurlGetRequest($url) {
-        ini_set("memory_limit","-1");
+    private function doCurlGetRequest($url)
+    {
+        ini_set('memory_limit', '-1');
         // 创建一个新 cURL 资源
         $ch = curl_init();
         // 设置URL和相应的选项
@@ -132,7 +133,7 @@ trait VideoCloudTrait
         return $ret;
     }
 
-    private function getMediaUrl($mediaUrl,$setting)
+    private function getMediaUrl($mediaUrl, $setting)
     {
         $urlKey = $setting->get('qcloud_vod_url_key', 'qcloud');
         $urlExpire = (int)$this->settings->get('qcloud_vod_url_expire', 'qcloud');
@@ -148,8 +149,9 @@ trait VideoCloudTrait
     }
 
     //保存到数据库
-    private function save($fileId,$mediaUrl,$userId,$threadId,$log){
-        if(empty($fileId)){
+    private function save($fileId, $mediaUrl, $userId, $threadId, $log)
+    {
+        if (empty($fileId)) {
             $log->info('保存数据库时fileId不能为空');
             return false;
         }
@@ -162,15 +164,16 @@ trait VideoCloudTrait
             $threadVideo->user_id = $userId;
             $threadVideo->save();
             return $threadVideo->id;
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             $log->info('数据库异常');
             return false;
         }
     }
 
     //转码
-    private function processMedia($fileId,$log,$setting){
-        if(empty($fileId)){
+    private function processMedia($fileId, $log, $setting)
+    {
+        if (empty($fileId)) {
             $log->info('转码时fileId不能为空');
             return false;
         }
@@ -184,20 +187,20 @@ trait VideoCloudTrait
 
             $clientProfile = new ClientProfile();
             $clientProfile->setHttpProfile($httpProfile);
-            $client = new VodClient($cred, "", $clientProfile);
+            $client = new VodClient($cred, '', $clientProfile);
             $req = new ProcessMediaRequest();
-            $params = array(
+            $params = [
                 'FileId'=>$fileId
-            );
+            ];
             $req->fromJsonString(json_encode($params));
             $resp = $client->ProcessMedia($req);
-            $resp = json_decode($resp->toJsonString(),true);
-            if(empty($resp['TaskId'])){
+            $resp = json_decode($resp->toJsonString(), true);
+            if (empty($resp['TaskId'])) {
                 $log->info('转码任务未执行');
                 return false;
             }
             return true;
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             $log->info('转码异常');
             return false;
         }

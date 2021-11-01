@@ -18,7 +18,7 @@
 
 namespace App\Api\Serializer;
 
-use App\Api\Controller\ThreadsV3\ThreadHelper;
+use App\Api\Controller\Threads\ThreadHelper;
 use App\Common\CacheKey;
 use App\Formatter\Formatter;
 use App\Models\Post;

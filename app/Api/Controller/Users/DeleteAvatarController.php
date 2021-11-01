@@ -18,63 +18,38 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Api\Serializer\UserSerializer;
+use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
 use App\User\AvatarUploader;
-use Discuz\Api\Controller\AbstractResourceController;
-use Discuz\Auth\AssertPermissionTrait;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
+use Discuz\Base\DzqAdminController;
 
-class DeleteAvatarController extends AbstractResourceController
+class DeleteAvatarController extends DzqAdminController
 {
-    use AssertPermissionTrait;
-
-    /**
-     * {@inheritdoc}
-     */
-    public $serializer = UserSerializer::class;
-
-    /**
-     * @var UserRepository
-     */
     protected $users;
 
-    /**
-     * @var AvatarUploader
-     */
     protected $uploader;
 
-    /**
-     * @param UserRepository $users
-     * @param AvatarUploader $uploader
-     */
     public function __construct(UserRepository $users, AvatarUploader $uploader)
     {
         $this->users = $users;
         $this->uploader = $uploader;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param Document $document
-     * @return \App\Models\User|mixed
-     * @throws \Discuz\Auth\Exception\PermissionDeniedException
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $request->getAttribute('actor');
-        $id = Arr::get($request->getQueryParams(), 'id');
+        return $userRepo->canDeleteAvatar($this->user);
+    }
 
-        $user = $this->users->findOrFail($id);
+    public function main()
+    {
+        $pid = $this->inPut('aid');
 
-        $this->assertCan($actor, 'edit', $user);
+        $user = $this->users->findOrFail($pid);
 
         $this->uploader->remove($user);
 
         $user->save();
 
-        return $user;
+        $this->outPut(ResponseCode::SUCCESS, '', []);
     }
 }

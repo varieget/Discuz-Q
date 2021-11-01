@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,6 @@
 
 namespace Plugin\Activity\Controller;
 
-
 use App\Common\DzqConst;
 use App\Common\ResponseCode;
 use App\Repositories\UserRepository;
@@ -28,6 +28,7 @@ use Plugin\Activity\Model\ThreadActivity;
 class AppendController extends DzqController
 {
     use ActivityTrait;
+
     private $activity = null;
 
     protected function checkRequestPermissions(UserRepository $userRepo)
@@ -43,30 +44,32 @@ class AppendController extends DzqController
             'activity_id'=>$activity->id,
             'status'=>DzqConst::BOOL_YES
         ]);
-        if($totalNumber != 0){
+        if ($totalNumber != 0) {
             $activityUserBuilder->count() >= $totalNumber && $this->outPut(ResponseCode::INVALID_PARAMETER, '人数已满，报名失败');
         }
-        $activityUser = $activityUserBuilder->where('user_id',$this->user->id)->first();
-        if(!empty($activityUser)){
-            $this->outPut(ResponseCode::RESOURCE_IN_USE,'您已经报名，不能重复报名');
+        $activityUser = $activityUserBuilder->where('user_id', $this->user->id)->first();
+        if (!empty($activityUser)) {
+            $this->outPut(ResponseCode::RESOURCE_IN_USE, '您已经报名，不能重复报名');
         }
         $additional_info = $this->inPut('additionalInfo') ?? [];
         $judge_additional_info = [];
-        if(!empty($additional_info)){
-            foreach ($additional_info as $key => $val){
+        if (!empty($additional_info)) {
+            foreach ($additional_info as $key => $val) {
                 $judge_additional_info[] = ThreadActivity::$addition_info_map[$key];
             }
         }
-        if(!empty($this->activity->additional_info_type)){
+        if (!empty($this->activity->additional_info_type)) {
             $additional_info_type = json_decode($this->activity->additional_info_type, 1);
             $error_judge = array_diff($additional_info_type, $judge_additional_info);
             $error_msg = '';
-            if(!empty($error_judge)){
-                foreach ($error_judge as $val){
+            if (!empty($error_judge)) {
+                foreach ($error_judge as $val) {
                     $error_msg .= ThreadActivity::$addition_map[$val].' ';
                 }
             }
-            if(!empty($error_msg))      $this->outPut(ResponseCode::RESOURCE_IN_USE,'缺少必填信息：'.$error_msg);
+            if (!empty($error_msg)) {
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, '缺少必填信息：'.$error_msg);
+            }
         }
 
         $activityUser = new ActivityUser();
@@ -75,9 +78,9 @@ class AppendController extends DzqController
         $activityUser->user_id = $this->user->id;
         $activityUser->status = DzqConst::BOOL_YES;
         $activityUser->additional_info = json_encode($additional_info, JSON_UNESCAPED_UNICODE);
-        if(!$activityUser->save()){
+        if (!$activityUser->save()) {
             $this->outPut(ResponseCode::DB_ERROR);
         }
-        $this->outPut(0,'报名成功');
+        $this->outPut(0, '报名成功');
     }
 }

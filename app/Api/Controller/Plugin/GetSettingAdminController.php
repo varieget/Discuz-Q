@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +31,6 @@ class GetSettingAdminController extends DzqAdminController
 
         $data = $this->getOneSettingAndConfig($appId, true);
 
-        $this->outPut(0,'',$data);
+        $this->outPut(0, '', $data);
     }
-
 }

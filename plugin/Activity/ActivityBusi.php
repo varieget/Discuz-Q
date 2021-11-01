@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,6 @@
 
 namespace Plugin\Activity;
 
-
 use App\Common\CacheKey;
 use App\Common\DzqConst;
 use App\Common\ResponseCode;
@@ -30,7 +30,6 @@ use Plugin\Activity\Model\ThreadActivity;
 
 class ActivityBusi extends TomBaseBusi
 {
-
     public function select()
     {
         $activityId = $this->getParams('activityId');
@@ -38,7 +37,9 @@ class ActivityBusi extends TomBaseBusi
             'id' => $activityId,
             'status' => DzqConst::BOOL_YES
         ])->first();
-        if (empty($activity)) return false;
+        if (empty($activity)) {
+            return false;
+        }
         $result = $this->getActivityDetail($activity);
         return $this->jsonReturn($result);
     }
@@ -64,15 +65,21 @@ class ActivityBusi extends TomBaseBusi
     {
         $this->activityValidate();
         $activityId = $this->getParams('activityId');
-        if (empty($activityId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '插件参数缺少字段 activityId ');
+        if (empty($activityId)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '插件参数缺少字段 activityId ');
+        }
         $activity = ThreadActivity::query()->where([
             'id' => $activityId,
             'status' => DzqConst::BOOL_YES
         ])->first();
-        if (empty($activity)) $this->outPut(ResponseCode::INVALID_PARAMETER, '活动不存在');
+        if (empty($activity)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '活动不存在');
+        }
         //如果有人报名了，则不能编辑
         $isRegistered = ActivityUser::query()->where(['activity_id' => $activityId, 'status' => DzqConst::BOOL_YES])->exists();
-        if($isRegistered)   $this->outPut(ResponseCode::INVALID_PARAMETER, '已有人报名，不可编辑活动内容');
+        if ($isRegistered) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '已有人报名，不可编辑活动内容');
+        }
         $rawAttr = $this->getActivityRawAttr();
         $activity->setRawAttributes($rawAttr);
         if ($activity->save()) {

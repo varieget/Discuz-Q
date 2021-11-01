@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 namespace App\Http\Controller;
 
 use App\Common\ResponseCode;
@@ -25,7 +27,6 @@ use Symfony\Component\Finder\Finder;
 
 class PluginFileController implements RequestHandlerInterface
 {
-
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $query = $request->getQueryParams();
@@ -40,7 +41,7 @@ class PluginFileController implements RequestHandlerInterface
         foreach ($files as $file) {
             if ($file->getPathname() == $filePath) {
                 $ext = strtolower($file->getExtension());
-                switch ($ext){
+                switch ($ext) {
                     case 'js':
                         header('Content-type:application/javascript');
                         break;

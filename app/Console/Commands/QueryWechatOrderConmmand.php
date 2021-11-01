@@ -44,8 +44,8 @@ class QueryWechatOrderConmmand extends AbstractCommand
     protected $events;
 
     protected $expireEndTime = 24;           //订单过期开始时间
-    protected $expireStartTime = 48;         //订单过期结束时间
 
+    protected $expireStartTime = 48;         //订单过期结束时间
 
     public function __construct(Application $app, SettingsRepository $setting, ConnectionInterface $connection, Dispatcher $events)
     {
@@ -129,7 +129,7 @@ class QueryWechatOrderConmmand extends AbstractCommand
                     $order->save();
                     //查询、修改该订单对应的子订单状态
                     $res = OrderChildren::query()->where('order_sn', $order->order_sn)->update(['status' => Order::ORDER_STATUS_EXPIRED]);
-                    if($res === false){
+                    if ($res === false) {
                         $log = app('log');
                         $log->info("订单order_sn：{$order->order_sn} ，更新子订单出错");
                     }

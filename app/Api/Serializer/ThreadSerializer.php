@@ -18,7 +18,6 @@
 
 namespace App\Api\Serializer;
 
-use App\Models\RedPacket;
 use App\Models\Thread;
 use App\Models\Post;
 use App\Models\ThreadReward;
@@ -292,12 +291,11 @@ class ThreadSerializer extends AbstractSerializer
     public function question($thread)
     {
         $questionType = ThreadReward::query()->where('thread_id', $thread->id)->first();
-        if(isset($questionType['type']) && $questionType['type'] == 0) {
+        if (isset($questionType['type']) && $questionType['type'] == 0) {
             return $this->hasOne($thread, ThreadRewardSerializer::class);
-        }else {
+        } else {
             return $this->hasOne($thread, QuestionAnswerSerializer::class);
         }
-
     }
 
     /**
@@ -329,5 +327,4 @@ class ThreadSerializer extends AbstractSerializer
     {
         return $this->hasMany($thread, AttachmentSerializer::class);
     }
-
 }

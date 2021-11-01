@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +20,22 @@ namespace App\Modules\ThreadTom;
 
 class TomConfig
 {
-
     const TOM_TEXT = 100;//文字内容，目前不单独作为扩展插件存储
+
     const TOM_IMAGE = 101;
+
     const TOM_AUDIO = 102;
+
     const TOM_VIDEO = 103;
+
     const TOM_GOODS = 104;
+
     const TOM_REDPACK = 106;
+
     const TOM_REWARD = 107;
+
     const TOM_DOC = 108;
+
     const TOM_VOTE = 109;
 
     public static $map = [

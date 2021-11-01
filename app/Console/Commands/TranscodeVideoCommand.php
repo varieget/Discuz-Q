@@ -34,7 +34,6 @@ use TencentCloud\Common\Profile\HttpProfile;
 use TencentCloud\Vod\V20180717\Models\ProcessMediaRequest;
 use TencentCloud\Vod\V20180717\VodClient;
 
-
 class TranscodeVideoCommand extends AbstractCommand
 {
     use QcloudStatisticsTrait;
@@ -81,23 +80,23 @@ class TranscodeVideoCommand extends AbstractCommand
             ->where('th.is_draft', Thread::IS_NOT_DRAFT)
             ->where('tv.status', ThreadVideo::VIDEO_STATUS_TRANSCODING)
             ->where('tv.type', ThreadVideo::TYPE_OF_VIDEO)
-            ->where('tv.thread_id','!=',0)
+            ->where('tv.thread_id', '!=', 0)
             ->where('tv.updated_at', '<', Carbon::now()->subMinute(5)->toDateTimeString())
             ->get();
 
         $threadVideosArr = $threadVideos->toArray();
 
         $threadIds = array_unique(array_column($threadVideosArr, 'thread_id'));
-        $threads = Thread::query()->whereIn('id', $threadIds)->get()->keyBy("id")->toArray();
+        $threads = Thread::query()->whereIn('id', $threadIds)->get()->keyBy('id')->toArray();
         $newThreadVideos = [];
-        foreach ($threadVideosArr as $k=>$val){
+        foreach ($threadVideosArr as $k=>$val) {
             $newThreadVideos[$val['id']] = $threads[$val['thread_id']];
         }
 
-        if($threadVideos){
+        if ($threadVideos) {
             $settingRepo = app(SettingsRepository::class);
             $log = app('log');
-            $threadVideos->map(function ($item) use ($settingRepo,$newThreadVideos,$log) {
+            $threadVideos->map(function ($item) use ($settingRepo, $newThreadVideos, $log) {
                 try {
                     if (!empty($newThreadVideos[$item->id])) {
                         //转码
@@ -107,23 +106,23 @@ class TranscodeVideoCommand extends AbstractCommand
                         if ($template_name = $settingRepo->get('qcloud_vod_taskflow_gif', 'qcloud')) {
                             $this->processMediaByProcedure($item->file_id, $template_name);
                         }
-                        if($resTranscode){
+                        if ($resTranscode) {
                             $item->status = ThreadVideo::VIDEO_STATUS_SUCCESS;
                             $item->save();
-                            $log->info('普通转码成功,videoId为'.$item->id.",taskId为".$resTranscode->TaskId);
+                            $log->info('普通转码成功,videoId为'.$item->id.',taskId为'.$resTranscode->TaskId);
                         }
                     }
                 } catch (Exception $e) {
                     if (!empty($newThreadVideos[$item->id])) {
                         $fileId = $item->file_id;
-                        $resp = $this->processMedia($fileId,$settingRepo);
-                        if(empty($resp['TaskId'])){
+                        $resp = $this->processMedia($fileId, $settingRepo);
+                        if (empty($resp['TaskId'])) {
                             $log->info('转码任务未执行,videoId为'.$item->id);
                             return;
                         }
                         $item->status = ThreadVideo::VIDEO_STATUS_SUCCESS;
                         $item->save();
-                        $log->info('sdk上传视频转码成功,videoId为'.$item->id.",taskId为".$resp['TaskId']);
+                        $log->info('sdk上传视频转码成功,videoId为'.$item->id.',taskId为'.$resp['TaskId']);
                     }
                 }
             });
@@ -132,7 +131,8 @@ class TranscodeVideoCommand extends AbstractCommand
     }
 
     //兼容sdk上传视频转码
-    public function ProcessMedia($fileId,$settingRepo){
+    public function ProcessMedia($fileId, $settingRepo)
+    {
         $secretId = $settingRepo->get('qcloud_secret_id', 'qcloud');
         $secretKey = $settingRepo->get('qcloud_secret_key', 'qcloud');
 
@@ -142,15 +142,15 @@ class TranscodeVideoCommand extends AbstractCommand
 
         $clientProfile = new ClientProfile();
         $clientProfile->setHttpProfile($httpProfile);
-        $client = new VodClient($cred, "", $clientProfile);
+        $client = new VodClient($cred, '', $clientProfile);
         $req = new ProcessMediaRequest();
-        $params = array(
+        $params = [
             'FileId'=>$fileId
-        );
+        ];
 
         $req->fromJsonString(json_encode($params));
         $resp = $client->ProcessMedia($req);
-        $resp = json_decode($resp->toJsonString(),true);
+        $resp = json_decode($resp->toJsonString(), true);
         return $resp;
     }
 }

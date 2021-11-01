@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -17,23 +18,26 @@
 
 namespace App\Commands\SignInFields;
 
-
 use App\Models\UserSignInFields;
 
 class UpdateUserSignIn
 {
     private $id;
+
     private $actor;
+
     private $data;
 
-    public function __construct($id,$actor,$data)
+    public function __construct($id, $actor, $data)
     {
         $this->id = $id;
         $this->actor = $actor;
         $this->data = $data;
     }
-    public function handle(){
+
+    public function handle()
+    {
         $attributes = $this->data['attributes'];
-        return UserSignInFields::instance()->adminSaveUserSignInFields($this->id,$attributes);
+        return UserSignInFields::instance()->adminSaveUserSignInFields($this->id, $attributes);
     }
 }

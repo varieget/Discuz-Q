@@ -18,8 +18,8 @@
 
 namespace App\Listeners\Setting;
 
-use App\Api\Controller\SettingsV3\CdnTrait;
-use App\Api\Controller\SettingsV3\DnspodTrait;
+use App\Api\Controller\Settings\CdnTrait;
+use App\Api\Controller\Settings\DnspodTrait;
 use App\Common\ResponseCode;
 use App\Events\Setting\Saving;
 use Discuz\Common\Utils;

@@ -94,7 +94,7 @@ class CashTransfer
      */
     public function wecahtTransfer(Cash $event)
     {
-        $this->log->info("开始微信企业付款，提现记录id：".$event->cash_record->id,[$event]);
+        $this->log->info('开始微信企业付款，提现记录id：'.$event->cash_record->id, [$event]);
         //获取微信配置
         $config = $this->settings->tag('wxpay');
         $miniprogram_app_id = $this->settings->get('miniprogram_app_id', 'wx_miniprogram');
@@ -131,7 +131,7 @@ class CashTransfer
         //企业付款
         TransferTrade::transfer($event->transfer_type, $config, $data);
         $response = TransferTrade::getTransferRespone();
-        $this->log->info("微信企业付款请求响应，提现记录id：".$event->cash_record->id,[$response]);
+        $this->log->info('微信企业付款请求响应，提现记录id：'.$event->cash_record->id, [$response]);
         if (TransferTrade::getTransferStatus()) {
             $data_result = [
                 'trade_time' => Carbon::parse($response['payment_time'])->format('Y-m-d H:i:s'),//交易时间
@@ -152,7 +152,7 @@ class CashTransfer
                 //未明确的错误码,体现状态返回待审核，允许重新审核
                 $is_thaw = false;
             }
-            $this->log->error("开始微信企业付款失败，提现记录id：{$event->cash_record->id}，出错码：{$response['err_code']}",[$response, $data]);
+            $this->log->error("开始微信企业付款失败，提现记录id：{$event->cash_record->id}，出错码：{$response['err_code']}", [$response, $data]);
             $this->transferFailure($event->cash_record->id, $data_result, $is_thaw);
         }
     }
@@ -196,12 +196,12 @@ class CashTransfer
                 );
                 //提交事务
                 $this->connection->commit();
-                $this->log->info("开始微信企业付款成功，提现记录id：".$cash_id, $data);
+                $this->log->info('开始微信企业付款成功，提现记录id：'.$cash_id, $data);
                 return true;
             } catch (\Exception $e) {
                 //回滚事务
                 $this->connection->rollback();
-                $this->log->error("开始微信企业付款，修改用户钱包金额出错，提现记录id：".$cash_id,[$e->getMessage(),$data]);
+                $this->log->error('开始微信企业付款，修改用户钱包金额出错，提现记录id：'.$cash_id, [$e->getMessage(),$data]);
                 return false;
             }
         }

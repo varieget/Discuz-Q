@@ -19,14 +19,11 @@
 namespace App\Models;
 
 use App\Events\Attachment\Created;
-use App\Modules\ThreadTom\PreQuery;
 use Carbon\Carbon;
 use Discuz\Base\DzqModel;
-use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Contracts\Cache\Repository as Cache;
 
@@ -56,6 +53,7 @@ use Illuminate\Contracts\Cache\Repository as Cache;
 class Attachment extends DzqModel
 {
     use EventGeneratorTrait;
+
     use ScopeVisibilityTrait;
 
     const FIX_WIDTH = 500;
@@ -77,8 +75,8 @@ class Attachment extends DzqModel
     const APPROVED = 1;
 
     const YES_REMOTE = 1;
-    const NO_REMOTE = 0;
 
+    const NO_REMOTE = 0;
 
     const ORIENTATION_THREE = 3;
 
@@ -139,8 +137,7 @@ class Attachment extends DzqModel
         $order = 0,
         $width = 0,
         $height = 0
-    )
-    {
+    ) {
         $attachment = new static;
 
         $attachment->uuid = Str::uuid();
@@ -240,6 +237,7 @@ class Attachment extends DzqModel
         $parts[0] = md5($parts[0]);
         return self::getFilePath($attachment) . implode('_blur.', $parts);
     }
+
     /**
      * Define the relationship with the attachment's author.
      *
@@ -258,9 +256,9 @@ class Attachment extends DzqModel
     public function post()
     {
         $post = null;
-        if($post){
+        if ($post) {
             return $this->belongsTo(self::class)->withDefault($post);
-        }else{
+        } else {
             return $this->belongsTo(Post::class, 'type_id');
         }
     }
@@ -273,21 +271,20 @@ class Attachment extends DzqModel
     public function thread()
     {
         $thread = null;
-        if($thread){
+        if ($thread) {
             return $this->belongsTo(self::class)->withDefault($thread);
-        }else{
+        } else {
             return $this->belongsTo(Thread::class, 'type_id');
         }
-
     }
-
 
     public function getAttachments($typeIds, $types)
     {
         return self::query()->whereIn('type_id', $typeIds)->whereIn('type', $types)->get();
     }
 
-    public static function getOneAttachment($attachmentsId,$toArray = false){
+    public static function getOneAttachment($attachmentsId, $toArray = false)
+    {
         $ret = self::query()
             ->where([
                 'id' => $attachmentsId,

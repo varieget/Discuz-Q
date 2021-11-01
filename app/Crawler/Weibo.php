@@ -1,17 +1,32 @@
 <?php
 
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace App\Crawler;
 
 class Weibo
 {
-
     /**
      * @method  主入口
      * @param sting $topic 话题
      * @param int $page  获取第几页
      * @return array
      */
-    public function main($topic,$page=1)
+    public function main($topic, $page=1)
     {
         set_time_limit(0);
         $res = $this->getList($topic, $page);
@@ -22,7 +37,6 @@ class Weibo
         }
         return $res;
     }
-
 
     /**
      * @method  从话题搜索数据，获取到帖子数据
@@ -43,7 +57,7 @@ class Weibo
                     continue;
                 }
                 //用户信息
-                $value['mblog']['user']['screen_name'] =  str_replace(" ", "", $value['mblog']['user']['screen_name']);
+                $value['mblog']['user']['screen_name'] =  str_replace(' ', '', $value['mblog']['user']['screen_name']);
                 $forum['user'] = [
                     'avatar' => $value['mblog']['user']['avatar_hd'],//头像
                     'nickname' => $value['mblog']['user']['screen_name'],//昵称
@@ -56,11 +70,11 @@ class Weibo
                 //帖子数据
                 $text = $this->dealText($value['mblog']['text']);
                 //帖子内容不全的情况下
-                if(empty($text['text'])){
+                if (empty($text['text'])) {
                     $text = $this->getForumTextDetail($value['mblog']['mid']);
                 }
                 //处理转发的情况
-                if(isset($value['mblog']['retweeted_status']['text']) && !empty($value['mblog']['retweeted_status']['text'])){
+                if (isset($value['mblog']['retweeted_status']['text']) && !empty($value['mblog']['retweeted_status']['text'])) {
                     $text['text'] = $text['text'] . $value['mblog']['retweeted_status']['text'];
                 }
                 $forum['forum'] = [
@@ -111,7 +125,7 @@ class Weibo
         $html = $this->curlGet($url);
         //从话题页面提取出mid
         //<div class=\"card-wrap\" action-type=\"feed_list_item\" mid=\"(.*)\" >
-        preg_match_all("/<div class=\"card-wrap\" action-type=\"feed_list_item\" mid=\"(.*)\" >/i", strtolower($html), $matches);
+        preg_match_all('/<div class="card-wrap" action-type="feed_list_item" mid="(.*)" >/i', strtolower($html), $matches);
         return $matches[1];
     }
 
@@ -136,7 +150,7 @@ class Weibo
         //用户信息
         $forum['user'] = [
             'avatar' => $result[0]['status']['user']['avatar_hd'],//头像
-            'nickname' => str_replace(" ", "", $result[0]['status']['user']['screen_name']),//昵称
+            'nickname' => str_replace(' ', '', $result[0]['status']['user']['screen_name']),//昵称
             'gender' => $result[0]['status']['user']['gender'],//性别
             'home_page' => $result[0]['status']['user']['profile_url'],//个人主页
             'description' => $result[0]['status']['user']['description'],//描述
@@ -196,7 +210,7 @@ class Weibo
         }
         $text = $result[0]['status']['text'];
         //处理转发的情况
-        if(isset($result[0]['status']['retweeted_status']['text']) && !empty($result[0]['status']['retweeted_status']['text'])){
+        if (isset($result[0]['status']['retweeted_status']['text']) && !empty($result[0]['status']['retweeted_status']['text'])) {
             $text = $text . $result[0]['status']['retweeted_status']['text'];
         }
         //发帖信息
@@ -217,7 +231,7 @@ class Weibo
         if (isset($html['data']['data']) || !empty($html['data']['data'])) {
             foreach ($html['data']['data'] as $key => $value) {
                 //评论信息
-                $value['user']['screen_name'] = str_replace(" ", "", $value['user']['screen_name']);
+                $value['user']['screen_name'] = str_replace(' ', '', $value['user']['screen_name']);
                 $comment[$key]['comment'] = [
                     'id' => $value['id'],//评论ID
                     'rootid' => $value['rootid'],//评论ID
@@ -236,7 +250,6 @@ class Weibo
                     //'followers_count' => $value['user']['followers_count'],//粉丝
                     //'follow_count' => $value['user']['follow_count'],//关注
                 ];
-
             }
         }
         return $comment;
@@ -256,7 +269,7 @@ class Weibo
         if (isset($html['data']) || !empty($html['data'])) {
             foreach ($html['data'] as $value) {
                 //评论信息
-                $value['user']['screen_name'] = str_replace(" ", "", $value['user']['screen_name']);
+                $value['user']['screen_name'] = str_replace(' ', '', $value['user']['screen_name']);
                 $comment[]['comment'] = [
                     'id' => $value['id'],//评论ID
                     'rootid' => $value['rootid'],//评论ID
@@ -275,12 +288,10 @@ class Weibo
                     'followers_count' => $value['user']['followers_count'],//粉丝
                     'follow_count' => $value['user']['follow_count'],//关注
                 ];
-
             }
         }
         return $comment;
     }
-
 
     /**
      * @method  处理帖子内容格式
@@ -290,21 +301,21 @@ class Weibo
     private function dealText($text)
     {
         //发帖信息
-        $text = strip_tags($text,'<p><br><img>');   //保留<p><br><img>
+        $text = strip_tags($text, '<p><br><img>');   //保留<p><br><img>
         //判断是否完成,以最后两位是否为全文进行判断
         if (mb_substr($text, -2) == '全文') {
             return ['text' => ''];
         }
         //去除@某人数据
-        if(strpos($text,'@') != false){
-            $text = preg_replace('/@(.*?) /is','',$text);
+        if (strpos($text, '@') != false) {
+            $text = preg_replace('/@(.*?) /is', '', $text);
         }
         //位置，根据定位图标处理
         $position = '';
-        if(strpos($text,'timeline_card_small_location_default.png') != false) {
+        if (strpos($text, 'timeline_card_small_location_default.png') != false) {
             //特殊处理，内容末尾出现定位，拼接一个空格
             $text = $text.' ';
-            $text = str_replace("'","\"",$text);
+            $text = str_replace("'", '"', $text);
             preg_match_all('/timeline_card_small_location_default.png\">(.*?) /is', $text, $position);
             if (isset($position[1][0]) && !empty($position[1][0])) {
                 $position = strip_tags($position[1][0]);
@@ -329,7 +340,7 @@ class Weibo
 //        }
 
         //话题提取
-        preg_match_all('/#(.*?)#/is',$text,$topics);
+        preg_match_all('/#(.*?)#/is', $text, $topics);
 
         return [
             'text' => $text,
@@ -345,12 +356,12 @@ class Weibo
      * @param string $path 路径
      * @return string
      */
-    private function downloadFile($url, $type=1,$path = 'images/')
+    private function downloadFile($url, $type=1, $path = 'images/')
     {
         $pix = $type == 1 ? '.jpg': '.mp4';
         $content = file_get_contents($url);
         $filename = $path.md5($url.time()).$pix;
-        if(!is_file($filename)){
+        if (!is_file($filename)) {
             file_put_contents($filename, $content);
         }
         return $filename;
@@ -367,12 +378,12 @@ class Weibo
         if (empty($str)) {
             return '';
         }
-        $str = str_replace("-", ",", $str);
-        $str = str_replace("，", ",", $str);
-        $str = str_replace(" ", ",", $str);
-        $str = str_replace("|", ",", $str);
-        $str = str_replace("、", ",", $str);
-        $str = str_replace(",,", ",", $str);
+        $str = str_replace('-', ',', $str);
+        $str = str_replace('，', ',', $str);
+        $str = str_replace(' ', ',', $str);
+        $str = str_replace('|', ',', $str);
+        $str = str_replace('、', ',', $str);
+        $str = str_replace(',,', ',', $str);
         return trim($str);
     }
 
@@ -385,13 +396,13 @@ class Weibo
     private function curlGet($url, $port = 80)
     {
         $ch = curl_init();
-        $header = array();
+        $header = [];
         $header[] = 'Content-Type:application/x-www-form-urlencoded';
         curl_setopt($ch, CURLOPT_URL, $url);
         if ($port !== 80) {
             curl_setopt($ch, CURLOPT_PORT, $port);
         }
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36');
         curl_setopt($ch, CURLOPT_HEADER, 0);//设定是否输出页面内容
 //        curl_setopt($ch,CURLOPT_HTTPHEADER,$header);
 //        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); //不验证证书
@@ -407,5 +418,4 @@ class Weibo
 
         return $filecontent;
     }
-
 }

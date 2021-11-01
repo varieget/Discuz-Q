@@ -18,77 +18,55 @@
 
 namespace App\Api\Controller\Wallet;
 
-use App\Settings\SettingsRepository;
-use Discuz\Auth\Exception\PermissionDeniedException;
-use Illuminate\Contracts\Bus\Dispatcher;
-use App\Api\Serializer\UserWalletSerializer;
-use Discuz\Api\Controller\AbstractResourceController;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
+use App\Common\ResponseCode;
+use App\Models\User;
+use App\Models\UserWallet;
 use App\Repositories\UserWalletRepository;
-use Discuz\Auth\AssertPermissionTrait;
+use App\Settings\SettingsRepository;
+use Discuz\Base\DzqController;
+use App\Repositories\UserRepository;
 
-class ResourceUserWalletController extends AbstractResourceController
+class ResourceUserWalletController extends DzqController
 {
-    use AssertPermissionTrait;
-
-    /**
-     * {@inheritdoc}
-     */
-    public $serializer = UserWalletSerializer::class;
-
-    /**
-     * {@inheritdoc}
-     */
-    public $include = [
-        'user'
-    ];
-
-    /**
-     * @var Dispatcher
-     */
-    protected $bus;
-
-    /**
-     * @var UserWalletRepository
-     */
     public $wallet;
 
-    /**
-     * @var SettingsRepository
-     */
-    protected $setting;
+    public $setting;
 
-    /**
-     * @param Dispatcher $bus
-     * @param SettingsRepository $setting
-     * @param UserWalletRepository $wallet
-     */
-    public function __construct(Dispatcher $bus, SettingsRepository $setting, UserWalletRepository $wallet)
+    public $include = [
+    ];
+
+    public function __construct(UserWalletRepository $wallet, SettingsRepository $setting)
     {
-        $this->bus = $bus;
-        $this->setting = $setting;
         $this->wallet = $wallet;
+        $this->setting = $setting;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function data(ServerRequestInterface $request, Document $document)
+    // 权限检查，是否为注册用户
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        // 获取当前用户
-        $actor = $request->getAttribute('actor');
-        $this->assertRegistered($actor);
-        if(!$actor->isAdmin() && $actor->id != Arr::get($request->getQueryParams(), 'user_id')){
-            throw new PermissionDeniedException;
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return true;
+    }
+
+    public function main()
+    {
+        $actor = $this->user;
+        $user_id = $actor->id;
+        if (!$user_id) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
-        $user_id = Arr::get($request->getQueryParams(), 'user_id');
-        $data = $this->wallet->findOrFail($user_id);
-
+        $query = User::query();
+        $groupData = $query->where('id', $user_id)->first();
+        if (empty($groupData)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, 'ID为'.$user_id.'用户不存在');
+        }
+        $data = UserWallet::where('user_id', $user_id)->first();
         $data->cash_tax_ratio = $this->setting->get('cash_rate', 'cash', 0);
-
-        return $data;
+        $data = $this->camelData($data);
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }

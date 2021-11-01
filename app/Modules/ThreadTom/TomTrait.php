@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,6 @@
 
 namespace App\Modules\ThreadTom;
 
-
 use App\Common\CacheKey;
 use App\Common\PluginEnum;
 use App\Models\Order;
@@ -31,12 +31,13 @@ use Illuminate\Support\Arr;
 
 trait TomTrait
 {
-
     private $CREATE_FUNC = 'create';
-    private $DELETE_FUNC = 'delete';
-    private $UPDATE_FUNC = 'update';
-    private $SELECT_FUNC = 'select';
 
+    private $DELETE_FUNC = 'delete';
+
+    private $UPDATE_FUNC = 'update';
+
+    private $SELECT_FUNC = 'select';
 
     /**
      * @desc 支持一次提交包含新建或者更新或者删除等各种类型混合
@@ -53,7 +54,9 @@ trait TomTrait
         $config = $this->threadPluginList();
         $tomJsons = [];
         $indexes = $this->getContentIndexes($tomContent);
-        if (empty($indexes)) return $tomJsons;
+        if (empty($indexes)) {
+            return $tomJsons;
+        }
         $tomList = [];
         if (!empty($threadId) && empty($operation)) {
             $tomList = DzqCache::hGet(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
@@ -81,7 +84,7 @@ trait TomTrait
                     $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body, $canViewTom]);
                 }
                 $opResult = $service->$op();
-                if(method_exists($service, $op) && is_array($opResult)){
+                if (method_exists($service, $op) && is_array($opResult)) {
                     $tomJsons[$key] = $opResult;
                 }
             }
@@ -169,7 +172,9 @@ trait TomTrait
      */
     private function needPay($tomJsons)
     {
-        if (empty($tomJsons)) return false;
+        if (empty($tomJsons)) {
+            return false;
+        }
         $tomTypes = array_keys($tomJsons);
         foreach ($tomTypes as $tomType) {
             $tomService = Arr::get(TomConfig::$map, $tomType . '.service');
@@ -181,7 +186,6 @@ trait TomTrait
         }
         return false;
     }
-
 
     /**
      * @param $threadId

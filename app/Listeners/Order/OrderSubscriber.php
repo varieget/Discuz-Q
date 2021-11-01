@@ -53,7 +53,7 @@ class OrderSubscriber
         if ($order->type == Order::ORDER_TYPE_REGISTER && $order->status == Order::ORDER_STATUS_PAID) {
             $day = app()->make(SettingsRepository::class)->get('site_expire');
             // 修改用户过期时间、订单过期时间,如果没有有效期，订单过期时间设置为null
-            if(empty($day)){
+            if (empty($day)) {
                 $day = 365*99;
             }
             $expired = Carbon::now()->addDays($day);
@@ -67,13 +67,15 @@ class OrderSubscriber
         if ($order->type == Order::ORDER_TYPE_RENEW && $order->status == Order::ORDER_STATUS_PAID) {
             $day = app()->make(SettingsRepository::class)->get('site_expire');
             // 如果没有设置有效期，则设置有效期为 99 年
-            if(empty($day))     $day = 365 * 99;
-            $expiredDate = date("Y-m-d H:i:s", time() + $day * 86400 - 1);
+            if (empty($day)) {
+                $day = 365 * 99;
+            }
+            $expiredDate = date('Y-m-d H:i:s', time() + $day * 86400 - 1);
             // 过期时间未到时，则续费时间加剩余时间
-            if( !empty($order->user->expired_at) && (strtotime($order->user->expired_at) > time()) ){
+            if (!empty($order->user->expired_at) && (strtotime($order->user->expired_at) > time())) {
                 $remainTime = strtotime($order->user->expired_at) - time();
                 $reNewTime = time() + $remainTime + $day * 86400 - 1;
-                $expiredDate = date("Y-m-d H:i:s", $reNewTime);
+                $expiredDate = date('Y-m-d H:i:s', $reNewTime);
             }
             $order->user->expired_at = $expiredDate;
             $order->expired_at = $expiredDate;
@@ -96,9 +98,9 @@ class OrderSubscriber
         }
 
         //更新 site_info_dailies 订单情况
-        $today = date("Y-m-d", time());
+        $today = date('Y-m-d', time());
         $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
-        if(empty($site_info_daily)){
+        if (empty($site_info_daily)) {
             $site_info_daily = new SiteInfoDaily();
             $site_info_daily->date = $today;
             $site_info_daily->orders_count = 0;
@@ -109,7 +111,7 @@ class OrderSubscriber
         $site_info_daily->orders_count += 1;
         $site_info_daily->orders_money += $order->amount;
         $site_info_daily->order_royalty += $order->master_amount;
-        if($order->type == Order::ORDER_TYPE_REGISTER){
+        if ($order->type == Order::ORDER_TYPE_REGISTER) {
             $site_info_daily->total_register_profit += $order->amount;
         }
         $site_info_daily->save();

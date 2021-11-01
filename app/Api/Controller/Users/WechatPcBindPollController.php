@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -18,40 +17,37 @@
 
 namespace App\Api\Controller\Users;
 
+use App\Common\ResponseCode;
 use App\Models\SessionToken;
-use Discuz\Http\DiscuzResponseFactory;
-use Exception;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqController;
+use Discuz\Base\DzqLog;
 
-class WechatPcBindPollController implements RequestHandlerInterface
+class WechatPcBindPollController extends AuthBaseController
 {
-    /**
-     * {@inheritdoc}
-     * @throws Exception
-     */
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $sessionToken = Arr::get($request->getQueryParams(), 'session_token');
+        return true;
+    }
 
-        $token = SessionToken::get($sessionToken);
-        if (empty($token)) {
-            // 二维码已失效，扫码超时
-            throw new Exception('pc_qrcode_time_out');
+    public function main()
+    {
+        try {
+            $token = $this->getScanCodeToken();
+
+            if (isset($token->payload['bind']) && $token->payload['bind']) {
+                $result = $this->camelData($token->payload);
+                $result = $this->addUserInfo($token->user, $result);
+                // 绑定成功
+                $this->outPut(ResponseCode::SUCCESS, '', $result);
+            }
+
+            $this->outPut(ResponseCode::PC_BIND_ERROR, '请刷新二维码重新绑定');
+        } catch (\Exception $e) {
+            DzqLog::error('wechat_pc_bind_poll_api_error', [
+                'sessionToken' => $this->inPut('sessionToken')
+            ], $e->getMessage());
+            $this->outPut(ResponseCode::INTERNAL_ERROR, 'pc、H5轮询绑定接口异常');
         }
-
-        if (is_null($token->payload)) {
-            // 扫码中
-            throw new Exception('pc_qrcode_scanning_code');
-        }
-
-        if (isset($token->payload['bind']) && $token->payload['bind']) {
-            // 绑定成功
-            return DiscuzResponseFactory::JsonResponse($token->payload);
-        }
-
-        throw new Exception($token->payload['code'] ?: 'error');
     }
 }

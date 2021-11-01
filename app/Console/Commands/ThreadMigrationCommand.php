@@ -22,10 +22,8 @@ use App\Formatter\Formatter;
 use App\Models\Attachment;
 use App\Models\Order;
 use App\Models\Post;
-use App\Models\PostGoods;
 use App\Models\PostMod;
 use App\Models\PostUser;
-use App\Models\Question;
 use App\Models\Thread;
 use App\Models\ThreadRedPacket;
 use App\Models\ThreadReward;
@@ -34,43 +32,46 @@ use App\Models\ThreadTom;
 use App\Models\ThreadVideo;
 use App\Models\Topic;
 use App\Models\User;
-use App\Repositories\ThreadVideoRepository;
-use Carbon\Carbon;
 use Discuz\Console\AbstractCommand;
 use Discuz\Foundation\Application;
-use Discuz\Qcloud\QcloudTrait;
-use Illuminate\Database\DatabaseManager;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Facade;
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Support\Facades\Schema;
+
 /**
  * thread 迁移脚本，迁移数据库  thread_tag、thread_tom，其中帖子中图文混排中的图片情况先不管，只考虑单独添加的图片/附件
  */
 class ThreadMigrationCommand extends AbstractCommand
 {
-
-
     protected $signature = 'thread:migration';
 
     protected $description = '帖子内容数据库迁移';
 
     // 数据迁移涉及到的表 start
     protected $threads;
+
     protected $thread_tag;
+
     protected $posts;
+
     protected $thread_tom;
+
     protected $thread_red_packets;
+
     protected $attachments;
+
     protected $thread_video;
+
     protected $users;
+
     protected $post_content_temp;
+
     protected $posts_dst;
+
     protected $post_mentions_user;
+
     protected $post_mod;
+
     protected $post_user;
+
     //end
 
     protected $app;
@@ -129,7 +130,6 @@ class ThreadMigrationCommand extends AbstractCommand
   CONSTRAINT `posts_temp_deleted_user_id_foreign` FOREIGN KEY (`deleted_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `posts_temp_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=101821 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci';
-
 
     /**
      * AvatarCleanCommand constructor.
@@ -268,26 +268,27 @@ class ThreadMigrationCommand extends AbstractCommand
         $data = self::getOldData($limit);
         $i = 0;
         try {
-            while (!empty($data)){
+            while (!empty($data)) {
                 app('log')->info('修改posts中content数据start，开始次数：'.$i);
                 $i ++;
-                $thread_array = array();
-                $post_array = array();
+                $thread_array = [];
+                $post_array = [];
                 $this->db->beginTransaction();
-                foreach ($data as $key => $val){
-                    foreach ($val as $vi){
+                foreach ($data as $key => $val) {
+                    foreach ($val as $vi) {
                         $content = $vi['content'];
-                        if(empty($content))     continue;
+                        if (empty($content)) {
+                            continue;
+                        }
                         $content = self::s9eRender($content);
                         $content = self::v3Content($content);
                         $post_array[] = ['id' => $vi['post_id'], 'content' => $content];
-
                     }
                     $thread_array[] = $key;
                 }
 
                 $res = $this->db->table('post_content_temp')->insert($post_array);
-                if($res === false){
+                if ($res === false) {
                     $this->db->rollBack();
                     $this->info('插入 post_content_temp 出错');
                     break;
@@ -295,7 +296,7 @@ class ThreadMigrationCommand extends AbstractCommand
 
                 //最后将 posts 对应的 thread 的 type 修改为 99
                 $res = $this->db->table('threads')->whereIn('id', $thread_array)->update(['type' => self::V3_TYPE]);
-                if($res === false){
+                if ($res === false) {
                     $this->db->rollBack();
                     $this->info('修改 threads 中 type 出错');
                     break;
@@ -309,7 +310,7 @@ class ThreadMigrationCommand extends AbstractCommand
                 $data = self::getOldData($limit);
             }
             app('log')->info('data完成', [$data]);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             $this->db->rollBack();
             $this->info($e->getMessage());
             app('log')->info('处理posts的content，数据库出错', [$e->getMessage()]);
@@ -341,15 +342,15 @@ class ThreadMigrationCommand extends AbstractCommand
         $this->info('开始帖子数据迁移end');
     }
 
-
-    public function migrateRedPacket(){
+    public function migrateRedPacket()
+    {
         $start_page = 0;
         $isset_red_thread_ids = ThreadTom::query()->where('tom_type', ThreadTag::RED_PACKET)->pluck('thread_id')->toArray();
-        while (!empty($list = self::getThreadRedPacket($start_page, $isset_red_thread_ids)) && !empty($list->toArray())){
+        while (!empty($list = self::getThreadRedPacket($start_page, $isset_red_thread_ids)) && !empty($list->toArray())) {
             $this->db->beginTransaction();
-            $res = array();
+            $res = [];
             $thread_red_ids = [];
-            foreach ($list as $thread_red_packets){
+            foreach ($list as $thread_red_packets) {
                 //还需要插入对应的  thread_tom
 //                $order = Order::where(['thread_id' => $val->id, 'type' => Order::ORDER_TYPE_TEXT])->first();
                 $value = [
@@ -372,7 +373,7 @@ class ThreadMigrationCommand extends AbstractCommand
                 $res[] = self::collectThreadTom($thread_red_packets, ThreadTag::RED_PACKET, $value);
                 $thread_red_ids[] = $thread_red_packets->id;
             }
-            if(!empty($res)){
+            if (!empty($res)) {
                 $result = self::batchInsertThreadTom($res);
                 if (!$result) {
                     $this->db->rollBack();
@@ -386,7 +387,8 @@ class ThreadMigrationCommand extends AbstractCommand
         }
     }
 
-    public function migrateVideo(){
+    public function migrateVideo()
+    {
         //先刷新已经转码的
         $videoStringStart = '\'{\"videoId\":\'';
         $videoStringEnd = '\'}\'';
@@ -396,7 +398,8 @@ class ThreadMigrationCommand extends AbstractCommand
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$videoStringStart},MAX({$this->thread_video}.id), {$videoStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 0 and {$this->thread_video}.status = 0 and {$this->threads}.is_draft = 1 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?) group by {$this->thread_video}.thread_id"), [ThreadTag::VIDEO,ThreadTag::VIDEO, ThreadTag::VIDEO]);
     }
 
-    public function migrateAudio(){
+    public function migrateAudio()
+    {
         //先刷新已经转码的
         $audioStringStart = '\'{\"audioId\":\'';
         $audioStringEnd = '\'}\'';
@@ -406,19 +409,20 @@ class ThreadMigrationCommand extends AbstractCommand
         app(ConnectionInterface::class)->statement(app(ConnectionInterface::class)->raw("INSERT INTO {$this->thread_tom} (thread_id,tom_type,{$this->thread_tom}.key,{$this->thread_tom}.status,created_at,updated_at,{$this->thread_tom}.value) select {$this->threads}.id,?,?,IF({$this->threads}.deleted_at, -1, 0),{$this->threads}.created_at,{$this->threads}.updated_at,concat({$audioStringStart},MAX({$this->thread_video}.id), {$audioStringEnd}) from {$this->thread_video} inner join {$this->threads} on {$this->thread_video}.thread_id = {$this->threads}.id where {$this->thread_video}.type = 1 and {$this->thread_video}.status = 0 and {$this->threads}.is_draft = 1 and {$this->thread_video}.thread_id not in (select thread_id from {$this->thread_tom} where tom_type = ?) group by {$this->thread_video}.thread_id"), [ThreadTag::VOICE,ThreadTag::VOICE, ThreadTag::VOICE]);
     }
 
-    public function migrateQuestion(){
+    public function migrateQuestion()
+    {
         $start_page = 0;
         $isset_reward_ids = ThreadTom::query()->where('tom_type', ThreadTag::REWARD)->pluck('thread_id')->toArray();
-        while(!empty($list = self::getThreadQuestion($start_page, $isset_reward_ids)) && !empty($list->toArray())){
+        while (!empty($list = self::getThreadQuestion($start_page, $isset_reward_ids)) && !empty($list->toArray())) {
             $this->db->beginTransaction();
-            $res = array();
+            $res = [];
             $added_reward_ids = [];
-            foreach ($list as $val){
+            foreach ($list as $val) {
                 $q_type = 0;
                 $q_price = $remain_money = 0;
                 $answer_id = 0;
                 $q_expired_at = $q_created_at = $q_updated_at = '';
-                if(!empty($val->reward_id)){
+                if (!empty($val->reward_id)) {
                     $q_type = $val->type;
                     $q_price = $val->money;
                     $remain_money = $val->remain_money;
@@ -426,9 +430,7 @@ class ThreadMigrationCommand extends AbstractCommand
                     $answer_id = $val->answer_id;
                     $q_created_at = $val->reward_created_at;
                     $q_updated_at = $val->reward_updated_at;
-                }
-                else
-                {
+                } else {
                     continue;
                 }
 
@@ -451,7 +453,7 @@ class ThreadMigrationCommand extends AbstractCommand
                 $added_reward_ids[] = $val->id;
             }
 
-            if(!empty($res)){
+            if (!empty($res)) {
                 $result = self::batchInsertThreadTom($res);
                 if (!$result) {
                     $this->db->rollBack();
@@ -465,14 +467,15 @@ class ThreadMigrationCommand extends AbstractCommand
         }
     }
 
-    public function migrateGoods(){
+    public function migrateGoods()
+    {
         $start_page = 0;
         $isset_goods_thread_ids = ThreadTom::query()->where('tom_type', ThreadTag::GOODS)->pluck('thread_id')->toArray();
-        while (!empty($list = self::getThreadGoods($start_page, $isset_goods_thread_ids)) && !empty($list->toArray())){
-            $res = array();
+        while (!empty($list = self::getThreadGoods($start_page, $isset_goods_thread_ids)) && !empty($list->toArray())) {
+            $res = [];
             $this->db->beginTransaction();
             $added_goods_thread_ids = [];
-            foreach ($list as $val){
+            foreach ($list as $val) {
                 // 插入 thread_tom ，先插goods，再判断是否插入image类型
                 $body = [
                     'id'        =>  $val->gid,
@@ -494,7 +497,7 @@ class ThreadMigrationCommand extends AbstractCommand
                 $added_goods_thread_ids[] = $val->id;
             }
 
-            if(!empty($res)){
+            if (!empty($res)) {
                 $result = self::batchInsertThreadTom($res);
                 if (!$result) {
                     $this->db->rollBack();
@@ -508,15 +511,16 @@ class ThreadMigrationCommand extends AbstractCommand
         }
     }
 
-
-    public function preHttps($url){
-        if(strpos($url, 'http') === false){
+    public function preHttps($url)
+    {
+        if (strpos($url, 'http') === false) {
             $url = 'https://'.$url;
         }
         return $url;
     }
 
-    public function insertThreadTom($thread, $tom_type, $value){
+    public function insertThreadTom($thread, $tom_type, $value)
+    {
         return $this->db->table('thread_tom')->insert([
             'thread_id' =>  $thread->id,
             'tom_type'  =>  $tom_type,
@@ -528,9 +532,8 @@ class ThreadMigrationCommand extends AbstractCommand
         ]);
     }
 
-
-
-    public function collectThreadTom($thread, $tom_type, $value){
+    public function collectThreadTom($thread, $tom_type, $value)
+    {
         return [
             'thread_id' =>  $thread->id,
             'tom_type'  =>  $tom_type,
@@ -542,26 +545,29 @@ class ThreadMigrationCommand extends AbstractCommand
         ];
     }
 
-    public function batchInsertThreadTom($arr){
+    public function batchInsertThreadTom($arr)
+    {
         return $this->db->table('thread_tom')->insert($arr);
     }
 
     //通过s9e，将threads中的 content 转为接口获取的 html 渲染格式
-    public function s9eRender($text){
+    public function s9eRender($text)
+    {
         return $this->app->make(Formatter::class)->render($text);
     }
 
     //将s9e render 渲染后的数据，正则匹配替换调表情，如不切换，当站长更换域名时，表情url会失效
-    public function v3Content($text){
+    public function v3Content($text)
+    {
         preg_match_all('/<img.*?emoji\/qq.*?>/i', $text, $m1);
-        if(empty($m1[0])){
+        if (empty($m1[0])) {
             return $text;
         }
         $searches = $m1[0];
         $replaces = [];
         foreach ($searches as $key => $search) {
             preg_match('/alt="(.*?)"/i', $search, $m2);
-            if(empty($m2[0])){      //没有匹配上
+            if (empty($m2[0])) {      //没有匹配上
                 unset($searches[$key]);
                 continue;
             }
@@ -572,9 +578,10 @@ class ThreadMigrationCommand extends AbstractCommand
         return $text;
     }
 
-    public function renderTopic($text){
+    public function renderTopic($text)
+    {
         preg_match_all('/#.+?#/', $text, $topic);
-        if(empty($topic)){
+        if (empty($topic)) {
             return  $text;
         }
         $topic = $topic[0];
@@ -584,15 +591,16 @@ class ThreadMigrationCommand extends AbstractCommand
             $item['html'] = sprintf('<span id="topic" value="%s">%s</span>', $item['id'], $item['content']);
             return $item;
         })->toArray();
-        foreach ($topics as $val){
+        foreach ($topics as $val) {
             $text = preg_replace("/{$val['content']}/", $val['html'], $text, 1);
         }
         return $text;
     }
 
-    public function renderCall($text){
+    public function renderCall($text)
+    {
         preg_match_all('/@.+? /', $text, $call);
-        if(empty($call)){
+        if (empty($call)) {
             return  $text;
         }
         $call = $call[0];
@@ -602,23 +610,26 @@ class ThreadMigrationCommand extends AbstractCommand
             $item['html'] = sprintf('<span id="member" value="%s">%s</span>', $item['id'], $item['username']);
             return $item;
         })->toArray();
-        foreach ($ats as $val){
+        foreach ($ats as $val) {
             $text = preg_replace("/{$val['username']}/", "{$val['html']}", $text, 1);
         }
         return $text;
     }
 
     //获取老数据 threads 、posts
-    public function getOldData($limit){
+    public function getOldData($limit)
+    {
         $data = [];
-        $threadIds = Thread::query()->where('type','!=', self::V3_TYPE)
+        $threadIds = Thread::query()->where('type', '!=', self::V3_TYPE)
             ->limit($limit)->pluck('id')->toArray();
-        if(empty($threadIds))   return $data;
+        if (empty($threadIds)) {
+            return $data;
+        }
         $posts = Post::query()->whereIn('thread_id', $threadIds)
             ->where('user_id', '!=', 0)
             ->whereNotNull('user_id')
             ->get(['id', 'content', 'thread_id']);
-        foreach ($posts as $val){
+        foreach ($posts as $val) {
             $data[$val->thread_id][] = [
                 'post_id'   =>  $val->id,
                 'content'   =>  $val->content
@@ -627,12 +638,12 @@ class ThreadMigrationCommand extends AbstractCommand
         return $data;
     }
 
-
     //获取文字贴数据
-    public function getThreadRedPacket($start_page, $isset_red_thread_ids){
+    public function getThreadRedPacket($start_page, $isset_red_thread_ids)
+    {
         return  $this->db->table('thread_red_packets as t')
-            ->join('threads', 'threads.id','=','t.thread_id')
-            ->join('posts as p','t.thread_id','=','p.thread_id')
+            ->join('threads', 'threads.id', '=', 't.thread_id')
+            ->join('posts as p', 't.thread_id', '=', 'p.thread_id')
             ->where('p.is_first', 1)
             ->whereNotIn('t.thread_id', $isset_red_thread_ids)
             ->offset($start_page * self::LIMIT)
@@ -641,12 +652,13 @@ class ThreadMigrationCommand extends AbstractCommand
     }
 
     //获取问题数据
-    public function getThreadQuestion($start_page, $isset_reward_ids){
+    public function getThreadQuestion($start_page, $isset_reward_ids)
+    {
         //这里只处理悬赏帖了
         $thread_reward_ids = ThreadReward::query()->where('type', 0)->pluck('thread_id')->toArray();
         return  $this->db->table('threads as t')
-            ->join('posts as p','t.id','=','p.thread_id')
-            ->join('thread_rewards as r','p.id','=','r.post_id')
+            ->join('posts as p', 't.id', '=', 'p.thread_id')
+            ->join('thread_rewards as r', 'p.id', '=', 'r.post_id')
             ->where('t.type', Thread::TYPE_OF_QUESTION)
             ->where('p.is_first', 1)
             ->whereIn('t.id', $thread_reward_ids)
@@ -657,10 +669,11 @@ class ThreadMigrationCommand extends AbstractCommand
     }
 
     //获取商品数据
-    public function getThreadGoods($start_page, $isset_goods_thread_ids){
+    public function getThreadGoods($start_page, $isset_goods_thread_ids)
+    {
         return  $this->db->table('threads as t')
-            ->join('posts as p','t.id','=','p.thread_id')
-            ->join('post_goods as g','g.post_id','=','p.id')
+            ->join('posts as p', 't.id', '=', 'p.thread_id')
+            ->join('post_goods as g', 'g.post_id', '=', 'p.id')
             ->where('t.type', Thread::TYPE_OF_GOODS)
             ->where('p.is_first', 1)
             ->whereNotIn('t.id', $isset_goods_thread_ids)
@@ -670,12 +683,14 @@ class ThreadMigrationCommand extends AbstractCommand
     }
 
     //add_sql
-    public function addSql(){
+    public function addSql()
+    {
         return "INSERT INTO {$this->posts_dst} (`id`,`user_id`,`thread_id`,`reply_post_id`,`reply_user_id`,`comment_post_id`,`comment_user_id`,`content`,`ip`,`port`,`reply_count`,`like_count`,`created_at`,`updated_at`,`deleted_at`,`deleted_user_id`,`is_first`, `is_comment`, `is_approved`) select {$this->posts}.`id`,{$this->posts}.`user_id`,{$this->posts}.`thread_id`,{$this->posts}.`reply_post_id`,{$this->posts}.`reply_user_id`,{$this->posts}.`comment_post_id`,{$this->posts}.`comment_user_id`,{$this->post_content_temp}.`content`,{$this->posts}.`ip`,{$this->posts}.`port`,{$this->posts}.`reply_count`,{$this->posts}.`like_count`,{$this->posts}.`created_at`,{$this->posts}.`updated_at`,{$this->posts}.`deleted_at`,{$this->posts}.`deleted_user_id`,{$this->posts}.`is_first`, {$this->posts}.`is_comment`, {$this->posts}.`is_approved` from {$this->post_content_temp} inner join {$this->posts} on {$this->post_content_temp}.id = {$this->posts}.id WHERE {$this->post_content_temp}.id NOT IN (SELECT id FROM {$this->posts_dst})";
     }
 
     //posts_sql
-    public function postSql(){
+    public function postSql()
+    {
         return  "CREATE TABLE {$this->posts_dst} (
                   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '回复 id',
                   `user_id` bigint(20) unsigned DEFAULT NULL COMMENT '发表用户 id',
@@ -709,12 +724,12 @@ class ThreadMigrationCommand extends AbstractCommand
     }
 
     //temp_sql
-    public function tempSql(){
+    public function tempSql()
+    {
         return  "CREATE TABLE {$this->post_content_temp} (
                   `id` bigint(20) unsigned NOT NULL,
                   `content` mediumtext COLLATE utf8mb4_unicode_ci DEFAULT NULL,
                    UNIQUE KEY `post_id` (`id`)
                   ) ENGINE=InnoDB AUTO_INCREMENT=101821 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     }
-
 }

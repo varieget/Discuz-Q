@@ -25,7 +25,8 @@ use Illuminate\Notifications\RoutesNotifications;
 
 trait Notifiable
 {
-    use HasDatabaseNotifications,RoutesNotifications;
+    use HasDatabaseNotifications;
+    use RoutesNotifications;
 
     /**
      * Get the entity's notifications.
