@@ -173,31 +173,11 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        //检查插件过滤情况
-        $this->filterPlugin($threadsBuilder);
-
         $bPreload = Utils::isPositiveInteger(($page - 2) / $this->preloadPages + 1);
         if ($page > 1 && $bPreload) {//预加载
             return $this->preloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         } else {//读缓存
             return $this->loadOnePage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
-        }
-    }
-
-    private function filterPlugin(&$threadsBuilder)
-    {
-        $pluginList = \Discuz\Common\Utils::getPluginList();
-        foreach ($pluginList as $item) {
-            if ($item['type'] == PluginEnum::PLUGIN_THREAD
-                && $item['filter_enable']
-                && isset($item['busi'])) {
-                $serviceClass = new \ReflectionClass($item['busi']);
-                $op = "filter";
-                $service = $serviceClass->newInstanceArgs([$this->user, 0, 0, $item["app_id"], null, $op, "", false]);
-                if (method_exists($service,$op)){
-                    $service->$op($threadsBuilder);
-                }
-            }
         }
     }
 

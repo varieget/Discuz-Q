@@ -42,32 +42,6 @@ class ShopBusi extends TomBaseBusi
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_PAID_HOMEPAGE);
     }
 
-    public function filter(&$threadsBuilder)
-    {
-        Utils::setAppKey("plugin_appid",$this->tomId);
-        $setting = $this->getSetting();
-        if (isset($setting["isOpen"]) && $setting["isOpen"] == 1){
-            return;
-        }
-        $sqlStr = $threadsBuilder->toSql();
-        if (str_contains($sqlStr,"thread_tag")){
-
-            $startPos = strpos($sqlStr," `thread_tag` as `");
-            if ($startPos === false){
-               $threadsBuilder->where("thread_tag.tag","!=",$this->tomId);
-            }else{
-                $startPos += strlen(" `thread_tag` as `");
-                $endPos = strpos($sqlStr,"` ", $startPos);
-                $tableName = substr($sqlStr,$startPos,$endPos-$startPos);
-                $threadsBuilder->where($tableName.".tag","!=",$this->tomId);
-            }
-        }else{
-            $threadsBuilder->leftJoin('thread_tag as tag', 'tag.thread_id', '=', 'th.id')
-                ->where('tag.tag', "!=", $this->tomId);
-        }
-    }
-
-
     public function create()
     {
         Utils::setAppKey("plugin_appid",$this->tomId);
