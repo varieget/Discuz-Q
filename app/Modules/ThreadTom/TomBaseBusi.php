@@ -77,19 +77,11 @@ abstract class TomBaseBusi
         $this->operationValid();
     }
 
-    public function __call($name, $arguments)
-    {
-        // TODO: Implement __call() method.
-        if (!method_exists($this, $name)) {
-            $this->outPut(ResponseCode::INTERNAL_ERROR, sprintf('operation [%s] not exist in [%s]', $name, static::class));
-        }
-    }
-
     private function operationValid()
     {
-//        if (!method_exists($this, $this->operation)) {
-//            $this->outPut(ResponseCode::INTERNAL_ERROR, sprintf('operation [%s] not exist in [%s]', $this->operation, static::class));
-//        }
+        if (!method_exists($this, $this->operation)) {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, sprintf('operation [%s] not exist in [%s]', $this->operation, static::class));
+        }
     }
 
     /**
