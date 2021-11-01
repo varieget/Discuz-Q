@@ -233,7 +233,8 @@ class Utils
         header('Content-Length:' . ob_get_length());
         header('Content-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         ob_end_flush();
-        
+        ob_end_clean();
+
     }
 
     public static function setAppKey($key, $value)
