@@ -3,7 +3,6 @@
 
 namespace App\Api\Controller\Plugin;
 
-
 use Discuz\Base\DzqLog;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Filesystem\Factory;
@@ -15,17 +14,19 @@ class PluginFileSave
     /** @var SettingsRepository $settings */
     private $settings;
 
-    public function __construct(Factory $fileSystem, SettingsRepository $settings){
+    public function __construct(Factory $fileSystem, SettingsRepository $settings)
+    {
         $this->fileSystem = $fileSystem;
         $this->settings = $settings;
     }
 
-    public function saveFile($fileName,string $qrBuff){
+    public function saveFile($fileName, string $qrBuff)
+    {
         try {
-            $path="public/plugin/".$fileName;
+            $path='public/plugin/'.$fileName;
             $isRemote=false;
             // 开启 cos 时，cos放一份
-            if($this->settings->get('qcloud_cos', 'qcloud')){
+            if ($this->settings->get('qcloud_cos', 'qcloud')) {
                 //$qrBuffTemp = clone $qrBuff;
                 $this->fileSystem->disk('cos')->put($path, $qrBuff);
                 $isRemote = true;
@@ -41,14 +42,15 @@ class PluginFileSave
             }
             DzqLog::error('ShopFileSave::saveFile', [], $errorMsg);
 
-            return ["",false];
+            return ['',false];
         }
     }
 
-    public function getFilePath($isRemote, $path){
-        if($isRemote && $this->settings->get('qcloud_cos', 'qcloud')){
+    public function getFilePath($isRemote, $path)
+    {
+        if ($isRemote && $this->settings->get('qcloud_cos', 'qcloud')) {
             $isExist = $this->fileSystem->disk('cos')->has($path);
-            if ($isExist){
+            if ($isExist) {
                 $url = $this->fileSystem->disk('cos')->url($path);
                 return $url;
             }

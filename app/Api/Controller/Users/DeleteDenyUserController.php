@@ -18,33 +18,33 @@
 
 namespace App\Api\Controller\Users;
 
+use App\Common\ResponseCode;
 use App\Models\DenyUser;
-use Discuz\Api\Controller\AbstractDeleteController;
-use Discuz\Auth\AssertPermissionTrait;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqController;
 
-class DeleteDenyUserController extends AbstractDeleteController
+class DeleteDenyUserController extends DzqController
 {
-    use AssertPermissionTrait;
-
-    /**
-     * @inheritDoc
-     * @throws \Discuz\Auth\Exception\NotAuthenticatedException
-     */
-    protected function delete(ServerRequestInterface $request)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $request->getAttribute('actor');
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return true;
+    }
 
-        $this->assertRegistered($actor);
+    public function main()
+    {
+        $actor = $this->user;
 
-        $id = Arr::get($request->getQueryParams(), 'id');
+        $id = $this->inPut('id');
 
         if ($actor->deny) {
             DenyUser::query()->where([
-                'user_id' => $actor->id,
-                'deny_user_id' => $id
-            ])->delete();
+             'user_id' => $actor->id, 'deny_user_id' => $id])->delete();
         }
+
+        $this->outPut(ResponseCode::SUCCESS);
     }
 }

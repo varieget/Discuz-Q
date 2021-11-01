@@ -18,7 +18,7 @@
 
 namespace App\Repositories;
 
-use App\Api\Controller\ThreadsV3\ThreadTrait;
+use App\Api\Controller\Threads\ThreadTrait;
 use App\Common\PermissionKey;
 use App\Common\ResponseCode;
 use App\Models\Attachment;

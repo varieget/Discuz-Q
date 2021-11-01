@@ -25,7 +25,6 @@ use App\Events\Users\Forum;
 use App\Events\Users\PayPasswordChanged;
 use App\Events\Users\UserFollowCreated;
 use App\Models\SessionToken;
-use App\Models\Setting;
 use App\Models\SiteInfoDaily;
 use App\Notifications\Messages\Database\StatusMessage;
 use App\Notifications\System;
@@ -85,19 +84,21 @@ class UserListener
     public function activeUsersStatistics(Forum $event)
     {
         $get_query_params = $event->request->getQueryParams();
-        if(empty($get_query_params['dzqPf'])){
+        if (empty($get_query_params['dzqPf'])) {
             return;
         }
         $active_users = app('cache')->get('active_users');
-        if(empty($active_users))    $active_users = [];
+        if (empty($active_users)) {
+            $active_users = [];
+        }
         //如果没有 user_id，就不统计活跃用户
-        if($event->user->id && !in_array($event->user->id, $active_users)){
-            $tomorrow = date("Y-m-d",strtotime("+1 day"));
+        if ($event->user->id && !in_array($event->user->id, $active_users)) {
+            $tomorrow = date('Y-m-d', strtotime('+1 day'));
             $cache_time = strtotime($tomorrow) - time();
 
-            $today = date("Y-m-d", time());
+            $today = date('Y-m-d', time());
             $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
-            if(empty($site_info_daily)){
+            if (empty($site_info_daily)) {
                 $site_info_daily = new SiteInfoDaily();
                 $site_info_daily->date = $today;
                 $site_info_daily->mini_active_users = 0;
@@ -106,7 +107,7 @@ class UserListener
                 $site_info_daily->new_users = 0;
             }
             //根据url上dzqPf参数判断来自哪个端
-            switch ($get_query_params['dzqPf']){
+            switch ($get_query_params['dzqPf']) {
                 case Platform::FROM_WEAPP:
                     $site_info_daily->mini_active_users += 1;
                     break;
@@ -118,26 +119,31 @@ class UserListener
                     break;
             }
             //判断改用户的 created_at 时间，如果是今天则表示新注册的用户
-            if($event->user->created_at < $tomorrow && $event->user->created_at > $today){
+            if ($event->user->created_at < $tomorrow && $event->user->created_at > $today) {
                 $site_info_daily->new_users += 1;
             }
             $site_info_daily->save();
             array_push($active_users, $event->user->id);
-            app('cache')->put('active_users' , $active_users, $cache_time);
+            app('cache')->put('active_users', $active_users, $cache_time);
         }
     }
 
     //启动数统计
-    public function startStatistics(Forum $event){
+    public function startStatistics(Forum $event)
+    {
         $get_query_params = $event->request->getQueryParams();
-        if(empty($get_query_params['dzqPf'])){
+        if (empty($get_query_params['dzqPf'])) {
             return;
         }
-        $start_peoples_dzqSid = app('cache')->get('start_peoples_dzqSid');
-        if(empty($start_peoples_dzqSid))    $start_peoples_dzqSid = [];
-        $today = date("Y-m-d", time());
+//        $start_peoples_dzqSid = app('cache')->get('start_peoples_dzqSid');
+//        if(empty($start_peoples_dzqSid))    $start_peoples_dzqSid = [];
+        $start_peoples_uid = app('cache')->get('start_peoples_uid');
+        if (empty($start_peoples_uid)) {
+            $start_peoples_uid = [];
+        }
+        $today = date('Y-m-d', time());
         $site_info_daily = SiteInfoDaily::query()->where('date', $today)->first();
-        if(empty($site_info_daily)){
+        if (empty($site_info_daily)) {
             $site_info_daily = new SiteInfoDaily();
             $site_info_daily->date = $today;
             $site_info_daily->pc_start_count = 0;
@@ -150,7 +156,7 @@ class UserListener
             $site_info_daily->start_peoples = 0;
         }
         //根据url上dzqPf参数判断来自哪个端
-        switch ($get_query_params['dzqPf']){
+        switch ($get_query_params['dzqPf']) {
             case Platform::FROM_WEAPP:
                 $site_info_daily->mini_start_count += 1;
                 break;
@@ -162,10 +168,10 @@ class UserListener
                 break;
         }
         $site_info_daily->start_count += 1;
-        if(!in_array($get_query_params['dzqSid'], $start_peoples_dzqSid)){
-            $tomorrow = date("Y-m-d",strtotime("+1 day"));
+        if ($event->user->id  && !in_array($event->user->id, $start_peoples_uid)) {
+            $tomorrow = date('Y-m-d', strtotime('+1 day'));
             $cache_time = strtotime($tomorrow) - time();
-            switch ($get_query_params['dzqPf']){
+            switch ($get_query_params['dzqPf']) {
                 case Platform::FROM_WEAPP:
                     $site_info_daily->mini_start_peoples += 1;
                     break;
@@ -179,9 +185,9 @@ class UserListener
             $site_info_daily->start_peoples += 1;
         }
         $site_info_daily->save();
-        if($event->user->id && !in_array($event->user->id, $start_peoples_dzqSid) && !empty($cache_time)){
-            array_push($start_peoples_dzqSid, $get_query_params['dzqSid']);
-            app('cache')->put('start_peoples_dzqSid' , $start_peoples_dzqSid, $cache_time);
+        if ($event->user->id && !in_array($event->user->id, $start_peoples_uid) && !empty($cache_time)) {
+            array_push($start_peoples_uid, $event->user->id);
+            app('cache')->put('start_peoples_uid', $start_peoples_uid, $cache_time);
         }
     }
 }

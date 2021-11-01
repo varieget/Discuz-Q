@@ -1,5 +1,21 @@
 <?php
 
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace App\Crawler;
 
 class Douban
@@ -19,7 +35,6 @@ class Douban
         $this->cookie = $cookie;
         return $this->getList($topic, $page);
     }
-
 
     /**
      * @method  从话题搜索数据，获取到帖子列表
@@ -70,7 +85,7 @@ class Douban
                 }
                 //组装数据
                 //发帖人信息
-                $result['user']['nickname'] = str_replace(" ", "", $result['user']['nickname']);
+                $result['user']['nickname'] = str_replace(' ', '', $result['user']['nickname']);
                 $data[$k]['user'] = $result['user'];
                 //帖子信息
                 $data[$k]['forum'] = [
@@ -168,7 +183,6 @@ class Douban
         return $forumInfo;
     }
 
-
     /**
      * @method  获取用户信息
      * @param string $userInfo 内容
@@ -210,7 +224,7 @@ class Douban
             }
             //评论用户信息
             $user = $this->getUser($commentValue);
-            $user['nickname'] = str_replace(" ", "", $user['nickname']);
+            $user['nickname'] = str_replace(' ', '', $user['nickname']);
             //评论信息
             $commentDetail = $this->getComment($commentValue);
             if (empty($user['nickname']) || empty($commentDetail['text']['text'])) {
@@ -248,7 +262,7 @@ class Douban
         }
 
         //id
-        $commentInfo['id'] = $this->dealMatchStr("/data-cid=\"(.*)\" >/i", $comment);
+        $commentInfo['id'] = $this->dealMatchStr('/data-cid="(.*)" >/i', $comment);
         $commentInfo['rootid'] = $commentInfo['id'];
         //评论时间
         $commentInfo['created_at'] = $this->dealMatchStr("/<span class=\"pubtime\">(.*)<\/span>/i", $comment);
@@ -258,7 +272,6 @@ class Douban
 
         return $commentInfo;
     }
-
 
     /**
      * @method  处理单个正则匹配，返回结果
@@ -289,13 +302,13 @@ class Douban
     private function curlGet($url, $headers = [], $port = 80)
     {
         $ch = curl_init();
-        $header = array();
+        $header = [];
         $header[] = 'Content-Type:application/x-www-form-urlencoded';
         curl_setopt($ch, CURLOPT_URL, $url);
         if ($port !== 80) {
             curl_setopt($ch, CURLOPT_PORT, $port);
         }
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36');
         curl_setopt($ch, CURLOPT_HEADER, 0);//设定是否输出页面内容
         if ($headers) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -313,5 +326,4 @@ class Douban
 
         return $filecontent;
     }
-
 }

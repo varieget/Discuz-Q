@@ -24,7 +24,6 @@ use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Filesystem\Factory as Filesystem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Intervention\Image\ImageManager;
 
 /**
  * @property int $id
@@ -75,13 +74,14 @@ class DialogMessage extends Model
     public function getMessageTextAttribute($value)
     {
         $value = json_decode(stripslashes($value));
-      //  $value['message_text'] = static::$formatter->unparse($value['message_text']);
+        //  $value['message_text'] = static::$formatter->unparse($value['message_text']);
         $value = json_encode($value);
 
         return $value;
     }
 
-    public function getCommonMessageText(){
+    public function getCommonMessageText()
+    {
         $message_text_old = $this->attributes['message_text'] ?: '';
         $message_text = json_decode(stripslashes($message_text_old));
         if (!empty($message_text)) {
@@ -154,8 +154,8 @@ class DialogMessage extends Model
         $message_text = json_decode(stripslashes($message_text_old));
         if (!empty($message_text)) {
             $messageText = $message_text->image_url;
-            if($messageText){
-                if(!empty($attachmentId)) {
+            if ($messageText) {
+                if (!empty($attachmentId)) {
                     $attachmentRecord = Attachment::query()->find($attachmentId);
                     $settings = app()->make(SettingsRepository::class);
                     if ($attachmentRecord->is_remote) {
@@ -166,15 +166,15 @@ class DialogMessage extends Model
                         $url = app()->make(Filesystem::class)->disk('attachment')->url($attachmentRecord->full_path);
                     }
 //                   $attachmentRecord = Attachment::query()->where('id', $attachmentId)->first(["file_width", "file_height"])->toArray();
-                   if(!empty($attachmentRecord->file_width) && !empty($attachmentRecord->file_height)){
+                    if (!empty($attachmentRecord->file_width) && !empty($attachmentRecord->file_height)) {
                         if (strstr($messageText, $settings->get('qcloud_cos_bucket_name', 'qcloud'))) {
-                            if($settings->get('qcloud_cos_sign_url', 'qcloud', true)){          //开启了签名
-                                $messageText = $url."&width=".$attachmentRecord->file_width."&"."height=".$attachmentRecord->file_height;
-                            }else{
-                                $messageText = $url."?width=".$attachmentRecord->file_width."&"."height=".$attachmentRecord->file_height;
+                            if ($settings->get('qcloud_cos_sign_url', 'qcloud', true)) {          //开启了签名
+                                $messageText = $url.'&width='.$attachmentRecord->file_width.'&'.'height='.$attachmentRecord->file_height;
+                            } else {
+                                $messageText = $url.'?width='.$attachmentRecord->file_width.'&'.'height='.$attachmentRecord->file_height;
                             }
                         } else {
-                            $messageText = $url."?width=".$attachmentRecord->file_width."&"."height=".$attachmentRecord->file_height;
+                            $messageText = $url.'?width='.$attachmentRecord->file_width.'&'.'height='.$attachmentRecord->file_height;
                         }
                     }
                 }
@@ -186,7 +186,7 @@ class DialogMessage extends Model
         return $messageText;
     }
 
-    public static function build($user_id, $dialog_id, $attachment_id, $message_text,$read_status, $status)
+    public static function build($user_id, $dialog_id, $attachment_id, $message_text, $read_status, $status)
     {
         $dialogMessage = new static();
 

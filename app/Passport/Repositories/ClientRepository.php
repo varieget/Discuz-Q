@@ -26,7 +26,8 @@ use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
 
 class ClientRepository implements ClientRepositoryInterface
 {
-    use ClientTrait, EntityTrait;
+    use ClientTrait;
+    use EntityTrait;
 
     /**
      * Get a client.

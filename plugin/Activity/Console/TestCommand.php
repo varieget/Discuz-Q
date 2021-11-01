@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +18,14 @@
 
 namespace Plugin\Activity\Console;
 
-
 use Discuz\Base\DzqCommand;
 
 class TestCommand extends DzqCommand
 {
-
     protected $signature = 'activity:test';
+
     protected $description = '执行一个脚本命令,控制台执行[php disco activity:test]';
+
     protected function main()
     {
         $this->info('Hello Discuz! Q Plugin Activity');

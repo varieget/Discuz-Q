@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +18,18 @@
 
 namespace Plugin\Activity;
 
-
 use App\Common\CacheKey;
 use App\Common\DzqConst;
 use App\Common\ResponseCode;
 use App\Models\User;
 use App\Modules\ThreadTom\TomBaseBusi;
 use Discuz\Base\DzqCache;
+use Illuminate\Validation\Rule;
 use Plugin\Activity\Model\ActivityUser;
 use Plugin\Activity\Model\ThreadActivity;
 
 class ActivityBusi extends TomBaseBusi
 {
-
     public function select()
     {
         $activityId = $this->getParams('activityId');
@@ -37,7 +37,9 @@ class ActivityBusi extends TomBaseBusi
             'id' => $activityId,
             'status' => DzqConst::BOOL_YES
         ])->first();
-        if (empty($activity)) return false;
+        if (empty($activity)) {
+            return false;
+        }
         $result = $this->getActivityDetail($activity);
         return $this->jsonReturn($result);
     }
@@ -63,12 +65,21 @@ class ActivityBusi extends TomBaseBusi
     {
         $this->activityValidate();
         $activityId = $this->getParams('activityId');
-        if (empty($activityId)) $this->outPut(ResponseCode::INVALID_PARAMETER, '插件参数缺少字段 activityId ');
+        if (empty($activityId)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '插件参数缺少字段 activityId ');
+        }
         $activity = ThreadActivity::query()->where([
             'id' => $activityId,
             'status' => DzqConst::BOOL_YES
         ])->first();
-        if (empty($activity)) $this->outPut(ResponseCode::INVALID_PARAMETER, '活动不存在');
+        if (empty($activity)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '活动不存在');
+        }
+        //如果有人报名了，则不能编辑
+        $isRegistered = ActivityUser::query()->where(['activity_id' => $activityId, 'status' => DzqConst::BOOL_YES])->exists();
+        if ($isRegistered) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '已有人报名，不可编辑活动内容');
+        }
         $rawAttr = $this->getActivityRawAttr();
         $activity->setRawAttributes($rawAttr);
         if ($activity->save()) {
@@ -113,6 +124,7 @@ class ActivityBusi extends TomBaseBusi
                 'registerStartTime' => 'date',
                 'registerEndTime' => 'date|after_or_equal:' . $this->getParams('registerStartTime'),
                 'totalNumber' => 'integer|min:0|max:10000',
+                'additionalInfoType.*' => Rule::in(ThreadActivity::allowInfoType())
             ]
         );
     }
@@ -134,7 +146,9 @@ class ActivityBusi extends TomBaseBusi
             'activity_end_time' => $activityEndTime,
             'register_start_time' => $registerStartTime,
             'register_end_time' => $registerEndTime,
-            'total_number' => $totalNumber
+            'total_number' => $totalNumber,
+            'additional_info_type'  =>  json_encode($this->getParams('additionalInfoType'), JSON_UNESCAPED_UNICODE)
+
         ];
         $position = $this->getParams('position');
         if (!empty($position)) {
@@ -168,6 +182,7 @@ class ActivityBusi extends TomBaseBusi
                 'nickname' => $user['nickname']
             ];
         }
+
         $isRegistered = $activityUser->where('user_id', $this->user->id)->exists();
         return [
             'activityId' => $activityId,
@@ -190,7 +205,8 @@ class ActivityBusi extends TomBaseBusi
             'isMemberFull' => $activity['total_number'] == 0 ? false : $activity['total_number'] <= $currentNumber,
             'createdAt' => date('Y-m-d H:i:s', strtotime($activity['created_at'])),
             'updatedAt' => date('Y-m-d H:i:s', strtotime($activity['updated_at'])),
-            'registerUsers' => $registerUsers
+            'registerUsers' => $registerUsers,
+            'additionalInfoType' => json_decode($activity['additional_info_type'], 1)
         ];
     }
 }

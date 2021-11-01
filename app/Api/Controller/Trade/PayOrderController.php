@@ -18,25 +18,43 @@
 
 namespace App\Api\Controller\Trade;
 
-use App\Api\Serializer\PayOrderSerializer;
 use App\Commands\Trade\PayOrder;
-use Discuz\Api\Controller\AbstractResourceController;
+use App\Common\CacheKey;
+use App\Common\ResponseCode;
+use App\Models\Order;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
+use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class PayOrderController extends AbstractResourceController
+class PayOrderController extends DzqController
 {
-    /**
-     * {@inheritdoc}
-     */
-    public $serializer = PayOrderSerializer::class;
-
     /**
      * @var Dispatcher
      */
     protected $bus;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        if (!$userRepo->canPayOrder($this->user)) {
+            throw new PermissionDeniedException('您没有权限支付订单');
+        }
+        return true;
+    }
+
+    public function prefixClearCache($user)
+    {
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_USER_PAY_ORDERS . $user->id);
+        DzqCache::delKey(CacheKey::LIST_THREADS_V3_USER_REWARD_ORDERS . $user->id);
+    }
+
+    public function suffixClearCache($user)
+    {
+        if (intval($this->inPut('paymentType')) == Order::PAYMENT_TYPE_WALLET) {
+            CacheKey::delListCache();
+        }
+    }
 
     /**
      * @param Dispatcher $bus
@@ -46,16 +64,58 @@ class PayOrderController extends AbstractResourceController
         $this->bus = $bus;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function data(ServerRequestInterface $request, Document $document)
+    public function main()
     {
-        $actor = $request->getAttribute('actor');
-        $order_sn = Arr::get($request->getQueryParams(), 'order_sn');
+        try {
+            // 兼容原来封装的逻辑
+            $orderSn = $this->inPut('orderSn');
+            $paymentType = $this->inPut('paymentType');
+            $payPassword = $this->inPut('payPassword');
+            if (empty($orderSn) || empty($paymentType) ||
+                ($paymentType == Order::PAYMENT_TYPE_WALLET && empty($payPassword))) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER);
+            }
 
-        return $this->bus->dispatch(
-            new PayOrder($order_sn, $actor, $request->getParsedBody())
-        );
+            $data = [
+                'order_sn' => $orderSn,
+                'payment_type' => $paymentType
+            ];
+            if (!empty($payPassword)) {
+                $data['pay_password'] = $payPassword;
+            }
+            $data = collect($data);
+            $payOrder = $this->bus->dispatch(
+                new PayOrder($orderSn, $this->user, $data)
+            );
+        } catch (\Exception $e) {
+            $this->info('订单支付失败,订单id:' . $orderSn, [$e->getTraceAsString()]);
+            $this->outPut(ResponseCode::INTERNAL_ERROR, $e->getMessage());
+        }
+
+        $result = [];
+        $payOrderResult = $payOrder->payment_params;
+        if ($paymentType == Order::PAYMENT_TYPE_WALLET) {
+            $payOrderResult = $payOrderResult['wallet_pay'] ?? [];
+            $result = [
+                'id' => $payOrder->id,
+                'desc' => $payOrder->body,
+                'walletPayResult' => $this->camelData($payOrderResult),
+                'wechatPayResult' => []
+            ];
+        } else {
+            $payOrderResult['wechatQrcode'] = $payOrderResult['wechat_qrcode'] ?? '';
+            $result = [
+                'id' => $payOrder->id,
+                'desc' => $payOrder->body,
+                'walletPayResult' => [],
+                'wechatPayResult' => $this->camelData($payOrderResult)
+            ];
+        }
+
+        if (isset($payOrderResult['result']) && $payOrderResult['result'] == 'fail') {
+            $this->outPut(ResponseCode::PAY_ORDER_FAIL, $payOrderResult['message'], $result);
+        }
+
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

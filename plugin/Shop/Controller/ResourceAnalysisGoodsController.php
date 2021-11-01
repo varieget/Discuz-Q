@@ -106,7 +106,7 @@ class ResourceAnalysisGoodsController extends DzqController
         $existsGoods = $postGoods->where('ready_content', $readyContent)->first();
         if (! empty($existsGoods)) {
             if ($this->checkGoodTitle($existsGoods)) {
-                return $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($existsGoods->toArray()));
+                $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($existsGoods->toArray()));
             }
             // TODO 未抓取到，但是商品已存在
         }
@@ -114,7 +114,7 @@ class ResourceAnalysisGoodsController extends DzqController
         // Filter Url
         $addressRegex = '/(?<address>(https|http):[\S.]+)/i';
         if (! preg_match($addressRegex, $readyContent, $matchAddress)) {
-            return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_not_found_address'));
+            $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_not_found_address'));
         }
         $this->address = $matchAddress['address'];
 
@@ -122,7 +122,7 @@ class ResourceAnalysisGoodsController extends DzqController
         $domainRegex = '/https:\/\/(([^:\/]*?)\.(?<url>.+?\.(cn|com)))/i';
         if (preg_match($domainRegex, $this->address, $domainUrl)) {
             if (! in_array($domainUrl['url'], $this->allowDomain)) {
-                return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_does_not_resolve'));
+                $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_does_not_resolve'));
             }
         }
 
@@ -135,19 +135,19 @@ class ResourceAnalysisGoodsController extends DzqController
         // Regular Expression Url
         $extractionUrlRegex = '/(https|http):\/\/(?<url>[0-9a-z.]+)/i';
         if (! preg_match($extractionUrlRegex, $this->address, $match)) {
-            return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_not_found_regex'));
+            $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_not_found_regex'));
         }
 
         $url = $match['url'];
         if (empty($url)) {
-            return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_fail_url'));
+            $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_fail_url'));
         }
 
         // Judge Enum
         if (! PostGoods::enumType(explode('.', $url), function ($callback) {
             $this->goodsType = $callback;
         })) {
-            return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_not_found_enum'));
+            $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_not_found_enum'));
         }
 
         /**
@@ -164,7 +164,7 @@ class ResourceAnalysisGoodsController extends DzqController
                     ->where('user_id', $actor->id)
                     ->first();
                 if (! empty($existTBGoods)) {
-                    return $this->outPut(ResponseCode::SUCCESS,'',$this->littleHump($existTBGoods->toArray()));
+                    $this->outPut(ResponseCode::SUCCESS,'',$this->littleHump($existTBGoods->toArray()));
                 }
             }
         }
@@ -191,7 +191,7 @@ class ResourceAnalysisGoodsController extends DzqController
             }
 
             if ($response->getStatusCode() != 200) {
-                return $this->outPut(ResponseCode::NET_ERROR,trans('post.post_goods_http_client_fail'));
+                $this->outPut(ResponseCode::NET_ERROR,trans('post.post_goods_http_client_fail'));
             }
             $this->html = $response->getBody()->getContents();
         } elseif ($sendType == 'File') {
@@ -212,13 +212,13 @@ class ResourceAnalysisGoodsController extends DzqController
          * @see PostGoodsTrait
          */
         if(empty($this->goodsType['value'])){
-            return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_fail_url'));
+            $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_fail_url'));
         }
         $this->{$this->goodsType['value']}();
 
         //过滤商品
         if ($this->goodsType['key'] != 3 && empty($this->goodsInfo['title']) && empty($this->goodsInfo['price'])) {
-            return $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_fail_url'));
+            $this->outPut(ResponseCode::INVALID_PARAMETER,trans('post.post_goods_fail_url'));
         }
 
         /**
@@ -256,7 +256,7 @@ class ResourceAnalysisGoodsController extends DzqController
 
         $goods->save();
 
-        return $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($goods));
+        $this->outPut(ResponseCode::SUCCESS,'', $this->camelData($goods));
     }
 
     private function isValidUrl($readyContent)

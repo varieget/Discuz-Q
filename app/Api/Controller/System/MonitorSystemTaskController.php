@@ -20,9 +20,7 @@ namespace App\Api\Controller\System;
 
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
-use App\Repositories\UserRepository;
 use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
 
@@ -40,6 +38,6 @@ class MonitorSystemTaskController extends DzqAdminController
                 $arr['status'] = 1;
             }
         }
-        return $this->outPut(ResponseCode::SUCCESS,'', $arr);
+        $this->outPut(ResponseCode::SUCCESS, '', $arr);
     }
 }

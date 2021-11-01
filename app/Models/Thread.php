@@ -93,6 +93,7 @@ use Illuminate\Support\Stringable;
 class Thread extends DzqModel
 {
     use EventGeneratorTrait;
+
     use ScopeVisibilityTrait;
 
     const TYPE_OF_TEXT = 0;
@@ -131,21 +132,31 @@ class Thread extends DzqModel
      * 通知内容展示长度(字)
      */
     const CONTENT_LENGTH = 80;
+
     const CONTENT_WITHOUT_LENGTH = 0;
+
     const TITLE_LENGTH = 100;
+
     const NOTICE_MESSAGE_LENGTH = 30;
 
-
     const  SORT_BY_THREAD = 1;//帖子创建时间排序
+
     const  SORT_BY_POST = 2;//评论创建时间排序
+
     const SORT_BY_HOT = 3;//热度排序
+
     const SORT_BY_RENEW = 4;//帖子更新时间排序
 
     const MY_DRAFT_THREAD = 1;//我的草稿
+
     const MY_LIKE_THREAD = 2;//我的点赞
+
     const MY_COLLECT_THREAD = 3;//我的收藏
+
     const MY_BUY_THREAD = 4;//我的购买
+
     const MY_OR_HIS_THREAD = 5;//我or他的主题页
+
     /**
      * 草稿
      */
@@ -154,56 +165,84 @@ class Thread extends DzqModel
     const IS_DRAFT = 1;
 
     const IS_ANONYMOUS = 1;
+
     const IS_NOT_ANONYMOUS = 0;
 
     const BOOL_YES = 1;
+
     const BOOL_NO = 0;
 
     const PAY_FREE = 0;
+
     const PAY_THREAD = 1;
+
     const PAY_ATTACH = 2;
 
     const IS_SITE = 1;
+
     const IS_NOT_SITE = 0;
 
     /**
      * 订单标题展示长度
      */
     const ORDER_TITLE_LENGTH = 20;
+
     const ORDER_TITLE_END_WITH = '...';
 
     const DATA_PLATFORM_OF_SITE = 0;
+
     const DATA_PLATFORM_OF_IMPORT = 1;
 
     const AUTO_IMPORT_OF_YEAR = 1;
+
     const AUTO_IMPORT_OF_MONTH = 2;
+
     const AUTO_IMPORT_OF_WEEKS = 3;
+
     const AUTO_IMPORT_OF_DAY = 4;
 
     const AUTO_IMPORT_HAVE_NOT_BEGUN = 0;
+
     const AUTO_IMPORT_HAVE_FINISHED = 1; // 当前年/月/周/天 已完成导入
 
     const CRAWLER_DATA_PLATFORM_OF_WEIBO = 1;
+
     const CRAWLER_DATA_PLATFORM_OF_TIEBA = 2;
+
     const CRAWLER_DATA_PLATFORM_OF_DOUBAN = 3;
+
     const CRAWLER_DATA_PLATFORM_OF_WECHAT = 4;
+
     const CRAWLER_DATA_PLATFORM_OF_ZSXQ = 5;
+
     const CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME = 60;
 
     const PRICE_LIMIT = 100000;
 
     const IMPORT_WAITING = 0;
+
     const IMPORT_PROCESSING = 1;
+
     const IMPORT_NORMAL_ENDING = 2;
+
     const IMPORT_ABNORMAL_ENDING = 3;
+
     const IMPORT_TIMEOUT_ENDING = 4;
+
     const IMPORT_NOTHING_ENDING = 5;
+
     const PROCESS_OF_START_INSERT_CRAWLER_DATA = 0;
+
     const PROCESS_OF_GET_CRAWLER_DATA = 25;
+
     const PROCESS_OF_INSERT_USERS = 50;
+
     const PROCESS_OF_INSERT_THREADS = 75;
+
     const PROCESS_OF_INSERT_POSTS = 99;
+
     const PROCESS_OF_END_INSERT_CRAWLER_DATA = 100;
+
     const IMPORT_WECHAT_DATA_LIMIT = 20;
 
     /**
@@ -229,11 +268,17 @@ class Thread extends DzqModel
     ];
 
     const EXT_TEXT = 'text';
+
     const EXT_LONG = 'thread';
+
     const EXT_VIDEO = 'video';
+
     const EXT_IMAGE = 'image';
+
     const EXT_AUDIO = 'audio';
+
     const EXT_QA = 'question';
+
     const EXT_GOODS = 'goods';
 
     public $threadDic = [
@@ -245,7 +290,6 @@ class Thread extends DzqModel
         self::TYPE_OF_QUESTION => '问答',
         self::TYPE_OF_GOODS => '商品',
     ];
-
 
     /**
      * The user for which the state relationship should be loaded.
@@ -340,13 +384,14 @@ class Thread extends DzqModel
                 $firstPost = $this->firstPost->formatContent();
             }
         }
-        if(is_object($firstPost)){
+        if (is_object($firstPost)) {
             $firstPost = (string)$firstPost;
         }
         return $firstPost;
     }
 
-    public function getRewardedContent($substr, $parse = false){
+    public function getRewardedContent($substr, $parse = false)
+    {
         $this->firstPost->content = $substr ? Str::of($this->firstPost->content)->substr(0, $substr) : $this->firstPost->content;
         if ($parse) {
             // 原文
@@ -974,11 +1019,12 @@ class Thread extends DzqModel
         return $ret;
     }
 
-    public static function getThreadTomInfoById($threadId){
-         return self::query()->from('threads as th')
+    public static function getThreadTomInfoById($threadId)
+    {
+        return self::query()->from('threads as th')
              ->whereNull('th.deleted_at')
              ->where('th.id', $threadId)
-             ->leftJoin('thread_tom as tt','tt.thread_id','=','th.id')
+             ->leftJoin('thread_tom as tt', 'tt.thread_id', '=', 'th.id')
              ->where(['tt.tom_type' => TomConfig::TOM_DOC , 'tt.status' => ThreadTom::STATUS_ACTIVE])
              ->first(['th.id','th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'th.is_draft', 'th.is_approved', 'tt.value']);
     }

@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,6 @@
 
 namespace App\Common;
 
-use Discuz\Base\DzqCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -189,9 +189,35 @@ class Utils
     public static function getTodayTime()
     {
         return [
-            'begin' => date("Y-m-d 00:00:00"),
-            'end' => date("Y-m-d 23:59:59")
+            'begin' => date('Y-m-d 00:00:00'),
+            'end' => date('Y-m-d 23:59:59')
         ];
+    }
+
+    //execl 导出
+    public static function localexport($cell, $title, $data)
+    {
+        set_time_limit(0);
+        ini_set('memory_limit', '128M');
+        header('Content-Type: application/vnd.ms-execl');
+        header('Content-Disposition: attachment;filename="' . $title . '.csv"');
+
+        //以写入追加的方式打开
+        $fp = fopen('php://output', 'a');
+
+        foreach ($cell as $key => $item) {
+            $celldata[$key] = iconv('UTF-8', 'GBK//IGNORE', $item);
+        }
+        //将标题写到标准输出中
+        fputcsv($fp, $celldata);
+        foreach ($data as $row) {
+            foreach ($row as $key => $item) {
+                //这里必须转码，不然会乱码
+                $row[$key] = iconv('UTF-8', 'GBK//IGNORE', $item);
+            }
+            fputcsv($fp, $row);
+        }
+        return ['file' => $title];
     }
 
     public static function setAppKey($key, $value)

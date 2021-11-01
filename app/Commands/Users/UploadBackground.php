@@ -103,7 +103,7 @@ class UploadBackground
      */
     public function __invoke()
     {
-        $user = User::query()->where('id',$this->userId)->first();
+        $user = User::query()->where('id', $this->userId)->first();
 
         $ext = pathinfo($this->avatar->getClientFilename(), PATHINFO_EXTENSION);
         if (!in_array(strtolower($ext), ['jpeg', 'jpg', 'gif', 'png'])) {

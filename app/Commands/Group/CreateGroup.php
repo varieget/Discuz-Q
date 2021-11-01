@@ -28,11 +28,11 @@ use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Foundation\EventsDispatchTrait;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Support\Arr;
 
 class CreateGroup
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     /**
@@ -122,15 +122,16 @@ class CreateGroup
         return $group;
     }
 
-    private function checkBool($var){
-        if (is_string($var)){
-            if (empty($var)){
+    private function checkBool($var)
+    {
+        if (is_string($var)) {
+            if (empty($var)) {
                 return false;
             }
             return 'false' == $var?false:true;
-        }else if (is_bool($var)){
+        } elseif (is_bool($var)) {
             return $var;
-        }else{
+        } else {
             return true;
         }
     }

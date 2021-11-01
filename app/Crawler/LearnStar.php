@@ -1,12 +1,27 @@
 <?php
 
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 namespace App\Crawler;
-
 
 class LearnStar
 {
     private $cookie = '';
+
     private $userAgent = '';
 
     /**
@@ -24,30 +39,31 @@ class LearnStar
         return $this->getData($topic, $num);
     }
 
-    private function getData($topic, $num){
-        if ($num<=0){
+    private function getData($topic, $num)
+    {
+        if ($num<=0) {
             return [];
         }
 
         $filterList = [];
         //搜索
-        $threadDataList = $this->getData_groupsSearch($topic,$num);
-        foreach ($threadDataList as $oneThread){
-            if(!empty($oneThread["forum"] && !empty($oneThread["forum"]["id"]))){
-                $id = $oneThread["forum"]["id"];
-                array_push($filterList,$id);
+        $threadDataList = $this->getData_groupsSearch($topic, $num);
+        foreach ($threadDataList as $oneThread) {
+            if (!empty($oneThread['forum'] && !empty($oneThread['forum']['id']))) {
+                $id = $oneThread['forum']['id'];
+                array_push($filterList, $id);
             }
         }
 
         $lefNum = $num-count($threadDataList);
-        if ($lefNum>0){
+        if ($lefNum>0) {
             //拉取全部
             $groupIdList = $this->getData_groups();
-            foreach ($groupIdList as $gId){
-                $oneGroup = $this->getData_oneGroup($gId, $lefNum,$filterList);
-                $threadDataList = array_merge($threadDataList,$oneGroup);
+            foreach ($groupIdList as $gId) {
+                $oneGroup = $this->getData_oneGroup($gId, $lefNum, $filterList);
+                $threadDataList = array_merge($threadDataList, $oneGroup);
                 $lefNum = $num-count($threadDataList);
-                if ($lefNum<=0){
+                if ($lefNum<=0) {
                     break;
                 }
             }
@@ -57,52 +73,53 @@ class LearnStar
         return $threadDataList;
     }
 
-    private function getData_groupsSearch($key,$num){
+    private function getData_groupsSearch($key, $num)
+    {
         $ret = [];
         $curIndex = 0;
         $count = $num<30?$num:30;
         $leftNum = $num;
-        for ($i=0;$i<100;$i++){
-            $url = "https://api.zsxq.com/v2/search/topics?keyword=".urlencode($key)."&index=".$curIndex."&count=".$count;
+        for ($i=0;$i<100;$i++) {
+            $url = 'https://api.zsxq.com/v2/search/topics?keyword='.urlencode($key).'&index='.$curIndex.'&count='.$count;
             $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
             $data = json_decode($html);
 
-            if(empty($data)){
+            if (empty($data)) {
                 break;
             }
-            if($data->succeeded != true){
+            if ($data->succeeded != true) {
                 break;
             }
 
             $resp_data = $data->resp_data;
-            if (empty($resp_data->topics)){
+            if (empty($resp_data->topics)) {
                 break;
             }
-            foreach ($resp_data->topics as $oneTopic){
+            foreach ($resp_data->topics as $oneTopic) {
                 //搜索的要重新拉取一遍，图文混排的这种，在搜索中没有链接出来
-                $urlTopic = "https://api.zsxq.com/v2/topics/".$oneTopic->topic->topic_id;
+                $urlTopic = 'https://api.zsxq.com/v2/topics/'.$oneTopic->topic->topic_id;
                 $htmlTopic = $this->getDataByUrl($urlTopic, $this->userAgent, $this->cookie);
                 $dataTopic = json_decode($htmlTopic);
-                if(empty($dataTopic)){
+                if (empty($dataTopic)) {
                     continue;
                 }
-                if($dataTopic->succeeded != true){
+                if ($dataTopic->succeeded != true) {
                     continue;
                 }
                 $oneTopicTemp = $dataTopic->resp_data->topic;
                 $oneThread = $this->paseOneTopic($oneTopicTemp);
-                if (empty($oneThread)){
+                if (empty($oneThread)) {
                     continue;
                 }
                 array_push($ret, $oneThread);
 
                 $leftNum--;
-                if ($leftNum<=0){
-                   return $ret;
+                if ($leftNum<=0) {
+                    return $ret;
                 }
             }
 
-            if ($count<30 || count($resp_data->topics) < $count){
+            if ($count<30 || count($resp_data->topics) < $count) {
                 break;
             }
 
@@ -112,60 +129,61 @@ class LearnStar
         return $ret;
     }
 
-    private function getData_groups(){
-        $url = "https://api.zsxq.com/v2/groups";
+    private function getData_groups()
+    {
+        $url = 'https://api.zsxq.com/v2/groups';
         $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
         $data = json_decode($html);
         $ret = [];
-        if(empty($data)){
+        if (empty($data)) {
             return $ret;
         }
-        if($data->succeeded != true){
+        if ($data->succeeded != true) {
             return $ret;
         }
 
         $respData = $data->resp_data;
         $groups = $respData->groups;
-        foreach ($groups as $v){
+        foreach ($groups as $v) {
             array_push($ret, $v->group_id);
         }
 
         return $ret;
     }
 
-
-    private function getData_oneGroup($gId, $num,$filterIdList){
+    private function getData_oneGroup($gId, $num, $filterIdList)
+    {
         $threadDataList=[];
-        if ($num<=0){
+        if ($num<=0) {
             return $threadDataList;
         }
         $leftN = $num;
         $endTime = null;
         $oneN = 20;
-        for($i=0;$i<100;$i++){
-            list($data,$endTime,$isContinue) = $this->getData_oneGroupPer($gId, $endTime, $oneN, $filterIdList, $leftN);
-            if (!empty($data)){
-                $threadDataList = array_merge($threadDataList,$data);
+        for ($i=0;$i<100;$i++) {
+            list($data, $endTime, $isContinue) = $this->getData_oneGroupPer($gId, $endTime, $oneN, $filterIdList, $leftN);
+            if (!empty($data)) {
+                $threadDataList = array_merge($threadDataList, $data);
                 $leftN-=count($data);
-                if ($leftN<=0){
+                if ($leftN<=0) {
                     break;
                 }
             }
-            if (!$isContinue){
+            if (!$isContinue) {
                 break;
             }
-
         }
         return $threadDataList;
     }
 
-    public function getDataByUrl($url, $userAgent, $cookie){
+    public function getDataByUrl($url, $userAgent, $cookie)
+    {
         $rrd = $this->rId();
         $tts = $this->ts();
-        $strS = $url." ".$tts." ".$rrd;
+        $strS = $url.' '.$tts.' '.$rrd;
         $aa11 = sha1($strS);
 
-        $headers = array();
+        $headers = [];
 
         $headers[0] = 'user-agent:' . $userAgent;
         $headers[1] = 'cookie:' . $cookie;
@@ -173,62 +191,63 @@ class LearnStar
         $headers[3] = 'x-signature:' . $aa11;
         $headers[4] = 'x-timestamp:' . $tts;
 
-        $html = $this->curlGet2($url,$headers);
+        $html = $this->curlGet2($url, $headers);
 
         return $html;
     }
 
-    private function getData_oneGroupPer($gId, $endTime, $num, $filterIds, $leftN){
-        $url = "https://api.zsxq.com/v2/groups/".$gId."/topics?scope=all&count=".$num;
-        if ($endTime!=null){
+    private function getData_oneGroupPer($gId, $endTime, $num, $filterIds, $leftN)
+    {
+        $url = 'https://api.zsxq.com/v2/groups/'.$gId.'/topics?scope=all&count='.$num;
+        if ($endTime!=null) {
             $tempET = urlencode($endTime);
-            $url = "https://api.zsxq.com/v2/groups/".$gId."/topics?scope=all&count=".($num+1)."&end_time=".$tempET;
+            $url = 'https://api.zsxq.com/v2/groups/'.$gId.'/topics?scope=all&count='.($num+1).'&end_time='.$tempET;
         }
 
         $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
 
         $data = json_decode($html);
         $ret = [];
-        if(empty($data)){
+        if (empty($data)) {
             return [$ret,null,false];
         }
-        if($data->succeeded != true){
+        if ($data->succeeded != true) {
             return [$ret,null,false];
         }
 
         $respData = $data->resp_data;
 
-        if(empty($respData->topics)){
+        if (empty($respData->topics)) {
             return [$ret,null,false];
         }
         $topics = $respData->topics;
         $isContinue = count($topics)>=$num;
 
         $i=0;
-        if(!empty($endTime)){
+        if (!empty($endTime)) {
             $i = 1;
         }
 
 
-        for (;$i<count($topics);$i++){
+        for (;$i<count($topics);$i++) {
             $oneTopic = $topics[$i];
 
-            if (!empty($oneTopic->create_time)){
+            if (!empty($oneTopic->create_time)) {
                 $endTime = $oneTopic->create_time;
             }
 
-            if (in_array($oneTopic->topic_id,$filterIds)){
-               continue;
+            if (in_array($oneTopic->topic_id, $filterIds)) {
+                continue;
             }
 
             $oneD = $this->paseOneTopic($oneTopic);
-            if (empty($oneD)){
+            if (empty($oneD)) {
                 continue;
             }
 
             array_push($ret, $oneD);
             $leftN--;
-            if ($leftN<=0){
+            if ($leftN<=0) {
                 $isContinue = false;
                 break;
             }
@@ -237,15 +256,14 @@ class LearnStar
         return [$ret,$endTime,$isContinue];
     }
 
-    private function paseOneTopic($oneTopic){
-
-
+    private function paseOneTopic($oneTopic)
+    {
         $oneD = [];
         $author=[];
         $forum =[];
 
-        $forum["id"] = $oneTopic->topic_id;
-        $forum["create_at"] = $oneTopic->create_time;
+        $forum['id'] = $oneTopic->topic_id;
+        $forum['create_at'] = $oneTopic->create_time;
 
         $text = [];
         $pics = [];
@@ -254,137 +272,138 @@ class LearnStar
         $commonetList = [];
 
 
-        if ($oneTopic->type == "talk")// 帖子,作业,问答等类型
-        {
+        if ($oneTopic->type == 'talk') {// 帖子,作业,问答等类型
             $talk = $oneTopic->talk;
             $owner = $talk->owner;
-            $author["nickname"] = str_replace(" ","", $owner->name);
-            $author["avatar"] = $owner->avatar_url;
+            $author['nickname'] = str_replace(' ', '', $owner->name);
+            $author['avatar'] = $owner->avatar_url;
 
             //文字
-            if (!empty($talk->article)){
+            if (!empty($talk->article)) {
                 //文字图片混编的
                 $text = $this->getTextArticle($talk->article);
-            }else{
-                if(!empty($talk->text)){
+            } else {
+                if (!empty($talk->text)) {
                     $text = $this->getTextContent($talk->text);
                 }
             }
 
             //文件的
-            if(!empty($talk->files)) {
+            if (!empty($talk->files)) {
                 $attachment = $this->getAttachFile($talk->files);
             }
 
             //图片的
-            if(!empty($talk->images)) {
+            if (!empty($talk->images)) {
                 $pics = $this->getAttachImage($talk->images);
             }
             //评论
             $commonetList = $this->getData_OneComment($oneTopic->topic_id, $author['nickname']);
-        }elseif($oneTopic->type == "q&a"){
+        } elseif ($oneTopic->type == 'q&a') {
             $talk = $oneTopic->question;
             $owner = $talk->questionee;
-            $author["nickname"] = str_replace(" ","", $owner->name);
-            $author["avatar"] = $owner->avatar_url;
+            $author['nickname'] = str_replace(' ', '', $owner->name);
+            $author['avatar'] = $owner->avatar_url;
 
             //文字
-            if (!empty($talk->article)){
+            if (!empty($talk->article)) {
                 //文字图片混编的
                 $text = $this->getTextArticle($talk->article);
-            }else{
-                if(!empty($talk->text)){
+            } else {
+                if (!empty($talk->text)) {
                     $text = $this->getTextContent($talk->text);
                 }
             }
             //文件的
-            if(!empty($talk->files)) {
+            if (!empty($talk->files)) {
                 $attachment = $this->getAttachFile($talk->files);
             }
             //图片的
-            if(!empty($talk->images)) {
+            if (!empty($talk->images)) {
                 $pics = $this->getAttachImage($talk->images);
             }
 
             //有回答者的，把回答者转为一个评论
-            if(!empty($oneTopic->answer)) {
-                $answerComment = $this->answerToComment($oneTopic->answer,$oneTopic->topic_id, $author['nickname'],$oneTopic->create_time);
+            if (!empty($oneTopic->answer)) {
+                $answerComment = $this->answerToComment($oneTopic->answer, $oneTopic->topic_id, $author['nickname'], $oneTopic->create_time);
                 array_push($commonetList, $answerComment);
             }
             $otherCommonet= $this->getData_OneComment($oneTopic->topic_id, $author['nickname']);
-            $commonetList = array_merge($commonetList,$otherCommonet);
-        }else{ //非帖子类型的排除
+            $commonetList = array_merge($commonetList, $otherCommonet);
+        } else { //非帖子类型的排除
             return [];
         }
 
-        $forum["text"] = $text;
-        $forum["pics"]["small_pics"] = $pics;
-        $forum["medias"]["small_medias"] = $medias;
-        $forum["attachment"] = $attachment;
+        $forum['text'] = $text;
+        $forum['pics']['small_pics'] = $pics;
+        $forum['medias']['small_medias'] = $medias;
+        $forum['attachment'] = $attachment;
 
 
 
-        $oneD["user"] = $author;
+        $oneD['user'] = $author;
         $forum['nickname'] = $author['nickname'];
-        $oneD["forum"] = $forum;
-        $oneD["comment"] = $commonetList;
+        $oneD['forum'] = $forum;
+        $oneD['comment'] = $commonetList;
 
         return $oneD;
     }
 
-    private function getTextContent($textIn){
+    private function getTextContent($textIn)
+    {
         $textIn = urldecode($textIn);
-        $tagList = array();
-        $textContent = "";
+        $tagList = [];
+        $textContent = '';
         $posStart = 0;
         $flagStartStr = '<e type=';  //hashtag标签,web链接
         $flagEndStr = '/>';
-        while (1){
-            list($preStr,$flagStr,$posFlagEnd) = $this->getFlagSubStr($textIn,$posStart,$flagStartStr,$flagEndStr);
+        while (1) {
+            list($preStr, $flagStr, $posFlagEnd) = $this->getFlagSubStr($textIn, $posStart, $flagStartStr, $flagEndStr);
             $textContent = $textContent.$preStr;
 
-            if (strpos($flagStr,'type="hashtag"')!==false){ //标签
+            if (strpos($flagStr, 'type="hashtag"')!==false) { //标签
                 $textContent = $textContent.$flagStr;
-            }else{
+            } else {
                 //取出文字
                 $titleStr = $this->dealMatchStr('/<e[^>]+title=["\'](.*?)["\']/i', $flagStr);
                 $textContent = $textContent. $titleStr;
                 //取出链接
                 $linkStr = $this->dealMatchStr('/<e[^>]+href=["\'](.*?)["\']/i', $flagStr);
-                if ($titleStr != $linkStr){
+                if ($titleStr != $linkStr) {
                     $textContent = $textContent.$linkStr;
                 }
             }
 
-            if ($posFlagEnd === false){
+            if ($posFlagEnd === false) {
                 break;
             }
             $posStart = $posFlagEnd;
         }
 
 
-        list($textContent,$tagList) = $this->filterDataTag($textContent);
+        list($textContent, $tagList) = $this->filterDataTag($textContent);
 
-        $text = array();
-        $text["text"] = $textContent;
-        $text["topic_list"] = $tagList;
+        $text = [];
+        $text['text'] = $textContent;
+        $text['topic_list'] = $tagList;
 
         return $text;
     }
 
-    private function getTextArticle($article){
+    private function getTextArticle($article)
+    {
         $url = $article->article_url;
         $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
 
-        $contentPosStart = strpos($html,'<div class="content">',0);
-        $contentPosEnd = strpos($html,'</div>',$contentPosStart);
-        $textIn = substr($html,$contentPosStart,$contentPosEnd-$contentPosStart+6);
+        $contentPosStart = strpos($html, '<div class="content">', 0);
+        $contentPosEnd = strpos($html, '</div>', $contentPosStart);
+        $textIn = substr($html, $contentPosStart, $contentPosEnd-$contentPosStart+6);
 
-        list($textContent,$tagList) = $this->filterDataTag($textIn);
+        list($textContent, $tagList) = $this->filterDataTag($textIn);
 
-        $text = array();
-        $text["text"] = $textContent;
-        $text["topic_list"] = $tagList;
+        $text = [];
+        $text['text'] = $textContent;
+        $text['topic_list'] = $tagList;
 
         return $text;
     }
@@ -397,18 +416,19 @@ class LearnStar
      * @param string $flagEndStr 结束符
      * @return array
      */
-    private function getFlagSubStr($textIn,$posStart,$flagStartStr,$flagEndStr){
-        $subStrPre = "";
-        $subStrFlag = "";
+    private function getFlagSubStr($textIn, $posStart, $flagStartStr, $flagEndStr)
+    {
+        $subStrPre = '';
+        $subStrFlag = '';
         $posEnd = false;
         $posFlagStart = strpos($textIn, $flagStartStr, $posStart);
         //拿出第一节文字
-        if ($posFlagStart === false){
-            $subStrPre = substr($textIn,$posStart);
-        }else{
-            $subStrPre = substr($textIn,$posStart,$posFlagStart-$posStart);
+        if ($posFlagStart === false) {
+            $subStrPre = substr($textIn, $posStart);
+        } else {
+            $subStrPre = substr($textIn, $posStart, $posFlagStart-$posStart);
             $posFlagEnd = strpos($textIn, $flagEndStr, $posFlagStart);
-            if ($posFlagEnd!==false){
+            if ($posFlagEnd!==false) {
                 $subStrFlag = substr($textIn, $posFlagStart, $posFlagEnd-$posFlagStart+strlen($flagEndStr));
                 $posEnd = $posFlagEnd+strlen($flagEndStr);
             }
@@ -418,25 +438,25 @@ class LearnStar
         return [$subStrPre,$subStrFlag,$posEnd];
     }
 
-
-    private function filterDataTag($textIn){
+    private function filterDataTag($textIn)
+    {
         //处理标签
-        $tagList = array();
-        $textContent = "";
+        $tagList = [];
+        $textContent = '';
         $posStart = 0;
         $flagStartStr = '<e type="hashtag"';  //hashtag标签
         $flagEndStr = '/>';
-        while (1){
-            list($preStr,$flagStr,$posFlagEnd) = $this->getFlagSubStr($textIn,$posStart,$flagStartStr,$flagEndStr);
+        while (1) {
+            list($preStr, $flagStr, $posFlagEnd) = $this->getFlagSubStr($textIn, $posStart, $flagStartStr, $flagEndStr);
 
-            if (strpos($flagStr,'type="hashtag"') !== false){ //标签
+            if (strpos($flagStr, 'type="hashtag"') !== false) { //标签
 
                 $tagStrTemp = $this->dealMatchStr('/<e[^>]+title=["\']#(.*?)#["\']/i', $flagStr);
                 $tagStr = urldecode($tagStrTemp);
-                array_push($tagList,$tagStr);
+                array_push($tagList, $tagStr);
             }
 
-            if ($posFlagEnd === false){
+            if ($posFlagEnd === false) {
                 break;
             }
             $posStart = $posFlagEnd;
@@ -444,21 +464,22 @@ class LearnStar
         return [$textIn,$tagList];
     }
 
-    private function getAttachFile($files){
+    private function getAttachFile($files)
+    {
         $fileLinkList = [];
-        foreach ($files as $oneFile){
-            $url = "https://api.zsxq.com/v2/files/".$oneFile->file_id."/download_url";
+        foreach ($files as $oneFile) {
+            $url = 'https://api.zsxq.com/v2/files/'.$oneFile->file_id.'/download_url';
             $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
             $data = json_decode($html);
-            if(empty($data)){
+            if (empty($data)) {
                 continue;
             }
-            if($data->succeeded != true){
+            if ($data->succeeded != true) {
                 continue;
             }
 
             $respData = $data->resp_data;
-            if (empty($respData->download_url)){
+            if (empty($respData->download_url)) {
                 continue;
             }
             array_push($fileLinkList, $respData->download_url);
@@ -466,23 +487,23 @@ class LearnStar
         return $fileLinkList;
     }
 
-
-    private function getAttachImage($images){
+    private function getAttachImage($images)
+    {
         $pics = [];
-        foreach ($images as $oneImage){
-            if(!empty($oneImage->original)){//原图
+        foreach ($images as $oneImage) {
+            if (!empty($oneImage->original)) {//原图
                 $imagelink =  urldecode($oneImage->original->url);
-                array_push($pics,$imagelink);
-            }else if(!empty($oneImage->large)){//大图
+                array_push($pics, $imagelink);
+            } elseif (!empty($oneImage->large)) {//大图
                 $imagelink =  urldecode($oneImage->large->url);
-                array_push($pics,$imagelink);
-            }else{
+                array_push($pics, $imagelink);
+            } else {
                 //小图
-                if(empty($oneImage->thumbnail)){
+                if (empty($oneImage->thumbnail)) {
                     continue;
                 }
                 $imagelink =  urldecode($oneImage->thumbnail->url);
-                array_push($pics,$imagelink);
+                array_push($pics, $imagelink);
             }
         }
         return $pics;
@@ -507,57 +528,57 @@ class LearnStar
         return $result;
     }
 
-
-    private function  getData_OneComment($topicId, $nickname){
-        $url = "https://api.zsxq.com/v2/topics/".$topicId."/comments?sort=asc&count=30";
+    private function getData_OneComment($topicId, $nickname)
+    {
+        $url = 'https://api.zsxq.com/v2/topics/'.$topicId.'/comments?sort=asc&count=30';
         $html = $this->getDataByUrl($url, $this->userAgent, $this->cookie);
         $data = json_decode($html);
         $ret = [];
-        if(empty($data)){
+        if (empty($data)) {
             return $ret;
         }
-        if($data->succeeded != true){
+        if ($data->succeeded != true) {
             return $ret;
         }
 
         $resp_data = $data->resp_data;
-        if(empty($resp_data->comments)){
+        if (empty($resp_data->comments)) {
             return $ret;
         }
         $comments = $resp_data->comments;
-        foreach ($comments as $one){
+        foreach ($comments as $one) {
             $oneComment = [];
-            $oneComment["comment"]["id"] = $one->comment_id;
-            $oneComment["comment"]["forumId"] = $topicId;
-            $oneComment["comment"]["nickname"] = $nickname;
+            $oneComment['comment']['id'] = $one->comment_id;
+            $oneComment['comment']['forumId'] = $topicId;
+            $oneComment['comment']['nickname'] = $nickname;
 
             $text = [];
-            if(isset($one->text)){
-                $text["text"] = $one->text;
-            }else{
-                $text["text"] = "";
+            if (isset($one->text)) {
+                $text['text'] = $one->text;
+            } else {
+                $text['text'] = '';
             }
-            $text["topic_list"] = [];
-            $oneComment["comment"]["text"] = $text;
+            $text['topic_list'] = [];
+            $oneComment['comment']['text'] = $text;
 
             if (isset($one->images)) {
                 $images = $this->getAttachImage($one->images);
-                $oneComment["comment"]["images"] = $images;
+                $oneComment['comment']['images'] = $images;
             }
-            if (isset($one->create_time)){
-                $oneComment["comment"]["created_at"] = $one->create_time;
-            }else{
-                $oneComment["comment"]["created_at"] = date(DATE_ISO8601);
+            if (isset($one->create_time)) {
+                $oneComment['comment']['created_at'] = $one->create_time;
+            } else {
+                $oneComment['comment']['created_at'] = date(DATE_ISO8601);
             }
 
             $userComment = [];
-            if(!empty($one->owner)){
+            if (!empty($one->owner)) {
                 $owner = $one->owner;
-                $userComment["nickname"]= str_replace(" ","",$owner->name);
-                $userComment["avatar"] = $owner->avatar_url;
+                $userComment['nickname']= str_replace(' ', '', $owner->name);
+                $userComment['avatar'] = $owner->avatar_url;
             }
 
-            $oneComment["user"] = $userComment;
+            $oneComment['user'] = $userComment;
 
             array_push($ret, $oneComment);
         }
@@ -565,68 +586,70 @@ class LearnStar
         return $ret;
     }
 
-
-    private function answerToComment($answer,$topicId, $nickname, $createTime){
+    private function answerToComment($answer, $topicId, $nickname, $createTime)
+    {
         $oneComment = [];
-        $oneComment["comment"]["id"] = 0;
-        $oneComment["comment"]["forumId"] = $topicId;
-        $oneComment["comment"]["nickname"] = $nickname;
+        $oneComment['comment']['id'] = 0;
+        $oneComment['comment']['forumId'] = $topicId;
+        $oneComment['comment']['nickname'] = $nickname;
 
         $text = [];
         if (!isset($answer->text)) {
-            $text["text"] = "";
-        }else {
-            $text["text"] = $answer->text;
+            $text['text'] = '';
+        } else {
+            $text['text'] = $answer->text;
         }
-        $text["topic_list"] = [];
-        $oneComment["comment"]["text"] = $text;
+        $text['topic_list'] = [];
+        $oneComment['comment']['text'] = $text;
 
         if (isset($answer->images)) {
             $images = $this->getAttachImage($answer->images);
-            $oneComment["comment"]["images"] = $images;
+            $oneComment['comment']['images'] = $images;
         }
-        $oneComment["comment"]["created_at"] = $createTime;
+        $oneComment['comment']['created_at'] = $createTime;
 
         $userComment = [];
-        if(!empty($answer->owner)){
+        if (!empty($answer->owner)) {
             $owner = $answer->owner;
-            $userComment["nickname"]= str_replace(" ","", $owner->name);;
-            $userComment["avatar"] = $owner->avatar_url;
+            $userComment['nickname']= str_replace(' ', '', $owner->name);
+            ;
+            $userComment['avatar'] = $owner->avatar_url;
         }
 
-        $oneComment["user"] = $userComment;
+        $oneComment['user'] = $userComment;
 
         return $oneComment;
     }
 
     private function randFloat($min = 0, $max = 1)
     {
-        return round($min + mt_rand() / mt_getrandmax() * ($max - $min),2);
+        return round($min + mt_rand() / mt_getrandmax() * ($max - $min), 2);
     }
 
-    private function rId(){
-        $t="";
+    private function rId()
+    {
+        $t='';
         $e=0;
 
-        for (;$e<32;$e++){
+        for (;$e<32;$e++) {
             $a = 16*$this->randFloat();
             $strRandom = floor($a);
             $t .= dechex($strRandom);
 
-            if($e==8 || $e==12 || $e==16 || $e==20 )
-                $t .= "-";
+            if ($e==8 || $e==12 || $e==16 || $e==20) {
+                $t .= '-';
+            }
         }
         return $t;
     }
 
-    private function  ts(){
+    private function ts()
+    {
         $t = time();
         $t1 = $t/1e3;
-        $t2 = floor(  $t1 );
+        $t2 = floor($t1);
         return $t;
     }
-
-
 
     /**
      * @method  curl-get请求
@@ -660,5 +683,4 @@ class LearnStar
 
         return $filecontent;
     }
-
 }

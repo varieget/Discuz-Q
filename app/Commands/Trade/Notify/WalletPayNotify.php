@@ -140,8 +140,8 @@ class WalletPayNotify
                     //获取 order_children 子订单中红包、悬赏金额
                     $order_children = OrderChildren::query()->where('order_sn', $this->data['order_sn'])->get(['type', 'amount'])->toArray();
                     $redpacket_log = $reward_log = [];
-                    foreach ($order_children as $val){
-                        switch ($val['type']){
+                    foreach ($order_children as $val) {
+                        switch ($val['type']) {
                             case OrderChildren::TYPE_REDPACKET:
                                 $redpacket_log = $val;
                                 break;
@@ -153,7 +153,7 @@ class WalletPayNotify
                         }
                     }
                     //红包记录
-                    if(!empty($redpacket_log)){
+                    if (!empty($redpacket_log)) {
                         $change_type = UserWalletLog::TYPE_REDPACKET_FREEZE;
                         $change_type_lang = 'wallet.redpacket_freeze';
                         $updateData = [
@@ -164,7 +164,7 @@ class WalletPayNotify
                         $res = UserWallet::query()->where('user_id', $this->data['user_id'])->update($updateData);
                         $userWallet->available_amount = $updateData['available_amount'];
                         $userWallet->freeze_amount = $updateData['freeze_amount'];
-                        if($res === false){
+                        if ($res === false) {
                             $connection->rollback();
                             $log->error('合并订单，扣除用户红包金额出错', $this->data);
                             throw new ErrorException('合并订单，扣除用户红包金额出错', 500);
@@ -182,13 +182,13 @@ class WalletPayNotify
                             0,
                             $this->data['thread_id'] ?? 0
                         );
-                        if($res === false){
+                        if ($res === false) {
                             $connection->rollback();
                             $log->error('合并订单，扣除红包，记录用户钱包明细出错', $this->data);
                             throw new ErrorException('合并订单，扣除红包，记录用户钱包明细出错', 500);
                         }
                     }
-                    if(!empty($reward_log)){
+                    if (!empty($reward_log)) {
                         $change_type = UserWalletLog::TYPE_QUESTION_REWARD_FREEZE;
                         $change_type_lang = 'wallet.question_reward_freeze';
                         $updateData = [
@@ -197,7 +197,7 @@ class WalletPayNotify
                         ];
                         $freezeAmount = $reward_log['amount'];
                         $res = UserWallet::query()->where('user_id', $this->data['user_id'])->update($updateData);
-                        if($res === false){
+                        if ($res === false) {
                             $connection->rollback();
                             $log->error('合并订单，扣除用户悬赏金额出错', $this->data);
                             throw new ErrorException('合并订单，扣除用户悬赏金额出错', 500);
@@ -215,7 +215,7 @@ class WalletPayNotify
                             0,
                             $this->data['thread_id'] ?? 0
                         );
-                        if($res === false){
+                        if ($res === false) {
                             $connection->rollback();
                             $log->error('合并订单，扣除悬赏，记录用户钱包明细出错', $this->data);
                             throw new ErrorException('合并订单，扣除悬赏，记录用户钱包明细出错', 500);
@@ -228,9 +228,9 @@ class WalletPayNotify
             }
 
             //合并订单的情况，前面单独处理了，这里就不处理了
-            if($this->data['type'] != Order::ORDER_TYPE_MERGE){
+            if ($this->data['type'] != Order::ORDER_TYPE_MERGE) {
                 $res = UserWallet::query()->where('user_id', $this->data['user_id'])->update($updateData);
-                if($res === false){
+                if ($res === false) {
                     $connection->rollback();
                     $log->error('钱包支付出错', $this->data);
                     throw new ErrorException('钱包支付出错', 500);
@@ -248,7 +248,7 @@ class WalletPayNotify
                     0,
                     $this->data['thread_id'] ?? 0
                 );
-                if($res === false){
+                if ($res === false) {
                     $connection->rollback();
                     $log->error('钱包支付，增加用户钱包记录明细出错', $this->data);
                     throw new ErrorException('钱包支付，增加用户钱包记录明细出错', 500);

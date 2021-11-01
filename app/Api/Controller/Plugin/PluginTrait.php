@@ -1,8 +1,22 @@
 <?php
 
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 namespace App\Api\Controller\Plugin;
-
 
 use App\Common\PermissionKey;
 use App\Common\Utils;
@@ -12,12 +26,13 @@ use Symfony\Component\Finder\Finder;
 
 trait PluginTrait
 {
-    private function getOneSettingAndConfig($appId, $isFromAdmin){
+    private function getOneSettingAndConfig($appId, $isFromAdmin)
+    {
         $pluginList = \Discuz\Common\Utils::getPluginList();
 
         $setting = PluginSettings::getSettingRecord($appId);
 
-        $setting = $this->getOutSetting($setting,$isFromAdmin);
+        $setting = $this->getOutSetting($setting, $isFromAdmin);
 
         $data = [
             'setting'=>$setting,
@@ -27,7 +42,8 @@ trait PluginTrait
         return $data;
     }
 
-    private function getAllSettingAndConfig($groupId, $isAdmin, $isFromAdmin){
+    private function getAllSettingAndConfig($groupId, $isAdmin, $isFromAdmin)
+    {
         $pluginList = \Discuz\Common\Utils::getPluginList();
         $permissions = PluginGroupPermission::query()
             ->where('group_id', $groupId)->get()->keyBy('app_id')->toArray();
@@ -59,7 +75,7 @@ trait PluginTrait
                         $fileUrl = Utils::getDzqDomain() . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR . $appName . DIRECTORY_SEPARATOR . $dirName . DIRECTORY_SEPARATOR . $fileName;
                         if ($extension == 'js') {
                             $pluginFiles[$dirName]['js'][] = $fileUrl;
-                        } else if ($extension == 'css') {
+                        } elseif ($extension == 'css') {
                             $pluginFiles[$dirName]['css'][] = $fileUrl;
                         } else {
                             $pluginFiles[$dirName]['assets'][] = $fileUrl;
@@ -73,10 +89,10 @@ trait PluginTrait
             unset($item['plugin_' . $appId]);
             unset($item['busi']);
 
-            if (isset($appSettingMap[$appId])){
-                $item["setting"] = $this->getOutSetting($appSettingMap[$appId],$isFromAdmin);
-            }else{
-                $item["setting"] = [];
+            if (isset($appSettingMap[$appId])) {
+                $item['setting'] = $this->getOutSetting($appSettingMap[$appId], $isFromAdmin);
+            } else {
+                $item['setting'] = [];
             }
         }
 
@@ -94,12 +110,12 @@ trait PluginTrait
         }
 
         $data = [];
-        $data["id"] = $setting["id"];
-        $data["appId"] = $setting["app_id"];
-        $data["appName"] = $setting["app_name"];
-        $data["type"] = $setting["type"];
-        $data["publicValue"] = $publicValueData;
-        $data["privateValue"] = $privateValueData;
+        $data['id'] = $setting['id'];
+        $data['appId'] = $setting['app_id'];
+        $data['appName'] = $setting['app_name'];
+        $data['type'] = $setting['type'];
+        $data['publicValue'] = $publicValueData;
+        $data['privateValue'] = $privateValueData;
         return $data;
     }
 }

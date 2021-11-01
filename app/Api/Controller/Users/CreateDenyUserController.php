@@ -18,25 +18,16 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Api\Serializer\UserSerializer;
+use App\Common\ResponseCode;
 use App\Events\DenyUsers\Saved;
 use App\Models\DenyUser;
-use Discuz\Api\Controller\AbstractCreateController;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\PermissionDeniedException;
-use Exception;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqController;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class CreateDenyUserController extends AbstractCreateController
+class CreateDenyUserController extends DzqController
 {
-    use AssertPermissionTrait;
-
-    public $serializer = UserSerializer::class;
-
     public $include = ['deny'];
 
     protected $validation;
@@ -49,30 +40,32 @@ class CreateDenyUserController extends AbstractCreateController
         $this->events = $events;
     }
 
-    /**
-     * @inheritDoc
-     * @throws PermissionDeniedException
-     * @throws Exception
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $request->getAttribute('actor');
-        $id = Arr::get($request->getQueryParams(), 'id');
+        $actor = $this->user;
+        if ($actor->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return true;
+    }
 
-        $this->assertPermission($actor->id);
+    public function main()
+    {
+        $actor = $this->user;
+
+        $id = $this->inPut('id');
 
         if ($actor->id == $id) {
-            throw new Exception('deny_self');
+            $this->outPut(ResponseCode::NET_ERROR, 'deny_self');
         }
 
         $denyUser = DenyUser::where('user_id', $actor->id)
-                        ->where('deny_user_id', $id)
-                        ->first();
+            ->where('deny_user_id', $id)
+            ->first();
 
         $denyUser = $denyUser ?? new DenyUser();
         $denyUser->user_id = $actor->id;
         $denyUser->deny_user_id = $id;
-
 
         $validation = $this->validation->make(
             $denyUser->getAttributes(),
@@ -81,13 +74,14 @@ class CreateDenyUserController extends AbstractCreateController
                 'deny_user_id' => 'required'
             ]
         );
-
         $validation->failed();
-
         $denyUser->save();
 
-        $this->events->dispatch(new Saved($denyUser, $actor));
+        $this->events->dispatch(
+            new Saved($denyUser, $actor)
+        );
 
-        return $actor;
+        $data = $this->camelData($denyUser);
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }

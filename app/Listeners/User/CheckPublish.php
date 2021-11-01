@@ -18,7 +18,6 @@
 
 namespace App\Listeners\User;
 
-use App\Common\ResponseCode;
 use App\Events\Post\Saving as PostSaving;
 use App\Events\Thread\Saving as ThreadSaving;
 use App\Repositories\UserRepository;
@@ -63,9 +62,10 @@ class CheckPublish
             $rules = [];
 
             // 发布内容需先绑定手机
-            if (! $event->actor->isAdmin() && ($event->actor->can('publishNeedBindPhone')
+            if (! $event->actor->isAdmin() && (
+                $event->actor->can('publishNeedBindPhone')
                                                 || $event->actor->can('publishNeedBindWechat')
-                )) {
+            )) {
                 $rules['user'][] = function ($attribute, $value, $fail) use ($event, $userRepository) {
                     $userRepository->checkPublishPermission($event->actor);
                 };

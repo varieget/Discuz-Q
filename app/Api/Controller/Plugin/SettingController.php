@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,13 +39,13 @@ class SettingController extends DzqAdminController
             'type' => 'required|integer',
         ]);
 
-        if (!is_array($privateValue) || !is_array($privateValue)){
+        if (!is_array($privateValue) || !is_array($privateValue)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
-        $intersectKeys = array_intersect_key($privateValue,$publicValue);
-        if (!empty($intersectKeys)){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,"key重复");
+        $intersectKeys = array_intersect_key($privateValue, $publicValue);
+        if (!empty($intersectKeys)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, 'key重复');
         }
 
         $setResult = $this->app->make(PluginSettings::class)->setData($appId, $name, $type, $privateValue, $publicValue);

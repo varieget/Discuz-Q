@@ -20,7 +20,6 @@ namespace App\Api\Serializer;
 
 use App\Models\User;
 use App\Models\UserQq;
-use App\Models\UserSignInFields;
 use App\Models\UserWallet;
 use App\Repositories\UserFollowRepository;
 use Discuz\Api\Serializer\AbstractSerializer;
@@ -125,10 +124,10 @@ class UserSerializer extends AbstractSerializer
             //userWallet 使用缓存减低数据库查询
             $cache = app('cache');
             $userWallet = $cache->get('user_wallet_'.$model->id);
-            if(empty($userWallet)){
+            if (empty($userWallet)) {
                 $userWallet = $this->actor->userWallet->toArray();
                 $cache->put('user_wallet_'.$model->id, serialize($userWallet), 5 * 60);
-            }else{
+            } else {
                 $userWallet = unserialize($userWallet);
             }
             $attributes += [
@@ -151,7 +150,7 @@ class UserSerializer extends AbstractSerializer
                 'canEditUsername' => $model->username_bout < $settings->get('username_bout', 'default', 1),
             ];
         }
-        if($model->bind_type == 2) {
+        if ($model->bind_type == 2) {
             $attributes['avatarUrl'] = ! empty($attributes['avatarUrl']) ? $attributes['avatarUrl'] : $this->qqAvatar($model);
         }
 
@@ -182,7 +181,6 @@ class UserSerializer extends AbstractSerializer
         return $this->hasOne($user, UserWechatSerializer::class);
     }
 
-
     /**
      * @param $user
      * @return Relationship
@@ -196,6 +194,7 @@ class UserSerializer extends AbstractSerializer
     {
         return $this->hasMany($user, UserSignInSerializer::class);
     }
+
     /**
      * @param $user
      * @return Relationship
@@ -222,7 +221,7 @@ class UserSerializer extends AbstractSerializer
     public function qqAvatar(User $user)
     {
         $qqUser = UserQq::where('user_id', $user->id)->first();
-        if(! $qqUser) {
+        if (! $qqUser) {
             return '';
         }
         return $qqUser->headimgurl;
