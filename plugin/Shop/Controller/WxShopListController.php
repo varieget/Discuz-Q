@@ -13,9 +13,9 @@ class WxShopListController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if (!$this->user->isAdmin()){
-            return false;
-        }
+//        if (!$this->user->isAdmin()){
+//            return false;
+//        }
         return true;
     }
 

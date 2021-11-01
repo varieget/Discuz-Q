@@ -26,13 +26,13 @@ use Symfony\Component\Finder\Finder;
 
 trait PluginTrait
 {
-    private function getOneSettingAndConfig($appId, $isFromAdmin)
+    private function getOneSettingAndConfig($appId)
     {
         $pluginList = \Discuz\Common\Utils::getPluginList();
 
-        $setting = PluginSettings::getSettingRecord($appId);
+        $setting = app()->make(PluginSettings::class)->getSettingRecord($appId);
 
-        $setting = $this->getOutSetting($setting, $isFromAdmin);
+        $setting = $this->getOutSetting($setting);
 
         $data = [
             'setting'=>$setting,
@@ -42,7 +42,7 @@ trait PluginTrait
         return $data;
     }
 
-    private function getAllSettingAndConfig($groupId, $isAdmin, $isFromAdmin)
+    private function getAllSettingAndConfig($groupId, $isAdmin)
     {
         $pluginList = \Discuz\Common\Utils::getPluginList();
         $permissions = PluginGroupPermission::query()
@@ -90,7 +90,7 @@ trait PluginTrait
             unset($item['busi']);
 
             if (isset($appSettingMap[$appId])) {
-                $item['setting'] = $this->getOutSetting($appSettingMap[$appId], $isFromAdmin);
+                $item['setting'] = $this->getOutSetting($appSettingMap[$appId]);
             } else {
                 $item['setting'] = [];
             }
@@ -99,7 +99,7 @@ trait PluginTrait
         return $pluginList;
     }
 
-    private function getOutSetting($setting,$isFromAdmin){
+    private function getOutSetting($setting){
         $privateValueData = $setting["private_value"];
         $publicValueData = $setting["public_value"];
 
