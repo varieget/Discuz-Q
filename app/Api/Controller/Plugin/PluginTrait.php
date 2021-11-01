@@ -29,7 +29,6 @@ trait PluginTrait
     private function getOneSettingAndConfig($appId, $isFromAdmin)
     {
         $pluginList = \Discuz\Common\Utils::getPluginList();
-
         $setting = PluginSettings::getSettingRecord($appId);
 
         $setting = $this->getOutSetting($setting, $isFromAdmin);
@@ -82,7 +81,7 @@ trait PluginTrait
                                     $item['view'][$dirName]['pluginFiles']['assets'][] = $fileUrl;
                                 }
                             } else {
-                                throw new \Exception('view file directory' . $dirName . 'not exist');
+                                throw new \Exception('view file directory ' . $dirName . ' not exist');
                             }
                         }
                     }
