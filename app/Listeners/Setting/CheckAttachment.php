@@ -74,7 +74,7 @@ class CheckAttachment
 
             $num = (int)$settings['support_max_upload_attachment_num'];
             if ($num < 0 || $num > $this->supportMaxUploadAttachmentNum) {
-                Utils::outPut(ResponseCode::INVALID_PARAMETER, '最大上传附件数取值范围：0～100');
+                Utils::outPut(ResponseCode::INVALID_PARAMETER, '最大上传附件数取值范围：0～'.$this->supportMaxUploadAttachmentNum);
             }
 
             $event->settings->transform(function ($settings) use ($num) {
