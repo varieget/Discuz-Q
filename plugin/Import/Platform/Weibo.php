@@ -2,7 +2,7 @@
 
 namespace Plugin\Import\Platform;
 
-class Weibo
+class WeiBo
 {
 
     /**
@@ -16,6 +16,7 @@ class Weibo
         set_time_limit(0);
         $page = 1;
         $data = $pageData = $this->getList($topic, $page);
+
         while (count($data) < $number && !empty($pageData)) {
             $page++;
             $pageData = $this->getList($topic, $page);
@@ -63,8 +64,11 @@ class Weibo
                 }
                 //处理转发的情况
                 if(isset($value['mblog']['retweeted_status']['text']) && !empty($value['mblog']['retweeted_status']['text'])){
-                    $text['text'] = $text['text'] . $value['mblog']['retweeted_status']['text'];
+                    $moreText = $this->getForumTextDetail($value['mblog']['retweeted_status']['mid']);
+                    $text['text'] = $text['text'] . $moreText['text']; // 转发的文字内容
+                    $text['topicList'] = array_merge($text['topicList'], $moreText['topicList']); // 转发内容中的话题
                 }
+
                 $forum['forum'] = [
                     'id' => $value['mblog']['id'],
                     'mid' => $value['mblog']['mid'],
@@ -82,12 +86,24 @@ class Weibo
                         $smallPics[] = $valuePic['url'];
                     }
                 }
+                // 转发内容的图片
+                if (isset($value['mblog']['retweeted_status']['pics']) && !empty($value['mblog']['retweeted_status']['pics'])) {
+                    foreach ($value['mblog']['retweeted_status']['pics'] as $valuePic) {
+                        $smallPics[] = $valuePic['url'];
+                    }
+                }
                 $forum['forum']['images'] = $smallPics;
                 //判断是否帖子中包含视频
                 $smallMedias = [];
                 if (isset($value['mblog']['page_info']) && !empty($value['mblog']['page_info'])) {
                     if (strtolower($value['mblog']['page_info']['type']) == 'video') {
                         $smallMedias = $value['mblog']['page_info']['media_info'];
+                    }
+                }
+                // 转发微博中的视频
+                if (isset($value['mblog']['retweeted_status']['page_info']) && !empty($value['mblog']['retweeted_status']['page_info'])) {
+                    if (strtolower($value['mblog']['retweeted_status']['page_info']['type']) == 'video' && empty($smallMedias)) {
+                        $smallMedias = $value['mblog']['retweeted_status']['page_info']['media_info'];
                     }
                 }
 

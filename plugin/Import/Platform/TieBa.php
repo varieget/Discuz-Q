@@ -1,25 +1,13 @@
 <?php
 
-/**
- * Copyright (C) 2020 Tencent Cloud.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+namespace Plugin\Import\Platform;
 
-namespace App\Crawler;
+use Plugin\Import\Traits\ImportTrait;
 
-class Tieba
+class TieBa
 {
+    use ImportTrait;
+
     private $cookie = '';
 
     /**
@@ -29,11 +17,22 @@ class Tieba
      * @param string $cookie 用户cookie
      * @return array
      */
-    public function main($topic, $page = 1, $cookie = '')
+    public function main($topic, $number, $cookie = '')
     {
         set_time_limit(0);
         $this->cookie = $cookie;
-        return $this->getListWap($topic, $page);
+        $page = 1;
+        $data = $pageData = $this->getListWap($topic, $page);
+        while (count($data) < $number && !empty($pageData)) {
+            $page++;
+            $pageData = $this->getListWap($topic, $page);
+            $data = array_merge($data, $pageData);
+        }
+        if (count($data) > $number) {
+            $data = array_slice($data,0, $number);
+        }
+
+        return $data;
     }
 
     /**
@@ -74,11 +73,9 @@ class Tieba
                 if (empty($forum['id'])) {
                     continue;
                 }
-                $user['nickname'] = str_replace(' ', '', $user['nickname']);
+                $user['nickname'] = str_replace(" ", "", $user['nickname']);
                 $data[$k]['user'] = $user;
                 $data[$k]['forum'] = $forum;
-                //增加nickname
-                $data[$k]['forum']['nickname'] = $user['nickname'];
                 //评论信息
                 $data[$k]['comment'] = $this->getCommentList($forum['id']);
             }
@@ -96,18 +93,15 @@ class Tieba
         //返回参数
         $userInfo = [
             'avatar' => '',
-            'nickname' => '',
-            'gender' => '',
-            'home_page' => '',
-            'description' => '',
+            'nickname' => ''
         ];
         if ($content) {
             //头像
-            $avatar = $this->dealMatchStr('/<img src="(.*)" alt="">/i', $content);
+            $avatar = $this->dealMatchStr("/<img src=\"(.*)\" alt=\"\">/i", $content);
             $userInfo['avatar'] = trim($avatar);
-            if (!empty($avatar)) {
-                $userId = substr($avatar, strpos($avatar, '/item/'));
-                $userId = str_replace('/item/', '', $userId);
+            if (strstr($userInfo['avatar'], '?')) {
+                $userInfo['avatar'] = substr($userInfo['avatar'], 0, strpos($userInfo['avatar'], '?'));
+                $userInfo['avatar'] = $userInfo['avatar'] . '.jpg';
             }
 
             //昵称
@@ -115,16 +109,6 @@ class Tieba
             if (isset($nicknameMatches[0][0]) && !empty($nicknameMatches[0][0])) {
                 $userInfo['nickname'] = trim(strip_tags($nicknameMatches[0][0]));
             }
-
-            //主页
-            $userInfo['home_page'] = 'https://tieba.baidu.com/home/main?un=' . $userInfo['nickname'];
-
-            //性别
-//            if(isset($userId)) {
-//                $user = $this->getUserInfo($userId);
-//                $userInfo['nickname'] = $user['nickname'];
-//                $userInfo['gender'] = $user['gender'];
-//            }
         }
         return $userInfo;
     }
@@ -139,27 +123,22 @@ class Tieba
         //返回参数
         $forumData = [
             'id' => '',
-            'mid' => '',
             'text' => [
                 'text' => '',
                 'position' => '',
-                'topic_list' => []
+                'topicList' => []
             ],
-            'create_at' => '',
-            'pics' => [
-                'small_pics' => [],
-                'large_pics' => []
-            ],
-            'medias' => [
-                'small_medias' => [],
-                'large_medias' => [],
+            'createdAt' => '',
+            'images' => [],
+            'media' => [
+                'video' => [],
+                'audio' => [],
             ]
         ];
         if ($content) {
             //id
             $id = $this->dealMatchStr("/<a href=\"\/p\/(.*)\?lp=/i", $content);
             $forumData['id'] = trim($id);
-            $forumData['mid'] = trim($id);
 
             //帖子内容
             $text = $this->dealMatchStr("/<div class=\"ti_title\">(.*)<\/span>(?)<\/div> *<div/i", $content);
@@ -172,7 +151,7 @@ class Tieba
             if (strpos($createAt, ':') != false) {
                 $createAt = date('Y-m-d ') . $createAt;
             }
-            $forumData['create_at'] = $createAt;
+            $forumData['createdAt'] = $createAt;
 
             //图片
             //判断是否包含图片
@@ -185,7 +164,7 @@ class Tieba
                         unset($pics[1][$picKey]);
                     }
                 }
-                $forumData['pics']['small_pics'] = $pics[1];
+                $forumData['images'] = $pics[1];
             }
         }
         return $forumData;
@@ -220,17 +199,14 @@ class Tieba
             //评论信息
             $commentDetail = $this->getComment($content[1]);
             //如果评论ID为空，抛弃
-            if (empty($commentDetail['id']) || empty($commentDetail['text']['text'])) {
+            if (empty($commentDetail['id']) || (empty($commentDetail['text']['text']) && empty($commentDetail['images']))) {
                 continue;
             }
             //用户信息
-            $user['nickname'] = str_replace(' ', '', $user['nickname']);
+            $user['nickname'] = str_replace(" ", "", $user['nickname']);
             $data[$key]['user'] = $user;
             //评论信息
             $data[$key]['comment'] = $commentDetail;
-            //增加帖子ID，和用户昵称
-            $data[$key]['comment']['forumId'] = $mid;
-            $data[$key]['comment']['nickname'] = $user['nickname'];
         }
         return $data;
     }
@@ -245,10 +221,7 @@ class Tieba
         //返回数据
         $userInfo = [
             'avatar' => '',
-            'nickname' => '',
-            'gender' => '',
-            'home_page' => '',
-            'description' => '',
+            'nickname' => ''
         ];
         if ($content) {
             //头像
@@ -258,24 +231,14 @@ class Tieba
                 $avatar = substr($avatar, strpos($avatar, 'https://'));
             }
             $userInfo['avatar'] = trim($avatar);
-
-            //昵称
-            $nickname = $this->dealMatchStr('/img username="(.*)" class=""/i', $content);
-            $userInfo['nickname'] = trim($nickname);
-
-            //主页
-            $homePage = $this->dealMatchStr('/class="p_author_face " href="(.*)">/i', $content);
-            $userInfo['home_page'] = 'https://tieba.baidu.com' . trim($homePage);
-            if ($homePage) {
-                $userId = substr($homePage, strpos($homePage, 'id='));
+            if (strstr($userInfo['avatar'], '?')) {
+                $userInfo['avatar'] = substr($userInfo['avatar'], 0, strpos($userInfo['avatar'], '?'));
+                $userInfo['avatar'] = $userInfo['avatar'] . '.jpg';
             }
 
-            //性别
-//            if(isset($userId)) {
-//                $user = $this->getUserInfo($userId);
-//                $userInfo['nickname'] = $user['nickname'];
-//                $userInfo['gender'] = $user['gender'];
-//            }
+            //昵称
+            $nickname = $this->dealMatchStr("/img username=\"(.*)\" class=\"\"/i", $content);
+            $userInfo['nickname'] = trim($nickname);
         }
         return $userInfo;
     }
@@ -289,24 +252,22 @@ class Tieba
     {
         $commentInfo = [
             'id' => '',
-            'rootid' => '',
-            'created_at' => '',
+            'createdAt' => '',
             'text' => [
-                'text' => '',
-                'position' => '',
-                'topic_list' => [],
+                'text' => ''
             ],
         ];
         //评论ID
-        $commentInfo['id'] = $this->dealMatchStr('/<div id="post_content_(.*)" class="d_post_content j_d_post_content/i', $content);
+        $commentInfo['id'] = $this->dealMatchStr("/<div id=\"post_content_(.*)\" class=\"d_post_content j_d_post_content/i", $content);
 
         //评论内容
         $commentText = $this->dealMatchStr("/class=\"d_post_content j_d_post_content \" style=\"display:;\">(.*)<\/div><br>/i", $content);
+        $imageMatches = $this->getHtmlLabel('/<img[^>]*\s+src="([^"]*)"[^>]*>/isU', $commentText);
+        $commentInfo['images'] = $imageMatches[1] ?? [];
         $commentInfo['text']['text'] = trim(strip_tags($commentText, '<p><br><img>'));
 
         //评论时间
-        $commentInfo['created_at'] = $this->dealMatchStr("/楼<\/span><span class=\"tail-info\">(.*)<\/span><\/div><ul class=\"p_props_tail props_appraise_wrap/i", $content);
-
+        $commentInfo['createdAt'] = $this->dealMatchStr("/楼<\/span><span class=\"tail-info\">(.*)<\/span><\/div><ul class=\"p_props_tail props_appraise_wrap/i", $content) ?: date('Y-m-d H:i:s', time());
         return $commentInfo;
     }
 
@@ -339,14 +300,13 @@ class Tieba
     private function curlGet($url, $headers = [], $port = 80)
     {
         $ch = curl_init();
-        $header = [];
-        $header[] = 'Content-Type:application/x-www-form-urlencoded';
+        $headers[] = 'Content-Type:application/x-www-form-urlencoded';
         curl_setopt($ch, CURLOPT_URL, $url);
         if ($port !== 80) {
             curl_setopt($ch, CURLOPT_PORT, $port);
         }
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36');
-        curl_setopt($ch, CURLOPT_HEADER, 0);//设定是否输出页面内容
+        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
+        curl_setopt($ch, CURLOPT_HEADER, 1);//设定是否输出页面内容
         if ($headers) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         }
@@ -356,6 +316,7 @@ class Tieba
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);       //链接超时时间
         curl_setopt($ch, CURLOPT_TIMEOUT, 3);       //设置超时时间
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         $filecontent = curl_exec($ch);
         curl_close($ch);
 
