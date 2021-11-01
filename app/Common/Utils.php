@@ -26,6 +26,8 @@ use Maatwebsite\Excel\Excel;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Psr\Log\LoggerInterface;
 
 class Utils
@@ -197,12 +199,32 @@ class Utils
     }
 
     //execl 导出
-    public static function localexport($filePath, $fileName= '', $header = [], $readBuffer = 1024)
+    public static function localexport($filePath, $datas, $column_map, $fileName= '', $header = [], $readBuffer = 1024)
     {
-        //设置头信息
         if (!$fileName) {
             $fileName = basename($filePath);
         }
+        $cells = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $keys = [];
+        foreach ($datas as $row => $data) {
+            $keys = array_keys($data);
+            $values = array_values($data);
+            foreach ($values as $index => $item) {
+                $sheet->setCellValue($cells[$index].($row+2), $item);
+            }
+        }
+        if ($keys) {
+            foreach ($keys as $index => $key) {
+                $sheet->setCellValue($cells[$index].'1', Arr::get($column_map, $key, $key));
+            }
+        }
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($fileName);
+
+
         //声明浏览器输出的是字节流
         $contentType = isset($header['Content-Type']) ? $header['Content-Type'] : 'application/octet-stream';
         header('Content-Type: ' . $contentType);

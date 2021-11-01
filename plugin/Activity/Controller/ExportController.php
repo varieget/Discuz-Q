@@ -21,10 +21,10 @@ namespace Plugin\Activity\Controller;
 use App\Common\DzqConst;
 use App\Common\ResponseCode;
 use App\Common\Utils;
-use App\Exports\ActivityExport;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
+use Plugin\Activity\Export\ActivityExport;
 use Plugin\Activity\Model\ActivityUser;
 use Plugin\Activity\Model\ThreadActivity;
 
@@ -86,16 +86,8 @@ class ExportController extends DzqController
         }
 
         $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . 'activity_excel.xlsx';
-        //TODO 判断满足条件的excel是否存在,if exist 直接返回;
-        $this->bus->dispatch(
-            new ActivityExport($filename, $export_list, $column_map)
-        );
 
-        //检测下载文件是否存在 并且可读
-        if (!is_file($filename) && !is_readable($filename)) {
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '');
-        }
-        Utils::localexport($filename);
+        Utils::localexport($filename, $export_list, $column_map);
 
     }
 
