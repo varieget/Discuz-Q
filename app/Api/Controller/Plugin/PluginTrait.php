@@ -82,7 +82,7 @@ trait PluginTrait
                                     $item['view'][$dirName]['pluginFiles']['assets'][] = $fileUrl;
                                 }
                             } else {
-                                throw new \Exception('view file directory' . $dirName . 'not exist');
+                                throw new \Exception('view file directory ' . $dirName . ' not exist');
                             }
                         }
                     }
