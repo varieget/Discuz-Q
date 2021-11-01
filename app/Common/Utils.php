@@ -18,12 +18,16 @@
 
 namespace App\Common;
 
+use App\Exports\UsersExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Excel;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Psr\Log\LoggerInterface;
 
 class Utils
@@ -195,21 +199,51 @@ class Utils
     }
 
     //execl 导出
-    public static function localexport($title,$filename,$data)
+    public static function localexport($filePath, $datas, $column_map, $fileName= '', $header = [], $readBuffer = 1024)
     {
-        ob_get_clean();
-        ob_start();
-        echo implode("\t", $title),"\n";
-        foreach ($data as $val){
-            echo implode("\t", $val), "\n";
+        if (!$fileName) {
+            $fileName = basename($filePath);
         }
-        header('Content-Disposition: attachment; filename='.$filename.'.xlsx');
-        header('Accept-Ranges:bytes');
-        header('Content-Length:' . ob_get_length());
-        header('Content-Type:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        ob_end_flush();
-        ob_end_clean();
+        $cells = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $keys = [];
+        foreach ($datas as $row => $data) {
+            $keys = array_keys($data);
+            $values = array_values($data);
+            foreach ($values as $index => $item) {
+                $sheet->setCellValue($cells[$index].($row+2), $item);
+            }
+        }
+        if ($keys) {
+            foreach ($keys as $index => $key) {
+                $sheet->setCellValue($cells[$index].'1', Arr::get($column_map, $key, $key));
+            }
+        }
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($fileName);
+
+
+        //声明浏览器输出的是字节流
+        $contentType = isset($header['Content-Type']) ? $header['Content-Type'] : 'application/octet-stream';
+        header('Content-Type: ' . $contentType);
+        //声明浏览器返回大小是按字节进行计算
+        header('Accept-Ranges:bytes');
+        //告诉浏览器文件的总大小
+        $fileSize = filesize($filePath);//坑 filesize 如果超过2G 低版本php会返回负数
+        header('Content-Length:' . $fileSize); //注意是'Content-Length:' 非Accept-Length
+        $contentDisposition = isset($header['Content-Disposition']) ? $header['Content-Disposition'] : 'attachment;filename=' . $fileName;
+        //声明下载文件的名称
+        header('Content-Disposition:' . $contentDisposition);//声明作为附件处理和下载后文件的名称
+        //获取文件内容
+        $handle = fopen($filePath, 'rb');//二进制文件用‘rb’模式读取
+
+        while (!feof($handle)) { //循环到文件末尾 规定每次读取（向浏览器输出为$readBuffer设置的字节数）
+            echo fread($handle, $readBuffer);
+        }
+        fclose($handle);//关闭文件句柄
+        exit();
     }
 
     public static function setAppKey($key, $value)

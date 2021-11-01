@@ -19,15 +19,25 @@
 namespace Plugin\Activity\Controller;
 
 use App\Common\DzqConst;
+use App\Common\ResponseCode;
 use App\Common\Utils;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
+use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
+use Plugin\Activity\Export\ActivityExport;
 use Plugin\Activity\Model\ActivityUser;
 use Plugin\Activity\Model\ThreadActivity;
 
 class ExportController extends DzqController
 {
     use ActivityTrait;
+
+    protected $bus;
+
+    public function __construct(BusDispatcher $bus)
+    {
+        $this->bus = $bus;
+    }
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
@@ -48,9 +58,24 @@ class ExportController extends DzqController
         $activityId = $this->inPut('activityId');
         $activity_users = ActivityUser::query()->where(['activity_id' => $activityId, 'status' => DzqConst::BOOL_YES])->get();
         $export_list = [];
+        $column_map = [];
         foreach ($activity_users as $key=>$val) {
             $export_list[$key]['nickname'] = $val->user->nickname;
             $additional_info = json_decode($val->additional_info, 1);
+            if(empty($column_map)){
+                foreach ($additional_info as $k => $v){
+                    $map_v = '';
+                    switch ($k){
+                        case in_array($k, array_keys(ThreadActivity::$addition_info_map)):
+                            $map_v = ThreadActivity::$addition_map[ThreadActivity::$addition_info_map[$k]];
+                            break;
+                        default:
+                            break;
+                    }
+                    $column_map[$k] = $map_v;
+                }
+                $column_map['nickname'] = '昵称';
+            }
             ksort($additional_info);
 
             if (!empty($additional_info)) {
@@ -59,16 +84,12 @@ class ExportController extends DzqController
                 }
             }
         }
-        //处理execl表头
-        $row = $export_list[0];
-        $excel_title = ['昵称'];
-        foreach ($row as $key => $val) {
-            if ($key!= 'nickname') {
-                $excel_title[] = ThreadActivity::$addition_map[ThreadActivity::$addition_info_map[$key]];
-            }
-        }
-        $title = '活动报名用户'.time();
-        Utils::localexport($excel_title, $title, $export_list);
-        exit();
+
+        $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . 'activity_excel.xlsx';
+
+        Utils::localexport($filename, $export_list, $column_map);
+
     }
+
+
 }
