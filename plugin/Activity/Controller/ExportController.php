@@ -84,8 +84,8 @@ class ExportController extends DzqController
                 }
             }
         }
-
-        $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . 'activity_excel.xlsx';
+        $time = time();
+        $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . "activity_excel_{$time}.xlsx";
 
         Utils::localexport($filename, $export_list, $column_map);
 
