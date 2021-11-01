@@ -29,7 +29,6 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\User;
 use App\Models\RedPacket;
-use App\Models\Setting;
 use App\Repositories\ThreadRepository;
 use App\Validators\ThreadValidator;
 use Carbon\Carbon;
@@ -47,6 +46,7 @@ use Illuminate\Validation\ValidationException;
 class CreateThread
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     /**
@@ -116,18 +116,20 @@ class CreateThread
 
         $attributes = Arr::get($this->data, 'attributes', []);
         $content = Arr::get($attributes, 'content', '');
-        if(mb_strlen($content) > 49998)  throw new PermissionDeniedException;
+        if (mb_strlen($content) > 49998) {
+            throw new PermissionDeniedException;
+        }
 
         $thread_id = Arr::get($attributes, 'id');
         if ($thread_id) {
             $oldThreadData = Thread::query()->where('id', $thread_id)->first();
             // 不是本人编辑草稿，报错
-            if($oldThreadData->is_draft == 1 && $oldThreadData->user_id !== $this->actor->id){
+            if ($oldThreadData->is_draft == 1 && $oldThreadData->user_id !== $this->actor->id) {
                 throw new PermissionDeniedException;
             }
             // 正式帖子，不是本人、不是管理员、没有编辑权限，报错
-            if($oldThreadData->is_draft == 0 && $oldThreadData->user_id !== $this->actor->id){
-                if(!$this->actor->isAdmin() && !$this->actor->can('edit', $oldThreadData)){
+            if ($oldThreadData->is_draft == 0 && $oldThreadData->user_id !== $this->actor->id) {
+                if (!$this->actor->isAdmin() && !$this->actor->can('edit', $oldThreadData)) {
                     throw new PermissionDeniedException;
                 }
             }
@@ -149,7 +151,6 @@ class CreateThread
         $red_money = Arr::get($attributes, 'redPacket.money', null);
         $thread->is_red_packet = Thread::NOT_HAVE_RED_PACKET;
         if ($thread->type === Thread::TYPE_OF_TEXT || $thread->type === Thread::TYPE_OF_LONG) {
-
             if (!empty($red_money)) {
                 $this->assertCan($this->actor, 'createThread.' . $thread->type . '.redPacket');
                 $thread->is_red_packet = Thread::HAVE_RED_PACKET;//0:未添加红包，1:有添加红包

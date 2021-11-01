@@ -22,7 +22,6 @@ use Discuz\Base\DzqCache;
 
 class CacheKey
 {
-
     //微信相关重复登录加锁
     const WECHAT_FILE_LOCK = 'wechat_file_lock:';
 
@@ -55,6 +54,7 @@ class CacheKey
 
     // 存储小程序通知模板数据
     const NOTICE_MINI_PROGRAM_TEMPLATES = 'notice_mini_program_templates';
+
     const AUTH_USER_PREFIX = 'auth_user_';
 
     const CHECK_PAID_GROUP = 'check_paid_group_';
@@ -71,7 +71,6 @@ class CacheKey
 
     const SEQUENCE = 'sequence';
 
-
     //默认的创建时间降序
     const LIST_THREADS_V3_CREATE_TIME = 'list_threads_v3_create_time';//filterId->pageId
     //智能排序，不参与筛选
@@ -83,7 +82,6 @@ class CacheKey
     //付费首页
     const LIST_THREADS_V3_PAID_HOMEPAGE = 'list_threads_v3_paid_homepage';//filterId->pageId
 
-
     //浏览数排序
     const LIST_THREADS_V3_VIEW_COUNT = 'list_threads_v3_view_count';//filterId->pageId
     //评论时间排序
@@ -93,23 +91,36 @@ class CacheKey
     //个人中心复合数据排序
     const LIST_THREADS_V3_COMPLEX = 'list_threads_v3_complex';//filterId->pageId
 
-
     const LIST_THREADS_V3_USERS = 'list_threads_v3_users';//发帖用户存储 id
+
     const LIST_THREADS_V3_THREADS = 'list_threads_v3_threads';//帖子数据存储 id
+
     const LIST_THREADS_V3_ATTACHMENT = 'list_threads_v3_attachment';//帖子附件数据存储 id
+
     const LIST_THREADS_V3_VIDEO = 'list_threads_v3_video';//帖子视频文件存储 id
+
     const LIST_THREADS_V3_TAGS = 'list_threads_v3_tags';//帖子标签存储 thread_id
+
     const LIST_THREADS_V3_TOMS = 'list_threads_v3_toms';//帖子插件存储 thread_id
+
     const LIST_THREADS_V3_GROUP_USER = 'list_threads_v3_group_user';//用户组 user_id
+
     const LIST_THREADS_V3_SEARCH_REPLACE = 'list_threads_v3_search_replace';//替换标签、话题和艾特
+
     const LIST_THREADS_V3_POST_USERS = 'list_threads_v3_post_users';//帖子卡面底部的点赞支付摘要 thread_id
+
     const LIST_THREADS_V3_VOTES = 'list_threads_v3_votes';  //帖子投票
+
     const LIST_THREADS_V3_VOTE_SUBITEMS = 'list_threads_v3_vote_subitems';  //帖子投票选项
 
     const LIST_THREADS_V3_POSTS = 'list_threads_v3_posts:';//帖子正文数据存储 thread_id,【碎片化多文件存储】--切分成20个缓存文件
+
     const LIST_THREADS_V3_USER_PAY_ORDERS = 'list_threads_v3_user_pay_orders:';//用户付费贴订单信息 user_id->thread_id
+
     const LIST_THREADS_V3_USER_REWARD_ORDERS = 'list_threads_v3_user_reward_orders:';//打赏的订单信息 user_id->thead_id
+
     const LIST_THREADS_V3_POST_LIKED = 'list_threads_v3_post_liked:';//是否点赞 user_id->post_id
+
     const LIST_THREADS_V3_THREAD_USERS = 'list_threads_v3_thread_users:';//是否收藏 user_id->thread_id
 
     const MONITOR_SYSTEM_TASK = 'monitor_system_task:';//监听系统定时任务是否启动
@@ -119,6 +130,8 @@ class CacheKey
     const  CRAWLER_SPLQUEUE_INPUT_DATA = 'crawler_splqueue_input_data:'; // 数据抓取/内容导入-入参缓存
 
     const PLUGIN_LOCAL_CONFIG = 'plugin_local_config';//存储本地插件配置信息
+
+    const PLUGIN_SETTINGS = 'plugin_settings';
 
     const OAC_REQUEST_TIME = 'oac_request_time';//记录开源应用中心的请求时间以关闭定时任务
 
@@ -138,5 +151,4 @@ class CacheKey
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
         DzqCache::delKey(CacheKey::LIST_THREADS_V3_ATTENTION);
     }
-
 }

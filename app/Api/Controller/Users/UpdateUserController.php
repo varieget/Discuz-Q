@@ -18,45 +18,101 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Api\Serializer\UserProfileSerializer;
 use App\Commands\Users\UpdateUser;
-use Discuz\Api\Controller\AbstractResourceController;
+use App\Common\ResponseCode;
+use App\Models\User;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqController;
+use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
-use Illuminate\Support\Arr;
 
-class UpdateUserController extends AbstractResourceController
+class UpdateUserController extends DzqController
 {
-    /**
-     * {@inheritdoc}
-     */
-    public $serializer = UserProfileSerializer::class;
-
-    /**
-     * @var Dispatcher
-     */
     protected $bus;
 
-    /**
-     * @param Dispatcher $bus
-     */
-    public function __construct(Dispatcher $bus)
+    protected $settings;
+
+    public function __construct(Dispatcher $bus, SettingsRepository $settings)
     {
         $this->bus = $bus;
+        $this->settings = $settings;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        return $this->bus->dispatch(
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN, '');
+        }
+
+        $user = User::query()->where('id', $this->inPut('id'))->first();
+        if (!$user) {
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
+        }
+        $isSelf = $this->user->id == $user->id;
+
+        return $isSelf || $this->user->isAdmin();
+    }
+
+    public function main()
+    {
+        $id = $this->inPut('id');
+        if (empty($id)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '');
+        }
+
+        $data = $this->inPut('data');
+        if (empty($data)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '');
+        }
+
+        $requestData = [];
+        if (!empty($data['username'])) {
+            $requestData['username'] = $data['username'];
+        }
+        if (!empty($data['password'])) {
+            $requestData['passWord'] = $data['password'];
+        }
+        if (!empty($data['newPassword'])) {
+            $requestData['newPassword'] = $data['newPassword'];
+        }
+        if (!empty($data['passwordConfirmation'])) {
+            $requestData['password_confirmation'] = $data['passwordConfirmation'];
+        }
+        if (!empty($data['payPassword'])) {
+            $requestData['payPassword'] = $data['payPassword'];
+        }
+        if (!empty($data['payPasswordConfirmation'])) {
+            $requestData['pay_password_confirmation'] = $data['payPasswordConfirmation'];
+        }
+        if (!empty($data['payPasswordToken'])) {
+            $requestData['pay_password_token'] = $data['payPasswordToken'];
+        }
+
+        if (!empty($data['mobile'])) {
+            $requestData['mobile'] = $data['mobile'];
+        }
+
+        if (!empty($data['refuseMessage'])) {
+            $requestData['refuse_message'] = $data['refuseMessage'];
+        }
+        if (!empty($data['signature'])) {
+            $requestData['signature'] = $data['signature'];
+        }
+        if (!empty($data['registerReason'])) {
+            $requestData['register_reason'] = $data['registerReason'];
+        }
+        if (!empty($data['groupId'])) {
+            $requestData['groupId'] = $data['groupId'];
+        }
+
+        $result = $this->bus->dispatch(
             new UpdateUser(
-                Arr::get($request->getQueryParams(), 'id'),
-                $request->getParsedBody(),
-                $request->getAttribute('actor')
+                $id,
+                $requestData,
+                $this->user
             )
         );
+        $data = $this->camelData($result);
+        $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }

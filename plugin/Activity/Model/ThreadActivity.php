@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,6 @@
 
 namespace Plugin\Activity\Model;
 
-
 use Discuz\Base\DzqModel;
 
 class ThreadActivity extends DzqModel
@@ -25,11 +25,15 @@ class ThreadActivity extends DzqModel
     protected $table='plugin_activity_thread_activity';
 
     const ADDITIONAL_INFO_TYPE_NAME = 1;
+
     const ADDITIONAL_INFO_TYPE_MOBILE = 2;
+
     const ADDITIONAL_INFO_TYPE_WEIXIN = 3;
+
     const ADDITIONAL_INFO_TYPE_AD = 4;
 
-    public static function allowInfoType(){
+    public static function allowInfoType()
+    {
         return  [
             self::ADDITIONAL_INFO_TYPE_NAME,
             self::ADDITIONAL_INFO_TYPE_MOBILE,
@@ -51,5 +55,4 @@ class ThreadActivity extends DzqModel
         'weixin'  =>  self::ADDITIONAL_INFO_TYPE_WEIXIN,
         'address'  =>  self::ADDITIONAL_INFO_TYPE_AD,
     ];
-
 }

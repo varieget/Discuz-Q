@@ -2,10 +2,13 @@
 
 /**
  * Copyright (C) 2020 Tencent Cloud.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +18,8 @@
 
 namespace App\Common;
 
-class Image{
-
+class Image
+{
     /**
      * 图片高斯模糊（适用于png/jpg/gif格式）
      * @param $srcImg 原图片
@@ -26,10 +29,10 @@ class Image{
      *
      *基于Martijn Frazer代码的扩充， 感谢 Martijn Frazer
      */
-    public function gaussianBlur($srcImg,$savepath=null,$savename=null,$blurFactor=3){
-
+    public function gaussianBlur($srcImg, $savepath=null, $savename=null, $blurFactor=3)
+    {
         $gdImageResource=$this->image_create_from_ext($srcImg);
-        $srcImgObj=$this->blur($gdImageResource,$blurFactor);
+        $srcImgObj=$this->blur($gdImageResource, $blurFactor);
         $temp = pathinfo($srcImg);
         $name = $temp['basename'];
         $path = $temp['dirname'];
@@ -75,16 +78,25 @@ class Image{
         $prevHeight = $originalHeight;
 
         // scale way down and gradually scale back up, blurring all the way
-        for($i = 0; $i < $blurFactor; $i += 1)
-        {
+        for ($i = 0; $i < $blurFactor; $i += 1) {
             // determine dimensions of next image
             $nextWidth = $smallestWidth * pow(2, $i);
             $nextHeight = $smallestHeight * pow(2, $i);
 
             // resize previous image to next size
             $nextImage = imagecreatetruecolor($nextWidth, $nextHeight);
-            imagecopyresized($nextImage, $prevImage, 0, 0, 0, 0,
-                $nextWidth, $nextHeight, $prevWidth, $prevHeight);
+            imagecopyresized(
+                $nextImage,
+                $prevImage,
+                0,
+                0,
+                0,
+                0,
+                $nextWidth,
+                $nextHeight,
+                $prevWidth,
+                $prevHeight
+            );
 
             // apply blur filter
             imagefilter($nextImage, IMG_FILTER_GAUSSIAN_BLUR);
@@ -96,8 +108,18 @@ class Image{
         }
 
         // scale back to original size and blur one more time
-        imagecopyresized($gdImageResource, $nextImage,
-            0, 0, 0, 0, $originalWidth, $originalHeight, $nextWidth, $nextHeight);
+        imagecopyresized(
+            $gdImageResource,
+            $nextImage,
+            0,
+            0,
+            0,
+            0,
+            $originalWidth,
+            $originalHeight,
+            $nextWidth,
+            $nextHeight
+        );
         imagefilter($gdImageResource, IMG_FILTER_GAUSSIAN_BLUR);
 
         // clean up
@@ -118,5 +140,4 @@ class Image{
         }
         return $im;
     }
-
 }

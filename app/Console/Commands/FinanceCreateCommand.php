@@ -28,6 +28,7 @@ use Discuz\Qcloud\QcloudStatisticsTrait;
 class FinanceCreateCommand extends AbstractCommand
 {
     use QcloudStatisticsTrait;
+
     protected $signature = 'finance:create';
 
     protected $description = 'Count the financial situation of the previous day.';
@@ -52,7 +53,7 @@ class FinanceCreateCommand extends AbstractCommand
         $date = Carbon::parse('-1 day')->toDateString();
         $dateTimeBegin = $date . ' 00:00:00';
         $dateTimeEnd = $date . ' 23:59:59';
-        $orderType = [$this->order::ORDER_STATUS_PAID, $this->order::ORDER_STATUS_PART_OF_RETURN, 
+        $orderType = [$this->order::ORDER_STATUS_PAID, $this->order::ORDER_STATUS_PART_OF_RETURN,
                       $this->order::ORDER_STATUS_RETURN, $this->order::ORDER_STATUS_UNTREATED];
 
         $register_profit = $this->order::WhereBetween('created_at', [$dateTimeBegin, $dateTimeEnd])->where('type', 1)->where('status', $this->order::ORDER_STATUS_PAID)->sum('amount');

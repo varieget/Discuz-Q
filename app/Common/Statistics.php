@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +18,8 @@
 
 namespace App\Common;
 
-
 class Statistics
 {
-
     public static function set($key, $value)
     {
         $path = storage_path('statistics') . '/' . sha1($key);
@@ -49,7 +48,7 @@ class Statistics
     public static function delete($key)
     {
         $path = storage_path('statistics') . '/' . sha1($key);
-        if(file_exists($path)){
+        if (file_exists($path)) {
             return unlink($path);
         }
         return false;

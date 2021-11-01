@@ -19,27 +19,51 @@
 namespace App\Api\Controller\Users;
 
 use App\Commands\Users\DeleteUsers;
+use App\Common\ResponseCode;
+use App\Models\User;
+use App\Models\UserWechat;
+use App\Repositories\UserRepository;
 use Discuz\Api\Controller\AbstractDeleteController;
+use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ServerRequestInterface;
 
-class DeleteUserController extends AbstractDeleteController
+class DeleteUserController extends DzqController
 {
-    protected $bus;
-
-    public function __construct(Dispatcher $bus)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $this->bus = $bus;
+        return true;
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function delete(ServerRequestInterface $request)
+    public function main()
     {
-        $this->bus->dispatch(
-            new DeleteUsers(Arr::get($request->getQueryParams(), 'id'), $request->getAttribute('actor'))
-        );
+        if ($this->user->id != 1) {
+            $this->outPut(ResponseCode::UNAUTHORIZED);
+        }
+
+        $id     = $this->inPut('id');
+        $ip     = ip($this->request->getServerParams());
+        $port   = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
+
+        $user   = User::query()->where('id', $id)->first();
+        if (!empty($user)) {
+            try {
+                app('log')->info('被删除用户：'.$user.';ip：'.$ip.';port：'.$port);
+                if (!empty($user->wechat)) {
+                    app('log')->info('被删除微信用户：'.$user->wechat.';ip：'.$ip.';port：'.$port);
+                }
+                $user->delete();
+            } catch (\Exception $e) {
+                app('log')->info('被删除用户：'.$user.';ip：'.$ip.';port：'.$port.';$e:'.$e);
+            }
+        }
+
+        $result = [
+            'user'          => $user,
+            'userWechat'    => !empty($user->wechat) ? $user->wechat : null
+        ];
+
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

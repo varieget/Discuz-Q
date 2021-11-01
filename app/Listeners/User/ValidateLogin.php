@@ -37,7 +37,7 @@ class ValidateLogin
 
     private function exceptionResponse($userId, $msg)
     {
-        Utils::outPut(ResponseCode::INVALID_PARAMETER,$msg,User::getUserReject($userId));
+        Utils::outPut(ResponseCode::INVALID_PARAMETER, $msg, User::getUserReject($userId));
         $crossHeaders = DiscuzResponseFactory::getCrossHeaders();
         foreach ($crossHeaders as $k => $v) {
             header($k . ':' . $v);

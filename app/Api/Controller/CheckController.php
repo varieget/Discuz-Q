@@ -26,7 +26,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class CheckController implements RequestHandlerInterface
 {
-    use QcloudTrait,AssertPermissionTrait;
+    use AssertPermissionTrait;
+    use QcloudTrait;
 
     /**
      * @param ServerRequestInterface $request

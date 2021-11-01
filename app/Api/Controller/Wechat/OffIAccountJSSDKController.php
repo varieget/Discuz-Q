@@ -18,27 +18,20 @@
 
 namespace App\Api\Controller\Wechat;
 
-use App\Api\Serializer\WechatJssdkSerializer;
+use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqController;
 use App\Exceptions\TranslatorException;
-use Discuz\Api\Controller\AbstractCreateController;
 use Discuz\Wechat\EasyWechatTrait;
 use EasyWeChat\Kernel\Exceptions\InvalidConfigException;
 use EasyWeChat\Kernel\Exceptions\RuntimeException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Routing\UrlGenerator;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\SimpleCache\InvalidArgumentException;
-use Tobscure\JsonApi\Document;
 
-/**
- * @package App\Api\Controller\Wechat
- */
-class OffIAccountJSSDKController extends AbstractCreateController
+class OffIAccountJSSDKController extends DzqController
 {
     use EasyWechatTrait;
-
-    public $serializer = WechatJssdkSerializer::class;
 
     /**
      * @var Dispatcher
@@ -60,15 +53,20 @@ class OffIAccountJSSDKController extends AbstractCreateController
         $this->url = $url;
     }
 
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     /**
      * {@inheritdoc}
      * @throws TranslatorException
      */
-    protected function data(ServerRequestInterface $request, Document $document)
+    public function main()
     {
-        $url = Arr::get($request->getQueryParams(), 'url');
+        $url = $this->inPut('url');
         if (blank($url)) {
-            throw new TranslatorException('wechat_invalid_unknown_url_exception');
+            $this->outPut(ResponseCode::WECHAT_INVALID_UNKNOWN_URL_EXCEPTION);
         }
 
         $app = $this->offiaccount();
@@ -84,13 +82,13 @@ class OffIAccountJSSDKController extends AbstractCreateController
         try {
             $result = $app->jssdk->buildConfig($build, true, false, false);
         } catch (InvalidConfigException $e) {
-            throw new TranslatorException('wechat_invalid_config_exception');
+            $this->outPut(ResponseCode::WECHAT_INVALID_CONFIG_EXCEPTION);
         } catch (RuntimeException $e) {
-            throw new TranslatorException('wechat_runtime_exception');
+            $this->outPut(ResponseCode::WECHAT_RUNTIME_EXCEPTION);
         } catch (InvalidArgumentException $e) {
-            throw new TranslatorException('wechat_invalid_argument_exception');
+            $this->outPut(ResponseCode::WECHAT_INVALID_ARGUMENT_EXCEPTION);
         }
 
-        return $result;
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

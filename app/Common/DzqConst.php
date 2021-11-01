@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +18,19 @@
 
 namespace App\Common;
 
-
 class DzqConst
 {
     //数据库bool类型查询
     const BOOL_YES = 1;
+
     const BOOL_NO = 0;
 
     //帖子列表接口作用域
     const SCOPE_NORMAL = 0;//常规列表
-    const SCOPE_RECOMMEND = 1;//推荐列表
-    const SCOPE_SEARCH = 2;//发现页搜索列表
-    const SCOPE_PAID = 3;//付费站首页列表
 
+    const SCOPE_RECOMMEND = 1;//推荐列表
+
+    const SCOPE_SEARCH = 2;//发现页搜索列表
+
+    const SCOPE_PAID = 3;//付费站首页列表
 }

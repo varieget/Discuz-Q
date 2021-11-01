@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class DeleteUserFollow
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     /**
@@ -70,7 +71,7 @@ class DeleteUserFollow
     public function __invoke(UserFollow $userFollow, UserFollowRepository $userFollowRepository, User $user, Dispatcher $events)
     {
         $this->events = $events;
-        if ($this->actor->isGuest()){
+        if ($this->actor->isGuest()) {
             throw new NotAuthenticatedException;
         }
 

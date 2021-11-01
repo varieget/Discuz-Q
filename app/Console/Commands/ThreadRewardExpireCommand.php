@@ -19,7 +19,6 @@
 namespace App\Console\Commands;
 
 use App\Models\ThreadReward;
-use App\Models\Post;
 use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
@@ -147,7 +146,7 @@ class ThreadRewardExpireCommand extends AbstractCommand
 
                 if ($order->payment_type == Order::PAYMENT_TYPE_WALLET) {
                     $userWalletUpdateResult = UserWallet::query()->where('user_id', $item->user_id)
-                        ->update(['available_amount' => $userWallet->available_amount + $remainMoney, 
+                        ->update(['available_amount' => $userWallet->available_amount + $remainMoney,
                                   'freeze_amount' => $userWallet->freeze_amount - $remainMoney]);
                 } else {
                     $userWalletUpdateResult = UserWallet::query()->where('user_id', $item->user_id)
@@ -228,6 +227,5 @@ class ThreadRewardExpireCommand extends AbstractCommand
         $bar->finish();
         $this->info('');
         $this->info('悬赏过期脚本执行 [结束]');
-        
     }
 }

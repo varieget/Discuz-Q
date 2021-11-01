@@ -37,18 +37,18 @@ class RecommendedTopicListController extends DzqAdminController
     public function main()
     {
         $topicCount = Topic::query()->count();
-        if($topicCount <= 10){
+        if ($topicCount <= 10) {
             $topicList = Topic::query()
                 ->select('id as topicId', 'content as topicTitle')
                 ->limit(10)
                 ->orderBy('updated_at')
                 ->get()->toArray();
-            return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($topicList));
+            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($topicList));
         }
 
         $offset = rand(0, $topicCount);
 
-        if($offset > $topicCount - 10){
+        if ($offset > $topicCount - 10) {
             $offset = $topicCount - 10;
         }
 
@@ -61,6 +61,6 @@ class RecommendedTopicListController extends DzqAdminController
             ->whereIn('id', $ids)
             ->orderBy('updated_at')
             ->get()->toArray();
-        return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($topicList));
+        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($topicList));
     }
 }

@@ -32,6 +32,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 class DeleteDialog
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     /**
@@ -71,8 +72,8 @@ class DeleteDialog
 
         //增加修改状态
         $dialogList = DialogMessage::query()
-            ->where('dialog_id',$this->id)
-            ->where('user_id','!=', $this->actor->id)
+            ->where('dialog_id', $this->id)
+            ->where('user_id', '!=', $this->actor->id)
             ->get(['id','read_status']);
 
         foreach ($dialogList as $value) {
@@ -99,7 +100,6 @@ class DeleteDialog
             Attachment::query()
                 ->whereIn('id', $dialogMessage->pluck('attachment_id'))
                 ->update(['type_id'=>0]);
-
         }
 
         return $dialog;

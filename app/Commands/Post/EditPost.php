@@ -107,7 +107,7 @@ class EditPost
 
             $post->content = $censor->checkText($post->content);
 
-            if(mb_strlen($post->content)>49999){
+            if (mb_strlen($post->content)>49999) {
                 throw new \Exception('字数超出限制');
             }
             // 存在审核敏感词时，将主题放入待审核

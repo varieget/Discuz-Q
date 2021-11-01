@@ -44,52 +44,52 @@ class CategoryListener
         $oldpPermissions = Permission::query()->whereIn('group_id', $ids)->get()->toArray();
         $groupPermissions = [];
         foreach ($oldpPermissions as $key => $value) {
-            if(isset($groupPermissions[$value['group_id']])){
+            if (isset($groupPermissions[$value['group_id']])) {
                 $groupPermissions[$value['group_id']][] = $value['permission'];
-            }else{
+            } else {
                 $groupPermissions[$value['group_id']][] = $value['permission'];
             }
         }
 
         $newPermissions = [];
         foreach ($ids as $key => $value) {
-            if($value !== Group::GUEST_ID){
-                if(!in_array('createThread', $groupPermissions[$value])){
+            if ($value !== Group::GUEST_ID) {
+                if (!in_array('createThread', $groupPermissions[$value])) {
                     $newPermissions[] = [
                         'group_id' => $value,
                         'permission' => "category{$category->id}.createThread",
                     ];
                 }
 
-                if(!in_array('viewThreads', $groupPermissions[$value])){
+                if (!in_array('viewThreads', $groupPermissions[$value])) {
                     $newPermissions[] = [
                         'group_id' => $value,
                         'permission' => "category{$category->id}.viewThreads",
                     ];
                 }
 
-                if(!in_array('thread.reply', $groupPermissions[$value])){
+                if (!in_array('thread.reply', $groupPermissions[$value])) {
                     $newPermissions[] = [
                         'group_id' => $value,
                         'permission' => "category{$category->id}.thread.reply",
                     ];
                 }
 
-                if(!in_array('thread.viewPosts', $groupPermissions[$value])){
+                if (!in_array('thread.viewPosts', $groupPermissions[$value])) {
                     $newPermissions[] = [
                         'group_id' => $value,
                         'permission' => "category{$category->id}.thread.viewPosts",
                     ];
                 }
-            }else{
-                if(!in_array('viewThreads', $groupPermissions[Group::GUEST_ID])){
+            } else {
+                if (!in_array('viewThreads', $groupPermissions[Group::GUEST_ID])) {
                     $newPermissions[] = [
                         'group_id' => Group::GUEST_ID,
                         'permission' => "category{$category->id}.viewThreads",
                     ];
                 }
 
-                if(!in_array('thread.viewPosts', $groupPermissions[Group::GUEST_ID])){
+                if (!in_array('thread.viewPosts', $groupPermissions[Group::GUEST_ID])) {
                     $newPermissions[] = [
                         'group_id' => Group::GUEST_ID,
                         'permission' => "category{$category->id}.thread.viewPosts",
@@ -98,7 +98,7 @@ class CategoryListener
             }
         }
 
-        if(!empty($newPermissions)){
+        if (!empty($newPermissions)) {
             Permission::query()->insert($newPermissions);
         }
     }

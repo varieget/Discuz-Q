@@ -25,7 +25,6 @@ use App\Models\Thread;
 use App\Models\ThreadVideo;
 use App\Models\User;
 use Discuz\Auth\Guest;
-use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Str;
 
 /**
@@ -53,7 +52,9 @@ trait HasPaidContent
      */
     public function paidContent($model)
     {
-        if(empty($this->actor))     $this->actor = new Guest();
+        if (empty($this->actor)) {
+            $this->actor = new Guest();
+        }
         Thread::setStateUser($this->actor);
 
         // 作者本人 或 管理员 或 回答者本人 不处理（新增类型时请保证 $model->user_id 存在）

@@ -1,8 +1,24 @@
 <?php
 
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace App\Console\Commands;
 
-use App\Api\Controller\AttachmentV3\AttachmentTrait;
+use App\Api\Controller\Attachment\AttachmentTrait;
 use App\Api\Controller\Crawler\CrawlerTrait;
 use App\Censor\Censor;
 use App\Commands\Attachment\AttachmentUploader;
@@ -110,8 +126,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
         AttachmentValidator $attachmentValidator,
         ImageManager        $image,
         ConnectionInterface $db,
-        Filesystem          $filesystem)
-    {
+        Filesystem          $filesystem
+    ) {
         parent::__construct();
         $this->userRepo         = $userRepo;
         $this->bus              = $bus;
@@ -124,8 +140,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
         $this->image               = $image;
         $this->db                  = $db;
         $this->filesystem          = $filesystem;
-        $this->uploader              = new AttachmentUploader($this->filesystem , $this->settings);
-        $this->crawlerAvatarUploader = new CrawlerAvatarUploader($this->censor, $this->filesystem , $this->settings);
+        $this->uploader              = new AttachmentUploader($this->filesystem, $this->settings);
+        $this->crawlerAvatarUploader = new CrawlerAvatarUploader($this->censor, $this->filesystem, $this->settings);
     }
 
     public function handle()
@@ -142,7 +158,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
             if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {
                 $this->info('----The content import process has been occupied,You cannot start a new process.----');
                 exit;
-            } else if ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
+            } elseif ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
                 $this->insertLogs('----Execution timed out.The file lock has been deleted.----');
                 app('cache')->clear();
                 $this->changeLockFileContent($this->lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $lockFileContent['topic']);
@@ -179,7 +195,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
             if ($inputData['platform'] != Thread::CRAWLER_DATA_PLATFORM_OF_ZSXQ) {
                 $pageData = $this->crawlerPlatform->main($inputData['topic'], $page);
-                $this->insertLogs("----The " . $page . " page capture " . count($pageData) . " data'records.----");
+                $this->insertLogs('----The ' . $page . ' page capture ' . count($pageData) . " data'records.----");
                 if (empty($pageData)) {
                     $this->insertLogs('----No data is obtained. Process ends.----');
                     app('cache')->clear();
@@ -190,7 +206,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                 while (count($data) < $inputData['number'] && !empty($pageData)) {
                     $page++;
                     $pageData = $this->crawlerPlatform->main($inputData['topic'], $page);
-                    $this->insertLogs("----The " . $page . " page capture " . count($pageData) . " data'records.----");
+                    $this->insertLogs('----The ' . $page . ' page capture ' . count($pageData) . " data'records.----");
                     $data = array_merge($data, $pageData);
                 }
             } else {
@@ -204,7 +220,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
             }
 
             if (count($data) > $inputData['number']) {
-                $data = array_slice($data,0,$inputData['number']);
+                $data = array_slice($data, 0, $inputData['number']);
             }
 
             $totalCount = count($data);
@@ -254,7 +270,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
 
                 $this->db->commit();
                 $totalDataNumber = count($insertThreadsResult);
-                $this->insertLogs("----Importing crawler data success.The importing'data total number is " . $totalDataNumber . ".----");
+                $this->insertLogs("----Importing crawler data success.The importing'data total number is " . $totalDataNumber . '.----');
                 $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, Thread::PROCESS_OF_INSERT_POSTS, Thread::IMPORT_PROCESSING, $this->topic, $totalDataNumber);
             } catch (\Exception $e) {
                 $this->db->rollBack();
@@ -313,7 +329,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
         if (!empty($updateTopicsIds)) {
             $updateTopicsIds = array_flip($updateTopicsIds);
             $updateTopicsIds = array_keys($updateTopicsIds);
-            $topicDatas = Topic::query()->whereIn('id' , $updateTopicsIds)->get();
+            $topicDatas = Topic::query()->whereIn('id', $updateTopicsIds)->get();
             $topicDatas->map(function ($item) {
                 $query = ThreadTopic::join('threads', 'threads.id', 'thread_topic.thread_id')
                     ->where('thread_topic.topic_id', $item->id)
@@ -379,7 +395,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     $oldNicknames = array_merge($oldNicknames, [$registerUserResult->nickname]);
                 }
                 $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertUsersprogress, Thread::IMPORT_PROCESSING, $this->topic);
-            }catch (\Exception $e) {
+            } catch (\Exception $e) {
                 $this->insertLogs('----Insert a new user fail,errorMsg: '. $e->getMessage() . '----');
             }
         }
@@ -396,16 +412,16 @@ class CreateCrawlerDataCommand extends AbstractCommand
         }
 
         // 头像下载至storage/tmp文件夹下
-        if($this->platform == Thread::CRAWLER_DATA_PLATFORM_OF_TIEBA) {
+        if ($this->platform == Thread::CRAWLER_DATA_PLATFORM_OF_TIEBA) {
             $data['avatar'] = $data['avatar'] . '.jpg';
         }
 
         $mimeType = $this->getAttachmentMimeType($data['avatar']);
-        $fileExt = substr($mimeType, strpos($mimeType, "/") + strlen("/"));
+        $fileExt = substr($mimeType, strpos($mimeType, '/') + strlen('/'));
         $fileName = Str::random(40) . '.' . $fileExt;
         set_time_limit(0);
         $file = $this->getFileContents($data['avatar']);
-        if (!$file ) {
+        if (!$file) {
             return false;
         }
         $tmpFile = tempnam(storage_path('/tmp'), 'avatar');
@@ -451,7 +467,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                 $topicIds = [];
                 $docIds = [];
                 // 处理text中的img-src
-                if ($this->platform != Thread::CRAWLER_DATA_PLATFORM_OF_WEIBO && preg_match("/<img.*>/", $value['text']['text'])) {
+                if ($this->platform != Thread::CRAWLER_DATA_PLATFORM_OF_WEIBO && preg_match('/<img.*>/', $value['text']['text'])) {
                     [$contentAttachmentIds, $content] = $this->changeImg($users[$threadAuthor]['id'], $threads[$key]['text']['text'], Attachment::TYPE_OF_IMAGE);
                     $threads[$key]['text']['text'] = $content;
                 } elseif ($this->platform == Thread::CRAWLER_DATA_PLATFORM_OF_WEIBO) {
@@ -490,7 +506,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                                     ];
                             }
 
-                            if (!strpos($threads[$key]['text']['text'], $html)){
+                            if (!strpos($threads[$key]['text']['text'], $html)) {
                                 $this->insertLogs("----Replace the topic'content in thread content.----");
                                 $searchTopicContent = '#' . $topicContent . '#';
                                 if ($this->platform == Thread::CRAWLER_DATA_PLATFORM_OF_ZSXQ) {
@@ -540,9 +556,9 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     // 处理视频，暂时只写入小视频，以后再优化
                     if (!empty($value['medias']['small_medias'])) {
                         if (isset($value['medias']['small_medias']['stream_url']) && !empty($value['medias']['small_medias']['stream_url'])) {
-                            $this->insertLogs("----Upload the thread video start,the video url is [" . $value['medias']['small_medias']['stream_url'] . "].----");
+                            $this->insertLogs('----Upload the thread video start,the video url is [' . $value['medias']['small_medias']['stream_url'] . '].----');
                             $videoId = $this->videoUpload($newThread->user_id, $newThread->id, $value['medias']['small_medias']['stream_url'], $this->settings);
-                            $this->insertLogs("----Upload the thread video end,the video_id is " . $videoId . ".----");
+                            $this->insertLogs('----Upload the thread video end,the video_id is ' . $videoId . '.----');
                         }
                     }
 
@@ -566,7 +582,6 @@ class CreateCrawlerDataCommand extends AbstractCommand
                             'createdAt' => $threads[$key]['create_at']
                         ]
                     ];
-
                 }
             }
             $this->changeLockFileContent($this->lockPath, $this->startCrawlerTime, $insertThreadProgress, Thread::IMPORT_PROCESSING, $this->topic);
@@ -582,7 +597,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
      * @return array
      *
      */
-    private function getImagesSrc($contentStr = "")
+    private function getImagesSrc($contentStr = '')
     {
         $imgSrcArr = [];
         //首先将富文本字符串中的 img 标签进行匹配
@@ -616,14 +631,14 @@ class CreateCrawlerDataCommand extends AbstractCommand
             set_time_limit(0);
 
             if ($this->platform == Thread::CRAWLER_DATA_PLATFORM_OF_ZSXQ && $type == Attachment::TYPE_OF_FILE) {
-                $formatStr = substr($value, strpos($value, "attname=") + strlen("attname="));
-                $fileName = urldecode( substr($formatStr, 0, strpos($formatStr, "&")));
-                $fileExt = substr($fileName, strpos($fileName, ".") + strlen("."));
+                $formatStr = substr($value, strpos($value, 'attname=') + strlen('attname='));
+                $fileName = urldecode(substr($formatStr, 0, strpos($formatStr, '&')));
+                $fileExt = substr($fileName, strpos($fileName, '.') + strlen('.'));
                 $mimeType = MimeType::fromExtension($fileExt);
                 $file = $this->crawlerPlatform->getDataByUrl($value, $this->userAgent, $this->cookie);
             } else {
                 $mimeType = $this->getAttachmentMimeType($value);
-                $fileExt = substr($mimeType, strpos($mimeType, "/") + strlen("/"));
+                $fileExt = substr($mimeType, strpos($mimeType, '/') + strlen('/'));
                 $fileName = Str::random(40) . '.' . $fileExt;
                 $file = $this->getFileContents($value);
             }
@@ -631,8 +646,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
             $imageSize = strlen($file);
             $maxSize = $this->settings->get('support_max_size', 'default', 0) * 1024 * 1024;
             if ($file && $imageSize > 0 && $imageSize < $maxSize) {
-                ini_set('memory_limit',-1);
-                $this->insertLogs("----Capture image's information.The url is [" . $value . "]----");
+                ini_set('memory_limit', -1);
+                $this->insertLogs("----Capture image's information.The url is [" . $value . ']----');
                 $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
                 $ext = $fileExt ? ".$fileExt" : '';
                 $tmpFileWithExt = $tmpFile . $ext;
@@ -651,7 +666,7 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     true
                 );
 
-                if(strtolower($ext) != 'gif'){
+                if (strtolower($ext) != 'gif') {
                     if ((int) $type === Attachment::TYPE_OF_IMAGE && extension_loaded('exif')) {
                         $this->image->make($tmpFileWithExt)->orientate()->save();
                     }
@@ -693,7 +708,6 @@ class CreateCrawlerDataCommand extends AbstractCommand
                     'oldImageSrc' => $value,
                     'newImageSrc' => $url
                 ];
-
             }
         }
 
@@ -865,8 +879,8 @@ class CreateCrawlerDataCommand extends AbstractCommand
      */
     private function changeImg($userId, $content, $type)
     {
-        $content = preg_replace('/(<img.*?)(style=.+?[\'|"])|((width)=[\'"]+[0-9]+[\'"]+)|((height)=[\'"]+[0-9]+[\'"]+)/i', '$1' , $content);
-        preg_match_all("/<img[^>]+/", $content, $imagesSrc);
+        $content = preg_replace('/(<img.*?)(style=.+?[\'|"])|((width)=[\'"]+[0-9]+[\'"]+)|((height)=[\'"]+[0-9]+[\'"]+)/i', '$1', $content);
+        preg_match_all('/<img[^>]+/', $content, $imagesSrc);
         if (!empty($imagesSrc) && !empty($imagesSrc[0])) {
             foreach ($imagesSrc[0] as $imageSrc) {
                 if ($this->platform == Thread::CRAWLER_DATA_PLATFORM_OF_WEIBO &&

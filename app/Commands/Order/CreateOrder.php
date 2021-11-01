@@ -92,7 +92,7 @@ class CreateOrder
         ]);
 
         if ($validator_info->fails()) {
-            app('log')->info("创建订单验证参数错误,用户id:{$this->actor->id}" );
+            app('log')->info("创建订单验证参数错误,用户id:{$this->actor->id}");
             throw new ValidationException($validator_info);
         }
 
@@ -302,7 +302,7 @@ class CreateOrder
 
         // 订单金额需检查
         if (($amount == 0 && ! $order_zero_amount_allowed) || $amount < 0) {
-            app('log')->info("参数金额错误,用户id:{$this->actor->id}" );
+            app('log')->info("参数金额错误,用户id:{$this->actor->id}");
             throw new OrderException('order_amount_error');
         }
 

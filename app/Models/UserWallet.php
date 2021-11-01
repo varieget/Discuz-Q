@@ -40,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class UserWallet extends Model
 {
     use EventGeneratorTrait;
+
     use ScopeVisibilityTrait;
 
     /**
@@ -135,8 +136,9 @@ class UserWallet extends Model
      * monitor available_amount change
      * @param int $value 可用金额
      */
-    public function setAvailableAmountAttribute($value){
-        $this->attributes['available_amount'] = sprintf('%.2f',$value);
+    public function setAvailableAmountAttribute($value)
+    {
+        $this->attributes['available_amount'] = sprintf('%.2f', $value);
         $cache = app('cache');
         $cache->put('user_wallet_'.$this->attributes['user_id'], serialize($this->attributes), 5 * 60);
     }
@@ -145,8 +147,9 @@ class UserWallet extends Model
      * monitor freeze_amount change
      * @param int $value 冻结金额
      */
-    public function setFreezeAmountAttribute($value){
-        $this->attributes['freeze_amount'] = sprintf('%.2f',$value);
+    public function setFreezeAmountAttribute($value)
+    {
+        $this->attributes['freeze_amount'] = sprintf('%.2f', $value);
         $cache = app('cache');
         $cache->put('user_wallet_'.$this->attributes['user_id'], serialize($this->attributes), 5 * 60);
     }

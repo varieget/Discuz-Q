@@ -19,10 +19,13 @@
 namespace App\Api\Controller\Oauth2;
 
 use App\Api\Serializer\TokenSerializer;
+use App\Common\ResponseCode;
 use App\Passport\Repositories\AccessTokenRepository;
 use App\Passport\Repositories\RefreshTokenRepository;
+use App\Repositories\UserRepository;
 use DateInterval;
-use Discuz\Api\Controller\AbstractResourceController;
+use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqAdminController;
 use Discuz\Foundation\Application;
 use Exception;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -32,62 +35,73 @@ use Laminas\Diactoros\Response;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\RefreshTokenGrant;
 use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class RefreshTokenController extends AbstractResourceController
+class RefreshTokenController extends DzqAdminController
 {
     public $serializer = TokenSerializer::class;
 
-    /**
-     * @var Application
-     */
     protected $app;
 
     protected $events;
 
-    public function __construct(Application $app, Dispatcher $events)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $this->app = $app;
-        $this->events = $events;
+        if (!$this->user->isAdmin()) {
+            throw new PermissionDeniedException('您没有刷新token的权限!');
+        }
+        return true;
+    }
+
+    public function __construct(Application $app, Dispatcher $events, ServerRequestInterface $request)
+    {
+        $this->app     = $app;
+        $this->events  = $events;
+        $this->request = $request;
     }
 
     /**
      * @inheritDoc
      */
-    protected function data(ServerRequestInterface $request, Document $document)
+    public function main()
     {
+        $refreshToken = $this->input('refreshToken');
+        $request = $this->request;
+        if (empty($refreshToken)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, 'refreshToken不能为空');
+        }
+
         $refreshTokenRepository = new RefreshTokenRepository();
 
         // Setup the authorization server
         $server = $this->app->make(AuthorizationServer::class);
 
         $grant = new RefreshTokenGrant($refreshTokenRepository);
-        $grant->setRefreshTokenTTL(new DateInterval(AccessTokenRepository::REFER_TOKEN_EXP)); // new refresh tokens will expire after 1 month
+        // new refresh tokens will expire after 1 month
+        $grant->setRefreshTokenTTL(new DateInterval(AccessTokenRepository::REFER_TOKEN_EXP));
 
         // Enable the refresh token grant on the server
         $server->enableGrantType(
             $grant,
-            new DateInterval(AccessTokenRepository::TOKEN_EXP) // new access tokens will expire after an hour
-        );
+            new DateInterval(AccessTokenRepository::TOKEN_EXP)
+        ); // new access tokens will expire after an hour
 
         if ($request->getParsedBody() instanceof Collection) {
-            $data = $request->getParsedBody()->get('data');
             $request = $request->withParsedBody(
                 [
-                    'grant_type' => 'refresh_token',
-                    'refresh_token' => Arr::get($data, 'attributes.refresh_token'),
-                    'client_id' => '',
+                    'grant_type'    => 'refresh_token',
+                    'refresh_token' => $refreshToken,
+                    'client_id'     => '',
                     'client_secret' => '',
-                    'scope' => '',
+                    'scope'         => '',
                 ]
             );
         }
         try {
             $response = $server->respondToAccessTokenRequest($request, new Response());
-
-            return json_decode((string)$response->getBody());
+            $result = json_decode((string)$response->getBody(), true);
+            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($result));
         } catch (Exception $e) {
-            throw $e;
+            $this->outPut(ResponseCode::INTERNAL_ERROR, $e->getMessage());
         }
     }
 }

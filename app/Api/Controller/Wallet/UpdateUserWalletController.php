@@ -18,52 +18,60 @@
 
 namespace App\Api\Controller\Wallet;
 
-use App\Api\Serializer\UserWalletSerializer;
 use App\Commands\Wallet\UpdateUserWallet;
-use Discuz\Api\Controller\AbstractResourceController;
+use App\Common\ResponseCode;
+use App\Models\User;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqAdminController;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class UpdateUserWalletController extends AbstractResourceController
+class UpdateUserWalletController extends DzqAdminController
 {
-    /**
-     * {@inheritdoc}
-     */
-    public $serializer = UserWalletSerializer::class;
-
-    /**
-     * {@inheritdoc}
-     */
-    public $include = [
-        'user'
-    ];
-
-    /**
-     * @var Dispatcher
-     */
     protected $bus;
 
-    /**
-     * @param Dispatcher $bus
-     */
     public function __construct(Dispatcher $bus)
     {
         $this->bus = $bus;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function data(ServerRequestInterface $request, Document $document)
+    // 权限检查，是否为管理员
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $request->getAttribute('actor');
+        return $userRepo->canUpdateUserWallet($this->user);
+    }
 
-        $userId = (int) Arr::get($request->getQueryParams(), 'user_id');
+    public function main()
+    {
+        $actor = $this->user;
+        $log = app('payLog');
+        $data = [
+            'userId' => $this->inPut('userId'),
+            'operateType' => $this->inPut('operateType'),
+            'operateAmount' => $this->inPut('operateAmount'),
+            'walletStatus' => $this->inPut('walletStatus'),
+            'operateReason' => $this->inPut('operateReason'),
+        ];
 
-        return $this->bus->dispatch(
-            new UpdateUserWallet($userId, $actor, $request->getParsedBody())
+        $log->info("requestId：{$this->requestId} ,修改钱包入参,data:".json_encode($data));
+
+        if (intval($data['operateAmount']) > 10000) {
+            $log->error("操作金额小于10000 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
+            $this->outPut(ResponseCode::UNAUTHORIZED, '操作金额小于10000');
+        }
+
+        $user = User::query()->where('id', $data['userId'])->first();
+        if (empty($user)) {
+            $log->error("用户不存在 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $data);
+            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '用户不存在');
+        }
+
+        $datas = $this->bus->dispatch(
+            new UpdateUserWallet($data['userId'], $actor, $data)
         );
+
+        $build = $this->camelData($datas);
+
+        $this->outPut(ResponseCode::SUCCESS, '', $build);
+
     }
 }

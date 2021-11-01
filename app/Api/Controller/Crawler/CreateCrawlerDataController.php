@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +22,6 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Thread;
-use App\Repositories\UserRepository;
 use Discuz\Base\DzqAdminController;
 
 class CreateCrawlerDataController extends DzqAdminController
@@ -75,8 +75,8 @@ class CreateCrawlerDataController extends DzqAdminController
         if (file_exists($lockPath)) {
             $lockFileContent = $this->getLockFileContent($lockPath);
             if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {
-                $this->outPut(ResponseCode::RESOURCE_IN_USE, "当前内容[{$lockFileContent['topic']}]正在导入，请勿重复操作！当前已执行" . $lockFileContent['runtime'] . "分钟。");
-            } else if ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
+                $this->outPut(ResponseCode::RESOURCE_IN_USE, "当前内容[{$lockFileContent['topic']}]正在导入，请勿重复操作！当前已执行" . $lockFileContent['runtime'] . '分钟。');
+            } elseif ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
                 $this->changeLockFileContent($lockPath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $lockFileContent['topic']);
                 app('cache')->clear();
                 $this->outPut(ResponseCode::INVALID_PARAMETER, "内容[{$lockFileContent['topic']}]导入时间过长，导入失败！");
