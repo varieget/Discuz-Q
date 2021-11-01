@@ -100,55 +100,12 @@ trait PluginTrait
         return $pluginList;
     }
 
-    private function getInSetting(&$private_value, $public_value)
-    {
-        /** @var PluginFileSave $shopFileSave */
-        $shopFileSave = $this->app->make(PluginFileSave::class);
-        $resourceKeys = [];
-        foreach ($private_value as $key=>$value) {
-            $urlTemp = parse_url($value);
-            if (isset($urlTemp['scheme']) && isset($urlTemp['host'])) {
-                $isResource = $shopFileSave->checkSiteResource($value);
-                if ($isResource) {
-                    $resourceKeys[]=$key;
-                }
-            }
-        }
-        foreach ($public_value as $key=>$value) {
-            $urlTemp = parse_url($value);
-            if (isset($urlTemp['scheme']) && isset($urlTemp['host'])) {
-                $isResource = $shopFileSave->checkSiteResource($value);
-                if ($isResource) {
-                    $resourceKeys[]=$key;
-                }
-            }
-        }
-        $private_value['resourceKeys'] = $resourceKeys;
-        return true;
-    }
+    private function getOutSetting($setting,$isFromAdmin){
+        $privateValueData = $setting["private_value"];
+        $publicValueData = $setting["public_value"];
 
-    private function getOutSetting($setting, $isFromAdmin)
-    {
-        $privateValueData = $setting['private_value'];
-        $publicValueData = $setting['public_value'];
-
-        if (isset($privateValueData['resourceKeys'])) {
-            foreach ($privateValueData['resourceKeys'] as $key) {
-                if (isset($privateValueData[$key])) {
-                    $urlOld = $privateValueData[$key];
-                    $urlNew = $this->getCurrentUrl($urlOld);
-                    $privateValueData[$key] = $urlNew;
-                } elseif (isset($publicValueData[$key])) {
-                    $urlOld = $publicValueData[$key];
-                    $urlNew = $this->getCurrentUrl($urlOld);
-                    $publicValueData[$key] = $urlNew;
-                }
-            }
-            unset($privateValueData['resourceKeys']);
-        }
-
-        foreach ($privateValueData as $key=>$value) {
-            if (is_string($value)) {
+        foreach ($privateValueData as $key=>$value){
+            if (is_string($value)){
                 $privateValueData[$key] = Utils::hideStr($value);
             }
         }
@@ -161,12 +118,5 @@ trait PluginTrait
         $data['publicValue'] = $publicValueData;
         $data['privateValue'] = $privateValueData;
         return $data;
-    }
-
-    public function getCurrentUrl($urlOld)
-    {
-        /** @var PluginFileSave $shopFileSave */
-        $shopFileSave = $this->app->make(PluginFileSave::class);
-        return $shopFileSave->getCurrentUrl($urlOld);
     }
 }
