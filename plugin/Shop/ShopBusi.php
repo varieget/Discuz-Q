@@ -3,7 +3,6 @@
 
 namespace Plugin\Shop;
 
-
 use App\Common\Utils;
 use App\Models\PluginSettings;
 use App\Modules\ThreadTom\TomBaseBusi;
@@ -16,8 +15,6 @@ class ShopBusi extends TomBaseBusi
 
     public const TYPE_ORIGIN = 10;
     public const TYPE_WX_SHOP = 11;
-
-
 
     public function create()
     {
@@ -92,13 +89,13 @@ class ShopBusi extends TomBaseBusi
 
     private function selectWxShop( &$product){
         $qrCode = "";
-        $setting = $this->getSetting();
+        $setting = app()->make(PluginSettings::class)->getSetting($this->tomId);
         if ($setting && isset($setting["wxQrcode"]) && isset($setting["wxQrcode"])){
             $qrCode = $setting["wxQrcode"];
         }
 
         if (!empty($product["detailQrcode"])){
-            $product["detailQrcode"] = $this->getQRUrl($product["isRemote"],$product["detailQrcode"]);
+            $product["detailQrcode"] = $this->getQRUrl($product["isRemote"]??0,$product["detailQrcode"]);
         }else{
             $product["detailQrcode"] = $qrCode;
         }
@@ -108,12 +105,11 @@ class ShopBusi extends TomBaseBusi
 
     private function doProduct($productId){
         $resultData = false;
-        Utils::setAppKey("plugin_appid",$this->tomId);
 
         $config = app()->make(PluginSettings::class)->getSetting($this->tomId);
         $wxAppId = $config["wxAppId"];
 
-        list($result,$accssToken) = $this->getAccessToken();
+        list($result,$accssToken) = $this->getAccessToken($this->tomId);
         if ($result !== 0){
             return $resultData;
         }
@@ -137,7 +133,7 @@ class ShopBusi extends TomBaseBusi
             ->where("product_id",$productId)->first();
         if (empty($productOld)){
             //拉取二维码
-            list($qrPath,$isRemote) = $this->getProductQrCode($path);
+            list($qrPath,$isRemote) = $this->getProductQrCode($this->tomId,$path);
 
             $oneShopProduct = new ShopProducts();
             $oneShopProduct->app_id = $wxAppId;
@@ -149,7 +145,7 @@ class ShopBusi extends TomBaseBusi
             $oneShopProduct->detail_url = $path;
             $oneShopProduct->detail_qrcode = $qrPath;
             $oneShopProduct->is_remote = $isRemote?1:0;
-            $oneShopProduct->detail_scheme = $this->getSchemeProduct($path);
+            $oneShopProduct->detail_scheme = $this->getSchemeProduct($this->tomId,$path);
 
             $oneShopProduct->save();
 
@@ -161,11 +157,11 @@ class ShopBusi extends TomBaseBusi
             $productOld->path = $path;
             $productOld->detail_url = $path;
             if (empty($productOld->detail_qrcode)){
-                list($qrPath,$isRemote) = $this->getProductQrCode($path);
+                list($qrPath,$isRemote) = $this->getProductQrCode($this->tomId,$path);
                 $productOld->detail_qrcode = $qrPath;
                 $productOld->is_remote = $isRemote?1:0;
 
-                $productOld->detail_scheme = $this->getSchemeProduct($path);
+                $productOld->detail_scheme = $this->getSchemeProduct($this->tomId,$path);
             }
 
             $productOld->save();

@@ -41,31 +41,15 @@ trait WxShopTrait
         }
         return $this->httpClient;
     }
-    /**
-     * @return
-     */
-    public function getSetting(){
-        if (!empty($this->settingData)){
-            return $this->settingData;
-        }
 
-        $appid = Utils::getAppKey("plugin_appid");
-        if (empty($appid)){
-            return false;
-        }
-        $settingData = app()->make(PluginSettings::class)->getSetting($appid);
-        if (empty($settingData)){
-           return false;
-        }
-        $this->settingData = $settingData;
-        return $this->settingData;
-    }
-
-    public function getWxApp(){
+    public function getWxApp($appId){
         if (!empty($this->wxApp)){
             return [0,$this->wxApp];
         }
-        $settingData = $this->getSetting();
+        $settingData = app()->make(PluginSettings::class)->getSetting($appId);
+        if (empty($settingData)){
+            return false;
+        }
         if (empty($settingData)){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
@@ -77,12 +61,12 @@ trait WxShopTrait
         return [0, $this->wxApp];
     }
 
-    public function getAccessToken(){
+    public function getAccessToken($appId){
         if (!empty($this->accessToken)){
             return [0,$this->accessToken];
         }
 
-        list($result,$wxApp) = $this->getWxApp();
+        list($result,$wxApp) = $this->getWxApp($appId);
         if ($result !== 0){
             return [$result,$wxApp];
         }
@@ -171,9 +155,9 @@ trait WxShopTrait
         return $oneGoods;
     }
 
-    public function getProductQrCode($path){
+    public function getProductQrCode($appId, $path){
         $pathNew = str_replace("plugin-private://","__plugin__/",$path);
-        list($result,$wxApp) = $this->getWxApp();
+        list($result,$wxApp) = $this->getWxApp($appId);
         if ($result !== 0){
             DzqLog::error('WxShopTrait::getProductQrCode', [], $wxApp);
             return ["", false];
@@ -202,10 +186,13 @@ trait WxShopTrait
         return $shopFileSave->getFilePath($isRemote, $path);
     }
 
-    public function getSchemeProduct($path)
+    public function getSchemeProduct($appId,$path)
     {
-        list($ret2,$accessToken) = $this->getAccessToken();
-        $settingData = $this->getSetting();
+        list($ret2,$accessToken) = $this->getAccessToken($appId);
+        $settingData = app()->make(PluginSettings::class)->getSetting($appId);
+        if (empty($settingData)){
+            return "";
+        }
         if (empty($settingData["wxScheme"])){
             return "";
         }

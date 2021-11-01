@@ -29,7 +29,7 @@ class GetSettingAdminController extends DzqAdminController
         $appId = $this->inPut('appId');
         $this->dzqValidate(['appId' => $appId], ['appId' => 'required|string']);
 
-        $data = $this->getOneSettingAndConfig($appId, true);
+        $data = $this->getOneSettingAndConfig($appId);
 
         $this->outPut(0, '', $data);
     }
