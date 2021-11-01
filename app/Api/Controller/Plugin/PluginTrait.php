@@ -29,7 +29,6 @@ trait PluginTrait
     private function getOneSettingAndConfig($appId, $isFromAdmin)
     {
         $pluginList = \Discuz\Common\Utils::getPluginList();
-
         $setting = PluginSettings::getSettingRecord($appId);
 
         $setting = $this->getOutSetting($setting, $isFromAdmin);
@@ -62,7 +61,6 @@ trait PluginTrait
                 'canUsePlugin' => $isAdmin ? true : (empty($permission) ? false : ($permission['status'] ? true : false)),
             ];
             $distPath = $pluginDirectories['view'] . DIRECTORY_SEPARATOR . 'dist';
-            $pluginFiles = [];
             if (is_dir($distPath)) {
                 $dirs = Finder::create()->in($distPath)->directories();
                 foreach ($dirs as $dir) {
@@ -73,22 +71,24 @@ trait PluginTrait
                         $fileName = $file->getFilename();
                         $extension = strtolower($file->getExtension());
                         $fileUrl = Utils::getDzqDomain() . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR . $appName . DIRECTORY_SEPARATOR . $dirName . DIRECTORY_SEPARATOR . $fileName;
-                        if ($extension == 'js') {
-                            $pluginFiles[$dirName]['js'][] = $fileUrl;
-                        } elseif ($extension == 'css') {
-                            $pluginFiles[$dirName]['css'][] = $fileUrl;
-                        } else {
-                            $pluginFiles[$dirName]['assets'][] = $fileUrl;
+                        if (isset($item['view'])) {
+                            if (isset($item['view'][$dirName])) {
+                                if ($extension == 'js') {
+                                    $item['view'][$dirName]['pluginFiles']['js'][] = $fileUrl;
+                                } elseif ($extension == 'css') {
+                                    $item['view'][$dirName]['pluginFiles']['css'][] = $fileUrl;
+                                } else {
+                                    $item['view'][$dirName]['pluginFiles']['assets'][] = $fileUrl;
+                                }
+                            } else {
+                                throw new \Exception('view file directory ' . $dirName . ' not exist');
+                            }
                         }
                     }
                 }
             }
-
-            //前端插件入口
-            $item['plugin_files'] = $pluginFiles;
             unset($item['plugin_' . $appId]);
             unset($item['busi']);
-
             if (isset($appSettingMap[$appId])) {
                 $item['setting'] = $this->getOutSetting($appSettingMap[$appId], $isFromAdmin);
             } else {
@@ -99,55 +99,12 @@ trait PluginTrait
         return $pluginList;
     }
 
-    private function getInSetting(&$private_value, $public_value)
-    {
-        /** @var PluginFileSave $shopFileSave */
-        $shopFileSave = $this->app->make(PluginFileSave::class);
-        $resourceKeys = [];
-        foreach ($private_value as $key=>$value) {
-            $urlTemp = parse_url($value);
-            if (isset($urlTemp['scheme']) && isset($urlTemp['host'])) {
-                $isResource = $shopFileSave->checkSiteResource($value);
-                if ($isResource) {
-                    $resourceKeys[]=$key;
-                }
-            }
-        }
-        foreach ($public_value as $key=>$value) {
-            $urlTemp = parse_url($value);
-            if (isset($urlTemp['scheme']) && isset($urlTemp['host'])) {
-                $isResource = $shopFileSave->checkSiteResource($value);
-                if ($isResource) {
-                    $resourceKeys[]=$key;
-                }
-            }
-        }
-        $private_value['resourceKeys'] = $resourceKeys;
-        return true;
-    }
+    private function getOutSetting($setting,$isFromAdmin){
+        $privateValueData = $setting["private_value"];
+        $publicValueData = $setting["public_value"];
 
-    private function getOutSetting($setting, $isFromAdmin)
-    {
-        $privateValueData = $setting['private_value'];
-        $publicValueData = $setting['public_value'];
-
-        if (isset($privateValueData['resourceKeys'])) {
-            foreach ($privateValueData['resourceKeys'] as $key) {
-                if (isset($privateValueData[$key])) {
-                    $urlOld = $privateValueData[$key];
-                    $urlNew = $this->getCurrentUrl($urlOld);
-                    $privateValueData[$key] = $urlNew;
-                } elseif (isset($publicValueData[$key])) {
-                    $urlOld = $publicValueData[$key];
-                    $urlNew = $this->getCurrentUrl($urlOld);
-                    $publicValueData[$key] = $urlNew;
-                }
-            }
-            unset($privateValueData['resourceKeys']);
-        }
-
-        foreach ($privateValueData as $key=>$value) {
-            if (is_string($value)) {
+        foreach ($privateValueData as $key=>$value){
+            if (is_string($value)){
                 $privateValueData[$key] = Utils::hideStr($value);
             }
         }
@@ -160,12 +117,5 @@ trait PluginTrait
         $data['publicValue'] = $publicValueData;
         $data['privateValue'] = $privateValueData;
         return $data;
-    }
-
-    public function getCurrentUrl($urlOld)
-    {
-        /** @var PluginFileSave $shopFileSave */
-        $shopFileSave = $this->app->make(PluginFileSave::class);
-        return $shopFileSave->getCurrentUrl($urlOld);
     }
 }

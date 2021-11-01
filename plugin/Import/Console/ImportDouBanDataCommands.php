@@ -4,19 +4,20 @@ namespace Plugin\Import\Console;
 
 use App\Import\ImportDataTrait;
 use Discuz\Base\DzqCommand;
-use Plugin\Import\Platform\WeiBo;
+use Plugin\Import\Platform\DouBan;
 
-class ImportWeiBoDataCommands extends DzqCommand
+class ImportDouBanDataCommands extends DzqCommand
 {
     use ImportDataTrait;
-    protected $signature = 'importData:insertWeiBoData {--topic=} {--number=} {--auto=} {--type=} {--interval=} {--month=} {--week=} {--day=} {--hour=} {--minute=}';
-    protected $description = '执行一个脚本命令,控制台执行[php disco importData:insertWeiBoData]';
+    protected $signature = 'importData:insertDouBanData {--topic=} {--number=} {--cookie=} {--auto=} {--type=} {--interval=} {--month=} {--week=} {--day=} {--hour=} {--minute=}';
+    protected $description = '执行一个脚本命令,控制台执行[php disco importData:insertDouBanData]';
 
     protected function main()
     {
         $optionData = [
             'topic' => $this->option('topic'),
             'number' => (int) $this->option('number'),
+            'cookie' => $this->option('cookie'),
             'auto' => $this->option('auto'),
             'type' => $this->option('type') ?? 0,
             'interval' => $this->option('interval') ?? 0,
@@ -26,15 +27,14 @@ class ImportWeiBoDataCommands extends DzqCommand
             'hour' => $this->option('hour') ?? 0,
             'minute' => $this->option('minute') ?? 0
         ];
-
         $this->importDataMain($optionData);
         exit;
     }
 
     public function getPlatformData($parameter)
     {
-        $platform = new WeiBo();
-        $data = $platform->main($parameter['topic'], $parameter['number']);
+        $platform = new DouBan();
+        $data = $platform->main($parameter['topic'], $parameter['number'], $parameter['cookie']);
         return $data;
     }
 }
