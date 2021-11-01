@@ -30,8 +30,6 @@ use Illuminate\Validation\ValidationException;
 
 class CheckAttachment
 {
-    use EasyWechatTrait;
-
     use AttachmentTrait;
 
     /**
