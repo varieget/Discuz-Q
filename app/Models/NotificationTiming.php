@@ -27,6 +27,7 @@ use Discuz\Foundation\EventGeneratorTrait;
  * @property string $notice_id
  * @property int $user_id
  * @property int $number
+ * @property string $data
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $expired_at
@@ -43,16 +44,18 @@ class NotificationTiming extends DzqModel
         'notice_id',
         'user_id',
         'number',
+        'data',
         'expired_at',
     ];
 
-    public static function create($noticeId, $userId, $expiredAt = null, $number = 0): NotificationTiming
+    public static function create($noticeId, $userId, $expiredAt = null, $number = 0, $data = ''): NotificationTiming
     {
         $nowTime = Carbon::now();
         $notification = new static();
         $notification->notice_id = $noticeId;
         $notification->user_id = $userId;
         $notification->number = $number;
+        $notification->data = $data;
         $notification->created_at = $nowTime;
         $notification->updated_at = $nowTime;
         $notification->expired_at = $expiredAt;
