@@ -58,9 +58,24 @@ class ExportController extends DzqController
         $activityId = $this->inPut('activityId');
         $activity_users = ActivityUser::query()->where(['activity_id' => $activityId, 'status' => DzqConst::BOOL_YES])->get();
         $export_list = [];
+        $column_map = [];
         foreach ($activity_users as $key=>$val) {
             $export_list[$key]['nickname'] = $val->user->nickname;
             $additional_info = json_decode($val->additional_info, 1);
+            if(empty($column_map)){
+                foreach ($additional_info as $k => $v){
+                    $map_v = '';
+                    switch ($k){
+                        case in_array($k, array_keys(ThreadActivity::$addition_info_map)):
+                            $map_v = ThreadActivity::$addition_map[ThreadActivity::$addition_info_map[$k]];
+                            break;
+                        default:
+                            break;
+                    }
+                    $column_map[$k] = $map_v;
+                }
+                $column_map['nickname'] = '昵称';
+            }
             ksort($additional_info);
 
             if (!empty($additional_info)) {
@@ -69,19 +84,11 @@ class ExportController extends DzqController
                 }
             }
         }
-        //处理execl表头
-        $row = $export_list[0];
-        $excel_title = ['昵称'];
-        foreach ($row as $key => $val) {
-            if ($key!= 'nickname') {
-                $excel_title[] = ThreadActivity::$addition_map[ThreadActivity::$addition_info_map[$key]];
-            }
-        }
 
         $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . 'activity_excel.xlsx';
         //TODO 判断满足条件的excel是否存在,if exist 直接返回;
         $this->bus->dispatch(
-            new ActivityExport($filename, $excel_title)
+            new ActivityExport($filename, $export_list, $column_map)
         );
 
         //检测下载文件是否存在 并且可读

@@ -200,6 +200,9 @@ class Utils
     public static function localexport($filePath, $fileName= '', $header = [], $readBuffer = 1024)
     {
         //设置头信息
+        if (!$fileName) {
+            $fileName = basename($filePath);
+        }
         //声明浏览器输出的是字节流
         $contentType = isset($header['Content-Type']) ? $header['Content-Type'] : 'application/octet-stream';
         header('Content-Type: ' . $contentType);

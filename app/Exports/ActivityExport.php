@@ -22,10 +22,10 @@ class ActivityExport extends Export
 {
     public $columnMap;
 
-    public function __construct($filename, $data)
+    public function __construct($filename, $data, $column_map)
     {
         parent::__construct($filename, $data);
 
-        $this->columnMap = trans('usersExport');
+        $this->columnMap = $column_map;
     }
 }
