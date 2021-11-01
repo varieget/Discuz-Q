@@ -3,13 +3,9 @@
 
 namespace Plugin\Shop;
 
-
-use App\Common\CacheKey;
 use App\Common\Utils;
 use App\Models\PluginSettings;
 use App\Modules\ThreadTom\TomBaseBusi;
-use Discuz\Base\DzqCache;
-use Illuminate\Database\Eloquent\Model;
 use Plugin\Shop\Controller\WxShopTrait;
 use Plugin\Shop\Model\ShopProducts;
 
@@ -20,32 +16,8 @@ class ShopBusi extends TomBaseBusi
     public const TYPE_ORIGIN = 10;
     public const TYPE_WX_SHOP = 11;
 
-    public function setSetting($privateValue,$publicValue)
-    {
-        Utils::setAppKey("plugin_appid",$this->tomId);
-
-        //判断isOpen变化了，则清帖子缓存
-        $settingNew = array_merge($privateValue,$publicValue);
-        $settingOld = $this->getSetting();
-
-        if ($settingOld["isOpen"] == $settingNew["isOpen"]){
-            return;
-        }
-
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_CREATE_TIME);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_ATTENTION);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_VIEW_COUNT);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_POST_TIME);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_COMPLEX);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEQUENCE);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_SEARCH);
-        DzqCache::delKey(CacheKey::LIST_THREADS_V3_PAID_HOMEPAGE);
-    }
-
     public function create()
     {
-        Utils::setAppKey("plugin_appid",$this->tomId);
-
         $products = $this->getParams('products');
         $productsNew = [];
         foreach ($products as $item){
@@ -72,8 +44,6 @@ class ShopBusi extends TomBaseBusi
 
     public function update()
     {
-        Utils::setAppKey("plugin_appid",$this->tomId);
-
         $products = $this->getParams('products');
         $productsNew = [];
         foreach ($products as $item){
@@ -100,12 +70,6 @@ class ShopBusi extends TomBaseBusi
 
     public function select()
     {
-        Utils::setAppKey("plugin_appid",$this->tomId);
-        $setting = $this->getSetting();
-        if (!isset($setting["isOpen"]) || $setting["isOpen"] == 0){
-            return;
-        }
-
         $products = $this->getParams('products');
         foreach ($products as &$item){
             if(!isset($item["type"])){
@@ -125,7 +89,7 @@ class ShopBusi extends TomBaseBusi
 
     private function selectWxShop( &$product){
         $qrCode = "";
-        $setting = $this->getSetting();
+        $setting = app()->make(PluginSettings::class)->getSetting($this->tomId);
         if ($setting && isset($setting["wxQrcode"]) && isset($setting["wxQrcode"])){
             $qrCode = $setting["wxQrcode"];
         }
@@ -145,7 +109,7 @@ class ShopBusi extends TomBaseBusi
         $config = app()->make(PluginSettings::class)->getSetting($this->tomId);
         $wxAppId = $config["wxAppId"];
 
-        list($result,$accssToken) = $this->getAccessToken();
+        list($result,$accssToken) = $this->getAccessToken($this->tomId);
         if ($result !== 0){
             return $resultData;
         }
@@ -169,7 +133,7 @@ class ShopBusi extends TomBaseBusi
             ->where("product_id",$productId)->first();
         if (empty($productOld)){
             //拉取二维码
-            list($qrPath,$isRemote) = $this->getProductQrCode($path);
+            list($qrPath,$isRemote) = $this->getProductQrCode($this->tomId,$path);
 
             $oneShopProduct = new ShopProducts();
             $oneShopProduct->app_id = $wxAppId;
@@ -181,7 +145,7 @@ class ShopBusi extends TomBaseBusi
             $oneShopProduct->detail_url = $path;
             $oneShopProduct->detail_qrcode = $qrPath;
             $oneShopProduct->is_remote = $isRemote?1:0;
-            $oneShopProduct->detail_scheme = $this->getSchemeProduct($path);
+            $oneShopProduct->detail_scheme = $this->getSchemeProduct($this->tomId,$path);
 
             $oneShopProduct->save();
 
@@ -193,11 +157,11 @@ class ShopBusi extends TomBaseBusi
             $productOld->path = $path;
             $productOld->detail_url = $path;
             if (empty($productOld->detail_qrcode)){
-                list($qrPath,$isRemote) = $this->getProductQrCode($path);
+                list($qrPath,$isRemote) = $this->getProductQrCode($this->tomId,$path);
                 $productOld->detail_qrcode = $qrPath;
                 $productOld->is_remote = $isRemote?1:0;
 
-                $productOld->detail_scheme = $this->getSchemeProduct($path);
+                $productOld->detail_scheme = $this->getSchemeProduct($this->tomId,$path);
             }
 
             $productOld->save();

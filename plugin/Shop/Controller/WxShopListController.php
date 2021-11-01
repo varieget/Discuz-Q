@@ -22,10 +22,6 @@ class WxShopListController extends DzqController
         if (empty($permissions)){
             return false;
         }
-
-//        if (!$this->user->isAdmin()){
-//            return false;
-//        }
         return true;
     }
 
@@ -36,7 +32,9 @@ class WxShopListController extends DzqController
         $page = $page ?: 1;
         $perPage = intval($this->inPut('perPage'));
         $perPage = $perPage ?: 10;
-        list($result,$accssToken) = $this->getAccessToken();
+
+       $appid = Utils::getAppKey("plugin_appid");
+        list($result,$accssToken) = $this->getAccessToken($appid);
         if ($result !== 0){
             $this->outPut($result,$accssToken);
         }

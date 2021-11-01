@@ -48,31 +48,11 @@ class SettingController extends DzqAdminController
             $this->outPut(ResponseCode::INVALID_PARAMETER, 'key重复');
         }
 
-        $this->setSetting($appId, $privateValue, $publicValue);
-
         $setResult = $this->app->make(PluginSettings::class)->setData($appId, $name, $type, $privateValue, $publicValue);
 
         if (!$setResult) {
             $this->outPut(ResponseCode::DB_ERROR);
         }
         $this->outPut(0);
-    }
-
-
-    public function setSetting($appId, $privateValue, $publicValue){
-        $pluginList = \Discuz\Common\Utils::getPluginList();
-        if (!isset($pluginList[$appId])){
-            return;
-        }
-        $onePlugin = $pluginList[$appId];
-        if (!isset($onePlugin['busi'])){
-            return;
-        }
-        $serviceClass = new \ReflectionClass($onePlugin['busi']);
-        $op = "setSetting";
-        $service = $serviceClass->newInstanceArgs([$this->user, 0, 0, $appId, null, $op, "", false]);
-        if (method_exists($service, $op)){
-            $service->$op($privateValue,$publicValue);
-        }
     }
 }
