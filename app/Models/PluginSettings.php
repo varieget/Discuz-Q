@@ -85,6 +85,19 @@ class PluginSettings extends DzqModel
         $pluginSetting = PluginSettings::query()->where(['app_id' => $appId])->first();
         if (empty($pluginSetting)) {
             $pluginSetting = new PluginSettings();
+        }else{
+            //检查星号,则用原来的
+            if(!empty($pluginSetting->private_value)){
+                $privateValueOld = json_decode($pluginSetting->private_value,true);
+                foreach ($privateValue as $key=>$value){
+                    if (is_string($value)){
+                        $starNum = substr_count($value,"*");
+                        if (strlen($value) == $starNum && isset($privateValueOld[$key])){
+                            $privateValue[$key] = $privateValueOld[$key];
+                        }
+                    }
+                }
+            }
         }
         $pluginSetting->app_id = $appId;
         $pluginSetting->app_name = $name;
@@ -98,6 +111,7 @@ class PluginSettings extends DzqModel
         }
 
         $this->cache->delete(CacheKey::PLUGIN_SETTINGS);
+        $this->settings = [];
         $this->allData();
         return true;
     }
