@@ -21,6 +21,7 @@ namespace App\Api\Controller\Threads;
 use App\Common\ResponseCode;
 use App\Models\Setting;
 use App\Models\Thread;
+use App\Modules\ThreadTom\TomConfig;
 use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
 use Discuz\Contracts\Setting\SettingsRepository;
@@ -52,7 +53,8 @@ class ThreadOptimizeController extends DzqAdminController
                 $thread = $prefix.'threads';
                 $threadTom = $prefix.'thread_tom';
             }
-            $db->update("update {$thread} set is_display = {$isDisplay} where id in(select thread_id from {$threadTom} where tom_type in('104','106','107','61540fef8f4de8')) or price > 0 or attachment_price > 0 or is_anonymous = 1");
+            $hiddenTomConfigSql = TomConfig::$hiddenTomConfigSql;
+            $db->update("update {$thread} set is_display = {$isDisplay} where id in(select thread_id from {$threadTom} where tom_type in({$hiddenTomConfigSql})) or price > 0 or attachment_price > 0 or is_anonymous = 1");
             $threadOptimize = Setting::query()->where('key', 'thread_optimize')->first();
             if ($threadOptimize) {
                 $this->settings->set('thread_optimize', $isDisplay, 'default');

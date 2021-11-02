@@ -85,4 +85,19 @@ class TomConfig
             'service' => \App\Modules\ThreadTom\Busi\VoteBusi::class
         ]
     ];
+
+    // 61540fef8f4de8 为商品插件
+    public static $hiddenTomConfig = [self::TOM_GOODS, self::TOM_REDPACK, self::TOM_REWARD, '61540fef8f4de8'];
+    public static $hiddenTomConfigSql = "'".self::TOM_GOODS."','".self::TOM_REDPACK."','".self::TOM_REWARD."','61540fef8f4de8'";
+
+    public static function isHiddenTomConfig($threadTom)
+    {
+        $hiddenTomConfig = self::$hiddenTomConfig;
+        foreach ($threadTom as $value) {
+            if (in_array($value, $hiddenTomConfig)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

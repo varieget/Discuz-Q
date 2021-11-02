@@ -218,11 +218,21 @@ class UpdateThreadController extends DzqController
         } else {
             $thread->is_anonymous = Thread::BOOL_NO;
         }
-        if (!(bool)app(SettingsRepository::class)->get('thread_optimize', 'default')) {
-            $thread->is_display = Thread::BOOL_NO;
+
+        if (!(bool)app(SettingsRepository::class)->get('thread_optimize')) {
+            $indexes = $content['indexes'] ?? [];
+            $threadTom = array_keys($indexes);
+            if (!$isDraft) {
+                // 付费、匿名、商品、红包、悬赏
+                if ($price > 0 || $attachmentPrice > 0 || $isAnonymous ||
+                    (!empty($threadTom) && TomConfig::isHiddenTomConfig($threadTom))) {
+                    $thread->is_display = Thread::BOOL_NO;
+                }
+            }
         } else {
             $thread->is_display = Thread::BOOL_YES;
         }
+
         //设置变更时间
         $thread->issue_at=date('Y-m-d H:i:s');
         $thread->save();

@@ -212,7 +212,19 @@ class CreateThreadController extends DzqController
         }
         $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
-        !(bool)app(SettingsRepository::class)->get('thread_optimize', 'default') && $dataThread['is_display'] = Thread::BOOL_NO;
+
+        if (!(bool)app(SettingsRepository::class)->get('thread_optimize')) {
+            $indexes = $content['indexes'] ?? [];
+            $threadTom = array_keys($indexes);
+            if (!$isDraft) {
+                // 付费、匿名、商品
+                if ($price > 0 || $attachmentPrice > 0 || !empty($isAnonymous) ||
+                    (!empty($threadTom) && TomConfig::isHiddenTomConfig($threadTom))) {
+                    $dataThread['is_display'] = Thread::BOOL_NO;
+                }
+            }
+        }
+
         $thread->setRawAttributes($dataThread);
         $thread->save();
         if (!$isApproved && !$isDraft) {
