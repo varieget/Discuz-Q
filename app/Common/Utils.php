@@ -227,7 +227,7 @@ class Utils
 
 
         //声明浏览器输出的是字节流
-        $contentType = isset($header['Content-Type']) ? $header['Content-Type'] : 'application/octet-stream';
+        $contentType = isset($header['Content-Type']) ? $header['Content-Type'] : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         header('Content-Type: ' . $contentType);
         //声明浏览器返回大小是按字节进行计算
         header('Accept-Ranges:bytes');
