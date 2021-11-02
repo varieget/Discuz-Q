@@ -18,7 +18,7 @@ class WxShopSettingController extends DzqAdminController
        if (empty($appid)){
            $appid = "61540fef8f4de8";
        }
-       list($url,$isRemote) = $this->getShopQrCode($appid);
+       $url = $this->getShopQrCode($appid);
        if (empty($url)){
            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"生成二维码异常，请检查配置");
        }

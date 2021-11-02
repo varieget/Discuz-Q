@@ -3,9 +3,12 @@
 
 namespace Plugin\Shop;
 
-use App\Common\Utils;
+use App\Api\Serializer\AttachmentSerializer;
+use App\Common\CacheKey;
+use App\Models\Attachment;
 use App\Models\PluginSettings;
 use App\Modules\ThreadTom\TomBaseBusi;
+use Discuz\Base\DzqCache;
 use Plugin\Shop\Controller\WxShopTrait;
 use Plugin\Shop\Model\ShopProducts;
 
@@ -15,6 +18,7 @@ class ShopBusi extends TomBaseBusi
 
     public const TYPE_ORIGIN = 10;
     public const TYPE_WX_SHOP = 11;
+
 
     public function create()
     {
@@ -71,8 +75,54 @@ class ShopBusi extends TomBaseBusi
     public function select()
     {
         $products = $this->getParams('products');
+
+        $this->selectWxshop($products);
+
         $productData["products"] = $products;
         return $this->jsonReturn($productData);
+    }
+
+
+    private function selectWxShop( &$products){
+        $attachmentIds = [];
+        foreach ($products as $item){
+            if (isset($item["type"]) && self::TYPE_WX_SHOP == $item["type"]){
+                if (!isset($item["data"]) || !isset($item["data"]["detailQrcode"])){
+                    continue;
+                }
+                $attachmentIds[] = $item["data"]["detailQrcode"];
+            }
+        }
+
+        $attachments = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT, $attachmentIds, function ($attachmentIds) {
+            return Attachment::query()->whereIn('id', $attachmentIds)->get()->toArray();
+        }, 'id');
+
+        $attachmentIdUrl = [];
+        $serializer = $this->app->make(AttachmentSerializer::class);
+        foreach ($attachments as $attachment) {
+            $item = $this->camelData($serializer->getBeautyAttachment($attachment));
+            $attachmentIdUrl[(string)$item["id"]] = $item['url'];
+        }
+
+        $qrCode = "";
+        $setting = app()->make(PluginSettings::class)->getSetting($this->tomId);
+        if ($setting && isset($setting["wxQrcode"]) && isset($setting["wxQrcode"])){
+            $qrCode = $setting["wxQrcode"];
+        }
+
+        foreach ($products as &$item){
+            if (isset($item["type"]) && self::TYPE_WX_SHOP == $item["type"]){
+                if (!isset($item["data"]) || !isset($item["data"]["detailQrcode"])){
+                    continue;
+                }
+                if(isset($attachmentIdUrl[$item["data"]["detailQrcode"]])){
+                    $item["data"]["detailQrcode"] = $attachmentIdUrl[$item["data"]["detailQrcode"]];
+                }else{
+                    $item["data"]["detailQrcode"] = $qrCode;
+                }
+            }
+        }
     }
 
 
@@ -106,7 +156,7 @@ class ShopBusi extends TomBaseBusi
             ->where("product_id",$productId)->first();
         if (empty($productOld)){
             //拉取二维码
-            list($qrPath,$isRemote) = $this->getProductQrCode($this->tomId,$path);
+            $attachId = $this->getProductQrCode($this->tomId,$path);
 
             $oneShopProduct = new ShopProducts();
             $oneShopProduct->app_id = $wxAppId;
@@ -116,8 +166,8 @@ class ShopBusi extends TomBaseBusi
             $oneShopProduct->price = (string)$price;
             $oneShopProduct->path = $path;
             $oneShopProduct->detail_url = $path;
-            $oneShopProduct->detail_qrcode = $qrPath;
-            $oneShopProduct->is_remote = $isRemote?1:0;
+            $oneShopProduct->detail_qrcode = (string)$attachId;
+            $oneShopProduct->is_remote = 0;
             $oneShopProduct->detail_scheme = $this->getSchemeProduct($this->tomId,$path);
 
             $oneShopProduct->save();
@@ -130,15 +180,12 @@ class ShopBusi extends TomBaseBusi
             $productOld->path = $path;
             $productOld->detail_url = $path;
             if (empty($productOld->detail_qrcode)){
-                list($qrPath,$isRemote) = $this->getProductQrCode($this->tomId,$path);
-                $productOld->detail_qrcode = $qrPath;
-                $productOld->is_remote = $isRemote?1:0;
-
+                $attachId = $this->getProductQrCode($this->tomId,$path);
+                $productOld->detail_qrcode = (string)$attachId;
+                $productOld->is_remote = 0;
                 $productOld->detail_scheme = $this->getSchemeProduct($this->tomId,$path);
             }
-
             $productOld->save();
-
             $resultData = $productOld;
         }
 
@@ -153,7 +200,6 @@ class ShopBusi extends TomBaseBusi
         $resultDataTemp["detailUrl"] =  $resultData["detail_url"];
         $resultDataTemp["detailQrcode"] =  $resultData["detail_qrcode"];
         $resultDataTemp["detailScheme"] =  $resultData["detail_scheme"];
-        $resultDataTemp["isRemote"] =  $resultData["is_remote"];
 
         return $resultDataTemp;
     }
