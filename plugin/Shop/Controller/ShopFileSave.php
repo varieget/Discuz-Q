@@ -35,7 +35,7 @@ class ShopFileSave
             $this->fileSystem->disk('local')->put($path, $qrBuff);
 
             return [$path, $isRemote];
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             if (empty($e->validator) || empty($e->validator->errors())) {
                 $errorMsg = $e->getMessage();
             } else {
