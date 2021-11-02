@@ -64,15 +64,7 @@ class ExportController extends DzqController
             $additional_info = json_decode($val->additional_info, 1);
             if(empty($column_map)){
                 foreach ($additional_info as $k => $v){
-                    $map_v = '';
-                    switch ($k){
-                        case in_array($k, array_keys(ThreadActivity::$addition_info_map)):
-                            $map_v = ThreadActivity::$addition_map[ThreadActivity::$addition_info_map[$k]];
-                            break;
-                        default:
-                            break;
-                    }
-                    $column_map[$k] = $map_v;
+                    $column_map[$k] = ThreadActivity::$addition_map[ThreadActivity::$addition_info_map[$k]];
                 }
                 $column_map['nickname'] = '昵称';
             }
