@@ -252,5 +252,8 @@ return [
         'qcloud_cdn_origins' => '源站地址',
         'qcloud_cdn_server_name' => '回源HOST',
 
+        // 附件
+        'support_max_upload_attachment_num' => '最大上传附件数',
+
     ],
 ];

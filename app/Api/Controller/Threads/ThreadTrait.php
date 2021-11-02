@@ -719,7 +719,7 @@ trait ThreadTrait
                 foreach ($imagesSrc[1] as $key => $value) {
                     $id = substr($value, strrpos($value, '-') + 1);
                     if (isset($attachments[$id])) {
-                        $newImageSrc = '<img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '" />';
+                        $newImageSrc = '<img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '" title="' . $id . '" />';
                         $xml = str_replace($imagesSrc[0][$key], $newImageSrc, $xml);
                     }
                 }
