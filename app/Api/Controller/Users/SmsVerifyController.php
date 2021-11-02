@@ -35,7 +35,11 @@ class SmsVerifyController extends AuthBaseController
             $mobileCode = $this->getMobileCode('verify');
 
             if ($mobileCode->user->exists) {
-                $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($mobileCode->user));
+                $data = $this->camelData($mobileCode->user);
+                if (!empty($data['username'])) {
+                    unset($data['username']);
+                }
+                $this->outPut(ResponseCode::SUCCESS, '', $data);
             }
 
             $this->outPut(ResponseCode::NOT_FOUND_USER);

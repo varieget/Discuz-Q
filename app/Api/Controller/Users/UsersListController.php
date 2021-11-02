@@ -72,7 +72,7 @@ class UsersListController extends DzqController
             $item = [
                 'userId'=>$userId,
                 'nickname' => $userData['nickname'],
-                'username' => $userData['username'],
+//                'username' => $userData['username'],
                 'avatar' => $userData['avatar'],
                 'threadCount' => $userData['thread_count'],
                 'questionCount' => $userData['question_count'],

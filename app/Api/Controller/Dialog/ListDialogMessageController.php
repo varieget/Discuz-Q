@@ -130,7 +130,8 @@ class ListDialogMessageController extends DzqController
             $user = [
                 'id'=>$i->user->id,
                 'avatar'=>$i->user->avatar,
-                'username'=>$i->user->username,
+//                'username'=>$i->user->username,
+                'nickname'=>$i->user->nickname,
             ];
 
             $imageUrl = $i->getImageUrlMessageText($i->attachment_id);
