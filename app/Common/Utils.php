@@ -18,11 +18,9 @@
 
 namespace App\Common;
 
-use App\Exports\UsersExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Excel;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
@@ -201,6 +199,9 @@ class Utils
     //execl 导出
     public static function localexport($filePath, $datas, $column_map, $fileName= '', $header = [], $readBuffer = 1024)
     {
+        if(file_exists($filePath)){
+            unlink($filePath);
+        }
         if (!$fileName) {
             $fileName = basename($filePath);
         }
@@ -222,7 +223,7 @@ class Utils
             }
         }
         $writer = new Xlsx($spreadsheet);
-        $writer->save($fileName);
+        $writer->save($filePath);
 
 
         //声明浏览器输出的是字节流

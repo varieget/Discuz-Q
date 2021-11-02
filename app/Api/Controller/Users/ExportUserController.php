@@ -19,7 +19,7 @@
 namespace App\Api\Controller\Users;
 
 use App\Common\ResponseCode;
-use App\Exports\UsersExport;
+use App\Common\Utils;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Traits\UserTrait;
@@ -53,14 +53,29 @@ class ExportUserController extends DzqAdminController
         $ids = $this->inPut('ids', '');
         $filters['id'] = $ids;
         $data= $this->ExportFilter($filters);
+        $time = time();
+        $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . "user_excel_{$time}.xlsx";
 
-        $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . 'user_excel.xlsx';
-        //TODO 判断满足条件的excel是否存在,if exist 直接返回;
-        $this->bus->dispatch(
-            new UsersExport($filename, $data)
-        );
+        $column_map = [
+            'id' => '用户ID',
+            'username' => '用户名',
+            'mobile' => '手机号',
+            'originalMobile' => '手机号',
+            'status' => '帐号状态',
+            'sex' => '性别',
+            'groups' => '用户组名',
+            'mp_openid' => '微信openid',
+            'unionid' => '微信unionID',
+            'nickname' => '微信昵称',
+            'created_at' => '注册时间',
+            'register_ip' => '注册IP',
+            'register_port' => '注册端口',
+            'login_at' => '最后登录时间',
+            'last_login_ip' => '最后登录ip',
+        ];
 
-        $this->outPut(ResponseCode::SUCCESS, '', $this->downloadFile($filename));
+        Utils::localexport($filename, $data, $column_map);
+
     }
 
     public function ExportFilter($filters)
@@ -135,38 +150,4 @@ class ExportUserController extends DzqAdminController
         })->toArray();
     }
 
-    protected function downloadFile($filePath, $fileName='', $header = [], $readBuffer = 1024)
-    {
-        //检测下载文件是否存在 并且可读
-        if (!is_file($filePath) && !is_readable($filePath)) {
-            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '');
-        }
-
-        //判读文件名是否为空
-        if (!$fileName) {
-            $fileName = basename($filePath);
-        }
-        // dd($header);die;
-        //设置头信息
-        //声明浏览器输出的是字节流
-        $contentType = isset($header['Content-Type']) ? $header['Content-Type'] : 'application/octet-stream';
-        header('Content-Type: ' . $contentType);
-        //声明浏览器返回大小是按字节进行计算
-        header('Accept-Ranges:bytes');
-        //告诉浏览器文件的总大小
-        $fileSize = filesize($filePath);//坑 filesize 如果超过2G 低版本php会返回负数
-        header('Content-Length:' . $fileSize); //注意是'Content-Length:' 非Accept-Length
-        $contentDisposition = isset($header['Content-Disposition']) ? $header['Content-Disposition'] : 'attachment;filename=' . $fileName;
-        //声明下载文件的名称
-        header('Content-Disposition:' . $contentDisposition);//声明作为附件处理和下载后文件的名称
-        //获取文件内容
-        $handle = fopen($filePath, 'rb');//二进制文件用‘rb’模式读取
-
-        while (!feof($handle)) { //循环到文件末尾 规定每次读取（向浏览器输出为$readBuffer设置的字节数）
-            echo fread($handle, $readBuffer);
-        }
-
-        fclose($handle);//关闭文件句柄
-        exit;
-    }
 }
