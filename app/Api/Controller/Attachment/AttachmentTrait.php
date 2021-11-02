@@ -24,7 +24,7 @@ use Symfony\Component\Mime\MimeTypes;
 
 trait AttachmentTrait
 {
-    public $supportMaxUploadAttachmentNum = 100;
+    public $supportMaxUploadAttachmentNum = 50;
 
     public $supportDefaultUploadAttachmentNum = 9;
 
