@@ -60,9 +60,7 @@ trait TomTrait
         $tomList = [];
         if (!empty($threadId) && empty($operation)) {
             $tomList = DzqCache::hGet(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
-                return ThreadTom::query()
-                    ->select('tom_type', 'key')
-                    ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
+                return ThreadTom::query()->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
             });
         }
         foreach ($indexes as $key => $tomJson) {

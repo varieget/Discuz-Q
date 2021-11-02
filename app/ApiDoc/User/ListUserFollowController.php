@@ -27,9 +27,8 @@
  *                          ),
  *                          @OA\Property(property = "user", type = "object",
  *                              @OA\Property(property = "avatar", type="string", description = "用户头像url"),
- *                              @OA\Property(property = "nickName", type="string", description = "用户昵称"),
- *                              @OA\Property(property = "userId", type="integer", description = "用户id"),
- *                              @OA\Property(property = "userName", type="string", description = "用户名称")
+ *                              @OA\Property(property = "nickname", type="string", description = "用户昵称"),
+ *                              @OA\Property(property = "userId", type="integer", description = "用户id")
  *                          ),
  *                          @OA\Property(property = "userFollow", type = "object",
  *                              @OA\Property(property = "createdAt", type="string", description = "创建时间", format = "datetime"),

@@ -111,7 +111,8 @@ class TopicListController extends DzqController
             $result[] = [
                 'topicId' => $topic['id'],
                 'userId' => $topic['user_id'],
-                'username' => $userDatas[$topic['user_id']]['username'] ?? '',
+//                'username' => $userDatas[$topic['user_id']]['username'] ?? '',
+                'nickname' => $userDatas[$topic['user_id']]['nickname'] ?? '',
                 'content' => $topic['content'],
                 'viewCount' => !empty($TopicThread[$topicId]['view_count']) ? $TopicThread[$topicId]['view_count'] : 0,
                 'threadCount' => !empty($TopicThread[$topicId]['thread_count']) ? $TopicThread[$topicId]['thread_count'] : 0,
