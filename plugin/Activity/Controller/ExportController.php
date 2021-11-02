@@ -68,11 +68,12 @@ class ExportController extends DzqController
                 }
                 $column_map['nickname'] = '昵称';
             }
-            ksort($additional_info);
 
             if (!empty($additional_info)) {
-                foreach ($additional_info as $ko => $vo) {
-                    $export_list[$key][$ko] = $vo;
+                foreach (ThreadActivity::$addition_info_map as $map_k => $map_v){
+                    if(in_array($map_k, array_keys($additional_info))){
+                        $export_list[$key][$map_k] = $additional_info[$map_k];
+                    }
                 }
             }
         }

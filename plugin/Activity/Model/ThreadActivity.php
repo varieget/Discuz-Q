@@ -46,7 +46,7 @@ class ThreadActivity extends DzqModel
         self::ADDITIONAL_INFO_TYPE_NAME =>  '姓名',
         self::ADDITIONAL_INFO_TYPE_MOBILE => '手机号',
         self::ADDITIONAL_INFO_TYPE_WEIXIN => '微信号',
-        self::ADDITIONAL_INFO_TYPE_AD => '地址'
+        self::ADDITIONAL_INFO_TYPE_AD => '联系地址'
     ];
 
     public static $addition_info_map = [
