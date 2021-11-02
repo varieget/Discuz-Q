@@ -20,6 +20,7 @@ namespace App\Common;
 
 class PluginEnum
 {
+    const PLUGIN_CUSTOMER = 0;//完全自定义插件
     const PLUGIN_THREAD = 1;//帖子新增类型
     const PLUGIN_DATA_IMPORT = 2;//外部数据导入
     const PLUGIN_AD = 3;//广告插件
