@@ -180,6 +180,28 @@ trait WxShopTrait
         return $shopFileSave->saveFile($fileName,$qrBuf);
     }
 
+    public function getShopQrCode($appId){
+        list($result,$wxApp) = $this->getWxApp($appId);
+        if ($result !== 0){
+            DzqLog::error('WxShopTrait::getProductQrCode', [], $wxApp);
+            return ["", false];
+        }
+
+        $qrResponse = $wxApp->app_code->get("pages/index/index");
+        if(is_array($qrResponse) && isset($qrResponse['errcode']) && isset($qrResponse['errmsg'])) {
+            DzqLog::error('WxShopTrait::getShopQrCode', [], $qrResponse['errmsg']);
+            return ["", false];
+        }
+
+        $fileName = "wxshop_".$appId."_".time().".jpg";
+        $qrBuf = $qrResponse->getBody()->getContents();
+
+        /** @var ShopFileSave $shopFileSave */
+        $shopFileSave = app("app")->make(ShopFileSave::class);
+
+        return $shopFileSave->saveFile($fileName,$qrBuf);
+    }
+
     public function getQRUrl($isRemote, $path){
         /** @var ShopFileSave $shopFileSave */
         $shopFileSave = app("app")->make(ShopFileSave::class);
