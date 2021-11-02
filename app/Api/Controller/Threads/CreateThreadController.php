@@ -34,6 +34,7 @@ use App\Repositories\UserRepository;
 use App\Settings\SettingsRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqController;
+use Discuz\Common\Utils;
 
 class CreateThreadController extends DzqController
 {
@@ -212,7 +213,9 @@ class CreateThreadController extends DzqController
         }
         $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
-        !(bool)app(SettingsRepository::class)->get('thread_optimize', 'default') && $dataThread['is_display'] = Thread::BOOL_NO;
+        if (!(bool)app(SettingsRepository::class)->get('thread_optimize') && Utils::requestFrom() != Platform::MinProgram) {
+            $dataThread['is_display'] = Thread::BOOL_NO;
+        }
         $thread->setRawAttributes($dataThread);
         $thread->save();
         if (!$isApproved && !$isDraft) {

@@ -19,6 +19,7 @@
 namespace App\Api\Controller\Threads;
 
 use App\Common\CacheKey;
+use App\Common\Platform;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Group;
@@ -39,6 +40,7 @@ use App\Settings\SettingsRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Discuz\Common\Utils;
 
 class UpdateThreadController extends DzqController
 {
@@ -218,7 +220,7 @@ class UpdateThreadController extends DzqController
         } else {
             $thread->is_anonymous = Thread::BOOL_NO;
         }
-        if (!(bool)app(SettingsRepository::class)->get('thread_optimize', 'default')) {
+        if (!(bool)app(SettingsRepository::class)->get('thread_optimize') && Utils::requestFrom() != Platform::MinProgram) {
             $thread->is_display = Thread::BOOL_NO;
         } else {
             $thread->is_display = Thread::BOOL_YES;
