@@ -31,10 +31,12 @@ class ShopFileSave
             if($this->settings->get('qcloud_cos', 'qcloud')){
                 $this->fileSystem->disk('cos')->put($path, $qrBuff);
                 $isRemote = true;
+                $url = $this->fileSystem->disk('cos')->url($path);
+                return [$url, $isRemote];
             }
             $this->fileSystem->disk('local')->put($path, $qrBuff);
-
-            return [$path, $isRemote];
+            $url = $this->fileSystem->disk('local')->url($path);
+            return [$url, $isRemote];
         } catch (Exception $e) {
             if (empty($e->validator) || empty($e->validator->errors())) {
                 $errorMsg = $e->getMessage();

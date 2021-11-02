@@ -15,11 +15,10 @@ class WxShopSettingController extends DzqAdminController
     public function main()
     {
        $appid = Utils::getAppKey("plugin_appid");
-       list($path,$isRemote) = $this->getShopQrCode($appid);
-       if (empty($path)){
+       list($url,$isRemote) = $this->getShopQrCode($appid);
+       if (empty($url)){
            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"生成二维码异常，请检查配置");
        }
-       $url = $this->getQRUrl($isRemote,$path);
 
        /** @var PluginSettings $pluginSettings */
        $pluginSettings = app()->make(PluginSettings::class);

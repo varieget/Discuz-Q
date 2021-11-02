@@ -71,37 +71,10 @@ class ShopBusi extends TomBaseBusi
     public function select()
     {
         $products = $this->getParams('products');
-        foreach ($products as &$item){
-            if(!isset($item["type"])){
-                continue;
-            }
-            if (self::TYPE_WX_SHOP == $item["type"]){
-                if (!isset($item["data"])){
-                    continue;
-                }
-                $item["data"] = $this->selectWxShop($item["data"]);
-            }
-        }
         $productData["products"] = $products;
         return $this->jsonReturn($productData);
     }
 
-
-    private function selectWxShop( &$product){
-        $qrCode = "";
-        $setting = app()->make(PluginSettings::class)->getSetting($this->tomId);
-        if ($setting && isset($setting["wxQrcode"]) && isset($setting["wxQrcode"])){
-            $qrCode = $setting["wxQrcode"];
-        }
-
-        if (!empty($product["detailQrcode"])){
-            $product["detailQrcode"] = $this->getQRUrl($product["isRemote"]??0,$product["detailQrcode"]);
-        }else{
-            $product["detailQrcode"] = $qrCode;
-        }
-
-        return $product;
-    }
 
     private function doProduct($productId){
         $resultData = false;
