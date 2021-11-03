@@ -14,7 +14,7 @@ class WxShopSettingController extends DzqAdminController
 
     public function main()
     {
-       $appid = Utils::getAppKey("plugin_appid");
+       $appid = Utils::getPluginAppId();
        $url = $this->getShopQrCode($appid);
        if (empty($url)){
            $this->outPut(ResponseCode::RESOURCE_NOT_FOUND,"生成二维码异常，请检查配置");

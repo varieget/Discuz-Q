@@ -15,7 +15,7 @@ class WxShopListController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $appid = Utils::getAppKey("plugin_appid");
+        $appid = Utils::getPluginAppId();
         $groupId = $this->user->groupId;
         $permissions = PluginGroupPermission::query()
             ->where('group_id', $groupId)->where("app_id",$appid)->first();
@@ -33,7 +33,7 @@ class WxShopListController extends DzqController
         $perPage = intval($this->inPut('perPage'));
         $perPage = $perPage ?: 10;
 
-       $appid = Utils::getAppKey("plugin_appid");
+       $appid = Utils::getPluginAppId();
         list($result,$accssToken) = $this->getAccessToken($appid);
         if ($result !== 0){
             $this->outPut($result,$accssToken);
