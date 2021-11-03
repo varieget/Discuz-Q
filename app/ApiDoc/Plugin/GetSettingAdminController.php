@@ -1,8 +1,8 @@
 <?php
 /**
  * @OA\Get(
- *     path="/api/v3/plugin/settinginfo",
- *     summary="插件配置详情",
+ *     path="/api/backAdmin/plugin/settinginfo",
+ *     summary="插件配置详情（管理后台）",
  *     description="查询当前插件的所有配置信息",
  *     tags={"插件"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
