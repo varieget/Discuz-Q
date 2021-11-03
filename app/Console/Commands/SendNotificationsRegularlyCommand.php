@@ -18,12 +18,12 @@
 
 namespace App\Console\Commands;
 
-use App\Api\Controller\Notification\NotificationTimingTrait;
 use App\Models\NotificationTiming;
 use App\Models\User;
 use App\Notifications\System;
 use Discuz\Console\AbstractCommand;
 use Discuz\Foundation\Application;
+use Discuz\Notifications\Traits\NotificationTimingTrait;
 use Exception;
 use Illuminate\Database\ConnectionInterface;
 
