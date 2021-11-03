@@ -252,6 +252,11 @@ trait ThreadListTrait
                             break;
                     }
                 }
+                //如果是部分付费的话，将 price_ids 放进 body
+                $priceIds = json_decode($tom['price_ids'], true);
+                if ($tom['price_type'] && !empty($priceIds)) {
+                    array_push($value, ['priceIds' => $priceIds]);
+                }
                 $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
             }
         }
