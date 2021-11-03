@@ -102,7 +102,7 @@ class EditThread
         $attributes = Arr::get($this->data, 'attributes', []);
 
         $thread = Thread::query()->where('id', $this->threadId)->first();
-        $action_desc = '';
+        $actionDesc = '';
 
         if ($thread->title == '' || empty($thread->title)) {
             $threadTitle = '，其ID为'. $thread->id;
@@ -144,10 +144,10 @@ class EditThread
         if (isset($attributes['isDeleted'])) {
             if ($attributes['isDeleted']) {
                 $thread->hide($this->actor, ['message' => $attributes['message'] ?? '']);
-                $action_desc = '删除用户主题帖'. $threadTitle;
+                $actionDesc = '删除用户主题帖'. $threadTitle;
             } else {
                 $thread->restore($this->actor, ['message' => $attributes['message'] ?? '']);
-                $action_desc = '还原用户主题帖'. $threadTitle;
+                $actionDesc = '还原用户主题帖'. $threadTitle;
             }
         }
 
@@ -199,10 +199,11 @@ class EditThread
             app(SequenceRepository::class)->updateSequenceCache($this->threadId, 'edit');
         }
 
-        if ($action_desc !== '' && !empty($action_desc)) {
+        if ($actionDesc !== '' && !empty($actionDesc)) {
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                $action_desc
+                AdminActionLog::ACTION_OF_THREAD,
+                $actionDesc
             );
         }
 

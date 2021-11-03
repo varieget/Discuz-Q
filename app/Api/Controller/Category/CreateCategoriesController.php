@@ -68,6 +68,7 @@ class CreateCategoriesController extends DzqAdminController
             $category->save();
             AdminActionLog::createAdminActionLog(
                 $this->user->id,
+                AdminActionLog::ACTION_OF_CATEGORY,
                 '新增内容分类【'. $name .'】'
             );
         }

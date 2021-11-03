@@ -73,6 +73,7 @@ class UpdateGroupPermissionController extends DzqAdminController
 
         AdminActionLog::createAdminActionLog(
             $actor->id,
+            AdminActionLog::ACTION_OF_PERMISSION,
             '更改用户角色【' . $group->name . '】操作权限'
         );
 

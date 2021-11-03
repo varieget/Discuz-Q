@@ -19,6 +19,7 @@
 namespace App\Api\Controller\Category;
 
 use App\Common\CacheKey;
+use App\Models\AdminActionLog;
 use App\Models\Category;
 use App\Common\ResponseCode;
 use Discuz\Base\DzqAdminController;
@@ -58,7 +59,8 @@ class BatchUpdateCategoriesController extends DzqAdminController
                 ]);
 
                 $category = Category::query()->findOrFail($value['id']);
-                if (isset($value['name'])) {
+                if (isset($value['name']) && $value['name'] != $category->name) {
+                    $oldName = $category->name;
                     $category->name = $value['name'];
                 }
 
@@ -72,6 +74,15 @@ class BatchUpdateCategoriesController extends DzqAdminController
                 $category->ip = $ip;
                 $category->save();
                 $resultData[] = $category;
+
+                if (isset($oldName)) {
+                    AdminActionLog::createAdminActionLog(
+                        $this->user->id,
+                        AdminActionLog::ACTION_OF_CATEGORY,
+                        '更新内容分类名称【'. $oldName .'】为【'. $category->name .'】'
+                    );
+                    unset($oldName);
+                }
             } catch (\Exception $e) {
                 app('log')->info('requestId：' . $this->requestId . '-' . '修改内容分类 "' . $value['name'] . '" 出错： ' . $e->getMessage());
                 $this->outPut(ResponseCode::INTERNAL_ERROR, '修改出错', [$e->getMessage(), $value]);
