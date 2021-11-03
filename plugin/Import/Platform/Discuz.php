@@ -2,10 +2,12 @@
 
 namespace Plugin\Import\Platform;
 
-use Monolog\Handler\IFTTTHandler;
+use Plugin\Import\Traits\ImportTrait;
 
 class Discuz
 {
+    use ImportTrait;
+
     private $siteUrl;
     private $urlCookie;
     private $urlPort;
@@ -339,6 +341,7 @@ class Discuz
         $match = '/<input.*?name=[\"|\']?(.*?)[\"|\']?\s.*?.*?value=[\"|\']?(.*?)[\"|\']?\s.*?>/i';
         $matches = $this->getHtmlLabel($match, $content);
         if (empty($matches[1]) || empty($matches[2])) {
+            $this->deleteImportLockFile();
             throw new \Exception('未获取到DiscuzX站点关键数据-formhash.');
         }
         foreach ($matches[1] as $key => $value) {
@@ -347,12 +350,6 @@ class Discuz
             }
         }
         return $formhash;
-    }
-
-    private function getHtmlLabel($match, $content)
-    {
-        preg_match_all($match, $content,$matches);
-        return $matches;
     }
 
     private function getSearchId($url)
@@ -384,6 +381,7 @@ class Discuz
         $redirectUrl = curl_getinfo($curl, CURLINFO_EFFECTIVE_URL);//获取最终请求的url地址
         curl_close($curl); // 关闭CURL会话
         if (empty($redirectUrl)) {
+            $this->deleteImportLockFile();
             throw new \Exception('未获取到重定向链接.');
         }
 
@@ -395,6 +393,7 @@ class Discuz
             }
         }
         if (empty($searchId)) {
+            $this->deleteImportLockFile();
             throw new \Exception('未获取到DiscuzX站点关键数据-searchid.');
         }
         return $searchId;

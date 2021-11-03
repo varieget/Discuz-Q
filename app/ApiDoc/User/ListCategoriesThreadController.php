@@ -3,7 +3,7 @@
  *@OA\Get(
  *    path = "/api/v3/categories.thread",
  *    summary = "帖子分类列表",
- *    description = "Discuz! Q 帖子分类列表",
+ *    description = "分类下，新建/编辑 权限",
  *    tags ={"发布与展示"},
  *@OA\Parameter(ref = "#/components/parameters/bear_token"),
  *

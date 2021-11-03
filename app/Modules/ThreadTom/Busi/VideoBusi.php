@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,6 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
-
 use App\Common\CacheKey;
 use Discuz\Base\DzqCache;
 use App\Models\Thread;
@@ -28,7 +28,6 @@ use Discuz\Qcloud\QcloudTrait;
 
 class VideoBusi extends TomBaseBusi
 {
-
     use QcloudTrait;
 
     public function create()
@@ -54,7 +53,6 @@ class VideoBusi extends TomBaseBusi
                 if ($taskflow && $taskflow['value']) {
                     // 转动图
                     $this->processMediaByProcedure($video->file_id, $taskflow['value']);
-
                 }
             }
         }
@@ -97,9 +95,11 @@ class VideoBusi extends TomBaseBusi
         });
         if ($video) {
             $video = ThreadVideo::instance()->threadVideoResult($video);
-            if (!$this->canViewTom) {
-                $video['mediaUrl'] = '';
-            }
+        /*
+        if (!$this->canViewTom) {
+            $video['mediaUrl'] = '';
+        }
+        */
         } else {
             $video = false;
         }

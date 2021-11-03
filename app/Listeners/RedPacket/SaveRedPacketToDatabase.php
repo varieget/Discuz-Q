@@ -111,7 +111,7 @@ class SaveRedPacketToDatabase
             }
         }
 
-        $thread = Thread::query()->where('id',$post->thread_id)->first();
+        $thread = Thread::query()->where('id', $post->thread_id)->first();
         if (empty($thread['is_red_packet'])) {
             $this->outDebugInfo('保存红包到数据库：该帖不为红包帖');
             return;
@@ -190,7 +190,7 @@ class SaveRedPacketToDatabase
              * @var RedPacket $redPacket
              */
             $redPacket = RedPacket::query() ->where('thread_id', $post->thread_id)
-                                            ->where('post_id',$post->id)
+                                            ->where('post_id', $post->id)
                                             ->first();
 
             $redPacket = RedPacket::creation(
@@ -250,7 +250,6 @@ class SaveRedPacketToDatabase
                     $walletLog->thread_id = $redPacket->thread_id;
                     $walletLog->post_id = $redPacket->post_id;
                     $walletLog->save();
-
                 }
             }
 

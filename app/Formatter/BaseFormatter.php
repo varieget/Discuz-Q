@@ -143,11 +143,11 @@ class BaseFormatter
     {
         $renderer = $this->getRenderer();
         if (substr($xml, 0, 3) === '<t>' && substr($xml, -4) != '</t>') {
-            $xml = $xml."</t>";
+            $xml = $xml.'</t>';
         }
 
         if (substr($xml, 0, 3) === '<r>' && substr($xml, -4) != '</r>') {
-            $xml = $xml."</r>";
+            $xml = $xml.'</r>';
         }
 
         return $renderer->render($xml);

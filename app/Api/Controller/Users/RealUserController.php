@@ -18,42 +18,59 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Api\Serializer\UserProfileSerializer;
-use App\Commands\Users\RealUser;
-use Discuz\Api\Controller\AbstractCreateController;
-use Discuz\Auth\AssertPermissionTrait;
-use Illuminate\Contracts\Bus\Dispatcher;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
+use App\Common\ResponseCode;
+use App\Models\User;
+use Discuz\Base\DzqController;
+use Illuminate\Support\Arr;
+use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 
-class RealUserController extends AbstractCreateController
+class RealUserController extends DzqController
 {
-    use AssertPermissionTrait;
-
-    public $serializer = UserProfileSerializer::class;
-
-    protected $bus;
-
-    public function __construct(Dispatcher $bus)
+    // 权限检查，是否为注册用户
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $this->bus = $bus;
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return true;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param Document $document
-     * @return mixed
-     * @throws \Discuz\Auth\Exception\PermissionDeniedException
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    public function main()
     {
-        $actor = $request->getAttribute('actor');
+        $realName = $this->inPut('realName');
+        $identity = $this->inPut('identity');
 
-        $this->assertPermission($actor->id);
+        $this->user->changeRealname($realName);
+        $this->user->changeIdentity($identity);
 
-        $data = $request->getParsedBody()->get('data', []);
-        return $this->bus->dispatch(
-            new RealUser($data, $actor)
-        );
+        $qcloud = $this->app->make('qcloud');
+        $res = $qcloud->service('faceid')->idCardVerification($identity, $realName);
+
+        //判断身份证信息与姓名是否符合
+        if (Arr::get($res, 'Result', false) != User::NAME_ID_NUMBER_MATCH) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        }
+
+        $this->user->save();
+
+        $result = [
+            'id' => $this->user->id,
+//            'username' => $this->user->username,
+            'nickname' => $this->user->nickname,
+            'mobile' => $this->user->mobile,
+            'threadCount' => $this->user->thread_count,
+            'followCount' => $this->user->follow_count,
+            'fansCount' => $this->user->fans_count,
+            'likedCount' => $this->user->liked_count,
+            'realname' => $this->user->realname,
+            'identity' => $this->user->identity,
+            'avatarUrl' => $this->user->avatar,
+            'updatedAt' => optional($this->user->updated_at)->format('Y-m-d H:i:s'),
+            'createdAt' => optional($this->user->created_at)->format('Y-m-d H:i:s'),
+        ];
+
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
+
     }
 }

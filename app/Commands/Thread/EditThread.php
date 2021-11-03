@@ -19,11 +19,10 @@
 namespace App\Commands\Thread;
 
 use App\Censor\Censor;
-use App\Events\Post\Saved;
 use App\Events\Thread\Deleting;
+use App\Models\ThreadStickSort;
 use App\Repositories\SequenceRepository;
 use App\Events\Thread\Saving;
-use App\Events\Thread\ThreadWasApproved;
 use App\Events\Thread\Updated;
 use App\Models\Thread;
 use App\Models\ThreadVideo;
@@ -46,7 +45,9 @@ use Illuminate\Validation\ValidationException;
 class EditThread
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
+
     use ThreadNoticesTrait;
 
     /**
@@ -100,12 +101,12 @@ class EditThread
 
         $attributes = Arr::get($this->data, 'attributes', []);
 
-        $thread = Thread::query()->where('id',$this->threadId)->first();
+        $thread = Thread::query()->where('id', $this->threadId)->first();
         $action_desc = '';
 
-        if($thread->title == '' || empty($thread->title)) {
+        if ($thread->title == '' || empty($thread->title)) {
             $threadTitle = '，其ID为'. $thread->id;
-        }else{
+        } else {
             $threadTitle = '【'. $thread->title .'】';
         }
 
@@ -113,8 +114,19 @@ class EditThread
             if ($thread->is_sticky != $attributes['isSticky']) {
                 $thread->is_sticky = $attributes['isSticky'];
                 $thread->updated_at = Carbon::now();
+                $stickSort = ThreadStickSort::query()->where('thread_id', $thread->id)->first();
                 if ($thread->is_sticky) {
+                    if (empty($stickSort)) {
+                        $stickSort = new ThreadStickSort();
+                        $stickSort->thread_id = $thread->id;
+                        $stickSort->sort = 0;
+                        $stickSort->save();
+                    }
                     $this->threadNotices($thread, $this->actor, 'isSticky', $attributes['message'] ?? '');
+                } else {
+                    if (!empty($stickSort)) {
+                        $stickSort->delete();
+                    }
                 }
             }
         }
@@ -156,7 +168,7 @@ class EditThread
                 }
                 if ($threadVideoStatus->status == Thread::THREAD_VIDEO_STATUS_TRANSCODING) {
                     throw new Exception(trans('post.audio_video_is_being_transcoded'));
-                } else if ($threadVideoStatus->status == Thread::THREAD_VIDEO_STATUS_FAIL){
+                } elseif ($threadVideoStatus->status == Thread::THREAD_VIDEO_STATUS_FAIL) {
                     throw new Exception(trans('post.audio_video_transcoding_failed'));
                 }
 
@@ -180,14 +192,14 @@ class EditThread
         $thread->raise(new Updated($thread, $this->actor, $this->data));
 
         $thread->save();
-        if (isset($attributes['isDeleted'])){
+        if (isset($attributes['isDeleted'])) {
             $this->events->dispatch(new Deleting($thread, $this->actor, $this->data));
         }
-        if(!isset($attributes['isFavorite']) && !isset($attributes['isSticky']) && !isset($attributes['isEssence'])){
+        if (!isset($attributes['isFavorite']) && !isset($attributes['isSticky']) && !isset($attributes['isEssence'])) {
             app(SequenceRepository::class)->updateSequenceCache($this->threadId, 'edit');
         }
 
-        if($action_desc !== '' && !empty($action_desc)){
+        if ($action_desc !== '' && !empty($action_desc)) {
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
                 $action_desc

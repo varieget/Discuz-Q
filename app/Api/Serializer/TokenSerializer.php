@@ -62,9 +62,9 @@ class TokenSerializer extends AbstractSerializer
         $data = $cache->get($cacheKey);
         if (!empty($data)) {
             $build['new_user'] = true;
-            $cache->put($cacheKey,$data,10);
+            $cache->put($cacheKey, $data, 10);
         }
-        if($build['status'] == User::STATUS_NORMAL){
+        if ($build['status'] == User::STATUS_NORMAL) {
             $this->localStatistics();
         }
         return $build;

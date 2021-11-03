@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -17,11 +18,12 @@
 
 namespace App\Common;
 
-
 class PostCache
 {
     public $posts;
+
     public $metaLinks;
+
     /**
      * @param mixed $metaLinks
      */

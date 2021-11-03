@@ -37,29 +37,29 @@ class RecommendedUserListController extends DzqAdminController
     public function main()
     {
         $userCount = User::query()->where('status', 0)->count();
-        if($userCount <= 10){
+        if ($userCount <= 10) {
             $userList = User::query()
                 ->select('id as userId', 'username', 'nickname')
                 ->limit(10)
                 ->where('status', 0)
                 ->orderBy('updated_at')
                 ->get()->toArray();
-            return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($userList));
+            $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($userList));
         }
 
-        $offset = rand(0,$userCount);
-        if($offset > $userCount - 10){
+        $offset = rand(0, $userCount);
+        if ($offset > $userCount - 10) {
             $offset = $userCount - 10;
         }
         $userId = User::query()->offset($offset)->where('status', 0)->limit(100)->pluck('id')->toArray();
         shuffle($userId);
-        $ids = array_slice($userId,0,10);
+        $ids = array_slice($userId, 0, 10);
 
         $userList = User::query()
             ->select('id as userId', 'username', 'nickname')
             ->whereIn('id', $ids)
             ->orderBy('updated_at')
             ->get()->toArray();
-        return $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($userList));
+        $this->outPut(ResponseCode::SUCCESS, '', $this->camelData($userList));
     }
 }

@@ -22,7 +22,6 @@ use App\Commands\Wallet\ChangeUserWallet;
 use App\Common\Coupon;
 use App\Models\Order;
 use App\Models\RedPacket;
-use App\Models\Thread;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
 use Discuz\Auth\AssertPermissionTrait;
@@ -34,6 +33,7 @@ use Illuminate\Database\ConnectionInterface;
 class ReceiveRedPacket
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     protected $connection;
@@ -58,15 +58,13 @@ class ReceiveRedPacket
      * @param $incomeUser
      * @throws Exception
      */
-    public function __construct($thread,$post,$redPacket,$expendUser,$incomeUser)
+    public function __construct($thread, $post, $redPacket, $expendUser, $incomeUser)
     {
-
         $this->thread = $thread;
         $this->post = $post;
         $this->redPacket = $redPacket;
         $this->expendUser = $expendUser;
         $this->incomeUser = $incomeUser;
-
     }
 
     /**
@@ -91,7 +89,7 @@ class ReceiveRedPacket
         }
 
         if ($this->redPacket['rule'] == 1) { // 发放规则，0定额，1随机
-            $generateRedPacket = new Coupon($this->redPacket['remain_money'],$this->redPacket['remain_number']);
+            $generateRedPacket = new Coupon($this->redPacket['remain_money'], $this->redPacket['remain_number']);
             $redPacketItems = $generateRedPacket->handle();
             $prepareChangeAmount = $redPacketItems['items'][0];
         } else {
@@ -124,7 +122,7 @@ class ReceiveRedPacket
             }
             $redPacketData->save();
 
-            if($order->payment_type == Order::PAYMENT_TYPE_WALLET){
+            if ($order->payment_type == Order::PAYMENT_TYPE_WALLET) {
                 //减少发帖人冻结金额
                 $data = [
                     'order_id' => $order->id,
@@ -149,6 +147,5 @@ class ReceiveRedPacket
             app('log')->info('红包ID:'.$this->redPacket['id'].'领取异常:' . $e->getMessage());
             throw $e;
         }
-
     }
 }

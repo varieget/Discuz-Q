@@ -1,8 +1,24 @@
 <?php
 
+/**
+ * Copyright (C) 2020 Tencent Cloud.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 namespace App\Import;
 
-use App\Api\Controller\AttachmentV3\AttachmentTrait;
+use App\Api\Controller\Attachment\AttachmentTrait;
 use App\Censor\Censor;
 use App\Commands\Attachment\AttachmentUploader;
 use App\Commands\Users\RegisterCrawlerUser as RegisterUser;
@@ -40,29 +56,51 @@ use Laminas\Diactoros\UploadedFile as RequestUploadedFile;
 trait ImportDataTrait
 {
     use ImportLockFileTrait;
+
     use VideoCloudTrait;
+
     use AttachmentTrait;
 
     protected $userRepo;
+
     protected $bus;
+
     protected $settings;
+
     protected $censor;
+
     protected $userValidator;
+
     protected $avatarValidator;
+
     protected $crawlerAvatarUploader;
+
     protected $attachmentValidator;
+
     protected $uploader;
+
     protected $image;
+
     protected $db;
+
     protected $filesystem;
+
     protected $events;
+
     private $categoryId;
+
     private $topic;
+
     private $startCrawlerTime;
+
     private $crawlerPlatform;
+
     private $cookie;
+
     private $userAgent;
+
     private $importDataLockFilePath;
+
     private $autoImportDataLockFilePath;
 
     public function __construct(
@@ -76,8 +114,8 @@ trait ImportDataTrait
         AttachmentValidator $attachmentValidator,
         ImageManager $image,
         ConnectionInterface $db,
-        Filesystem $filesystem)
-    {
+        Filesystem $filesystem
+    ) {
         $this->userRepo = $userRepo;
         $this->bus = $bus;
         $this->settings = $settings;
@@ -114,7 +152,7 @@ trait ImportDataTrait
         }
         $categoryId = $category['id'];
 
-        if ($optionData['auto']) {
+        if (isset($optionData['auto']) && $optionData['auto']) {
             $autoImportParameters = $optionData;
             unset($autoImportParameters['auto']);
             $checkResult = $this->checkAutoImportParameters($autoImportParameters, 'WeiBo');
@@ -150,7 +188,7 @@ trait ImportDataTrait
                 if ($lockFileContent['runtime'] < Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME && $lockFileContent['status'] == Thread::IMPORT_PROCESSING) {
                     $this->insertLogs('----The content import process has been occupied,You cannot start a new process.----');
                     return false;
-                } else if ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
+                } elseif ($lockFileContent['runtime'] > Thread::CREATE_CRAWLER_DATA_LIMIT_MINUTE_TIME) {
                     $this->insertLogs('----Execution timed out.The file lock has been deleted.----');
                     CacheKey::delListCache();
                     $this->changeLockFileContent($this->importDataLockFilePath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_TIMEOUT_ENDING, $lockFileContent['topic']);
@@ -196,7 +234,7 @@ trait ImportDataTrait
         Category::refreshThreadCountV3($this->categoryId);
         $this->changeLockFileContent($this->importDataLockFilePath, 0, Thread::PROCESS_OF_END_INSERT_CRAWLER_DATA, Thread::IMPORT_NORMAL_ENDING, $topic, $totalImportDataNumber);
         CacheKey::delListCache();
-        $this->insertLogs("----Importing crawler data success.The progress is 100%.The importing' data total number is " . $totalImportDataNumber . ".----");
+        $this->insertLogs("----Importing crawler data success.The progress is 100%.The importing' data total number is " . $totalImportDataNumber . '.----');
         return true;
     }
 
@@ -249,7 +287,7 @@ trait ImportDataTrait
             Category::refreshThreadCountV3($this->categoryId);
             CacheKey::delListCache();
             $this->changeLockFileContent($this->importDataLockFilePath, 0, Thread::PROCESS_OF_START_INSERT_CRAWLER_DATA, Thread::IMPORT_ABNORMAL_ENDING, $this->topic, 0);
-            throw new \Exception("数据导入失败：" . $e->getMessage());
+            throw new \Exception('数据导入失败：' . $e->getMessage());
         }
     }
 
@@ -302,13 +340,12 @@ trait ImportDataTrait
         ]]);
 
         return [$oldUsernameData, $oldNicknameData, $registerUserResult];
-
     }
 
     private function uploadCrawlerUserAvatar($avatar, $registerUserData)
     {
         $mimeType = $this->getAttachmentMimeType($avatar);
-        $fileExt = substr($mimeType, strpos($mimeType, "/") + strlen("/"));
+        $fileExt = substr($mimeType, strpos($mimeType, '/') + strlen('/'));
         if (!in_array($fileExt, ['gif', 'png', 'jpg', 'jpeg', 'jpe', 'heic'])) {
             return false;
         }
@@ -478,12 +515,16 @@ trait ImportDataTrait
 
             set_time_limit(0);
             $mimeType = $this->getAttachmentMimeType($value);
-            $fileExt = substr($mimeType, strpos($mimeType, "/") + strlen("/"));
+            $fileExt = substr($mimeType, strpos($mimeType, '/') + strlen('/'));
             if (!in_array($fileExt, $allowExt)) {
                 $originFileName = $this->getContentDispositionFileName($value);
-                if (empty($originFileName)) continue;
-                $fileExt = substr($originFileName, strrpos($originFileName,".") + 1);
-                if (!in_array($fileExt, $allowExt)) continue;
+                if (empty($originFileName)) {
+                    continue;
+                }
+                $fileExt = substr($originFileName, strrpos($originFileName, '.') + 1);
+                if (!in_array($fileExt, $allowExt)) {
+                    continue;
+                }
             }
             $fileName = Str::random(40) . '.' . $fileExt;
 
@@ -550,7 +591,6 @@ trait ImportDataTrait
                     'oldImageSrc' => $value,
                     'newImageSrc' => $url
                 ];
-
             }
         }
 
@@ -735,19 +775,25 @@ trait ImportDataTrait
     {
         $fileName = '';
         $responseHeader = $this->getResponseHeader($url);
-        if (empty($responseHeader)) return $fileName;
+        if (empty($responseHeader)) {
+            return $fileName;
+        }
 
         $responseHeader = explode(';', $responseHeader);
         foreach ($responseHeader as $value) {
-            if (strpos($value, "filename=") !== false) {
-                $fileName = substr($value,strrpos($value,'=') + 1, strlen($value));
+            if (strpos($value, 'filename=') !== false) {
+                $fileName = substr($value, strrpos($value, '=') + 1, strlen($value));
                 $fileName = str_replace('"', '', $fileName);
             }
         }
 
         $originEncoding = mb_detect_encoding($fileName, array("ASCII", "UTF-8", "GB2312", "GBK", "BIG5"));
         if ($originEncoding != 'UTF-8') {
-            $fileName = mb_convert_encoding($fileName, 'UTF-8', $originEncoding);
+            if ($originEncoding == 'ASCII') {
+                $fileName = urldecode($fileName);
+            } else {
+                $fileName = mb_convert_encoding($fileName, "UTF-8", $originEncoding);
+            }
         }
 
         return $fileName;
@@ -767,7 +813,7 @@ trait ImportDataTrait
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);       //链接超时时间
         curl_setopt($ch, CURLOPT_TIMEOUT, 20);       //设置超时时间
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);  //对于web页等有重定向的，要加上这个设置，才能真正访问到页面
-        curl_setopt($ch,CURLOPT_COOKIE, '');
+        curl_setopt($ch, CURLOPT_COOKIE, '');
         $responseHeader = curl_exec($ch);
         curl_close($ch);
         return $responseHeader;

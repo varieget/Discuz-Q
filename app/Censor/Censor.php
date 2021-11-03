@@ -21,11 +21,9 @@ namespace App\Censor;
 use App\Models\Attachment;
 use App\Models\StopWord;
 use App\Common\ResponseCode;
-use App\Common\Platform;
 use Discuz\Base\DzqLog;
 use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
-use Discuz\Base\DzqController;
 use Discuz\Foundation\Application;
 use Discuz\Qcloud\QcloudManage;
 use Discuz\Wechat\EasyWechatTrait;
@@ -201,7 +199,7 @@ class Censor
                 if ($word->{$type} === StopWord::REPLACE) {
                     $content = preg_replace($find, $word->replacement, $content);
                 } else {
-                    if (preg_match($find, preg_replace('/<img.*?>/','',$content), $matches)) {
+                    if (preg_match($find, preg_replace('/<img.*?>/', '', $content), $matches)) {
                         if ($word->{$type} === StopWord::MOD) {
                             // 记录触发的审核词
                             array_push($this->wordMod, head($matches));
@@ -241,7 +239,7 @@ class Censor
         try {
             $result = $qcloud->service('tms')->TextModeration($content);
             $this->errorResult = $result;
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DzqLog::error('tencent_cloud_check_text_error', [], $e->getMessage());
             Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, '文本内容安全检测异常', [$e->getMessage()]);
         }
@@ -309,7 +307,7 @@ class Censor
      * @throws GuzzleException
      * @throws InvalidConfigException
      */
-    public function checkImage($path, $isRemote = false,$tempPath = "")
+    public function checkImage($path, $isRemote = false, $tempPath = '')
     {
         // TODO 结耦
         if ($isRemote) {
@@ -336,7 +334,7 @@ class Censor
              */
             try {
                 $result = $this->app->make('qcloud')->service('ims')->ImageModeration($params);
-            }catch (\Exception $e){
+            } catch (\Exception $e) {
                 DzqLog::error('tencent_cloud_check_image_error', [], $e->getMessage());
                 Utils::outPut(ResponseCode::EXTERNAL_API_ERROR, '图片内容安全检测异常', [$e->getMessage()]);
             }

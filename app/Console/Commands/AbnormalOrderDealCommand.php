@@ -81,13 +81,13 @@ class AbnormalOrderDealCommand extends AbstractCommand
         $date = Carbon::parse('-1 day')->toDateString();
         $dateTimeBegin = $date . ' 00:00:00';
         $preTime = time() - $this->expireTime;
-        $dateTimeEnd = date("Y-m-d H:i:s", $preTime); // 筛选昨天至当前15分钟前的异常订单
+        $dateTimeEnd = date('Y-m-d H:i:s', $preTime); // 筛选昨天至当前15分钟前的异常订单
         $query = Order::query();
         $query->whereBetween('created_at', [$dateTimeBegin, $dateTimeEnd]);
         $query->where('status', Order::ORDER_STATUS_PAID);
         $query->where('amount', '>', 0);
         $query->whereIn('type', $orderType);
-        $query->where(function ($query){
+        $query->where(function ($query) {
             $query->whereNull('thread_id')->orWhere('thread_id', 0);
         });
 
@@ -117,8 +117,8 @@ class AbnormalOrderDealCommand extends AbstractCommand
                 $changeType = $changeDesc = $merge_amount = [];
                 //获取 order_children 子订单中红包、悬赏金额
                 $order_children = OrderChildren::query()->where('order_sn', $item->order_sn)->get(['type', 'amount'])->toArray();
-                foreach ($order_children as $val){
-                    switch ($val['type']){
+                foreach ($order_children as $val) {
+                    switch ($val['type']) {
                         case OrderChildren::TYPE_REDPACKET:
                             $changeType[] = UserWalletLog::TYPE_REDPACKET_ORDER_ABNORMAL_REFUND;       // 红包订单异常退款，154
                             $changeDesc[] = trans('wallet.redpacket_order_abnormal_refund');
@@ -165,8 +165,8 @@ class AbnormalOrderDealCommand extends AbstractCommand
             try {
                 if ($item->payment_type == Order::PAYMENT_TYPE_WALLET) {
                     //如果是合并订单的话，需要分多笔增加余额
-                    if($item->type == Order::ORDER_TYPE_MERGE && !empty($data['change_type']) && !empty($merge_amount)){
-                        foreach ($data['change_type'] as $k => $v){
+                    if ($item->type == Order::ORDER_TYPE_MERGE && !empty($data['change_type']) && !empty($merge_amount)) {
+                        foreach ($data['change_type'] as $k => $v) {
                             $m_data = [
                                 'order_id' => $data['order_id'],
                                 'thread_id' => $data['thread_id'],
@@ -174,15 +174,17 @@ class AbnormalOrderDealCommand extends AbstractCommand
                                 'change_type'   =>  $v,
                                 'change_desc'   =>  $data['change_desc'][$k]
                             ];
-                            $this->bus->dispatch(new ChangeUserWallet($item->user,
+                            $this->bus->dispatch(new ChangeUserWallet(
+                                $item->user,
                                 UserWallet::OPERATE_UNFREEZE,
                                 $merge_amount[$k],
                                 $m_data
                             ));
                         }
-                    }else{
+                    } else {
                         // 钱包支付 减少冻结金额，增加可用金额
-                        $this->bus->dispatch(new ChangeUserWallet($item->user,
+                        $this->bus->dispatch(new ChangeUserWallet(
+                            $item->user,
                             UserWallet::OPERATE_UNFREEZE,
                             $item->amount,
                             $data
@@ -194,8 +196,8 @@ class AbnormalOrderDealCommand extends AbstractCommand
                     || $item->payment_type == Order::PAYMENT_TYPE_WECHAT_JS
                     || $item->payment_type == Order::PAYMENT_TYPE_WECHAT_MINI
                 ) {
-                    if($item->type == Order::ORDER_TYPE_MERGE && !empty($data['change_type']) && !empty($merge_amount)){
-                        foreach ($data['change_type'] as $k => $v){
+                    if ($item->type == Order::ORDER_TYPE_MERGE && !empty($data['change_type']) && !empty($merge_amount)) {
+                        foreach ($data['change_type'] as $k => $v) {
                             $m_data = [
                                 'order_id' => $data['order_id'],
                                 'thread_id' => $data['thread_id'],
@@ -203,14 +205,16 @@ class AbnormalOrderDealCommand extends AbstractCommand
                                 'change_type'   =>  $v,
                                 'change_desc'   =>  $data['change_desc'][$k]
                             ];
-                            $this->bus->dispatch(new ChangeUserWallet($item->user,
+                            $this->bus->dispatch(new ChangeUserWallet(
+                                $item->user,
                                 UserWallet::OPERATE_INCREASE,
                                 $merge_amount[$k],
                                 $m_data
                             ));
                         }
-                    }else{
-                        $this->bus->dispatch(new ChangeUserWallet($item->user,
+                    } else {
+                        $this->bus->dispatch(new ChangeUserWallet(
+                            $item->user,
                             UserWallet::OPERATE_INCREASE,
                             $item->amount,
                             $data

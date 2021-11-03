@@ -23,20 +23,11 @@ use App\Models\ThreadReward;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Post;
-use App\Api\Serializer\ThreadSerializer;
-use App\Api\Serializer\UserSerializer;
 use Carbon\Carbon;
 use Discuz\Foundation\AbstractRepository;
 use Illuminate\Support\Arr;
 use App\Notifications\ThreadRewarded;
 use App\Notifications\ThreadRewardedExpired;
-use App\Notifications\Messages\Wechat\ThreadRewardedWechatMessage;
-use App\Notifications\Messages\Wechat\ThreadRewardedExpiredWechatMessage;
-use Tobscure\JsonApi\Relationship;
-use Discuz\Api\Serializer\AbstractSerializer;
-use Illuminate\Support\Str;
-use Illuminate\Support\Stringable;
-use Illuminate\Database\Eloquent\Model;
 
 class ThreadRewardRepository extends AbstractRepository
 {
@@ -59,19 +50,19 @@ class ThreadRewardRepository extends AbstractRepository
         $order = Order::query()->where(['thread_id' => $thread_id])->first();
         $actorUser = User::query()->where(['id' => $order->user_id])->first();
         $user = User::query()->where(['id' => $user_id])->first();
-        $orderArr = empty($order) ? array() : $order->toArray();
+        $orderArr = empty($order) ? [] : $order->toArray();
 
-        if(!empty($thread)){
+        if (!empty($thread)) {
             $threadContent = $thread->title;
             if (empty($thread->title)) {
                 $post = Post::query()->where(['thread_id' => $thread_id, 'is_first' => 1])->first();
                 $threadContent = $post->content;
             }
-        }else{
+        } else {
             $threadContent = '悬赏帖已过期且已被删除，返回剩余冻结金额';
         }
 
-        if(!empty($actorUser) && !empty($user)){
+        if (!empty($actorUser) && !empty($user)) {
             $build = [
                 'message' => $threadContent,
                 'raw' => array_merge(Arr::only($orderArr, ['id', 'thread_id', 'type']), [
@@ -84,12 +75,12 @@ class ThreadRewardRepository extends AbstractRepository
             ];
 
             $walletType = $type;
-            if(Carbon::now() > $threadReward['expired_at']){
+            if (Carbon::now() > $threadReward['expired_at']) {
                 $user->notify(new ThreadRewardedExpired($user, $order, $build, $walletType));
-            }else{
+            } else {
                 $user->notify(new ThreadRewarded($user, $order, $build, $walletType));
             }
-        }else{
+        } else {
             app('log')->info('过期悬赏发送错误：悬赏帖(ID为' . $thread_id . ')，因查询不到用户信息(ID为' . $user_id . ')，无法发送通知');
         }
     }

@@ -19,14 +19,11 @@
 namespace App\Models;
 
 use App\Events\Attachment\Created;
-use App\Modules\ThreadTom\PreQuery;
 use Carbon\Carbon;
 use Discuz\Base\DzqModel;
-use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Contracts\Cache\Repository as Cache;
 
@@ -56,6 +53,7 @@ use Illuminate\Contracts\Cache\Repository as Cache;
 class Attachment extends DzqModel
 {
     use EventGeneratorTrait;
+
     use ScopeVisibilityTrait;
 
     const FIX_WIDTH = 500;
@@ -77,8 +75,8 @@ class Attachment extends DzqModel
     const APPROVED = 1;
 
     const YES_REMOTE = 1;
-    const NO_REMOTE = 0;
 
+    const NO_REMOTE = 0;
 
     const ORIENTATION_THREE = 3;
 
@@ -121,6 +119,8 @@ class Attachment extends DzqModel
      * @param bool $isApproved 是否合法
      * @param string $ip ip 地址
      * @param int $order 文件顺序
+     * @param int $width
+     * @param int $height
      * @return static
      */
     public static function build(
@@ -135,10 +135,9 @@ class Attachment extends DzqModel
         $isApproved,
         $ip,
         $order = 0,
-        $width,
-        $height
-    )
-    {
+        $width = 0,
+        $height = 0
+    ) {
         $attachment = new static;
 
         $attachment->uuid = Str::uuid();
@@ -191,12 +190,22 @@ class Attachment extends DzqModel
         return Str::finish($value, '/');
     }
 
+    public static function getFilePath($attachment)
+    {
+        return Str::finish($attachment['file_path'], '/');
+    }
+
     /**
      * @return string
      */
     public function getFullPathAttribute()
     {
         return $this->file_path . $this->attachment;
+    }
+
+    public static function getFullPath($attachment)
+    {
+        return self::getFilePath($attachment) . $attachment['attachment'];
     }
 
     /**
@@ -207,16 +216,26 @@ class Attachment extends DzqModel
         return $this->file_path . Str::replaceLast('.', '_thumb.', $this->attachment);
     }
 
+    public static function getThumbPath($attachment)
+    {
+        return self::getFilePath($attachment) . Str::replaceLast('.', '_thumb.', $attachment['attachment']);
+    }
+
     /**
      * @return string
      */
     public function getBlurPathAttribute()
     {
         $parts = explode('.', $this->attachment);
-
         $parts[0] = md5($parts[0]);
-
         return $this->file_path . implode('_blur.', $parts);
+    }
+
+    public static function getBlurPath($attachment)
+    {
+        $parts = explode('.', $attachment['attachment']);
+        $parts[0] = md5($parts[0]);
+        return self::getFilePath($attachment) . implode('_blur.', $parts);
     }
 
     /**
@@ -237,9 +256,9 @@ class Attachment extends DzqModel
     public function post()
     {
         $post = null;
-        if($post){
+        if ($post) {
             return $this->belongsTo(self::class)->withDefault($post);
-        }else{
+        } else {
             return $this->belongsTo(Post::class, 'type_id');
         }
     }
@@ -252,75 +271,20 @@ class Attachment extends DzqModel
     public function thread()
     {
         $thread = null;
-        if($thread){
+        if ($thread) {
             return $this->belongsTo(self::class)->withDefault($thread);
-        }else{
+        } else {
             return $this->belongsTo(Thread::class, 'type_id');
         }
-
     }
-
 
     public function getAttachments($typeIds, $types)
     {
         return self::query()->whereIn('type_id', $typeIds)->whereIn('type', $types)->get();
     }
 
-    //待完善
-    public static function getBeautyAttachment($attachment,$canView = false)
+    public static function getOneAttachment($attachmentsId, $toArray = false)
     {
-
-        $url = '';
-        $thumbUrl = '';
-        $blurUrl = '';
-        $filesystem = app()->make('filesystem');
-        $settings = app()->make(SettingsRepository::class);
-
-        if ($attachment['is_remote'] == self::YES_REMOTE) {
-            $url = $settings->get('qcloud_cos_sign_url', 'qcloud', true)
-                ? $filesystem->disk('attachment_cos')->temporaryUrl($attachment['full_path'], Carbon::now()->addDay())
-                : $filesystem->disk('attachment_cos')->url($attachment['full_path']);
-            $thumbUrl = $url . (strpos($url, '?') === false ? '?' : '&')
-                . 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;;
-            $blurUrl = $thumbUrl;
-
-        } else {
-            $domain = Request::capture()->getSchemeAndHttpHost();
-            $filePath = Str::replaceFirst('public/', '', $attachment['file_path']);
-            $url = $domain . '/storage/' . $filePath . $attachment['attachment'];
-            $pathInfo = pathinfo($attachment['attachment']);
-            $fileName = $pathInfo['filename'];
-            $extension = $pathInfo['extension'];
-            $localThumb = storage_path() . '/app/' . $attachment['file_path'] . $fileName . '_thumb.' . $extension;
-            $localBlur = storage_path() . '/app/' . $attachment['file_path'] . $fileName . '_blur.' . $extension;
-            if (file_exists($localThumb)) {
-                $thumbUrl = $domain . '/storage/' . $filePath . $fileName . '_thumb.' . $extension;
-            } else {
-                $thumbUrl = $url;
-            }
-            if (file_exists($localBlur)) {
-                $blurUrl = $domain . '/storage/' . $filePath . $fileName . '_blur.' . $extension;
-            }
-        }
-        $data = [
-            'uuid' => $attachment['uuid'],
-            'typeId' => $attachment['type_id'],
-            'file_name' => $attachment['file_name'],
-            'file_size' => $attachment['file_size'],
-            'file_type' => $attachment['file_type'],
-            'url' => $url,
-            'thumbUrl' => $thumbUrl,
-            'blurUrl' => $blurUrl,
-            'extension' => Str::afterLast($attachment['attachment'], '.')
-        ];
-        if(!$canView){
-            $data['thumbUrl'] = $blurUrl;
-            $data['url'] = $blurUrl;
-        }
-        return $data;
-    }
-
-    public static function getOneAttachment($attachmentsId,$toArray = false){
         $ret = self::query()
             ->where([
                 'id' => $attachmentsId,

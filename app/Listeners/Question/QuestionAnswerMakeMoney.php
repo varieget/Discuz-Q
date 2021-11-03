@@ -91,7 +91,7 @@ class QuestionAnswerMakeMoney
             */
 
             // 如果是钱包支付的话，这里只多一个修改支付人钱包记录数据
-            if($questionOrder->payment_type == Order::PAYMENT_TYPE_WALLET){
+            if ($questionOrder->payment_type == Order::PAYMENT_TYPE_WALLET) {
                 // freeze amount decrease
                 $data = [
                     'question_id' => $question->id, // 关联问答ID

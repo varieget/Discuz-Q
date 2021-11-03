@@ -17,6 +17,7 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
+use App\Api\Controller\Attachment\AttachmentTrait;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Common\CacheKey;
 use Discuz\Base\DzqCache;
@@ -27,11 +28,14 @@ use App\Modules\ThreadTom\TomBaseBusi;
 
 class DocBusi extends TomBaseBusi
 {
+    use AttachmentTrait;
+
     public function create()
     {
         $docIds = $this->getParams('docIds');
-        if (count($docIds) > 9) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过9个');
+        $num = (int)$this->getSupportMaxUploadAttachmentNum();
+        if (count($docIds) > $num) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过'.$num.'个');
         }
         return $this->jsonReturn(['docIds' => $docIds]);
     }
@@ -39,8 +43,9 @@ class DocBusi extends TomBaseBusi
     public function update()
     {
         $docIds = $this->getParams('docIds');
-        if (count($docIds) > 9) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过9个');
+        $num = (int)$this->getSupportMaxUploadAttachmentNum();
+        if (count($docIds) > $num) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过'.$num.'个');
         }
         return $this->jsonReturn(['docIds' => $docIds]);
     }
@@ -50,22 +55,18 @@ class DocBusi extends TomBaseBusi
         $serializer = $this->app->make(AttachmentSerializer::class);
         $result = [];
         $docIds = $this->getParams('docIds');
-        $attachments = DzqCache::hMGetCollection(CacheKey::LIST_THREADS_V3_ATTACHMENT, $docIds, function ($docIds) {
-            return Attachment::query()->whereIn('id', $docIds)->get()->keyBy('id');
+        $attachments = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT, $docIds, function ($docIds) {
+            return Attachment::query()->whereIn('id', $docIds)->get()->keyBy('id')->toArray();
         });
-        $threadId = $this->threadId;
-        $thread = DzqCache::hGet(CacheKey::LIST_THREADS_V3_THREADS, $threadId, function ($threadId) {
-            return Thread::getOneThread($threadId, true);
-        });
+
         foreach ($attachments as $attachment) {
-            if (!empty($thread)) {
-                $item = $this->camelData($serializer->getBeautyAttachment($attachment, $thread, $this->user));
-                if (!$this->canViewTom) {
-                    $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
-                }
-                unset($item['blurUrl']);
-                $result[] = $item;
+            $item = $this->camelData($serializer->getBeautyAttachment($attachment));
+            if (!$this->canViewTom) {
+                $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
             }
+            unset($item['blurUrl']);
+            $result[] = $item;
+
         }
         return $this->jsonReturn($result);
     }

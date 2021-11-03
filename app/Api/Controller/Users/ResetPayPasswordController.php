@@ -18,71 +18,64 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Api\Serializer\SessionSerializer;
+use App\Common\ResponseCode;
 use App\Models\SessionToken;
 use App\Models\UserWalletFailLogs;
-use App\Repositories\UserWalletFailLogsRepository;
-use Discuz\Api\Controller\AbstractResourceController;
-use Discuz\Auth\AssertPermissionTrait;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
+use App\Repositories\UserRepository;
+use Carbon\Carbon;
+use Discuz\Base\DzqController;
 use Illuminate\Validation\Factory as Validator;
-use Tobscure\JsonApi\Document;
 
-class ResetPayPasswordController extends AbstractResourceController
+class ResetPayPasswordController extends DzqController
 {
-    use AssertPermissionTrait;
-
-    public $serializer = SessionSerializer::class;
-
     /**
      * @var Validator
      */
-    protected $validator;
+    private $validator;
 
-    protected $userWalletFailLogs;
-
-    /**
-     * @param Validator $validator
-     */
-    public function __construct(Validator $validator, UserWalletFailLogsRepository $userWalletFailLogs)
+    public function __construct(Validator $validator)
     {
         $this->validator = $validator;
-        $this->userWalletFailLogs = $userWalletFailLogs;
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $actor = $request->getAttribute('actor');
+        if ($this->user->isGuest()) {
+            $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        return true;
+    }
 
-        $this->assertRegistered($actor);
-
+    public function main()
+    {
+        $actor = $this->user;
+        $request = $this->request;
+//        $this->assertRegistered($actor);
         //验证错误次数
-        $failCount = $this->userWalletFailLogs->getCountByUserId($actor->id);
+        $failCount = UserWalletFailLogs::query()
+            ->where('user_id', $this->user->id)
+            ->whereBetween('created_at', [Carbon::today(),Carbon::tomorrow()])
+            ->count();
+
         if ($failCount > UserWalletFailLogs::TOPLIMIT) {
-            throw new \Exception('pay_password_failures_times_toplimit');
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '您输入的密码错误次数已超限，请点击忘记密码找回或次日后重试');
         }
 
-        $pay_password = Arr::get($request->getParsedBody(), 'data.attributes.pay_password');
-
-        $this->validator->make(compact('pay_password'), [
-            'pay_password' => [
+        $payPassword = $this->inPut('payPassword');
+        $this->validator->make(compact('payPassword'), [
+            'payPassword' => [
                 'bail',
                 'required',
                 'digits:6',
-                function ($attribute, $value, $fail) use ($actor,$request,$failCount) {
+                function ($attribute, $value, $fail) use ($actor, $request, $failCount) {
                     // 验证支付密码
                     if (! $actor->checkWalletPayPassword($value)) {
                         //记录钱包密码错误日志
                         UserWalletFailLogs::build(ip($request->getServerParams()), $actor->id);
-
                         if (UserWalletFailLogs::TOPLIMIT == $failCount) {
-                            throw new \Exception('pay_password_failures_times_toplimit');
+                            $this->outPut(ResponseCode::INVALID_PARAMETER, '您输入的密码错误次数已超限，请点击忘记密码找回或次日后重试');
                         } else {
-                            $fail(trans('trade.wallet_pay_password_error', ['value'=>UserWalletFailLogs::TOPLIMIT - $failCount]));
+                            $this->outPut(ResponseCode::INVALID_PARAMETER, '支付密码错误,今天还能重试'.(UserWalletFailLogs::TOPLIMIT - $failCount).'次');
                         }
                     }
                 }
@@ -91,14 +84,14 @@ class ResetPayPasswordController extends AbstractResourceController
 
         // 正确后清除错误记录
         if ($failCount > 0) {
-            UserWalletFailLogs::deleteAll($actor->id);
+            UserWalletFailLogs::deleteAll($this->user->id);
         }
 
-        $token = SessionToken::generate('reset_pay_password', null, $actor->id);
+        $token = SessionToken::generate('reset_pay_password', null, $this->user->id);
         $token->save();
 
-        return [
+        $this->outPut(ResponseCode::SUCCESS, '', [
             'sessionId' => $token->token
-        ];
+        ]);
     }
 }

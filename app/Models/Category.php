@@ -44,6 +44,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends DzqModel
 {
     use EventGeneratorTrait;
+
     use ScopeVisibilityTrait;
 
     /**
@@ -253,7 +254,7 @@ class Category extends DzqModel
     {
         $category = Category::query()->findOrFail($id);
 
-        $childCategoryIds = array();
+        $childCategoryIds = [];
         if ($category->parentid == 0) {
             $childCategoryIds = Category::query()->where('parentid', $category->id)->pluck('id')->toArray();
         }
@@ -301,7 +302,6 @@ class Category extends DzqModel
         }
         return $categoryids;
     }
-
 
     /**
      * @desc 获取所有分类

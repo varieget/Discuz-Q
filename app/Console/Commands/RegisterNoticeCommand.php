@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +18,6 @@
 
 namespace App\Console\Commands;
 
-
 use App\Common\DzqConst;
 use App\Models\Thread;
 use App\Models\User;
@@ -30,8 +30,10 @@ use Plugin\Activity\Model\ThreadActivity;
 
 class RegisterNoticeCommand extends DzqCommand
 {
-    protected $signature = "register:notice";
+    protected $signature = 'register:notice';
+
     protected $description = '报名帖消息通知';
+
     protected function main()
     {
         $now = time();
@@ -50,11 +52,17 @@ class RegisterNoticeCommand extends DzqCommand
         $settings = app(SettingsRepository::class);
         foreach ($aUsers as $aUser) {
             $activity = $activities[$aUser['activity_id']] ?? null;
-            if (empty($activity)) continue;
+            if (empty($activity)) {
+                continue;
+            }
             $thread = Thread::getOneActiveThread($activity['thread_id']);
-            if (empty($thread)) continue;
+            if (empty($thread)) {
+                continue;
+            }
             $user = $users[$aUser['user_id']] ?? null;
-            if (empty($user)) continue;
+            if (empty($user)) {
+                continue;
+            }
             $url = $settings->get('site_url') . '/thread/' . $activity['thread_id'];
             $msg = sprintf('%s 你好，你报名的活动【%s（%s）】已开始', $user['nickname'], $activity['title'], $url);
             echo $msg.PHP_EOL;
@@ -70,9 +78,13 @@ class RegisterNoticeCommand extends DzqCommand
         $users = User::query()->whereIn('id', $userIds)->get()->keyBy('id');
         foreach ($activities as $activity) {
             $thread = Thread::getOneActiveThread($activity['thread_id']);
-            if (empty($thread)) continue;
+            if (empty($thread)) {
+                continue;
+            }
             $user = $users[$activity['user_id']] ?? null;
-            if (empty($user)) continue;
+            if (empty($user)) {
+                continue;
+            }
             $url = $settings->get('site_url') . '/thread/' . $activity['thread_id'];
             $msg = sprintf('%s 你好，你发起的活动【%s（%s）】报名已结束，快去查看参与人列表吧', $user['nickname'], $activity['title'], $url);
             echo $msg.PHP_EOL;

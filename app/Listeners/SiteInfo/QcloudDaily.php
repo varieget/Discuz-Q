@@ -21,17 +21,13 @@ namespace App\Listeners\SiteInfo;
 use App\Common\Utils;
 use App\Models\Setting;
 use App\Settings\SettingsRepository;
-use App\Events\Setting\Saved;
-use Illuminate\Support\Arr;
 use Discuz\Qcloud\QcloudTrait;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use TencentCloud\Common\Credential;
 use TencentCloud\Common\Profile\ClientProfile;
 use TencentCloud\Common\Profile\HttpProfile;
 use TencentCloud\Ms\V20180408\Models\DescribeUserBaseInfoInstanceRequest;
 use TencentCloud\Ms\V20180408\MsClient;
-use function Clue\StreamFilter\fun;
 
 class QcloudDaily
 {
@@ -57,21 +53,20 @@ class QcloudDaily
         $this->settings = $settings;
     }
 
-
     public function handle()
     {
-        $tomorrow = date("Y-m-d",strtotime("+1 day"));
+        $tomorrow = date('Y-m-d', strtotime('+1 day'));
         $cache_time = strtotime($tomorrow) - time();
         $settings = Setting::query()->get()->pluck('value', 'key')->toArray();
         $isset_daily = app('cache')->get('qcloud_daily_'.$settings['site_id']);
-        if($isset_daily){
+        if ($isset_daily) {
             return;
         }
         $qcloudSecretId = !empty($settings['qcloud_secret_id']) ? $settings['qcloud_secret_id'] : '';
         $qcloudSecretKey = !empty($settings['qcloud_secret_key']) ? $settings['qcloud_secret_key'] : '';
-        if(empty($qcloudSecretId) || empty($qcloudSecretKey)){
+        if (empty($qcloudSecretId) || empty($qcloudSecretKey)) {
             $uin = '';
-        }else{
+        } else {
             try {
                 $cred = new Credential($qcloudSecretId, $qcloudSecretKey);
                 $httpProfile = new HttpProfile();
@@ -84,12 +79,12 @@ class QcloudDaily
                 $req->fromJsonString($params);
                 $resp = $client->DescribeUserBaseInfoInstance($req);
                 $uin = $resp->UserUin;
-            }catch (\Exception $e){
+            } catch (\Exception $e) {
                 $uin = '';
             }
         }
         $site_url = !empty($settings['site_url']) ? $settings['site_url'] : '';
-        if(empty($site_url) || $site_url != Utils::getSiteUrl()){
+        if (empty($site_url) || $site_url != Utils::getSiteUrl()) {
             $site_url = Utils::getSiteUrl();
             $this->settings->set('site_url', $site_url, 'default');
             $settings['site_url'] = $site_url;
@@ -121,13 +116,10 @@ class QcloudDaily
         try {
             $this->qcloudDaily($json)->wait();
             // 下面进行缓存是为了方便后面的上报直接调用
-            app('cache')->put('qcloud_uin' , $uin, $cache_time);
-            app('cache')->put('qcloud_daily_'.$settings['site_id'] , 1, $cache_time);
+            app('cache')->put('qcloud_uin', $uin, $cache_time);
+            app('cache')->put('qcloud_daily_'.$settings['site_id'], 1, $cache_time);
             app('cache')->put('settings_up', $settings, $cache_time);
-        }catch (\Exception $e){
-
+        } catch (\Exception $e) {
         }
-
     }
-
 }

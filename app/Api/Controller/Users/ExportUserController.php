@@ -18,77 +18,67 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Exports\UsersExport;
+use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Models\User;
+use App\Repositories\UserRepository;
 use App\Traits\UserTrait;
-use Discuz\Auth\AssertPermissionTrait;
+use Discuz\Base\DzqAdminController;
 use Discuz\Foundation\Application;
-use Discuz\Http\DiscuzResponseFactory;
-use Illuminate\Bus\Dispatcher;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
-use Illuminate\Support\Arr;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-use Tobscure\JsonApi\Parameters;
 
-class ExportUserController implements RequestHandlerInterface
+class ExportUserController extends DzqAdminController
 {
-    use AssertPermissionTrait;
     use UserTrait;
 
-    /**
-     * @var Dispatcher
-     */
     protected $bus;
 
-    /**
-     * @var Application
-     */
     protected $app;
 
-    /**
-     * @param BusDispatcher $bus
-     * @param Application $app
-     */
     public function __construct(BusDispatcher $bus, Application $app)
     {
         $this->bus = $bus;
         $this->app = $app;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
-     * @throws \Discuz\Auth\Exception\PermissionDeniedException
-     */
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $this->assertAdmin($request->getAttribute('actor'));
-
-        $filter = new Parameters($request->getQueryParams());
-        $filters = $filter->getFilter() ?: [];
-
-        $ids = Arr::get($request->getQueryParams(), 'ids', '');
-        $filters['id'] = $ids;
-
-        $data = $this->data($filters);
-
-        $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . 'user_excel.xlsx';
-
-        //TODO 判断满足条件的excel是否存在,if exist 直接返回;
-        $this->bus->dispatch(
-            new UsersExport($filename, $data)
-        );
-
-        return DiscuzResponseFactory::FileResponse($filename);
+        return $userRepo->canExportUser($this->user);
     }
 
-    /**
-     * @param $filters
-     * @return array
-     */
-    private function data($filters)
+    public function main()
+    {
+        $filter = $this->inPut('filter');
+        $filters = $filter ?: [];
+        $ids = $this->inPut('ids', '');
+        $filters['id'] = $ids;
+        $data= $this->ExportFilter($filters);
+        $time = time();
+        $filename = $this->app->config('excel.root') . DIRECTORY_SEPARATOR . "user_excel_{$time}.xlsx";
+
+        $column_map = [
+            'id' => '用户ID',
+            'username' => '用户名',
+            'mobile' => '手机号',
+            'originalMobile' => '手机号',
+            'status' => '帐号状态',
+            'sex' => '性别',
+            'groups' => '用户组名',
+            'mp_openid' => '微信openid',
+            'unionid' => '微信unionID',
+            'nickname' => '微信昵称',
+            'created_at' => '注册时间',
+            'register_ip' => '注册IP',
+            'register_port' => '注册端口',
+            'login_at' => '最后登录时间',
+            'last_login_ip' => '最后登录ip',
+        ];
+
+        Utils::localexport($filename, $data, $column_map);
+
+    }
+
+    public function ExportFilter($filters)
     {
         $userField = [
             'id',
@@ -159,4 +149,5 @@ class ExportUserController implements RequestHandlerInterface
             return $user->only($columnMap);
         })->toArray();
     }
+
 }

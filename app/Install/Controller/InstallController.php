@@ -169,8 +169,12 @@ class InstallController implements RequestHandlerInterface
         }
         //判断数据库名，数据库名称不能以数字开头
         $mysqlDatabase = Arr::get($input, 'mysqlDatabase', '');
-        if(empty($mysqlDatabase))       throw new Exception('数据库名称不能为空');
-        if(is_numeric(mb_substr($mysqlDatabase, 0, 1)))         throw new Exception('数据库名称不能以数字开头');
+        if (empty($mysqlDatabase)) {
+            throw new Exception('数据库名称不能为空');
+        }
+        if (is_numeric(mb_substr($mysqlDatabase, 0, 1))) {
+            throw new Exception('数据库名称不能以数字开头');
+        }
 
         $pdo->query('CREATE DATABASE IF NOT EXISTS '.Arr::get($input, 'mysqlDatabase').' DEFAULT CHARACTER SET = `utf8mb4` DEFAULT COLLATE = `utf8mb4_unicode_ci`')->execute();
 
@@ -319,15 +323,15 @@ class InstallController implements RequestHandlerInterface
     public function extract_version_from_source()
     {
         $dir = __DIR__;
-        $appfile = $dir . "/../../../framework/src/Foundation/Application.php";
+        $appfile = $dir . '/../../../framework/src/Foundation/Application.php';
         if (!file_exists($appfile)) {
-            $appfile = $dir . "/../../../vendor/discuz/core/src/Foundation/Application.php";
+            $appfile = $dir . '/../../../vendor/discuz/core/src/Foundation/Application.php';
             if (!file_exists($appfile)) {
                 return false;
             }
         }
         $content = file_get_contents($appfile);
-        $match = NULL;
+        $match = null;
         preg_match("/const VERSION = '(.*)';$/m", $content, $match);
         if ($match) {
             return $match[1];

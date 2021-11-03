@@ -4,7 +4,7 @@ namespace Plugin\Import\Console;
 
 use App\Import\ImportDataTrait;
 use Discuz\Base\DzqCommand;
-use Plugin\Import\Platform\Weibo;
+use Plugin\Import\Platform\WeiBo;
 
 class ImportWeiBoDataCommands extends DzqCommand
 {
@@ -26,13 +26,14 @@ class ImportWeiBoDataCommands extends DzqCommand
             'hour' => $this->option('hour') ?? 0,
             'minute' => $this->option('minute') ?? 0
         ];
+
         $this->importDataMain($optionData);
         exit;
     }
 
     public function getPlatformData($parameter)
     {
-        $platform = new Weibo();
+        $platform = new WeiBo();
         $data = $platform->main($parameter['topic'], $parameter['number']);
         return $data;
     }

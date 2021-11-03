@@ -18,11 +18,14 @@
 
 namespace App\Traits;
 
+use App\Api\Controller\Attachment\AttachmentTrait;
 use App\Models\User;
 use Discuz\Http\UrlGenerator;
 
 trait ForumSettingSerializerTrait
 {
+    use AttachmentTrait;
+
     public function getCommonAttributes($actor = null): array
     {
         // 获取logo完整地址
@@ -97,7 +100,9 @@ trait ForumSettingSerializerTrait
                 'support_img_ext' => $this->settings->get('support_img_ext', 'default'),
                 'support_file_ext' => $this->settings->get('support_file_ext', 'default'),
                 'support_max_size' => $this->settings->get('support_max_size', 'default'),
-                'support_max_download_num' => $this->settings->get('support_max_download_num', 'default')
+                'support_max_download_num' => $this->settings->get('support_max_download_num', 'default'),
+                'support_max_upload_attachment_num' => $this->getSupportMaxUploadAttachmentNum(),
+                'max_upload_attachment_num' => $this->getMaxUploadAttachmentNum(),
             ],
 
             // 腾讯云设置
@@ -182,9 +187,6 @@ trait ForumSettingSerializerTrait
             // $attributes['lbs'] += [ 'qq_lbs_key' => $this->settings->get('qq_lbs_key', 'lbs')];
         } else {
             $attributes['qcloud']['qcloud_vod_token'] = '';
-        }
-        if ($actor->id == User::SUPER_ADMINISTRATOR) {
-            $attributes['other']['inner_net_ip'] = json_decode($this->settings->get('inner_net_ip', 'default'),true);
         }
 
         return $attributes;

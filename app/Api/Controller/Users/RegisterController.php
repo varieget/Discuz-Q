@@ -18,145 +18,178 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Api\Serializer\TokenSerializer;
-use App\Commands\Users\GenJwtToken;
+use App\Censor\Censor;
 use App\Commands\Users\RegisterUser;
+use App\Common\ResponseCode;
 use App\Events\Users\RegisteredCheck;
-use App\Models\SessionToken;
-use App\Notifications\Messages\Wechat\RegisterWechatMessage;
-use App\Notifications\System;
+use App\Models\User;
 use App\Repositories\UserRepository;
-use App\User\Bind;
-use Discuz\Api\Controller\AbstractCreateController;
-use Discuz\Auth\AssertPermissionTrait;
-use Discuz\Auth\Exception\PermissionDeniedException;
-use Discuz\Auth\Exception\RegisterException;
+use App\Validators\UserValidator;
+use Discuz\Base\DzqLog;
 use Discuz\Contracts\Setting\SettingsRepository;
-use Discuz\Foundation\Application;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Events\Dispatcher as Events;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 
-class RegisterController extends AbstractCreateController
+class RegisterController extends AuthBaseController
 {
-    use AssertPermissionTrait;
+    public $bus;
 
-    protected $bus;
+    public $settings;
 
-    protected $users;
+    public $events;
 
-    protected $settings;
+    public $censor;
 
-    protected $app;
+    public $userValidator;
 
-    protected $bind;
+    public $connection;
 
-    protected $events;
-
-    public function __construct(Dispatcher $bus, UserRepository $users, SettingsRepository $settings, Application $app, Bind $bind, Events $events)
-    {
-        $this->bus = $bus;
-        $this->users = $users;
-        $this->settings = $settings;
-        $this->app = $app;
-        $this->bind = $bind;
-        $this->events = $events;
+    public function __construct(
+        Dispatcher          $bus,
+        SettingsRepository  $settings,
+        Events              $events,
+        Censor              $censor,
+        UserValidator       $userValidator,
+        ConnectionInterface $connection
+    ) {
+        $this->bus              = $bus;
+        $this->settings         = $settings;
+        $this->events           = $events;
+        $this->censor           = $censor;
+        $this->userValidator    = $userValidator;
+        $this->connection       = $connection;
     }
 
-    public $serializer = TokenSerializer::class;
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
 
-    /**
-     * {@inheritdoc}
-     * @throws PermissionDeniedException
-     * @throws \Exception
-     */
-    protected function data(ServerRequestInterface $request, Document $document)
+    public function main()
     {
         if (!(bool)$this->settings->get('register_close')) {
-            throw new PermissionDeniedException('register_close');
+            $this->outPut(ResponseCode::REGISTER_CLOSE);
         }
-        $attributes = Arr::get($request->getParsedBody(), 'data.attributes', []);
-        $attributes['register_ip'] = ip($request->getServerParams());
-        $attributes['register_port'] = Arr::get($request->getServerParams(), 'REMOTE_PORT', 0);
-        $type = intval(Arr::get($attributes, 'register_type'));
-        //新增参数，注册类型
-        $registerType = $this->settings->get('register_type');
-
-        //若参数与配置不一致，抛异常不再执行
-        if($type != $registerType) {
-            throw new RegisterException('Register Type Error');
+        if ((bool)$this->settings->get('qcloud_sms', 'qcloud')
+            || (bool)$this->settings->get('offiaccount_close', 'wx_offiaccount')
+            || (bool)$this->settings->get('miniprogram_close', 'wx_miniprogram')) {
+            $this->outPut(ResponseCode::REGISTER_CLOSE, '请使用微信或者手机号注册登录');
         }
 
-        /**手机号模式下,或无感模式下只有微信可用**/
-        /**公众号使用**/
-        $token = Arr::get($attributes, 'token');
-        /**小程序使用**/
-        $js_code = Arr::get($attributes, 'js_code');
-        $noAES = Arr::get($attributes, 'noAES');
-        $iv = Arr::get($attributes, 'iv');
-        $encryptedData = Arr::get($attributes, 'encryptedData');
+        $data = [
+            'username'              => $this->inPut('username'),
+            'password'              => $this->inPut('password'),
+            'password_confirmation' => $this->inPut('passwordConfirmation'),
+            'nickname'              => $this->inPut('nickname'),
+            'code'                  => $this->inPut('code'),
+            'register_ip'           => ip($this->request->getServerParams()),
+            'register_port'         => $this->request->getServerParams()['REMOTE_PORT'] ? $this->request->getServerParams()['REMOTE_PORT'] : 0,
+            'captcha_ticket'        => $this->inPut('captchaTicket'),
+            'captcha_rand_str'      => $this->inPut('captchaRandStr'),
+        ];
 
-        //手机号或者无感模式下，若公众号或小程序的参数都不存在，则不可使用该接口
-        if($registerType == 1 || $registerType == 2) {
-            if(empty($token) && empty($js_code) ) {
-                throw new RegisterException('Register Method Error');
+        try {
+            $this->dzqValidate($data, [
+                'username' => 'required',
+                'password' => 'required',
+                'nickname' => 'required',
+            ]);
+
+            // 注册验证码(无感模式不走验证码，开启也不走)
+            $captcha = '';  // 默认为空将不走验证
+            if ((bool)$this->settings->get('register_captcha') &&
+                (bool)$this->settings->get('qcloud_captcha', 'qcloud') &&
+                ($this->settings->get('register_type', 'default') != 2)) {
+                $captcha = [
+                    Arr::get($data, 'captcha_ticket', ''),
+                    Arr::get($data, 'captcha_rand_str', ''),
+                    Arr::get($data, 'register_ip', ''),
+                ];
             }
-            if(! empty($token)) {
-                //校验token
-                if(empty(SessionToken::get($token))) {
-                    throw new RegisterException('Register Token Error');
-                }
+
+            // 密码为空的时候，不验证密码，允许创建密码为空的用户(但无法登录，只能用其它方法登录)
+            $password = $data['password'];
+            $password_confirmation = $data['password_confirmation'];
+            $attrs_to_validate = array_merge($data, compact('password', 'password_confirmation', 'captcha'));
+            if ($data['password'] === '') {
+                unset($attrs_to_validate['password']);
             }
-            /**小程序使用，三个参数必须都存在才可以使用**/
-            /*if((! empty($js_code) && (empty($iv) || empty($encryptedData)))  ||
-                (! empty($iv) && (empty($js_code) || empty($encryptedData))) ||
-                (! empty($encryptedData) && (empty($js_code) || empty($iv)))
-            ) {
-                throw new RegisterException('Register Mini Token Error');
-            }*/
-            if(! empty($js_code)) {
-                throw new RegisterException('Register Mini Token Error');
+            unset($attrs_to_validate['register_reason']);
+            try {
+                $this->userValidator->valid($attrs_to_validate);
+            } catch (\Exception $e) {
+                $validate_error = $e->validator->errors()->first();
+                $error_message = !empty($validate_error) ? $validate_error : $e->getMessage();
+                $this->outPut(ResponseCode::INVALID_PARAMETER, $error_message);
             }
+        } catch (\Exception $e) {
+            DzqLog::error('username_register_api_error', $data, $e->getMessage());
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册接口异常', [$e->getMessage()]);
         }
 
-        $user = $this->bus->dispatch(
-            new RegisterUser($request->getAttribute('actor'), $attributes)
-        );
+        $this->connection->beginTransaction();
+        try {
+            $this->checkName('username', $data['username']);
+            //密码校验
+            $result = strpos($data['password'], ' ');
+            if ($result !== false) {
+                $this->connection->rollback();
+                $this->outPut(ResponseCode::PASSWORD_NOT_ALLOW_HAS_SPACE);
+            }
 
-        $rebind = Arr::get($attributes, 'rebind', 0);
-        //绑定公众号
-        if ($token) {
-            $this->bind->withToken($token, $user, $rebind);
-            // 判断是否开启了注册审核
+            $this->checkName('nickname', $data['nickname']);
+
+            $user = $this->bus->dispatch(
+                new RegisterUser($this->request->getAttribute('actor'), $data)
+            );
+
+            // 注册后的登录检查
             if (!(bool)$this->settings->get('register_validate')) {
-                // Tag 发送通知 (在注册绑定微信后 发送注册微信通知)
-                $user->notify(new System(RegisterWechatMessage::class, $user, ['send_type' => 'wechat']));
+                $this->events->dispatch(new RegisteredCheck($user));
             }
-        }
-        //绑定小程序信息
-        if ($js_code && $iv && $encryptedData && ! $noAES) {
-            $this->bind->bindMiniprogram($js_code, $iv, $encryptedData, $rebind, $user);
-        }
 
-        if($js_code && $noAES) {
-            $this->bind->bindMiniprogramByCode($js_code,  $user);
+            $accessToken = $this->getAccessToken($user);
+            $this->connection->commit();
+            $this->outPut(
+                ResponseCode::SUCCESS,
+                '',
+                $this->camelData($this->addUserInfo($user, $accessToken))
+            );
+        } catch (\Exception $e) {
+            unset($data['password']);
+            unset($data['password_confirmation']);
+            DzqLog::error('username_register_api_error', $data, $e->getMessage());
+            $this->connection->rollback();
+            $this->outPut(ResponseCode::INTERNAL_ERROR, '用户名注册接口异常', [$e->getMessage()]);
         }
+    }
 
-
-        //绑定手机号
-        /* if ($mobileToken = Arr::get($attributes, 'mobileToken')) {
-             $this->bind->mobile($mobileToken, $user);
-         }*/
-
-        // 注册后的登录检查
-        if (!(bool)$this->settings->get('register_validate')) {
-            $this->events->dispatch(new RegisteredCheck($user));
+    private function checkName($name = '', $content = '')
+    {
+        $msg = $name == 'username' ? '用户名' : '昵称';
+        $result = strpos($content, ' ');
+        if ($result !== false) {
+            $this->connection->rollback();
+            $this->outPut(ResponseCode::USERNAME_NOT_ALLOW_HAS_SPACE, $msg.'不允许包含空格');
         }
-        $response = $this->bus->dispatch(
-            new GenJwtToken(Arr::only($attributes, 'username'))
-        );
-        return json_decode($response->getBody());
+        //敏感词检测
+        $this->censor->checkText($content, $name);
+        //长度检查
+        if (strlen($content) == 0) {
+            $this->connection->rollback();
+            $this->outPut(ResponseCode::USERNAME_NOT_NULL, $msg.'不能为空');
+        }
+        if (mb_strlen($content, 'UTF8') > 15) {
+            $this->connection->rollback();
+            $this->outPut(ResponseCode::NAME_LENGTH_ERROR, $msg.'长度超过15个字符');
+        }
+        //重名校验
+        $user = User::query()->where($name, $content)->lockForUpdate()->first();
+        if (!empty($user)) {
+            $this->connection->rollback();
+            $this->outPut(ResponseCode::USERNAME_HAD_EXIST, $msg.'已经存在');
+        }
     }
 }

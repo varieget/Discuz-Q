@@ -53,30 +53,29 @@ class QcloudSiteInfoDaily
         $this->settings = $settings;
     }
 
-
     public function handle()
     {
-        $tomorrow = date("Y-m-d",strtotime("+1 day"));
-        $today = date('Y-m-d',time());
+        $tomorrow = date('Y-m-d', strtotime('+1 day'));
+        $today = date('Y-m-d', time());
         $cache_time = strtotime($tomorrow) - time();
         $uin = app('cache')->get('qcloud_uin');
         $settings = app('cache')->get('settings_up');
         $isset_daily = app('cache')->get('qcloud_site_info_daily_'.$settings['site_id']);
-        if($isset_daily){
+        if ($isset_daily) {
             return;
         }
         $site_url = !empty($settings['site_url']) ? $settings['site_url'] : '';
-        if(empty($site_url) || $site_url != Utils::getSiteUrl()){
+        if (empty($site_url) || $site_url != Utils::getSiteUrl()) {
             $site_url = Utils::getSiteUrl();
             $this->settings->set('site_url', $site_url, 'default');
         }
         $appfile = base_path('vendor/discuz/core/src/Foundation/Application.php');
         $current_version_time = date('Y-m-d H:i:s', filemtime($appfile));
-        if(empty($settings['site_init_version'])){
+        if (empty($settings['site_init_version'])) {
             $settings['site_init_version'] = app()->version();
             $this->settings->set('site_init_version', $settings['site_init_version'], 'default');
         }
-        if(empty($settings['site_init_version_time'])){
+        if (empty($settings['site_init_version_time'])) {
             $settings['site_init_version_time'] = $current_version_time;
             $this->settings->set('site_init_version_time', $settings['site_init_version_time'], 'default');
         }
@@ -88,18 +87,24 @@ class QcloudSiteInfoDaily
         //开源应用中心：KUBERNETES_OAC_HOST、云开发tcb：KUBERNETES_SERVICE_HOST、云市场镜像：CLOUD_MARKET_HOST
         $install_type = 'default';
         $oldversionfile = base_path('public/.oldversion');
-        if(!file_exists($oldversionfile)){
+        if (!file_exists($oldversionfile)) {
             //docker 环境
             $install_type = 'docker';
             $oac = getenv('KUBERNETES_OAC_HOST');
             $tcb = getenv('KUBERNETES_SERVICE_HOST');
             $market = getenv('CLOUD_MARKET_HOST');
-            if(!empty($tcb))        $install_type = 'tcb';
-            if(!empty($oac))        $install_type = 'oac';
-            if(!empty($market))     $install_type = 'market';
+            if (!empty($tcb)) {
+                $install_type = 'tcb';
+            }
+            if (!empty($oac)) {
+                $install_type = 'oac';
+            }
+            if (!empty($market)) {
+                $install_type = 'market';
+            }
         }
         //获取site_info_dailies 中 is_upload 为 0 的数据
-        $site_info_dailies = SiteInfoDaily::query()->where('is_upload', 0)->where('date','<', $today)->get()->toArray();
+        $site_info_dailies = SiteInfoDaily::query()->where('is_upload', 0)->where('date', '<', $today)->get()->toArray();
         $json = [
             'site_id' => $settings['site_id'] ?? '',
             'site_secret' => !empty($settings['site_secret']) ? $settings['site_secret'] : '',
@@ -130,11 +135,8 @@ class QcloudSiteInfoDaily
         try {
             $this->siteInfoDaily($json)->wait();
             SiteInfoDaily::query()->whereIn('id', array_column($site_info_dailies, 'id'))->update(['is_upload' => 1]);
-            app('cache')->put('qcloud_site_info_daily_'.$settings['site_id'] , 1, $cache_time);
-        }catch (\Exception $e){
-
+            app('cache')->put('qcloud_site_info_daily_'.$settings['site_id'], 1, $cache_time);
+        } catch (\Exception $e) {
         }
-
     }
-
 }

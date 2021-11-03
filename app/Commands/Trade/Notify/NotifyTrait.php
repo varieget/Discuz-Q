@@ -196,19 +196,19 @@ trait NotifyTrait
                 // 悬赏支出
                 case Order::ORDER_TYPE_QUESTION_REWARD:
                     $this->orderInfo->save();
-                    Thread::query()->where('id', $this->orderInfo->thread_id)->update(['is_draft' => 0]);
+                    Thread::query()->where('id', $this->orderInfo->thread_id)->update(['is_draft' => Thread::BOOL_NO]);
                     return $this->orderInfo;
 
                 // 合并订单支出
                 case Order::ORDER_TYPE_MERGE:
                     $this->orderInfo->save();
-                    Thread::query()->where('id', $this->orderInfo->thread_id)->update(['is_draft' => 0]);
+                    Thread::query()->where('id', $this->orderInfo->thread_id)->update(['is_draft' => Thread::BOOL_NO]);
                     $orderChildrenInfo = OrderChildren::query()->where('status', Order::ORDER_STATUS_PENDING)->where('order_sn', $this->orderInfo->order_sn)->get();
                     $orderData = $this->orderInfo;
-                     $orderChildrenInfo->map(function ($orderChildren) use($orderData) {
-                        $orderChildren->status = Order::ORDER_STATUS_PAID;
-                        $orderChildren->thread_id = $orderData->thread_id ?? 0;
-                        $orderChildren->save();
+                     $orderChildrenInfo->map(function ($orderChildren) use ($orderData) {
+                         $orderChildren->status = Order::ORDER_STATUS_PAID;
+                         $orderChildren->thread_id = $orderData->thread_id ?? 0;
+                         $orderChildren->save();
                      });
                     return $this->orderInfo;
 

@@ -18,8 +18,8 @@
 
 namespace App\Listeners\Setting;
 
-use App\Api\Controller\SettingsV3\CdnTrait;
-use App\Api\Controller\SettingsV3\DnspodTrait;
+use App\Api\Controller\Settings\CdnTrait;
+use App\Api\Controller\Settings\DnspodTrait;
 use App\Common\ResponseCode;
 use App\Events\Setting\Saving;
 use Discuz\Common\Utils;
@@ -100,6 +100,12 @@ class CheckCdn
         }
         $cdnServerName = isset($settings['qcloud_cdn_server_name']) ? $settings['qcloud_cdn_server_name'] : '';
 
+        $serverName = $_SERVER['SERVER_NAME'];
+        if (isset($settings['qcloud_cdn_speed_domain']) && $speedDomain != $serverName) {
+            Utils::outPut(ResponseCode::INVALID_PARAMETER, '加速域名与本站点域名不符');
+        }
+
+
 //        $this->stopCdnDomain($speedDomain);
 //        $this->deleteCdnDomain($speedDomain);
 //        dd('已完成域名删除');
@@ -114,56 +120,66 @@ class CheckCdn
             $this->updateCdnDomain($speedDomain, $cdnOrigins, $cdnServerName);
             $this->purgeCdnPathCache();
         } else {
+            // 添加cdn域名
             $this->addCdnDomain($speedDomain, $cdnOrigins, $cdnServerName);
 
-            // 添加域名、解析
-            $this->createDomain($mainDomain);
+            if (empty($this->getDomainArr()) || !in_array($mainDomain, $this->getDomainArr())) {
+                // 添加dnspod主域名
+                $this->createDomain($mainDomain);
+            }
 
-            $this->createRecord($mainDomain, $cdnOrigins[0], 'A');
-            $this->modifyIpRecordStatus($mainDomain, $cdnOrigins[0], 'DISABLE');
+            $subDomain = $this->getSubDomain($speedDomain, $mainDomain);
 
-            $this->createRecord($mainDomain, $this->getCdnCname($speedDomain), 'CNAME');
-            $this->modifyCnameRecordStatus($mainDomain, $speedDomain.'.cdn.dnsv1.com.', 'ENABLE');
+            // 添加cname解析
+            $this->createRecord($mainDomain, $this->getCdnCname($speedDomain), 'CNAME', $subDomain, 'ENABLE');
+
+            // 添加ip地址解析
+            $this->createRecord($mainDomain, $this->getRemoteIp($cdnOrigins), 'A', $subDomain, 'DISABLE');
         }
 
-        if (isset($settings['qcloud_cdn']) && (bool)$settings['qcloud_cdn'] == true) { //开启了cdn
-            $this->switchCdnStatus($speedDomain, true, $mainDomain, $cdnOrigins[0]);
-        } else {
-            $this->switchCdnStatus($speedDomain, false, $mainDomain, $cdnOrigins[0]);
+        if (isset($settings['qcloud_cdn'])) {
+            app('log')->info('qcloud_cdn_status', ['qcloud_cdn' => $settings['qcloud_cdn']]);
+            if ((bool)$settings['qcloud_cdn'] == true) {  //开启了cdn
+                $this->switchCdnStatus($speedDomain, true, $mainDomain, $this->getRemoteIp($cdnOrigins));
+            } else {
+                $this->switchCdnStatus($speedDomain, false, $mainDomain, $this->getRemoteIp($cdnOrigins));
+            }
         }
     }
 
-    public function modifyIpRecordStatus($mainDomain, $ipValue, $status)
+    public function modifyIpRecordStatus($mainDomain, $ipValue, $status, $subDomain)
     {
-        $ipRecordId = $this->getRecordId($mainDomain, $ipValue, 'A');
+        $ipRecordId = $this->getRecordId($mainDomain, $ipValue, 'A', $subDomain);
         $this->modifyRecordStatus($mainDomain, $ipRecordId, $status);
     }
 
-    public function modifyCnameRecordStatus($mainDomain, $cnameValue, $status)
+    public function modifyCnameRecordStatus($mainDomain, $cnameValue, $status, $subDomain)
     {
-        $cnameRecordId = $this->getRecordId($mainDomain, $cnameValue, 'CNAME');
+        $cnameRecordId = $this->getRecordId($mainDomain, $cnameValue, 'CNAME', $subDomain);
         $this->modifyRecordStatus($mainDomain, $cnameRecordId, $status);
     }
 
     public function switchCdnStatus($speedDomain, $status, $mainDomain, $ipValue)
     {
         $cdnDomainStatus = $this->getCdnDomainStatus($speedDomain);
+        $subDomain = $this->getSubDomain($speedDomain, $mainDomain);
+
         if ($status === true) {
             if ($cdnDomainStatus == 'offline') {
                 $this->startCdnDomain($speedDomain);
             }
 
             // 开启cname的解析
-            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'DISABLE');
-            $this->modifyCnameRecordStatus($mainDomain, $speedDomain.'.cdn.dnsv1.com.', 'ENABLE');
+            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'DISABLE', $subDomain);
+            $this->modifyCnameRecordStatus($mainDomain, $this->getCdnCname($speedDomain), 'ENABLE', $subDomain);
         } else {
             if ($cdnDomainStatus == 'online') {
                 $this->stopCdnDomain($speedDomain);
             }
 
             // 开启ip地址的解析
-            $this->modifyCnameRecordStatus($mainDomain, $speedDomain.'.cdn.dnsv1.com.', 'DISABLE');
-            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'ENABLE');
+            $this->modifyCnameRecordStatus($mainDomain, $this->getCdnCname($speedDomain), 'DISABLE', $subDomain);
+            $this->modifyIpRecordStatus($mainDomain, $ipValue, 'ENABLE', $subDomain);
         }
         $this->purgeCdnPathCache(); // 刷新cdn
     }
@@ -176,5 +192,13 @@ class CheckCdn
             $cname = $domains['Domains'][0]['Cname'];
         }
         return $cname;
+    }
+
+    public function getRemoteIp($cdnOrigins = []): string
+    {
+        if (!empty($cdnOrigins)) {
+            return $cdnOrigins[0];
+        }
+        return '';
     }
 }

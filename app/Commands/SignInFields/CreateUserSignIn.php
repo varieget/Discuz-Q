@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -17,14 +18,16 @@
 
 namespace App\Commands\SignInFields;
 
-
 use App\Models\UserSignInFields;
 
 class CreateUserSignIn
 {
     private $actor;
+
     private $data;
+
     private $ip;
+
     private $port;
 
     public function __construct($actor, $data, $ip, $port)
@@ -37,9 +40,8 @@ class CreateUserSignIn
 
     public function handle()
     {
-        $attributes = array_column($this->data,'attributes');
+        $attributes = array_column($this->data, 'attributes');
         $userId = $this->actor->id;
-        return UserSignInFields::instance()->userSaveUserSignInFields($userId,$attributes);
+        return UserSignInFields::instance()->userSaveUserSignInFields($userId, $attributes);
     }
-
 }

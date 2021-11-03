@@ -27,7 +27,7 @@
  *                      @OA\Property(property="likeUsers", type="array", @OA\Items(
                             type="object",
  *                          @OA\Property(property="id", type="integer", description="点赞用户id"),
- *                          @OA\Property(property="username", type="string", description="点赞用户名称"),
+ *                          @OA\Property(property="nickname", type="string", description="点赞用户昵称"),
  *                          @OA\Property(property="avatar", type="string", description="点赞用户头像"))
  *                      )
  *                  )

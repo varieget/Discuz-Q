@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -27,17 +28,17 @@ class SettingCache
     {
         $public_path = public_path();
         $site_skin = 1;
-        if(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'){
-            if(is_dir($public_path)){
-                if($dh = opendir($public_path)){
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            if (is_dir($public_path)) {
+                if ($dh = opendir($public_path)) {
                     $skin_file = 'skin.conf';
                 }
             }
-        }else{
+        } else {
             $skin_file = $public_path . DIRECTORY_SEPARATOR .'skin.conf';
         }
 
-        if(file_exists($skin_file)){
+        if (file_exists($skin_file)) {
             $site_skin = file_get_contents($skin_file);
         }
 

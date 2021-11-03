@@ -42,6 +42,7 @@ use App\Models\UsernameChange;
 class UpdateClientUser
 {
     use AssertPermissionTrait;
+
     use EventsDispatchTrait;
 
     /**
@@ -131,12 +132,12 @@ class UpdateClientUser
         $user = $this->users->findOrFail($this->id, $this->actor);
         $canEdit = true;
         $isSelf = $this->actor->id === $user->id;
-        if(!$isSelf){
+        if (!$isSelf) {
             throw new PermissionDeniedException('没有权限');
         }
-        if(!empty(Arr::get($this->data, 'data.attributes'))){
+        if (!empty(Arr::get($this->data, 'data.attributes'))) {
             $attributes = Arr::get($this->data, 'data.attributes');
-        }else{
+        } else {
             $attributes = $this->data;
         }
         // 下列部分方法使用地址引用的方式修改了该值，以便验证用户参数
@@ -197,12 +198,12 @@ class UpdateClientUser
         // 过滤内容
         $username = $this->specialChar->purify($username);
 
-        $usernamechange = UsernameChange::query()->where("user_id",$user->id)->orderBy('id', 'desc')
+        $usernamechange = UsernameChange::query()->where('user_id', $user->id)->orderBy('id', 'desc')
             ->first();
-        if($usernamechange){
-            $currentTime=date("y-m-d h:i:s");
+        if ($usernamechange) {
+            $currentTime=date('y-m-d h:i:s');
             $oldTime=$usernamechange->updated_at;
-            if(strtotime($currentTime)<strtotime("+1years",strtotime($oldTime))){
+            if (strtotime($currentTime)<strtotime('+1years', strtotime($oldTime))) {
                 throw new TranslatorException(trans('user.user_username_change_limit_error'));
             }
         }
@@ -235,8 +236,6 @@ class UpdateClientUser
 
         return $validate;
     }
-
-
 
     /**
      * @param User $user

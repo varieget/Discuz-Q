@@ -42,7 +42,7 @@ class LocalImageHandler
      * @param ServerRequestInterface $request
      * @param ImageManager $image
      */
-    public function __construct(ServerRequestInterface $request, ImageManager $image,Image $images)
+    public function __construct(ServerRequestInterface $request, ImageManager $image, Image $images)
     {
         $this->data = $request->getParsedBody();
         $this->image = $image;
@@ -77,11 +77,11 @@ class LocalImageHandler
         })->save($thumbPath);
 
         $ext = $image->extension;
-        if(in_array($ext,['jpeg','jpg','png','gif'])){
+        if (in_array($ext, ['jpeg','jpg','png','gif'])) {
             $saveBlurPath = storage_path('app/' . $uploader->getPath());
             $saveBlurName = $blurFilename. '_blur.'.$image->extension;
-            $this->images->gaussianBlur($image->basePath(),$saveBlurPath,$saveBlurName,3);
-        }else{
+            $this->images->gaussianBlur($image->basePath(), $saveBlurPath, $saveBlurName, 3);
+        } else {
             // 生成模糊图
             $image->blur(80)->save($blurPath);
         }

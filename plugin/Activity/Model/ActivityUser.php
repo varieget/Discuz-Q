@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +18,15 @@
 
 namespace Plugin\Activity\Model;
 
-
+use App\Models\User;
 use Discuz\Base\DzqModel;
 
 class ActivityUser extends DzqModel
 {
     protected $table = 'plugin_activity_user';
 
+    public function user()
+    {
+        return  $this->belongsTo(User::class);
+    }
 }

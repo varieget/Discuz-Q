@@ -294,6 +294,14 @@
  *    @OA\Schema(type="array",@OA\Items(type="integer"))
  *),
  *@OA\Parameter(
+ *    parameter="threadlist_search",
+ *    name="filter[search]",
+ *    in="query",
+ *    required=false,
+ *    description = "搜索关键词",
+ *    @OA\Schema(type="string",default="")
+ *),
+ *@OA\Parameter(
  *     parameter="threadlist_sort",
  *    name="filter[sort]",
  *    in="query",
@@ -560,7 +568,7 @@
  *     schema = "user_detail_output",
  *     title = "用户详情输出数据集合",
  *          @OA\Property(property = "id", type = "integer", description = "用户id"),
- *          @OA\Property(property = "username", type = "string", description = "用户名"),
+ *          @OA\Property(property = "username", type = "string", description = "用户名(已去除)"),
  *          @OA\Property(property = "nickname", type = "string", description = "昵称"),
  *          @OA\Property(property = "mobile", type = "string", description = "昵称"),
  *          @OA\Property(property = "avatar", type = "string", description = "头像地址"),
@@ -615,7 +623,6 @@
  *              )
  *           }),
  *           @OA\Property(property = "userId", type = "integer", description = "发送人-用户id"),
- *           @OA\Property(property = "username", type = "string", description = "发送人-用户名"),
  *           @OA\Property(property = "userAvatar", type = "string", description = "发送人-用户头像"),
  *           @OA\Property(property = "nickname", type = "string", description = "发送人-昵称"),
  *           @OA\Property(property = "isReal", type = "boolean", description = "是否实名"),
@@ -623,7 +630,6 @@
  *           @OA\Property(property = "createdAt", type = "string", description = "发送时间"),
  *           @OA\Property(property = "threadId", type = "integer", description = "帖子id"),
  *           @OA\Property(property = "threadTitle", type = "string", description = "帖子标题"),
- *           @OA\Property(property = "threadUsername", type = "string", description = "帖子作者用户名"),
  *           @OA\Property(property = "threadUserGroups", type = "string", description = "帖子作者所在用户组"),
  *           @OA\Property(property = "threadIsApproved", type = "integer", description = "帖子是否已审核"),
  *           @OA\Property(property = "threadUserNickname", type = "string", description = "帖子作者昵称"),

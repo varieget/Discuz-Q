@@ -30,7 +30,6 @@ use Illuminate\Support\Arr;
 
 class UpdateUserWallet
 {
-
     public $user_id;
 
     /**
@@ -57,7 +56,6 @@ class UpdateUserWallet
         $this->user_id = $user_id;
         $this->actor   = $actor;
         $this->data    = $data;
-
     }
 
     /**
@@ -131,10 +129,10 @@ class UpdateUserWallet
 
             $userDetail = User::query()->where('id', $this->user_id)->first();
             
-            if($operate_amount !== '' && $operate_amount > 0){
-                if($change_type == 32){
+            if ($operate_amount !== '' && $operate_amount > 0) {
+                if ($change_type == 32) {
                     $desc = '增加';
-                }else{
+                } else {
                     $desc = '减少';
                 }
 
@@ -145,10 +143,10 @@ class UpdateUserWallet
             }
             
 
-            if($old_wallet_status['wallet_status'] !== $user_wallet->wallet_status){
-                if($user_wallet->wallet_status === 1){
+            if ($old_wallet_status['wallet_status'] !== $user_wallet->wallet_status) {
+                if ($user_wallet->wallet_status === 1) {
                     $status_desc = '冻结';
-                }else{
+                } else {
                     $status_desc = '恢复';
                 }
 
@@ -156,7 +154,6 @@ class UpdateUserWallet
                     $this->actor->id,
                     $status_desc . '了用户【'. $userDetail['username'] .'】提现'
                 );
-                
             }
 
             //提交事务

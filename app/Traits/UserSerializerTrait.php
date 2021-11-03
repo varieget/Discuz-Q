@@ -37,21 +37,21 @@ trait UserSerializerTrait
 
         $attributes = [
             'id'                => (int) $model->id,
-            'username'          => $model->username,
+            'username'          => '',
             'avatarUrl'         => $model->avatar,
             'status'            => $model->status,
             'loginAt'           => optional($model->login_at)->format('Y-m-d H:i:s'),
 //            'joinedAt'          => optional($model->joined_at)->format('Y-m-d H:i:s'),
             'expiredAt'         => optional($model->expired_at)->format('Y-m-d H:i:s'),
 //            'createdAt'         => optional($model->created_at)->format('Y-m-d H:i:s'),
-            'banReason'         => '', // 禁用原因
+            'banReason'         => !empty($model->reject_reason) ? $model->reject_reason : '', // 禁用原因
             'nickname'          => $model->nickname,
         ];
 
         // 判断禁用原因
-        if ($model->status == 1) {
-            $attributes['banReason'] = !empty($model->latelyLog) ? $model->latelyLog->message : '' ;
-        }
+//        if ($model->status == 1) {
+//            $attributes['banReason'] = !empty($model->latelyLog) ? $model->latelyLog->message : '' ;
+//        }
 
         if ($model->bind_type == 2) {
             $attributes['avatarUrl'] = ! empty($attributes['avatarUrl']) ? $attributes['avatarUrl'] : $this->qqAvatar($model);

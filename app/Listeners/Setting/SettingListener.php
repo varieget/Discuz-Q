@@ -43,6 +43,8 @@ class SettingListener
         $events->listen(Saving::class, CheckCos::class);                        // 腾讯云对象存储 COS
         $events->listen(Saving::class, CheckCdn::class);                        // 腾讯云cdn
 
+        $events->listen(Saving::class, CheckAttachment::class);                 // 附件设置
+
         // When the settings are saved
         $events->listen(Saved::class, ClearDisabledPermission::class);
         $events->listen(Saved::class, ClearDisabledSettings::class);

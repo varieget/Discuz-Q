@@ -47,11 +47,13 @@ class GenJwtToken
         return $apiClient->send(AccessTokenController::class, null, [], $param);
     }
 
-    public static function setUid($uid) {
+    public static function setUid($uid)
+    {
         self::$uid = $uid;
     }
 
-    public static function getUid() {
+    public static function getUid()
+    {
         return self::$uid;
     }
 }

@@ -26,13 +26,15 @@ use Illuminate\Database\ConnectionInterface;
 
 class AddUsersGroupCommand extends AbstractCommand
 {
-
     protected $signature = 'usersGroup:add';
+
     protected $description = '对没有用户组的用户设置默认用户组';
 
     // 数据备份涉及到的表 start
     protected $group_user;
+
     protected $group_user_dst;
+
     //end
 
     //表前缀
@@ -56,16 +58,16 @@ class AddUsersGroupCommand extends AbstractCommand
         $this->info('设置默认用户组脚本执行[开始]');
         try {
             $this->connection->beginTransaction();
-            ini_set("memory_limit","-1");
+            ini_set('memory_limit', '-1');
             $backupData =  GroupUser::query()->get()->toArray();
             //备份原数据
             //新建备份表group_user_dst
             $this->connection->statement($this->connection->raw("DROP TABLE IF EXISTS {$this->group_user_dst}"));
             $this->connection->statement($this->connection->raw(self::groupUserSql()));
             //插入原数据
-            if(!empty($backupData)){
-                collect($backupData)->when(true,function ($collection) {
-                    foreach ($collection->chunk(1000) as $k=>$val){
+            if (!empty($backupData)) {
+                collect($backupData)->when(true, function ($collection) {
+                    foreach ($collection->chunk(1000) as $k=>$val) {
                         $this->connection->table($this->group_user_dst)->insert($val->toArray());
                     }
                 });
@@ -73,21 +75,21 @@ class AddUsersGroupCommand extends AbstractCommand
 
             //插入新数据
             $groupUserIds = GroupUser::query()->get('user_id')->toArray();
-            $groupUserIds = array_column($groupUserIds,'user_id');
+            $groupUserIds = array_column($groupUserIds, 'user_id');
 
             $userId = User::query()->get('id')->toArray();
-            $userId = array_column($userId,'id');
+            $userId = array_column($userId, 'id');
 
-            $addGroupUsersId = array_diff($userId,$groupUserIds);
+            $addGroupUsersId = array_diff($userId, $groupUserIds);
             $addGroupUsers = [];
-            if(!empty($addGroupUsersId)){
-                foreach ($addGroupUsersId as $val){
+            if (!empty($addGroupUsersId)) {
+                foreach ($addGroupUsersId as $val) {
                     $addGroupUsers[] = ['group_id'=>Group::MEMBER_ID,'user_id'=>$val];
                 }
             }
-            if(!empty($addGroupUsers)){
-                collect($addGroupUsers)->when(true,function ($collection) {
-                    foreach ($collection->chunk(1000) as $k=>$val){
+            if (!empty($addGroupUsers)) {
+                collect($addGroupUsers)->when(true, function ($collection) {
+                    foreach ($collection->chunk(1000) as $k=>$val) {
                         GroupUser::query()->insert($val->toArray());
                     }
                 });
@@ -102,7 +104,8 @@ class AddUsersGroupCommand extends AbstractCommand
     }
 
     //group_user_sql
-    public function groupUserSql(){
+    public function groupUserSql()
+    {
         return  "CREATE TABLE {$this->group_user_dst} (
   `group_id` bigint(20) unsigned NOT NULL COMMENT '用户组 id',
   `user_id` bigint(20) unsigned NOT NULL COMMENT '用户 id',

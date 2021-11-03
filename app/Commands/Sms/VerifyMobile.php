@@ -151,12 +151,12 @@ class VerifyMobile
         if ($js_code && $iv && $encryptedData && ! $noAES) {
             $this->bind->bindMiniprogram($js_code, $iv, $encryptedData, null, $this->mobileCode->user);
         }
-        if($js_code && $noAES) {
+        if ($js_code && $noAES) {
             $this->bind->bindMiniprogramByCode($js_code, $this->mobileCode->user);
         }
 
         //手机号登录需要填写扩展字段审核的场景
-        if($this->mobileCode->user->status!=User::STATUS_MOD){
+        if ($this->mobileCode->user->status!=User::STATUS_MOD) {
             $this->events->dispatch(
                 new Logind($this->mobileCode->user)
             );

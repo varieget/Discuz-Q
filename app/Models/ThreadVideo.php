@@ -58,11 +58,11 @@ class ThreadVideo extends DzqModel
 
     const VIDEO_STATUS_FAIL = 2;        // 转码失败
 
-
     private $typeDic = [
         self::TYPE_OF_AUDIO => '音频',
         self::TYPE_OF_VIDEO => '视频'
     ];
+
     /**
      * {@inheritdoc}
      */

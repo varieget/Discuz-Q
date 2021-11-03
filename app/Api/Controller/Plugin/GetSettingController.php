@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +18,25 @@
 
 namespace App\Api\Controller\Plugin;
 
-use App\Models\PluginSettings;
-use Discuz\Base\DzqAdminController;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqController;
 
-class GetSettingController extends DzqAdminController
+class GetSettingController extends DzqController
 {
+    use PluginTrait;
+
+    protected function checkRequestPermissions(UserRepository $userRepo)
+    {
+        return true;
+    }
+
     public function main()
     {
         $appId = $this->inPut('appId');
         $this->dzqValidate(['appId' => $appId], ['appId' => 'required|string']);
-        $pluginList = \Discuz\Common\Utils::getPluginList();
-        $setting = PluginSettings::getSetting($appId);
-        $data = [
-            'setting'=>$setting,
-            'config'=>$pluginList[$appId]?:null
-        ];
-        $this->outPut(0,'',$data);
+
+        $data = $this->getOneSettingAndConfig($appId);
+
+        $this->outPut(0, '', $data);
     }
 }

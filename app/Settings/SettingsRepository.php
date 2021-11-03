@@ -27,7 +27,6 @@ use Illuminate\Support\Collection;
 
 class SettingsRepository implements ContractsSettingRepository
 {
-
     /**
      * @var Collection
      */
@@ -51,8 +50,8 @@ class SettingsRepository implements ContractsSettingRepository
         $settings = $this->cache->sear(
             CacheKey::SETTINGS,
             function () {
-                    return $this->getAllFromDatabase();
-                }
+                return $this->getAllFromDatabase();
+            }
         );
         /*} else {
             $settings = $this->getAllFromDatabase();
