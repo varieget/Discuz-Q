@@ -220,12 +220,24 @@ class PayOrder
             case Order::ORDER_TYPE_LONG:
                 $order_info->body = trans('order.order_type_long');
                 break;
-            case Order::ORDER_TYPE_REDPACKET:
-                $order_info->body = trans('order.order_type_redpacket');
+
+//            case Order::ORDER_TYPE_REDPACKET:
+//                $order_info->body = trans('order.order_type_redpacket');
+//                break;
+
+            // 集赞红包订单支付
+            case Order::ORDER_TYPE_LIKE_RED_PACKET:
+                $order_info->body = trans('order.order_type_like_red_packet');
                 break;
+            // 回复红包订单支付
+            case Order::ORDER_TYPE_REPLY_RED_PACKET:
+                $order_info->body = trans('order.order_type_reply_red_packet');
+                break;
+            // 悬赏订单支付
             case Order::ORDER_TYPE_QUESTION_REWARD:
                 $order_info->body = trans('order.order_type_question_reward');
                 break;
+            // 合并订单支付
             case Order::ORDER_TYPE_MERGE:
                 $order_info->body = trans('order.order_type_merge');
                 break;

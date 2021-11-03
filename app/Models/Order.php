@@ -93,6 +93,10 @@ class Order extends DzqModel
 
     const ORDER_TYPE_CHARGE = 30;  //充值
 
+    const ORDER_TYPE_LIKE_RED_PACKET = 40; //集赞红包
+
+    const ORDER_TYPE_REPLY_RED_PACKET = 41; //回复红包
+
     /**
      * 订单状态
      */

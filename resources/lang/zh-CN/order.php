@@ -22,7 +22,9 @@ return [
     'order_type_text'               => '文字帖红包',
     'order_type_long'               => '长文帖红包',
 
-    'order_type_redpacket'          => '支付红包',
+    // 'order_type_redpacket'          => '支付红包',
+    'order_type_reply_red_packet'   => '支付红包(回复红包)',
+    'order_type_like_red_packet'    => '支付红包(集赞红包)',
     'order_type_question_reward'    => '支付悬赏',
     'order_type_merge'              => '红包与悬赏合并支付',
 

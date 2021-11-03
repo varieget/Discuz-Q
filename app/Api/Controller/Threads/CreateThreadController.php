@@ -249,9 +249,9 @@ class CreateThreadController extends DzqController
     private function saveTom($thread, $content, $post)
     {
         $indexes = $content['indexes'] ?? [];
+        $tomJsons = $this->tomDispatcher($indexes, $this->CREATE_FUNC, $thread['id'], $post['id']);
 
         $attrs = [];
-        $tomJsons = $this->tomDispatcher($indexes, $this->CREATE_FUNC, $thread['id'], $post['id']);
         $tags = [];
         if (!empty($content['text'])) {
             $tags[] = [
@@ -260,21 +260,37 @@ class CreateThreadController extends DzqController
             ];
         }
         foreach ($tomJsons as $key => $value) {
-            $attrs[] = [
-                'thread_id' => $thread['id'],
-                'tom_type' => $value['tomId'],
-                'key' => $key,
-                'value' => json_encode($value['body'], 256)
-            ];
-            $tags[] = [
-                'thread_id' => $thread['id'],
-                'tag' => $value['tomId']
-            ];
+            if ($key == TomConfig::TOM_REDPACK) {
+                foreach ($value as $redPacketValue) {
+                    $attrs[] = $this->getAttr($thread, $key, $redPacketValue);
+                }
+                $tags[] = [
+                    'thread_id' => $thread['id'],
+                    'tag' => TomConfig::TOM_REDPACK
+                ];
+            } else {
+                $attrs[] = $this->getAttr($thread, $key, $value);
+                $tags[] = [
+                    'thread_id' => $thread['id'],
+                    'tag' => $value['tomId']
+                ];
+            }
         }
+
         ThreadTom::query()->insert($attrs);
         //添加tag类型
         ThreadTag::query()->insert($tags);
         return $tomJsons;
+    }
+
+    private function getAttr($thread, $key, $value)
+    {
+        return [
+            'thread_id' => $thread['id'],
+            'tom_type' => $value['tomId'],
+            'key' => $key,
+            'value' => json_encode($value['body'], 256)
+        ];
     }
 
     private function getResult($thread, $post, $tomJsons)
@@ -282,9 +298,14 @@ class CreateThreadController extends DzqController
         $user = $this->user;
         $group = Group::getGroup($user->id);
         $tags = [];
+
         if (!empty($tomJsons)) {
-            foreach ($tomJsons as $val) {
-                $tags[]['tag'] = $val['tomId'];
+            foreach ($tomJsons as $key => $val) {
+                if ($key == TomConfig::TOM_REDPACK) {
+                    $tags[]['tag'] = TomConfig::TOM_REDPACK;
+                } else {
+                    $tags[]['tag'] = $val['tomId'];
+                }
             }
         }
         return $this->packThreadDetail($user, $group, $thread, $post, $tomJsons, true, $tags);
@@ -298,7 +319,7 @@ class CreateThreadController extends DzqController
             ->orderByDesc('created_at')->first();
         //发帖间隔时间30s
         if (!empty($threadFirst) && (time() - strtotime($threadFirst['created_at'])) < 30) {
-            $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，请稍后重试');
+            // $this->outPut(ResponseCode::RESOURCE_EXIST, '发帖太快，请稍后重试');
         }
     }
 

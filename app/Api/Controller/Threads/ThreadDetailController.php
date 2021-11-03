@@ -25,6 +25,7 @@ use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
+use App\Modules\ThreadTom\TomConfig;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
@@ -97,7 +98,11 @@ class ThreadDetailController extends DzqController
             ])->orderBy('key')->get()->toArray();
         $tomContent = $tags = [];
         foreach ($threadTom as $item) {
-            $tomContent[$item['key']] = $this->buildTomJson($threadId, $item['tom_type'], $this->SELECT_FUNC, json_decode($item['value'], true));
+            if ($item['key'] == TomConfig::TOM_REDPACK) {
+                $tomContent[$item['key']][] = $this->buildTomJson($threadId, $item['tom_type'], $this->SELECT_FUNC, json_decode($item['value'], true));
+            } else {
+                $tomContent[$item['key']] = $this->buildTomJson($threadId, $item['tom_type'], $this->SELECT_FUNC, json_decode($item['value'], true));
+            }
             $tags[$item['key']]['tag'] = $item['tom_type'];
         }
         return ['tomContent' => $tomContent, 'tags' => $tags];

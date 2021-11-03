@@ -27,10 +27,20 @@ use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Models\ThreadRedPacket;
 use Carbon\Carbon;
+use Monolog\Handler\IFTTTHandler;
 
 class RedPackBusi extends TomBaseBusi
 {
     const NEED_PAY = true;
+
+    const REPLY_RED_PACKET = 0; // 回复领红包
+
+    const LIKE_RED_PACKET = 1; // 集赞领红包
+
+    public static $redPacketOrderType = [
+        self::REPLY_RED_PACKET => Order::ORDER_TYPE_REPLY_RED_PACKET,
+        self::LIKE_RED_PACKET => Order::ORDER_TYPE_LIKE_RED_PACKET
+    ];
 
     public function create()
     {
@@ -43,13 +53,15 @@ class RedPackBusi extends TomBaseBusi
         if (!empty($res['data'])) {
             return $this->jsonReturn($res['data']);
         }
-        $thread = Thread::query()->find($this->threadId);
-        if (empty($thread->is_draft)) {       //已发布的帖子，不允许在增加红包tom
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '已发布的帖子不允许增加红包');
+
+        $oldThreadRedPacket = ThreadRedPacket::query()->where('thread_id', $this->threadId)->pluck('condition')->toArray();
+        // 不允许增加同类型红包
+        if (isset($oldThreadRedPacket[$input['condition']])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '已发布的帖子不允许增加同类型红包');
         }
         //判断随机金额红布够不够分
         if ($input['rule'] == 1) {
-            if ($input['price']*100 <  $input['number']) {
+            if ($input['price'] * 100 <  $input['number']) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '红包金额不够分');
             }
         }
@@ -58,40 +70,11 @@ class RedPackBusi extends TomBaseBusi
                 ->where('order_sn', $input['orderSn'])
                 ->first(['id','thread_id','user_id','status','amount','expired_at','type']);
 
-            //判断红包金额
-            if ($input['rule'] == 1) {
-                if ($order->type == Order::ORDER_TYPE_REDPACKET && Utils::compareMath($order['amount'], $input['price'])) {
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '订单金额错误');
-                }
-            } else {
-                if ($order->type == Order::ORDER_TYPE_REDPACKET && Utils::compareMath($input['price']*$input['number'], $order['amount'])) {
-                    $this->outPut(ResponseCode::INVALID_PARAMETER, '订单金额错误', []);
-                }
+            $this->checkOrderBasicData($input, $order);
+            if ($order['type'] == Order::ORDER_TYPE_MERGE) {
+                $this->checkChildOrderBasicData($input);
             }
 
-            if (
-                ($order->type == Order::ORDER_TYPE_REDPACKET && !empty($order['thread_id'])) ||
-                !in_array($order->type, [Order::ORDER_TYPE_REDPACKET, Order::ORDER_TYPE_MERGE]) ||
-                $order['user_id'] != $this->user['id'] ||
-                $order['status'] != Order::ORDER_STATUS_PENDING ||
-                (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())
-            ) {
-                $this->outPut(ResponseCode::RESOURCE_EXPIRED, '订单已过期或异常，请重新创建订单');
-            }
-
-            if ($order->type == Order::ORDER_TYPE_MERGE) {
-                $orderChildrenInfo = OrderChildren::query()
-                    ->where('order_sn', $input['orderSn'])
-                    ->where('type', Order::ORDER_TYPE_REDPACKET)
-                    ->first();
-                if (empty($orderChildrenInfo) ||
-                    ($input['rule'] == 1 ? Utils::compareMath($orderChildrenInfo->amount, $input['price']) : Utils::compareMath($input['price']*$input['number'], $orderChildrenInfo->amount)) ||
-                    $orderChildrenInfo->status != Order::ORDER_STATUS_PENDING) {
-                    $this->outPut(ResponseCode::RESOURCE_EXPIRED, '子订单异常');
-                }
-                $orderChildrenInfo->thread_id = $this->threadId;
-                $orderChildrenInfo->save();
-            }
             $order->thread_id = $this->threadId;
             $order->save();
 
@@ -102,7 +85,7 @@ class RedPackBusi extends TomBaseBusi
         // 创建对应的红包 tom 时，需要同时配套创建 thread_red_packet 数据
         $threadRedPacket = new ThreadRedPacket;
         //定额红包计算
-        $price = $input['rule'] == 0 ? $input['price']*$input['number'] : $input['price'];
+        $price = $input['rule'] == 0 ? $input['price'] * $input['number'] : $input['price'];
         $threadRedPacket->thread_id = $this->threadId;
         $threadRedPacket->post_id = $this->postId;
         $threadRedPacket->rule = $input['rule'];
@@ -267,5 +250,72 @@ class RedPackBusi extends TomBaseBusi
             'msg'   =>  '',
             'data'  =>  ''
         ];
+    }
+
+    private function checkOrderBasicData($input,$order)
+    {
+        if (!in_array($order['type'], [Order::ORDER_TYPE_LIKE_RED_PACKET, Order::ORDER_TYPE_REPLY_RED_PACKET, Order::ORDER_TYPE_MERGE])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '订单类型错误');
+        }
+
+        if ($order['user_id'] != $this->user['id']) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '订单支付用户错误');
+        }
+
+        if ($order['status'] != Order::ORDER_STATUS_PENDING ||
+            (!empty($order['expired_at']) && strtotime($order['expired_at']) < time())
+        ) {
+            $this->outPut(ResponseCode::RESOURCE_EXPIRED, '订单已过期或异常，请重新创建订单');
+        }
+
+        if ($order['type'] != Order::ORDER_TYPE_MERGE) {
+
+            if (empty($order['thread_id'])) {
+                $this->outPut(ResponseCode::RESOURCE_EXPIRED, '订单与帖子关联异常');
+            }
+
+            if ($input['rule'] == 1) {
+                if (Utils::compareMath($order['amount'], $input['price'])) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '订单金额错误');
+                }
+            } else {
+                if (Utils::compareMath($input['price'] * $input['number'], $order['amount'])) {
+                    $this->outPut(ResponseCode::INVALID_PARAMETER, '订单金额错误');
+                }
+            }
+        }
+    }
+
+    private function checkChildOrderBasicData($input)
+    {
+        $redPacketOrderType = self::$redPacketOrderType[$input['condition']];
+        if (!$redPacketOrderType) {
+            $this->outPut(ResponseCode::RESOURCE_EXPIRED, '红包子订单类型异常');
+        }
+        $orderChildrenInfo = OrderChildren::query()
+            ->where('order_sn', $input['orderSn'])
+            ->where('type', $redPacketOrderType)
+            ->first();
+        if (empty($orderChildrenInfo)) {
+            $this->outPut(ResponseCode::RESOURCE_EXPIRED, '未查询到红包子订单');
+        }
+
+        // 子订单状态验证
+        if ($orderChildrenInfo['status'] != Order::ORDER_STATUS_PENDING) {
+            $this->outPut(ResponseCode::RESOURCE_EXPIRED, '红包子订单支付状态异常');
+        }
+
+        // 子订单金额验证
+        if ($input['rule'] == 1) {
+            $compareResult = Utils::compareMath($orderChildrenInfo['amount'], $input['price']);
+        } else {
+            $compareResult = Utils::compareMath($input['price'] * $input['number'], $orderChildrenInfo['amount']);
+        }
+        if ($compareResult) {
+            $this->outPut(ResponseCode::RESOURCE_EXPIRED, '红包子订单金额异常');
+        }
+
+        $orderChildrenInfo->thread_id = $this->threadId;
+        $orderChildrenInfo->save();
     }
 }

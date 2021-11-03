@@ -53,8 +53,10 @@ class CreateOrderController extends DzqController
     {
         $data = [
             'amount' => (float) $this->inPut('amount'),
-            'red_amount' => (float) $this->inPut('redAmount') ?? 0,
-            'reward_amount' => (float) $this->inPut('rewardAmount') ?? 0,
+            // 'red_amount' => (float) $this->inPut('redAmount') ?? 0,
+            'likeRedPacketAmount' => (float) $this->inPut('likeRedPacketAmount') ?? 0, // 集赞领红包
+            'replyRedPacketAmount' => (float) $this->inPut('replyRedPacketAmount') ?? 0, // 回复领红包
+            'rewardAmount' => (float) $this->inPut('rewardAmount') ?? 0,
             'is_anonymous' => (int) $this->inPut('isAnonymous'),
             'type' => (int) $this->inPut('type'),
             'thread_id' => (int) $this->inPut('threadId') ?? '',
@@ -63,7 +65,7 @@ class CreateOrderController extends DzqController
         ];
         $this->canCreateOrder($data);
         if ($data['type'] == Order::ORDER_TYPE_MERGE) {
-            $totalAmount = $data['red_amount'] + $data['reward_amount'];
+            $totalAmount = $data['likeRedPacketAmount'] + $data['replyRedPacketAmount'] + $data['rewardAmount'];
             if (Utils::compareMath($totalAmount, $data['amount'])) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '订单金额错误！', '');
             }
@@ -262,19 +264,21 @@ class CreateOrderController extends DzqController
                 break;
 
             // 红包支出
-            case Order::ORDER_TYPE_REDPACKET:
-                // 创建订单
-                $amount = sprintf('%.2f', $data['amount']); // 设置红包价格
-                $payeeId = 0;
+//            case Order::ORDER_TYPE_REDPACKET:
+//                // 创建订单
+//                $amount = sprintf('%.2f', $data['amount']); // 设置红包价格
+//                $payeeId = 0;
+//
+//                break;
 
-                break;
+            // 集赞红包支出
+            case Order::ORDER_TYPE_LIKE_RED_PACKET:
+
+            // 回复红包支出
+            case Order::ORDER_TYPE_REPLY_RED_PACKET:
 
             // 悬赏支出
             case Order::ORDER_TYPE_QUESTION_REWARD:
-                // 创建订单
-                $amount = sprintf('%.2f', $data['amount']); // 设置悬赏价格
-                $payeeId = 0;
-                break;
 
             // 合并订单支出
             case Order::ORDER_TYPE_MERGE:
@@ -327,10 +331,12 @@ class CreateOrderController extends DzqController
         $order->status          = 0;
 
         if ($orderType == Order::ORDER_TYPE_MERGE) {
-            $redAmount = sprintf('%.2f', $data['red_amount']);
-            $rewardAmount = sprintf('%.2f', $data['reward_amount']);
-            $redResult = $this->insertOrderChildren($order, $redAmount, Order::ORDER_TYPE_REDPACKET);
-            $rewardResult = $this->insertOrderChildren($order, $rewardAmount, Order::ORDER_TYPE_QUESTION_REWARD);
+            $likeRedPacketAmount = sprintf('%.2f', $data['likeRedPacketAmount']);
+            $replyRedPacketAmount = sprintf('%.2f', $data['replyRedPacketAmount']);
+            $rewardAmount = sprintf('%.2f', $data['rewardAmount']);
+            $likeRedPacketAmount > 0 && $this->insertOrderChildren($order, $likeRedPacketAmount, Order::ORDER_TYPE_LIKE_RED_PACKET);
+            $replyRedPacketAmount > 0 && $this->insertOrderChildren($order, $replyRedPacketAmount, Order::ORDER_TYPE_REPLY_RED_PACKET);
+            $rewardAmount > 0 && $this->insertOrderChildren($order, $rewardAmount, Order::ORDER_TYPE_QUESTION_REWARD);
         }
 
         $db = $this->getDB();
@@ -391,6 +397,7 @@ class CreateOrderController extends DzqController
             $this->info('createOrderChildren_error_' . $this->user->id, $e->getMessage());
             $this->outPut(ResponseCode::DB_ERROR, $e->getMessage());
         }
+        return true;
     }
 
     /**

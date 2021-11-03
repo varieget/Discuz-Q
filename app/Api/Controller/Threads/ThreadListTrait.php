@@ -252,7 +252,11 @@ trait ThreadListTrait
                             break;
                     }
                 }
-                $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
+                if ($tom['key'] == TomConfig::TOM_REDPACK) {
+                    $inPutToms[$tom['thread_id']][$tom['key']][] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
+                } else {
+                    $inPutToms[$tom['thread_id']][$tom['key']] = $this->buildTomJson($tom['thread_id'], $tom['tom_type'], $this->SELECT_FUNC, $value);
+                }
             }
         }
         if ($withIds) {

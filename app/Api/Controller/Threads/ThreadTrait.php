@@ -807,7 +807,7 @@ trait ThreadTrait
                 return;
             }
             foreach ($indexes as $k => $v) {
-                $appId = $v['tomId'];
+                $appId = $k;
                 $config = TomConfig::$map[$appId] ?? null;
                 $isAllowed = true;
                 if (is_null($config)) {

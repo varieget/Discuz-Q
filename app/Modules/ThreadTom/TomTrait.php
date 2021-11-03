@@ -54,40 +54,70 @@ trait TomTrait
         $config = $this->threadPluginList();
         $tomJsons = [];
         $indexes = $this->getContentIndexes($tomContent);
+
         if (empty($indexes)) {
             return $tomJsons;
         }
+
         $tomList = [];
         if (!empty($threadId) && empty($operation)) {
             $tomList = DzqCache::hGet(CacheKey::LIST_THREADS_V3_TOMS, $threadId, function ($threadId) {
-                return ThreadTom::query()->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
+                return ThreadTom::query()
+                    ->select('tom_type', 'key')
+                    ->where(['thread_id' => $threadId, 'status' => ThreadTom::STATUS_ACTIVE])->get()->toArray();
             });
         }
+
         foreach ($indexes as $key => $tomJson) {
-            $this->setOperation($threadId, $operation, $key, $tomJson, $tomList);
-            if (isset($tomJson['tomId']) && isset($tomJson['operation']) &&
-                in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
-                $tomId = strval($tomJson['tomId']);
-                $op = $tomJson['operation'];
-                $body = $tomJson['body'] ?? false;
-                if (isset($config[$tomId])) {
-                    $busiClass = $config[$tomId]['service'];
-                } else {
-                    $busiClass = \App\Modules\ThreadTom\Busi\DefaultBusi::class;
+            if ($key == TomConfig::TOM_REDPACK) {
+                foreach ($tomJson as $redPacketTomJson) {
+//                  dump($threadId);
+//                  dump($operation);
+//                  dump($key);
+//                  dump($tomJson);
+//                  dump($tomList);
+                    $this->setOperation($threadId, $operation, $key, $redPacketTomJson, $tomList);
+                    $tomJsons[$key][] = $this->getTomDispatcher($redPacketTomJson, $threadId, $postId, $key, $canViewTom, $config);
                 }
-                $service = new \ReflectionClass($busiClass);
-                if (empty($tomJson['threadId'])) {
-                    $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body, $canViewTom]);
-                } else {
-                    $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body, $canViewTom]);
-                }
-                $opResult = $service->$op();
-                if (method_exists($service, $op) && is_array($opResult)) {
-                    $tomJsons[$key] = $opResult;
-                }
+            } else {
+//                dump($threadId);
+//                dump($operation);
+//                dump($key);
+//                dump($tomJson);
+//                dump($tomList);
+                $this->setOperation($threadId, $operation, $key, $tomJson, $tomList);
+                $tomJsons[$key] = $this->getTomDispatcher($tomJson, $threadId, $postId, $key, $canViewTom, $config);
             }
         }
+
         return $tomJsons;
+    }
+
+    private function getTomDispatcher($tomJson, $threadId, $postId, $key, $canViewTom, $config)
+    {
+        if (isset($tomJson['tomId']) && isset($tomJson['operation']) &&
+            in_array($tomJson['operation'], [$this->CREATE_FUNC, $this->DELETE_FUNC, $this->UPDATE_FUNC, $this->SELECT_FUNC])) {
+            $tomId = strval($tomJson['tomId']);
+            $op = $tomJson['operation'];
+            $body = $tomJson['body'] ?? false;
+            if (isset($config[$tomId])) {
+                $busiClass = $config[$tomId]['service'];
+            } else {
+                $busiClass = \App\Modules\ThreadTom\Busi\DefaultBusi::class;
+            }
+            $service = new \ReflectionClass($busiClass);
+            if (empty($tomJson['threadId'])) {
+                $service = $service->newInstanceArgs([$this->user, $threadId, $postId, $tomId, $key, $op, $body, $canViewTom]);
+            } else {
+                $service = $service->newInstanceArgs([$this->user, $tomJson['threadId'], $postId, $tomId, $key, $op, $body, $canViewTom]);
+            }
+            $opResult = $service->$op();
+            if (method_exists($service, $op) && is_array($opResult)) {
+                // $tomJsons[$key] = $opResult;
+                return $opResult;
+            }
+        }
+        return [];
     }
 
     /**
@@ -119,6 +149,7 @@ trait TomTrait
                 $indexes = $tomContent;
             }
         }
+
         return $indexes;
     }
 
@@ -133,6 +164,11 @@ trait TomTrait
      */
     private function setOperation($threadId, $operation, $key, &$tomJson, $tomList)
     {
+//        dump($threadId);
+//        dump($operation);
+//        dump($key);
+//        dump($tomJson);
+//        dump($tomList);
         !empty($operation) && $tomJson['operation'] = $operation;
         if (!isset($tomJson['operation'])) {
             if (empty($tomJson['body'])) {
@@ -141,14 +177,7 @@ trait TomTrait
                 if (empty($threadId)) {
                     $tomJson['operation'] = $this->CREATE_FUNC;
                 } else {
-                    $isUpdate = false;
-                    foreach ($tomList as $item) {
-                        if ($item['tom_type'] == $tomJson['tomId'] && $item['key'] == $key) {
-                            $isUpdate = true;
-                            break;
-                        }
-                    }
-                    if ($isUpdate) {
+                    if (in_array(['tom_type' => $tomJson['tomId'], 'key' => $key], $tomList)) {
                         $tomJson['operation'] = $this->UPDATE_FUNC;
                     } else {
                         $tomJson['operation'] = $this->CREATE_FUNC;

@@ -192,7 +192,14 @@ trait NotifyTrait
                     return $this->orderInfo;
 
                 // 红包支出
-                case Order::ORDER_TYPE_REDPACKET:
+                // case Order::ORDER_TYPE_REDPACKET:
+
+                // 集赞领红包支出
+                case Order::ORDER_TYPE_LIKE_RED_PACKET:
+
+                // 回复领红包支出
+                case Order::ORDER_TYPE_REPLY_RED_PACKET:
+
                 // 悬赏支出
                 case Order::ORDER_TYPE_QUESTION_REWARD:
                     $this->orderInfo->save();
