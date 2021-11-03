@@ -116,6 +116,8 @@ $route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\Ge
 $route->get('/plugin/list', 'plugin.list', ApiController\Plugin\PluginListAdminController::class);
 $route->post('/plugin/uploadimage', 'plugin.uploadimage', ApiController\Plugin\PluginUploadImageController::class);
 $route->post('/plugin/deleteimage', 'plugin.deleteimage', ApiController\Plugin\PluginDeleteImageController::class);
+$route->post('/plugin/panel.upload', 'plugin.upload', ApiController\Plugin\PanelUploadController::class);
+$route->post('/plugin/panel.operate', 'plugin.operate', ApiController\Plugin\PanelOperateController::class);
 
 
 $route->post('/open.api.log', 'open.api.log', ApiController\Settings\OpenApiLogController::class);
