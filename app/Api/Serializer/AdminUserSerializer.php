@@ -54,6 +54,8 @@ class AdminUserSerializer extends AbstractSerializer
         ];
         $attributes = array_merge_recursive($attributes, $commonAttributes);
 
+        $attributes['username'] = $model->username;
+
         return $attributes;
     }
 }
