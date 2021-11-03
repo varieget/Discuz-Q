@@ -3,7 +3,8 @@
 
 namespace Plugin\Shop;
 
-use App\Common\Utils;
+use App\Api\Serializer\AttachmentSerializer;
+use App\Models\Attachment;
 use App\Models\PluginSettings;
 use App\Modules\ThreadTom\TomBaseBusi;
 use Plugin\Shop\Controller\WxShopTrait;
@@ -16,10 +17,12 @@ class ShopBusi extends TomBaseBusi
     public const TYPE_ORIGIN = 10;
     public const TYPE_WX_SHOP = 11;
 
+
     public function create()
     {
         $products = $this->getParams('products');
         $productsNew = [];
+        $wxshopNum = 0;
         foreach ($products as $item){
             if(!isset($item["type"])){
                 continue;
@@ -28,15 +31,17 @@ class ShopBusi extends TomBaseBusi
                 if (!isset($item["data"]) || !isset($item["data"]["productId"])){
                     continue;
                 }
+                if ($wxshopNum>=10){
+                    continue;
+                }
+                $wxshopNum++;
                 $pData  = $this->doProduct($item["data"]["productId"]);
                 if($pData !== false){
                     $item["data"] = $pData;
                 }
             }
             $productsNew[] = $item;
-            if (count($productsNew)>=10){
-                break;
-            }
+
         }
         $productData["products"] = $productsNew;
         return $this->jsonReturn($productData);
@@ -46,6 +51,7 @@ class ShopBusi extends TomBaseBusi
     {
         $products = $this->getParams('products');
         $productsNew = [];
+        $wxshopNum = 0;
         foreach ($products as $item){
             if(!isset($item["type"])){
                 continue;
@@ -54,15 +60,16 @@ class ShopBusi extends TomBaseBusi
                 if (!isset($item["data"]) || !isset($item["data"]["productId"])){
                     continue;
                 }
+                if ($wxshopNum>=10){
+                    continue;
+                }
+                $wxshopNum++;
                 $pData  = $this->doProduct($item["data"]["productId"]);
                 if($pData !== false){
                     $item["data"] = $pData;
                 }
             }
             $productsNew[] = $item;
-            if (count($productsNew)>=10){
-                break;
-            }
         }
         $productData["products"] = $productsNew;
         return $this->jsonReturn($productData);
@@ -71,53 +78,77 @@ class ShopBusi extends TomBaseBusi
     public function select()
     {
         $products = $this->getParams('products');
-        foreach ($products as &$item){
-            if(!isset($item["type"])){
-                continue;
-            }
-            if (self::TYPE_WX_SHOP == $item["type"]){
-                if (!isset($item["data"])){
-                    continue;
-                }
-                $item["data"] = $this->selectWxShop($item["data"]);
-            }
-        }
+
+        $this->selectWxshop($products);
+
         $productData["products"] = $products;
         return $this->jsonReturn($productData);
     }
 
 
-    private function selectWxShop( &$product){
+    private function selectWxShop( &$products){
         $qrCode = "";
         $setting = app()->make(PluginSettings::class)->getSetting($this->tomId);
         if ($setting && isset($setting["wxQrcode"]) && isset($setting["wxQrcode"])){
             $qrCode = $setting["wxQrcode"];
         }
+        $serializer = $this->app->make(AttachmentSerializer::class);
 
-        if (!empty($product["detailQrcode"])){
-            $product["detailQrcode"] = $this->getQRUrl($product["isRemote"]??0,$product["detailQrcode"]);
-        }else{
-            $product["detailQrcode"] = $qrCode;
+        foreach ($products as &$item){
+            if (!isset($item["type"]) || self::TYPE_WX_SHOP != $item["type"]) {
+                continue;
+            }
+            if (!isset($item["data"])) {
+                continue;
+            }
+
+            if (!isset($item["data"]["attachFilePath"])
+                || empty($item["data"]["attachFilePath"])
+                || !isset($item["data"]["attachFileName"])
+                || empty($item["data"]["attachFileName"]) ) {
+                $item["data"]["detailQrcode"] = $qrCode;
+            }else{
+                $attachment = Attachment::build(
+                    1,
+                    Attachment::TYPE_OF_FILE,
+                    $item["data"]["attachFileName"],
+                    $item["data"]["attachFilePath"],
+                    $item["data"]["attachFileName"],
+                    0,
+                    0,
+                    $item["data"]["isRemote"],
+                    Attachment::APPROVED,
+                    "",
+                    0,
+                    0,
+                    0
+                );
+                $attachmentData = $serializer->getBeautyAttachment($attachment);
+                $item["data"]["detailQrcode"] = $attachmentData['url'];
+            }
+
+            //删掉不用的字段
+            unset($item["data"]["attachFilePath"]);
+            unset($item["data"]["attachFileName"]);
+            unset($item["data"]["isRemote"]);
         }
-
-        return $product;
     }
 
+
     private function doProduct($productId){
-        $resultData = false;
 
         $config = app()->make(PluginSettings::class)->getSetting($this->tomId);
         $wxAppId = $config["wxAppId"];
 
         list($result,$accssToken) = $this->getAccessToken($this->tomId);
         if ($result !== 0){
-            return $resultData;
+            return false;
         }
 
         $productId =  (string)$productId;
         $productInfo = $this->getProductInfo($accssToken, $productId);
         if (empty($productInfo)){
-            return $resultData;
+            return false;
         }
         $imgUrl = "";
         if (count($productInfo["head_img"])>0){
@@ -133,54 +164,53 @@ class ShopBusi extends TomBaseBusi
             ->where("product_id",$productId)->first();
         if (empty($productOld)){
             //拉取二维码
-            list($qrPath,$isRemote) = $this->getProductQrCode($this->tomId,$path);
+            list($filePath, $fileName, $isRemote) = $this->getProductQrCode($this->tomId,$path);
 
-            $oneShopProduct = new ShopProducts();
-            $oneShopProduct->app_id = $wxAppId;
-            $oneShopProduct->product_id = $productId;
-            $oneShopProduct->title = $name;
-            $oneShopProduct->image_path = $imgUrl;
-            $oneShopProduct->price = (string)$price;
-            $oneShopProduct->path = $path;
-            $oneShopProduct->detail_url = $path;
-            $oneShopProduct->detail_qrcode = $qrPath;
-            $oneShopProduct->is_remote = $isRemote?1:0;
-            $oneShopProduct->detail_scheme = $this->getSchemeProduct($this->tomId,$path);
-
-            $oneShopProduct->save();
-
-            $resultData = $oneShopProduct;
+            $productOld = new ShopProducts();
+            $productOld->app_id = $wxAppId;
+            $productOld->product_id = $productId;
+            $productOld->title = $name;
+            $productOld->image_path = $imgUrl;
+            $productOld->price = (string)$price;
+            $productOld->path = $path;
+            $productOld->detail_url = $path;
+            $productOld->detail_qrcode = $filePath.$fileName;
+            $productOld->is_remote = $isRemote;
+            $productOld->attach_file_path = $filePath;
+            $productOld->attach_file_name = $fileName;
+            $productOld->detail_scheme = $this->getSchemeProduct($this->tomId,$path);
+            $productOld->save();
         }else{
             $productOld->title = $name;
             $productOld->image_path = $imgUrl;
             $productOld->price = (string)$price;
             $productOld->path = $path;
             $productOld->detail_url = $path;
-            if (empty($productOld->detail_qrcode)){
-                list($qrPath,$isRemote) = $this->getProductQrCode($this->tomId,$path);
-                $productOld->detail_qrcode = $qrPath;
-                $productOld->is_remote = $isRemote?1:0;
-
+            if (empty($productOld->attach_file_path)){
+                list($filePath,$fileName,$isRemote) = $this->getProductQrCode($this->tomId,$path);
+                $productOld->detail_qrcode = $filePath.$fileName;
+                $productOld->is_remote = $isRemote;
+                $productOld->attach_file_path = $filePath;
+                $productOld->attach_file_name = $fileName;
                 $productOld->detail_scheme = $this->getSchemeProduct($this->tomId,$path);
             }
-
             $productOld->save();
-
-            $resultData = $productOld;
         }
 
         $resultDataTemp = [];
-        $resultDataTemp["id"] =  $resultData["id"];
-        $resultDataTemp["appId"] =  $resultData["app_id"];
-        $resultDataTemp["productId"] =  $resultData["product_id"];
-        $resultDataTemp["title"] =  $resultData["title"];
-        $resultDataTemp["imagePath"] =  $resultData["image_path"];
-        $resultDataTemp["price"] =  $resultData["price"];
-        $resultDataTemp["path"] =  $resultData["path"];
-        $resultDataTemp["detailUrl"] =  $resultData["detail_url"];
-        $resultDataTemp["detailQrcode"] =  $resultData["detail_qrcode"];
-        $resultDataTemp["detailScheme"] =  $resultData["detail_scheme"];
-        $resultDataTemp["isRemote"] =  $resultData["is_remote"];
+        $resultDataTemp["id"] =  $productOld["id"];
+        $resultDataTemp["appId"] =  $productOld["app_id"];
+        $resultDataTemp["productId"] =  $productOld["product_id"];
+        $resultDataTemp["title"] =  $productOld["title"];
+        $resultDataTemp["imagePath"] =  $productOld["image_path"];
+        $resultDataTemp["price"] =  $productOld["price"];
+        $resultDataTemp["path"] =  $productOld["path"];
+        $resultDataTemp["detailUrl"] =  $productOld["detail_url"];
+        $resultDataTemp["detailQrcode"] =  $productOld["detail_qrcode"];
+        $resultDataTemp["detailScheme"] =  $productOld["detail_scheme"];
+        $resultDataTemp["isRemote"] =  $productOld["is_remote"];
+        $resultDataTemp["attachFilePath"] = $productOld["attach_file_path"];
+        $resultDataTemp["attachFileName"] = $productOld["attach_file_name"];
 
         return $resultDataTemp;
     }

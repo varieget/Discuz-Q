@@ -18,12 +18,15 @@
 namespace Plugin\Shop\Controller;
 
 
+use App\Commands\Attachment\AttachmentUploader;
 use App\Common\ResponseCode;
-use App\Common\Utils;
+use App\Models\Attachment;
 use App\Models\PluginSettings;
+use App\Settings\SettingsRepository;
 use Discuz\Base\DzqLog;
 use Discuz\Wechat\EasyWechatTrait;
 use GuzzleHttp\Client;
+use Illuminate\Http\UploadedFile;
 
 trait WxShopTrait
 {
@@ -155,18 +158,24 @@ trait WxShopTrait
         return $oneGoods;
     }
 
+    /**
+     * 商品二维码
+     * @param $appId
+     * @param $path
+     * @return array|int
+     */
     public function getProductQrCode($appId, $path){
         $pathNew = str_replace("plugin-private://","__plugin__/",$path);
         list($result,$wxApp) = $this->getWxApp($appId);
         if ($result !== 0){
             DzqLog::error('WxShopTrait::getProductQrCode', [], $wxApp);
-            return ["", false];
+            return ["", "", false];
         }
 
         $qrResponse = $wxApp->app_code->get($pathNew);
         if(is_array($qrResponse) && isset($qrResponse['errcode']) && isset($qrResponse['errmsg'])) {
             DzqLog::error('WxShopTrait::getProductQrCode', [], $qrResponse['errmsg']);
-            return ["", false];
+            return ["", "", false];
         }
         $pStartIndex = strpos($path,"productId=");
         $productIdStr = substr($path, $pStartIndex+strlen("productId="));
@@ -174,17 +183,99 @@ trait WxShopTrait
         $fileName = "wxshop_".$productIdStr."_".time().".jpg";
         $qrBuf = $qrResponse->getBody()->getContents();
 
-        /** @var ShopFileSave $shopFileSave */
-        $shopFileSave = app("app")->make(ShopFileSave::class);
+        $tmpFile = tempnam(storage_path('/tmp'), 'attachment');
+        $fileHandler = fopen($tmpFile,"w");
+        fwrite($fileHandler, $qrBuf);
+        fclose($fileHandler);
 
-        return $shopFileSave->saveFile($fileName,$qrBuf);
+        $attach = $this->save($tmpFile,$fileName,"image/jpeg");
+
+        @unlink($tmpFile);
+
+        return $attach;
     }
 
-    public function getQRUrl($isRemote, $path){
-        /** @var ShopFileSave $shopFileSave */
-        $shopFileSave = app("app")->make(ShopFileSave::class);
-        return $shopFileSave->getFilePath($isRemote, $path);
+
+    private function save($path,$fileName,$fileType){
+        $uploader = app()->make(AttachmentUploader::class);
+
+        $file = new UploadedFile(
+            $path,
+            $fileName,
+            $fileType,
+            null,
+            true
+        );
+        // 上传
+        $uploader->upload($file, Attachment::TYPE_OF_FILE);
+
+        list($width, $height) = getimagesize($path);
+
+        $attachment = Attachment::build(
+            1,
+            Attachment::TYPE_OF_FILE,
+            $uploader->fileName,
+            $uploader->getPath(),
+            $fileName,
+            $file->getSize(),
+            $file->getClientMimeType(),
+            $uploader->isRemote(),
+            Attachment::APPROVED,
+            "",
+            0,
+            $width,
+            $height
+        );
+        $attachment->save();
+
+        return [$attachment->file_path, $uploader->fileName, $attachment->is_remote];
     }
+
+    /**
+     * 小商店二维码
+     * @param $appId
+     * @return array|string
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     */
+    public function getShopQrCode($appId){
+        list($result,$wxApp) = $this->getWxApp($appId);
+        if ($result !== 0){
+            DzqLog::error('WxShopTrait::getProductQrCode', [], $wxApp);
+            return "";
+        }
+
+        $qrResponse = $wxApp->app_code->get("pages/index/index");
+        if(is_array($qrResponse) && isset($qrResponse['errcode']) && isset($qrResponse['errmsg'])) {
+            DzqLog::error('WxShopTrait::getShopQrCode', [], $qrResponse['errmsg']);
+            return "";
+        }
+
+        $fileName = "wxshop_".$appId."_".time().".jpg";
+        $qrBuf = $qrResponse->getBody()->getContents();
+
+        try {
+            $settings =  app()->make(SettingsRepository::class);
+            $fileSystemFactory =  app()->make( \Illuminate\Contracts\Filesystem\Factory::class);
+
+            $path='public/shop/'.$fileName;
+            if ($settings->get('qcloud_cos', 'qcloud')) {
+                $fileSystemFactory->disk('cos')->put($path, $qrBuf);
+                return $fileSystemFactory->disk('cos')->url($path);
+            }
+            $fileSystemFactory->disk('local')->put($path, $qrBuf);
+            return $fileSystemFactory->disk('local')->url($path);
+        } catch (Exception $e) {
+            if (empty($e->validator) || empty($e->validator->errors())) {
+                $errorMsg = $e->getMessage();
+            } else {
+                $errorMsg = $e->validator->errors()->first();
+            }
+            DzqLog::error('ShopFileSave::saveFile', [], $errorMsg);
+
+            return "";
+        }
+    }
+
 
     public function getSchemeProduct($appId,$path)
     {

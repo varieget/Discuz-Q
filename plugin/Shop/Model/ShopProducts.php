@@ -17,6 +17,8 @@ use Discuz\Base\DzqModel;
  * @property string $path
  * @property string $detail_url
  * @property string $detail_qrcode
+ * @property string $attach_file_path
+ * @property string $attach_file_name
  * @property string $detail_scheme
  * @property int $is_remote
  * @property Carbon $created_at

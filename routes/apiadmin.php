@@ -113,7 +113,6 @@ $route->get('/plugin/list', 'plugin.list', ApiController\Plugin\PluginListAdminC
 $route->post('/plugin/uploadimage', 'plugin.uploadimage', ApiController\Plugin\PluginUploadImageController::class);
 $route->post('/plugin/deleteimage', 'plugin.deleteimage', ApiController\Plugin\PluginDeleteImageController::class);
 
-
 $route->post('/open.api.log', 'open.api.log', ApiController\Settings\OpenApiLogController::class);
 
 $route->get('/thread.stick.sort', 'thread.stick.sort', ApiController\Threads\ThreadStickSortController::class);

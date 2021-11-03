@@ -259,4 +259,12 @@ class Utils
         }
         return null;
     }
+
+    public static function setPluginAppId($pluginAppId){
+        return static::setAppKey("plugin_appid", $pluginAppId);
+    }
+
+    public static function getPluginAppId(){
+        return static::getAppKey("plugin_appid") ?? "";
+    }
 }
