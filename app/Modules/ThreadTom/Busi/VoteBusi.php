@@ -245,6 +245,10 @@ class VoteBusi extends TomBaseBusi
             'subitems' => 'required|array|min:2|max:20',
         ];
         $this->dzqValidate($input, $rules);
+        $thread_vote = ThreadVote::query()->find($input['vote_id']);
+        if($thread_vote->expired_at < Carbon::now()){          //已经过期的投票，即便编辑也不做修改，即：不可编辑
+            return $this->jsonReturn(['voteIds' => [$thread_vote->id]]);
+        }
         if ($input['expired_at'] < Carbon::now()) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '过期时间不正确');
         }
