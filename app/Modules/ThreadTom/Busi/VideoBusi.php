@@ -95,11 +95,14 @@ class VideoBusi extends TomBaseBusi
         });
         if ($video) {
             $video = ThreadVideo::instance()->threadVideoResult($video);
-        /*
-        if (!$this->canViewTom) {
-            $video['mediaUrl'] = '';
-        }
-        */
+            if (!$this->isPaySub && !empty($this->priceIds) && in_array($videoId, $this->priceIds)) {
+                $video['mediaUrl'] = '';
+            }
+            /*
+            if (!$this->canViewTom) {
+                $video['mediaUrl'] = '';
+            }
+            */
         } else {
             $video = false;
         }

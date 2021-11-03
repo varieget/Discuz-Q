@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +23,6 @@ use App\Common\CacheKey;
 use Discuz\Base\DzqCache;
 use App\Common\ResponseCode;
 use App\Models\Attachment;
-use App\Models\Thread;
 use App\Modules\ThreadTom\TomBaseBusi;
 
 class ImageBusi extends TomBaseBusi
@@ -53,10 +53,10 @@ class ImageBusi extends TomBaseBusi
         $attachments = DzqCache::hMGet(CacheKey::LIST_THREADS_V3_ATTACHMENT, $imageIds, function ($imageIds) {
             return Attachment::query()->whereIn('id', $imageIds)->get()->keyBy('id')->toArray();
         });
-
         foreach ($attachments as $attachment) {
             $item = $this->camelData($serializer->getBeautyAttachment($attachment));
-            if (!$this->canViewTom) {
+            //如果图片没有权限查看，或者用户没有购买部分附件
+            if (!$this->canViewTom || (!$this->isPaySub && !empty($this->priceIds) && in_array($attachment['id'], $this->priceIds))) {
                 $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
             }
             unset($item['blurUrl']);
