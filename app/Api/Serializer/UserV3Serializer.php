@@ -93,8 +93,8 @@ class UserV3Serializer extends AbstractSerializer
             'registerReason'    => $model->register_reason,                 // 注册原因
             'denyStatus'        => (bool) $model->denyStatus,
 //            'canBeAsked'        => $model->id !== $this->actor->id && $model->can('canBeAsked'), // 是否允许被提问(已弃用指定人问答)
-            'hasPassword'       => !empty($model->password) ? true : false,
-            'isRenew'           => !empty($model->isRenew) ? true : false,
+            'hasPassword'       => !empty($model->password),
+            'isRenew'           => !empty($model->isRenew),
 
             'paid'              => $model->paid,
             'payTime'           => $this->formatDate($model->payTime),
@@ -109,6 +109,8 @@ class UserV3Serializer extends AbstractSerializer
 
         // 限制字段 本人/权限 显示
         if ($this->actor->id === $model->id) {
+            $attributes['username'] = $model->username;
+
             $attributes += [
                 'originalMobile'    => $model->getRawOriginal('mobile'),
 //            'registerIp'        => $model->register_ip,
