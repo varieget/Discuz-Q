@@ -102,6 +102,7 @@ trait ForumSettingSerializerTrait
                 'support_max_size' => $this->settings->get('support_max_size', 'default'),
                 'support_max_download_num' => $this->settings->get('support_max_download_num', 'default'),
                 'support_max_upload_attachment_num' => $this->getSupportMaxUploadAttachmentNum(),
+                'max_upload_attachment_num' => $this->getMaxUploadAttachmentNum(),
             ],
 
             // 腾讯云设置
