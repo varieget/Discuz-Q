@@ -28,7 +28,6 @@
  *                    @OA\Schema(title="用户列表", description="用户列表", @OA\Property(property="pageData", type="array", @OA\Items(type="object",
  *                      @OA\Property(property = "avatar", type = "string", description = "用户头像url"),
  *                      @OA\Property(property = "userId", type = "integer", description = "用户id"),
- *                      @OA\Property(property = "username", type = "string", description = "用户名称"),
  *                      @OA\Property(property = "nickname", type = "string", description = "用户所属组"),
  *                      @OA\Property(property = "groupName", type = "string", description = "话题引用帖子数量"),
  *                      @OA\Property(property = "followCount", type = "integer", description = "关注数"),

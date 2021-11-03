@@ -1,6 +1,7 @@
 <?php
+
 /**
- * Copyright (C) 2021 Tencent Cloud.
+ * Copyright (C) 2020 Tencent Cloud.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,22 +25,32 @@ use Symfony\Component\Mime\MimeTypes;
 
 trait AttachmentTrait
 {
-    public $supportMaxUploadAttachmentNum = 100;
+    public $supportMaxUploadAttachmentNum = 50;
 
     public $supportDefaultUploadAttachmentNum = 9;
 
     public function checkUploadAttachmentPermissions($type, $user, $userRepo)
     {
         if ($type == Attachment::TYPE_OF_FILE) {
-            if (!$userRepo->canInsertAttachmentToThread($user)) $this->outPut(ResponseCode::UNAUTHORIZED,'没有发附件权限');
-        } else if ($type == Attachment::TYPE_OF_IMAGE) {
-            if (!$userRepo->canInsertImageToThread($user)) $this->outPut(ResponseCode::UNAUTHORIZED,'没有发图片权限');
-        } else if ($type == Attachment::TYPE_OF_AUDIO) {
-            if (!$userRepo->canInsertVideoToThread($user)) $this->outPut(ResponseCode::UNAUTHORIZED,'没有发视频权限');
-        } else if ($type == Attachment::TYPE_OF_VIDEO) {
-            if (!$userRepo->canInsertAudioToThread($user)) $this->outPut(ResponseCode::UNAUTHORIZED,'没有发音频权限');
-        } else if ($type == Attachment::TYPE_OF_DIALOG_MESSAGE) {
-            if (!$userRepo->canCreateDialog($user)) $this->outPut(ResponseCode::UNAUTHORIZED,'没有发私信权限');
+            if (!$userRepo->canInsertAttachmentToThread($user)) {
+                $this->outPut(ResponseCode::UNAUTHORIZED, '没有发附件权限');
+            }
+        } elseif ($type == Attachment::TYPE_OF_IMAGE) {
+            if (!$userRepo->canInsertImageToThread($user)) {
+                $this->outPut(ResponseCode::UNAUTHORIZED, '没有发图片权限');
+            }
+        } elseif ($type == Attachment::TYPE_OF_AUDIO) {
+            if (!$userRepo->canInsertVideoToThread($user)) {
+                $this->outPut(ResponseCode::UNAUTHORIZED, '没有发视频权限');
+            }
+        } elseif ($type == Attachment::TYPE_OF_VIDEO) {
+            if (!$userRepo->canInsertAudioToThread($user)) {
+                $this->outPut(ResponseCode::UNAUTHORIZED, '没有发音频权限');
+            }
+        } elseif ($type == Attachment::TYPE_OF_DIALOG_MESSAGE) {
+            if (!$userRepo->canCreateDialog($user)) {
+                $this->outPut(ResponseCode::UNAUTHORIZED, '没有发私信权限');
+            }
         } else {
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
@@ -120,10 +131,10 @@ trait AttachmentTrait
 
     public function getAttachmentMimeType($cosUrl)
     {
-        $ch = curl_init ();
-        curl_setopt ( $ch, CURLOPT_CUSTOMREQUEST, 'GET' );
-        curl_setopt ( $ch, CURLOPT_SSL_VERIFYPEER, false );
-        curl_setopt ( $ch, CURLOPT_URL, $cosUrl );
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_URL, $cosUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_exec($ch);
         return curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
@@ -132,7 +143,7 @@ trait AttachmentTrait
     public function getImageInfo($cosUrl, $censor)
     {
         $thumbParameter = 'imageMogr2/thumbnail/' . Attachment::FIX_WIDTH . 'x' . Attachment::FIX_WIDTH;
-        if (strstr($cosUrl,'?')) {
+        if (strstr($cosUrl, '?')) {
             $newCosUrl = $cosUrl . '&imageInfo';
             $thumbUrl = $cosUrl . '&' . $thumbParameter;
         } else {
@@ -160,7 +171,7 @@ trait AttachmentTrait
     public function getDocumentInfo($cosUrl)
     {
         $documentInfo = $this->getFileContents($cosUrl);
-        if(!$documentInfo) {
+        if (!$documentInfo) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '未获取到文件信息');
         }
         $fileData = $this->getFileData($cosUrl);
@@ -199,5 +210,10 @@ trait AttachmentTrait
             return (string)$value;
         }
         return (string)$this->supportDefaultUploadAttachmentNum;
+    }
+
+    public function getMaxUploadAttachmentNum(): string
+    {
+        return $this->supportMaxUploadAttachmentNum;
     }
 }

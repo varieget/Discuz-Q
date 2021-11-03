@@ -1,25 +1,13 @@
 <?php
 
-/**
- * Copyright (C) 2020 Tencent Cloud.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+namespace Plugin\Import\Platform;
 
-namespace App\Crawler;
+use Plugin\Import\Traits\ImportTrait;
 
-class Douban
+class DouBan
 {
+    use ImportTrait;
+
     private $cookie = '';
 
     /**
@@ -29,12 +17,24 @@ class Douban
      * @param string $cookie 用户cookie
      * @return array
      */
-    public function main($topic, $page = 1, $cookie = '')
+    public function main($topic, $number, $cookie = '')
     {
         set_time_limit(0);
         $this->cookie = $cookie;
-        return $this->getList($topic, $page);
+        $page = 1;
+        $data = $pageData = $this->getList($topic, $page);
+        while (count($data) < $number && !empty($pageData)) {
+            $page++;
+            $pageData = $this->getList($topic, $page);
+            $data = array_merge($data, $pageData);
+        }
+        if (count($data) > $number) {
+            $data = array_slice($data,0, $number);
+        }
+
+        return $data;
     }
+
 
     /**
      * @method  从话题搜索数据，获取到帖子列表
@@ -52,6 +52,11 @@ class Douban
         if (empty($html)) {
             return $data;
         }
+        if (strpos($html, "登录跳转") !== false) {
+            $this->deleteImportLockFile();
+            throw new \Exception('请求次数过多，强制登录跳转，无法获取数据');
+        }
+
         $forumList = explode('<tr class="pl">', $html);
         if (!isset($forumList[1])) {
             return $data;
@@ -73,7 +78,7 @@ class Douban
                 //标题
                 $title = $this->dealMatchStr('/<a[^>]+title=["\'](.*?)["\']/i', $info);
                 //发帖时间
-                $create_at = $this->dealMatchStr('/<td class="td-time" title="(.*)" nowrap="nowrap">/i', $v);
+                $createdAt = $this->dealMatchStr('/<td class="td-time" title="(.*)" nowrap="nowrap">/i', $v);
 
                 //获取帖子基本信息及评论信息
                 $result = $this->getForumDetail($link, $id);
@@ -85,7 +90,7 @@ class Douban
                 }
                 //组装数据
                 //发帖人信息
-                $result['user']['nickname'] = str_replace(' ', '', $result['user']['nickname']);
+                $result['user']['nickname'] = str_replace(" ", "", $result['user']['nickname']);
                 $data[$k]['user'] = $result['user'];
                 //帖子信息
                 $data[$k]['forum'] = [
@@ -95,18 +100,14 @@ class Douban
                     'text' => [
                         'text' => $title . $result['forum'],
                         'position' => '',
-                        'topic_list' => '',
+                        'topicList' => '',
                     ],
-                    'create_at' => $create_at,
-                    'pics' => [
-                        'small_pics' => '',
-                        'large_pics' => '',
-                    ],
-                    'medias' => [
-                        'small_medias' => '',
-                        'large_medias' => '',
-                    ],
-                    'link' => $link
+                    'createdAt' => $createdAt,
+                    'images' => [],
+                    'media' => [
+                        'videos' => [],
+                        'audio'  => []
+                    ]
                 ];
                 //评论信息
                 $data[$k]['comment'] = $result['comment'];
@@ -162,10 +163,7 @@ class Douban
         $forumInfo = [
             'user' => [
                 'avatar' => '',
-                'nickname' => '',
-                'gender' => '',
-                'home_page' => '',
-                'description' => '',
+                'nickname' => ''
             ],
             'forum' => '',
         ];
@@ -183,6 +181,7 @@ class Douban
         return $forumInfo;
     }
 
+
     /**
      * @method  获取用户信息
      * @param string $userInfo 内容
@@ -196,12 +195,6 @@ class Douban
 
         //用户昵称
         $user['nickname'] = $this->dealMatchStr("/[img|IMG].*?alt=['|\"](.*?)['|\"].*?[\/]?>/", $info);
-
-        //用户主页
-        $user['home_page'] = $this->dealMatchStr('/<a[^>]+href=["\'](.*?)["\']/i', $info);
-
-        //描述
-        $user['description'] = '';
         return $user;
     }
 
@@ -224,7 +217,7 @@ class Douban
             }
             //评论用户信息
             $user = $this->getUser($commentValue);
-            $user['nickname'] = str_replace(' ', '', $user['nickname']);
+            $user['nickname'] = str_replace(" ", "", $user['nickname']);
             //评论信息
             $commentDetail = $this->getComment($commentValue);
             if (empty($user['nickname']) || empty($commentDetail['text']['text'])) {
@@ -250,28 +243,36 @@ class Douban
         $commentInfo = [
             'id' => '',
             'rootid' => '',
-            'created_at' => '',
+            'createdAt' => '',
             'text' => [
                 'text' => '',
                 'position' => '',
-                'topic_list' => [],
+                'topicList' => [],
             ],
         ];
         if (empty($comment)) {
             return $commentInfo;
         }
 
-        //id
-        $commentInfo['id'] = $this->dealMatchStr('/data-cid="(.*)" >/i', $comment);
+        // id
+        $commentInfo['id'] = $this->dealMatchStr("/data-cid=\"(.*)\" >/i", $comment);
         $commentInfo['rootid'] = $commentInfo['id'];
-        //评论时间
-        $commentInfo['created_at'] = $this->dealMatchStr("/<span class=\"pubtime\">(.*)<\/span>/i", $comment);
-        //评论内容
+        // 评论时间
+        $commentInfo['createdAt'] = $this->dealMatchStr("/<span class=\"pubtime\">(.*)<\/span>/i", $comment);
+        // 评论内容
         $text = $this->dealMatchStr("/<p class=\" reply-content\">(.*)<\/p>/i", $comment);
         $commentInfo['text']['text'] = $text;
+        // 评论图片
+        $commentInfo['images'] = [];
+        $divMatches = $this->getHtmlLabel('/<div[^>]*\s+class="cmt-img"[^>]*>(.*)<\/div>/isU', $comment);
+        if (!empty($divMatches[1])) {
+            $images = $this->getHtmlLabel('/<img[^>]*\s+src="([^"]*)"[^>]*>/isU', $divMatches[1][0]);
+            $commentInfo['images'] = $images[1];
+        }
 
         return $commentInfo;
     }
+
 
     /**
      * @method  处理单个正则匹配，返回结果
@@ -302,13 +303,13 @@ class Douban
     private function curlGet($url, $headers = [], $port = 80)
     {
         $ch = curl_init();
-        $header = [];
+        $header = array();
         $header[] = 'Content-Type:application/x-www-form-urlencoded';
         curl_setopt($ch, CURLOPT_URL, $url);
         if ($port !== 80) {
             curl_setopt($ch, CURLOPT_PORT, $port);
         }
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36');
+        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
         curl_setopt($ch, CURLOPT_HEADER, 0);//设定是否输出页面内容
         if ($headers) {
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -321,6 +322,7 @@ class Douban
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);       //链接超时时间
         curl_setopt($ch, CURLOPT_TIMEOUT, 3);       //设置超时时间
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         $filecontent = curl_exec($ch);
         curl_close($ch);
 

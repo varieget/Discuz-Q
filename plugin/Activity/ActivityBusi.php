@@ -83,7 +83,7 @@ class ActivityBusi extends TomBaseBusi
         $rawAttr = $this->getActivityRawAttr();
         $activity->setRawAttributes($rawAttr);
         if ($activity->save()) {
-            return $this->jsonReturn($this->getActivityDetail($activity));
+            return $this->jsonReturn(['activityId' => $activityId]);
         } else {
             return false;
         }

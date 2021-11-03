@@ -237,11 +237,11 @@ class ListNotificationController extends DzqController
 
         // 新增单独赋值的字段值
         $result = array_merge($result, [
-            'username' => $data->user_name ?: '',
+//            'username' => $data->user_name ?: '',
             'userAvatar' => $data->user_avatar ?: '',
             'nickname' => $data->nickname ?: '',
             'isReal' => $this->getIsReal($data->realname),
-            'threadUsername' => $data->thread_username ?: '',
+//            'threadUsername' => $data->thread_username ?: '',
             'threadUserGroups' => $data->thread_user_groups ?: '',
             'threadCreatedAt' => optional($data->thread_created_at)->format('Y-m-d H:i:s'),
             'threadIsApproved' => $data->thread_is_approved ?: 0,

@@ -17,6 +17,7 @@
 
 namespace App\Modules\ThreadTom\Busi;
 
+use App\Api\Controller\Attachment\AttachmentTrait;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Common\CacheKey;
 use Discuz\Base\DzqCache;
@@ -27,11 +28,14 @@ use App\Modules\ThreadTom\TomBaseBusi;
 
 class DocBusi extends TomBaseBusi
 {
+    use AttachmentTrait;
+
     public function create()
     {
         $docIds = $this->getParams('docIds');
-        if (count($docIds) > 9) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过9个');
+        $num = (int)$this->getSupportMaxUploadAttachmentNum();
+        if (count($docIds) > $num) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过'.$num.'个');
         }
         return $this->jsonReturn(['docIds' => $docIds]);
     }
@@ -39,8 +43,9 @@ class DocBusi extends TomBaseBusi
     public function update()
     {
         $docIds = $this->getParams('docIds');
-        if (count($docIds) > 9) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过9个');
+        $num = (int)$this->getSupportMaxUploadAttachmentNum();
+        if (count($docIds) > $num) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '文件不能超过'.$num.'个');
         }
         return $this->jsonReturn(['docIds' => $docIds]);
     }

@@ -26,13 +26,13 @@ use Symfony\Component\Finder\Finder;
 
 trait PluginTrait
 {
-    private function getOneSettingAndConfig($appId, $isFromAdmin)
+    private function getOneSettingAndConfig($appId)
     {
         $pluginList = \Discuz\Common\Utils::getPluginList();
 
-        $setting = PluginSettings::getSettingRecord($appId);
+        $setting = app()->make(PluginSettings::class)->getSettingRecord($appId);
 
-        $setting = $this->getOutSetting($setting, $isFromAdmin);
+        $setting = $this->getOutSetting($setting);
 
         $data = [
             'setting'=>$setting,
@@ -42,7 +42,7 @@ trait PluginTrait
         return $data;
     }
 
-    private function getAllSettingAndConfig($groupId, $isAdmin, $isFromAdmin)
+    private function getAllSettingAndConfig($groupId, $isAdmin)
     {
         $pluginList = \Discuz\Common\Utils::getPluginList();
         $permissions = PluginGroupPermission::query()
@@ -62,7 +62,6 @@ trait PluginTrait
                 'canUsePlugin' => $isAdmin ? true : (empty($permission) ? false : ($permission['status'] ? true : false)),
             ];
             $distPath = $pluginDirectories['view'] . DIRECTORY_SEPARATOR . 'dist';
-            $pluginFiles = [];
             if (is_dir($distPath)) {
                 $dirs = Finder::create()->in($distPath)->directories();
                 foreach ($dirs as $dir) {
@@ -73,24 +72,26 @@ trait PluginTrait
                         $fileName = $file->getFilename();
                         $extension = strtolower($file->getExtension());
                         $fileUrl = Utils::getDzqDomain() . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR . $appName . DIRECTORY_SEPARATOR . $dirName . DIRECTORY_SEPARATOR . $fileName;
-                        if ($extension == 'js') {
-                            $pluginFiles[$dirName]['js'][] = $fileUrl;
-                        } elseif ($extension == 'css') {
-                            $pluginFiles[$dirName]['css'][] = $fileUrl;
-                        } else {
-                            $pluginFiles[$dirName]['assets'][] = $fileUrl;
+                        if (isset($item['view'])) {
+                            if (isset($item['view'][$dirName])) {
+                                if ($extension == 'js') {
+                                    $item['view'][$dirName]['pluginFiles']['js'][] = $fileUrl;
+                                } elseif ($extension == 'css') {
+                                    $item['view'][$dirName]['pluginFiles']['css'][] = $fileUrl;
+                                } else {
+                                    $item['view'][$dirName]['pluginFiles']['assets'][] = $fileUrl;
+                                }
+                            } else {
+                                throw new \Exception('view file directory ' . $dirName . ' not exist');
+                            }
                         }
                     }
                 }
             }
-
-            //前端插件入口
-            $item['plugin_files'] = $pluginFiles;
             unset($item['plugin_' . $appId]);
             unset($item['busi']);
-
             if (isset($appSettingMap[$appId])) {
-                $item['setting'] = $this->getOutSetting($appSettingMap[$appId], $isFromAdmin);
+                $item['setting'] = $this->getOutSetting($appSettingMap[$appId]);
             } else {
                 $item['setting'] = [];
             }
@@ -99,7 +100,7 @@ trait PluginTrait
         return $pluginList;
     }
 
-    private function getOutSetting($setting,$isFromAdmin){
+    private function getOutSetting($setting){
         $privateValueData = $setting["private_value"];
         $publicValueData = $setting["public_value"];
 

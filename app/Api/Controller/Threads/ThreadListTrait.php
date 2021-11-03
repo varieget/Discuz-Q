@@ -262,9 +262,6 @@ trait ThreadListTrait
         return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_USERS, $userIds, function ($userIds) {
             return User::instance()->getUsers($userIds);
         }, 'id');
-//        $users = User::instance()->getUsers($userIds);
-//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_USERS, $users, 'id');
-//        return $users;
     }
 
     private function cacheGroupUser($userIds)
@@ -272,9 +269,6 @@ trait ThreadListTrait
         return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_GROUP_USER, $userIds, function ($userIds) {
             return GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
         }, 'user_id');
-//        $groupUsers = GroupUser::query()->whereIn('user_id', $userIds)->get()->toArray();
-//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_GROUP_USER, $groupUsers, 'user_id');
-//        return $groupUsers;
     }
 
     private function cacheTags($threadIds)
@@ -282,8 +276,6 @@ trait ThreadListTrait
         return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TAGS, $threadIds, function ($threadIds) {
             return ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
         }, 'thread_id');
-//        $tags = ThreadTag::query()->whereIn('thread_id', $threadIds)->get()->toArray();
-//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_TAGS, $tags, 'thread_id', true, $threadIds);
     }
 
     private function cacheThreads($threadIds, $threads)
@@ -291,8 +283,6 @@ trait ThreadListTrait
         return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_THREADS, $threadIds, function () use ($threads) {
             return $threads;
         }, 'id');
-//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_THREADS, $threads, 'id');
-//        return $threads;
     }
 
     private function cachePosts($threadIds)
@@ -300,10 +290,6 @@ trait ThreadListTrait
         return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_POSTS, $threadIds, function ($threadIds) {
             return Post::instance()->getPosts($threadIds);
         }, 'thread_id');
-
-//        $posts = Post::instance()->getPosts($threadIds);
-//        DzqCache::hMSet(CacheKey::LIST_THREADS_V3_POSTS, $posts, 'thread_id');
-//        return $posts;
     }
 
     private function cacheToms($threadIds)
@@ -311,9 +297,6 @@ trait ThreadListTrait
         return DzqCache::hMGet(CacheKey::LIST_THREADS_V3_TOMS, $threadIds, function ($threadIds) {
             return ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
         }, 'thread_id', true);
-//        $toms = ThreadTom::query()->whereIn('thread_id', $threadIds)->where('status', ThreadTom::STATUS_ACTIVE)->get()->toArray();
-//        $toms = DzqCache::hMSet(CacheKey::LIST_THREADS_V3_TOMS, $toms, 'thread_id', true, $threadIds);
-//        return $toms;
     }
 
     private function cacheSearchReplace($threads, $posts)

@@ -152,7 +152,7 @@ trait ImportDataTrait
         }
         $categoryId = $category['id'];
 
-        if ($optionData['auto']) {
+        if (isset($optionData['auto']) && $optionData['auto']) {
             $autoImportParameters = $optionData;
             unset($autoImportParameters['auto']);
             $checkResult = $this->checkAutoImportParameters($autoImportParameters, 'WeiBo');
@@ -787,9 +787,13 @@ trait ImportDataTrait
             }
         }
 
-        $originEncoding = mb_detect_encoding($fileName, ['ASCII', 'UTF-8', 'GB2312', 'GBK', 'BIG5']);
+        $originEncoding = mb_detect_encoding($fileName, array("ASCII", "UTF-8", "GB2312", "GBK", "BIG5"));
         if ($originEncoding != 'UTF-8') {
-            $fileName = mb_convert_encoding($fileName, 'UTF-8', $originEncoding);
+            if ($originEncoding == 'ASCII') {
+                $fileName = urldecode($fileName);
+            } else {
+                $fileName = mb_convert_encoding($fileName, "UTF-8", $originEncoding);
+            }
         }
 
         return $fileName;

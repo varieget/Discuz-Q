@@ -56,7 +56,8 @@ class RealUserController extends DzqController
 
         $result = [
             'id' => $this->user->id,
-            'username' => $this->user->username,
+//            'username' => $this->user->username,
+            'nickname' => $this->user->nickname,
             'mobile' => $this->user->mobile,
             'threadCount' => $this->user->thread_count,
             'followCount' => $this->user->follow_count,

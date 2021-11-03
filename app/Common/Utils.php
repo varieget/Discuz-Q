@@ -24,6 +24,8 @@ use Illuminate\Support\Str;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Psr\Log\LoggerInterface;
 
 class Utils
@@ -195,29 +197,54 @@ class Utils
     }
 
     //execl 导出
-    public static function localexport($cell, $title, $data)
+    public static function localexport($filePath, $datas, $column_map, $fileName= '', $header = [], $readBuffer = 1024)
     {
-        set_time_limit(0);
-        ini_set('memory_limit', '128M');
-        header('Content-Type: application/vnd.ms-execl');
-        header('Content-Disposition: attachment;filename="' . $title . '.csv"');
-
-        //以写入追加的方式打开
-        $fp = fopen('php://output', 'a');
-
-        foreach ($cell as $key => $item) {
-            $celldata[$key] = iconv('UTF-8', 'GBK//IGNORE', $item);
+        if(file_exists($filePath)){
+            unlink($filePath);
         }
-        //将标题写到标准输出中
-        fputcsv($fp, $celldata);
-        foreach ($data as $row) {
-            foreach ($row as $key => $item) {
-                //这里必须转码，不然会乱码
-                $row[$key] = iconv('UTF-8', 'GBK//IGNORE', $item);
+        if (!$fileName) {
+            $fileName = basename($filePath);
+        }
+        $cells = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $keys = [];
+        foreach ($datas as $row => $data) {
+            $keys = array_keys($data);
+            $values = array_values($data);
+            foreach ($values as $index => $item) {
+                $sheet->setCellValue($cells[$index].($row+2), $item);
             }
-            fputcsv($fp, $row);
         }
-        return ['file' => $title];
+        if ($keys) {
+            foreach ($keys as $index => $key) {
+                $sheet->setCellValue($cells[$index].'1', Arr::get($column_map, $key, $key));
+            }
+        }
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($filePath);
+
+
+        //声明浏览器输出的是字节流
+        $contentType = isset($header['Content-Type']) ? $header['Content-Type'] : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        header('Content-Type: ' . $contentType);
+        //声明浏览器返回大小是按字节进行计算
+        header('Accept-Ranges:bytes');
+        //告诉浏览器文件的总大小
+        $fileSize = filesize($filePath);//坑 filesize 如果超过2G 低版本php会返回负数
+        header('Content-Length:' . $fileSize); //注意是'Content-Length:' 非Accept-Length
+        $contentDisposition = isset($header['Content-Disposition']) ? $header['Content-Disposition'] : 'attachment;filename=' . $fileName;
+        //声明下载文件的名称
+        header('Content-Disposition:' . $contentDisposition);//声明作为附件处理和下载后文件的名称
+        //获取文件内容
+        $handle = fopen($filePath, 'rb');//二进制文件用‘rb’模式读取
+
+        while (!feof($handle)) { //循环到文件末尾 规定每次读取（向浏览器输出为$readBuffer设置的字节数）
+            echo fread($handle, $readBuffer);
+        }
+        fclose($handle);//关闭文件句柄
+        exit();
     }
 
     public static function setAppKey($key, $value)
@@ -231,5 +258,13 @@ class Utils
             return app()->get($key);
         }
         return null;
+    }
+
+    public static function setPluginAppId($pluginAppId){
+        return static::setAppKey("plugin_appid", $pluginAppId);
+    }
+
+    public static function getPluginAppId(){
+        return static::getAppKey("plugin_appid") ?? "";
     }
 }

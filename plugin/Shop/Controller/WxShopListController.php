@@ -4,6 +4,8 @@
 namespace Plugin\Shop\Controller;
 
 use App\Common\ResponseCode;
+use App\Common\Utils;
+use App\Models\PluginGroupPermission;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
 
@@ -13,7 +15,11 @@ class WxShopListController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if (!$this->user->isAdmin()){
+        $appid = Utils::getPluginAppId();
+        $groupId = $this->user->groupId;
+        $permissions = PluginGroupPermission::query()
+            ->where('group_id', $groupId)->where("app_id",$appid)->first();
+        if (empty($permissions)){
             return false;
         }
         return true;
@@ -26,7 +32,9 @@ class WxShopListController extends DzqController
         $page = $page ?: 1;
         $perPage = intval($this->inPut('perPage'));
         $perPage = $perPage ?: 10;
-        list($result,$accssToken) = $this->getAccessToken();
+
+       $appid = Utils::getPluginAppId();
+        list($result,$accssToken) = $this->getAccessToken($appid);
         if ($result !== 0){
             $this->outPut($result,$accssToken);
         }

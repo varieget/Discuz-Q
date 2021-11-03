@@ -97,10 +97,6 @@ $route->get('/stopWords/export', 'stopWords.export', ApiController\StopWords\Exp
 //监听定时任务
 $route->get('/monitor/system/task', 'monitor.system.task', ApiController\System\MonitorSystemTaskController::class);
 
-// 数据爬取
-$route->get('/create.crawler', 'create.crawler', ApiController\Crawler\CreateCrawlerDataController::class);
-$route->get('/check.crawler.process', 'check.crawler.process', ApiController\Crawler\CheckCrawlerProcessController::class);
-
 $route->post('/open.view.count', 'open.view.count', ApiController\Settings\OpenViewCountController::class);
 
 // 表情列表
@@ -112,13 +108,12 @@ $route->post('/thread.optimize', 'thread.optimize', ApiController\Threads\Thread
 $route->post('/plugin/settings.save', 'plugin.settings.save', ApiController\Plugin\SettingController::class);
 $route->post('/plugin/permission.switch', 'plugin.permission.switch', ApiController\Plugin\GroupPermissionController::class);
 $route->get('/plugin/permissionlist', 'plugin.permissionlist', ApiController\Plugin\GetGroupPermissionsController::class);
-$route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingController::class);
+$route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingAdminController::class);
 $route->get('/plugin/list', 'plugin.list', ApiController\Plugin\PluginListAdminController::class);
 $route->post('/plugin/uploadimage', 'plugin.uploadimage', ApiController\Plugin\PluginUploadImageController::class);
 $route->post('/plugin/deleteimage', 'plugin.deleteimage', ApiController\Plugin\PluginDeleteImageController::class);
 $route->post('/plugin/panel.upload', 'plugin.upload', ApiController\Plugin\PanelUploadController::class);
 $route->post('/plugin/panel.operate', 'plugin.operate', ApiController\Plugin\PanelOperateController::class);
-
 
 $route->post('/open.api.log', 'open.api.log', ApiController\Settings\OpenApiLogController::class);
 

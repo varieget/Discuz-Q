@@ -35,7 +35,7 @@ class GetSettingController extends DzqController
         $appId = $this->inPut('appId');
         $this->dzqValidate(['appId' => $appId], ['appId' => 'required|string']);
 
-        $data = $this->getOneSettingAndConfig($appId, false);
+        $data = $this->getOneSettingAndConfig($appId);
 
         $this->outPut(0, '', $data);
     }
