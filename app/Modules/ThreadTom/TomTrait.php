@@ -141,7 +141,14 @@ trait TomTrait
                 if (empty($threadId)) {
                     $tomJson['operation'] = $this->CREATE_FUNC;
                 } else {
-                    if (in_array(['tom_type' => $tomJson['tomId'], 'key' => $key], $tomList)) {
+                    $isUpdate = false;
+                    foreach ($tomList as $item) {
+                        if ($item['tom_type'] == $tomJson['tomId'] && $item['key'] == $key) {
+                            $isUpdate = true;
+                            break;
+                        }
+                    }
+                    if ($isUpdate) {
                         $tomJson['operation'] = $this->UPDATE_FUNC;
                     } else {
                         $tomJson['operation'] = $this->CREATE_FUNC;
