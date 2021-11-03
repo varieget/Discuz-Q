@@ -4,11 +4,9 @@
 namespace Plugin\Shop;
 
 use App\Api\Serializer\AttachmentSerializer;
-use App\Common\CacheKey;
 use App\Models\Attachment;
 use App\Models\PluginSettings;
 use App\Modules\ThreadTom\TomBaseBusi;
-use Discuz\Base\DzqCache;
 use Plugin\Shop\Controller\WxShopTrait;
 use Plugin\Shop\Model\ShopProducts;
 
@@ -24,6 +22,7 @@ class ShopBusi extends TomBaseBusi
     {
         $products = $this->getParams('products');
         $productsNew = [];
+        $wxshopNum = 0;
         foreach ($products as $item){
             if(!isset($item["type"])){
                 continue;
@@ -32,15 +31,17 @@ class ShopBusi extends TomBaseBusi
                 if (!isset($item["data"]) || !isset($item["data"]["productId"])){
                     continue;
                 }
+                if ($wxshopNum>=10){
+                    continue;
+                }
+                $wxshopNum++;
                 $pData  = $this->doProduct($item["data"]["productId"]);
                 if($pData !== false){
                     $item["data"] = $pData;
                 }
             }
             $productsNew[] = $item;
-            if (count($productsNew)>=10){
-                break;
-            }
+
         }
         $productData["products"] = $productsNew;
         return $this->jsonReturn($productData);
@@ -50,6 +51,7 @@ class ShopBusi extends TomBaseBusi
     {
         $products = $this->getParams('products');
         $productsNew = [];
+        $wxshopNum = 0;
         foreach ($products as $item){
             if(!isset($item["type"])){
                 continue;
@@ -58,15 +60,16 @@ class ShopBusi extends TomBaseBusi
                 if (!isset($item["data"]) || !isset($item["data"]["productId"])){
                     continue;
                 }
+                if ($wxshopNum>=10){
+                    continue;
+                }
+                $wxshopNum++;
                 $pData  = $this->doProduct($item["data"]["productId"]);
                 if($pData !== false){
                     $item["data"] = $pData;
                 }
             }
             $productsNew[] = $item;
-            if (count($productsNew)>=10){
-                break;
-            }
         }
         $productData["products"] = $productsNew;
         return $this->jsonReturn($productData);
