@@ -46,7 +46,6 @@ class BatchUpdateTopicController extends DzqAdminController
         $isRecommended = $this->inPut('isRecommended');
 
         foreach ($idsArr as $key=>$value) {
-            $action_desc = '';
             $topic = Topic::query()->where('id', $value)->first();
 
             if ($topic->recommended == $isRecommended) {
@@ -58,16 +57,17 @@ class BatchUpdateTopicController extends DzqAdminController
                 $topic->recommended_at = date('Y-m-d H:i:s', time());
             }
             if ($topic->recommended == 1) {
-                $action_desc = '推荐话题【'. $topic->content .'】';
+                $actionDesc = '推荐话题【'. $topic['content'] .'】';
             } else {
-                $action_desc = '取消推荐话题【'. $topic->content .'】';
+                $actionDesc = '取消推荐话题【'. $topic['content'] .'】';
             }
             $topic->save();
 
-            if ($action_desc !== '' && !empty($action_desc)) {
+            if ($actionDesc !== '' && !empty($actionDesc)) {
                 AdminActionLog::createAdminActionLog(
                     $this->user->id,
-                    $action_desc
+                    AdminActionLog::ACTION_OF_TOPIC,
+                    $actionDesc
                 );
             }
         }

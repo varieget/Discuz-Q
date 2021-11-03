@@ -66,7 +66,7 @@ class AdminBatchEditThreads
     /**
      * @param Dispatcher $events
      * @param ThreadRepository $threads
-     * @return array
+     * @return object
      */
     public function handle(Dispatcher $events, ThreadRepository $threads)
     {
@@ -184,64 +184,66 @@ class AdminBatchEditThreads
         }
 
         $titles = implode('、', $titles);
-        $action_desc = '';
+        $actionDesc = '';
         if (isset($attributes['isApproved'])) {
             if ($attributes['isApproved'] == Thread::APPROVED) {
-                $action_desc = '用户主题帖'. $titles .'通过审核';
+                $actionDesc = '用户主题帖'. $titles .'通过审核';
             }
             if ($attributes['isApproved'] == Thread::UNAPPROVED) {
-                $action_desc = '用户主题帖'. $titles .'暂被设为非法';
+                $actionDesc = '用户主题帖'. $titles .'暂被设为非法';
             }
             if ($attributes['isApproved'] == Thread::IGNORED) {
-                $action_desc = '用户主题帖'. $titles .'被忽略';
+                $actionDesc = '用户主题帖'. $titles .'被忽略';
             }
         }
 
         if (isset($attributes['isSticky'])) {
             if ($attributes['isSticky'] == true) {
-                $action_desc = '批量置顶用户主题帖'. $titles;
+                $actionDesc = '批量置顶用户主题帖'. $titles;
             } else {
-                $action_desc = '批量取消用户主题帖'. $titles .'的置顶';
+                $actionDesc = '批量取消用户主题帖'. $titles .'的置顶';
             }
         }
 
         if (isset($attributes['isDeleted'])) {
             if ($attributes['isDeleted'] == true) {
-                $action_desc = '批量删除用户主题帖'. $titles;
+                $actionDesc = '批量删除用户主题帖'. $titles;
             } else {
-                $action_desc = '批量还原用户主题帖'. $titles;
+                $actionDesc = '批量还原用户主题帖'. $titles;
             }
         }
 
         if (isset($attributes['isEssence'])) {
             if ($attributes['isEssence'] == true) {
-                $action_desc = '批量设置用户主题帖'. $titles .'为精华';
+                $actionDesc = '批量设置用户主题帖'. $titles .'为精华';
             } else {
-                $action_desc = '批量取消用户主题帖'. $titles .'的精华标志';
+                $actionDesc = '批量取消用户主题帖'. $titles .'的精华标志';
             }
         }
 
         if (isset($attributes['isSite'])) {
             if ($thread->is_site == true) {
-                $action_desc = '批量推荐用户主题帖'. $titles .'至付费首页';
+                $actionDesc = '批量推荐用户主题帖'. $titles .'至付费首页';
             } else {
-                $action_desc = '批量取消用户主题帖'. $titles .'的付费首页推荐';
+                $actionDesc = '批量取消用户主题帖'. $titles .'的付费首页推荐';
             }
         }
 
-        if ($action_desc !== '' && !empty($action_desc)) {
+        if ($actionDesc !== '' && !empty($actionDesc)) {
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                $action_desc
+                AdminActionLog::ACTION_OF_THREAD,
+                $actionDesc
             );
         }
 
         if ($category_id !== '' && !empty($category_id)) {
             $categoryDetail = Category::query()->where('id', $category_id)->first();
-            $action_desc = '批量转移用户主题帖'. $titles .'至【'. $categoryDetail['name'] .'】分类';
+            $actionDesc = '批量转移用户主题帖'. $titles .'至【'. $categoryDetail['name'] .'】分类';
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                $action_desc
+                AdminActionLog::ACTION_OF_THREAD,
+                $actionDesc
             );
         }
         return $thread;

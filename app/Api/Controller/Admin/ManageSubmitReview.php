@@ -62,16 +62,23 @@ class ManageSubmitReview extends DzqAdminController
 
         switch ($type) {
             case 1:
+                $actionType = AdminActionLog::ACTION_OF_THREAD;
                 $logArr = $this->threads();
                 break;
             case 2:
+                $actionType = AdminActionLog::ACTION_OF_COMMENT;
                 $logArr = $this->posts();
                 break;
         }
 
         if (!empty($logArr)) {
-            AdminActionLog::insert($logArr);
-
+            foreach ($logArr as $logValue) {
+                AdminActionLog::createAdminActionLog(
+                    $logValue['user_id'],
+                    $actionType,
+                    $logValue['action_desc']
+                );
+            }
             $this->outPut(ResponseCode::SUCCESS);
         }
 
@@ -102,17 +109,17 @@ class ManageSubmitReview extends DzqAdminController
                 $v->save();
 
                 if ($arr[$v->id]['isApproved'] == 1) {
-                    $action_desc = $threadTitle.',通过审核';
+                    $actionDesc = $threadTitle.',通过审核';
                     //统计分类主题数+1
                     Category::refreshThreadCountV3($v->category_id);
                     //发送@用户消息
                     $threadIds[] = $v->id;
                     $this->threadSendMiddleware($v);
                 } else {
-                    $action_desc = $threadTitle.',被忽略';
+                    $actionDesc = $threadTitle.',被忽略';
                 }
 
-                $logArr[] = $this->logs('用户主题帖'. $action_desc);
+                $logArr[] = $this->logs('用户主题帖'. $actionDesc);
             //删除主题
             } elseif (isset($arr[$v->id]['isDeleted']) && in_array($arr[$v->id]['isDeleted'], [true, false])) {
                 if ($arr[$v->id]['isDeleted'] == true) {
@@ -193,17 +200,17 @@ class ManageSubmitReview extends DzqAdminController
                 $v->save();
 
                 if ($arr[$v->id]['isApproved']==1) {
-                    $action_desc = $threadContent.',通过审核';
+                    $actionDesc = $threadContent.',通过审核';
                     //统计帖子评论数+1
                     $v->thread->refreshPostCount();
                     $v->thread->save();
                     //发送@用户短信信息
                     $this->postSendMiddleware($v);
                 } else {
-                    $action_desc = $threadContent.',被忽略';
+                    $actionDesc = $threadContent.',被忽略';
                 }
 
-                $logArr[] = $this->logs('用户回复评论'. $action_desc);
+                $logArr[] = $this->logs('用户回复评论'. $actionDesc);
 
             //删除回复
             } elseif (isset($arr[$v->id]['isDeleted']) && in_array($arr[$v->id]['isDeleted'], [true, false])) {
