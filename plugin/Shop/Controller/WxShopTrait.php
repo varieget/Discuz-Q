@@ -169,13 +169,13 @@ trait WxShopTrait
         list($result,$wxApp) = $this->getWxApp($appId);
         if ($result !== 0){
             DzqLog::error('WxShopTrait::getProductQrCode', [], $wxApp);
-            return ["", false];
+            return ["", "", false];
         }
 
         $qrResponse = $wxApp->app_code->get($pathNew);
         if(is_array($qrResponse) && isset($qrResponse['errcode']) && isset($qrResponse['errmsg'])) {
             DzqLog::error('WxShopTrait::getProductQrCode', [], $qrResponse['errmsg']);
-            return ["", false];
+            return ["", "", false];
         }
         $pStartIndex = strpos($path,"productId=");
         $productIdStr = substr($path, $pStartIndex+strlen("productId="));

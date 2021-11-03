@@ -103,7 +103,9 @@ class ShopBusi extends TomBaseBusi
             }
 
             if (!isset($item["data"]["attachFilePath"])
-                || !isset($item["data"]["attachFileName"])) {
+                || empty($item["data"]["attachFilePath"])
+                || !isset($item["data"]["attachFileName"])
+                || empty($item["data"]["attachFileName"]) ) {
                 $item["data"]["detailQrcode"] = $qrCode;
             }else{
                 $attachment = Attachment::build(
@@ -184,7 +186,7 @@ class ShopBusi extends TomBaseBusi
             $productOld->price = (string)$price;
             $productOld->path = $path;
             $productOld->detail_url = $path;
-            if (empty($productOld->attach_full_path)){
+            if (empty($productOld->attach_file_path)){
                 list($filePath,$fileName,$isRemote) = $this->getProductQrCode($this->tomId,$path);
                 $productOld->detail_qrcode = $filePath.$fileName;
                 $productOld->is_remote = $isRemote;
