@@ -86,10 +86,8 @@ class CreateUserWalletCashController extends DzqController
         if ($cashApplyAmount > $cash_max_sum) {
             return $this->outPut(ResponseCode::INVALID_PARAMETER, '单次提现金额不得多于' . $cash_max_sum . '元');
         }
-
-        if ($cash_interval_time != 0) {
-            //提现间隔时间
-            $cash_record = UserWalletCash::query()->orderBy('id','desc')->where('user_id', $this->user->id)->first();
+        $cash_record = UserWalletCash::query()->orderBy('id','desc')->where('user_id', $this->user->id)->first();
+        if ($cash_interval_time != 0 && !empty($cash_record)) {
             $time_after = Carbon::parse($cash_record->created_at)->addDays($cash_interval_time);
             $can_cash_time = Carbon::parse($time_after)->diffInDays(Carbon::now());
             if ($can_cash_time > 0) {
