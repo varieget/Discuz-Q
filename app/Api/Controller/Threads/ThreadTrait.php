@@ -725,19 +725,6 @@ trait ThreadTrait
                 }
             }
 
-            /* $xml = preg_replace_callback(
-                '<img src="(.*)" alt="attachmentId-(\d+)" />',
-                function ($m) use ($attachments) {
-                    $id = trim($m[2], '"');
-                    if (!empty($m) && in_array($id, array_keys($attachments))) {
-                        return 'img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '"';
-                    }else{
-                        return 'img src="' . $m[1] . '" alt="attachmentId-' . $id . '"';
-                    }
-                },
-                $xml
-            ); */
-
             $xml_attachments = $xml_attachments_ids = [];
             $serializer = $this->app->make(AttachmentSerializer::class);
             if (!$canViewTom && !empty($attachments_body)) {       //如果没有权限查看的，则图文混排中的图片还是取清晰的
