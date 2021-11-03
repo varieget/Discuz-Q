@@ -230,11 +230,6 @@ trait ThreadListTrait
         $inPutToms = [];
         foreach ($tomData as $threadId => $toms) {
             foreach ($toms as $tom) {
-                if (!isset($tom['value'])) {
-                    \Discuz\Base\DzqLog::info('build_input_toms_error', [
-                        $threadId, $toms, $tom
-                    ]);
-                }
                 $value = json_decode($tom['value'], true);
                 if ($withIds) {
                     switch ($tom['tom_type']) {
