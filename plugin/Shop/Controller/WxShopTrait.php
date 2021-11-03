@@ -188,11 +188,11 @@ trait WxShopTrait
         fwrite($fileHandler, $qrBuf);
         fclose($fileHandler);
 
-        $attachId = $this->save($tmpFile,$fileName,"image/jpeg");
+        $attach = $this->save($tmpFile,$fileName,"image/jpeg");
 
         @unlink($tmpFile);
 
-        return $attachId;
+        return $attach;
     }
 
 
@@ -207,13 +207,13 @@ trait WxShopTrait
             true
         );
         // 上传
-        $uploader->upload($file, 0);
+        $uploader->upload($file, Attachment::TYPE_OF_FILE);
 
         list($width, $height) = getimagesize($path);
 
         $attachment = Attachment::build(
             1,
-            0,
+            Attachment::TYPE_OF_FILE,
             $uploader->fileName,
             $uploader->getPath(),
             $fileName,
@@ -228,7 +228,7 @@ trait WxShopTrait
         );
         $attachment->save();
 
-        return $attachment->id;
+        return [$attachment->file_path, $uploader->fileName, $attachment->is_remote];
     }
 
     /**
