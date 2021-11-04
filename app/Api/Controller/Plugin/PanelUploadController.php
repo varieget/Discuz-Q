@@ -17,8 +17,10 @@
 
 namespace App\Api\Controller\Plugin;
 
+use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use Discuz\Base\DzqAdminController;
+use Discuz\Base\DzqCache;
 use Illuminate\Support\Arr;
 use Laminas\Diactoros\Stream;
 
@@ -77,6 +79,9 @@ class PanelUploadController extends DzqAdminController
         $this->outPut(0,'', "上传成功");
     }
 
+    public function suffixClearCache(){
+        DzqCache::delKey(CacheKey::PLUGIN_LOCAL_CONFIG);
+    }
 
     function remove_dir($path)
     {
