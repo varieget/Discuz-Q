@@ -29,30 +29,8 @@ class LearnStar
             return [];
         }
 
-        $filterList = [];
         //搜索
         $threadDataList = $this->getData_groupsSearch($topic,$num);
-//        foreach ($threadDataList as $oneThread){
-//            if(!empty($oneThread["forum"] && !empty($oneThread["forum"]["id"]))){
-//                $id = $oneThread["forum"]["id"];
-//                array_push($filterList,$id);
-//            }
-//        }
-//
-//        $lefNum = $num-count($threadDataList);
-//        if ($lefNum>0){
-//            //拉取全部
-//            $groupIdList = $this->getData_groups();
-//            foreach ($groupIdList as $gId){
-//                $oneGroup = $this->getData_oneGroup($gId, $lefNum,$filterList);
-//                $threadDataList = array_merge($threadDataList,$oneGroup);
-//                $lefNum = $num-count($threadDataList);
-//                if ($lefNum<=0){
-//                    break;
-//                }
-//            }
-//        }
-
 
         return $threadDataList;
     }
