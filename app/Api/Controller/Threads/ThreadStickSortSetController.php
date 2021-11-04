@@ -34,6 +34,11 @@ class ThreadStickSortSetController extends DzqAdminController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '置顶帖数据不能为空');
         }
 
+        $maxThreadStickNum = ThreadStickSort::THREAD_STICK_COUNT_LIMIT;
+        if (count($data) > $maxThreadStickNum) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '置顶帖设置不允许大于'.$maxThreadStickNum.'条');
+        }
+
         $insertData = [];
         foreach ($data as $val) {
             $threadId = $val['id'];
