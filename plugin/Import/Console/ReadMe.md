@@ -1,4 +1,4 @@
-#### 1. 数据导入命令参数说明：
+#### 1. 数据导入命令参数说明
 
 ```
 topic    关键词
@@ -36,7 +36,7 @@ articleUrl  微信公众号文章链接
 
 ![](https://discuz.chat/assets/import_data_wx_example.png)
 
-#### 2. 数据导入命令示例：
+#### 2.  数据导入命令示例
 
 即时导入：`topic，number`为必传参数。
 
@@ -165,3 +165,26 @@ php disco importData:insertOfficialAccountArticleData --articleUrl='https://mp.w
 ```text
 php disco importData:insertOfficialAccountArticleData --articleUrl='https://mp.weixin.qq.com/s/oPZQRB0uiENrkX-cktaRSg,https://mp.weixin.qq.com/s/-U1QMMYJUZqfxNUk3VeZYg,https://mp.weixin.qq.com/s/H7V38NeFrSHaRPF3nHYs9g'
 ```
+
+#### 3. 删除/取消自动导入
+
+```
+php disco autoImport:stop
+```
+
+#### 4. 数据导入命令注意点
+
+即时导入：为避免CPU负载过高、服务器宕机，一次只允许执行一个导入进程。
+
+```
+进程占用提示：
+----The content import process has been occupied,You cannot start a new process.----
+```
+
+自动导入：只能设置一个自动任务，如前后执行了不同的自动导入命令，只保留最后一次执行的自动导入命令参数。
+
+```
+自动导入命令参数覆盖提示：
+----The automatic import task is written successfully,and overwrites the previous task.----
+```
+
