@@ -91,8 +91,8 @@ class CreateUserWalletCashController extends DzqController
         if ($cash_interval_time != 0 && !empty($cash_record)) {
             //提现间隔时间
             $time_after = Carbon::parse($cash_record->created_at)->addDays($cash_interval_time);
-            $can_cash_time = Carbon::parse($time_after)->diffInDays(Carbon::now());
-            if ($can_cash_time > 0) {
+            if($time_after > Carbon::now()){
+                $can_cash_time = Carbon::parse($time_after)->diffInDays(Carbon::now());
                 $log->error("提现处于限制间隔天数内 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
                 $this->outPut(ResponseCode::NET_ERROR, $can_cash_time.'天后可提现');
             }
