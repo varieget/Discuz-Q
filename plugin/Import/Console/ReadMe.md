@@ -123,7 +123,7 @@ php disco importData:insertDouBanData --topic=北京租房 --number=6 --cookie='
 ```
 示例：
 ```text
-php disco importData:insertLearnStarData --topic=宇航员 --number=9 --cookie="amplitude_id_fef1e872c952688acd962d30aa545b9ezsxq.com=eyJkZXZpY2VJZCI6IjNlZmE0NzViLWQ5OTQtNDMyYy04MmUwLThlOWNjNjQwMmUwNlIiLCJ1c2Vyc3Npb25JZCI6MTYzMTA4MTc4NTM3NiwibGFzdEV2ZW50VGltZSI6MTYzMTA4MTc4NTM3NywiZXZlbnRJZCI6MSwiaWRWVuY2VOdW1iZXIiOjF9; _ga=GA1.2.696784474.1631081785; sensorsdata2015jssdkcross=%7B%22distinct_id%2255525144%22%2C%22first_id%22%3A%2215d629eefb5fa-c343365-1327104-17b7b43630cb03%22%2C%22props%22%3A%7B%7D%2C%22%24devi3630b3fa-085d629eefb5fa-c343365-1327104-13%22%7D; abtest_env=product; zsxq_access_token=978F-A0C7-05B7-7A62-1_F6DE2B0A0F5B4E57" --userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"
+php disco importData:insertLearnStarData --topic=学习 --number=9 --cookie="amplitude_id_fef1e872c952688acd962d30aa545b9ezsxq.com=eyJkZXZpY2VJZCI6IjNlZmE0NzViLWQ5OTQtNDMyYy04MmUwLThlOWNjNjQwMmUwNlIiLCJ1c2Vyc3Npb25JZCI6MTYzMTA4MTc4NTM3NiwibGFzdEV2ZW50VGltZSI6MTYzMTA4MTc4NTM3NywiZXZlbnRJZCI6MSwiaWRWVuY2VOdW1iZXIiOjF9; _ga=GA1.2.696784474.1631081785; sensorsdata2015jssdkcross=%7B%22distinct_id%2255525144%22%2C%22first_id%22%3A%2215d629eefb5fa-c343365-1327104-17b7b43630cb03%22%2C%22props%22%3A%7B%7D%2C%22%24devi3630b3fa-085d629eefb5fa-c343365-1327104-13%22%7D; abtest_env=product; zsxq_access_token=978F-A0C7-05B7-7A62-1_F6DE2B0A0F5B4E57" --userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"
 ```
 
 ##### 2.5 Discuz! X
