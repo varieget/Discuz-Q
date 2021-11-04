@@ -61,7 +61,7 @@ class DocBusi extends TomBaseBusi
 
         foreach ($attachments as $attachment) {
             $item = $this->camelData($serializer->getBeautyAttachment($attachment));
-            if (!$this->canViewTom || (!$this->isPaySub && !empty($this->priceIds) && in_array($attachment['id'], $this->priceIds))) {
+            if (!$this->canViewTom && (!$this->isPaySub && !empty($this->priceIds) && in_array($attachment['id'], $this->priceIds))) {
                 $item['url'] = $item['thumbUrl'] = $item['blurUrl'];
             }
             unset($item['blurUrl']);

@@ -101,7 +101,7 @@ class ThreadDetailController extends DzqController
             $tom_value = json_decode($item['value'], true);
             $priceIds = json_decode($item['price_ids'], true);
             if ($item['price_type'] && !empty($priceIds)) {
-                array_push($tom_value, ['priceIds' => $priceIds]);
+                $tom_value += ['priceIds' => $priceIds];
             }
             $tomContent[$item['key']] = $this->buildTomJson($threadId, $item['tom_type'], $this->SELECT_FUNC, $tom_value);
             $tags[$item['key']]['tag'] = $item['tom_type'];
