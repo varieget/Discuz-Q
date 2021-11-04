@@ -29,5 +29,6 @@ class Kernel extends DzqKernel
         $schedule->command('importData:insertDiscuzData')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
         $schedule->command('importData:insertLearnStarData')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
         $schedule->command('importData:insertTieBaData')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
+        $schedule->command('importData:insertDouBanData')->everyMinute()->appendOutputTo('/data/logs/schedule.log');
     }
 }
