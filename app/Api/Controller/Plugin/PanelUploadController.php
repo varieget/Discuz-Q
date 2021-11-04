@@ -70,7 +70,7 @@ class PanelUploadController extends DzqAdminController
         $this->remove_dir($oldPath);
         $result = $zipUn->extractTo($oldPath);
         if (!$result){
-            $this->outPut(0,'', "解压失败");
+            $this->outPut(0,'', "解压失败，请检查目录权限等情况");
         }
         $zipUn->close();
 
