@@ -119,7 +119,6 @@ class PluginSettings extends DzqModel
     public function getSettingRecord($appId)
     {
         $setting = $this->getData($appId);
-        ;
         if (empty($setting)) {
             return [];
         }
