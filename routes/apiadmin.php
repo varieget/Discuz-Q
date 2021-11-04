@@ -1,5 +1,5 @@
 <?php
-
+/**@var Discuz\Http\RouteCollection $route */
 use App\Api\Controller as ApiController;
 
 $route->post('/login', 'login', ApiController\Users\AdminLoginController::class);

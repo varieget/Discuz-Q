@@ -1,5 +1,5 @@
 <?php
-
+/**@var Discuz\Http\RouteCollection $route */
 use App\Install\Controller as InstallController;
 
 $route->get('/plugin/{plugin_name}/{module_name}/{file_path}', 'plugin.file', \App\Http\Controller\PluginFileController::class);
