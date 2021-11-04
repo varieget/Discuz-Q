@@ -19,6 +19,7 @@ namespace App\Api\Controller\Plugin;
 
 use App\Common\ResponseCode;
 use Discuz\Base\DzqAdminController;
+use Discuz\Base\DzqLog;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Laminas\Diactoros\Stream;
@@ -67,6 +68,7 @@ class PanelUploadController extends DzqAdminController
 
         $basePath = app()->basePath();
         $oldPath = $basePath.DIRECTORY_SEPARATOR."Plugin".DIRECTORY_SEPARATOR.$pluginName;
+        DzqLog::info("panel::upload",[$oldPath],DzqLog::LOG_ADMIN);
         $this->remove_dir($oldPath);
         $zipUn->extractTo($oldPath);
         $zipUn->close();
