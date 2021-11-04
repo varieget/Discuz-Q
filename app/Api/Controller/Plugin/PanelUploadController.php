@@ -70,7 +70,10 @@ class PanelUploadController extends DzqAdminController
         $oldPath = $basePath.DIRECTORY_SEPARATOR."Plugin".DIRECTORY_SEPARATOR.$pluginName;
         DzqLog::info("panel::upload",[$oldPath],DzqLog::LOG_ADMIN);
         $this->remove_dir($oldPath);
-        $zipUn->extractTo($oldPath);
+        $result = $zipUn->extractTo($oldPath);
+        if (!$result){
+            $this->outPut(0,'', "解压失败");
+        }
         $zipUn->close();
 
         $this->outPut(0,'', "上传成功");
