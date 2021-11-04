@@ -17,7 +17,7 @@
  */
 use App\Api\Controller as ApiController;
 
-$route->group('/', function ($route) {
+$route->withFrequency(function ($route) {
 //删除用户和微信用户接口，上线前需去除
 //$route->post('/user/delete', 'user.delete', ApiController\UsersV3\DeleteUserController::class);
 //$route->post('/user/delete/wechat', 'user.delete.wechat', ApiController\UsersV3\UnbindWechatController::class);

@@ -2,7 +2,7 @@
 
 /**@var Discuz\Http\RouteCollection $route */
 
-$route->group('/', function ($route) {
+$route->withFrequency(function ($route) {
     //提交报名信息
     $route->post('register/append', 'register.append', \Plugin\Activity\Controller\AppendController::class);
 //取消报名
