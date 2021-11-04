@@ -318,6 +318,8 @@ trait ThreadTrait
                 isset($tomInput[TomConfig::TOM_IMAGE]) && $tomConfig += [TomConfig::TOM_IMAGE => $tomInput[TomConfig::TOM_IMAGE]];
                 isset($tomInput[TomConfig::TOM_VOTE]) && $tomConfig += [TomConfig::TOM_VOTE => $tomInput[TomConfig::TOM_VOTE]];
                 isset($tomInput[TomConfig::TOM_REWARD]) && $tomConfig += [TomConfig::TOM_REWARD => $tomInput[TomConfig::TOM_REWARD]];
+                isset($tomInput[TomConfig::TOM_DOC]) && $tomConfig += [TomConfig::TOM_DOC => $tomInput[TomConfig::TOM_DOC]];
+                isset($tomInput[TomConfig::TOM_VIDEO]) && $tomConfig += [TomConfig::TOM_VIDEO => $tomInput[TomConfig::TOM_VIDEO]];
                 if (!empty($tomConfig)) {
                     $content['indexes'] = $this->tomDispatcher(
                         $tomConfig,
