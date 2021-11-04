@@ -19,9 +19,7 @@ namespace App\Api\Controller\Plugin;
 
 use App\Common\ResponseCode;
 use Discuz\Base\DzqAdminController;
-use Discuz\Base\DzqLog;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use Laminas\Diactoros\Stream;
 
 class PanelUploadController extends DzqAdminController
@@ -59,9 +57,7 @@ class PanelUploadController extends DzqAdminController
             $contents .= fread($fileConfigHandler, 1024);
         }
         fclose($fileConfigHandler);
-        $basePath = app()->basePath();
 
-        file_put_contents($basePath.DIRECTORY_SEPARATOR."Plugin".DIRECTORY_SEPARATOR."aaa.json",$contents);
         $configJson = json_decode($contents,true);
         $pluginName = $configJson["name_en"];
         if (strpos($pluginName," ")){
@@ -69,13 +65,9 @@ class PanelUploadController extends DzqAdminController
         }
         $pluginName = ucfirst($pluginName);
 
-
-        $oldPath = $basePath.DIRECTORY_SEPARATOR."Plugin".DIRECTORY_SEPARATOR.$pluginName;
-        DzqLog::info("panel::upload",[$oldPath],DzqLog::LOG_ADMIN);
+        $basePath = app()->basePath();
+        $oldPath = $basePath.DIRECTORY_SEPARATOR."plugin".DIRECTORY_SEPARATOR.$pluginName;
         $this->remove_dir($oldPath);
-        DzqLog::info("panel::upload",["移除"],DzqLog::LOG_ADMIN);
-        mkdir($oldPath);
-        DzqLog::info("panel::upload",["创建"],DzqLog::LOG_ADMIN);
         $result = $zipUn->extractTo($oldPath);
         if (!$result){
             $this->outPut(0,'', "解压失败");
@@ -83,9 +75,7 @@ class PanelUploadController extends DzqAdminController
         $zipUn->close();
 
         $this->outPut(0,'', "上传成功");
-
     }
-
 
 
     function remove_dir($path)
