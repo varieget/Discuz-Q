@@ -92,7 +92,7 @@ class PluginSettings extends DzqModel
                 foreach ($privateValue as $key=>$value){
                     if (is_string($value)){
                         $starNum = substr_count($value,"*");
-                        if (strlen($value) == $starNum && isset($privateValueOld[$key])){
+                        if (strlen($value)!=0 && strlen($value) == $starNum && isset($privateValueOld[$key])){
                             $privateValue[$key] = $privateValueOld[$key];
                         }
                     }
@@ -119,7 +119,6 @@ class PluginSettings extends DzqModel
     public function getSettingRecord($appId)
     {
         $setting = $this->getData($appId);
-        ;
         if (empty($setting)) {
             return [];
         }

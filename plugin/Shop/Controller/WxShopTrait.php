@@ -57,10 +57,15 @@ trait WxShopTrait
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
         if (!isset($settingData["wxAppId"])
-            || !isset($settingData["wxAppSecret"])){
+            || empty($settingData["wxAppId"])
+            || !isset($settingData["wxAppSecret"])
+            || empty($settingData["wxAppSecret"])){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
         $this->wxApp = $this->miniProgram(["app_id"=>$settingData["wxAppId"],"secret"=>$settingData["wxAppSecret"]]);
+        if (empty($this->wxApp)){
+            return [ResponseCode::RESOURCE_NOT_FOUND,"插件配置不正确"];
+        }
         return [0, $this->wxApp];
     }
 
