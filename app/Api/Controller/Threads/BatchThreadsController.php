@@ -28,6 +28,8 @@ use Illuminate\Contracts\Bus\Dispatcher;
 
 class BatchThreadsController extends DzqAdminController
 {
+    use ThreadStickTrait;
+
     protected $bus;
 
     public function __construct(Dispatcher $bus)
@@ -63,6 +65,7 @@ class BatchThreadsController extends DzqAdminController
         $idsArr = explode(',', $ids);
 
         $requestData = [];
+        $needStickNum = 0;
         foreach ($idsArr as $key=>$val) {
             $requestData[$key]['type'] = 'threads';
             $requestData[$key]['id'] = $val;
@@ -75,6 +78,9 @@ class BatchThreadsController extends DzqAdminController
             }
             if (!empty($isSticky) || $isSticky === 0) {
                 $requestData[$key]['attributes']['isSticky'] = $isSticky;
+                if ($isSticky == 1) {
+                    $needStickNum++;
+                }
             }
             if (!empty($isDeleted) || $isDeleted === 0) {
                 $requestData[$key]['attributes']['isDeleted'] = $isDeleted;
@@ -88,6 +94,11 @@ class BatchThreadsController extends DzqAdminController
             if (!empty($isEssence) || $isEssence === 0) {
                 $requestData[$key]['attributes']['isEssence'] = $isEssence;
             }
+        }
+
+        $lackThreadNum = $this->getLackThreadNum();
+        if ($needStickNum > $lackThreadNum) {
+            $this->outPut(ResponseCode::SET_ERROR, '需要置顶的帖子数：'.$needStickNum.' > 可置顶的帖子数：'.$lackThreadNum);
         }
 
         $result = $this->bus->dispatch(

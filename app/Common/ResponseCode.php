@@ -133,6 +133,7 @@ class ResponseCode
     const DOWNLOAD_RESOURCE_IS_INVALID = -7082;
     const DOWNLOAD_NUMS_IS_TOPLIMIT = -7083;
     const RESOURCE_IS_REVIEW = -7084;
+    const SET_ERROR = -7085;
 
     const NEED_BIND_WECHAT = -8000;
     const NEED_BIND_PHONE = -8001;
@@ -240,7 +241,7 @@ class ResponseCode
         self::TRY_LOGIN_AGAIN => '当前注册人数过多，请稍后登录',
         self::RESOURCE_EXPIRED => '资源已过期',
         self::NOT_ALLOW_CENSOR_IMAGE => '不允许上传敏感图',
-        self::CATEGORY_NOT_FOUNF =>"分类不存在",
+        self::CATEGORY_NOT_FOUNF => '分类不存在',
         self::INVALID_TOKEN => '无效token',
         self::CURRENT_IS_PAY_SITE =>'当前站点是付费模式',
         self::MOBILE_FORMAT_ERROR =>'手机号格式错误',
@@ -249,6 +250,7 @@ class ResponseCode
         self::CONFIG_MINIPROGRAM_AND_OPEN =>'请先配置小程序并开启',
         self::DOWNLOAD_RESOURCE_IS_INVALID =>'下载资源已失效',
         self::DOWNLOAD_NUMS_IS_TOPLIMIT =>'超过今天可下载附件的最大次数',
-        self::RESOURCE_IS_REVIEW =>'资源审核中'
+        self::RESOURCE_IS_REVIEW =>'资源审核中',
+        self::SET_ERROR =>'设置失败',
     ];
 }
