@@ -78,32 +78,14 @@ class PanelOperateController extends DzqAdminController
     private function runDBMigration($name)
     {
         try {
-            return $this->runConsoleCommand('migrate:plugin', ['--force' => true, '--name='.$name]);
+            $console = app()->make(Kernel::class);
+            $console->call('migrate:plugin', ['--force' => true,'--name' => $name]);
         } catch (Exception $e) {
             throw new Exception("发布失败，数据库执行失败：" . $e->getMessage());
         }
     }
 
-    /**
-     * 运行 php disco 命令
-     */
-    function runConsoleCommand($cmd, $params)
-    {
-//        // 访问私有属性
-//        $reader = function & ($object, $property) {
-//            $value = &Closure::bind(function & () use ($property) {
-//                return $this->$property;
-//            }, $object, $object)->__invoke();
-//
-//            return $value;
-//        };
-//        require __DIR__ . '/../vendor/autoload.php';
-//        $app = new Application(realpath(__DIR__ . '/..'));
-//        $console = $app->make(Kernel::class);
-//        $console->call($cmd, $params);
-//        $lastOutput = &$reader($console, 'lastOutput');
-//        return $lastOutput->fetch();
-    }
+
 
     private function offline($item){
         $pluginDir = base_path('plugin');
