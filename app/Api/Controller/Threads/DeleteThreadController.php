@@ -22,6 +22,7 @@ use App\Common\CacheKey;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Thread;
+use App\Models\ThreadStickSort;
 use App\Modules\ThreadTom\TomTrait;
 use App\Repositories\UserRepository;
 use App\Traits\ThreadNoticesTrait;
@@ -56,6 +57,8 @@ class DeleteThreadController extends DzqController
         if (!$thread->save()) {
             $this->outPut(ResponseCode::DB_ERROR, '删除失败');
         }
+
+        ThreadStickSort::deleteThreadStick($thread->id);
 
         Category::refreshThreadCountV3($thread['category_id']);
 

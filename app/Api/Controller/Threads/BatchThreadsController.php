@@ -97,7 +97,7 @@ class BatchThreadsController extends DzqAdminController
         }
 
         $lackThreadNum = $this->getLackThreadNum();
-        if ($needStickNum > $lackThreadNum) {
+        if ($needStickNum > $lackThreadNum && $lackThreadNum > 0) {
             $this->outPut(ResponseCode::SET_ERROR, '需要置顶的帖子数：'.$needStickNum.' > 可置顶的帖子数：'.$lackThreadNum);
         }
 
