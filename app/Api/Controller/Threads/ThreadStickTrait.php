@@ -18,87 +18,58 @@
 
 namespace App\Api\Controller\Threads;
 
+use App\Common\Platform;
 use App\Common\ResponseCode;
 use App\Models\Category;
 use App\Models\Permission;
-use App\Models\Post;
 use App\Models\Setting;
 use App\Models\Thread;
 use App\Models\ThreadStickSort;
+use Discuz\Common\Utils;
 
 trait ThreadStickTrait
 {
-    public function getData($isAdmin = false)
+    public function getData(): array
     {
-        $categoryIds = $this->inPut('categoryIds');
-        $threads = Thread::query()->select(['id', 'category_id', 'title', 'updated_at','user_id'])->orderByDesc('updated_at');
-        if (!empty($categoryIds)) {
-            if (!is_array($categoryIds)) {
-                $categoryIds = [$categoryIds];
-            }
-        }
-        if (!$isAdmin) {
-            $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
-            if (!$isMiniProgramVideoOn) {
-                $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
-            }
+        $effectiveStickThread = $this->getStickThread(false);
+
+        $stickThreadList = $effectiveStickThread;
+
+        $lackThreadNum = $this->getLackThreadNum($effectiveStickThread);
+
+        if ($lackThreadNum > 0) {
+            $lackStickThread = $this->getStickThread(true, $lackThreadNum);
+
+            $stickThreadList = collect()
+                ->merge($effectiveStickThread)
+                ->merge($lackStickThread);
         }
 
         $permissions = Permission::getUserPermissions($this->user);
-        $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
-        if (!$categoryIds) {
-            $this->outPut(ResponseCode::SUCCESS, '', []);
-        } else {
-            $threads = $threads->whereIn('category_id', $categoryIds);
-        }
 
-        $threads = $threads
-            ->where('is_sticky', Thread::BOOL_YES)
-            ->whereNull('deleted_at')
-            ->whereNotNull('user_id')
-            ->where('is_draft', Thread::BOOL_NO)
-            ->where('is_display', Thread::BOOL_YES)
-            ->where('is_approved', Thread::BOOL_YES)
-            ->get();
-        $threadIds = $threads->pluck('id')->toArray();
-
-        $posts = Post::query()
-            ->whereIn('thread_id', $threadIds)
-            ->whereNull('deleted_at')
-            ->where('is_first', Post::FIRST_YES)
-            ->get()->pluck(null, 'thread_id');
         $data = [];
-        $linkString = '';
-
-        $threadStickSort = ThreadStickSort::query()->select('thread_id', 'sort')->get()->toArray();
-        $sort = array_column($threadStickSort, 'sort', 'thread_id');
-
-        foreach ($threads as $thread) {
-            $title = $thread['title'];
-            $id = $thread['id'];
-            if (empty($title)) {
-                if (isset($posts[$id])) {
-                    $title = Post::instance()->getContentSummary($posts[$id]);
-                }
-            }
-            $linkString .= $title;
+        collect($stickThreadList)->map(function ($thread) use ($permissions, &$data) {
+            $title = $thread->getContentByType(Thread::CONTENT_LENGTH, true);
+            $threadId = $thread->thread_id;
+            $categoryId = $thread->category_id;
+            $updatedAt = $thread->updated_at;
+            $sort = $thread->sort;
 
             $resultData = [
-                'threadId' => $thread['id'],
-                'categoryId' => $thread['category_id'],
+                'threadId' => $threadId,
+                'categoryId' => $categoryId,
                 'title' => $title,
-                'updatedAt' => date('Y-m-d H:i:s', strtotime($thread['updated_at'])),
+                'updatedAt' => date('Y-m-d H:i:s', strtotime($updatedAt)),
                 'canViewPosts' => $this->canViewPosts($thread, $permissions),
-                'sort' => !empty($sort[$id]) ? $sort[$id] : 0
+                'sort' => $sort
             ];
+            array_push($data, $resultData);
+        });
 
-            $data [] = $resultData;
-        }
-        $data = collect($data)->sortBy('sort')->values()->toArray();
         return $data;
     }
 
-    private function canViewPosts($thread, $permissions)
+    private function canViewPosts($thread, $permissions): bool
     {
         if ($this->user->isAdmin() || $this->user->id == $thread['user_id']) {
             return true;
@@ -108,5 +79,103 @@ trait ThreadStickTrait
             return true;
         }
         return false;
+    }
+
+    public function getStickThreadsBuild($thread)
+    {
+        $thread = $thread
+            ->where('is_sticky', Thread::BOOL_YES)
+            ->whereNull('deleted_at')
+            ->whereNotNull('user_id')
+            ->where('is_draft', Thread::BOOL_NO)
+            ->where('is_approved', Thread::BOOL_YES);
+        if (Utils::requestFrom() == Platform::MinProgram) {
+            $thread->where('is_display', Thread::BOOL_YES);
+        }
+        return $thread;
+    }
+
+    public function getStickThread($isLack = false, $lackThreadNum = 0)
+    {
+        $categoryIds = $this->inPut('categoryIds');
+
+        if (!empty($categoryIds) && !is_array($categoryIds)) {
+            $categoryIds = [$categoryIds];
+        }
+        $categoryIds = Category::instance()->getValidCategoryIds($this->user, $categoryIds);
+        if (!$categoryIds) {
+            $this->outPut(ResponseCode::SUCCESS, '', []);
+        }
+
+        $threadStickSort = ThreadStickSort::query()->select('thread_id', 'sort')->get()->toArray();
+
+        $threadStickIds = [];
+        foreach ($threadStickSort as $value) {
+            array_push($threadStickIds, $value['thread_id']);
+        }
+
+        $threads = Thread::query()
+            ->select([
+                'threads.id as id',
+                'threads.id as thread_id',
+                'threads.category_id',
+                'threads.title',
+                'threads.updated_at',
+                'threads.user_id',
+                'threads.type',
+
+                'thread_stick_sort.sort'
+            ])
+            ->leftJoin('thread_stick_sort', 'threads.id', '=', 'thread_stick_sort.thread_id');
+
+        if ($isLack == false) {
+            $threads = $threads
+                ->orderBy('thread_stick_sort.sort', 'asc')
+                ->orderBy('threads.updated_at', 'desc')
+                ->whereIn('threads.id', $threadStickIds);
+        } else {
+            $threads = $threads
+                ->orderBy('threads.updated_at', 'desc')
+                ->whereNotIn('threads.id', $threadStickIds)
+                ->limit($lackThreadNum);
+        }
+
+        $isMiniProgramVideoOn = Setting::isMiniProgramVideoOn();
+        if (!$isMiniProgramVideoOn) {
+            $threads = $threads->where('type', '<>', Thread::TYPE_OF_VIDEO);
+        }
+
+        $threads = $threads->whereIn('category_id', $categoryIds);
+        $threads = $this->getStickThreadsBuild($threads)->get();
+
+        return $threads;
+    }
+
+    public function getLackThreadNum($effectiveStickThread = []): int
+    {
+        if (empty($effectiveStickThread)) {
+            $effectiveStickThread = $this->getStickThread(false);
+        }
+
+        return ThreadStickSort::THREAD_STICK_COUNT_LIMIT - count($effectiveStickThread);
+    }
+
+    public function isAllowSetThreadStick(): bool
+    {
+        $lackThreadNum = $this->getLackThreadNum();
+        if ($lackThreadNum > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public function updateOrCreateThreadStick($threadId)
+    {
+        $exists = ThreadStickSort::query()->where('thread_id', '=', $threadId)->exists();
+        if ($exists == true) {
+            ThreadStickSort::updateThreadStick($threadId);
+        } else {
+            ThreadStickSort::createThreadStick($threadId);
+        }
     }
 }
