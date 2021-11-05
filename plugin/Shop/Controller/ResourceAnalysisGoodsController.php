@@ -44,12 +44,11 @@ class ResourceAnalysisGoodsController extends DzqController
         }
         $appid = Utils::getPluginAppId();
         $groupId = $this->user->groupId;
-        $permissions = PluginGroupPermission::query()
-            ->where('group_id', $groupId)->where("app_id",$appid)->first();
-        if (empty($permissions)){
-            return false;
+        if(PluginGroupPermission::hasPluginPermission($appid,$groupId)){
+            return true;
         }
-        return true;
+
+        return false;
     }
 
     protected $httpClient;
