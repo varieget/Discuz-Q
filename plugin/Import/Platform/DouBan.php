@@ -191,7 +191,12 @@ class DouBan
     {
         $info = $this->dealMatchStr("/<div class=\"user-face\">\s(.*?)\s<\/div>/ism", $userInfo);
         //用户头像
-        $user['avatar'] = $this->dealMatchStr("/[img|IMG].*?src=['|\"](.*?(?:[.gif|.jpg]))['|\"].*?[\/]?>/", $info);
+        $avatarUrl = $this->dealMatchStr("/[img|IMG].*?src=['|\"](.*?(?:[.gif|.jpg]))['|\"].*?[\/]?>/", $info);
+        if (strpos($avatarUrl, "user_normal") === false) {
+            $user['avatar'] = $avatarUrl;
+        } else {
+            $user['avatar'] = '';
+        }
 
         //用户昵称
         $user['nickname'] = $this->dealMatchStr("/[img|IMG].*?alt=['|\"](.*?)['|\"].*?[\/]?>/", $info);
