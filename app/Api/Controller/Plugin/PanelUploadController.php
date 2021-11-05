@@ -36,6 +36,10 @@ class PanelUploadController extends DzqAdminController
         /** @var Stream $fileContent */
         $fileContent = $file->getStream();
         $fileName = $file->getClientFilename();
+        $fileSize = $file->getSize();
+        if ($fileSize/1024/1024>20){
+            $this->outPut(ResponseCode::INVALID_PARAMETER,"包体必须小于20M");
+        }
         $ext = pathinfo($fileName,PATHINFO_EXTENSION);
         $fileName = md5($fileName).time().".".$ext;
         if ($ext != "zip"){
