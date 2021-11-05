@@ -320,10 +320,56 @@ class ImportXXXXDataCommands extends DzqCommand
 
     public function getPlatformData($parameter)
     {
-        $platform = new XXXX(); // 可参考Plugin\Import\Platform\Weibo
+        $platform = new XXXX(); // 可参考Plugin\Import\Platform\WeiBo
         $data = $platform->main($parameter['topic'], $parameter['number'], $parameter['cookie'], $parameter['userAgent']);
         return $data;
     }
+}
+```
+
+#### 4. 数据导入命令注意点
+
+即时导入：为避免CPU负载过高、服务器宕机，一次只允许执行一个导入进程。
+
+```
+进程占用提示：
+----The content import process has been occupied,You cannot start a new process.----
+```
+
+自动导入：只能设置一个自动任务，如前后执行了不同的自动导入命令，只保留最后一次执行的自动导入命令参数。
+
+```
+自动导入命令参数覆盖提示：
+----The automatic import task is written successfully,and overwrites the previous task.----
+```
+
+#### 5. 文件进程锁机制
+
+执行导入进程时，将修改文件锁`public/importDataLock.conf`中的导入状态status，当状态为占用中，就不可执行新的导入进程。当前导入进程结束后，状态变更，变更后允许执行新的进程。
+
+自动导入参数记录在文件`public/autoImportDataLock.conf`中，多次执行自动导入命令就是在刷新文件内容，文件中只保留最后一次写入的相关参数。
+
+开发者在撰写平台数据抓取逻辑时，如需要抛出相关报错、中断进程，那么抛错之前需要删除文件锁`importDataLock.conf`(释放进程)，否则进程状态将一直处于占用中，无法开启下一进程。删除文件锁可调用`App\Import\PlatformTrait`中的公共方法`deleteImportLockFile()`。调用形式如下：
+
+```php
+namespace Plugin\Import\Platform;
+
+use App\Import\PlatformTrait;
+
+class XXXPlatform
+{
+		use PlatformTrait;
+  
+  	public function main()
+  	{
+    	/* 省略爬取过程代码 */
+    	if (empty($data)) {
+      	$this->deleteImportLockFile(); // 释放该导入进程
+      	throw new \Exception('未获取到数据.');
+    	}
+      
+      return $data;
+  	}
 }
 ```
 

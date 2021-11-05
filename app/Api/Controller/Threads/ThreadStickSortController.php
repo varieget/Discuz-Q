@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (C) 2021 Tencent Cloud.
  *
@@ -18,16 +19,16 @@
 namespace App\Api\Controller\Threads;
 
 use App\Common\ResponseCode;
+use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqController;
 
-class ThreadStickSortController extends DzqController
+class ThreadStickSortController extends DzqAdminController
 {
     use ThreadStickTrait;
 
     public function main()
     {
-        $isAdmin = true;
-        $data = $this->getData($isAdmin);
+        $data = $this->getData();
         $this->outPut(ResponseCode::SUCCESS, '', $data);
     }
 }

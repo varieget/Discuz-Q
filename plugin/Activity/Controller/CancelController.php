@@ -36,6 +36,11 @@ class CancelController extends DzqController
 
     public function main()
     {
+        $activity = $this->activity;
+        $t = time();
+        if (strtotime($activity['register_start_time']) > $t || $t > strtotime($activity['register_end_time'])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '报名未开始或已结束，不能取消');
+        }
         $activityUser = ActivityUser::query()->where([
             'activity_id' => $this->activity->id,
             'user_id' => $this->user->id,

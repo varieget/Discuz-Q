@@ -30,6 +30,7 @@ class PluginGroupPermission extends DzqModel
 
     public static function hasPluginPermission($appId, $groupId)
     {
+        if ($groupId == Group::ADMINISTRATOR_ID) return true;
         return PluginGroupPermission::query()->where([
             'group_id' => $groupId,
             'app_id' => $appId,

@@ -196,6 +196,7 @@ class RedPackBusi extends TomBaseBusi
     public function select()
     {
         $redPacket = ThreadRedPacket::query()->where('id', $this->body['id'])->first(['remain_money','remain_number','status']);
+        if(empty($redPacket))return false;
         $this->body['remain_money'] = $redPacket['remain_money'];
         $this->body['remain_number'] = $redPacket['remain_number'];
         $this->body['status'] = $redPacket['remain_number'];

@@ -25,6 +25,6 @@ class Kernel extends DzqKernel
 {
     public function schedule(Schedule $schedule)
     {
-        $schedule->command('activity:test')->everyFiveMinutes()->appendOutputTo('/data/logs/schedule.log');
+        $schedule->command('register:notice')->everyMinute()->appendOutputTo('/data/logs/schedule.log');;
     }
 }

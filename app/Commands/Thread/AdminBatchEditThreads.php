@@ -18,7 +18,7 @@
 
 namespace App\Commands\Thread;
 
-use App\Common\ResponseCode;
+use App\Api\Controller\Threads\ThreadStickTrait;
 use App\Events\Thread\Saving;
 use App\Events\Thread\ThreadWasApproved;
 use App\Models\Thread;
@@ -38,6 +38,8 @@ class AdminBatchEditThreads
     use EventsDispatchTrait;
 
     use ThreadNoticesTrait;
+
+    use ThreadStickTrait;
 
     /**
      * The user performing the action.
@@ -115,23 +117,11 @@ class AdminBatchEditThreads
             if (isset($attributes['isSticky'])) {
                 if ($thread->is_sticky != $attributes['isSticky']) {
                     $thread->is_sticky = $attributes['isSticky'];
-                    $stickSort = ThreadStickSort::query()->where('thread_id', $thread->id)->first();
                     if ($thread->is_sticky) {
-                        $stickCount = ThreadStickSort::query()->count();
-                        if ($stickCount >= ThreadStickSort::THREAD_STICK_COUNT_LIMIT) {
-                            \Discuz\Common\Utils::outPut(ResponseCode::NET_ERROR, '置顶贴最多只允许设置20条');
-                        }
-                        if (empty($stickSort)) {
-                            $stickSort = new ThreadStickSort();
-                            $stickSort->thread_id = $thread->id;
-                            $stickSort->sort = 0;
-                            $stickSort->save();
-                        }
+                        $this->updateOrCreateThreadStick($thread->id);
                         $this->threadNotices($thread, $this->actor, 'isSticky', $attributes['message'] ?? '');
                     } else {
-                        if ($stickSort) {
-                            $stickSort->delete();
-                        }
+                        ThreadStickSort::deleteThreadStick($thread->id);
                     }
                 }
             }

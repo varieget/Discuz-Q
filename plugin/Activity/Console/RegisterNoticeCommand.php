@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace App\Console\Commands;
+namespace Plugin\Activity\Console;
 
 use App\Common\DzqConst;
 use App\Models\Thread;
