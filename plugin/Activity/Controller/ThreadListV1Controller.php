@@ -19,7 +19,6 @@ namespace Plugin\Activity\Controller;
 
 
 use App\Api\Controller\Threads\ThreadListTrait;
-use App\Api\Controller\Threads\ThreadQueryTrait;
 use App\Api\Controller\Threads\ThreadTrait;
 use App\Common\CacheKey;
 use App\Common\DzqConst;
@@ -39,7 +38,7 @@ class ThreadListV1Controller extends DzqController
 
     use ThreadListTrait;
 
-    use ThreadQueryTrait;
+    use \Plugin\Activity\Controller\ThreadQueryTrait;
 
     private $preloadPages = 5;///预加载的页数，从第2页开始每次预加载n页
 
@@ -79,7 +78,6 @@ class ThreadListV1Controller extends DzqController
 
     public function main()
     {
-        dd(123123);
         $filter = $this->inPut('filter');
         $page = intval($this->inPut('page'));
         $perPage = intval($this->inPut('perPage'));
