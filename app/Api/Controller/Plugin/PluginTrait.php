@@ -22,6 +22,10 @@ use App\Common\PermissionKey;
 use App\Common\Utils;
 use App\Models\PluginGroupPermission;
 use App\Models\PluginSettings;
+use App\Settings\SettingsRepository;
+use Carbon\Carbon;
+use Discuz\Http\UrlGenerator;
+use Illuminate\Contracts\Filesystem\Factory as Filesystem;
 use Symfony\Component\Finder\Finder;
 
 trait PluginTrait
@@ -110,6 +114,16 @@ trait PluginTrait
             }
         }
 
+        if(isset($publicValueData["checkSiteUrl"])){
+            foreach ($publicValueData["checkSiteUrl"] as $key=>$isRemote){
+                if(isset($publicValueData[$key])) {
+                    $url = $this->siteUrlSplicing($publicValueData[$key],$isRemote);
+                    $publicValueData[$key] = $url;
+                }
+            }
+        }
+        unset($publicValueData["checkSiteUrl"]);
+
         $data = [];
         $data['id'] = $setting['id'];
         $data['appId'] = $setting['app_id'];
@@ -119,4 +133,27 @@ trait PluginTrait
         $data['privateValue'] = $privateValueData;
         return $data;
     }
+
+    /**
+     * 站点地址 - 拼接
+     *
+     * @param $imgName
+     * @return string
+     */
+    public function siteUrlSplicing($imgName,$isRemote)
+    {
+        if ($isRemote){
+            $settings =  app()->make(SettingsRepository::class);
+            if ((bool) $settings->get('qcloud_cos', 'qcloud')) {
+                return $settings->get('qcloud_cos_sign_url', 'qcloud', true)
+                    ? app(Filesystem::class)->disk('cos')->temporaryUrl($imgName, Carbon::now()->addDay())
+                    : app(Filesystem::class)->disk('cos')->url($imgName);
+            }
+        }
+        $fileTime = @filemtime(public_path('storage/' . $imgName));
+        $urlxx = app(UrlGenerator::class);
+        return $urlxx->to('/storage/' . $imgName) . '?' . $fileTime ?: Carbon::now()->timestamp;
+
+    }
+
 }
