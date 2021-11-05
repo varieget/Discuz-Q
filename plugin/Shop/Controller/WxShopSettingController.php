@@ -25,11 +25,13 @@ class WxShopSettingController extends DzqAdminController
                 && isset($settingData["private_value"]["wxAppSecret"])
                 && !empty($settingData["private_value"]["wxAppSecret"])){
 
-                $url = $this->getShopQrCode($appid);
+                list($url,$isRemote) = $this->getShopQrCode($appid);
                 if (empty($url)){
                     $this->outPut(ResponseCode::INVALID_PARAMETER,'生成二维码失败');
                 }
                 $settingData["public_value"]["wxQrcode"] = $url;
+                $settingData["public_value"]["checkSiteUrl"]["wxQrcode"] = $isRemote;
+
                 $pluginSettings->setData($appid, $settingData["app_name"], $settingData["type"],
                     $settingData["private_value"], $settingData["public_value"]);
             }
