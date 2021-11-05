@@ -37,7 +37,7 @@ trait UserSerializerTrait
 
         $attributes = [
             'id'                => (int) $model->id,
-            'username'          => '',
+            'username'          => $model->username,
             'avatarUrl'         => $model->avatar,
             'status'            => $model->status,
             'loginAt'           => optional($model->login_at)->format('Y-m-d H:i:s'),
