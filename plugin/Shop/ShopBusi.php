@@ -77,6 +77,11 @@ class ShopBusi extends TomBaseBusi
 
     public function select()
     {
+        if (!isset($this->body["_plugin"])) {
+            $plugin = ["name"=>"shop"];
+            $this->body["_plugin"] = $plugin;
+        }
+
         $products = $this->getParams('products');
 
         $this->selectWxshop($products);

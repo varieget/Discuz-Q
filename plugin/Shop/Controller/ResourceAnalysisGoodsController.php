@@ -16,7 +16,9 @@
 namespace Plugin\Shop\Controller;
 
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use App\Exceptions\TranslatorException;
+use App\Models\PluginGroupPermission;
 use App\Models\PostGoods;
 use App\Repositories\UserRepository;
 use App\Traits\PostGoodsTrait;
@@ -34,8 +36,18 @@ class ResourceAnalysisGoodsController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        if ($this->user->isGuest() || !$userRepo->canInsertGoodsToThread($this->user)) {
+        if ($this->user->isAdmin()){
+            return true;
+        }
+        if ($this->user->isGuest()) {
             throw new NotAuthenticatedException;
+        }
+        $appid = Utils::getPluginAppId();
+        $groupId = $this->user->groupId;
+        $permissions = PluginGroupPermission::query()
+            ->where('group_id', $groupId)->where("app_id",$appid)->first();
+        if (empty($permissions)){
+            return false;
         }
         return true;
     }
