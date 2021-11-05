@@ -2,11 +2,11 @@
 
 namespace Plugin\Import\Platform;
 
-use Plugin\Import\Traits\ImportTrait;
+use App\Import\PlatformTrait;
 
 class Discuz
 {
-    use ImportTrait;
+    use PlatformTrait;
 
     private $siteUrl;
     private $urlCookie;

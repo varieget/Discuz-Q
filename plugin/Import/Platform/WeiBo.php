@@ -2,8 +2,13 @@
 
 namespace Plugin\Import\Platform;
 
+use App\Import\PlatformTrait;
+
 class WeiBo
 {
+    use PlatformTrait;
+
+    private $cookie = '';
 
     /**
      * @method  主入口
@@ -42,7 +47,7 @@ class WeiBo
     {
         //获取话题搜索页面结果
         $url = "https://m.weibo.cn/api/container/getIndex?containerid=100103type=1%3D1%26q%3D{$topic}&page_type=searchall&page={$page}";
-        $html = $this->curlGet($url);
+        $html = $this->curlGet($url, $this->cookie);
         $html = json_decode($html, true);
         $data = [];
         if (isset($html['data']['cards']) && !empty($html['data']['cards'])) {
@@ -123,7 +128,7 @@ class WeiBo
     {
         //获取话题搜索页面结果
         $url = "https://s.weibo.com/weibo/%23{$topic}%23";
-        $html = $this->curlGet($url);
+        $html = $this->curlGet($url,  $this->cookie);
         //从话题页面提取出mid
         //<div class=\"card-wrap\" action-type=\"feed_list_item\" mid=\"(.*)\" >
         preg_match_all("/<div class=\"card-wrap\" action-type=\"feed_list_item\" mid=\"(.*)\" >/i", strtolower($html), $matches);
@@ -138,7 +143,7 @@ class WeiBo
     private function getForumDetail($mid)
     {
         $forumUrl = "https://m.weibo.cn/detail/{$mid}";
-        $html = $this->curlGet($forumUrl);
+        $html = $this->curlGet($forumUrl,  $this->cookie);
         //获取js标签之间的数据
         $start = strpos($html, '[{');
         $end = strpos($html, '}]');
@@ -195,7 +200,7 @@ class WeiBo
     private function getForumTextDetail($mid)
     {
         $forumUrl = "https://m.weibo.cn/detail/{$mid}";
-        $html = $this->curlGet($forumUrl);
+        $html = $this->curlGet($forumUrl,  $this->cookie);
         //获取js标签之间的数据
         $start = strpos($html, '[{');
         $end = strpos($html, '}]');
@@ -222,7 +227,7 @@ class WeiBo
     private function getComment($mid)
     {
         $commentUrl = "https://m.weibo.cn/comments/hotflow?id={$mid}&mid={$mid}&max_id_type=0";
-        $html = $this->curlGet($commentUrl);
+        $html = $this->curlGet($commentUrl,  $this->cookie);
         $html = json_decode($html, true);
         $comment = [];
         if (isset($html['data']['data']) || !empty($html['data']['data'])) {
@@ -314,37 +319,4 @@ class WeiBo
             'topicList' => $topics[1]
         ];
     }
-
-    /**
-     * @method  curl-get请求
-     * @param string $url 请求地址
-     * @param int $port 端口号
-     * @return string $filecontent  采集内容
-     */
-    private function curlGet($url, $port = 80)
-    {
-        $ch = curl_init();
-        $header = array();
-        $header[] = 'Content-Type:application/x-www-form-urlencoded';
-        curl_setopt($ch, CURLOPT_URL, $url);
-        if ($port !== 80) {
-            curl_setopt($ch, CURLOPT_PORT, $port);
-        }
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36");
-        curl_setopt($ch, CURLOPT_HEADER, 0);//设定是否输出页面内容
-//        curl_setopt($ch,CURLOPT_HTTPHEADER,$header);
-//        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); //不验证证书
-//        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true); //不验证证书
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);       //链接超时时间
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20);       //设置超时时间
-
-//        curl_setopt($ch, CURLOPT_PROXY, '39.98.196.223'); //代理服务器地址
-//        curl_setopt($ch, CURLOPT_PROXYPORT, 80); //代理服务器端口
-        $filecontent = curl_exec($ch);
-        curl_close($ch);
-
-        return $filecontent;
-    }
-
 }
