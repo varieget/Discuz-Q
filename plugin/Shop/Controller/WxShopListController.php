@@ -7,6 +7,7 @@ use App\Common\ResponseCode;
 use App\Common\Utils;
 use App\Models\PluginGroupPermission;
 use App\Repositories\UserRepository;
+use Discuz\Auth\Exception\NotAuthenticatedException;
 use Discuz\Base\DzqController;
 
 class WxShopListController extends DzqController
@@ -15,14 +16,21 @@ class WxShopListController extends DzqController
 
     protected function checkRequestPermissions(UserRepository $userRepo)
     {
+        if ($this->user->isAdmin()){
+            return true;
+        }
+        if ($this->user->isGuest()) {
+            throw new NotAuthenticatedException;
+        }
+
+
         $appid = Utils::getPluginAppId();
         $groupId = $this->user->groupId;
-        $permissions = PluginGroupPermission::query()
-            ->where('group_id', $groupId)->where("app_id",$appid)->first();
-        if (empty($permissions)){
-            return false;
+        if(PluginGroupPermission::hasPluginPermission($appid,$groupId)){
+            return true;
         }
-        return true;
+
+        return false;
     }
 
 
