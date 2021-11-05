@@ -150,9 +150,9 @@ trait PluginTrait
                     : app(Filesystem::class)->disk('cos')->url($imgName);
             }
         }
+
         $fileTime = @filemtime(public_path('storage/' . $imgName));
-        $urlxx = app(UrlGenerator::class);
-        return $urlxx->to('/storage/' . $imgName) . '?' . $fileTime ?: Carbon::now()->timestamp;
+        return app(UrlGenerator::class)->to('/storage/' . $imgName) . '?' . $fileTime ?: Carbon::now()->timestamp;
 
     }
 
