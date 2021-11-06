@@ -298,7 +298,7 @@
  *    name="filter[search]",
  *    in="query",
  *    required=false,
- *    description = "搜索关键词",
+ *    description = "搜索关键词(仅支持简单搜索，不支持关键词分词)",
  *    @OA\Schema(type="string",default="")
  *),
  *@OA\Parameter(
@@ -345,6 +345,16 @@
  *    in="query",
  *    required=false,
  *    description = "分类组合（需要查询的分类id集合）",
+ *    @OA\Schema(
+ *        type="array",@OA\Items(type="integer")
+ *    )
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_toUserId",
+ *    name="filter[toUserId]",
+ *    in="query",
+ *    required=false,
+ *    description = "个人主页帖子列表",
  *    @OA\Schema(
  *        type="array",@OA\Items(type="integer")
  *    )
