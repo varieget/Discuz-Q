@@ -345,7 +345,7 @@ class ImportXXXXDataCommands extends DzqCommand
 
 #### 5. 文件进程锁机制
 
-执行导入进程时，将修改文件锁`public/importDataLock.conf`中的导入状态status，当状态为占用中，就不可执行新的导入进程。当前导入进程后，状态变更，变更后允许执行新的进程。
+执行导入进程时，将修改文件锁`public/importDataLock.conf`中的导入状态status，当状态为占用中，就不可执行新的导入进程。当前导入进程结束后，状态变更，变更后允许执行新的进程。
 
 自动导入参数记录在文件`public/autoImportDataLock.conf`中，多次执行自动导入命令就是在刷新文件内容，文件中只保留最后一次写入的相关参数。
 
@@ -362,11 +362,13 @@ class XXXPlatform
   
   	public function main()
   	{
-    	/*  省略爬取过程代码 */
+    	/* 省略爬取过程代码 */
     	if (empty($data)) {
       	$this->deleteImportLockFile(); // 释放该导入进程
       	throw new \Exception('未获取到数据.');
     	}
+      
+      return $data;
   	}
 }
 ```

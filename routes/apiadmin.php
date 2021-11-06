@@ -105,7 +105,7 @@ $route->get('/emoji.list', 'emoji.list', ApiController\Emoji\ListAdminEmojiContr
 $route->post('/thread.optimize', 'thread.optimize', ApiController\Threads\ThreadOptimizeController::class);
 
 //插件后台控制接口
-$route->post('/plugin/settings.save', 'plugin.settings.save', ApiController\Plugin\SettingController::class);
+$route->post('/plugin/settings', 'plugin.settings', ApiController\Plugin\SettingController::class);
 $route->post('/plugin/permission.switch', 'plugin.permission.switch', ApiController\Plugin\GroupPermissionController::class);
 $route->get('/plugin/permissionlist', 'plugin.permissionlist', ApiController\Plugin\GetGroupPermissionsController::class);
 $route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingAdminController::class);
