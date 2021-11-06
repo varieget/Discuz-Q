@@ -78,6 +78,7 @@ class ThreadListV1Controller extends DzqController
 
     public function main()
     {
+        dd(1111);
         $filter = $this->inPut('filter');
         $page = intval($this->inPut('page'));
         $perPage = intval($this->inPut('perPage'));
