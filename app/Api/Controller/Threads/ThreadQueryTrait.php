@@ -42,7 +42,7 @@ trait ThreadQueryTrait
         $administrator = $this->user->isAdmin();
         $threads = $this->getBaseThreadsBuilder();
         if (!empty($complex)) {
-            \App\Common\Utils::setAppKey('thread_complex', $complex);
+            \Discuz\Common\Utils::setAppKey('thread_complex', $complex);
             switch ($complex) {
                 case Thread::MY_DRAFT_THREAD:
                     $threads = $this->getBaseThreadsBuilder(Thread::IS_DRAFT, false)

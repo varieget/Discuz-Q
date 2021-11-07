@@ -129,7 +129,7 @@ trait ThreadListTrait
             CacheKey::LIST_THREADS_V3_THREADS => DzqCache::get(CacheKey::LIST_THREADS_V3_THREADS),
             CacheKey::LIST_THREADS_V3_VIDEO => DzqCache::get(CacheKey::LIST_THREADS_V3_VIDEO),
         ];
-        Utils::setAppKey(CacheKey::APP_CACHE, $cache);
+        \Discuz\Common\Utils::setAppKey(CacheKey::APP_CACHE, $cache);
     }
 
     private function getGroupUserInfo($userIds)

@@ -212,5 +212,7 @@ $route->withFrequency(function ($route) {
 
     $route->get('/plugin/list', 'plugin', ApiController\Plugin\PluginListController::class);
     $route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingController::class);
+    $route->get('/plugin/test/{plugin_name}/{module_name}/{file_path}', 'plugin.test.file', \App\Http\Controller\PluginFileController::class);
+    $route->post('/plugin/test/{plugin_name}/{module_name}', 'plugin.test.file', \App\Http\Controller\PluginFileController::class);
 
 }, 30, 60);

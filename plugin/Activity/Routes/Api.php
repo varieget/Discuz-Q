@@ -8,9 +8,10 @@ $route->withFrequency(function (\Discuz\Http\RouteCollection $route) {
 //取消报名
     $route->post('register/cancel', 'register.cancel', \Plugin\Activity\Controller\CancelController::class);
 //报名用户列表
-    $route->get('register/list', 'register.list', \Plugin\Activity\Controller\ListController::class);
+    $route->get('register/list', 'register.list', \Plugin\Activity\Controller\ListController::class,\App\Api\Controller\Threads\ThreadListController::class);
+
 //报名用户信息导出
     $route->get('register/export', 'register.export', \Plugin\Activity\Controller\ExportController::class);
-}, 30, 60);
+}, 50, 20);
 
 
