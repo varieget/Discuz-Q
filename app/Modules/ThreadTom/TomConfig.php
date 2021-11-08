@@ -38,6 +38,8 @@ class TomConfig
 
     const TOM_VOTE = 109;
 
+    const OPTIMIZE_TYPE_LIST = [TomConfig::TOM_GOODS,TomConfig::TOM_REDPACK,TomConfig::TOM_REWARD,'61540fef8f4de8'];
+
     public static $map = [
         self::TOM_TEXT => [
             'name_en' => 'Text',
@@ -85,4 +87,6 @@ class TomConfig
             'service' => \App\Modules\ThreadTom\Busi\VoteBusi::class
         ]
     ];
+
+
 }
