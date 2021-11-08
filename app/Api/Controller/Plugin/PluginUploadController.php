@@ -19,12 +19,13 @@ namespace App\Api\Controller\Plugin;
 
 use App\Common\CacheKey;
 use App\Common\ResponseCode;
+use App\Common\Utils;
 use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
 use Illuminate\Support\Arr;
 use Laminas\Diactoros\Stream;
 
-class PanelUploadController extends DzqAdminController
+class PluginUploadController extends DzqAdminController
 {
     public function main()
     {
@@ -56,6 +57,7 @@ class PanelUploadController extends DzqAdminController
 
         $fileConfigHandler = $zipUn->getStream("config.json");
         if (!$fileConfigHandler){
+            $zipUn->close();
             $this->outPut(ResponseCode::INVALID_PARAMETER,"配置文件找不到，请按正确目录结构打包");
         }
         $contents="";
@@ -67,40 +69,25 @@ class PanelUploadController extends DzqAdminController
         $configJson = json_decode($contents,true);
         $pluginName = $configJson["name_en"];
         if (strpos($pluginName," ")){
+            $zipUn->close();
             $this->outPut(ResponseCode::INVALID_PARAMETER,"插件名不能有空格");
         }
         $pluginName = ucfirst($pluginName);
 
         $basePath = app()->basePath();
         $oldPath = $basePath.DIRECTORY_SEPARATOR."plugin".DIRECTORY_SEPARATOR.$pluginName;
-        $this->remove_dir($oldPath);
+        Utils::removeDir($oldPath);
         $result = $zipUn->extractTo($oldPath);
+        $zipUn->close();
         if (!$result){
             $this->outPut(0,'', "解压失败，请检查目录权限等情况");
         }
-        $zipUn->close();
 
         $this->outPut(0,'', "上传成功");
     }
 
     public function suffixClearCache(){
         DzqCache::delKey(CacheKey::PLUGIN_LOCAL_CONFIG);
-    }
-
-    function remove_dir($path)
-    {
-        if (empty($path) || !$path) {
-            return false;
-        }
-        if(is_file($path)){
-            @unlink($path);
-        }else{
-            $fileList = glob($path . DIRECTORY_SEPARATOR.'*');
-            foreach ($fileList as $pathTemp){
-                $this->remove_dir($pathTemp);
-            }
-            @rmdir($path);
-        }
     }
 
 }

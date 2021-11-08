@@ -22,75 +22,55 @@ use App\Common\ResponseCode;
 use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
 use Discuz\Common\Utils;
-use Discuz\Console\Kernel;
-use Discuz\Foundation\Application;
 
-class PanelOperateController extends DzqAdminController
+class PluginOperateController extends DzqAdminController
 {
 
     public function main()
     {
         $appId = $this->inPut("appId");
         $operate = $this->inPut("operate");
-        $pluginMap = Utils::getPluginList();
+        $pluginMap = Utils::getPluginList(true);
         if(!isset($pluginMap[$appId])){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,"没该插件");
+            $this->outPut(ResponseCode::INVALID_PARAMETER,"没有找到对应的插件，请检查参数");
         }
         $item = $pluginMap[$appId];
 
         switch ($operate){
             case 1:
-                $this->release($item);
+                $this->publishPlugin($item);
                 break;
             case 2:
-                $this->offline($item);
+                $this->offlinePlugin($item);
                 break;
             case 3:
-                $this->delete($item);
+                $this->unloadPlugin($item);
                 break;
         }
 
-
         $this->outPut(ResponseCode::INVALID_PARAMETER);
-
     }
 
     public function suffixClearCache(){
         DzqCache::delKey(CacheKey::PLUGIN_LOCAL_CONFIG);
     }
 
-    private function release($item){
-        $pluginDir = base_path('plugin');
+    private function publishPlugin($item){
         $nameEn = $item["name_en"];
-        $pathDir = $pluginDir.DIRECTORY_SEPARATOR.ucfirst($nameEn).DIRECTORY_SEPARATOR."config.json";
+        $pathDir = $item['plugin_'. $item["app_id"]]["config"];
         $config = json_decode(file_get_contents($pathDir), 256);
         $config["status"] = 1;
         $strConfig = json_encode($config, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
         file_put_contents($pathDir,$strConfig);
 
         //执行命令
-        $this->runDBMigration($nameEn);
+        Utils::runConsoleCmd('migrate:plugin', ['--force' => true,'--name' => $nameEn]);
 
         $this->outPut(0,'', "发布成功");
     }
 
-
-    private function runDBMigration($name)
-    {
-        try {
-            $console = app()->make(Kernel::class);
-            $console->call('migrate:plugin', ['--force' => true,'--name' => $name]);
-        } catch (Exception $e) {
-            throw new Exception("发布失败，数据库执行失败：" . $e->getMessage());
-        }
-    }
-
-
-
-    private function offline($item){
-        $pluginDir = base_path('plugin');
-        $nameEn = $item["name_en"];
-        $pathDir = $pluginDir.DIRECTORY_SEPARATOR.ucfirst($nameEn).DIRECTORY_SEPARATOR."config.json";
+    private function offlinePlugin($item){
+        $pathDir = $item['plugin_'. $item["app_id"] ]["config"];
         $config = json_decode(file_get_contents($pathDir), 256);
         $config["status"] = 0;
         $strConfig = json_encode($config, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
@@ -99,29 +79,12 @@ class PanelOperateController extends DzqAdminController
         $this->outPut(0,'', "下线成功");
     }
 
-    private function delete($item){
-
+    private function unloadPlugin($item){
         $pluginDir = base_path('plugin');
         $nameEn = $item["name_en"];
         $pathDir = $pluginDir.DIRECTORY_SEPARATOR.ucfirst($nameEn);
-        $this->remove_dir($pathDir);
+        \App\Common\Utils::removeDir($pathDir);
 
         $this->outPut(0,'', "删除成功");
-    }
-
-    function remove_dir($path)
-    {
-        if (empty($path) || !$path) {
-            return false;
-        }
-        if(is_file($path)){
-            @unlink($path);
-        }else{
-            $fileList = glob($path . DIRECTORY_SEPARATOR.'*');
-            foreach ($fileList as $pathTemp){
-                $this->remove_dir($pathTemp);
-            }
-            @rmdir($path);
-        }
     }
 }
