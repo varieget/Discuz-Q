@@ -287,7 +287,8 @@ trait ThreadQueryTrait
             'attention' => 'integer|in:0,1',
             'complex' => 'integer|in:1,2,3,4,5',
             'exclusiveIds' => 'array',
-            'categoryids' => 'array'
+            'categoryids' => 'array',
+            'toUserId'=>'integer'
         ]);
         $essence = '';
         $types = [];

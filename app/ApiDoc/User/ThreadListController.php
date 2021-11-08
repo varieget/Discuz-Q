@@ -17,6 +17,7 @@
  *@OA\Parameter(ref = "#/components/parameters/threadlist_complex"),
  *@OA\Parameter(ref = "#/components/parameters/threadlist_exclusiveIds"),
  *@OA\Parameter(ref = "#/components/parameters/threadlist_categoryids"),
+ *@OA\Parameter(ref = "#/components/parameters/threadlist_toUserId"),
  *
  * @OA\Response(response = 200,description = "返回帖子列表",@OA\JsonContent(allOf ={
  *     @OA\Schema(ref = "#/components/schemas/dzq_layout"),

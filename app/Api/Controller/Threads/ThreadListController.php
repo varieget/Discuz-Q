@@ -21,7 +21,6 @@ namespace App\Api\Controller\Threads;
 use App\Common\CacheKey;
 use App\Common\DzqConst;
 use App\Common\Platform;
-use App\Common\PluginEnum;
 use Discuz\Base\DzqCache;
 use App\Models\Category;
 use App\Models\Thread;
