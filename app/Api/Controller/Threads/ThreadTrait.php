@@ -796,16 +796,7 @@ trait ThreadTrait
         if (($price > 0 || $attachmentPrice > 0) && !$userRepo->canInsertPayToThread($user)) {
             $this->outPut(ResponseCode::UNAUTHORIZED, '没有添加付费项权限');
         }
-        $checkPostion = false;
-        if (!empty($position)) {
-            foreach ($position as $key=>$value) {
-                if($value!="" && $value!=0){
-                    $checkPostion = true;
-                    break;
-                }
-            }
-        }
-        if ($checkPostion && !$userRepo->canInsertPositionToThread($user)) {
+        if (!empty($position) && !$userRepo->canInsertPositionToThread($user)) {
             $this->outPut(ResponseCode::UNAUTHORIZED, '没有插入位置信息权限');
         }
         if (!empty($isAnonymous) && !$userRepo->canCreateThreadAnonymous($user)) {
