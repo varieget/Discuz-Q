@@ -130,11 +130,17 @@ class CheckCdn
 
             $subDomain = $this->getSubDomain($speedDomain, $mainDomain);
 
+            // 暂停ip地址解析
+            $this->modifyIpRecordStatus($mainDomain, $this->getRemoteIp($cdnOrigins), 'DISABLE', $subDomain);
             // 添加cname解析
             $this->createRecord($mainDomain, $this->getCdnCname($speedDomain), 'CNAME', $subDomain, 'ENABLE');
 
+            if (empty($this->settings->get('qcloud_cdn', 'qcloud'))) {
+                $this->settings->set('qcloud_cdn', '1', 'qcloud');
+            }
+
             // 添加ip地址解析
-            $this->createRecord($mainDomain, $this->getRemoteIp($cdnOrigins), 'A', $subDomain, 'DISABLE');
+//            $this->createRecord($mainDomain, $this->getRemoteIp($cdnOrigins), 'A', $subDomain, 'DISABLE');
         }
 
         if (isset($settings['qcloud_cdn'])) {
