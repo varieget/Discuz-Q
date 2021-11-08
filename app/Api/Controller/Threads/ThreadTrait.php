@@ -365,7 +365,8 @@ trait ThreadTrait
                 'groupId' => $group['group_id'],
                 'groupName' => $group['groups']['name'],
                 'groupIcon' => $group['groups']['icon'],
-                'isDisplay' => $group['groups']['is_display']
+                'isDisplay' => $group['groups']['is_display'],
+                'level' =>  $group['groups']['level']
             ];
         }
         return $groupResult;

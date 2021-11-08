@@ -80,7 +80,8 @@ class UsersListController extends DzqController
                 'followCount' => $userData['follow_count'],
                 'isFollow' => false,
                 'isMutualFollow' => false,
-                'groupName' => $userGroupDatas[$groupId]['name'] ?? ''
+                'groupName' => $userGroupDatas[$groupId]['name'] ?? '',
+                'level' =>  $userGroupDatas[$groupId]['level'] ?? 0
             ];
             if (isset($userFollowList[$userId])) {
                 $item['isFollow'] = true;
