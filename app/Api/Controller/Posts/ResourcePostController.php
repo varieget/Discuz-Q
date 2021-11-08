@@ -36,7 +36,7 @@ class ResourcePostController extends DzqController
     //返回的数据一定包含的数据
     public $include = [
         'user:id,username,avatar',
-        'user.groups:id,name,is_display',
+        'user.groups:id,name,is_display,level',
         'likedUsers:id,username,avatar',
         'images'
     ];
@@ -159,7 +159,7 @@ class ResourcePostController extends DzqController
         $groupId = array_column($groupUsers, 'group_id');
         $userGroups = array_column($groupUsers, null, 'user_id');
 
-        $groups = Group::query()->whereIn('id', $groupId)->get(['id','name','is_display'])->toArray();
+        $groups = Group::query()->whereIn('id', $groupId)->get(['id','name','is_display','level'])->toArray();
         $groupInfo = array_column($groups, null, 'id');
         foreach ($users as $k=>$val) {
             $users[$k]['groups'] = $this->getGroup($groupInfo, $userGroups, $k);
@@ -205,7 +205,8 @@ class ResourcePostController extends DzqController
         return [
             'id' => $group['group_id'],
             'name' => $group['groups']['name'],
-            'isDisplay' => $group['groups']['is_display']
+            'isDisplay' => $group['groups']['is_display'],
+            'level' => $group['groups']['level']
         ];
     }
 
@@ -214,7 +215,8 @@ class ResourcePostController extends DzqController
         return [
             'id' => !empty($groupInfo[$userGroups[$k]['group_id']]['id']) ? $groupInfo[$userGroups[$k]['group_id']]['id'] : null,
             'name' => !empty($groupInfo[$userGroups[$k]['group_id']]['name']) ? $groupInfo[$userGroups[$k]['group_id']]['name'] : null,
-            'isDisplay' => !empty($groupInfo[$userGroups[$k]['group_id']]['is_display']) ? $groupInfo[$userGroups[$k]['group_id']]['is_display'] : false
+            'isDisplay' => !empty($groupInfo[$userGroups[$k]['group_id']]['is_display']) ? $groupInfo[$userGroups[$k]['group_id']]['is_display'] : false,
+            'level' => !empty($groupInfo[$userGroups[$k]['group_id']]['level']) ? $groupInfo[$userGroups[$k]['group_id']]['level'] : 0
         ];
     }
 }
