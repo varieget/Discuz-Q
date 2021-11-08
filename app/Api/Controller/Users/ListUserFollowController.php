@@ -281,7 +281,8 @@ class ListUserFollowController extends DzqController
             'pid' => $group['group_id'],
             'groupId' => $group['group_id'],
             'groupName' => $group['groups']['name'],
-            'groupIcon' => $group['groups']['icon']
+            'groupIcon' => $group['groups']['icon'],
+            'level' =>  $group['groups']['level']
         ];
     }
 }
