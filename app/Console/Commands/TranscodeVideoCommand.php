@@ -18,10 +18,12 @@
 
 namespace App\Console\Commands;
 
+use App\Common\CacheKey;
 use App\Models\Thread;
 use App\Models\ThreadVideo;
 use App\Repositories\ThreadVideoRepository;
 use App\Settings\SettingsRepository;
+use Discuz\Base\DzqCache;
 use Discuz\Console\AbstractCommand;
 use Discuz\Foundation\Application;
 use Carbon\Carbon;
@@ -125,6 +127,9 @@ class TranscodeVideoCommand extends AbstractCommand
                         $log->info('sdk上传视频转码成功,videoId为'.$item->id.',taskId为'.$resp['TaskId']);
                     }
                 }
+
+                DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_VIDEO, $item->id);
+
             });
         }
         $this->info('转码脚本执行 [结束]');

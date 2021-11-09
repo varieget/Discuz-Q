@@ -19,20 +19,19 @@
 namespace App\Api\Controller\Threads\Notify;
 
 use App\Commands\Thread\Notify\ThreadVideoNotify;
-use Discuz\Http\DiscuzResponseFactory;
+use App\Common\ResponseCode;
+use App\Repositories\UserRepository;
+use Discuz\Base\DzqController;
 use Illuminate\Contracts\Bus\Dispatcher;
-use Discuz\Api\Controller\AbstractResourceController;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Illuminate\Support\Arr;
 
-class ThreadVideoNotifyController extends AbstractResourceController
+class ThreadVideoNotifyController extends DzqController
 {
     /**
      * @var Dispatcher
-//     */
+    */
     protected $bus;
 
     protected $settings;
@@ -40,33 +39,30 @@ class ThreadVideoNotifyController extends AbstractResourceController
     /**
      * @param Dispatcher $bus
      */
-    public function __construct(Dispatcher $bus,SettingsRepository $settings)
+    public function __construct(Dispatcher $bus, SettingsRepository $settings)
     {
         $this->bus = $bus;
         $this->settings = $settings;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function handle(ServerRequestInterface $request): ResponseInterface
+    protected function checkRequestPermissions(UserRepository $userRepo)
     {
-        $document = new Document();
+        return true;
+    }
 
+    public function main()
+    {
         $dbtoken = $this->settings->get('qcloud_vod_token', 'qcloud');
-        $inputtoken = Arr::get($request->getQueryParams(), 'qvodtoken');
-        if (empty($dbtoken) || (!empty($inputtoken) && strcmp($dbtoken, $inputtoken) === 0))
-        {
-            $data     = $this->data($request, $document);
-            return DiscuzResponseFactory::XmlResponse($data);
-        }
-        else
-        {
-            return DiscuzResponseFactory::XmlResponse("fobidden");
+        $inputtoken = Arr::get($this->queryParams, 'qvodtoken');
+        if (empty($dbtoken) || (!empty($inputtoken) && strcmp($dbtoken, $inputtoken) === 0)) {
+            $this->data($this->request);
+            $this->outPut(ResponseCode::SUCCESS);
+        } else {
+            $this->outPut(ResponseCode::INTERNAL_ERROR, 'Ignored or forbidden.');
         }
     }
 
-    public function data(ServerRequestInterface $request, Document $document)
+    public function data(ServerRequestInterface $request)
     {
         return $this->bus->dispatch(
             new ThreadVideoNotify($request->getParsedBody()->toArray())
