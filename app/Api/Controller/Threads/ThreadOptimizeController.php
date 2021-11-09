@@ -54,7 +54,8 @@ class ThreadOptimizeController extends DzqAdminController
                 $threadTom = $prefix.'thread_tom';
             }
             if ($isDisplay === Thread::BOOL_NO) {
-                $db->update("update {$thread} set is_display = {$isDisplay} where id in (select thread_id from {$threadTom} where tom_type in ('". TomConfig::TOM_GOODS ."','". TomConfig::TOM_REDPACK ."','". TomConfig::TOM_REWARD ."','61540fef8f4de8')) or price > 0 or attachment_price > 0 or is_anonymous = 1");
+                $optimizeStr = "'".implode("','",TomConfig::OPTIMIZE_TYPE_LIST)."'";
+                $db->update("update {$thread} set is_display = {$isDisplay} where id in (select thread_id from {$threadTom} where tom_type in (".$optimizeStr.")) or price > 0 or attachment_price > 0 or is_anonymous = 1");
             } elseif ($isDisplay === Thread::BOOL_YES) {
                 $db->update("update {$thread} set is_display = {$isDisplay} where id > 0");
             }

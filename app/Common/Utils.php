@@ -254,4 +254,42 @@ class Utils
     public static function getPluginAppId(){
         return \Discuz\Common\Utils::getAppKey("plugin_appid") ?? "";
     }
+
+    public static function copyDir($src, $dst)
+    {
+        $dir = opendir($src);
+        @mkdir($dst);
+        while ($file = readdir($dir)) {
+            if (($file != '.') && ($file != '..')) {
+                if (is_dir($src . DIRECTORY_SEPARATOR . $file)) {
+                    self::copyDir($src . DIRECTORY_SEPARATOR . $file, $dst . DIRECTORY_SEPARATOR . $file);
+                } else {
+                    copy($src . DIRECTORY_SEPARATOR . $file, $dst . DIRECTORY_SEPARATOR . $file);
+                }
+            }
+        }
+        closedir($dir);
+    }
+
+    public static function removeDir($path)
+    {
+        if (empty($path) || !$path) {
+            return false;
+        }
+        return is_file($path) ? @unlink($path) : array_map([self::class, __FUNCTION__], glob($path . '/*')) == @rmdir($path);
+    }
+
+    function extractZip($zipfile, $targetfolder)
+    {
+        $zip = new \ZipArchive;
+        $res = $zip->open($zipfile);
+        if ($res === true) {
+            if ($zip->extractTo($targetfolder) === FALSE) {
+                throw new \Exception("无法解压缩 $zipfile 到 $targetfolder");
+            }
+            $zip->close();
+        } else {
+            throw new \Exception("无法打开 $zipfile");
+        }
+    }
 }
