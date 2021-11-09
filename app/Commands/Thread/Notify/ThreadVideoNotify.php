@@ -74,7 +74,7 @@ class ThreadVideoNotify
             return 'pass';
         }
 
-        $taskDetail  = $this->describeTaskDetail(Arr::get($this->data, 'ProcedureStateChangeEvent.TaskId'));
+        $taskDetail = $this->describeTaskDetail(Arr::get($this->data, 'ProcedureStateChangeEvent.TaskId'));
         if ($taskDetail && $taskDetail->TaskType == 'Procedure' && $taskDetail->Status == 'FINISH') {
             if ($taskDetail->ProcedureTask->Status == 'FINISH') {
 
