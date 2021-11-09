@@ -64,7 +64,7 @@ trait ThreadListTrait
         $concatString = '';
         $loginUserData = $this->getLoginUserData($loginUserId, $threadIds, $postIds);
         $userStickIds = [];
-        if (Utils::getAppKey('thread_complex') == Thread::MY_OR_HIS_THREAD) {
+        if (\Discuz\Common\Utils::getAppKey('thread_complex') == Thread::MY_OR_HIS_THREAD) {
             $userStickIds = ThreadUserStickRecord::query()->whereIn('thread_id', $threadIds)->select('thread_id')->pluck('thread_id')->toArray();
         }
         foreach ($threads as $thread) {
