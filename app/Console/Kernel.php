@@ -36,22 +36,6 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class Kernel extends ConsoleKernel
 {
-    public $commands = [
-        FinanceCreateCommand::class,
-        AvatarClearCommand::class,
-        AttachmentClearCommand::class,
-        QueryWechatOrderConmmand::class,
-        InviteExpireCommand::class,
-        QuestionClearCommand::class,
-        ThreadRewardExpireCommand::class,
-        RedPacketExpireCommand::class,
-        AbnormalOrderDealCommand::class,
-        TranscodeVideoCommand::class,
-        AttachmentAttributeUpdateCommand::class,
-        MonitorSystemTaskCommand::class,
-        GroupExpiredNoticeCommand::class
-    ];
-
     /**
      * Define the application's command schedule.
      *
