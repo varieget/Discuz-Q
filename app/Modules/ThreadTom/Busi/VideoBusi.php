@@ -36,12 +36,7 @@ class VideoBusi extends TomBaseBusi
         $video = ThreadVideo::query()->where('id', $videoId)->first();
         if (!empty($video) && !empty($this->threadId)) {
             $video->thread_id = $this->threadId;
-
-            if ($video->type === ThreadVideo::TYPE_OF_VIDEO) {
-                $video->status = ThreadVideo::VIDEO_STATUS_TRANSCODING;
-            } else {
-                $video->status = ThreadVideo::VIDEO_STATUS_SUCCESS;
-            }
+            $video->status = ThreadVideo::VIDEO_STATUS_SUCCESS;
             $video->save();
 
             $thread = Thread::query()->where('id', $this->threadId)->first();
