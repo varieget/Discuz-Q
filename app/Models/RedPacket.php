@@ -46,6 +46,8 @@ class RedPacket extends Model
 
     protected $table = 'thread_red_packets';
 
+    public const EXPIRE_TIME = 24 * 60 * 60; //红包过期时间24小时
+
     /**
      * 红包状态
      */

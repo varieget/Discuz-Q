@@ -133,7 +133,9 @@ class CountLikedMakeRedPacket
             return;
         }
 
+        $compareTime = date('Y-m-d H:i:s', time() - RedPacket::EXPIRE_TIME);
         $redPacket = RedPacket::query() ->where(['thread_id' => $thread['id'], 'status' => RedPacket::RED_PACKET_STATUS_VALID, 'condition' => 1])
+                                        ->where('created_at', '>', $compareTime)
                                         ->first();
         if (empty($redPacket) || empty($redPacket['remain_money']) || empty($redPacket['remain_number'])) {
             $this->outDebugInfo('点赞领红包：该红包帖无剩余金额和个数');
