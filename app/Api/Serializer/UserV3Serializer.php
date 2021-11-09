@@ -109,7 +109,7 @@ class UserV3Serializer extends AbstractSerializer
 
         // 限制字段 本人/权限 显示
         if ($this->actor->id === $model->id) {
-//            $attributes['username'] = $model->username;
+            $attributes['username'] = $model->username;
 
             $attributes += [
                 'originalMobile'    => $model->getRawOriginal('mobile'),

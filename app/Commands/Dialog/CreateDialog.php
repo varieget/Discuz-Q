@@ -61,9 +61,9 @@ class CreateDialog
         $this->events = $events;
 
         $sender = $this->actor->id;
-        $recipient = Arr::get($this->attributes, 'recipient_username');
+        $recipientUserId = Arr::get($this->attributes, 'recipientUserId');
 
-        $recipientUser = $user->query()->where('username', $recipient)->firstOrFail();
+        $recipientUser = $user->query()->where('id', $recipientUserId)->firstOrFail();
 
         if ($sender == $recipientUser->id) {
             throw new Exception('不能给自己发送私信');
@@ -76,7 +76,7 @@ class CreateDialog
         $dialogRes = $dialog::buildOrFetch($sender, $recipientUser->id);
 
         //创建会话时如传入消息内容，则创建消息
-        if (!empty($this->attributes['message_text']) || 
+        if (!empty($this->attributes['message_text']) ||
            (!empty($this->attributes['attachment_id']) && !empty($this->attributes['image_url']))) {
             $this->attributes['status'] = DialogMessage::NORMAL_MESSAGE;
         } else {
