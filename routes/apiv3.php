@@ -76,6 +76,8 @@ $route->post('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiC
 $route->post('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\Users\WechatMiniProgramBindController::class);
 $route->post('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\Users\WechatMiniProgramRebindController::class);
 $route->get('/oauth/wechat/miniprogram/code', 'wechat.mini.program.code', ApiController\Users\WechatMiniProgramCodeController::class);
+$route->get('/oauth/qq', 'qq.login', ApiController\Users\QQLoginController::class);
+$route->get('/oauth/qq/user', 'qq.user', ApiController\Users\QQUserController::class);
 
 //手机浏览器（微信外）登录并绑定微信
 //$route->get('/users/mobilebrowser/wechat/h5.bind', 'mobilebrowser.wechat.h5.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
