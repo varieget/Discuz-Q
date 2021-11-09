@@ -40,8 +40,6 @@ class RedPacketExpireCommand extends AbstractCommand
 
     protected $description = '返还过期未领取完的红包金额';
 
-    protected $expireTime = 24 * 60 * 60; //红包过期时间24小时
-
     protected $app;
 
     /**
@@ -71,7 +69,7 @@ class RedPacketExpireCommand extends AbstractCommand
         $this->info('');
 
         // 定时任务处理此条记录的时间，与用户最后参与领红包的时间增加 10 秒，以防时间临界点并发引起问题
-        $compareTime = date('Y-m-d H:i:s', time() - $this->expireTime + 10);
+        $compareTime = date('Y-m-d H:i:s', time() - RedPacket::EXPIRE_TIME + 10);
         $query = RedPacket::query();
         $query->where('created_at', '<', $compareTime);
         $query->where('remain_money', '>', 0);
