@@ -89,7 +89,7 @@ class SendNotificationsRegularlyCommand extends AbstractCommand
                         'userId' => $item->user_id,
                         'receiveUser' => $receiveUser
                     ]);
-                    $this->connection->rollback();
+                    $this->connection->rollBack();
                     return;
                 }
 
@@ -116,7 +116,7 @@ class SendNotificationsRegularlyCommand extends AbstractCommand
                 $this->connection->commit();
             } catch (Exception $e) {
                 app('log')->info('SendNotificationsRegularlyCommand', $e->getMessage());
-                $this->connection->rollback();
+                $this->connection->rollBack();
             }
 
             $bar->advance();
