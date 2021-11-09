@@ -8,4 +8,3 @@ $route->withFrequency(function (RouteCollection $route){
 $route->get('/install', 'install.index', InstallController\IndexController::class);
 $route->post('/install', 'install', InstallController\InstallController::class);
 $route->get('/upgrade', 'upgrade', InstallController\UpgradeLogController::class);
-$route->get('/{other:.*}', 'other', \App\Http\Controller\IndexController::class);
