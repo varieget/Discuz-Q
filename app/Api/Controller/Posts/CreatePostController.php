@@ -304,7 +304,8 @@ class CreatePostController extends DzqController
 
         return [
             'groupName' => $group['groups']['name'],
-            'isDisplay' => $group['groups']['is_display']
+            'isDisplay' => $group['groups']['is_display'],
+            'level' => $group['groups']['level']
         ];
     }
 
