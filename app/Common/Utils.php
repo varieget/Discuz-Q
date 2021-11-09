@@ -247,25 +247,12 @@ class Utils
         exit();
     }
 
-    public static function setAppKey($key, $value)
-    {
-        return app()->instance($key, $value);
-    }
-
-    public static function getAppKey($key)
-    {
-        if (app()->has($key)) {
-            return app()->get($key);
-        }
-        return null;
-    }
-
     public static function setPluginAppId($pluginAppId){
-        return static::setAppKey("plugin_appid", $pluginAppId);
+        return \Discuz\Common\Utils::setAppKey("plugin_appid", $pluginAppId);
     }
 
     public static function getPluginAppId(){
-        return static::getAppKey("plugin_appid") ?? "";
+        return \Discuz\Common\Utils::getAppKey("plugin_appid") ?? "";
     }
 
     public static function copyDir($src, $dst)
