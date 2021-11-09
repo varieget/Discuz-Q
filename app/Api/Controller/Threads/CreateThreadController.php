@@ -213,7 +213,8 @@ class CreateThreadController extends DzqController
         }
         $isDraft && $dataThread['is_draft'] = Thread::BOOL_YES;
         !empty($isAnonymous) && $dataThread['is_anonymous'] = Thread::BOOL_YES;
-        if (!(bool)app(SettingsRepository::class)->get('thread_optimize') && Utils::requestFrom() != Platform::MinProgram) {
+        if (Utils::requestFrom() == Platform::MinProgram
+            && !(bool)app(SettingsRepository::class)->get('thread_optimize')) {
             $dataThread['is_display'] = Thread::BOOL_NO;
         }
         $thread->setRawAttributes($dataThread);
