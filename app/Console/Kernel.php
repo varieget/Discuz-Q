@@ -18,19 +18,7 @@
 
 namespace App\Console;
 
-use App\Console\Commands\AbnormalOrderDealCommand;
-use App\Console\Commands\AttachmentAttributeUpdateCommand;
-use App\Console\Commands\AttachmentClearCommand;
-use App\Console\Commands\AvatarClearCommand;
-use App\Console\Commands\FinanceCreateCommand;
-use App\Console\Commands\GroupExpiredNoticeCommand;
-use App\Console\Commands\InviteExpireCommand;
-use App\Console\Commands\QueryWechatOrderConmmand;
-use App\Console\Commands\QuestionClearCommand;
-use App\Console\Commands\ThreadRewardExpireCommand;
-use App\Console\Commands\RedPacketExpireCommand;
-use App\Console\Commands\TranscodeVideoCommand;
-use App\Console\Commands\MonitorSystemTaskCommand;
+
 use Discuz\Console\Kernel as ConsoleKernel;
 use Illuminate\Console\Scheduling\Schedule;
 
