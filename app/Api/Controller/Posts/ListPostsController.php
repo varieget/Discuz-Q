@@ -113,7 +113,7 @@ class ListPostsController extends DzqController
             ->with([
                 'thread:id,type,category_id',
                 'user:id,username,nickname,avatar,realname',
-                'user.groups:id,name,is_display',
+                'user.groups:id,name,is_display,level',
                 'images',
                 'likeState',
             ])
@@ -184,7 +184,7 @@ class ListPostsController extends DzqController
             ->with([
                 'thread:id,type,category_id',
                 'user:id,nickname,avatar,realname',
-                'user.groups:id,name,is_display',
+                'user.groups:id,name,is_display,level',
                 'commentUser:id,nickname,avatar,realname',
                 'replyUser:id,nickname,avatar,realname',
                 'images',
@@ -326,6 +326,7 @@ class ListPostsController extends DzqController
                 'id' => $groupInfos[0]['id'],
                 'name' => $isDisplay ? $groupInfos[0]['name'] : '',
                 'isDisplay' => $isDisplay,
+                'level' => $isDisplay ? $groupInfos[0]['level'] : 0
             ];
         }
 
