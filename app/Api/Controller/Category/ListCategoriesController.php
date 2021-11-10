@@ -71,6 +71,10 @@ class ListCategoriesController extends DzqController
                 $categoriesFather[$key]['children'] = [];
             }
         }
+
+        if (empty($categoriesFather)) {
+            $this->outPut(ResponseCode::UNAUTHORIZED, '没有浏览权限');
+        }
         $this->outPut(ResponseCode::SUCCESS, '', $categoriesFather);
     }
 }
