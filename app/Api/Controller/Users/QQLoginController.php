@@ -19,13 +19,22 @@
 namespace App\Api\Controller\Users;
 
 use App\Models\SessionToken;
+use Discuz\Contracts\Socialite\Factory;
 use Illuminate\Support\Arr;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-class QQLoginController extends AbstractQQLoginController
+class QQLoginController implements RequestHandlerInterface
 {
     public $type = 'qq';
+
+    protected $socialite;
+
+    public function __construct(Factory $socialite)
+    {
+        $this->socialite = $socialite;
+    }
 
     /**
      * 授权处理
