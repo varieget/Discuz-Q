@@ -36,7 +36,6 @@ class VideoBusi extends TomBaseBusi
         $video = ThreadVideo::query()->where('id', $videoId)->first();
         if (!empty($video) && !empty($this->threadId)) {
             $video->thread_id = $this->threadId;
-            $video->status = ThreadVideo::VIDEO_STATUS_SUCCESS;
             $video->save();
 
             $thread = Thread::query()->where('id', $this->threadId)->first();
@@ -61,15 +60,20 @@ class VideoBusi extends TomBaseBusi
         if (!empty($video) && !empty($this->threadId)) {
             $video->thread_id = $this->threadId;
             $video->save();
+
             $thread = Thread::query()->where('id', $this->threadId)->first();
-            if ($video->type == ThreadVideo::TYPE_OF_VIDEO && $thread && $thread['is_draft'] == 0 && $video->status == ThreadVideo::VIDEO_STATUS_TRANSCODING) {
-                // 发布文章时，转码
-                $this->transcodeVideo($video->file_id, 'TranscodeTaskSet');
-                // 转动图
-                $taskflow = Setting::query()->where('key', 'qcloud_vod_taskflow_gif')->where('tag', 'qcloud')->first();
-                if ($taskflow && $taskflow['value']) {
+            if ($video->type == ThreadVideo::TYPE_OF_VIDEO && $thread && $thread['is_draft'] == 0) {
+                if ($video->status == ThreadVideo::VIDEO_STATUS_TRANSCODING) {
+                    // 更新文章时，转码
+                    $this->transcodeVideo($video->file_id, 'TranscodeTaskSet');
+                }
+                if (empty($video->cover_url)) {
                     // 转动图
-                    $this->processMediaByProcedure($video->file_id, $taskflow['value']);
+                    $taskflow = Setting::query()->where('key', 'qcloud_vod_taskflow_gif')->where('tag', 'qcloud')->first();
+                    if ($taskflow && $taskflow['value']) {
+                        // 转动图
+                        $this->processMediaByProcedure($video->file_id, $taskflow['value']);
+                    }
                 }
             }
         }
