@@ -18,28 +18,22 @@
 
 namespace App\Api\Controller\Users;
 
-use App\Api\Serializer\TokenSerializer;
 use App\Commands\Users\GenJwtToken;
 use App\Commands\Users\RegisterQQUser;
+use App\Common\ResponseCode;
 use App\Events\Users\Logind;
 use App\Models\SessionToken;
 use App\Models\UserQq;
 use App\Settings\SettingsRepository;
-use Discuz\Api\Controller\AbstractResourceController;
-use Discuz\Auth\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Events\Dispatcher as Events;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Support\Arr;
-use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
 use Discuz\Contracts\Socialite\Factory;
 
-class QQUserController extends AbstractResourceController
+class QQUserController extends AuthBaseController
 {
-    public $serializer = TokenSerializer::class;
-
     protected $socialite;
 
     protected $bus;
@@ -65,18 +59,18 @@ class QQUserController extends AbstractResourceController
     /**
      * @inheritDoc
      */
-    protected function data(ServerRequestInterface $request, Document $document)
+    public function main()
     {
-        $sessionId = Arr::get($request->getQueryParams(), 'sessionId');
-        $accessToken = Arr::get($request->getQueryParams(), 'access_token');
+        $sessionId = $this->inPut('sessionId');
+        $accessToken = $this->inPut('accessToken');
 
-        $request = $request->withAttribute('session', new SessionToken())
+        $request = $this->request->withAttribute('session', new SessionToken())
             ->withAttribute('sessionId', $sessionId)
             ->withAttribute('access_token', $accessToken);
 
         $this->validation->make([
-            'access_token' => Arr::get($request->getQueryParams(), 'access_token'),
-            'sessionId' => Arr::get($request->getQueryParams(), 'sessionId'),
+            'access_token' => $accessToken,
+            'sessionId' => $sessionId,
         ], [
             'access_token' => 'required',
             'sessionId' => 'required'
@@ -88,7 +82,7 @@ class QQUserController extends AbstractResourceController
         if (! $qqUser || ! $qqUser->user) {
             // 站点关闭注册
             if (!(bool)$this->setting->get('register_close')) {
-                throw new PermissionDeniedException('register_close');
+                $this->outPut(ResponseCode::REGISTER_CLOSE);
             }
             //注册
             if (!$qqUser) {
@@ -96,8 +90,8 @@ class QQUserController extends AbstractResourceController
                 $preData['nickname'] = $user->nickname;
                 $preData['sex'] = $user->sex;
                 $preData['headimgurl'] = $user->avatar;
-                $preData['province'] = $user->user['province'];
-                $preData['city'] = $user->user['city'];
+                $preData['province'] = !empty($user->user['province']) ? $user->user['province'] : '';
+                $preData['city'] = !empty($user->user['city']) ? $user->user['city'] : '';
 
                 $qqUser = UserQq::build(Arr::only(
                     $preData,
@@ -106,10 +100,10 @@ class QQUserController extends AbstractResourceController
                 $qqUser->save();
             }
             $data['username'] = $qqUser->nickname;
-            $data['register_ip'] = ip($request->getServerParams());
-            $data['register_port'] = Arr::get($request->getServerParams(), 'REMOTE_PORT', 0);
+            $data['register_ip'] = ip($this->request->getServerParams());
+            $data['register_port'] = Arr::get($this->request->getServerParams(), 'REMOTE_PORT', 0);
             $registerUser = $this->bus->dispatch(
-                new RegisterQQUser($request->getAttribute('actor'), $data)
+                new RegisterQQUser($this->request->getAttribute('actor'), $data)
             );
             $qqUser->user_id = $registerUser->id;
             $qqUser->save();
@@ -128,6 +122,10 @@ class QQUserController extends AbstractResourceController
         if ($response->getStatusCode() === 200) {
             $this->events->dispatch(new Logind($qqUser->user));
         }
-        return json_decode($response->getBody());
+
+        $accessToken = json_decode($response->getBody());
+        $result = $this->camelData(collect($accessToken));
+        $result = $this->addUserInfo($qqUser->user, $result);
+        $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 }

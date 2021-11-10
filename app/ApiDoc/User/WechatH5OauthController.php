@@ -7,8 +7,8 @@
  *     tags={"注册登录"},
  *     @OA\Parameter(name="redirect",in="query",required=true,description="H5授权回调",@OA\Schema(type="string")),
  *     @OA\Response(
- *        response=200,
- *        description="返回数据"
+ *        response=302,
+ *        description="直接跳转到H5授权页"
  *     )
  * )
  */
