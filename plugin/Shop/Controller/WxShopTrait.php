@@ -49,20 +49,17 @@ trait WxShopTrait
         if (!empty($this->wxApp)){
             return [0,$this->wxApp];
         }
-        $settingData = app()->make(PluginSettings::class)->getSetting($appId);
-        if (empty($settingData)){
-            return false;
-        }
+        $settingData = app()->make(PluginSettings::class)->getSettingRecord($appId);
         if (empty($settingData)){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
-        if (!isset($settingData["wxAppId"])
-            || empty($settingData["wxAppId"])
-            || !isset($settingData["wxAppSecret"])
-            || empty($settingData["wxAppSecret"])){
+        if (!isset($settingData["public_value"]["wxAppId"])
+            || empty($settingData["public_value"]["wxAppId"])
+            || !isset($settingData["private_value"]["wxAppSecret"])
+            || empty($settingData["private_value"]["wxAppSecret"])){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
-        $this->wxApp = $this->miniProgram(["app_id"=>$settingData["wxAppId"],"secret"=>$settingData["wxAppSecret"]]);
+        $this->wxApp = $this->miniProgram(["app_id"=>$settingData["public_value"]["wxAppId"],"secret"=>$settingData["private_value"]["wxAppSecret"]]);
         if (empty($this->wxApp)){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件配置不正确"];
         }
@@ -286,16 +283,15 @@ trait WxShopTrait
     public function getSchemeProduct($appId,$path)
     {
         list($ret2,$accessToken) = $this->getAccessToken($appId);
-        $settingData = app()->make(PluginSettings::class)->getSetting($appId);
-        if (empty($settingData)){
-            return "";
-        }
-        if (empty($settingData["wxScheme"])){
+        $settingData = app()->make(PluginSettings::class)->getSettingRecord($appId);
+        if (empty($settingData) || empty($settingData["public_value"]["wxScheme"])
+            || empty($settingData["public_value"]["wxAppId"])
+            || empty($settingData["private_value"]["wxAppSecret"])){
             return "";
         }
 
-        $wxAppId = $settingData["wxAppId"];
-        $wxAppSecret = $settingData["wxAppSecret"];
+        $wxAppId = $settingData["public_value"]["wxAppId"];
+        $wxAppSecret = $settingData["private_value"]["wxAppSecret"];
 
         $pathNew = str_replace("plugin-private://","__plugin__/",$path);
         $post_data['jump_wxa']['path'] = $pathNew;
