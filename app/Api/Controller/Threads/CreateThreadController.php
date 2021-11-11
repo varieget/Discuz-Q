@@ -266,7 +266,7 @@ class CreateThreadController extends DzqController
                 'key' => $key,
                 'value' => json_encode($value['body'], 256),
                 'price_type' => !empty($thread->attachment_price) ? 1 : 0,
-                'price_ids' =>  is_array($indexes[$key]['body']['priceList']) && !empty($indexes[$key]['body']['priceList']) ? json_encode($indexes[$key]['body']['priceList']) : '{}'
+                'price_ids' =>  !empty($indexes[$key]['body']['priceList']) && is_array($indexes[$key]['body']['priceList']) ? json_encode($indexes[$key]['body']['priceList']) : '{}'
             ];
             $tags[] = [
                 'thread_id' => $thread['id'],
