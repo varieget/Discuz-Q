@@ -54,7 +54,7 @@ $route->post('/users/username.login', 'username.login', ApiController\Users\Logi
 //注册
 $route->withFrequency(function (RouteCollection $route) {
     $route->post('/users/username.register', 'username.register', ApiController\Users\RegisterController::class);
-}, 5, 60, 10 * 60);
+}, 10, 60, 10 * 60);
 //控制用户名密码入口是否展示 -> 已迁移至forum接口
 //$route->get('/users/username.login.isdisplay', 'username.login.isdisplay', ApiController\UsersV3\LsDisplayController::class);
 //用户昵称检测
