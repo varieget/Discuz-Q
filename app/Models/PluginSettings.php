@@ -137,26 +137,6 @@ class PluginSettings extends DzqModel
         return $setting;
     }
 
-    public function getSetting($appId)
-    {
-        $setting = $this->getData($appId);
-        if (empty($setting)) {
-            return [];
-        }
-
-        $result = [];
-        if (!empty($setting['private_value'])) {
-            $privateValue = json_decode($setting['private_value'], true);
-            $result = $privateValue;
-        }
-        if (!empty($setting['public_value'])) {
-            $publicValue = json_decode($setting['public_value'], true);
-            $result = array_merge($result, $publicValue);
-        }
-
-        return $result;
-    }
-
     public function getAllSettingRecord()
     {
         $appSettingMap = $this->allData();
