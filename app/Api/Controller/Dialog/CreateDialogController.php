@@ -20,6 +20,7 @@ namespace App\Api\Controller\Dialog;
 
 use App\Commands\Dialog\CreateDialog;
 use App\Common\ResponseCode;
+use App\Models\DialogMessage;
 use App\Providers\DialogMessageServiceProvider;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -50,6 +51,9 @@ class CreateDialogController extends DzqController
     {
         if ($this->user->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
+        }
+        if (DialogMessage::isDisable()) {
+            $this->outPut(ResponseCode::DIALOG_MESSAGE_DISABLE);
         }
         return $userRepo->canCreateDialog($this->user);
     }

@@ -143,6 +143,8 @@ class ResponseCode
 
     const PAY_ORDER_FAIL = -10000;
 
+    const DIALOG_MESSAGE_DISABLE = -11000;
+
     public static $codeMap = [
         self::NOT_INSTALL => '当前站点未安装',
         self::SITE_CLOSED => '站点已关闭',
@@ -252,5 +254,6 @@ class ResponseCode
         self::DOWNLOAD_NUMS_IS_TOPLIMIT =>'超过今天可下载附件的最大次数',
         self::RESOURCE_IS_REVIEW =>'资源审核中',
         self::SET_ERROR =>'设置失败',
+        self::DIALOG_MESSAGE_DISABLE => '私信已被禁用'
     ];
 }
