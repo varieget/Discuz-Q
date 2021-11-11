@@ -23,6 +23,7 @@ use App\Common\CacheKey;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Database\ScopeVisibilityTrait;
@@ -1131,8 +1132,8 @@ class User extends DzqModel
         return $user->username;
     }
 
-    protected function clearCache()
+    public function clearSomeCache()
     {
-        \Discuz\Base\DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $this->id);
+        DzqCache::delKey(CacheKey::DZQ_LOGIN_IN_USER_BY_ID.$this->id);
     }
 }

@@ -18,6 +18,8 @@
 
 define('DISCUZ_START', microtime(true));
 
+define('ARTISAN_BINARY', 'http');
+
 require __DIR__ . '/../vendor/autoload.php';
 
 $app = new Discuz\Foundation\Application(dirname(__DIR__));
