@@ -109,9 +109,11 @@ class CreateUserWalletCashController extends DzqController
             ->where('created_at', '>=', Carbon::today())
             ->where('refunds_status', UserWalletCash::REFUNDS_STATUS_NO)
             ->sum('cash_apply_amount');
-        if (bccomp($cash_sum_limit, $totday_cash_amount, 2) == -1) {
+        $currentCashAmount = $totday_cash_amount + $cashApplyAmount;
+        if (bccomp($cash_sum_limit, $currentCashAmount, 2) == -1) {
             $log->error("超出每日提现金额限制 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-            $this->outPut(ResponseCode::NET_ERROR, '超出每日提现金额限制');
+            $remainCashAmountLimit = $cash_sum_limit - $totday_cash_amount;
+            $this->outPut(ResponseCode::NET_ERROR, '超出每日提现总金额上限，今日剩余提现额度为' . $remainCashAmountLimit . '元.');
         }
         //计算手续费
         $tax_ratio  = $cash_rate; //手续费率

@@ -121,16 +121,6 @@ class CreateThreadVideo
         //添加防盗链
         $threadVideo->media_url = (new ThreadVideo())->getMediaUrl(['media_url' => $threadVideo->media_url]);
 
-        if ($threadVideo->type === ThreadVideo::TYPE_OF_VIDEO && $this->thread->exists  && empty($this->thread->is_draft)) {
-            // 发布文章时，转码
-            $this->transcodeVideo($threadVideo->file_id, 'TranscodeTaskSet');
-
-            // 转动图
-            if ($template_name = $this->settings->get('qcloud_vod_taskflow_gif', 'qcloud')) {
-                $this->processMediaByProcedure($fileId, $template_name);
-            }
-        }
-
         return $threadVideo;
     }
 }

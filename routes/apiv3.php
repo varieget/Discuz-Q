@@ -54,7 +54,7 @@ $route->post('/users/username.login', 'username.login', ApiController\Users\Logi
 //注册
 $route->withFrequency(function (RouteCollection $route) {
     $route->post('/users/username.register', 'username.register', ApiController\Users\RegisterController::class);
-}, 5, 60, 10 * 60);
+}, 10, 60, 10 * 60);
 //控制用户名密码入口是否展示 -> 已迁移至forum接口
 //$route->get('/users/username.login.isdisplay', 'username.login.isdisplay', ApiController\UsersV3\LsDisplayController::class);
 //用户昵称检测
@@ -76,6 +76,8 @@ $route->post('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiC
 $route->post('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\Users\WechatMiniProgramBindController::class);
 $route->post('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\Users\WechatMiniProgramRebindController::class);
 $route->get('/oauth/wechat/miniprogram/code', 'wechat.mini.program.code', ApiController\Users\WechatMiniProgramCodeController::class);
+$route->get('/oauth/qq', 'qq.login', ApiController\Users\QQLoginController::class);
+$route->get('/oauth/qq/user', 'qq.user', ApiController\Users\QQUserController::class);
 
 //手机浏览器（微信外）登录并绑定微信
 //$route->get('/users/mobilebrowser/wechat/h5.bind', 'mobilebrowser.wechat.h5.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
