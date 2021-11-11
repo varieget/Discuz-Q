@@ -20,5 +20,5 @@ namespace App\Common;
 
 class DzqRegex
 {
-    public static $topic = '/(?<!\\\)#[^<|>|;|&]+?[^\\\]#/i';
+    public static $topic = '/(?<!\\\|<code>)#[^<|>|;|&]+?[^\\\]#/i';
 }
