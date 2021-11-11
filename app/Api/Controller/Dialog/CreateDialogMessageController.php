@@ -40,6 +40,9 @@ class CreateDialogMessageController extends DzqController
         if ($this->user->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
+        if (DialogMessage::isDisable()) {
+            $this->outPut(ResponseCode::DIALOG_MESSAGE_DISABLE);
+        }
         return $userRepo->canCreateDialog($this->user);
     }
 
