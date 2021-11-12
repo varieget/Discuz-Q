@@ -19,6 +19,9 @@ class Discuz
 
     public function main($topic, $number, $url, $cookie = '', $port = 80)
     {
+        if (substr($url, -1) != '/') {
+            $url = $url . '/';
+        }
         $this->siteUrl = $url;
         $this->urlPort = $port;
         $this->urlCookie = $cookie;
