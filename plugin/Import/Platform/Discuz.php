@@ -2,11 +2,11 @@
 
 namespace Plugin\Import\Platform;
 
-use Plugin\Import\Traits\ImportTrait;
+use App\Import\PlatformTrait;
 
 class Discuz
 {
-    use ImportTrait;
+    use PlatformTrait;
 
     private $siteUrl;
     private $urlCookie;
@@ -19,6 +19,9 @@ class Discuz
 
     public function main($topic, $number, $url, $cookie = '', $port = 80)
     {
+        if (substr($url, -1) != '/') {
+            $url = $url . '/';
+        }
         $this->siteUrl = $url;
         $this->urlPort = $port;
         $this->urlCookie = $cookie;

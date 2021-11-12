@@ -3,11 +3,11 @@
 namespace Plugin\Import\Platform;
 
 use Carbon\Carbon;
-use Plugin\Import\Traits\ImportTrait;
+use App\Import\PlatformTrait;
 
 class OfficialAccountArticle
 {
-    use ImportTrait;
+    use PlatformTrait;
 
     //微信内容div正则
     private $wxContentDiv = '/<div class="rich_media_content " id="js_content" style="visibility: hidden;">(.*?)<\/div>/s';

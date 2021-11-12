@@ -28,7 +28,6 @@ use App\Models\Group;
 use App\Models\GroupPaidUser;
 use App\Models\User;
 use App\Models\UserActionLogs;
-use App\Models\AdminActionLog;
 use App\Notifications\Messages\Database\GroupMessage;
 use App\Notifications\System;
 use App\Repositories\UserRepository;
@@ -231,13 +230,6 @@ class UpdateUser
 
         $user->changeUsername($username, $isAdmin);
 
-        if (! $isSelf) {
-            AdminActionLog::createAdminActionLog(
-                $this->actor->id,
-                '更改了用户【'. $old_username .'】为【'. $username .'】'
-            );
-        }
-
         $validate['username'] = $username;
 
         return $validate;
@@ -283,13 +275,6 @@ class UpdateUser
         }
 
         $user->changePassword($newPassword);
-
-        if (! $isSelf) {
-            AdminActionLog::createAdminActionLog(
-                $this->actor->id,
-                '更改了用户【'. $user->username .'】的密码'
-            );
-        }
 
         $validate['password'] = $newPassword;
 
@@ -406,10 +391,6 @@ class UpdateUser
             '3' => '审核拒绝',
             '4' => '审核忽略'
         ];
-        AdminActionLog::createAdminActionLog(
-            $this->actor->id,
-            '更改了用户【'. $user->username .'】的用户状态为【'. $status_desc[$status] .'】'
-        );
     }
 
     //记录拒绝原因
@@ -459,11 +440,6 @@ class UpdateUser
         if ($newGroups && $newGroups->toArray() != $oldGroups->keys()->toArray()) {
             // 更新用户组
             $user->groups()->sync($newGroups);
-
-            AdminActionLog::createAdminActionLog(
-                $this->actor->id,
-                '更改了用户【'. $user->username .'】的用户角色为【'. $groupName['name'] .'】'
-            );
 
             $deleteGroups = array_diff($oldGroups->keys()->toArray(), $newGroups->toArray());
             if ($deleteGroups) {

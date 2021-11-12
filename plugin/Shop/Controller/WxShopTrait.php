@@ -49,18 +49,20 @@ trait WxShopTrait
         if (!empty($this->wxApp)){
             return [0,$this->wxApp];
         }
-        $settingData = app()->make(PluginSettings::class)->getSetting($appId);
-        if (empty($settingData)){
-            return false;
-        }
+        $settingData = app()->make(PluginSettings::class)->getSettingRecord($appId);
         if (empty($settingData)){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
-        if (!isset($settingData["wxAppId"])
-            || !isset($settingData["wxAppSecret"])){
+        if (!isset($settingData["public_value"]["wxAppId"])
+            || empty($settingData["public_value"]["wxAppId"])
+            || !isset($settingData["private_value"]["wxAppSecret"])
+            || empty($settingData["private_value"]["wxAppSecret"])){
             return [ResponseCode::RESOURCE_NOT_FOUND,"插件没配置"];
         }
-        $this->wxApp = $this->miniProgram(["app_id"=>$settingData["wxAppId"],"secret"=>$settingData["wxAppSecret"]]);
+        $this->wxApp = $this->miniProgram(["app_id"=>$settingData["public_value"]["wxAppId"],"secret"=>$settingData["private_value"]["wxAppSecret"]]);
+        if (empty($this->wxApp)){
+            return [ResponseCode::RESOURCE_NOT_FOUND,"插件配置不正确"];
+        }
         return [0, $this->wxApp];
     }
 
@@ -241,29 +243,30 @@ trait WxShopTrait
         list($result,$wxApp) = $this->getWxApp($appId);
         if ($result !== 0){
             DzqLog::error('WxShopTrait::getProductQrCode', [], $wxApp);
-            return "";
+            return ["",false];
         }
 
         $qrResponse = $wxApp->app_code->get("pages/index/index");
         if(is_array($qrResponse) && isset($qrResponse['errcode']) && isset($qrResponse['errmsg'])) {
             DzqLog::error('WxShopTrait::getShopQrCode', [], $qrResponse['errmsg']);
-            return "";
+            return  ["",false];
         }
 
-        $fileName = "wxshop_".$appId."_".time().".jpg";
+        $fileName = "wxshop_".$appId.".jpg";
         $qrBuf = $qrResponse->getBody()->getContents();
 
         try {
             $settings =  app()->make(SettingsRepository::class);
             $fileSystemFactory =  app()->make( \Illuminate\Contracts\Filesystem\Factory::class);
 
-            $path='public/shop/'.$fileName;
+            $isRemote = false;
+            $path='shop/'.$fileName;
             if ($settings->get('qcloud_cos', 'qcloud')) {
                 $fileSystemFactory->disk('cos')->put($path, $qrBuf);
-                return $fileSystemFactory->disk('cos')->url($path);
+                $isRemote = true;
             }
-            $fileSystemFactory->disk('local')->put($path, $qrBuf);
-            return $fileSystemFactory->disk('local')->url($path);
+            $fileSystemFactory->disk('public')->put($path, $qrBuf);
+            return [$path,$isRemote];
         } catch (Exception $e) {
             if (empty($e->validator) || empty($e->validator->errors())) {
                 $errorMsg = $e->getMessage();
@@ -272,7 +275,7 @@ trait WxShopTrait
             }
             DzqLog::error('ShopFileSave::saveFile', [], $errorMsg);
 
-            return "";
+            return  ["",false];
         }
     }
 
@@ -280,16 +283,15 @@ trait WxShopTrait
     public function getSchemeProduct($appId,$path)
     {
         list($ret2,$accessToken) = $this->getAccessToken($appId);
-        $settingData = app()->make(PluginSettings::class)->getSetting($appId);
-        if (empty($settingData)){
-            return "";
-        }
-        if (empty($settingData["wxScheme"])){
+        $settingData = app()->make(PluginSettings::class)->getSettingRecord($appId);
+        if (empty($settingData) || empty($settingData["public_value"]["wxScheme"])
+            || empty($settingData["public_value"]["wxAppId"])
+            || empty($settingData["private_value"]["wxAppSecret"])){
             return "";
         }
 
-        $wxAppId = $settingData["wxAppId"];
-        $wxAppSecret = $settingData["wxAppSecret"];
+        $wxAppId = $settingData["public_value"]["wxAppId"];
+        $wxAppSecret = $settingData["private_value"]["wxAppSecret"];
 
         $pathNew = str_replace("plugin-private://","__plugin__/",$path);
         $post_data['jump_wxa']['path'] = $pathNew;

@@ -1,5 +1,5 @@
 <?php
-
+/**@var Discuz\Http\RouteCollection $route */
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *

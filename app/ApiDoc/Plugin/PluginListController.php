@@ -27,6 +27,14 @@
  *                 @OA\Property(property="canUsePlugin",type="boolean", description="是否可以使用插件")
  *             ),
  *             @OA\Property(property="plugin_trigger",type="string", description="触发前端插件的js文件"),
+ *             @OA\Property(property="setting",type="object", description="管理后台设置",
+ *                 @OA\Property(property="id",type="integer", description="插件设置表id"),
+ *                 @OA\Property(property="appId",type="string", description="插件appid"),
+ *                 @OA\Property(property="appName",type="string", description="插件name_en"),
+ *                 @OA\Property(property="type",type="integer", description="插件类型"),
+ *                 @OA\Property(property="publicValue",type="object", description="公开的配置（里面的内容插件开发者自行定义）"),
+ *                 @OA\Property(property="privateValue",type="object", description="私密的配置（里面的内容插件开发者自行定义）")
+ *             ),
  *         )))
  *     }))
  * )

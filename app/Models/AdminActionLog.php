@@ -43,28 +43,40 @@ class AdminActionLog extends Model
      */
     protected $table = 'admin_action_logs';
 
+    const ACTION_OF_SETTING = 1000; // 操作站点设置
+
+    const ACTION_OF_PERMISSION = 1001; // 操作权限
+
+    const ACTION_OF_GROUP = 1002; // 操作用户组信息
+
+    const ACTION_OF_USER = 1003; // 操作用户信息
+
+    const ACTION_OF_CATEGORY = 1004; // 操作内容分类
+
+    const ACTION_OF_TOPIC = 1005; // 操作话题
+
+    const ACTION_OF_THREAD = 1006; // 操作帖子
+
+    const ACTION_OF_COMMENT = 1007; // 操作评论
+
     /**
      * Create a new adminactionlog.
      *
-     * @param string $user_id
-     * @param string $action_desc
-     * @param string $ip
-     * @return static
+     * @property int $userId
+     * @property int $type
+     * @property string $actionDesc
      */
-    public static function createAdminActionLog($user_id, $action_desc)
+    public static function createAdminActionLog($userId, $type, $actionDesc)
     {
         $request = app('request');
         $adminactionlog = new static;
-
-        $adminactionlog->user_id = $user_id;
-        $adminactionlog->action_desc = $action_desc;
+        $adminactionlog->type = $type;
+        $adminactionlog->user_id = $userId;
+        $adminactionlog->action_desc = $actionDesc;
         $adminactionlog->ip = ip($request->getServerParams());
         $adminactionlog->created_at = Carbon::now();
-
         $adminactionlog->save();
-
         $adminactionlog->raise(new Created($adminactionlog));
-
         return $adminactionlog;
     }
 }

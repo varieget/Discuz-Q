@@ -208,7 +208,7 @@ class UpdateAdminUser
             return $validate;
         }
 
-        $old_username = $user->username;
+        $oldUsername = $user->username;
 
         // 敏感词校验
         $this->censor->checkText($username, 'username');
@@ -227,7 +227,8 @@ class UpdateAdminUser
         if (! $isSelf) {
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                '更改了用户【'. $old_username .'】为【'. $username .'】'
+                AdminActionLog::ACTION_OF_USER,
+                '更改了用户名【'. $oldUsername .'】为【'. $username .'】'
             );
         }
 
@@ -258,7 +259,8 @@ class UpdateAdminUser
         if (! $isSelf) {
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                '更改了用户【'. $user->username .'】的密码'
+                AdminActionLog::ACTION_OF_USER,
+                '更改了用户【'. $user->username .'】的登录密码.'
             );
         }
 
@@ -375,6 +377,7 @@ class UpdateAdminUser
         ];
         AdminActionLog::createAdminActionLog(
             $this->actor->id,
+            AdminActionLog::ACTION_OF_USER,
             '更改了用户【'. $user->username .'】的用户状态为【'. $status_desc[$status] .'】'
         );
     }
@@ -433,6 +436,7 @@ class UpdateAdminUser
 
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
+                AdminActionLog::ACTION_OF_USER,
                 '更改了用户【'. $user->username .'】的用户角色为【'. $groupName['name'] .'】'
             );
 
@@ -591,8 +595,17 @@ class UpdateAdminUser
 
         // 过滤内容
         $nickname = $this->specialChar->purify($nickname);
+        $oldNickname = $user->nickname;
         $user->changeNickname($nickname);
         $validate['nickname'] = $nickname;
+
+        if (! $isSelf) {
+            AdminActionLog::createAdminActionLog(
+                $this->actor->id,
+                AdminActionLog::ACTION_OF_USER,
+                '更改了用户昵称【'. $oldNickname .'】为【'. $nickname .'】'
+            );
+        }
 
         return $validate;
     }

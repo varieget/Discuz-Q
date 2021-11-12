@@ -3,6 +3,7 @@
 
 namespace Plugin\Shop;
 
+use App\Api\Controller\Plugin\PluginTrait;
 use App\Api\Serializer\AttachmentSerializer;
 use App\Models\Attachment;
 use App\Models\PluginSettings;
@@ -13,6 +14,7 @@ use Plugin\Shop\Model\ShopProducts;
 class ShopBusi extends TomBaseBusi
 {
     use WxShopTrait;
+    use PluginTrait;
 
     public const TYPE_ORIGIN = 10;
     public const TYPE_WX_SHOP = 11;
@@ -77,6 +79,11 @@ class ShopBusi extends TomBaseBusi
 
     public function select()
     {
+        if (!isset($this->body["_plugin"])) {
+            $plugin = ["name"=>"shop"];
+            $this->body["_plugin"] = $plugin;
+        }
+
         $products = $this->getParams('products');
 
         $this->selectWxshop($products);
@@ -88,10 +95,17 @@ class ShopBusi extends TomBaseBusi
 
     private function selectWxShop( &$products){
         $qrCode = "";
-        $setting = app()->make(PluginSettings::class)->getSetting($this->tomId);
-        if ($setting && isset($setting["wxQrcode"]) && isset($setting["wxQrcode"])){
-            $qrCode = $setting["wxQrcode"];
+        $setting = app()->make(PluginSettings::class)->getSettingRecord($this->tomId);
+        if (!empty($setting) && !empty($setting["public_value"]["wxQrcode"])){
+            if(!empty($setting["public_value"]["checkSiteUrl"]) && isset($setting["public_value"]["checkSiteUrl"]["wxQrcode"])){
+                $img = $setting["public_value"]["wxQrcode"];
+                $isRemote = $setting["public_value"]["checkSiteUrl"]["wxQrcode"];
+                $qrCode = $this->siteUrlSplicing($img,$isRemote);
+            }else{
+                $qrCode = $setting["public_value"]["wxQrcode"];
+            }
         }
+
         $serializer = $this->app->make(AttachmentSerializer::class);
 
         foreach ($products as &$item){
@@ -136,9 +150,11 @@ class ShopBusi extends TomBaseBusi
 
 
     private function doProduct($productId){
-
-        $config = app()->make(PluginSettings::class)->getSetting($this->tomId);
-        $wxAppId = $config["wxAppId"];
+        $config = app()->make(PluginSettings::class)->getSettingRecord($this->tomId);
+        if (empty($config) || empty($config["public_value"]["wxAppId"])){
+            return false;
+        }
+        $wxAppId = $config["public_value"]["wxAppId"];
 
         list($result,$accssToken) = $this->getAccessToken($this->tomId);
         if ($result !== 0){

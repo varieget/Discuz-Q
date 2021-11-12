@@ -50,7 +50,7 @@ class ThreadTypeListController extends DzqController
        $result = [
            ["name"=>"视频","type"=>(string)TomConfig::TOM_VIDEO],
            ["name"=>"图片","type"=>(string)TomConfig::TOM_IMAGE],
-           ["name"=>"语音","type"=>(string)TomConfig::TOM_VIDEO],
+           ["name"=>"语音","type"=>(string)TomConfig::TOM_AUDIO],
            ["name"=>"红包","type"=>(string)TomConfig::TOM_REDPACK],
            ["name"=>"投票","type"=>(string)TomConfig::TOM_VOTE],
            ["name"=>"悬赏问答","type"=>(string)TomConfig::TOM_REWARD],
@@ -67,19 +67,18 @@ class ThreadTypeListController extends DzqController
         }
 
         $isDisplay = $this->settings->get('thread_optimize', 'default');
-        if (!$isDisplay &&  Utils::requestFrom() == Platform::MinProgram) {
-            $outType = ['104','106','107','61540fef8f4de8'];
-            $oneCollect = collect($result);
-            $result = $oneCollect->filter(function ($value) use($outType) {
-                if (in_array($value["type"],$outType)){
-                    return false;
-                }else{
-                    return true;
+       if (!$isDisplay &&  Utils::requestFrom() == Platform::MinProgram) {
+            $optimizeTemp = TomConfig::OPTIMIZE_TYPE_LIST;
+            $resultTemp = [];
+            foreach ($result as $oneItem){
+                if (!in_array($oneItem["type"], $optimizeTemp)){
+                    $resultTemp[] = $oneItem;
                 }
-            })->toArray();
-        }
+            }
+            $result = $resultTemp;
+       }
 
-        $this->outPut(ResponseCode::SUCCESS, '', $result);
+       $this->outPut(ResponseCode::SUCCESS, '', $result);
     }
 
 }

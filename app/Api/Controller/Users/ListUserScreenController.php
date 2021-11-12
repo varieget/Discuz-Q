@@ -43,6 +43,7 @@ class ListUserScreenController extends DzqAdminController
         $currentPage = $this->inPut('page');
         $perPage = $this->inPut('perPage');
         $filter = (array)$this->inPut('filter');
+        $filter = $this->replaceSymbol($filter, ['username', 'nickname']);
 
         $query = User::query();
         $query->select('users.id AS userId', 'users.expired_at', 'users.nickname', 'users.mobile', 'users.username', 'users.avatar', 'users.thread_count', 'users.status', 'users.created_at', 'users.updated_at', 'group_id', 'expiration_time');
@@ -58,13 +59,13 @@ class ListUserScreenController extends DzqAdminController
                 foreach ($usernames as $un) {
                     if (Str::startsWith($un, '*') || Str::endsWith($un, '*')) {
                         $un = Str::replaceLast('*', '%', Str::replaceFirst('*', '%', $un));
-                        $query->orWhere('username', 'like', $un);
+                        $query->orWhere('username', 'like', '%'.$un.'%');
                     }
                 }
             } else {
                 if (Str::startsWith($username, '*') || Str::endsWith($username, '*')) {
                     $username = Str::replaceLast('*', '%', Str::replaceFirst('*', '%', $username));
-                    $query->orWhere('username', 'like', $username);
+                    $query->orWhere('username', 'like', '%'.$username.'%');
                 } else {
                     $query->where('users.username', 'like', '%'.$username.'%');
                 }
@@ -197,5 +198,18 @@ class ListUserScreenController extends DzqAdminController
         $users['pageData'] = $userDatas ?? [];
 
         $this->outPut(ResponseCode::SUCCESS, '', $users);
+    }
+
+    protected function replaceSymbol($data, $replace = [])
+    {
+        if (empty($replace)) {
+            return $data;
+        }
+        foreach ($replace as $value) {
+            if (!empty($data[$value])) {
+                $data[$value] = addcslashes($data[$value], '%_');
+            }
+        }
+        return $data;
     }
 }

@@ -39,6 +39,10 @@ class AppendController extends DzqController
     public function main()
     {
         $activity = $this->activity;
+        $t = time();
+        if (strtotime($activity['register_start_time']) > $t || $t > strtotime($activity['register_end_time'])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '报名未开始或已结束，报名失败');
+        }
         $totalNumber = $activity['total_number'];
         $activityUserBuilder = ActivityUser::query()->where([
             'activity_id'=>$activity->id,

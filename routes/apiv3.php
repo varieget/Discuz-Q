@@ -1,4 +1,7 @@
 <?php
+
+
+
 /**
  * Copyright (C) 2020 Tencent Cloud.
  *
@@ -14,13 +17,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 use App\Api\Controller as ApiController;
+use \Discuz\Http\RouteCollection;
+/**@var RouteCollection $route */
 
 //删除用户和微信用户接口，上线前需去除
 //$route->post('/user/delete', 'user.delete', ApiController\UsersV3\DeleteUserController::class);
 //$route->post('/user/delete/wechat', 'user.delete.wechat', ApiController\UsersV3\UnbindWechatController::class);
 //$route->get('/models', 'models.get', ApiController\UsersV3\GetModelsController::class);
 //$route->get('/swagger', 'swagger', ApiController\SwaggerController::class);
+
+$route->withFrequency(function(RouteCollection $route){
+    $route->get('/users/pc/wechat/h5.login', 'pc.wechat.h5.login.poll', ApiController\Users\WechatPcLoginPollController::class);
+    $route->get('/users/pc/wechat/h5.bind', 'pc.wechat.h5.bind.poll', ApiController\Users\WechatPcBindPollController::class);
+    $route->get('/users/pc/wechat/miniprogram.bind', 'pc.wechat.miniprogram.bind.poll', ApiController\Users\MiniProgramPcBindPollController::class);
+    $route->get('/users/pc/wechat/miniprogram.login', 'pc.wechat.miniprogram.login.poll', ApiController\Users\MiniProgramPcLoginPollController::class);
+    $route->get('/users/pc/wechat.rebind.poll', 'pc.wechat.rebind.poll', ApiController\Users\WechatPcRebindPollController::class);
+    $route->get('/dialog/message', 'dialog.message.list', ApiController\Dialog\ListDialogMessageController::class);
+    $route->get('/unreadnotification', 'unreadnotification.', ApiController\Notification\UnreadNotificationController::class);
+    $route->post('/dialog.update', 'dialog.update', ApiController\Dialog\UpdateUnreadStatusController::class);
+},50,30,10);
 /*
 |--------------------------------------------------------------------------
 | 注册/登录
@@ -30,17 +47,14 @@ use App\Api\Controller as ApiController;
 $route->get('/users/pc/wechat/h5.genqrcode', 'pc.wechat.h5.qrcode', ApiController\Users\WechatH5QrCodeController::class);
 $route->get('/users/pc/wechat/miniprogram.genqrcode', 'pc.wechat.miniprogram.genqrcode', ApiController\Users\MiniProgramQrcodeController::class);
 $route->get('/users/pc/wechat.rebind.genqrcode', 'pc.wechat.rebind.genqrcode', ApiController\Users\WechatPcRebindQrCodeController::class);
-$route->get('/users/pc/wechat/h5.login', 'pc.wechat.h5.login.poll', ApiController\Users\WechatPcLoginPollController::class);
-$route->get('/users/pc/wechat/h5.bind', 'pc.wechat.h5.bind.poll', ApiController\Users\WechatPcBindPollController::class);
-$route->get('/users/pc/wechat/miniprogram.bind', 'pc.wechat.miniprogram.bind.poll', ApiController\Users\MiniProgramPcBindPollController::class);
-$route->get('/users/pc/wechat/miniprogram.login', 'pc.wechat.miniprogram.login.poll', ApiController\Users\MiniProgramPcLoginPollController::class);
-$route->get('/users/pc/wechat.rebind.poll', 'pc.wechat.rebind.poll', ApiController\Users\WechatPcRebindPollController::class);
 $route->get('/users/mobilebrowser/wechat/miniprogram.genscheme', 'pc.wechat.miniprogram.login.poll', ApiController\Users\MiniProgramSchemeGenController::class);
 $route->get('/users/mobilebrowser/wechat/miniprogram.genbindscheme', 'mobilebrowser.wechat.miniprogram.genbindscheme', ApiController\Users\MiniProgramBindSchemeGenController::class);
 //登录
 $route->post('/users/username.login', 'username.login', ApiController\Users\LoginController::class);
 //注册
-$route->post('/users/username.register', 'username.register', ApiController\Users\RegisterController::class);
+$route->withFrequency(function (RouteCollection $route) {
+    $route->post('/users/username.register', 'username.register', ApiController\Users\RegisterController::class);
+}, 10, 60, 10 * 60);
 //控制用户名密码入口是否展示 -> 已迁移至forum接口
 //$route->get('/users/username.login.isdisplay', 'username.login.isdisplay', ApiController\UsersV3\LsDisplayController::class);
 //用户昵称检测
@@ -62,6 +76,8 @@ $route->post('/users/wechat/miniprogram.login', 'wechat.miniprogram.login', ApiC
 $route->post('/users/wechat/miniprogram.bind', 'wechat.miniprogram.bind', ApiController\Users\WechatMiniProgramBindController::class);
 $route->post('/users/wechat/miniprogram.rebind', 'wechat.miniprogram.rebind', ApiController\Users\WechatMiniProgramRebindController::class);
 $route->get('/oauth/wechat/miniprogram/code', 'wechat.mini.program.code', ApiController\Users\WechatMiniProgramCodeController::class);
+$route->get('/oauth/qq', 'qq.login', ApiController\Users\QQLoginController::class);
+$route->get('/oauth/qq/user', 'qq.user', ApiController\Users\QQUserController::class);
 
 //手机浏览器（微信外）登录并绑定微信
 //$route->get('/users/mobilebrowser/wechat/h5.bind', 'mobilebrowser.wechat.h5.bind', ApiController\UsersV3\MiniProgramSchemeGenController::class);
@@ -79,25 +95,25 @@ $route->get('/user/signinfields.list', 'user.signinfields.list', ApiController\S
 $route->post('/user/signinfields.create', 'user.signinfields.create', ApiController\SignInFields\CreateUserSignInController::class);
 
 //帖子查询
-$route->get('/thread.detail','thread.detail',ApiController\Threads\ThreadDetailController::class);
-$route->get('/thread.list','thread.list',ApiController\Threads\ThreadListController::class);
-$route->get('/thread.stick','thread.stick',ApiController\Threads\ThreadStickController::class);
-$route->get('/thread.likedusers','thread.likedusers',ApiController\Threads\ThreadLikedUsersController::class);
-$route->get('/tom.detail','tom.detail',ApiController\Threads\SelectTomController::class);
-$route->get('/thread.recommends','thread.recommends',ApiController\Threads\ThreadRecommendController::class);
-$route->get('/thread.typelist','thread.typelist',ApiController\Threads\ThreadTypeListController::class);
+$route->get('/thread.detail', 'thread.detail', ApiController\Threads\ThreadDetailController::class);
+$route->get('/thread.list', 'thread.list', ApiController\Threads\ThreadListController::class);
+$route->get('/thread.stick', 'thread.stick', ApiController\Threads\ThreadStickController::class);
+$route->get('/thread.likedusers', 'thread.likedusers', ApiController\Threads\ThreadLikedUsersController::class);
+$route->get('/tom.detail', 'tom.detail', ApiController\Threads\SelectTomController::class);
+$route->get('/thread.recommends', 'thread.recommends', ApiController\Threads\ThreadRecommendController::class);
+$route->get('/thread.typelist', 'thread.typelist', ApiController\Threads\ThreadTypeListController::class);
 //帖子变更
-$route->post('/thread.create','thread.create',ApiController\Threads\CreateThreadController::class);
-$route->post('/thread.delete','thread.delete',ApiController\Threads\DeleteThreadController::class);
-$route->post('/thread.update','thread.update',ApiController\Threads\UpdateThreadController::class);
-$route->post('/tom.delete','tom.delete',ApiController\Threads\DeleteTomController::class);
-$route->post('/tom.update','tom.update',ApiController\Threads\UpdateTomController::class);
+$route->post('/thread.create', 'thread.create', ApiController\Threads\CreateThreadController::class);
+$route->post('/thread.delete', 'thread.delete', ApiController\Threads\DeleteThreadController::class);
+$route->post('/thread.update', 'thread.update', ApiController\Threads\UpdateThreadController::class);
+$route->post('/tom.delete', 'tom.delete', ApiController\Threads\DeleteTomController::class);
+$route->post('/tom.update', 'tom.update', ApiController\Threads\UpdateTomController::class);
 $route->post('/thread/video', 'threads.video', ApiController\Threads\CreateThreadVideoController::class);
 
 //首页配置接口
 $route->get('/forum', 'forum.settings', ApiController\Settings\ForumSettingsController::class);
 
-$route->post('/thread.share','thread.share',ApiController\Threads\ThreadShareController::class);
+$route->post('/thread.share', 'thread.share', ApiController\Threads\ThreadShareController::class);
 $route->post('/goods/analysis', 'goods.analysis', \Plugin\Shop\Controller\ResourceAnalysisGoodsController::class);
 
 $route->post('/attachments', 'attachments.create', ApiController\Attachment\CreateAttachmentController::class);
@@ -112,7 +128,11 @@ $route->get('/users.list', 'users.list', ApiController\Users\UsersListController
 $route->post('/order.create', 'order.create', ApiController\Order\CreateOrderController::class);
 $route->get('/order.detail', 'orders.resource.v2', ApiController\Order\ResourceOrderController::class);
 $route->post('/trade/notify/wechat', 'trade.notify.wechat', ApiController\Trade\Notify\WechatNotifyController::class);
-$route->post('/trade/pay/order', 'trade.pay.order', ApiController\Trade\PayOrderController::class);
+
+$route->withFrequency(function (RouteCollection $route) {
+    $route->post('/trade/pay/order', 'trade.pay.order', ApiController\Trade\PayOrderController::class);
+}, 3, 30, 10);
+
 $route->get('/categories', 'categories', ApiController\Category\ListCategoriesController::class);
 $route->get('/categories.thread', '/categories.thread', ApiController\Category\ListCategoriesThreadController::class);
 $route->get('/posts.list', 'posts', ApiController\Posts\ListPostsController::class);
@@ -133,16 +153,12 @@ $route->get('/wallet/user', 'wallet.wallet', ApiController\Wallet\ResourceUserWa
 */
 $route->get('/notification', 'notification.list', ApiController\Notification\ListNotificationController::class);
 $route->post('/notification.delete', 'notification.delete', ApiController\Notification\DeleteNotificationController::class);
-$route->get('/unreadnotification', 'unreadnotification.', ApiController\Notification\UnreadNotificationController::class);
-
 
 
 $route->get('/dialog', 'dialog.list', ApiController\Dialog\ListDialogController::class);
-$route->get('/dialog/message', 'dialog.message.list', ApiController\Dialog\ListDialogMessageController::class);
 $route->post('/dialog.create', 'dialog.create', ApiController\Dialog\CreateDialogController::class);
 $route->post('/dialog/message.create', 'dialog.message.create', ApiController\Dialog\CreateDialogMessageController::class);
 $route->post('/dialog.delete', 'dialog.delete', ApiController\Dialog\DeleteDialogController::class);
-$route->post('/dialog.update', 'dialog.update', ApiController\Dialog\UpdateUnreadStatusController::class);
 $route->get('/dialog.record', 'dialog.record', ApiController\Dialog\DialogRecordController::class);
 
 $route->post('/users/pay-password/reset', '', ApiController\Users\ResetPayPasswordController::class);
@@ -173,15 +189,15 @@ $route->post('/users/deny.delete', 'user.delete.deny', ApiController\Users\Delet
 $route->get('/tom.permissions', 'tom.permissions', ApiController\Group\TomPermissionsController::class);
 //$route->get('/threads.paid', 'threads.paid', ApiController\UsersV3\ListPaidThreadsController::class);//无使用
 
-$route->post('/user/thread.stick','user.thread.stick',ApiController\Threads\ThreadUserStickController::class);
+$route->post('/user/thread.stick', 'user.thread.stick', ApiController\Threads\ThreadUserStickController::class);
 
 //待使用接口
 $route->post('/reports', 'reports.create', ApiController\Report\CreateReportsController::class);
 $route->get('/redpacket.resource', 'redpacket.resource', ApiController\RedPacket\ResourceRedPacketController::class);
 
 // 邀请invite
-$route->get('/invite.users.list','invite.users.list',ApiController\Invite\InviteUsersListController::class);
-$route->get('/invite.link.create','invite.link.create',ApiController\Invite\CreateInviteLinkController::class);
+$route->get('/invite.users.list', 'invite.users.list', ApiController\Invite\InviteUsersListController::class);
+$route->get('/invite.link.create', 'invite.link.create', ApiController\Invite\CreateInviteLinkController::class);
 
 // 个人中心-站点信息-我的权限
 $route->get('/group.permission.list', 'group.permission.list', ApiController\Group\GroupPermissionListController::class);
@@ -197,10 +213,13 @@ $route->get('/test', 'thread.test', ApiController\Threads\TestController::class)
 
 $route->get('/view.count', 'view.count', ApiController\Threads\ViewCountController::class);
 
-//上传文件临时参数
-$route->post('/coskey', 'coskey', ApiController\Attachment\CoskeyAttachmentController::class);
+$route->withFrequency(function ($route) {
+    //上传文件临时参数
+    $route->post('/coskey', 'coskey', ApiController\Attachment\CoskeyAttachmentController::class);
 //记录前端上传文件的参数
-$route->post('/attachment.relation', 'attachment.relation', ApiController\Attachment\RelationAttachmentController::class);
+    $route->post('/attachment.relation', 'attachment.relation', ApiController\Attachment\RelationAttachmentController::class);
+}, 50, 60, 10 * 60);
+
 //用户投票
 $route->post('/vote.thread', 'vote.thread', ApiController\Threads\VoteThreadController::class);
 

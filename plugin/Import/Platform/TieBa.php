@@ -2,11 +2,11 @@
 
 namespace Plugin\Import\Platform;
 
-use Plugin\Import\Traits\ImportTrait;
+use App\Import\PlatformTrait;
 
 class TieBa
 {
-    use ImportTrait;
+    use PlatformTrait;
 
     private $cookie = '';
 
@@ -47,7 +47,7 @@ class TieBa
         $num = 30;
         $page = ($page - 1) * $num;
         $url = "https://tieba.baidu.com/mo/q/m?word={$topic}&page_from_search=index&tn6=bdISP&tn4=bdKSW&tn7=bdPSB&lm=16842752&lp=6093&sub4=进吧&pn={$page}&";
-        $html = $this->curlGet($url);
+        $html = $this->curlGet($url, $this->cookie);
         if (empty($html)) {
             return $data;
         }
@@ -142,7 +142,9 @@ class TieBa
 
             //帖子内容
             $text = $this->dealMatchStr("/<div class=\"ti_title\">(.*)<\/span>(?)<\/div> *<div/i", $content);
+            preg_match_all('/#(.*?)#/is',$content,$topics);
             $forumData['text']['text'] = trim(strip_tags($text, '<p><br><img>'));
+            $forumData['text']['topicList'] = $topics[1];
 
             //发帖时间
             $createAt = $this->dealMatchStr("/<span class=\"ti_time\">(.*)<\/span><\/div> *<\/div><a/i", $content);
@@ -179,7 +181,7 @@ class TieBa
     {
         $data = [];
         $url = "https://tieba.baidu.com/p/{$mid}";
-        $html = $this->curlGet($url);
+        $html = $this->curlGet($url, $this->cookie);
         if (empty($html)) {
             return $data;
         }
@@ -288,38 +290,5 @@ class TieBa
             }
         }
         return $result;
-    }
-
-    /**
-     * @method  curl-get请求
-     * @param string $url 请求地址D
-     * @param array $headers 请求头信息
-     * @param int $port 端口号
-     * @return string  采集内容
-     */
-    private function curlGet($url, $headers = [], $port = 80)
-    {
-        $ch = curl_init();
-        $headers[] = 'Content-Type:application/x-www-form-urlencoded';
-        curl_setopt($ch, CURLOPT_URL, $url);
-        if ($port !== 80) {
-            curl_setopt($ch, CURLOPT_PORT, $port);
-        }
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36");
-        curl_setopt($ch, CURLOPT_HEADER, 1);//设定是否输出页面内容
-        if ($headers) {
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        }
-        curl_setopt($ch, CURLOPT_COOKIE, $this->cookie);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);       //链接超时时间
-        curl_setopt($ch, CURLOPT_TIMEOUT, 3);       //设置超时时间
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        $filecontent = curl_exec($ch);
-        curl_close($ch);
-
-        return $filecontent;
     }
 }

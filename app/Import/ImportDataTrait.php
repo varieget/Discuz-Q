@@ -318,7 +318,17 @@ trait ImportDataTrait
         ];
         $newGuest = new Guest();
         $register = new RegisterUser($newGuest, $data);
-        $registerUserResult = $register->handle($this->events, $this->censor, $this->settings, $this->userValidator);
+        try {
+            $registerUserResult = $register->handle($this->events, $this->censor, $this->settings, $this->userValidator);
+        } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
+            if (strpos($errorMessage, "users_username_unique") !== false) {
+                $data['username'] = User::addStringToUsername($data['username']);
+                $register = new RegisterUser($newGuest, $data);
+                $registerUserResult = $register->handle($this->events, $this->censor, $this->settings, $this->userValidator);
+            }
+        }
+
         if (isset($user['avatar']) && !empty($user['avatar'])) {
             $this->uploadCrawlerUserAvatar($user['avatar'], $registerUserResult);
         }

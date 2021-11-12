@@ -19,6 +19,7 @@
 namespace App\Api\Controller\Category;
 
 use App\Common\CacheKey;
+use App\Models\AdminActionLog;
 use App\Models\Category;
 use App\Common\ResponseCode;
 use Discuz\Base\DzqAdminController;
@@ -60,6 +61,11 @@ class BatchDeleteCategoriesController extends DzqAdminController
             if ($categoryModel->hasThreads($category->id, 'normal')) {
                 $this->outPut(ResponseCode::INTERNAL_ERROR, '无法删除存在主题的分类', '分类名：' . $category->name);
             } else {
+                AdminActionLog::createAdminActionLog(
+                    $this->user->id,
+                    AdminActionLog::ACTION_OF_CATEGORY,
+                    '删除内容分类【'. $category->name .'】'
+                );
                 $category->delete();
             }
         });

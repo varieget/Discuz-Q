@@ -24,6 +24,7 @@ use App\Models\Group;
 use App\Models\Post;
 use App\Models\Thread;
 use App\Models\ThreadTom;
+use App\Models\ThreadUserStickRecord;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqCache;
@@ -72,10 +73,23 @@ class ThreadDetailController extends DzqController
         if (empty($user)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '用户不存在');
         }
+
+        if ($this->user->isGuest()) {
+            $loginUserData = [];
+        } elseif ($this->user->id == $thread['user_id']) {
+            $loginUserData = $user;
+        } else {
+            $loginUserData = User::query()->where('id', $this->user->id)->first();
+        }
+
         $group = Group::getGroup($user['id']);
 
         $tomInputIndexes = $this->getTomContent($thread);
-        $result = $this->packThreadDetail($user, $group, $thread, $post, $tomInputIndexes['tomContent'], true, $tomInputIndexes['tags']);
+
+        $userStickRecord = ThreadUserStickRecord::query()->where(['thread_id' => $threadId, 'user_id' => $user->id])->first();
+        $userStickIds = $userStickRecord ? [$threadId] : [];
+
+        $result = $this->packThreadDetail($user, $group, $thread, $post, $tomInputIndexes['tomContent'], true, $tomInputIndexes['tags'], $loginUserData, $userStickIds);
         $result['orderInfo'] = [];
         if (
             $this->needPay($tomInputIndexes['tomContent'])

@@ -71,7 +71,11 @@ class ReplyPostMakeRedPacket
                             ',post_id:'   . $post->id.
                             ',msg:';
         $thread = Thread::query()->where('id', $post->thread->id)->first();
-        $threadRedPacket = ThreadRedPacket::query()->where('thread_id', $post->thread->id)->first();
+        $compareTime = date('Y-m-d H:i:s', time() - RedPacket::EXPIRE_TIME);
+        $threadRedPacket = ThreadRedPacket::query()
+            ->where('thread_id', $post->thread->id)
+            ->where('created_at', '>', $compareTime)
+            ->first();
         if ($thread['is_red_packet'] == 0 && empty($threadRedPacket)) {
             $this->outDebugInfo('回复的帖子不是红包帖');
             return;

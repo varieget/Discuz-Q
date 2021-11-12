@@ -92,11 +92,16 @@ class PluginSettings extends DzqModel
                 foreach ($privateValue as $key=>$value){
                     if (is_string($value)){
                         $starNum = substr_count($value,"*");
-                        if (strlen($value) == $starNum && isset($privateValueOld[$key])){
+                        if (strlen($value)!=0 && strlen($value) == $starNum && isset($privateValueOld[$key])){
                             $privateValue[$key] = $privateValueOld[$key];
                         }
                     }
                 }
+                $privateValue = array_merge($privateValueOld,$privateValue);
+            }
+            if (!empty($pluginSetting->public_value)){
+                $publicValueOld = json_decode($pluginSetting->public_value,true);
+                $publicValue = array_merge($publicValueOld,$publicValue);
             }
         }
         $pluginSetting->app_id = $appId;
@@ -119,7 +124,6 @@ class PluginSettings extends DzqModel
     public function getSettingRecord($appId)
     {
         $setting = $this->getData($appId);
-        ;
         if (empty($setting)) {
             return [];
         }
@@ -136,26 +140,6 @@ class PluginSettings extends DzqModel
         }
 
         return $setting;
-    }
-
-    public function getSetting($appId)
-    {
-        $setting = $this->getData($appId);
-        if (empty($setting)) {
-            return [];
-        }
-
-        $result = [];
-        if (!empty($setting['private_value'])) {
-            $privateValue = json_decode($setting['private_value'], true);
-            $result = $privateValue;
-        }
-        if (!empty($setting['public_value'])) {
-            $publicValue = json_decode($setting['public_value'], true);
-            $result = array_merge($result, $publicValue);
-        }
-
-        return $result;
     }
 
     public function getAllSettingRecord()

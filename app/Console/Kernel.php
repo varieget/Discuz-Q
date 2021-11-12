@@ -18,44 +18,12 @@
 
 namespace App\Console;
 
-use App\Console\Commands\AbnormalOrderDealCommand;
-use App\Console\Commands\AttachmentAttributeUpdateCommand;
-use App\Console\Commands\AttachmentClearCommand;
-use App\Console\Commands\AvatarClearCommand;
-use App\Console\Commands\FinanceCreateCommand;
-use App\Console\Commands\GroupExpiredNoticeCommand;
-use App\Console\Commands\InviteExpireCommand;
-use App\Console\Commands\QueryWechatOrderConmmand;
-use App\Console\Commands\QuestionClearCommand;
-use App\Console\Commands\ThreadRewardExpireCommand;
-use App\Console\Commands\RedPacketExpireCommand;
-use App\Console\Commands\TranscodeVideoCommand;
-use App\Console\Commands\CreateCrawlerDataCommand;
-use App\Console\Commands\CreateCrawlerOfficialAccountDataCommand;
-use App\Console\Commands\MonitorSystemTaskCommand;
+
 use Discuz\Console\Kernel as ConsoleKernel;
 use Illuminate\Console\Scheduling\Schedule;
 
 class Kernel extends ConsoleKernel
 {
-    public $commands = [
-        FinanceCreateCommand::class,
-        AvatarClearCommand::class,
-        AttachmentClearCommand::class,
-        QueryWechatOrderConmmand::class,
-        InviteExpireCommand::class,
-        QuestionClearCommand::class,
-        ThreadRewardExpireCommand::class,
-        RedPacketExpireCommand::class,
-        AbnormalOrderDealCommand::class,
-        TranscodeVideoCommand::class,
-        AttachmentAttributeUpdateCommand::class,
-        CreateCrawlerDataCommand::class,
-        MonitorSystemTaskCommand::class,
-        CreateCrawlerOfficialAccountDataCommand::class,
-        GroupExpiredNoticeCommand::class
-    ];
-
     /**
      * Define the application's command schedule.
      *
@@ -80,8 +48,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('clear:question')->daily();
         $schedule->command('clear:thread_draft')->daily();
         $schedule->command('clear:session_token')->everyMinute();
-        $schedule->command('crawlerData:create')->everyMinute();
-        $schedule->command('crawlerOfficialAccountData:create')->everyMinute();
         $schedule->command('notificationTiming:clear')->daily();
 
         //监听定时任务

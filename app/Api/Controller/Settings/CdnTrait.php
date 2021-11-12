@@ -199,8 +199,12 @@ trait CdnTrait
     public function describeDomains($value)
     {
         return $this->commonCdnDomain('describeDomains', [
-            'Name' => 'domain',
-            'Value' => [$value],
+            'Filters' => [
+                [
+                    'Name' => 'domain',
+                    'Value' => [$value]
+                ]
+            ]
         ], '查询域名基本信息错误');
     }
 

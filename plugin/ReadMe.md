@@ -55,9 +55,10 @@ Discuz! Q框架已经支持非侵入式开发方式，本指南意在帮助开�
 │   └── readMe.md
 └── readMe.md
 ````
-以上不难看出已经集成了`Activity`和`Jobs`两个插件应用，每个插件应用都有自己的框架结构，开发者需要建立完全一致的目录进行项目开发（我们即将提供控制台命令自动生成插件框架目录，请留意）
+以上不难看出已经集成了`Activity`和`Jobs`两个插件应用，每个插件应用都有自己的框架结构，开发者需要建立完全一致的目录进行项目开发（我们即将提供控制台命令自动生成插件框架目录，请留意），总体上插件目录是基于MVC的框架结构。
 
 ### 后端插件开发
+插件分成很多种类，如，发帖类型插件、广告插件、表情插件等，官方会持续增加更多的类型，每个插件类型都会在框架里预留对应的能力，其配置文件`config.json`也可能会有少许差异，具体到各种插件的开发差异需要参看后续推出的**DZQ插件示例文档**，同时，开发者也可以通过自定义接口的方式开发非特定类型的插件， 本指南指在阐述后端插件开发的基本流程。
 以报名帖为例，开发者需要给自己的插件起一个唯一的英文名称 `name_en`且设置一个唯一的应用id `app_id` （官方开放插件市场以后，英文名称和app_id需要通过注册获取）。
 
 `插件的根目录推荐以英文名称命名且首字母大写`
@@ -117,7 +118,7 @@ Discuz! Q框架已经支持非侵入式开发方式，本指南意在帮助开�
 
 `icon` 插件的应用图标
 
-`filter_enable` 帖子类型插件特有字段，是否加入首页筛选【功能暂未开放】
+`filter_enable` 帖子类型插件特有字段，是否加入首页筛选
 
 `author` 开发者信息
 
@@ -145,22 +146,12 @@ Discuz! Q框架已经支持非侵入式开发方式，本指南意在帮助开�
 以活动报名为例，一个正常的报名流程，包含发起人的`发布活动` `编辑活动` `查看报名列表`以及参与人的 `参加报名` `取消报名`
 
 基于该背景需要新建两张数据表 
-
 `thread_activity` 活动明细表
-
 `activity_user` 用户报名表
-
- 在创建您的新表的时候，需要在 `plugin/Activity/Database/migrations` 目录下新建两个表的`migrate`文件，可以使用框架的`make:migration`命令生成,
- 例如 `php disco make:migration plugin_activity_thread_activity --create`,执行以后会在项目根目录下的`database/migrations`下生成一个空的数据库创建文件，
- 开发者可以将其移动到插件目录`Database/migrations`下。
- 
- 同时该命令也可以指定路径生成文件，
- `php disco make:migration plugin_activity_thread_activityccc  --create  --path=plugin/Activity/Database/migrations` 这样就可以将文件直接生成在插件对应的位置了
+ 在创建您的新表的时候，需要在 `plugin/Activity/Database/migrations` 目录下新建两个表的`migrate`文件，可以使用框架的`migrate:make`命令生成
  这里生成的是
  `2021_09_10_112512_create_plugin_activity_thread_activity.php` 和
   `2021_09_10_130011_create_plugin_activity_user.php`
- 
- **在编辑具体的表结构前，请将继承的基类由默认的`Migration`改成`DzqPluginMigration`**
  
 **建表的时候务必遵循以下规范：**
 - 数据迁移类务必继承`DzqPluginMigration`，且表的前缀添加`plugin`+`插件英文名称`，报名帖前缀为`plugin_activity_`，招聘贴前缀为 `plugin_jobs_`
@@ -310,7 +301,8 @@ class ThreadActivity extends DzqModel
 ```
 
 #### 步骤4：开发插件业务逻辑
-涉及到帖子结构的`增删查改`需要继承帖子类型的特有基础类`TomBaseBusi` 
+帖子类型插件需要新增`ActivityBusi.php`文件来实现发帖区的内容`增删查改`，那么需要在插件配置文件`config.json`里新增一条配置`"busi":"Plugin\\Activity\\ActivityBusi"`
+该文件需要继承帖子类型的特有基础类`TomBaseBusi` 
 并实现其 `select` `create` `delete` `update` 四个方法，可以参考`ActivityBusi.php`，该busi文件实现了帖子中内容发布、变更。
 除此以外的操作需要开发者另新增接口实现。
 
@@ -378,7 +370,35 @@ $route->get('register/list', 'register.list', \Plugin\Activity\Controller\ListCo
 
 ```
 
-接口调用规则：
+接口替换：
+插件路由表方法`$route->get`和`$route->post`提供了自定义接口覆盖替换官方接口的功能，开发者只需要在该方法的第四个参数`replaceHandler`里填写想要覆盖的接口控制器名称即可。
+例如开发者在报名帖里新增`register/thread.list`接口，该接口复用了`/api/v3/thread.list`接口的逻辑并做了一些修改，如下设置即可实现替换
+```
+$route->get('register/thread.list', 'register.thread.list',
+    \Plugin\Activity\Controller\ThreadListController::class,
+    \App\Api\Controller\Threads\ThreadListController::class
+);
+```
+用户在请求`/api/v3/thread.list`接口的时候，框架会自动路由到报名贴插件的接口`register/thread.list`
+接口限频：
+路由对象`$route`提供了`function withFrequency($callback,$times,$interval,$delay)`方法，框架中间件从`用户ip和用户id`两个维度记录了请求次数，`withFrequency`方法能够对某个路由或某一组路由配置限频策略，合理的限频策略对网站能起到一定的安全防护作用，如果不配置，框架中间件里会提供兜底的防护策略
+`GET`类型接口每30秒限制20次请求，超过则禁止5分钟
+`POST`类型接口每60秒限制30次，超过则禁止5分钟
+例如报名帖的报名用户查询接口`register/list`的限频策略改为每分钟最多调用10次，超过则禁止5秒
+```
+$route->withFrequency(function($route){
+    $route->get('register/list', 'register.list', \Plugin\Activity\Controller\ListController::class);
+},10,60,5);
+```
+如果想把报名接口`register/append`也加入该策略，只需要将其放在同一个限频策略下
+```
+$route->withFrequency(function($route){
+    $route->get('register/list', 'register.list', \Plugin\Activity\Controller\ListController::class);
+    $route->post('register/append', 'register.append', \Plugin\Activity\Controller\AppendController::class);
+},10,60,5);
+```
+
+插件接口调用规则：
 
 >配置自定义接口路由的时候，请注意，接口的访问`Method`只能选用get或post,其他http类型如`delete patch option`等不支持
 
@@ -413,23 +433,6 @@ class TestCommand extends DzqCommand
     }
 }
 ````
-
-`$signature` 定义的命令名称必须以插件英文名称作为前缀 `{插件英文名称}:{命令名称}`，活动报名插件添加了一个 `test` 自定义命令，那么`$signature` 就赋值为 `activity:test`
-如果要手动执行该命令，请在控制台输入`php disco activity:test`
-
-输出如下：
-```
-Plugin\Activity\Console\TestCommand RUNNING ...
-
-************************** START 2021-10-14 10:56:43 START ****************************
-
-Hello Discuz! Q Plugin Activity
-
-
-**************************  END   2021-10-14 10:56:43 END  ****************************
-```
-
-
 同目录新建 `Kernel.php` 继承 `DzqKernel` 添加一个任务计划
 
 ```
@@ -449,12 +452,164 @@ class Kernel extends DzqKernel
 }
 
 ```
-### 前端插件开发
+### 前端插件支持
+插件标准目录提供了`View`目录，前端脚手架编译出的插件需要的`js和css`文件均会存放在`View/dist`下的某个自定义模块分类下
+例如：
+View/
+├── dist
+│   ├── CustomIfram
+│   │   ├── index.css
+│   │   └── index.js
+│   ├── CustomIframDisplay
+│   │   └── index.js
+│   └── CustomIframPost
+│       └── index.js
+└── src
+    ├── CustomIfram
+    │   ├── adapter
+    │   │   ├── index.js
+    │   │   ├── mini
+    │   │   │   └── index.jsx
+    │   │   └── web
+    │   │       ├── index.jsx
+    │   │       └── index.scss
+    │   ├── images
+    │   │   ├── WechatIMG129.jpeg
+    │   │   └── WechatIMG130.jpeg
+    │   └── main.js
+    ├── CustomIframDisplay
+    │   ├── adapter
+    │   │   ├── index.js
+    │   │   ├── mini
+    │   │   │   └── index.jsx
+    │   │   └── web
+    │   │       └── index.jsx
+    │   └── main.js
+    └── CustomIframPost
+        ├── adapter
+        │   ├── index.js
+        │   ├── mini
+        │   │   └── index.jsx
+        │   └── web
+        │       └── index.jsx
+        └── main.js
+插件的配置文件`config.json`需要添加View的相关配置，示例如下：
+```json
+{
+    "name_cn":"iframe插件",
+    "name_en":"CustomIfram",
+    "description":"帖子类型里添加iframe插件",
+    "type":9,
+    "app_id":"6177c3415793a",
+    "version": "1.0.0",
+    "status":1,
+    "icon":"https:\/\/discuz.chat\/dzq-img\/active.png",
+    "filter_enable":false,
+    "author":{
+        "name":"腾讯科技（深圳）有限公司",
+        "email":"coralchu@tencent.com"
+    },
+    "view": {
+        "CustomIfram": {
+            "target": "plugin_post",
+            "hookName": "post_extension_entry_hook",
+            "platform": ["pc", "h5", "mini"],
+            "disables": false
+        },
+        "CustomIframDisplay": {
+            "target": ["plugin_index", "plugin_detail"],
+            "hookName": "thread_extension_display_hook",
+            "platform": ["pc", "h5", "mini"],
+            "disables": false
+        },
+        "CustomIframPost": {
+            "target": "plugin_post",
+            "hookName": "post_extension_content_hook",
+            "platform": ["pc", "h5", "mini"],
+            "disables": false
+        }
+    }
+}
+```
+插件列表接口`/api/v3/plugin/list`会返回所有插件的静态文件URL， 客户端会依据hook配置项加载对应的文件，从而触发插件的页面展示（插件的静态文件通过`动态路由/plugin/{plugin_name}/{module_name}/{file_path}`返回给客户端）。
+```json
+{
+    "name_cn":"iframe插件",
+    "name_en":"CustomIfram",
+    "description":"帖子类型里添加iframe插件",
+    "type":9,
+    "app_id":"6177c3415793a",
+    "version":"1.0.0",
+    "status":1,
+    "icon":"https://discuz.chat/dzq-img/active.png ",
+    "filter_enable":false,
+    "author":{
+        "name":"腾讯科技（深圳）有限公司",
+        "email":"coralchu@tencent.com"
+    },
+    "view":{
+        "CustomIfram":{
+            "target":"plugin_post",
+            "hookName":"post_extension_entry_hook",
+            "platform":[
+                "pc",
+                "h5",
+                "mini"
+            ],
+            "disables":false,
+            "pluginFiles":{
+                "css":[
+                    "http://v3.go/plugin/CustomIfram2/CustomIfram/index.css "
+                ],
+                "js":[
+                    "http://v3.go/plugin/CustomIfram2/CustomIfram/index.js "
+                ]
+            }
+        },
+        "CustomIframDisplay":{
+            "target":[
+                "plugin_index",
+                "plugin_detail"
+            ],
+            "hookName":"thread_extension_display_hook",
+            "platform":[
+                "pc",
+                "h5",
+                "mini"
+            ],
+            "disables":false,
+            "pluginFiles":{
+                "js":[
+                    "http://v3.go/plugin/CustomIfram2/CustomIframDisplay/index.js "
+                ]
+            }
+        },
+        "CustomIframPost":{
+            "target":"plugin_post",
+            "hookName":"post_extension_content_hook",
+            "platform":[
+                "pc",
+                "h5",
+                "mini"
+            ],
+            "disables":false,
+            "pluginFiles":{
+                "js":[
+                    "http://v3.go/plugin/CustomIfram2/CustomIframPost/index.js "
+                ]
+            }
+        }
+    },
+    "authority":{
+        "title":"插入iframe插件",
+        "permission":"canInsert",
+        "canUsePlugin":false
+    },
+    "setting":[
 
-即将推出，请期待
+    ]
+}
 
-### 注意事项
-
-***v3.0210926插件配置文件是config.php且不支持本指南中的路由配置方式，
-在v3.0211014之后支持本指南的接口路由配置方式，且配置文件变更为JSON格式。***
-
+```
+####注意事项
+推荐`v3.0.211111`或更新版本开发插件

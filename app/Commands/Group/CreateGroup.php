@@ -115,6 +115,7 @@ class CreateGroup
 
         AdminActionLog::createAdminActionLog(
             $this->actor->id,
+            AdminActionLog::ACTION_OF_GROUP,
             '新增用户角色【'. $group->name .'】'
         );
 

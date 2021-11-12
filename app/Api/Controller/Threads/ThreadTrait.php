@@ -366,7 +366,8 @@ trait ThreadTrait
                 'groupId' => $group['group_id'],
                 'groupName' => $group['groups']['name'],
                 'groupIcon' => $group['groups']['icon'],
-                'isDisplay' => $group['groups']['is_display']
+                'isDisplay' => $group['groups']['is_display'],
+                'level' =>  $group['groups']['level']
             ];
         }
         return $groupResult;
@@ -455,7 +456,7 @@ trait ThreadTrait
 
     private function loginDataExists($loginUserData, $type, $key, callable $callBack)
     {
-        if (array_key_exists($type, $loginUserData)) {
+        if (isset($loginUserData[$type])) {
             return isset($loginUserData[$type][$key]);
         } else {
             return $callBack();

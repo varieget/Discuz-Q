@@ -219,4 +219,13 @@ class DialogMessage extends Model
     {
         return $this->belongsTo(Attachment::class)->where('type', Attachment::TYPE_OF_DIALOG_MESSAGE);
     }
+
+    public static function isDisable()
+    {
+        $stopWords = StopWord::query()->where(['find' => '{1}', 'dialog' => '{BANNED}'])->first();
+        if ($stopWords) {
+            return true;
+        }
+        return false;
+    }
 }

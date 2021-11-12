@@ -24,8 +24,8 @@ class DialogRecordController extends DzqController
     {
         $actor = $this->user;
 
-        $username = $this->inPut('username');
-        $user = User::query()->where('username', $username)->pluck('id')->toArray();
+        $userId = $this->inPut('userId');
+        $user = User::query()->where('id', $userId)->pluck('id')->toArray();
 
         if(empty($user)){
             $this->outPut(ResponseCode::INVALID_PARAMETER,'用户不存在');

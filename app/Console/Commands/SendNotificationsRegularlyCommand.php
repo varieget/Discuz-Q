@@ -18,12 +18,12 @@
 
 namespace App\Console\Commands;
 
-use App\Api\Controller\Notification\NotificationTimingTrait;
 use App\Models\NotificationTiming;
 use App\Models\User;
 use App\Notifications\System;
 use Discuz\Console\AbstractCommand;
 use Discuz\Foundation\Application;
+use Discuz\Notifications\Traits\NotificationTimingTrait;
 use Exception;
 use Illuminate\Database\ConnectionInterface;
 
@@ -89,7 +89,7 @@ class SendNotificationsRegularlyCommand extends AbstractCommand
                         'userId' => $item->user_id,
                         'receiveUser' => $receiveUser
                     ]);
-                    $this->connection->rollback();
+                    $this->connection->rollBack();
                     return;
                 }
 
@@ -116,7 +116,7 @@ class SendNotificationsRegularlyCommand extends AbstractCommand
                 $this->connection->commit();
             } catch (Exception $e) {
                 app('log')->info('SendNotificationsRegularlyCommand', $e->getMessage());
-                $this->connection->rollback();
+                $this->connection->rollBack();
             }
 
             $bar->advance();

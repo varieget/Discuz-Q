@@ -85,9 +85,6 @@ class SetSettingsController extends DzqAdminController
      */
     public function main()
     {
-        $actor = $this->user;
-        $user_id = $actor->id;
-
         $data = $this->inPut('data');
         $data = $this->filterHideSetting($data);
         // 转换为以 tag + key 为键的集合，即可去重又方便取用
@@ -257,32 +254,33 @@ class SetSettingsController extends DzqAdminController
 
         $this->putBucketCors();
 
-        $action_desc = '';
+        $actionDesc = '';
         if (!empty($settings['cash_cash_interval_time']['key'])) {
             if ($settings['cash_cash_interval_time']['key'] == 'cash_interval_time') {
-                $action_desc = '更改提现设置';
+                $actionDesc = '更改提现设置';
             }
         }
 
         if (!empty($settings['wxpay_app_id']['key'])) {
             if ($settings['wxpay_app_id']['key'] == 'app_id') {
-                $action_desc = '配置了微信支付';
+                $actionDesc = '配置了微信支付';
             }
         }
         if (!empty($settings['wxpay_wxpay_close']['key'])) {
             if ($settings['wxpay_wxpay_close']['key'] == 'wxpay_close') {
                 if ($settings['wxpay_wxpay_close']['value'] == 0) {
-                    $action_desc = '关闭了微信支付';
+                    $actionDesc = '关闭了微信支付';
                 } else {
-                    $action_desc = '开启了微信支付';
+                    $actionDesc = '开启了微信支付';
                 }
             }
         }
 
-        if (!empty($action_desc)) {
+        if (!empty($actionDesc)) {
             AdminActionLog::createAdminActionLog(
-                $user_id,
-                $action_desc
+                $this->user->id,
+                AdminActionLog::ACTION_OF_SETTING,
+                $actionDesc
             );
         }
 

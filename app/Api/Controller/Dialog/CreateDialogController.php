@@ -20,6 +20,7 @@ namespace App\Api\Controller\Dialog;
 
 use App\Commands\Dialog\CreateDialog;
 use App\Common\ResponseCode;
+use App\Models\DialogMessage;
 use App\Providers\DialogMessageServiceProvider;
 use App\Repositories\UserRepository;
 use Discuz\Base\DzqController;
@@ -51,6 +52,9 @@ class CreateDialogController extends DzqController
         if ($this->user->isGuest()) {
             $this->outPut(ResponseCode::JUMP_TO_LOGIN);
         }
+        if (DialogMessage::isDisable()) {
+            $this->outPut(ResponseCode::DIALOG_MESSAGE_DISABLE);
+        }
         return $userRepo->canCreateDialog($this->user);
     }
 
@@ -59,14 +63,14 @@ class CreateDialogController extends DzqController
         $actor = $this->user;
         $data = [
             'message_text'=>$this->inPut('messageText'),
-            'recipient_username'=>$this->inPut('recipientUsername'),
+            'recipientUserId'=>$this->inPut('recipientUserId'),
             'isImage'=>$this->inPut('isImage'),
             'image_url' => $this->inPut('imageUrl') ?? '',
             'attachment_id' => $this->inPut('attachmentId') ?? 0
         ];
 
-        if (empty($data['recipient_username'])) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER);
+        if (empty($data['recipientUserId'])) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER, '接收者用户id不能为空');
         }
 
         try {

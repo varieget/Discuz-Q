@@ -18,6 +18,7 @@
 
 namespace App\Commands\Thread;
 
+use App\Api\Controller\Threads\ThreadStickTrait;
 use App\Censor\Censor;
 use App\Events\Thread\Deleting;
 use App\Models\ThreadStickSort;
@@ -49,6 +50,8 @@ class EditThread
     use EventsDispatchTrait;
 
     use ThreadNoticesTrait;
+
+    use ThreadStickTrait;
 
     /**
      * The ID of the thread to edit.
@@ -102,7 +105,7 @@ class EditThread
         $attributes = Arr::get($this->data, 'attributes', []);
 
         $thread = Thread::query()->where('id', $this->threadId)->first();
-        $action_desc = '';
+        $actionDesc = '';
 
         if ($thread->title == '' || empty($thread->title)) {
             $threadTitle = '，其ID为'. $thread->id;
@@ -114,19 +117,11 @@ class EditThread
             if ($thread->is_sticky != $attributes['isSticky']) {
                 $thread->is_sticky = $attributes['isSticky'];
                 $thread->updated_at = Carbon::now();
-                $stickSort = ThreadStickSort::query()->where('thread_id', $thread->id)->first();
                 if ($thread->is_sticky) {
-                    if (empty($stickSort)) {
-                        $stickSort = new ThreadStickSort();
-                        $stickSort->thread_id = $thread->id;
-                        $stickSort->sort = 0;
-                        $stickSort->save();
-                    }
+                    $this->updateOrCreateThreadStick($thread->id);
                     $this->threadNotices($thread, $this->actor, 'isSticky', $attributes['message'] ?? '');
                 } else {
-                    if (!empty($stickSort)) {
-                        $stickSort->delete();
-                    }
+                    ThreadStickSort::deleteThreadStick($thread->id);
                 }
             }
         }
@@ -144,10 +139,10 @@ class EditThread
         if (isset($attributes['isDeleted'])) {
             if ($attributes['isDeleted']) {
                 $thread->hide($this->actor, ['message' => $attributes['message'] ?? '']);
-                $action_desc = '删除用户主题帖'. $threadTitle;
+                $actionDesc = '删除用户主题帖'. $threadTitle;
             } else {
                 $thread->restore($this->actor, ['message' => $attributes['message'] ?? '']);
-                $action_desc = '还原用户主题帖'. $threadTitle;
+                $actionDesc = '还原用户主题帖'. $threadTitle;
             }
         }
 
@@ -199,10 +194,11 @@ class EditThread
             app(SequenceRepository::class)->updateSequenceCache($this->threadId, 'edit');
         }
 
-        if ($action_desc !== '' && !empty($action_desc)) {
+        if ($actionDesc !== '' && !empty($actionDesc)) {
             AdminActionLog::createAdminActionLog(
                 $this->actor->id,
-                $action_desc
+                AdminActionLog::ACTION_OF_THREAD,
+                $actionDesc
             );
         }
 

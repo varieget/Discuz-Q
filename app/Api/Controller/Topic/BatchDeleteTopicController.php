@@ -44,7 +44,6 @@ class BatchDeleteTopicController extends DzqAdminController
         $idsArr = explode(',', $ids);
 
         foreach ($idsArr as $key=>$value) {
-            $action_desc = '';
             $topic = Topic::query()->where('id', $value)->first();
             if (!$topic) {
                 continue;
@@ -53,6 +52,7 @@ class BatchDeleteTopicController extends DzqAdminController
             $topic->delete();
             AdminActionLog::createAdminActionLog(
                 $this->user->id,
+                AdminActionLog::ACTION_OF_TOPIC,
                 '删除话题【'. $topicContent .'】'
             );
         }

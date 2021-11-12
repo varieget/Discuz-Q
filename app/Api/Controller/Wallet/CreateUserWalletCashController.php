@@ -87,14 +87,21 @@ class CreateUserWalletCashController extends DzqController
             $this->outPut(ResponseCode::INVALID_PARAMETER, '单次提现金额不得多于' . $cash_max_sum . '元');
         }
 
-        if ($cash_interval_time != 0) {
+        $cash_record = UserWalletCash::query()->orderBy('id', 'desc')->where('user_id', $this->user->id)->first();
+        if ($cash_interval_time != 0 && !empty($cash_record)) {
             //提现间隔时间
-            $cash_record = UserWalletCash::query()->orderBy('id', 'desc')->where('user_id', $this->user->id)->first();
             $time_after = Carbon::parse($cash_record->created_at)->addDays($cash_interval_time);
-            $can_cash_time = Carbon::parse($time_after)->diffInDays(Carbon::now());
-            if ($can_cash_time > 0) {
+            if($time_after > Carbon::now()){
+                $can_cash_time = Carbon::parse($time_after)->diffInMinutes(Carbon::now());
+                if($can_cash_time > 60*24){
+                    $after_cash_msg = floor($can_cash_time/(60*24)).'天';
+                }elseif($can_cash_time > 60){
+                    $after_cash_msg = floor($can_cash_time/60).'小时';
+                }else{
+                    $after_cash_msg = $can_cash_time.'分钟';
+                }
                 $log->error("提现处于限制间隔天数内 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-                $this->outPut(ResponseCode::NET_ERROR, $can_cash_time.'天后可提现');
+                $this->outPut(ResponseCode::NET_ERROR, $after_cash_msg.'后可提现');
             }
         }
         //今日已申提现总额
@@ -102,9 +109,11 @@ class CreateUserWalletCashController extends DzqController
             ->where('created_at', '>=', Carbon::today())
             ->where('refunds_status', UserWalletCash::REFUNDS_STATUS_NO)
             ->sum('cash_apply_amount');
-        if (bccomp($cash_sum_limit, $totday_cash_amount, 2) == -1) {
+        $currentCashAmount = $totday_cash_amount + $cashApplyAmount;
+        if (bccomp($cash_sum_limit, $currentCashAmount, 2) == -1) {
             $log->error("超出每日提现金额限制 requestId：{$this->requestId}，user_id：{$this->user->id}，request_data：", $log_data);
-            $this->outPut(ResponseCode::NET_ERROR, '超出每日提现金额限制');
+            $remainCashAmountLimit = $cash_sum_limit - $totday_cash_amount;
+            $this->outPut(ResponseCode::NET_ERROR, '超出每日提现总金额上限，今日剩余提现额度为' . $remainCashAmountLimit . '元.');
         }
         //计算手续费
         $tax_ratio  = $cash_rate; //手续费率

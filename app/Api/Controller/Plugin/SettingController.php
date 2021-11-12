@@ -39,20 +39,25 @@ class SettingController extends DzqAdminController
             'type' => 'required|integer',
         ]);
 
-        if (!is_array($privateValue) || !is_array($privateValue)) {
+        if (!empty($privateValue) && !is_array($privateValue)) {
             $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
 
-        $intersectKeys = array_intersect_key($privateValue, $publicValue);
-        if (!empty($intersectKeys)) {
-            $this->outPut(ResponseCode::INVALID_PARAMETER, 'key重复');
+        if (!empty($publicValue) && !is_array($publicValue)) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER);
         }
+
 
         $setResult = $this->app->make(PluginSettings::class)->setData($appId, $name, $type, $privateValue, $publicValue);
 
         if (!$setResult) {
             $this->outPut(ResponseCode::DB_ERROR);
         }
-        $this->outPut(0);
+
+        $groupId = $this->user->groupId;
+        $isAdmin = $this->user->isAdmin();
+        $result = $this->getAllSettingAndConfig($groupId, $isAdmin);
+
+        $this->outPut(ResponseCode::SUCCESS, '', array_values($result));
     }
 }

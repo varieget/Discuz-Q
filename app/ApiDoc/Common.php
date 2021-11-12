@@ -298,7 +298,7 @@
  *    name="filter[search]",
  *    in="query",
  *    required=false,
- *    description = "搜索关键词",
+ *    description = "搜索关键词(仅支持简单搜索，不支持关键词分词)",
  *    @OA\Schema(type="string",default="")
  *),
  *@OA\Parameter(
@@ -345,6 +345,16 @@
  *    in="query",
  *    required=false,
  *    description = "分类组合（需要查询的分类id集合）",
+ *    @OA\Schema(
+ *        type="array",@OA\Items(type="integer")
+ *    )
+ *),
+ *@OA\Parameter(
+ *     parameter="threadlist_toUserId",
+ *    name="filter[toUserId]",
+ *    in="query",
+ *    required=false,
+ *    description = "个人主页帖子列表",
  *    @OA\Schema(
  *        type="array",@OA\Items(type="integer")
  *    )
@@ -441,9 +451,9 @@
  *     ),
  *     @OA\Property(property = "position", type = "object", description = "位置信息",
  *        @OA\Property(property = "address", type = "string", description = "街道详细地址"),
- *        @OA\Property(property = "latitude", type = "boolean", description = "纬度"),
- *        @OA\Property(property = "location", type = "boolean", description = "地址"),
- *        @OA\Property(property = "longitude", type = "boolean", description = "经度"),
+ *        @OA\Property(property = "location", type = "string", description = "地址"),
+ *        @OA\Property(property = "latitude", type = "string", description = "纬度"),
+ *        @OA\Property(property = "longitude", type = "string", description = "经度"),
  *      ),
  *     @OA\Property(property = "ability", type = "object", description = "当前用户对该贴的操作权限",
  *        @OA\Property(property = "canBeReward", type = "boolean", description = "是否可打赏"),

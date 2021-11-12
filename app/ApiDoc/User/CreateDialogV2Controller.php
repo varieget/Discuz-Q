@@ -10,7 +10,7 @@
  *        required = true,
  *        description = "对话信息",
  *        @OA\JsonContent(
- *           @OA\Property(property = "recipientUsername", type = "string", description = "接收人用户名"),
+ *           @OA\Property(property = "recipientUserId", type = "string", description = "接收人用户id"),
  *           @OA\Property(property = "messageText", type = "string", description = "消息内容"),
  *           @OA\Property(property = "imageUrl", type = "string", description = "消息图片链接"),
  *           @OA\Property(property = "attachmentId", type = "integer", description = "附件id"),

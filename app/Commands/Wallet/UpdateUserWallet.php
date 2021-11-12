@@ -138,6 +138,7 @@ class UpdateUserWallet
 
                 AdminActionLog::createAdminActionLog(
                     $this->actor->id,
+                    AdminActionLog::ACTION_OF_USER,
                     $desc . '了用户【'. $userDetail['username'] .'】的余额'. $operate_amount .'元'
                 );
             }
@@ -152,6 +153,7 @@ class UpdateUserWallet
 
                 AdminActionLog::createAdminActionLog(
                     $this->actor->id,
+                    AdminActionLog::ACTION_OF_USER,
                     $status_desc . '了用户【'. $userDetail['username'] .'】提现'
                 );
             }

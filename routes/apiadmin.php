@@ -1,5 +1,5 @@
 <?php
-
+/**@var Discuz\Http\RouteCollection $route */
 use App\Api\Controller as ApiController;
 
 $route->post('/login', 'login', ApiController\Users\AdminLoginController::class);
@@ -105,13 +105,15 @@ $route->get('/emoji.list', 'emoji.list', ApiController\Emoji\ListAdminEmojiContr
 $route->post('/thread.optimize', 'thread.optimize', ApiController\Threads\ThreadOptimizeController::class);
 
 //插件后台控制接口
-$route->post('/plugin/settings.save', 'plugin.settings.save', ApiController\Plugin\SettingController::class);
+$route->post('/plugin/settings', 'plugin.settings', ApiController\Plugin\SettingController::class);
 $route->post('/plugin/permission.switch', 'plugin.permission.switch', ApiController\Plugin\GroupPermissionController::class);
 $route->get('/plugin/permissionlist', 'plugin.permissionlist', ApiController\Plugin\GetGroupPermissionsController::class);
-$route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingController::class);
+$route->get('/plugin/settinginfo', 'plugin.settinginfo', ApiController\Plugin\GetSettingAdminController::class);
 $route->get('/plugin/list', 'plugin.list', ApiController\Plugin\PluginListAdminController::class);
 $route->post('/plugin/uploadimage', 'plugin.uploadimage', ApiController\Plugin\PluginUploadImageController::class);
 $route->post('/plugin/deleteimage', 'plugin.deleteimage', ApiController\Plugin\PluginDeleteImageController::class);
+$route->post('/plugin/upload', 'plugin.upload', ApiController\Plugin\PluginUploadController::class);
+$route->post('/plugin/operate', 'plugin.operate', ApiController\Plugin\PluginOperateController::class);
 
 $route->post('/open.api.log', 'open.api.log', ApiController\Settings\OpenApiLogController::class);
 

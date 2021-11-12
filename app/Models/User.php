@@ -23,6 +23,7 @@ use App\Common\CacheKey;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
+use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Database\ScopeVisibilityTrait;
@@ -596,7 +597,6 @@ class User extends DzqModel
         $this->thread_count = $this->threads()
             ->where('is_approved', Thread::APPROVED)
             ->where('is_draft', Thread::IS_NOT_DRAFT)
-            ->where('is_display', Thread::BOOL_YES)
             ->whereNull('deleted_at')
             ->count();
 
@@ -703,7 +703,6 @@ class User extends DzqModel
             ->where('posts.is_approved', Post::APPROVED)
             ->whereNull('posts.deleted_at')
             ->whereNotNull('threads.user_id')
-            ->where('threads.is_display', Thread::BOOL_YES)
             ->where('threads.is_sticky', Thread::BOOL_NO)
             ->where('threads.is_draft', Thread::IS_NOT_DRAFT)
             ->count();
@@ -1133,8 +1132,8 @@ class User extends DzqModel
         return $user->username;
     }
 
-    protected function clearCache()
+    public function clearSomeCache()
     {
-        \Discuz\Base\DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_USERS, $this->id);
+        DzqCache::delKey(CacheKey::DZQ_LOGIN_IN_USER_BY_ID.$this->id);
     }
 }

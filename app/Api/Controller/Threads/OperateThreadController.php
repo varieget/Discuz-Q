@@ -29,11 +29,14 @@ use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqController;
+use Discuz\Common\Utils;
 use Illuminate\Contracts\Bus\Dispatcher;
 
 class OperateThreadController extends DzqController
 {
     use AssertPermissionTrait;
+
+    use ThreadStickTrait;
 
     protected $bus;
 
@@ -139,13 +142,10 @@ class OperateThreadController extends DzqController
             $attributes['isEssence'] = $isEssence;
         }
         if ($isSticky || $isSticky === false) {
-            if ((bool)$isSticky) {
-                $stickCount = ThreadStickSort::query()->count();
-                if ($stickCount >= ThreadStickSort::THREAD_STICK_COUNT_LIMIT) {
-                    $this->outPut(ResponseCode::NET_ERROR, '置顶贴最多只允许设置20条');
-                }
-            }
             $attributes['isSticky'] = $isSticky;
+        }
+        if ($isSticky === true && $this->isAllowSetThreadStick() == false) {
+            Utils::outPut(ResponseCode::SET_ERROR, '置顶贴最多只允许设置'.ThreadStickSort::THREAD_STICK_COUNT_LIMIT.'条');
         }
         if ($isFavorite || $isFavorite === false) {
             $attributes['isFavorite'] = $isFavorite;

@@ -135,6 +135,8 @@ class CacheKey
 
     const OAC_REQUEST_TIME = 'oac_request_time';//记录开源应用中心的请求时间以关闭定时任务
 
+    const DZQ_LOGIN_IN_USER_BY_ID = 'dzq_login_user_by_id:';
+
     public static $fileStore = [
         self::LIST_THREADS_V3_POSTS => 20
     ];

@@ -7,10 +7,10 @@
  *     tags = {"私信与消息"},
  *     @OA\Parameter(ref = "#/components/parameters/bear_token"),
  *     @OA\Parameter(
- *        name = "username",
+ *        name = "userId",
  *        in = "query",
  *        required = true,
- *        description = "用户名",
+ *        description = "用户id",
  *        @OA\Schema(type = "string")
  *     ),
  *     @OA\Response(

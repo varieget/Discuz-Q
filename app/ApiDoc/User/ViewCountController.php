@@ -2,8 +2,8 @@
 /**
  * @OA\Get(
  *     path="/api/v3/view.count",
- *     summary="获得主题的查看次数",
- *     description="主获得主题的查看次数",
+ *     summary="记录主题查看次数",
+ *     description="调用一次接口增加一次查看次数",
  *     tags={"发布与展示"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
  *     @OA\Parameter(name="threadId",

@@ -63,6 +63,10 @@ class PostWechatMessage extends SimpleMessage
         $noticeId = !empty($this->data['noticeId']) ? $this->data['noticeId'] : '';
         $receiveUserId = !empty($this->data['receiveUserId']) ? $this->data['receiveUserId'] : 0;
 
+        if (!($this->post instanceof Post) && isset($this->data['post'])) {
+            $this->post = Post::query()->where('id', '=', $data['post']->id)->first();
+        }
+
         $threadPostContent = $this->post->getSummaryContent(Post::NOTICE_LENGTH, true)['first_content'];
         $threadTitle = $this->post->thread->getContentByType(Thread::CONTENT_LENGTH, true);
 
