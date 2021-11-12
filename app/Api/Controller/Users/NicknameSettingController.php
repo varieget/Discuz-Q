@@ -53,10 +53,11 @@ class NicknameSettingController extends AuthBaseController
             ], [
                 'nickname'      => 'required',
             ]);
-            $checkController = app(CheckController::class);
-            $checkController->checkName('nickname', $nickname);
+
+            $checkController = app()->make(CheckController::class);
+            $res = $checkController->checkName('nickname', $nickname);
             $user = $this->user;
-            $user->changeNickname($nickname);
+            $user->changeNickname($res['value']);
             $user->save();
 
             $this->outPut(ResponseCode::SUCCESS);

@@ -56,6 +56,7 @@ class CheckController extends DzqController
             if (!empty($nickname)) {
                 $this->checkName('nickname', $nickname);
             }
+
             $this->outPut(ResponseCode::SUCCESS);
         } catch (\Exception $e) {
             DzqLog::error('username_nickname_check_api_error', [
@@ -66,28 +67,64 @@ class CheckController extends DzqController
         }
     }
 
-    public function checkName($name = '', $content = '', $id = '')
+    public function checkName($checkField = '', $fieldValue = '', $isThrow = true, $removeId = 0, $isAutoRegister = false)
     {
-        $msg = $name == 'username' ? '用户名' : '昵称';
+        $allowFields = [
+            'username' => '用户名',
+            'nickname' => '昵称'
+        ];
+        $res = [
+            'field' => $checkField,
+            'value' => $fieldValue,
+            'errorCode' => 0,
+            'errorMsg' => ''
+        ];
+
+        if (!in_array($res['field'], array_keys($allowFields))) {
+            $res['errorCode'] = ResponseCode::INVALID_PARAMETER;
+            $res['errorMsg'] = '未被允许的检测字段';
+            return $res;
+        }
+
         //去除字符串中空格
-        $content = str_replace(' ', '', $content);
+        $res['value'] = preg_replace('/\s/ui', '', $res['value']);
+
         //敏感词检测
-        $this->censor->checkText($content, $name);
-        //长度检查
-        if (strlen($content) == 0) {
-            $this->outPut(ResponseCode::USERNAME_NOT_NULL, $msg.'不能为空');
-        }
-        if (mb_strlen($content, 'UTF8') > 15) {
-            $this->outPut(ResponseCode::NAME_LENGTH_ERROR, $msg.'长度超过15个字符');
-        }
+        $censor = app()->make(Censor::class);
+        $res['value'] = $censor->checkText($res['value'], $res['field']);
+
         //重名校验
-        $query = User::query()->where($name, $content);
-        if (!empty($id)) {
-            $query->where('id', '<>', $id);
+        $query = User::query()->where($res['field'], $res['value']);
+        if (!empty($removeId)) {
+            $query->where('id', '<>', $removeId);
         }
         $exists = $query->exists();
-        if (!empty($exists)) {
-            $this->outPut(ResponseCode::USERNAME_HAD_EXIST, $msg.'已经存在');
+
+        if ($isAutoRegister == false) {
+            //长度检查
+            if (strlen($res['value']) == 0) {
+                $res['errorCode'] = ResponseCode::USERNAME_NOT_NULL;
+                $res['errorMsg'] = $allowFields[$res['field']].'不能为空';
+            } elseif (mb_strlen($res['value'], 'UTF8') > 15) {
+                $res['errorCode'] = ResponseCode::NAME_LENGTH_ERROR;
+                $res['errorMsg'] = $allowFields[$res['field']].'长度超过15个字符';
+            } elseif (!empty($exists)) {
+                //重名检测
+                $res['errorCode'] = ResponseCode::USERNAME_HAD_EXIST;
+                $res['errorMsg'] = $allowFields[$res['field']].'已经存在';
+            }
+        } else {
+            if (!empty($exists)) {
+                $res['value'] = $res['field'] == 'username'
+                    ? User::addStringToUsername($res['value'])
+                    : User::addStringToNickname($res['value']);
+            }
         }
+
+        if ($isThrow == true && $res['errorCode'] != 0) {
+            $this->outPut($res['errorCode'], $res['errorMsg']);
+        }
+
+        return $res;
     }
 }

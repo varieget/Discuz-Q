@@ -81,11 +81,13 @@ class UpdateUsersController extends DzqController
 
         $registerReason = $this->inPut('registerReason');
 
+        $checkController = app()->make(CheckController::class);
+
         $requestData = [];
         if (!empty($username)) {
-            $requestData['username'] = $username;
-            $checkUsername['username'] = $username;
-            $this->dzqValidate($checkUsername, [
+            $usernameRes = $checkController->checkName('username', $username, true, $id);
+            $requestData['username'] = $usernameRes['value'];
+            $this->dzqValidate($requestData, [
                 'username' => [
                     'required',
                     'max:15',
@@ -167,24 +169,8 @@ class UpdateUsersController extends DzqController
         }
 
         if (isset($this->request->getParsedBody()['nickname'])) {
-            if (empty($nickname)) {
-                $this->outPut(ResponseCode::INVALID_PARAMETER, '昵称不能为空');
-            }
-            $isHasSpace = strpos($nickname, ' ');
-            if ($isHasSpace !== false) {
-                $this->outPut(ResponseCode::USERNAME_NOT_ALLOW_HAS_SPACE, '昵称不允许包含空格');
-            }
-            if (mb_strlen($nickname, 'UTF8') > 15) {
-                $this->outPut(ResponseCode::NAME_LENGTH_ERROR, '昵称长度超过15个字符');
-            }
-            $isExists = User::query()->where('nickname', $nickname)->where('id', '<>', $id)->exists();
-            if (!empty($isExists)) {
-                $this->outPut(ResponseCode::USERNAME_HAD_EXIST, '昵称已经存在');
-            }
-            $this->censor->checkText($nickname, 'nickname');
-            if (!empty($nickname)) {
-                $requestData['nickname'] = $nickname;
-            }
+            $nicknameRes = $checkController->checkName('nickname', $nickname, true, $id);
+            $requestData['nickname'] = $nicknameRes['value'];
         }
 
         $result = $this->bus->dispatch(
