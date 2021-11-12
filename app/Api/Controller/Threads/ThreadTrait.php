@@ -455,7 +455,7 @@ trait ThreadTrait
 
     private function loginDataExists($loginUserData, $type, $key, callable $callBack)
     {
-        if (array_key_exists($type, $loginUserData)) {
+        if (isset($loginUserData[$type])) {
             return isset($loginUserData[$type][$key]);
         } else {
             return $callBack();
