@@ -97,6 +97,11 @@ class PluginSettings extends DzqModel
                         }
                     }
                 }
+                $privateValue = array_merge($privateValueOld,$privateValue);
+            }
+            if (!empty($pluginSetting->public_value)){
+                $publicValueOld = json_decode($pluginSetting->public_value,true);
+                $publicValue = array_merge($publicValueOld,$publicValue);
             }
         }
         $pluginSetting->app_id = $appId;
