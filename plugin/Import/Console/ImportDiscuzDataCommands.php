@@ -36,7 +36,7 @@ class ImportDiscuzDataCommands extends DzqCommand
     public function getPlatformData($parameter)
     {
         $platform = new Discuz();
-        $data = $platform->main($parameter['topic'], $parameter['number'], $parameter['url'], $parameter['cookie'],$parameter['port']);
+        $data = $platform->main($parameter['topic'], $parameter['number'], $parameter['url'], $parameter['cookie'], $parameter['port']);
         return $data;
     }
 }
