@@ -46,9 +46,9 @@ trait PluginTrait
         return $data;
     }
 
-    private function getAllSettingAndConfig($groupId, $isAdmin)
+    private function getAllSettingAndConfig($groupId, $isAdmin, $isFromAdmin)
     {
-        $pluginList = \Discuz\Common\Utils::getPluginList();
+        $pluginList = \Discuz\Common\Utils::getPluginList($isFromAdmin);
         $permissions = PluginGroupPermission::query()
             ->where('group_id', $groupId)->get()->keyBy('app_id')->toArray();
 
