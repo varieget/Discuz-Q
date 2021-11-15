@@ -255,6 +255,7 @@ class UpdateThreadController extends DzqController
     {
         $threadId = $thread->id;
         $tags = [];
+        $indexes = $content['indexes'] ?? [];
         /* 允许红包帖在已发布情况下再次编辑，相当于允许 包含 红包 的帖子，draft 为 0
         if(!empty($content['indexes'])){
             //针对红包帖、悬赏帖，还需要往对应的 body 中插入  draft = 1
@@ -282,6 +283,8 @@ class UpdateThreadController extends DzqController
             $operation = $value['operation'];
             $body = $value['body'];
             $operation != $this->DELETE_FUNC && $tags[] = ['thread_id' => $threadId, 'tag' => $value['tomId']];
+            $price_type = !empty($thread->attachment_price) ? 1 : 0;
+            $price_ids = !empty($indexes[$key]['body']['priceList']) && is_array($indexes[$key]['body']['priceList']) ? json_encode($indexes[$key]['body']['priceList']) : '{}';
             switch ($operation) {
                 case $this->CREATE_FUNC:
                     ThreadTom::query()->insert([
@@ -289,7 +292,9 @@ class UpdateThreadController extends DzqController
                         'tom_type' => $tomId,
                         'key' => $key,
                         'value' => json_encode($body, 256),
-                        'status' => ThreadTom::STATUS_ACTIVE
+                        'status' => ThreadTom::STATUS_ACTIVE,
+                        'price_type' => $price_type,
+                        'price_ids' =>  $price_ids
                     ]);
                     break;
                 case $this->DELETE_FUNC:
@@ -310,7 +315,7 @@ class UpdateThreadController extends DzqController
                 case $this->UPDATE_FUNC:
                     ThreadTom::query()
                         ->where(['thread_id' => $threadId, 'tom_type' => $tomId, 'key' => $key, 'status' => ThreadTom::STATUS_ACTIVE])
-                        ->update(['value' => json_encode($body, 256)]);
+                        ->update(['value' => json_encode($body, 256), 'price_type' => $price_type, 'price_ids' =>  $price_ids]);
                     break;
                 default:
                     $this->outPut(ResponseCode::UNKNOWN_ERROR, 'operation ' . $operation . ' not exist.');

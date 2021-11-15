@@ -297,8 +297,7 @@ trait ThreadTrait
                 $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
             } else {
                 $text = $post['content'];
-                ;
-                if ($payType == Thread::PAY_THREAD) {
+                if (in_array($payType, [Thread::PAY_ATTACH, Thread::PAY_THREAD])) {
                     $freeWords = floatval($thread['free_words']);
                     if ($freeWords >= 0 && $freeWords < 1) {
                         $text = strip_tags($post['content']);
@@ -318,6 +317,8 @@ trait ThreadTrait
                 isset($tomInput[TomConfig::TOM_IMAGE]) && $tomConfig += [TomConfig::TOM_IMAGE => $tomInput[TomConfig::TOM_IMAGE]];
                 isset($tomInput[TomConfig::TOM_VOTE]) && $tomConfig += [TomConfig::TOM_VOTE => $tomInput[TomConfig::TOM_VOTE]];
                 isset($tomInput[TomConfig::TOM_REWARD]) && $tomConfig += [TomConfig::TOM_REWARD => $tomInput[TomConfig::TOM_REWARD]];
+                isset($tomInput[TomConfig::TOM_DOC]) && $tomConfig += [TomConfig::TOM_DOC => $tomInput[TomConfig::TOM_DOC]];
+                isset($tomInput[TomConfig::TOM_VIDEO]) && $tomConfig += [TomConfig::TOM_VIDEO => $tomInput[TomConfig::TOM_VIDEO]];
                 if (!empty($tomConfig)) {
                     $content['indexes'] = $this->tomDispatcher(
                         $tomConfig,
@@ -725,19 +726,6 @@ trait ThreadTrait
                     }
                 }
             }
-
-            /* $xml = preg_replace_callback(
-                '<img src="(.*)" alt="attachmentId-(\d+)" />',
-                function ($m) use ($attachments) {
-                    $id = trim($m[2], '"');
-                    if (!empty($m) && in_array($id, array_keys($attachments))) {
-                        return 'img src="' . $attachments[$id] . '" alt="attachmentId-' . $id . '"';
-                    }else{
-                        return 'img src="' . $m[1] . '" alt="attachmentId-' . $id . '"';
-                    }
-                },
-                $xml
-            ); */
 
             $xml_attachments = $xml_attachments_ids = [];
             $serializer = $this->app->make(AttachmentSerializer::class);
