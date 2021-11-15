@@ -1189,8 +1189,8 @@ class User extends DzqModel
         } else {
             if (!empty($exists)) {
                 $res['value'] = $res['field'] == 'username'
-                    ? User::addStringToUsername($res['value'])
-                    : User::addStringToNickname($res['value']);
+                    ? self::addStringToUsername($res['value'])
+                    : self::addStringToNickname($res['value']);
             }
         }
 
