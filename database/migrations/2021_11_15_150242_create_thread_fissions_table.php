@@ -4,7 +4,7 @@ use Discuz\Database\Migration;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
 
-class CreateFissionsTable extends Migration
+class CreateThreadFissionsTable extends Migration
 {
     /**
      * Run the migrations.
