@@ -18,6 +18,7 @@
 namespace App\Api\Controller\Plugin;
 
 use App\Common\CacheKey;
+use App\Common\DzqConst;
 use App\Common\ResponseCode;
 use App\Common\Utils;
 use Discuz\Base\DzqAdminController;
@@ -67,6 +68,11 @@ class PluginUploadController extends DzqAdminController
         fclose($fileConfigHandler);
 
         $configJson = json_decode($contents,true);
+        if($configJson["status"] == DzqConst::BOOL_YES){
+            $zipUn->close();
+            $this->outPut(ResponseCode::INVALID_PARAMETER,"上传的插件包中插件状态不能为发布状态");
+        }
+
         $pluginName = $configJson["name_en"];
         if (strpos($pluginName," ")){
             $zipUn->close();
