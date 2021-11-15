@@ -61,14 +61,13 @@ class UpdateAdminController extends DzqAdminController
         $rejectReason = $this->inPut('rejectReason');
 
         $requestData = [];
-        $checkController = app()->make(CheckController::class);
         if (!empty($username)) {
-            $usernameRes = $checkController->checkName('username', $username, true, $id);
+            $usernameRes = User::checkName('username', $username, true, $id);
             $requestData['username'] = $usernameRes['value'];
         }
 
         if (!empty($nickname)) {
-            $nicknameRes = $checkController->checkName('nickname', $nickname, true, $id);
+            $nicknameRes = User::checkName('nickname', $nickname, true, $id);
             $requestData['nickname'] = $nicknameRes['value'];
         }
 

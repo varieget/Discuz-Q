@@ -81,11 +81,9 @@ class UpdateUsersController extends DzqController
 
         $registerReason = $this->inPut('registerReason');
 
-        $checkController = app()->make(CheckController::class);
-
         $requestData = [];
         if (!empty($username)) {
-            $usernameRes = $checkController->checkName('username', $username, true, $id);
+            $usernameRes = User::checkName('username', $username, true, $id);
             $requestData['username'] = $usernameRes['value'];
             $this->dzqValidate($requestData, [
                 'username' => [
@@ -169,7 +167,7 @@ class UpdateUsersController extends DzqController
         }
 
         if (isset($this->request->getParsedBody()['nickname'])) {
-            $nicknameRes = $checkController->checkName('nickname', $nickname, true, $id);
+            $nicknameRes = User::checkName('nickname', $nickname, true, $id);
             $requestData['nickname'] = $nicknameRes['value'];
         }
 

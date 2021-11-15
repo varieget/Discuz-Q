@@ -18,13 +18,16 @@
 
 namespace App\Models;
 
+use App\Censor\Censor;
 use App\Common\AuthUtils;
 use App\Common\CacheKey;
+use App\Common\ResponseCode;
 use App\Traits\Notifiable;
 use Carbon\Carbon;
 use Discuz\Auth\Guest;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
+use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Database\ScopeVisibilityTrait;
 use Discuz\Foundation\EventGeneratorTrait;
@@ -1135,5 +1138,66 @@ class User extends DzqModel
     public function clearSomeCache()
     {
         DzqCache::delKey(CacheKey::DZQ_LOGIN_IN_USER_BY_ID.$this->id);
+    }
+
+    public static function checkName($checkField = '', $fieldValue = '', $isThrow = true, $removeId = 0, $isAutoRegister = false)
+    {
+        $allowFields = [
+            'username' => '用户名',
+            'nickname' => '昵称'
+        ];
+        $res = [
+            'field' => $checkField,
+            'value' => $fieldValue,
+            'errorCode' => 0,
+            'errorMsg' => ''
+        ];
+
+        if (!in_array($res['field'], array_keys($allowFields))) {
+            $res['errorCode'] = ResponseCode::INVALID_PARAMETER;
+            $res['errorMsg'] = '未被允许的检测字段';
+            return $res;
+        }
+
+        //去除字符串中空格
+        $res['value'] = preg_replace('/\s/ui', '', $res['value']);
+
+        //敏感词检测
+        $censor = app()->make(Censor::class);
+        $res['value'] = $censor->checkText($res['value'], $res['field']);
+
+        //重名校验
+        $query = self::query()->where($res['field'], $res['value']);
+        if (!empty($removeId)) {
+            $query->where('id', '<>', $removeId);
+        }
+        $exists = $query->exists();
+
+        if ($isAutoRegister == false) {
+            //长度检查
+            if (strlen($res['value']) == 0) {
+                $res['errorCode'] = ResponseCode::USERNAME_NOT_NULL;
+                $res['errorMsg'] = $allowFields[$res['field']].'不能为空';
+            } elseif (mb_strlen($res['value'], 'UTF8') > 15) {
+                $res['errorCode'] = ResponseCode::NAME_LENGTH_ERROR;
+                $res['errorMsg'] = $allowFields[$res['field']].'长度超过15个字符';
+            } elseif (!empty($exists)) {
+                //重名检测
+                $res['errorCode'] = ResponseCode::USERNAME_HAD_EXIST;
+                $res['errorMsg'] = $allowFields[$res['field']].'已经存在';
+            }
+        } else {
+            if (!empty($exists)) {
+                $res['value'] = $res['field'] == 'username'
+                    ? User::addStringToUsername($res['value'])
+                    : User::addStringToNickname($res['value']);
+            }
+        }
+
+        if ($isThrow == true && $res['errorCode'] != 0) {
+            Utils::outPut($res['errorCode'], $res['errorMsg']);
+        }
+
+        return $res;
     }
 }

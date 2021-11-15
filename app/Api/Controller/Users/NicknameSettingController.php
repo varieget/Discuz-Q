@@ -19,6 +19,7 @@
 namespace App\Api\Controller\Users;
 
 use App\Common\ResponseCode;
+use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Censor\Censor;
 use Discuz\Auth\Exception\NotAuthenticatedException;
@@ -54,8 +55,7 @@ class NicknameSettingController extends AuthBaseController
                 'nickname'      => 'required',
             ]);
 
-            $checkController = app()->make(CheckController::class);
-            $res = $checkController->checkName('nickname', $nickname);
+            $res = User::checkName('nickname', $nickname);
             $user = $this->user;
             $user->changeNickname($res['value']);
             $user->save();

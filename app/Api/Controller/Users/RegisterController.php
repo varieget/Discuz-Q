@@ -131,8 +131,7 @@ class RegisterController extends AuthBaseController
 
         $this->connection->beginTransaction();
         try {
-            $checkController = app()->make(CheckController::class);
-            $usernameRes = $checkController->checkName('username', $data['username'], false);
+            $usernameRes = User::checkName('username', $data['username'], false);
             if (!empty($usernameRes) && $usernameRes['errorCode'] != 0) {
                 $this->connection->rollback();
                 $this->outPut($usernameRes['errorCode'], $usernameRes['errorMsg']);
@@ -146,7 +145,7 @@ class RegisterController extends AuthBaseController
                 $this->outPut(ResponseCode::PASSWORD_NOT_ALLOW_HAS_SPACE);
             }
 
-            $nicknameRes = $checkController->checkName('nickname', $data['nickname'], false);
+            $nicknameRes = User::checkName('nickname', $data['nickname'], false);
             if (!empty($nicknameRes) && $nicknameRes['errorCode'] != 0) {
                 $this->connection->rollback();
                 $this->outPut($nicknameRes['errorCode'], $nicknameRes['errorMsg']);

@@ -51,10 +51,10 @@ class CheckController extends DzqController
             $username = $this->inPut('username');
             $nickname = $this->inPut('nickname');
             if (!empty($username)) {
-                $this->checkName('username', $username);
+                User::checkName('username', $username);
             }
             if (!empty($nickname)) {
-                $this->checkName('nickname', $nickname);
+                User::checkName('nickname', $nickname);
             }
 
             $this->outPut(ResponseCode::SUCCESS);
@@ -65,66 +65,5 @@ class CheckController extends DzqController
             ], $e->getMessage());
             $this->outPut(ResponseCode::INTERNAL_ERROR, '用户昵称检测接口异常');
         }
-    }
-
-    public function checkName($checkField = '', $fieldValue = '', $isThrow = true, $removeId = 0, $isAutoRegister = false)
-    {
-        $allowFields = [
-            'username' => '用户名',
-            'nickname' => '昵称'
-        ];
-        $res = [
-            'field' => $checkField,
-            'value' => $fieldValue,
-            'errorCode' => 0,
-            'errorMsg' => ''
-        ];
-
-        if (!in_array($res['field'], array_keys($allowFields))) {
-            $res['errorCode'] = ResponseCode::INVALID_PARAMETER;
-            $res['errorMsg'] = '未被允许的检测字段';
-            return $res;
-        }
-
-        //去除字符串中空格
-        $res['value'] = preg_replace('/\s/ui', '', $res['value']);
-
-        //敏感词检测
-        $censor = app()->make(Censor::class);
-        $res['value'] = $censor->checkText($res['value'], $res['field']);
-
-        //重名校验
-        $query = User::query()->where($res['field'], $res['value']);
-        if (!empty($removeId)) {
-            $query->where('id', '<>', $removeId);
-        }
-        $exists = $query->exists();
-
-        if ($isAutoRegister == false) {
-            //长度检查
-            if (strlen($res['value']) == 0) {
-                $res['errorCode'] = ResponseCode::USERNAME_NOT_NULL;
-                $res['errorMsg'] = $allowFields[$res['field']].'不能为空';
-            } elseif (mb_strlen($res['value'], 'UTF8') > 15) {
-                $res['errorCode'] = ResponseCode::NAME_LENGTH_ERROR;
-                $res['errorMsg'] = $allowFields[$res['field']].'长度超过15个字符';
-            } elseif (!empty($exists)) {
-                //重名检测
-                $res['errorCode'] = ResponseCode::USERNAME_HAD_EXIST;
-                $res['errorMsg'] = $allowFields[$res['field']].'已经存在';
-            }
-        } else {
-            if (!empty($exists)) {
-                $res['value'] = $res['field'] == 'username'
-                    ? User::addStringToUsername($res['value'])
-                    : User::addStringToNickname($res['value']);
-            }
-        }
-
-        if ($isThrow == true && $res['errorCode'] != 0) {
-            $this->outPut($res['errorCode'], $res['errorMsg']);
-        }
-
-        return $res;
     }
 }

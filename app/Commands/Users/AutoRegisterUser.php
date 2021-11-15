@@ -65,11 +65,10 @@ class AutoRegisterUser
         //自动注册没有密码，后续用户可以设置密码
         $this->data['password'] = '';
 
-        $checkController = app()->make(CheckController::class);
-        $usernameRes = $checkController->checkName('username', $this->data['username'], false, 0, true);
+        $usernameRes = User::checkName('username', $this->data['username'], false, 0, true);
         $this->data['username'] = $usernameRes['value'];
 
-        $nicknameRes = $checkController->checkName('nickname', $this->data['nickname'], false, 0, true);
+        $nicknameRes = User::checkName('nickname', $this->data['nickname'], false, 0, true);
         $this->data['nickname'] = $nicknameRes['value'];
 
         DzqLog::info('auto_register_user_process', ['data' => $this->data], DzqLog::LOG_LOGIN);
