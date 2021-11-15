@@ -172,7 +172,7 @@ class ThreadListController extends DzqController
 
     private function loadPageThreads($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage)
     {
-        $bPreload = Utils::isPositiveInteger(($page - 2) / $this->preloadPages + 1);
+        $bPreload = Utils::isPositiveInteger(($page + 3) / $this->preloadPages);
         if ($page > 1 && $bPreload) {//预加载
             return $this->preloadPage($cacheKey, $filterKey, $page, $threadsBuilder, $filter, $perPage);
         } else {//读缓存

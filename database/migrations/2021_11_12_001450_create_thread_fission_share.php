@@ -33,6 +33,7 @@ class CreateThreadFissionShare extends Migration
             $table->id()->comment('id');
             $table->unsignedBigInteger('thread_id')->nullable(false)->default(0)->comment('主题id');
             $table->unsignedBigInteger('user_id')->nullable(false)->default(0)->comment('分享者id');
+            $table->char('code', 10)->nullable(false)->default('')->comment('分享码');
             $table->unsignedInteger('share_count')->default(0)->comment('分享次数');
             $table->timestamp('created_at')->default(new Expression('CURRENT_TIMESTAMP'))->comment('创建时间');
             $table->timestamp('updated_at')->default(new Expression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))->comment('更新时间');
