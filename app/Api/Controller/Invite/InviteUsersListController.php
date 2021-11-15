@@ -83,6 +83,7 @@ class InviteUsersListController extends DzqController
             'nickname' => $this->user->nickname,
             'avatar' => $this->user->avatar,
             'groupName' => $groups[$this->user->id]['groups']['name'],
+            'level' => $groups[$this->user->id]['groups']['level'],
             'totalInviteUsers' => $totalInviteUsers,
             'totalInviteBounties' => $totalInviteBounties,
             'inviteUsersList' => $inviteData
