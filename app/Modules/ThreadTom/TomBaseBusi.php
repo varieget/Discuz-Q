@@ -20,6 +20,7 @@ namespace App\Modules\ThreadTom;
 
 use App\Common\ResponseCode;
 use App\Models\Order;
+use App\Models\Thread;
 use App\Models\ThreadTom;
 use App\Models\User;
 use Discuz\Common\Utils;
@@ -62,6 +63,11 @@ abstract class TomBaseBusi
 
     public $plugin = null;
 
+    public $priceIds = [];
+
+    //用户是否购买了部分付费
+    public $isPaySub = false;
+
     public function __construct(User $user, $threadId, $postId, $tomId, $key, $operation, $body, $canViewTom)
     {
         $this->app = app();
@@ -75,6 +81,20 @@ abstract class TomBaseBusi
         $this->canViewTom = $canViewTom;
         $this->db = app('db');
         $this->operationValid();
+        $this->priceIds = !empty($this->getParams('priceIds')) ? $this->getParams('priceIds') : [];
+        $thread = Thread::query()->find($threadId);
+        //判断用户是否有权或者购买了部分付费
+        //1、超管，自己可查看
+        if ($user->isAdmin() || ($thread->user_id == $user->id)) {
+            $this->isPaySub = true;
+        }
+        if (!$this->isPaySub) {
+            //2、具有部分付费订单支付记录
+            $order = Order::query()->where(['thread_id' => $threadId, 'status' => Order::ORDER_STATUS_PAID, 'user_id' => $user->id, 'type' => Order::ORDER_TYPE_ATTACHMENT])->first();
+            if ($order) {
+                $this->isPaySub = true;
+            }
+        }
     }
 
     private function operationValid()
