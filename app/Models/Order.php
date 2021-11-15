@@ -93,6 +93,8 @@ class Order extends DzqModel
 
     const ORDER_TYPE_CHARGE = 30;  //充值
 
+    const ORDER_TYPE_FISSION = 40;  // 分享裂变红包
+
     /**
      * 订单状态
      */
