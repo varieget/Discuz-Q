@@ -18,6 +18,7 @@
 namespace App\Api\Controller\Plugin;
 
 use App\Common\CacheKey;
+use App\Common\DzqConst;
 use App\Common\ResponseCode;
 use Discuz\Base\DzqAdminController;
 use Discuz\Base\DzqCache;
@@ -25,6 +26,7 @@ use Discuz\Common\Utils;
 
 class PluginOperateController extends DzqAdminController
 {
+    use PluginTrait;
 
     public function main()
     {
@@ -57,11 +59,7 @@ class PluginOperateController extends DzqAdminController
 
     private function publishPlugin($item){
         $nameEn = $item["name_en"];
-        $pathDir = $item['plugin_'. $item["app_id"]]["config"];
-        $config = json_decode(file_get_contents($pathDir), 256);
-        $config["status"] = 1;
-        $strConfig = json_encode($config, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-        file_put_contents($pathDir,$strConfig);
+        $this->changePluginStatus($item, DzqConst::BOOL_YES);
 
         //执行命令
         Utils::runConsoleCmd('migrate:plugin', ['--force' => true,'--name' => $nameEn]);
@@ -70,11 +68,8 @@ class PluginOperateController extends DzqAdminController
     }
 
     private function offlinePlugin($item){
-        $pathDir = $item['plugin_'. $item["app_id"] ]["config"];
-        $config = json_decode(file_get_contents($pathDir), 256);
-        $config["status"] = 0;
-        $strConfig = json_encode($config, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-        file_put_contents($pathDir,$strConfig);
+
+        $this->changePluginStatus($item, DzqConst::BOOL_NO);
 
         $this->outPut(0,'', "下线成功");
     }

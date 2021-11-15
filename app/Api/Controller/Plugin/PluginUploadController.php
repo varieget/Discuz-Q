@@ -28,6 +28,8 @@ use Laminas\Diactoros\Stream;
 
 class PluginUploadController extends DzqAdminController
 {
+    use PluginTrait;
+
     public function main()
     {
         /** @var Resource $file */
@@ -68,12 +70,8 @@ class PluginUploadController extends DzqAdminController
         fclose($fileConfigHandler);
 
         $configJson = json_decode($contents,true);
-        if($configJson["status"] == DzqConst::BOOL_YES){
-            $zipUn->close();
-            $this->outPut(ResponseCode::INVALID_PARAMETER,"上传的插件包中插件状态不能为发布状态");
-        }
-
         $pluginName = $configJson["name_en"];
+        $pluginAppId =  $configJson["app_id"];
         if (strpos($pluginName," ")){
             $zipUn->close();
             $this->outPut(ResponseCode::INVALID_PARAMETER,"插件名不能有空格");
@@ -87,6 +85,11 @@ class PluginUploadController extends DzqAdminController
         $zipUn->close();
         if (!$result){
             $this->outPut(0,'', "解压失败，请检查目录权限等情况");
+        }
+
+        $pluginList = \Discuz\Common\Utils::getPluginList(true);
+        if(isset($pluginList[$pluginAppId])) {
+            $this->changePluginStatus($pluginList[$pluginAppId], DzqConst::BOOL_NO);
         }
 
         $this->outPut(0,'', "上传成功");

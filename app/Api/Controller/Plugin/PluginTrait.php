@@ -156,4 +156,11 @@ trait PluginTrait
 
     }
 
+    public function changePluginStatus($item, $status){
+        $pathDir = $item['plugin_'. $item["app_id"]]["config"];
+        $config = json_decode(file_get_contents($pathDir), 256);
+        $config["status"] = $status;
+        $strConfig = json_encode($config, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+        file_put_contents($pathDir,$strConfig);
+    }
 }
