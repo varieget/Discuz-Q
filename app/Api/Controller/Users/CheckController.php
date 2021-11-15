@@ -51,11 +51,12 @@ class CheckController extends DzqController
             $username = $this->inPut('username');
             $nickname = $this->inPut('nickname');
             if (!empty($username)) {
-                $this->checkName('username', $username);
+                User::checkName('username', $username);
             }
             if (!empty($nickname)) {
-                $this->checkName('nickname', $nickname);
+                User::checkName('nickname', $nickname);
             }
+
             $this->outPut(ResponseCode::SUCCESS);
         } catch (\Exception $e) {
             DzqLog::error('username_nickname_check_api_error', [
@@ -63,31 +64,6 @@ class CheckController extends DzqController
                 'nickname' => $this->inPut('nickname')
             ], $e->getMessage());
             $this->outPut(ResponseCode::INTERNAL_ERROR, '用户昵称检测接口异常');
-        }
-    }
-
-    public function checkName($name = '', $content = '', $id = '')
-    {
-        $msg = $name == 'username' ? '用户名' : '昵称';
-        //去除字符串中空格
-        $content = str_replace(' ', '', $content);
-        //敏感词检测
-        $this->censor->checkText($content, $name);
-        //长度检查
-        if (strlen($content) == 0) {
-            $this->outPut(ResponseCode::USERNAME_NOT_NULL, $msg.'不能为空');
-        }
-        if (mb_strlen($content, 'UTF8') > 15) {
-            $this->outPut(ResponseCode::NAME_LENGTH_ERROR, $msg.'长度超过15个字符');
-        }
-        //重名校验
-        $query = User::query()->where($name, $content);
-        if (!empty($id)) {
-            $query->where('id', '<>', $id);
-        }
-        $exists = $query->exists();
-        if (!empty($exists)) {
-            $this->outPut(ResponseCode::USERNAME_HAD_EXIST, $msg.'已经存在');
         }
     }
 }
