@@ -35,7 +35,7 @@ class PluginListController extends DzqController
         $groupId = $this->user->groupId;
         $isAdmin = $this->user->isAdmin();
 
-        $result = $this->getAllSettingAndConfig($groupId, $isAdmin);
+        $result = $this->getAllSettingAndConfig($groupId, $isAdmin, false);
 
         $this->outPut(0, '', array_values($result));
     }
