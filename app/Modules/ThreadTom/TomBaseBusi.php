@@ -128,15 +128,24 @@ abstract class TomBaseBusi
         }
         //增加 priceList 字段返回
         $priceList = [];
-        foreach ($array as $val) {
-            if(!empty($val['needPay']))     $priceList[] = $val['id'];
+        $flag = false;
+        if(isset($array['needPay']) && isset($array['threadVideoId'])){
+            $flag = true;
+            $priceList[] = $array['threadVideoId'];
+        }else{
+            foreach ($array as $val) {
+                if(isset($val['needPay'])){
+                    $flag = true;
+                    if(!empty($val['needPay']))    $priceList[] = $val['id'];
+                }
+            }
         }
         $ret = [
             'tomId' => $this->tomId,
             'operation' => $this->operation,
             'body' => $array
         ];
-        if(!empty($priceList)){
+        if($flag){
             $ret['priceList'] = $priceList;
         }
         $plugin = $this->body['_plugin'] ?? null;
