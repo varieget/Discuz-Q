@@ -65,8 +65,10 @@ class DownloadAttachmentController extends DzqController
         if (empty($attachment)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-
-        $this->checkDownloadAttachment($thread, $user, $userRepo);
+        //判断附件是否需要付费
+        if ($thread->price_type && in_array($attachmentsId,  json_decode($thread->price_ids, 1))) {
+            $this->checkDownloadAttachment($thread, $user, $userRepo);
+        }
 
         if (!$userRepo->canDownloadThreadAttachment($this->user, $attachment->user_id)) {
             $this->outPut(ResponseCode::UNAUTHORIZED, '无权限下载该附件');
