@@ -57,7 +57,7 @@ class SelectTomController extends DzqController
         $value = json_decode($tom->value, true);
         $priceIds = json_decode($tom->price_ids, true);
         if ($tom->price_type && !empty($priceIds)) {
-            array_push($value, ['priceIds' => $priceIds]);
+            $value += ['priceIds' => $priceIds];
         }
         $content = $this->buildTomJson($threadId, $tomId, $this->SELECT_FUNC, $value);
         $result = $this->tomDispatcher([$key => $content]);
