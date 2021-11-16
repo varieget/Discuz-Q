@@ -38,6 +38,8 @@ class TomConfig
 
     const TOM_VOTE = 109;
 
+    const TOM_FISSION = 110;
+
     const OPTIMIZE_TYPE_LIST = [TomConfig::TOM_GOODS,TomConfig::TOM_REDPACK,TomConfig::TOM_REWARD,'61540fef8f4de8'];
 
     public static $map = [
@@ -85,6 +87,11 @@ class TomConfig
             'name_en' => 'Vote',
             'name_cn' => '投票',
             'service' => \App\Modules\ThreadTom\Busi\VoteBusi::class
+        ],
+        self::TOM_FISSION => [
+            'name_en' => 'Fission',
+            'name_cn' => '分享裂变',
+            'service' => \App\Modules\ThreadTom\Busi\FissionBusi::class
         ]
     ];
 
