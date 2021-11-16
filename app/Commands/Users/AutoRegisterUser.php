@@ -18,6 +18,7 @@
 
 namespace App\Commands\Users;
 
+use App\Api\Controller\Users\CheckController;
 use App\Censor\Censor;
 use App\Common\ResponseCode;
 use App\Events\Users\Registered;
@@ -64,8 +65,11 @@ class AutoRegisterUser
         //自动注册没有密码，后续用户可以设置密码
         $this->data['password'] = '';
 
-        $this->checkName('username');
-        $this->checkName('nickname');
+        $usernameRes = User::checkName('username', $this->data['username'], false, 0, true);
+        $this->data['username'] = $usernameRes['value'];
+
+        $nicknameRes = User::checkName('nickname', $this->data['nickname'], false, 0, true);
+        $this->data['nickname'] = $nicknameRes['value'];
 
         DzqLog::info('auto_register_user_process', ['data' => $this->data], DzqLog::LOG_LOGIN);
 
@@ -105,31 +109,5 @@ class AutoRegisterUser
         $this->dispatchEventsFor($user, $this->actor);
 
         return $user;
-    }
-
-    private function checkName($name = 'username')
-    {
-        $content = '';
-        $censor = app(Censor::class);
-        DzqLog::info('begin_check_'.$name.'_process_checkText', ['data' => $this->data], DzqLog::LOG_LOGIN);
-        try {
-            $content = $censor->checkText(Arr::get($this->data, $name), $name);
-        } catch (\Exception $e) {
-            DzqLog::error('checkText_error', [
-                $name   => Arr::get($this->data, $name)
-            ], $e->getMessage());
-            $preMsg = $name == 'username' ? '用户名' : '昵称';
-            Utils::outPut(ResponseCode::NET_ERROR, $preMsg.'敏感词检测异常');
-        }
-        DzqLog::info('end_check_'.$name.'_process_checkText', ['data' => $this->data], DzqLog::LOG_LOGIN);
-        $content = preg_replace('/\s/ui', '', $content);
-        $exists = User::where($name, $content)->exists();
-        if ($exists) {
-            $this->data[$name] = $name == 'username'
-                                    ? User::addStringToUsername($content)
-                                    : User::addStringToNickname($content);
-        } else {
-            $this->data[$name] = $content;
-        }
     }
 }

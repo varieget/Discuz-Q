@@ -237,6 +237,9 @@ class FirstStatistics
     {
         $tdData = $data->toArray();
         $newData = [];
+        $newTd1 = [];
+        $newTd2 = [];
+
         foreach ($tdData as $k=>$value) {
             $newTd1[$value['date']]=$value['count'];
         }
