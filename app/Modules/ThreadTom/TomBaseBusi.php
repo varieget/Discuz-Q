@@ -129,14 +129,16 @@ abstract class TomBaseBusi
         //增加 priceList 字段返回
         $priceList = [];
         foreach ($array as $val) {
-            if($val['needPay'])     $priceList[] = $val['id'];
+            if(!empty($val['needPay']))     $priceList[] = $val['id'];
         }
         $ret = [
             'tomId' => $this->tomId,
             'operation' => $this->operation,
-            'body' => $array,
-            'priceList' => $priceList
+            'body' => $array
         ];
+        if(!empty($priceList)){
+            $ret['priceList'] = $priceList;
+        }
         $plugin = $this->body['_plugin'] ?? null;
         if ($pFunc == 'select') {
             $ret['_plugin'] = $plugin;
