@@ -276,8 +276,14 @@ class Utils
         if (empty($path) || !$path) {
             return false;
         }
-        return is_file($path) ? @unlink($path) : array_map([self::class, __FUNCTION__], glob($path . '/*')) == @rmdir($path);
+        if(substr($path, -strlen("/.")) == "/."
+            || substr($path, -strlen("/..")) == "/..") {
+            return false;
+        }
+
+        return is_file($path) ? @unlink($path) : array_map([self::class, __FUNCTION__], glob($path . '/{,.}*',GLOB_BRACE)) == @rmdir($path);
     }
+
 
     function extractZip($zipfile, $targetfolder)
     {

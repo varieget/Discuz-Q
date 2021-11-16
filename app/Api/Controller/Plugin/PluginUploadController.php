@@ -19,6 +19,7 @@ namespace App\Api\Controller\Plugin;
 
 use App\Common\CacheKey;
 use App\Common\DzqConst;
+use App\Common\PluginEnum;
 use App\Common\ResponseCode;
 use App\Common\Utils;
 use Discuz\Base\DzqAdminController;
@@ -58,31 +59,12 @@ class PluginUploadController extends DzqAdminController
             $this->outPut(ResponseCode::INVALID_PARAMETER,"zip包读取失败");
         }
 
-        $fileConfigHandler = $zipUn->getStream("config.json");
-        if (!$fileConfigHandler){
-            $zipUn->close();
-            $this->outPut(ResponseCode::INVALID_PARAMETER,"配置文件找不到，请按正确目录结构打包");
-        }
-        $contents="";
-        while (!feof($fileConfigHandler)) {
-            $contents .= fread($fileConfigHandler, 1024);
-        }
-        fclose($fileConfigHandler);
-
-        $configJson = json_decode($contents,true);
-        $pluginName = $configJson["name_en"];
-        $pluginAppId =  $configJson["app_id"];
-        if (strpos($pluginName," ")){
-            $zipUn->close();
-            $this->outPut(ResponseCode::INVALID_PARAMETER,"插件名不能有空格");
-        }
-        $pluginName = ucfirst($pluginName);
+        list($pluginName,$pluginAppId) = $this->checkConfigFile($zipUn);
 
         $basePath = app()->basePath();
         $oldPath = $basePath.DIRECTORY_SEPARATOR."plugin".DIRECTORY_SEPARATOR.$pluginName;
         Utils::removeDir($oldPath);
         $result = $zipUn->extractTo($oldPath);
-        $zipUn->close();
         if (!$result){
             $this->outPut(0,'', "解压失败，请检查目录权限等情况");
         }
@@ -95,6 +77,42 @@ class PluginUploadController extends DzqAdminController
         $this->outPut(0,'', "上传成功");
     }
 
+    private function checkConfigFile($zipUn){
+        $fileConfigHandler = $zipUn->getStream("config.json");
+        if (!$fileConfigHandler){
+            $this->outPut(ResponseCode::INVALID_PARAMETER,"配置文件找不到，请按正确目录结构打包");
+        }
+        $contents="";
+        while (!feof($fileConfigHandler)) {
+            $contents .= fread($fileConfigHandler, 1024);
+        }
+        fclose($fileConfigHandler);
+
+        $configJson = json_decode($contents,true);
+        $pluginName = $configJson["name_en"];
+        $pluginAppId =  $configJson["app_id"];
+        $type = $configJson["type"];
+        if(preg_match("/^[a-zA-Z]*$/",$pluginName) == 0) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER,"插件名只能是包含大小写的英文字母");
+        }
+        $pluginName = ucfirst($pluginName);
+
+        if ($type == PluginEnum::PLUGIN_THREAD){
+            if(!isset($configJson["busi"])) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER,"帖子类型插件，需设置busi");
+            }
+        }
+
+        $pluginListOld = \Discuz\Common\Utils::getPluginList(true);
+        if(isset($pluginListOld[$pluginAppId])) {
+            if($pluginListOld[$pluginAppId]["name_en"] != $pluginName){
+                $this->outPut(ResponseCode::INVALID_PARAMETER,"插件app_id对应的name_en须与已安装的该插件保证一致");
+            }
+        }
+
+
+        return [$pluginName,$pluginAppId];
+    }
     public function suffixClearCache(){
         DzqCache::delKey(CacheKey::PLUGIN_LOCAL_CONFIG);
     }
