@@ -54,8 +54,10 @@ class ShareAttachmentController extends DzqController
         if (empty($attachment)) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND);
         }
-
-        $this->checkDownloadAttachment($thread, $user, $userRepo);
+        //判断附件是否需要付费
+        if ($thread->price_type && in_array($attachmentsId, json_decode($thread->price_ids, 1))) {
+            $this->checkDownloadAttachment($thread, $user, $userRepo);
+        }
 
         if (!$userRepo->canViewThreadAttachment($user, $thread)) {
             $this->outPut(ResponseCode::UNAUTHORIZED, '无权限查看该附件');
@@ -103,7 +105,7 @@ class ShareAttachmentController extends DzqController
         $attachmentShare->save();
 
         $this->outPut(ResponseCode::SUCCESS, '', [
-            'url' => $this->url->to('/apiv3/attachment.download') . '?sign=' . $sign . '&attachmentsId=' . $data['attachmentsId']
+            'url' => $this->url->to('/apiv3/attachment.download') . '?sign=' . $sign . '&attachmentsId=' . $data['attachmentsId']. '&threadId='. $data['threadId']
         ]);
     }
 

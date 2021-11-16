@@ -1026,7 +1026,7 @@ class Thread extends DzqModel
              ->where('th.id', $threadId)
              ->leftJoin('thread_tom as tt', 'tt.thread_id', '=', 'th.id')
              ->where(['tt.tom_type' => TomConfig::TOM_DOC , 'tt.status' => ThreadTom::STATUS_ACTIVE])
-             ->first(['th.id','th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'th.is_draft', 'th.is_approved', 'tt.value']);
+             ->first(['th.id','th.user_id', 'th.price', 'th.attachment_price', 'th.category_id', 'th.is_draft', 'th.is_approved', 'tt.value','tt.price_type', 'tt.price_ids']);
     }
 
     public static function getTagList()

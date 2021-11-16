@@ -260,13 +260,25 @@ class CreateThreadController extends DzqController
             ];
         }
         foreach ($tomJsons as $key => $value) {
+            //针对全贴付费，部分付费处理
+            $price_type = 0;
+            $price_ids = '{}';
+            if($thread->attachment_price || $thread->price){
+                $price_type = 1;
+                if($thread->price){
+                    $body_value = array_values($value['body']);
+                    $price_ids = json_encode($body_value[0]);
+                }else{
+                    $price_ids = !empty($indexes[$key]['body']['priceList']) && is_array($indexes[$key]['body']['priceList']) ? json_encode($indexes[$key]['body']['priceList']) : '{}';
+                }
+            }
             $attrs[] = [
                 'thread_id' => $thread['id'],
                 'tom_type' => $value['tomId'],
                 'key' => $key,
                 'value' => json_encode($value['body'], 256),
-                'price_type' => !empty($thread->attachment_price) ? 1 : 0,
-                'price_ids' =>  !empty($indexes[$key]['body']['priceList']) && is_array($indexes[$key]['body']['priceList']) ? json_encode($indexes[$key]['body']['priceList']) : '{}'
+                'price_type' => $price_type,
+                'price_ids' =>  $price_ids
             ];
             $tags[] = [
                 'thread_id' => $thread['id'],

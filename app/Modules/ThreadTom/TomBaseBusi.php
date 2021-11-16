@@ -126,10 +126,16 @@ abstract class TomBaseBusi
         if (!empty($lastStacks)) {
             $pFunc = $lastStacks['function'];
         }
+        //增加 priceList 字段返回
+        $priceList = [];
+        foreach ($array as $val) {
+            if($val['needPay'])     $priceList[] = $val['id'];
+        }
         $ret = [
             'tomId' => $this->tomId,
             'operation' => $this->operation,
-            'body' => $array
+            'body' => $array,
+            'priceList' => $priceList
         ];
         $plugin = $this->body['_plugin'] ?? null;
         if ($pFunc == 'select') {
