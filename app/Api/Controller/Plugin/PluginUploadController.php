@@ -19,6 +19,7 @@ namespace App\Api\Controller\Plugin;
 
 use App\Common\CacheKey;
 use App\Common\DzqConst;
+use App\Common\PluginEnum;
 use App\Common\ResponseCode;
 use App\Common\Utils;
 use Discuz\Base\DzqAdminController;
@@ -90,10 +91,17 @@ class PluginUploadController extends DzqAdminController
         $configJson = json_decode($contents,true);
         $pluginName = $configJson["name_en"];
         $pluginAppId =  $configJson["app_id"];
+        $type = $configJson["type"];
         if (strpos($pluginName," ")){
             $this->outPut(ResponseCode::INVALID_PARAMETER,"插件名不能有空格");
         }
         $pluginName = ucfirst($pluginName);
+
+        if ($type == PluginEnum::PLUGIN_THREAD){
+            if(!isset($configJson["busi"])) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER,"帖子类型插件，需设置busi");
+            }
+        }
 
         $pluginListOld = \Discuz\Common\Utils::getPluginList(true);
         if(isset($pluginListOld[$pluginAppId])) {
@@ -101,6 +109,7 @@ class PluginUploadController extends DzqAdminController
                 $this->outPut(ResponseCode::INVALID_PARAMETER,"插件app_id对应的name_en须与已安装的该插件保证一致");
             }
         }
+
 
         return [$pluginName,$pluginAppId];
     }
