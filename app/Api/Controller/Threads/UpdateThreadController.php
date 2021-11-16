@@ -283,8 +283,18 @@ class UpdateThreadController extends DzqController
             $operation = $value['operation'];
             $body = $value['body'];
             $operation != $this->DELETE_FUNC && $tags[] = ['thread_id' => $threadId, 'tag' => $value['tomId']];
-            $price_type = !empty($thread->attachment_price) ? 1 : 0;
-            $price_ids = !empty($indexes[$key]['body']['priceList']) && is_array($indexes[$key]['body']['priceList']) ? json_encode($indexes[$key]['body']['priceList']) : '{}';
+            if($thread->attachment_price || $thread->price){
+                $price_type = 1;
+                if($thread->price){
+                    $body_value = array_values($value['body']);
+                    if(!is_array($body_value[0])){
+                        $body_value[0] = [$body_value[0]];
+                    }
+                    $price_ids = json_encode($body_value[0]);
+                }else{
+                    $price_ids = !empty($indexes[$key]['body']['priceList']) && is_array($indexes[$key]['body']['priceList']) ? json_encode($indexes[$key]['body']['priceList']) : '{}';
+                }
+            }
             switch ($operation) {
                 case $this->CREATE_FUNC:
                     ThreadTom::query()->insert([
