@@ -92,8 +92,8 @@ class PluginUploadController extends DzqAdminController
         $pluginName = $configJson["name_en"];
         $pluginAppId =  $configJson["app_id"];
         $type = $configJson["type"];
-        if (strpos($pluginName," ")){
-            $this->outPut(ResponseCode::INVALID_PARAMETER,"插件名不能有空格");
+        if(preg_match("/^[a-zA-Z]*$/",$pluginName) == 0) {
+            $this->outPut(ResponseCode::INVALID_PARAMETER,"插件名只能是包含大小写的英文字母");
         }
         $pluginName = ucfirst($pluginName);
 
