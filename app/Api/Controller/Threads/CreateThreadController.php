@@ -267,6 +267,9 @@ class CreateThreadController extends DzqController
                 $price_type = 1;
                 if($thread->price){
                     $body_value = array_values($value['body']);
+                    if(!is_array($body_value[0])){
+                        $body_value[0] = [$body_value[0]];
+                    }
                     $price_ids = json_encode($body_value[0]);
                 }else{
                     $price_ids = !empty($indexes[$key]['body']['priceList']) && is_array($indexes[$key]['body']['priceList']) ? json_encode($indexes[$key]['body']['priceList']) : '{}';

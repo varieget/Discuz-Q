@@ -127,18 +127,19 @@ abstract class TomBaseBusi
             $pFunc = $lastStacks['function'];
         }
         //增加 priceList 字段返回
+        $thread_tom = ThreadTom::query()->where('thread_id', $this->threadId)->get()->toArray();
         $priceList = [];
-        foreach ($array as $val) {
-            if(!empty($val['needPay']))     $priceList[] = $val['id'];
+        foreach ($thread_tom as $val){
+            if($val['tom_type'] == $this->tomId){
+                $priceList = json_decode($val['price_ids'], 1);
+            }
         }
         $ret = [
             'tomId' => $this->tomId,
             'operation' => $this->operation,
-            'body' => $array
+            'body' => $array,
+            'priceList' => $priceList
         ];
-        if(!empty($priceList)){
-            $ret['priceList'] = $priceList;
-        }
         $plugin = $this->body['_plugin'] ?? null;
         if ($pFunc == 'select') {
             $ret['_plugin'] = $plugin;
