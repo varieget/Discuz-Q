@@ -2,8 +2,8 @@
 /**
  *@OA\Get(
  *    path = "/api/v3/users.list",
- *    summary = "发布与展示",
- *    description = "Discuz! Q 表情列表",
+ *    summary = "用户列表",
+ *    description = "Discuz! Q 用户列表",
  *    tags ={"发布与展示"},
  *@OA\Parameter(ref = "#/components/parameters/bear_token"),
  *@OA\Parameter(ref = "#/components/parameters/page"),
@@ -36,6 +36,7 @@
  *                      @OA\Property(property = "likedCount", type = "integer", description = "点赞数"),
  *                      @OA\Property(property = "questionCount", type = "integer", description = "问题数"),
  *                      @OA\Property(property = "threadCount", type = "integer", description = "主题数"),
+ *                      @OA\Property(property = "level", type = "integer", description = "用户层级"),
  *                    )))
  *                }))
  *            }
