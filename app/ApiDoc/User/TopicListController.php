@@ -2,8 +2,8 @@
 /**
  *@OA\Get(
  *    path = "/api/v3/topics.list",
- *    summary = "发布与展示",
- *    description = "Discuz! Q 表情列表",
+ *    summary = "话题列表",
+ *    description = "Discuz! Q 话题列表",
  *    tags ={"发布与展示"},
  *@OA\Parameter(ref = "#/components/parameters/bear_token"),
  *@OA\Parameter(ref = "#/components/parameters/page"),

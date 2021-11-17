@@ -8,6 +8,13 @@
  *     @OA\Parameter(ref = "#/components/parameters/bear_token"),
  *     @OA\Parameter(ref = "#/components/parameters/threadlist_page"),
  *     @OA\Parameter(ref = "#/components/parameters/threadlist_perPage"),
+ *     @OA\Parameter(
+ *          name="filter[dialogId]",
+ *          in="query",
+ *          required=true,
+ *          description="私信对话ID",
+ *          @OA\Schema(type="integer")
+ *      ),
  *     @OA\Response(
  *        response = 200,
  *        description = "私信消息列表",
