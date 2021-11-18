@@ -312,6 +312,7 @@ trait ThreadTrait
                 }
                 $content['text'] = $text;
                 //如果有红包和图片，则只显示红包和图片
+                /*
                 $tomConfig = [];
                 isset($tomInput[TomConfig::TOM_REDPACK]) && $tomConfig += [TomConfig::TOM_REDPACK => $tomInput[TomConfig::TOM_REDPACK]];
                 isset($tomInput[TomConfig::TOM_IMAGE]) && $tomConfig += [TomConfig::TOM_IMAGE => $tomInput[TomConfig::TOM_IMAGE]];
@@ -319,15 +320,14 @@ trait ThreadTrait
                 isset($tomInput[TomConfig::TOM_REWARD]) && $tomConfig += [TomConfig::TOM_REWARD => $tomInput[TomConfig::TOM_REWARD]];
                 isset($tomInput[TomConfig::TOM_DOC]) && $tomConfig += [TomConfig::TOM_DOC => $tomInput[TomConfig::TOM_DOC]];
                 isset($tomInput[TomConfig::TOM_VIDEO]) && $tomConfig += [TomConfig::TOM_VIDEO => $tomInput[TomConfig::TOM_VIDEO]];
-                if (!empty($tomConfig)) {
-                    $content['indexes'] = $this->tomDispatcher(
-                        $tomConfig,
-                        $this->SELECT_FUNC,
-                        $thread['id'],
-                        null,
-                        $canViewTom
-                    );
-                }
+                */
+                $content['indexes'] = $this->tomDispatcher(
+                    $tomInput,
+                    $this->SELECT_FUNC,
+                    $thread['id'],
+                    null,
+                    $canViewTom
+                );
             }
         }
         $content['text'] = str_replace(['<r>', '</r>', '<t>', '</t>'], ['', '', '', ''], $content['text']);
