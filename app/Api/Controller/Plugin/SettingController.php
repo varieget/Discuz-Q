@@ -56,7 +56,7 @@ class SettingController extends DzqAdminController
 
         $groupId = $this->user->groupId;
         $isAdmin = $this->user->isAdmin();
-        $result = $this->getAllSettingAndConfig($groupId, $isAdmin);
+        $result = $this->getAllSettingAndConfig($groupId, $isAdmin, true);
 
         $this->outPut(ResponseCode::SUCCESS, '', array_values($result));
     }
