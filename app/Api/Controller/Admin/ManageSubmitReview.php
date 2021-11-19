@@ -297,9 +297,9 @@ class ManageSubmitReview extends DzqAdminController
     {
         $this->events = app()->make(Dispatcher::class);
         $post->raise(
-            new PostWasApproved($post, $post->replyUser, ['message' => ''])
+            new PostWasApproved($post, $post->user, ['message' => ''])
         );
-        $this->dispatchEventsFor($post, $this->user);
+        $this->dispatchEventsFor($post);
 
         /* if (empty($post->parsedContent)) {
             return;
