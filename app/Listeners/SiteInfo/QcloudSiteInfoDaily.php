@@ -60,9 +60,13 @@ class QcloudSiteInfoDaily
         $cache_time = strtotime($tomorrow) - time();
         $uin = app('cache')->get('qcloud_uin');
         $settings = app('cache')->get('settings_up');
-        $isset_daily = app('cache')->get('qcloud_site_info_daily_'.$settings['site_id']);
-        if ($isset_daily) {
-            return;
+        if(!empty($settings)){
+            $isset_daily = app('cache')->get('qcloud_site_info_daily_'.$settings['site_id']);
+            if ($isset_daily) {
+                return;
+            }
+        }else{
+            $settings = $this->settings->all()->toArray();
         }
         $site_url = !empty($settings['site_url']) ? $settings['site_url'] : '';
         if (empty($site_url) || $site_url != Utils::getSiteUrl()) {
@@ -108,7 +112,7 @@ class QcloudSiteInfoDaily
         $json = [
             'site_id' => $settings['site_id'] ?? '',
             'site_secret' => !empty($settings['site_secret']) ? $settings['site_secret'] : '',
-            'site_url'  =>  $settings['site_url'],
+            'site_url'  =>  !empty($settings['site_url']) ? $settings['site_url'] : '',
             'site_name' =>  !empty($settings['site_name']) ? $settings['site_name'] : '',
             'site_charge'    =>  !empty($settings['site_price']) ? 1 : 0,
             'qcloud_secret_id'  =>  !empty($settings['qcloud_secret_id']) ? $settings['qcloud_secret_id'] : '-',
