@@ -221,7 +221,7 @@ class ManageSubmitReview extends DzqAdminController
                         $v->save();
 
                         // 通知
-                        $this->postNotices($v, $user, 'isDeleted', $arr[$v->id]['message'] ?? '');
+                        $this->postNotices($v, $v->user, 'isDeleted', $arr[$v->id]['message'] ?? '');
 
                         // 日志
                         UserActionLogs::writeLog($user, $v, 'hide', $arr[$v->id]['message'] ?? '');
@@ -297,7 +297,7 @@ class ManageSubmitReview extends DzqAdminController
     {
         $this->events = app()->make(Dispatcher::class);
         $post->raise(
-            new PostWasApproved($post, $this->user, ['message' => ''])
+            new PostWasApproved($post, $post->replyUser, ['message' => ''])
         );
         $this->dispatchEventsFor($post, $this->user);
 
