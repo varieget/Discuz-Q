@@ -5,18 +5,30 @@
  *    summary = "话题列表",
  *    description = "Discuz! Q 话题列表",
  *    tags ={"发布与展示"},
- *@OA\Parameter(ref = "#/components/parameters/bear_token"),
- *@OA\Parameter(ref = "#/components/parameters/page"),
- *@OA\Parameter(ref = "#/components/parameters/perPage"),
- *@OA\Parameter(
- *     name="filter[recommended]",
- *     in="query",
- *     required=true,
- *     description="是否为推荐话题；1：推荐、0：不推荐",
- *     @OA\Schema(
- *      type="integer", default=1
- * )
- * ),
+ *    @OA\Parameter(ref = "#/components/parameters/bear_token"),
+ *    @OA\Parameter(ref = "#/components/parameters/page"),
+ *    @OA\Parameter(ref = "#/components/parameters/perPage"),
+ *    @OA\Parameter(
+ *        name="filter[hot]",
+ *        in="query",
+ *        required=true,
+ *        description="潮流话题标识,1潮流话题(热度排序),0话题列表(时间倒序)",
+ *        @OA\Schema(type="integer", default=1)
+ *    ),
+ *    @OA\Parameter(
+ *        name="filter[topicId]",
+ *        in="query",
+ *        required=false,
+ *        description="话题ID，获取该话题详情及相关主题",
+ *        @OA\Schema(type="integer")
+ *    ),
+ *    @OA\Parameter(
+ *        name="filter[content]",
+ *        in="query",
+ *        required=false,
+ *        description="话题搜索内容",
+ *        @OA\Schema(type="string")
+ *    ),
  *
  * @OA\Response(
  *        response = 200,
