@@ -88,6 +88,10 @@ class AdminForumSettingSerializer extends AbstractSerializer
                 'qcloud_cdn_main_domain' => $this->settings->get('qcloud_cdn_main_domain', 'qcloud'), // 主域名
                 'qcloud_cdn_origins' => json_decode($this->settings->get('qcloud_cdn_origins', 'qcloud')), // 源站地址
                 'qcloud_cdn_server_name' => $this->settings->get('qcloud_cdn_server_name', 'qcloud'), // 回源HOST
+
+                'qcloud_ssr_region' => $this->settings->get('qcloud_ssr_region', 'qcloud'), // 地区
+                'qcloud_ssr_bucket' => $this->settings->get('qcloud_ssr_bucket', 'qcloud'), // 存储桶名称
+                'qcloud_ssr_access_path' => $this->settings->get('qcloud_ssr_access_path', 'qcloud'), // 访问地址
             ],
 
             // 提现设置

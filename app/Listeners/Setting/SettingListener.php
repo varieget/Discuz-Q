@@ -44,6 +44,7 @@ class SettingListener
         $events->listen(Saving::class, CheckCdn::class);                        // 腾讯云cdn
 
         $events->listen(Saving::class, CheckAttachment::class);                 // 附件设置
+        $events->listen(Saving::class, CheckSSR::class);                        // SSR设置
 
         // When the settings are saved
         $events->listen(Saved::class, ClearDisabledPermission::class);

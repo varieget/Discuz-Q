@@ -255,5 +255,7 @@ return [
         // 附件
         'support_max_upload_attachment_num' => '最大上传附件数',
 
+        'qcloud_ssr_region' => '地区',
+        'qcloud_ssr_bucket' => '存储桶名称',
     ],
 ];
