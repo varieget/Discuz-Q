@@ -40,13 +40,17 @@ class VideoBusi extends TomBaseBusi
 
             $thread = Thread::query()->where('id', $this->threadId)->first();
             if ($video->type == ThreadVideo::TYPE_OF_VIDEO && $thread && $thread['is_draft'] == 0) {
-                // 发布文章时，转码
-                $this->transcodeVideo($video->file_id, 'TranscodeTaskSet');
-                // 转动图
-                $taskflow = Setting::query()->where('key', 'qcloud_vod_taskflow_gif')->where('tag', 'qcloud')->first();
-                if ($taskflow && $taskflow['value']) {
+                if ($video->status == ThreadVideo::VIDEO_STATUS_TRANSCODING) {
+                    // 更新文章时，转码
+                    $this->transcodeVideo($video->file_id, 'TranscodeTaskSet');
+                }
+                if (empty($video->cover_url)) {
                     // 转动图
-                    $this->processMediaByProcedure($video->file_id, $taskflow['value']);
+                    $taskflow = Setting::query()->where('key', 'qcloud_vod_taskflow_gif')->where('tag', 'qcloud')->first();
+                    if ($taskflow && $taskflow['value']) {
+                        // 转动图
+                        $this->processMediaByProcedure($video->file_id, $taskflow['value']);
+                    }
                 }
             }
         }
