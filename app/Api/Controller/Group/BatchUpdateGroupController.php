@@ -18,6 +18,7 @@
 
 namespace App\Api\Controller\Group;
 
+use App\Common\CacheKey;
 use Discuz\Base\DzqAdminController;
 use App\Common\ResponseCode;
 use Discuz\Auth\AssertPermissionTrait;
@@ -25,6 +26,7 @@ use App\Models\Group;
 use App\Models\Invite;
 use App\Repositories\UserRepository;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Base\DzqCache;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
 
@@ -212,5 +214,10 @@ class BatchUpdateGroupController extends DzqAdminController
                 $this->info('相关邀请链接修改失败：' . $e->getMessage());
             }
         });
+    }
+
+    public function suffixClearCache($user)
+    {
+        DzqCache::delKey(CacheKey::LIST_GROUPS);
     }
 }
