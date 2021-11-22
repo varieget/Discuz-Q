@@ -35,6 +35,7 @@ class UpdateGroupPermissionController extends DzqAdminController
     public function suffixClearCache($user)
     {
         DzqCache::clear();
+        DzqCache::delKey(CacheKey::GROUP_PERMISSIONS);
     }
 
     protected $events;
