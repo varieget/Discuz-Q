@@ -25,8 +25,7 @@
  *                           @OA\Property(property = "denyUserId", type = "integer", description = "屏蔽用户id"),
  *                           @OA\Property(property = "nickname", type = "string", description = "屏蔽用户昵称"),
  *                           @OA\Property(property = "pid", type = "integer", description = "pid"),
- *                           @OA\Property(property = "userId", type = "integer", description = "用户id"),
- *                           @OA\Property(property = "username", type = "string", description = "用户名")
+ *                           @OA\Property(property = "userId", type = "integer", description = "用户id")
  * )
  *     }))
  *     )}))
