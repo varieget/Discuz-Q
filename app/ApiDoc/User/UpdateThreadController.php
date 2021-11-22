@@ -29,7 +29,9 @@
  *                 @OA\Property(property = "107", type = "string", description = "悬赏",ref="#/components/schemas/local_plugin_input"),
  *                 @OA\Property(property = "108", type = "string", description = "文件附件",ref="#/components/schemas/local_plugin_input"),
  *                 @OA\Property(property = "109", type = "string", description = "投票",ref="#/components/schemas/local_plugin_input"),
- *             )
+ *             ),
+ *             @OA\property(property="captchaTicket",type="string",description="开启腾讯云验证码服务时，前端回调函数返回的用户验证票据(非必需)"),
+ *             @OA\property(property="captchaRandStr",type="string",description="开启腾讯云验证码服务时，前端回调函数返回的随机字符串(非必需)")
  *           )
  *        )
  *     ),
