@@ -55,7 +55,7 @@ class CheckPublish
             'ip' => $data['attributes']['ip']
         ];
         $settings   = app(SettingsRepository::class);
-        $captcha = (bool)$settings->get('qcloud_captcha', 'qcloud');
+        $qcloudCaptcha = (bool)$settings->get('qcloud_captcha', 'qcloud');
 
         $userRepository = app(UserRepository::class);
         // 发布内容是否需要验证
@@ -75,7 +75,7 @@ class CheckPublish
             if (! $event->actor->isAdmin() && (
                 $event->actor->can('publishNeedBindPhone')
                 || $event->actor->can('publishNeedBindWechat')
-                || $captcha
+                || $qcloudCaptcha
             )) {
                 $rules['user'][] = function ($attribute, $value, $fail) use ($event, $userRepository, $captcha) {
                     $userRepository->checkPublishPermission($event->actor, $captcha);
