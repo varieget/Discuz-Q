@@ -86,6 +86,7 @@ trait AttachmentTrait
     public function checkAttachmentExt($type, $fileExt)
     {
         $allowedExt = $this->getAllowedExt($type);
+        $fileExt = strtolower($fileExt);
         if (!in_array($fileExt, $allowedExt)) {
             $extString = implode(',', $allowedExt);
             $this->outPut(ResponseCode::INTERNAL_ERROR, "暂时不支持{$fileExt}类型文件，仅支持{$extString}类型文件");
