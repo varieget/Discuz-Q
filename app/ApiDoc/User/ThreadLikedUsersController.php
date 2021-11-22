@@ -2,8 +2,8 @@
 /**
  * @OA\Get(
  *     path="/api/v3/thread.likedusers",
- *     summary="点赞支付的用户列表",
- *     description="获取首页置顶主题列表",
+ *     summary="点赞、支付、打赏的用户列表",
+ *     description="点赞、支付、打赏的用户列表",
  *     tags={"发布与展示"},
  *     @OA\Parameter(ref="#/components/parameters/bear_token"),
  *     @OA\Parameter(name="threadId",in="query",required=true,description = "主题id",@OA\Schema(type="integer")),
