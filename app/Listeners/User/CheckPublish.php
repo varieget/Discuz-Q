@@ -21,6 +21,7 @@ namespace App\Listeners\User;
 use App\Events\Post\Saving as PostSaving;
 use App\Events\Thread\Saving as ThreadSaving;
 use App\Repositories\UserRepository;
+use App\Settings\SettingsRepository;
 use Discuz\Auth\AssertPermissionTrait;
 use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,6 +48,15 @@ class CheckPublish
      */
     public function handle($event)
     {
+        $data = $event->data;
+        $captcha = [
+            'captchaTicket' => $data['attributes']['captchaTicket'],
+            'captchaRandStr' => $data['attributes']['captchaRandStr'],
+            'ip' => $data['attributes']['ip']
+        ];
+        $settings   = app(SettingsRepository::class);
+        $qcloudCaptcha = (bool)$settings->get('qcloud_captcha', 'qcloud');
+
         $userRepository = app(UserRepository::class);
         // 发布内容是否需要验证
         if ($event instanceof ThreadSaving && ! $event->thread->exists) {
@@ -64,10 +74,11 @@ class CheckPublish
             // 发布内容需先绑定手机
             if (! $event->actor->isAdmin() && (
                 $event->actor->can('publishNeedBindPhone')
-                                                || $event->actor->can('publishNeedBindWechat')
+                || $event->actor->can('publishNeedBindWechat')
+                || $qcloudCaptcha
             )) {
-                $rules['user'][] = function ($attribute, $value, $fail) use ($event, $userRepository) {
-                    $userRepository->checkPublishPermission($event->actor);
+                $rules['user'][] = function ($attribute, $value, $fail) use ($event, $userRepository, $captcha) {
+                    $userRepository->checkPublishPermission($event->actor, $captcha);
                 };
             }
 

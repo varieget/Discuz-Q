@@ -13,8 +13,10 @@
  *           @OA\Property(property="attachments",type="array",description="附件", @OA\Items(type="string")),
  *           @OA\Property(property="content",type="string",description="评论内容"),
  *           @OA\Property(property="id",type="integer",description="帖子id"),
- *          @OA\Property(property="isComment", type="boolean", description="是否是评论"),
- *           @OA\Property(property="replyId", type="integer", description="评论id")
+ *           @OA\Property(property="isComment", type="boolean", description="是否是评论"),
+ *           @OA\Property(property="replyId", type="integer", description="评论id"),
+ *           @OA\property(property="captchaTicket",type="string",description="开启腾讯云验证码服务时，前端回调函数返回的用户验证票据(非必需)"),
+ *           @OA\property(property="captchaRandStr",type="string",description="开启腾讯云验证码服务时，前端回调函数返回的随机字符串(非必需)")
  *        ),
  *     ),
  *

@@ -28,6 +28,7 @@ use App\Models\Order;
 use App\Models\Thread;
 use App\Models\User;
 use App\Settings\SettingsRepository;
+use App\Validators\ThreadValidator;
 use Carbon\Carbon;
 use Discuz\Common\Utils;
 use Discuz\Foundation\AbstractRepository;
@@ -38,6 +39,7 @@ use Illuminate\Support\Arr;
 class UserRepository extends AbstractRepository
 {
     use ThreadTrait;
+
     /**
      * Get a new query builder for the users table.
      *
@@ -121,7 +123,8 @@ class UserRepository extends AbstractRepository
     /**
      * 发帖插入投票权限
      */
-    public function canInsertVoteToThread(User $user){
+    public function canInsertVoteToThread(User $user)
+    {
         return  $this->checkCategoryPermission($user, PermissionKey::THREAD_INSERT_VOTE);
     }
 
@@ -375,13 +378,13 @@ class UserRepository extends AbstractRepository
         return $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT_OWN, $categoryId);
     }
 
-     /**
-     * 编辑前台帖子权限(自己+他人)
-     *
-     * @param User $user
-     * @param $categoryId
-     * @return bool
-     */
+    /**
+    * 编辑前台帖子权限(自己+他人)
+    *
+    * @param User $user
+    * @param $categoryId
+    * @return bool
+    */
     public function canEditOthersThread(User $user, $categoryId = null)
     {
         return $this->checkCategoryPermission($user, PermissionKey::THREAD_EDIT, $categoryId);
@@ -529,7 +532,6 @@ class UserRepository extends AbstractRepository
         return $user->hasPermission(PermissionKey::CREATE_INVITE_USER_SCALE);
     }
 
-
     public function canCreateInviteAdminUserScale(User $user)
     {
         return $user->isAdmin();
@@ -640,27 +642,40 @@ class UserRepository extends AbstractRepository
     /**
      * 检查当前用户发帖权限
      */
-    public function checkPublishPermission(User $user)
+    public function checkPublishPermission(User $user, $data = [])
     {
         if ($user->isAdmin()) {
             return true;
         }
 
         $settings   = app(SettingsRepository::class);
+
+        $captcha = (bool)$settings->get('qcloud_captcha', 'qcloud');
+        if ($user->hasPermission(PermissionKey::CREATE_THREAD_WITH_CAPTCHA) && $captcha) {
+            $threadValidator = app()->make(ThreadValidator::class);
+            $threadValidator->valid([
+                'captcha' => [
+                    Arr::get($data, 'captchaTicket', ''),
+                    Arr::get($data, 'captchaRandStr', ''),
+                    Arr::get($data, 'ip', ''),
+                ]
+            ]);
+        }
+
         $wechat     = (bool)$settings->get('offiaccount_close', 'wx_offiaccount');
         $miniWechat = (bool)$settings->get('miniprogram_close', 'wx_miniprogram');
-        $sms        = (bool)$settings->get('qcloud_sms', 'qcloud');
         if ($user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_WECHAT) && ($wechat || $miniWechat)) {
             if (empty($user->wechat)) {
                 Utils::outPut(ResponseCode::NEED_BIND_WECHAT, '请先绑定微信');
             }
         }
 
+        $sms        = (bool)$settings->get('qcloud_sms', 'qcloud');
         if ($user->hasPermission(PermissionKey::PUBLISH_NEED_BIND_PHONE) && $sms) {
             if (empty($user->mobile)) {
                 Utils::outPut(ResponseCode::NEED_BIND_PHONE, '请先绑定手机号');
             } else {
-                if(preg_match("/^1[3-9]\d{9}$/", $user->getRawOriginal('mobile')) !== 1){
+                if (preg_match("/^1[3-9]\d{9}$/", $user->getRawOriginal('mobile')) !== 1) {
                     Utils::outPut(ResponseCode::MOBILE_FORMAT_ERROR);
                 }
             }
@@ -670,41 +685,35 @@ class UserRepository extends AbstractRepository
     /**
      * 上传头像与删除权限
      */
-
     public function canCreateAvatar(User $user)
     {
         return $user->isAdmin();
     }
+
     public function canDeleteAvatar(User $user)
     {
         return $user->isAdmin();
     }
-
-
 
     public function canExportUser(User $user)
     {
         return $user->isAdmin();
     }
 
-
     public function canUserWallet(User $user)
     {
         return $user->isAdmin();
     }
-
 
     public function canUpdateUserWallet(User $user)
     {
         return $user->isAdmin();
     }
 
-
     public function canListUserScren(User $user)
     {
         return $user->isAdmin();
     }
-
 
     public function canUserStatus(User $user)
     {
@@ -740,18 +749,18 @@ class UserRepository extends AbstractRepository
         if (!empty($order)
             && ((strtotime($order->expired_at) > $now)
                 || (empty($order->expired_at) && empty($user->expired_at)))
-        ){
+        ) {
             //下面主要用来修复之前的老数据中 users 表中 expired_at 为空的情况 和 group_user 表中 expiration_time 为空的情况
             //如果用户有订单数据，但是 user 中 expired_at 为空的话，这里修复数据
-            if(empty($user->expired_at)){
-                if(!empty($order->expired_at)){
+            if (empty($user->expired_at)) {
+                if (!empty($order->expired_at)) {
                     $user->expired_at = $order->expired_at;
-                }else{
+                } else {
                     $user->expired_at = Carbon::now()->addDays(365 * 99);
                 }
                 $user->save();
                 $group_user = GroupUser::query()->where('user_id', $user->id)->first();
-                if(empty($group_user->expiration_time)){
+                if (empty($group_user->expiration_time)) {
                     $group_user = $user->expired_at;
                     $group_user->save();
                 }

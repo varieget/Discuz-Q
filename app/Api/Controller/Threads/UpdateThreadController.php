@@ -58,7 +58,14 @@ class UpdateThreadController extends DzqController
         if (!$this->thread) {
             $this->outPut(ResponseCode::RESOURCE_NOT_FOUND, '帖子不存在');
         }
-        $userRepo->checkPublishPermission($this->user);
+
+        $captcha = [
+            'captchaTicket' => $this->inPut('captchaTicket'),
+            'captchaRandStr' => $this->inPut('captchaRandStr'),
+            'ip' => ip($this->request->getServerParams())
+        ];
+        $userRepo->checkPublishPermission($this->user, $captcha);
+
         return $userRepo->canEditThread($this->user, $this->thread);
     }
 
