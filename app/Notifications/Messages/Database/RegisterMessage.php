@@ -42,6 +42,7 @@ class RegisterMessage extends SimpleMessage
     {
         return [
             '',
+            '',
             $this->settings->get('site_name'),
         ];
     }
