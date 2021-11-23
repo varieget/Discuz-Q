@@ -109,6 +109,43 @@ class MiniprogramSchemeManage
         return $wxScheme['openlink'];
     }
 
+    /**
+     * get wx paramscheme
+     * @param $type
+     * @param $accessToken
+     * @param $path
+     * @param $query
+     * @return string
+     */
+    public function getMiniProgramParamSchemeRefresh($type, $accessToken, $path, $query): string
+    {
+        $url = $this->miniProgramSchemeUrl.'?access_token='.$accessToken;
+
+        if ($type == 'share_mini' || $type == 'bind_mini') {
+            $wxSchemeResponse = $this->httpClient->post($url, [
+                'json' => [
+                    'jump_wxa' => [
+                        'path' => $path,
+                        'query' => $query
+                    ]
+                ]
+            ]);
+        }
+
+        $wxScheme = json_decode($wxSchemeResponse->getBody()->getContents(), true);
+
+        if (isset($wxScheme['errcode']) && $wxScheme['errcode'] != 0 && isset($wxScheme['errmsg'])) {
+            DzqLog::error(__CLASS__.__METHOD__, [
+                'path'      => $path,
+                'query'     => $query,
+                'errcode'   => $wxScheme['errcode'],
+                'errmsg'    => $wxScheme['errmsg']
+            ]);
+            return $type;
+        }
+        return $wxScheme['openlink'];
+    }
+
     public function getMiniProgramScheme(): string
     {
         $record = !empty(Scheme::getLastRecord()) ? Scheme::getLastRecord()->toArray() : '';

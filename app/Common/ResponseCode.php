@@ -134,6 +134,7 @@ class ResponseCode
     const DOWNLOAD_NUMS_IS_TOPLIMIT = -7083;
     const RESOURCE_IS_REVIEW = -7084;
     const SET_ERROR = -7085;
+    const GEN_SHARE_SCHEME_TYPE_ERROR = -7086;
 
     const NEED_BIND_WECHAT = -8000;
     const NEED_BIND_PHONE = -8001;
@@ -254,6 +255,7 @@ class ResponseCode
         self::DOWNLOAD_NUMS_IS_TOPLIMIT =>'超过今天可下载附件的最大次数',
         self::RESOURCE_IS_REVIEW =>'资源审核中',
         self::SET_ERROR =>'设置失败',
-        self::DIALOG_MESSAGE_DISABLE => '私信已被禁用'
+        self::DIALOG_MESSAGE_DISABLE => '私信已被禁用',
+        self::GEN_SHARE_SCHEME_TYPE_ERROR => '生成分享scheme参数类型错误',
     ];
 }
