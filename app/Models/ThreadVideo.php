@@ -23,6 +23,7 @@ use App\Settings\SettingsRepository;
 use Carbon\Carbon;
 use Discuz\Base\DzqCache;
 use Discuz\Base\DzqModel;
+use Discuz\Qcloud\QcloudTrait;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
@@ -48,6 +49,8 @@ use Illuminate\Support\Str;
  */
 class ThreadVideo extends DzqModel
 {
+    use QcloudTrait;
+
     const TYPE_OF_VIDEO = 0; // 视频
 
     const TYPE_OF_AUDIO = 1; // 音频
@@ -187,5 +190,25 @@ class ThreadVideo extends DzqModel
     protected function clearCache()
     {
         DzqCache::delHashKey(CacheKey::LIST_THREADS_V3_VIDEO, $this->id);
+    }
+
+    public function transcodeThreadVideo($threadId)
+    {
+        $video = ThreadVideo::query()
+            ->where(['type' => self::TYPE_OF_VIDEO,'thread_id' => $threadId, 'status' => self::VIDEO_STATUS_TRANSCODING])
+            ->first();
+        $thread = Thread::query()->where('id', $threadId)->first();
+        if (!$video || $thread['is_draft'] != Thread::BOOL_NO) {
+            return false;
+        }
+        //  支付成功后，转码
+        $this->transcodeVideo($video->file_id, 'TranscodeTaskSet');
+        // 转动图
+        $taskflow = Setting::query()->where('key', 'qcloud_vod_taskflow_gif')->where('tag', 'qcloud')->first();
+        if ($taskflow && $taskflow['value']) {
+            // 转动图
+            $this->processMediaByProcedure($video->file_id, $taskflow['value']);
+        }
+        return true;
     }
 }
