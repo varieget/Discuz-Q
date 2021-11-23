@@ -214,7 +214,7 @@ class VoteBusi extends TomBaseBusi
         $all_content = [];
         foreach ($input['subitems'] as &$val) {
             $val['content'] = trim($val['content']);
-            if (empty($val['content'])) {
+            if (!is_numeric($val['content']) && empty($val['content'])) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项内容不得为空');
             }
             if (in_array($val['content'], $all_content)) {
@@ -252,7 +252,7 @@ class VoteBusi extends TomBaseBusi
         $all_content = [];
         foreach ($input['subitems'] as &$val) {
             $val['content'] = trim($val['content']);
-            if (empty($val['content'])) {
+            if (!is_numeric($val['content']) && empty($val['content'])) {
                 $this->outPut(ResponseCode::INVALID_PARAMETER, '投票选项内容不得为空');
             }
             if (in_array($val['content'], $all_content)) {
