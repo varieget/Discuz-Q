@@ -96,8 +96,10 @@ class UpdatePostController extends DzqController
 
         $data = $this->inPut('data', []);
 
-        $threadId = $this->inPut('id');
-        $threadInfo = Thread::query()->where('id', $threadId)->first(['is_approved']);
+        $threadInfo = Thread::query()
+            ->leftJoin('posts', 'threads.id', '=', 'posts.thread_id')
+            ->where('posts.id', $postId)
+            ->first(['threads.is_approved']);
         if ($threadInfo['is_approved'] == Thread::UNAPPROVED && isset($data['attributes']['isLiked']) && (bool)$data['attributes']['isLiked'] == true) {
             $this->outPut(ResponseCode::INVALID_PARAMETER, '内容正在审核中，不允许点赞');
         }
