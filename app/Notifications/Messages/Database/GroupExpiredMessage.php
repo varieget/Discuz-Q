@@ -4,6 +4,7 @@ namespace App\Notifications\Messages\Database;
 
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * 用户角色到期通知
@@ -40,9 +41,10 @@ class GroupExpiredMessage extends SimpleMessage
     public function contentReplaceVars($data)
     {
         $group = $data['groupname'];
+        $nickname = Str::substr($this->actor->nickname, 0, 15) . '...';
 
         return [
-            $this->actor->nickname,
+            $nickname,
             $group
         ];
     }

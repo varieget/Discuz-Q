@@ -25,6 +25,7 @@ use App\Notifications\Messages\Database\CustomMessage;
 use App\Notifications\System;
 use App\Settings\SettingsRepository;
 use Discuz\Base\DzqCommand;
+use Illuminate\Support\Str;
 use Plugin\Activity\Model\ActivityUser;
 use Plugin\Activity\Model\ThreadActivity;
 
@@ -64,7 +65,8 @@ class RegisterNoticeCommand extends DzqCommand
                 continue;
             }
             $url = $settings->get('site_url') . '/thread/' . $activity['thread_id'];
-            $msg = sprintf('%s 你好，你报名的活动【%s（%s）】已开始', $user['nickname'], $activity['title'], $url);
+            $nickname = Str::substr($user['nickname'], 0, 15) . '...';
+            $msg = sprintf('%s 你好，你报名的活动【%s（%s）】已开始', $nickname, $activity['title'], $url);
             echo $msg.PHP_EOL;
             $user->notify(new System(CustomMessage::class, $user, ['title'=>'活动开始通知','content'=>$msg,'threadId'=>$activity['thread_id']]));
         }
@@ -86,7 +88,8 @@ class RegisterNoticeCommand extends DzqCommand
                 continue;
             }
             $url = $settings->get('site_url') . '/thread/' . $activity['thread_id'];
-            $msg = sprintf('%s 你好，你发起的活动【%s（%s）】报名已结束，快去查看参与人列表吧', $user['nickname'], $activity['title'], $url);
+            $nickname = Str::substr($user['nickname'], 0, 15) . '...';
+            $msg = sprintf('%s 你好，你发起的活动【%s（%s）】报名已结束，快去查看参与人列表吧', $nickname, $activity['title'], $url);
             echo $msg.PHP_EOL;
             $user->notify(new System(CustomMessage::class, $user, ['title'=>'报名截止通知', 'content'=>$msg,'threadId'=>$activity['thread_id']]));
         }

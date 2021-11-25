@@ -130,6 +130,9 @@ class CreatePostController extends DzqController
             'replyUserId' => $this->inPut('replyUserId'),
             'commentPostId' => $this->inPut('commentPostId'),
             'commentUserId' => $this->inPut('commentUserId'),
+            'captchaTicket' => $this->inPut('captchaTicket'),
+            'captchaRandStr' => $this->inPut('captchaRandStr'),
+            'ip' => ip($this->request->getServerParams())
         ];
         $threadId = $this->inPut('id');
         if (empty($threadId)) {

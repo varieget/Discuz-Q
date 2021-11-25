@@ -96,6 +96,11 @@ class WechatMiniProgramCodeController extends DzqController
                     'b' => $colorB,
                 ],
             ]);
+
+            if (is_array($response) && !empty($response['errcode']) && !empty($response['errmsg'])) {
+                $this->outPut(ResponseCode::INVALID_PARAMETER, $response['errmsg'], ['errcode' => $response['errcode'], 'errmsg' => $response['errmsg']]);
+            }
+
             $response = $response->withoutHeader('Content-disposition');
 
             if (is_array($response) && isset($response['errcode']) && isset($response['errmsg'])) {

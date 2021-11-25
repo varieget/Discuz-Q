@@ -50,6 +50,8 @@ class SessionToken extends Model
 
     const WECHAT_MINIPROGRAM_SCHEME_BIND = 'wechat_miniprogram_scheme_bind'; // 微信小程序 scheme 绑定
 
+    const WECHAT_MINIPROGRAM_SCHEME_SHARE = 'wechat_miniprogram_scheme_share'; // 微信小程序 scheme 分享
+
     const WECHAT_OFFIACCOUNT_QRCODE_BIND = 'wechat_offiaccount_qrcode_bind'; // 微信公众号二维码绑定
     /**
      * {@inheritdoc}

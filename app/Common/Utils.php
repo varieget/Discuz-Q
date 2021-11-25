@@ -247,12 +247,16 @@ class Utils
         exit();
     }
 
-    public static function setPluginAppId($pluginAppId){
-        return \Discuz\Common\Utils::setAppKey("plugin_appid", $pluginAppId);
+    public static function setPluginAppId($plugin_name, $pluginAppId){
+        return \Discuz\Common\Utils::setAppKey($plugin_name."_plugin_appid", $pluginAppId);
     }
 
     public static function getPluginAppId(){
-        return \Discuz\Common\Utils::getAppKey("plugin_appid") ?? "";
+        $backtrace = debug_backtrace();
+        $dir = dirname(dirname($backtrace[0]['file']));
+        $plugin_dir = explode(DIRECTORY_SEPARATOR, $dir);
+        $plugin_name = end($plugin_dir);
+        return \Discuz\Common\Utils::getAppKey($plugin_name."_plugin_appid") ?? "";
     }
 
     public static function copyDir($src, $dst)

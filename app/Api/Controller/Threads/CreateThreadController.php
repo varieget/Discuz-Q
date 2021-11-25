@@ -78,7 +78,14 @@ class CreateThreadController extends DzqController
         ) {
             throw new PermissionDeniedException('没有插入【位置信息】权限');
         }
-        $userRepo->checkPublishPermission($user);
+
+        $captcha = [
+            'captchaTicket' => $this->inPut('captchaTicket'),
+            'captchaRandStr' => $this->inPut('captchaRandStr'),
+            'ip' => ip($this->request->getServerParams())
+        ];
+        $userRepo->checkPublishPermission($user, $captcha);
+
         return true;
     }
 

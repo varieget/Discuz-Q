@@ -843,7 +843,7 @@ trait ThreadTrait
             }
         }
 
-        return mb_substr($html_string, 0, $length = min(mb_strlen($html_string), $length + $i)) . (count($tags = array_reverse($tags)) ? '</' . implode('></', $tags) . '>' : '') . $append;
+        return mb_substr($html_string, 0, $length = min(mb_strlen($html_string), $length + $i)) . $append . (count($tags = array_reverse($tags)) ? '</' . implode('></', $tags) . '>' : '');
     }
 
     public function preg_match_all_mb($pattern, $subject, array &$matches = null)

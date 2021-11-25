@@ -4,6 +4,7 @@ namespace App\Notifications\Messages\Database;
 
 use Discuz\Notifications\Messages\SimpleMessage;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * 用户角色升级通知
@@ -40,9 +41,10 @@ class GroupUpgradeMessage extends SimpleMessage
     public function contentReplaceVars($data)
     {
         $newGroup = $data['new_group'];
+        $nickname = Str::substr($this->actor->nickname, 0, 15) . '...';
 
         return [
-            $this->actor->nickname,
+            $nickname,
             $newGroup
         ];
     }

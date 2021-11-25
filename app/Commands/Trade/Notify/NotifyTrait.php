@@ -23,6 +23,7 @@ use App\Models\Order;
 use App\Models\OrderChildren;
 use App\Models\PayNotify;
 use App\Models\Thread;
+use App\Models\ThreadVideo;
 use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\UserWalletLog;
@@ -58,6 +59,8 @@ trait NotifyTrait
             // 修改订单，已支付
             $this->orderInfo->status = Order::ORDER_STATUS_PAID;
             $this->orderInfo->save();
+
+            $threadVideo = new ThreadVideo();
 
             switch ($this->orderInfo->type) {
                 case Order::ORDER_TYPE_REGISTER:
@@ -197,6 +200,7 @@ trait NotifyTrait
                 case Order::ORDER_TYPE_QUESTION_REWARD:
                     $this->orderInfo->save();
                     Thread::query()->where('id', $this->orderInfo->thread_id)->update(['is_draft' => Thread::BOOL_NO]);
+                    $threadVideo->transcodeThreadVideo($this->orderInfo->thread_id);
                     return $this->orderInfo;
 
                 // 合并订单支出
@@ -210,6 +214,7 @@ trait NotifyTrait
                          $orderChildren->thread_id = $orderData->thread_id ?? 0;
                          $orderChildren->save();
                      });
+                    $threadVideo->transcodeThreadVideo($this->orderInfo->thread_id);
                     return $this->orderInfo;
 
                 // 充值
