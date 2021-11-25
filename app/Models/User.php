@@ -150,6 +150,8 @@ class User extends DzqModel
 
     const SUPER_ADMINISTRATOR = 1;
 
+    const NICKNAME_LIMIT_LENGTH = 15;
+
     public static $statusMap = [
         self::STATUS_NORMAL => '正常',
         self::STATUS_BAN => '禁用',
