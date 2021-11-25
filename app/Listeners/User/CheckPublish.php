@@ -50,9 +50,9 @@ class CheckPublish
     {
         $data = $event->data;
         $captcha = [
-            'captchaTicket' => $data['attributes']['captchaTicket'],
-            'captchaRandStr' => $data['attributes']['captchaRandStr'],
-            'ip' => $data['attributes']['ip']
+            'captchaTicket' => $data['attributes']['captchaTicket'] ?? '',
+            'captchaRandStr' => $data['attributes']['captchaRandStr'] ?? '',
+            'ip' => $data['attributes']['ip'] ?? ''
         ];
         $settings   = app(SettingsRepository::class);
         $qcloudCaptcha = (bool)$settings->get('qcloud_captcha', 'qcloud');
