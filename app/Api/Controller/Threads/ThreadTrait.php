@@ -123,9 +123,11 @@ trait ThreadTrait
 
     private function canViewTom($user, $thread, $payType, $paid)
     {
+        $userRepo = app(UserRepository::class);
+        $canEditThread = $userRepo->canEditThread($user, $thread);
         if ($payType != Thread::PAY_FREE) {//付费贴
             $canFreeViewThreadDetail = $this->canFreeViewTom($user, $thread);
-            if ($canFreeViewThreadDetail || $paid) {
+            if ($canFreeViewThreadDetail || $paid || $canEditThread) {
                 return true;
             } else {
                 return false;
@@ -133,7 +135,7 @@ trait ThreadTrait
         } else {
             $repo = new UserRepository();
             $canViewThreadDetail = $repo->canViewThreadDetail($user, $thread);
-            if ($canViewThreadDetail) {
+            if ($canViewThreadDetail || $canEditThread) {
                 return true;
             } else {
                 return false;
@@ -294,7 +296,7 @@ trait ThreadTrait
         } else {
             if ($paid || $canFreeViewTom) {
                 $content['text'] = $post['content'];
-                $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, $canViewTom);
+                $content['indexes'] = $this->tomDispatcher($tomInput, $this->SELECT_FUNC, $thread['id'], null, true);
             } else {
                 $text = $post['content'];
                 if (in_array($payType, [Thread::PAY_ATTACH, Thread::PAY_THREAD])) {
