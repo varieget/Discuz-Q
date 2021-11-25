@@ -263,7 +263,7 @@ class CreateThreadController extends DzqController
             //针对全贴付费，部分付费处理
             $price_type = 0;
             $price_ids = '{}';
-            if($thread->attachment_price || $thread->price){
+            if(($thread->attachment_price || $thread->price) && in_array($value['tomId'], TomConfig::$sub_pay_list)){
                 $price_type = 1;
                 if($thread->price > 0){
                     $body_value = array_values($value['body']);
