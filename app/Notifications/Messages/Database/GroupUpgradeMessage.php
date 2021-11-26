@@ -42,7 +42,8 @@ class GroupUpgradeMessage extends SimpleMessage
     public function contentReplaceVars($data)
     {
         $newGroup = $data['new_group'];
-        $nickname = Str::substr($this->actor->nickname, 0, User::NICKNAME_LIMIT_LENGTH) . '...';
+        $nickname = strlen($this->actor->nickname) < User::NICKNAME_LIMIT_LENGTH ? $this->actor->nickname :
+            Str::substr($this->actor->nickname, 0, User::NICKNAME_LIMIT_LENGTH) . '...';
 
         return [
             $nickname,
