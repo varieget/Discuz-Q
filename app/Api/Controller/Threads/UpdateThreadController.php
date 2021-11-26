@@ -290,7 +290,7 @@ class UpdateThreadController extends DzqController
             $operation = $value['operation'];
             $body = $value['body'];
             $operation != $this->DELETE_FUNC && $tags[] = ['thread_id' => $threadId, 'tag' => $value['tomId']];
-            if($thread->attachment_price || $thread->price){
+            if(($thread->attachment_price || $thread->price) && in_array($value['tomId'], TomConfig::$sub_pay_list)){
                 $price_type = 1;
                 if($thread->price > 0){
                     $body_value = array_values($value['body']);
