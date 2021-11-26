@@ -289,6 +289,8 @@ class UpdateThreadController extends DzqController
             $tomId = $value['tomId'];
             $operation = $value['operation'];
             $body = $value['body'];
+            $price_type = 0;
+            $price_ids = '{}';
             $operation != $this->DELETE_FUNC && $tags[] = ['thread_id' => $threadId, 'tag' => $value['tomId']];
             if(($thread->attachment_price || $thread->price) && in_array($value['tomId'], TomConfig::$sub_pay_list)){
                 $price_type = 1;
