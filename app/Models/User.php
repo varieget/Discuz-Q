@@ -1202,4 +1202,202 @@ class User extends DzqModel
 
         return $res;
     }
+
+    public static function adjustGroupWithExpiredAt(User $user, $adjustExpiredAt = ''): array
+    {
+        $originExpiredAt = $user->getOriginal('expired_at');
+        $nowTime = Carbon::now();
+        $response = [
+            'code' => ResponseCode::SUCCESS,
+            'msg' => '',
+            'data' => [
+                'userId' => $user->id,
+                'originExpiredAt' => $originExpiredAt,
+                'adjustExpiredAt' => $adjustExpiredAt,
+                'nowTime' => $nowTime
+            ]
+        ];
+        $db = app('db');
+        $db->beginTransaction();
+
+        if (empty($originExpiredAt) || empty($adjustExpiredAt)) {
+            $response['code'] = ResponseCode::INVALID_PARAMETER;
+            $db->rollBack();
+            return $response;
+        }
+
+        $originExpiredAtInt = Carbon::parse($originExpiredAt)->getTimestamp();
+        $adjustExpiredAtInt = Carbon::parse($adjustExpiredAt)->getTimestamp();
+        $nowTimeInt = $nowTime->getTimestamp();
+
+        // 调整时间 > 权益最大时间
+        if ($adjustExpiredAtInt >= $originExpiredAtInt) {
+            $db->commit();
+            return $response;
+        }
+
+        $defaultGroup = Group::query()->where('default', true)->value('id') ?? Group::MEMBER_ID;
+
+        // 调整时间 < 当前时间，删除付费用户组所有权益
+        if ($adjustExpiredAtInt <= $nowTimeInt) {
+            $result = GroupUserMq::query()->where(['user_id' => $user->id])->delete();
+            if ($result === false) {
+                $response['code'] = ResponseCode::INTERNAL_ERROR;
+                $response['msg'] = '变更用户权益错误';
+                $db->rollBack();
+                return $response;
+            }
+
+            $result = GroupPaidUser::query()
+                ->where('user_id', $user->id)
+                ->where('delete_type', 0)
+                ->update(['deleted_at' => $nowTime, 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
+            if ($result === false) {
+                $response['code'] = ResponseCode::INTERNAL_ERROR;
+                $response['msg'] = '变更付费用户购买权益错误';
+                $db->rollBack();
+                return $response;
+            }
+
+            $result = GroupUser::query()
+                ->where(['user_id' => $user->id])
+                ->update(['group_id' => $defaultGroup, 'expiration_time' => $adjustExpiredAt]);
+            if ($result === false) {
+                $response['code'] = ResponseCode::INTERNAL_ERROR;
+                $response['msg'] = '变更用户组及过期时间错误';
+                $db->rollBack();
+                return $response;
+            }
+
+            $db->commit();
+            return $response;
+        }
+
+        // 当前时间 < 调整时间 < 权益最大时间，修改付费用户组对应权益
+        if ($adjustExpiredAtInt > $nowTimeInt && $adjustExpiredAtInt < $originExpiredAtInt) {
+            $groupUserMq = GroupUserMq::query()
+                ->select(['gum.group_id','gum.remain_days','g.level'])
+                ->from('group_user_mqs as gum')
+                ->where('gum.user_id', $user->id)
+                ->where('remain_days', '>', 0)
+                ->leftJoin('groups as g', 'g.id', '=', 'gum.group_id')
+                ->where('g.is_paid', Group::IS_PAID)
+                ->orderBy('g.level', 'desc')
+                ->get()
+                ->toArray();
+            $groupUser = GroupUser::query()
+                ->select(['gu.group_id','gu.expiration_time','g.level'])
+                ->from('group_user as gu')
+                ->where('gu.user_id', $user->id)
+                ->leftJoin('groups as g', 'g.id', '=', 'gu.group_id')
+                ->where('g.is_paid', Group::IS_PAID)
+                ->first()
+                ->toArray();
+            array_unshift($groupUserMq, $groupUser);
+            $deleteGroup = [];
+            $modifyGroup = [];
+            foreach ($groupUserMq as $key => &$value) {
+                if ($key > 0 && !isset($value['expiration_time'])) {
+                    if ($value['level'] > $groupUserMq[$key-1]['level']) {
+                        $response['code'] = ResponseCode::INTERNAL_ERROR;
+                        $response['msg'] = '用户权益等级错误';
+                        $response['data']['groupUserMq'] = $groupUserMq;
+                        $db->rollBack();
+                        return $response;
+                    }
+                    $preValue = $groupUserMq[$key-1];
+                    $value['expiration_time'] = Carbon::parse($preValue['expiration_time'])->addDays($value['remain_days']);
+                }
+
+                $value['expiration_time_int'] = Carbon::parse($value['expiration_time'])->getTimestamp();
+                $value['remove_time_int'] = $value['expiration_time_int'] - $adjustExpiredAtInt;
+
+                // 当前用户组处理
+                if ($key == 0 && $value['remove_time_int'] > 0) {
+                    $result = GroupUserMq::query()->where(['user_id' => $user->id])->delete();
+                    if ($result === false) {
+                        $response['code'] = ResponseCode::INTERNAL_ERROR;
+                        $response['msg'] = '变更当前用户权益错误';
+                        $db->rollBack();
+                        return $response;
+                    }
+
+                    $result = GroupPaidUser::query()
+                        ->where('user_id', $user->id)
+                        ->where('delete_type', 0)
+                        ->update(['deleted_at' => $nowTime, 'delete_type' => GroupPaidUser::DELETE_TYPE_ADMIN]);
+                    if ($result === false) {
+                        $response['code'] = ResponseCode::INTERNAL_ERROR;
+                        $response['msg'] = '变更当前付费用户购买权益错误';
+                        $db->rollBack();
+                        return $response;
+                    }
+
+                    $result = GroupUser::query()
+                        ->where(['user_id' => $user->id, 'group_id' => $value['group_id']])
+                        ->update(['expiration_time' => $adjustExpiredAt]);
+                    if ($result === false) {
+                        $response['code'] = ResponseCode::INTERNAL_ERROR;
+                        $response['msg'] = '变更当前用户组及过期时间错误';
+                        $db->rollBack();
+                        return $response;
+                    }
+
+                    $db->commit();
+                    return $response;
+                }
+
+                // 付费用户组处理
+                if ($value['remove_time_int'] > 0) {
+                    $oneDay = 24 * 60 * 60;
+                    $value['remain_days_int'] = $value['remain_days'] * $oneDay;
+                    if ($value['remove_time_int'] - $value['remain_days_int'] > 0) {
+                        $value['action'] = 'delete';
+                        array_push($deleteGroup, $value['group_id']);
+                    } else {
+                        $value['action'] = 'modify';
+                        $value['remove_days'] = ceil($value['remove_time_int'] / $oneDay);
+                        $modifyGroup ['group_id'] = $value['group_id'];
+                        $modifyGroup ['remain_days'] = $value['remain_days'] - $value['remove_days'];
+                    }
+                } else {
+                    $value['action'] = 'save';
+                }
+            }
+
+            // 更新付费用户组内容
+            if (!empty($deleteGroup)) {
+                $result = GroupUserMq::query()
+                    ->where(['user_id' => $user->id])
+                    ->whereIn('group_id', $deleteGroup)
+                    ->delete();
+                if ($result === false) {
+                    $response['code'] = ResponseCode::INTERNAL_ERROR;
+                    $response['msg'] = '删除付费用户组权益错误';
+                    $db->rollBack();
+                    return $response;
+                }
+            }
+
+            if (!empty($modifyGroup)) {
+                $result = GroupUserMq::query()
+                    ->where(['user_id' => $user->id, 'group_id' => $modifyGroup['group_id']])
+                    ->update(['remain_days' => $modifyGroup['remain_days']]);
+                if ($result === false) {
+                    $response['code'] = ResponseCode::INTERNAL_ERROR;
+                    $response['msg'] = '更新付费用户购买权益错误';
+                    $db->rollBack();
+                    return $response;
+                }
+            }
+
+            $db->commit();
+            return $response;
+        }
+
+        $response['code'] = ResponseCode::INTERNAL_ERROR;
+        $response['msg'] = '未执行相应规则判断';
+        $db->rollBack();
+        return $response;
+    }
 }
