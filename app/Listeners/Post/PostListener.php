@@ -207,8 +207,10 @@ class PostListener
      */
     public function whenPostWasHidden(Hidden $event)
     {
-        // 通知
-        $this->postNotices($event->post, $event->actor, 'isDeleted', $event->data['message'] ?? '');
+        // 通知(自己操作删除无需通知)
+        if ($event->post->user_id != $event->actor->id) {
+            $this->postNotices($event->post, $event->actor, 'isDeleted', $event->data['message'] ?? '');
+        }
 
         // 日志
         UserActionLogs::writeLog($event->actor, $event->post, 'hide', $event->data['message'] ?? '');
