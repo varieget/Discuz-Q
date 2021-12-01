@@ -772,6 +772,19 @@ class UserRepository extends AbstractRepository
             return true;
         }
 
+        // 付费用户组升级处理
+        $paidGroup = GroupUser::query()
+            ->select('gu.*')
+            ->from('group_user as gu')
+            ->where('gu.user_id', $user->id)
+            ->leftJoin('groups as gr', 'gr.id', '=', 'gu.group_id')
+            ->where('gr.is_paid', Group::IS_PAID)
+            ->orderBy('gu.expiration_time', 'desc')
+            ->first();
+        if (!empty($paidGroup['expiration_time']) && strtotime($paidGroup['expiration_time']) > $now) {
+            return true;
+        }
+
         return false;
     }
 
