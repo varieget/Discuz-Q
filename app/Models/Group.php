@@ -47,6 +47,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int level
  * @property string description
  * @property string notice
+ * @property int time_range
+ * @property int content_range
  */
 class Group extends DzqModel
 {
@@ -74,14 +76,25 @@ class Group extends DzqModel
     const GUEST_ID = 7;
 
     /**
+     * The ID of the experience card group.
+     */
+    const EXPERIENCE_ID = 8;
+
+    /**
      * The ID of the member group.
      */
     const MEMBER_ID = 10;
 
     /**
-     * The ID of preset groups : admin 、待付费、游客、普通会员
+     * The ID of preset groups : admin 、待付费、游客、免费体验、普通会员
      */
-    const PRESET_GROUPS = [1, 6, 7, 10];
+    const PRESET_GROUPS = [
+        Group::ADMINISTRATOR_ID,
+        Group::UNPAID,
+        Group::GUEST_ID,
+        Group::EXPERIENCE_ID,
+        Group::MEMBER_ID
+    ];
 
     /**
      * 付费站点禁止被购买用户组：admin、待付费、游客
@@ -94,6 +107,11 @@ class Group extends DzqModel
     const IS_PAID = 1;
 
     const PAID_GROUPS_NUM = 5;
+
+    // 免费体验组预设
+    const DEFAULT_TIME_RANGE = 3; // 默认访问时间范围
+
+    const DEFAULT_CONTENT_RANGE = 30; // 默认访问内容范围
 
     /**
      * {@inheritdoc}
@@ -126,6 +144,8 @@ class Group extends DzqModel
         'scale',
         'is_subordinate',
         'is_commission',
+        'time_range',
+        'content_range'
     ];
 
     /**

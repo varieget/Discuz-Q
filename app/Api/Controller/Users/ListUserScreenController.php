@@ -20,6 +20,8 @@ namespace App\Api\Controller\Users;
 
 use App\Common\ResponseCode;
 use App\Models\DenyUser;
+use App\Models\Invite;
+use App\Models\InviteUser;
 use App\Models\Order;
 use App\Models\User;
 use App\Repositories\UserRepository;
@@ -143,8 +145,22 @@ class ListUserScreenController extends DzqAdminController
                                 ->get()
                                 ->keyBy('user_id')
                                 ->toArray();
-        $userDatas = $userDatas->map(function (User $user) use ($ordersRegisterPaid) {
+        $inviteUsers = InviteUser::query()
+            ->whereIn('user_id', $userIds)
+            ->get()
+            ->toArray();
+        $inviteUsersRes = [];
+        foreach ($inviteUsers as $key => $val) {
+            if (!isset($inviteUsersRes[$val['user_id']]) || !in_array($val['to_user_id'], $inviteUsersRes[$val['user_id']])) {
+                $inviteUsersRes[$val['user_id']][] = $val['to_user_id'];
+            }
+        }
+        $userDatas = $userDatas->map(function (User $user) use ($ordersRegisterPaid, $inviteUsersRes) {
             $user->original_group_id = $user->getRawOriginal('group_id');
+
+            // 获取用户邀请人数
+            $user->inviteUsersNumber = isset($inviteUsersRes[$user->userId]) ? count($inviteUsersRes[$user->userId]) : 0;
+
             $user->paid = false;
             if ($user->group_id == Group::ADMINISTRATOR_ID) {
                 $user->paid = true;
@@ -166,6 +182,7 @@ class ListUserScreenController extends DzqAdminController
                 $user->paid = true;
                 return $user;
             }
+
             return $user;
         });
         $userDatas = $userDatas->toArray();
@@ -190,7 +207,8 @@ class ListUserScreenController extends DzqAdminController
                 'groupName' => $userGroupDatas[$value['original_group_id']]['name'] ?? '',
                 'expirationTime' =>$value['expiration_time'],
                 'extFields' =>  UserSignInFields::instance()->getUserSignInFields($value['userId']),
-                'paid'=>$value['paid']
+                'paid'=>$value['paid'],
+                'inviteUsersNumber' => $value['inviteUsersNumber']
             ];
         }
 

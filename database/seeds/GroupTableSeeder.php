@@ -34,22 +34,29 @@ class GroupTableSeeder extends Seeder
         $groups->getConnection()->statement('SET FOREIGN_KEY_CHECKS=1;');
         $groups->insert([
             [
-                'id' => 1,
+                'id' => Group::ADMINISTRATOR_ID,
                 'name' => '管理员',
                 'default' => 0
             ],
             [
-                'id' => 6,
+                'id' => Group::UNPAID,
                 'name' => '待付费',
                 'default' => 0
             ],
             [
-                'id' => 7,
+                'id' => Group::GUEST_ID,
                 'name' => '游客',
                 'default' => 0
             ],
             [
-                'id' => 10,
+                'id' => Group::EXPERIENCE_ID,
+                'name' => '免费体验',
+                'default' => 0,
+                'time_range' => Group::DEFAULT_TIME_RANGE,
+                'content_range' => Group::DEFAULT_CONTENT_RANGE
+            ],
+            [
+                'id' => Group::MEMBER_ID,
                 'name' => '普通会员',
                 'default' => 1
             ],

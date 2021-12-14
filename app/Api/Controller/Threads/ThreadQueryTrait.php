@@ -20,6 +20,7 @@ namespace App\Api\Controller\Threads;
 
 use App\Common\Platform;
 use App\Models\DenyUser;
+use App\Models\Group;
 use App\Models\Order;
 use App\Models\Post;
 use App\Models\Sequence;
@@ -268,6 +269,12 @@ trait ThreadQueryTrait
         }
         if ($filterApprove) {
             $threads->where('th.is_approved', Thread::BOOL_YES);
+        }
+        if ($this->user->groupId == Group::EXPERIENCE_ID) {
+            $groups = $this->user->groups->toArray();
+            $contentRange = !empty($groups[0]['content_range']) ? $groups[0]['content_range'] : Group::DEFAULT_CONTENT_RANGE;
+            $createdAtLimit = Carbon::now()->subDays($contentRange);
+            $threads->where('th.created_at', '>', $createdAtLimit);
         }
         return $threads;
     }

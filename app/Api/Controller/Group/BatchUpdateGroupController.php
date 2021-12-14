@@ -185,6 +185,14 @@ class BatchUpdateGroupController extends DzqAdminController
                     $group->notice = $value['notice'];
                 }
 
+                if (isset($value['timeRange'])) {
+                    $group->time_range = $value['timeRange'];
+                }
+
+                if (isset($value['contentRange'])) {
+                    $group->content_range = $value['contentRange'];
+                }
+
                 $group->save();
                 $resultData[] = $group;
             } catch (\Exception $e) {

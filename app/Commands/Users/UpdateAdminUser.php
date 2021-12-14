@@ -39,6 +39,7 @@ use App\Repositories\UserRepository;
 use App\Validators\UserValidator;
 use Discuz\Auth\AssertPermissionTrait;
 use Discuz\Auth\Exception\PermissionDeniedException;
+use Discuz\Common\Utils;
 use Discuz\Contracts\Setting\SettingsRepository;
 use Discuz\Foundation\EventsDispatchTrait;
 use Discuz\SpecialChar\SpecialCharServer;
@@ -518,6 +519,14 @@ class UpdateAdminUser
         }
 
         $user->expired_at = Carbon::parse($expiredAt);
+
+        //修改了过期时间，还需要修改付费用户组对应的权益有效期
+        $response = User::adjustGroupWithExpiredAt($user, $user->expired_at);
+        if ($response['code'] != ResponseCode::SUCCESS) {
+            app('log')->error('修改用户过期时间修改用户组对应权益出错', $response);
+            Utils::outPut($response['code'], $response['msg'], $response['data']);
+        }
+
         //修改过了过期时间，还需要将对应的 order 表中的 expired_at 修改
         $order = $user->orders()
             ->whereIn('type', [Order::ORDER_TYPE_REGISTER, Order::ORDER_TYPE_RENEW])
