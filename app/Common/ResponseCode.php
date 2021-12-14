@@ -135,6 +135,7 @@ class ResponseCode
     const RESOURCE_IS_REVIEW = -7084;
     const SET_ERROR = -7085;
     const GEN_SHARE_SCHEME_TYPE_ERROR = -7086;
+    const OPEN_H5_MINI_SET = -7087;
 
     const NEED_BIND_WECHAT = -8000;
     const NEED_BIND_PHONE = -8001;
@@ -257,5 +258,6 @@ class ResponseCode
         self::SET_ERROR =>'设置失败',
         self::DIALOG_MESSAGE_DISABLE => '私信已被禁用',
         self::GEN_SHARE_SCHEME_TYPE_ERROR => '生成分享scheme参数类型错误',
+        self::OPEN_H5_MINI_SET => '请先开启公众号或小程序配置',
     ];
 }
