@@ -34,8 +34,6 @@ use Illuminate\Support\Str;
 
 class WechatPosterQrCodeController extends AuthBaseController
 {
-    use EasyWechatTrait;
-
     protected $settingsRepository;
 
     protected $httpClient;
