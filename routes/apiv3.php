@@ -47,6 +47,7 @@ $route->withFrequency(function(RouteCollection $route){
 $route->get('/users/pc/wechat/h5.genqrcode', 'pc.wechat.h5.qrcode', ApiController\Users\WechatH5QrCodeController::class);
 $route->get('/users/pc/wechat/miniprogram.genqrcode', 'pc.wechat.miniprogram.genqrcode', ApiController\Users\MiniProgramQrcodeController::class);
 $route->get('/users/pc/wechat.rebind.genqrcode', 'pc.wechat.rebind.genqrcode', ApiController\Users\WechatPcRebindQrCodeController::class);
+$route->get('/users/mobilebrowser/wechat.poster.genqrcode', 'mobilebrowser.wechat.poster.genqrcode', ApiController\Users\WechatPosterQrCodeController::class);
 $route->get('/users/mobilebrowser/wechat/miniprogram.genscheme', 'pc.wechat.miniprogram.login.poll', ApiController\Users\MiniProgramSchemeGenController::class);
 $route->get('/users/mobilebrowser/wechat/miniprogram.genbindscheme', 'mobilebrowser.wechat.miniprogram.genbindscheme', ApiController\Users\MiniProgramBindSchemeGenController::class);
 $route->get('/users/mobilebrowser/wechat/miniprogram.genparamscheme', 'mobilebrowser.wechat.miniprogram.genparamscheme', ApiController\Users\MiniProgramParamSchemeGenController::class);
