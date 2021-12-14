@@ -504,6 +504,7 @@ class UserRepository extends AbstractRepository
             Group::BAN_ID,
             Group::UNPAID,
             Group::GUEST_ID,
+            Group::EXPERIENCE_ID,
             Group::MEMBER_ID,
         ];
 

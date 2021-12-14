@@ -65,6 +65,7 @@ $route->post('/users/avatar', 'user.upload.avatar', ApiController\Users\UploadAv
 $route->post('/delete/users/avatar', 'user.upload.avatar', ApiController\Users\DeleteAvatarController::class);
 $route->get('/users', 'users.list', ApiController\Users\ListUserScreenController::class);
 $route->get('/user', 'user.resource', ApiController\Users\AdminProfileController::class);
+$route->get('/users.invite', 'users.invite', ApiController\Users\ListUserInviteController::class);
 
 //内容过滤
 $route->post('/stopwords.batch', 'stopwords.batch', ApiController\StopWords\BatchCreateStopWordsController::class);

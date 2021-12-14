@@ -21,6 +21,8 @@ namespace App\Listeners\User;
 use App\Common\ResponseCode;
 use App\Events\Users\Registered;
 use App\Models\Group;
+use App\Models\Invite;
+use App\Models\InviteUser;
 use App\Models\User;
 use App\Models\UserDistribution;
 use App\Models\UserFollow;
@@ -75,8 +77,27 @@ class InviteBind
             $invite = $this->InviteRepository->verifyCode($code);
             if ($invite) {
                 $invite->to_user_id = $event->user->id;
-                $invite->status = 2;
+                $invite->status = Invite::STATUS_USED;
+                // 免费体验用户的邀请码特殊处理
+                if ($invite->group_id == Group::EXPERIENCE_ID) {
+                    $invite->to_user_id = 0;
+                    $invite->status = Invite::STATUS_UNUSED;
+                }
                 $invite->save();
+
+                if ($invite->group_id == Group::EXPERIENCE_ID) {
+                    $exists = InviteUser::query()->where('to_user_id', $event->user->id)->exists();
+                    if ($exists == true) {
+                        Utils::outPut(ResponseCode::INVALID_PARAMETER, '您已使用过体验卡，无法再次使用');
+                    }
+                    $inviteUser = new InviteUser();
+                    $inviteUser->invite_id = $invite->id;
+                    $inviteUser->code = $invite->code;
+                    $inviteUser->user_id = $invite->user_id;
+                    $inviteUser->to_user_id = $event->user->id;
+                    $inviteUser->save();
+                }
+
                 // 同步用户组
                 $event->user->groups()->sync(
                     Group::query()->find($invite->group_id)
@@ -85,6 +106,11 @@ class InviteBind
                 // 修改付费状态
                 if ($this->settings->get('site_mode') == 'pay') {
                     $event->user->expired_at = Carbon::now()->addDays($this->settings->get('site_expire'));
+                    // 针对免费体验卡的用户修改其过期时间
+                    if ($invite->group_id == Group::EXPERIENCE_ID) {
+                        $timeRange = Group::query()->where('id', Group::EXPERIENCE_ID)->first(['time_range'])->toArray();
+                        $event->user->expired_at = Carbon::now()->addDays($timeRange['time_range']);
+                    }
                     $event->user->save();
                 }
             } else {
