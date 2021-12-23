@@ -30,7 +30,7 @@ class CreateInviteUsers extends Migration
     public function up()
     {
         $this->schema()->create('invite_users', function (Blueprint $table) {
-            $table->id('invite_id')->comment('邀请码id');
+            $table->unsignedInteger('invite_id')->comment('邀请码id');
             $table->char('code', 32)->default('')->comment('邀请码');
             $table->unsignedInteger('user_id')->comment('邀请用户 id');
             $table->unsignedInteger('to_user_id')->default(0)->comment('被邀请用户 id');
