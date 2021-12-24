@@ -51,9 +51,7 @@ class GroupTableSeeder extends Seeder
             [
                 'id' => Group::EXPERIENCE_ID,
                 'name' => '免费体验',
-                'default' => 0,
-                'time_range' => Group::DEFAULT_TIME_RANGE,
-                'content_range' => Group::DEFAULT_CONTENT_RANGE
+                'default' => 0
             ],
             [
                 'id' => Group::MEMBER_ID,
