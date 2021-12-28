@@ -244,6 +244,11 @@ class SetSettingsController extends DzqAdminController
                         $this->settings->set('qcloud_cdn_init_time', $now, $tag);
                     }
                     break;
+                case 'qcloud_ssr_region':
+                    if ($value && empty($this->settings->get('qcloud_ssr_init_time'))) {
+                        $this->settings->set('qcloud_ssr_init_time', $now, $tag);
+                    }
+                    break;
                 default:
                     break;
             }
