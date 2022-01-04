@@ -63,7 +63,7 @@ class UnreadNotificationController extends DzqController
                 $query->where('dialog.sender_user_id', $actor->id);
                 $query->orWhere('dialog.recipient_user_id', $actor->id);
             })
-            ->where('user_id', '!=', $actor->id)
+            ->where('user_id', '=', $actor->id)
             ->where('read_status', 0)
             ->where('status', DialogMessage::NORMAL_MESSAGE)
             ->count();
