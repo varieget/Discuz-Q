@@ -150,7 +150,9 @@ class InviteBind
                 $toUser->save();
 
                 // 多个用户组时 取主用户组(null值无限期)
-                $bossGroup = $fromUser->groups()->whereNull('group_user.expiration_time')->first();
+//                $bossGroup = $fromUser->groups()->whereNull('group_user.expiration_time')->first();
+                // 一对一
+                $bossGroup = $fromUser->groups()->first();
 
                 // 建立上下级关系
                 UserDistribution::query()->create([
