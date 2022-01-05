@@ -174,9 +174,9 @@ class ManageThemeList extends DzqAdminController
 
         //话题Id
         if (!empty($topicId)) {
-            $query->leftJoin('posts', 'posts.thread_id', '=', 'threads.id')
-                ->where('content', 'like', '%value="'.$topicId.'"%')
-                ->where('is_first', true);
+            $query->leftJoin('posts as p', 'p.thread_id', '=', 'threads.id')
+                ->where('p.content', 'like', '%value="'.$topicId.'"%')
+                ->where('p.is_first', true);
         }
 
         //发帖时间筛选
