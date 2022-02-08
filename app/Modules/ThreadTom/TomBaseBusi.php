@@ -19,9 +19,14 @@
 namespace App\Modules\ThreadTom;
 
 use App\Common\ResponseCode;
+use App\Models\Attachment;
 use App\Models\Order;
 use App\Models\Thread;
+use App\Models\ThreadRedPacket;
+use App\Models\ThreadReward;
 use App\Models\ThreadTom;
+use App\Models\ThreadVideo;
+use App\Models\ThreadVote;
 use App\Models\User;
 use Discuz\Common\Utils;
 use Illuminate\Support\Arr;
@@ -95,6 +100,66 @@ abstract class TomBaseBusi
                 $this->isPaySub = true;
             }
         }
+        //针对 update 操作防越权
+        if ($this->operation == 'update') {
+            $isset = true;
+            switch ($this->tomId){
+                // 图片帖
+                case TomConfig::TOM_IMAGE:
+                    $imageIds = $this->getParams('imageIds');
+                    if(!empty($imageIds)){
+                        $isset = Attachment::query()->whereIn('id', $imageIds)->where('user_id', $this->user->id)->exists();
+                    }
+                    break;
+                // 音频帖
+                case TomConfig::TOM_AUDIO:
+                    $audioId = $this->getParams('audioId');
+                    if (!empty($audioId)){
+                        $isset = ThreadVideo::query()->where(['id' => $audioId, 'user_id' => $this->user->id])->exists();
+                    }
+                    break;
+                // 视频
+                case TomConfig::TOM_VIDEO:
+                    $videoId = $this->getParams('videoId');
+                    if(!empty($videoId)){
+                        $isset = ThreadVideo::query()->where(['id' => $videoId, 'user_id' => $this->user->id])->exists();
+                    }
+                    break;
+                // 红包帖
+                case TomConfig::TOM_REDPACK:
+                    $thread_red_packet_id = $this->getParams('id');
+                    if(!empty($thread_red_packet_id)){
+                        $isset = ThreadRedPacket::query()->where(['id' => $thread_red_packet_id, 'thread_id' => $this->threadId])->exists();
+                    }
+                    break;
+                // 悬赏
+                case TomConfig::TOM_REWARD:
+                    $thread_reward_id = $this->getParams('id');
+                    if(!empty($thread_reward_id)){
+                        $isset = ThreadReward::query()->where(['id' => $thread_reward_id, 'user_id' => $this->user->id])->exists();
+                    }
+                    break;
+                // 附件
+                case TomConfig::TOM_DOC:
+                    $docIds = $this->getParams('docIds');
+                    if(!empty($docIds)){
+                        $isset = Attachment::query()->whereIn('id', $docIds)->where('user_id', $this->user->id)->exists();
+                    }
+                    break;
+                // 投票
+                case TomConfig::TOM_VOTE:
+                    $voteId = $this->getParams('voteId');
+                    if(!empty($voteId)){
+                        $isset = ThreadVote::query()->where(['id' => $voteId, 'thread_id' => $this->threadId])->exists();
+                    }
+                    break;
+            }
+            if(!$isset){
+                $this->outPut(ResponseCode::UNAUTHORIZED);
+            }
+
+        }
+
     }
 
     private function operationValid()
