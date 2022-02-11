@@ -98,6 +98,9 @@ class UpdateUsersController extends DzqController
                 ]
             ]);
         }
+        if(!empty($newPassword) && empty($password)){
+            $this->outPut(ResponseCode::INVALID_PARAMETER,'请输入原密码');
+        }
         if (!empty($password)) {
             $requestData['password'] = $password;
             if (! $this->user->checkPassword($password)) {
@@ -144,6 +147,9 @@ class UpdateUsersController extends DzqController
                 'pay_password' => 'bail|sometimes|required|confirmed|digits:6',
             ]);
             if ($this->user->pay_password) {
+                if(empty($payPasswordToken)){
+                    $this->outPut(ResponseCode::INTERNAL_ERROR, '非法操作，请按正常流程操作');
+                }
                 if ($this->user->checkWalletPayPassword($checkPayPassword['pay_password'])) {
                     $this->outPut(ResponseCode::INVALID_PARAMETER, '新密码与原密码不能相同');
                 }
