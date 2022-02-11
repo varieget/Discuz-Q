@@ -100,8 +100,8 @@ abstract class TomBaseBusi
                 $this->isPaySub = true;
             }
         }
-        //针对 update 操作防越权
-        if ($this->operation == 'update') {
+        //针对 update、create 操作防越权
+        if (in_array($this->operation, ['create', 'update'])) {
             $isset = true;
             switch ($this->tomId){
                 // 图片帖
@@ -129,6 +129,10 @@ abstract class TomBaseBusi
                 case TomConfig::TOM_REDPACK:
                     $thread_red_packet_id = $this->getParams('id');
                     if(!empty($thread_red_packet_id)){
+                        if(empty($this->threadId)){
+                            $isset = false;
+                            break;
+                        }
                         $isset = ThreadRedPacket::query()->where(['id' => $thread_red_packet_id, 'thread_id' => $this->threadId])->exists();
                     }
                     break;
@@ -150,8 +154,14 @@ abstract class TomBaseBusi
                 case TomConfig::TOM_VOTE:
                     $voteId = $this->getParams('voteId');
                     if(!empty($voteId)){
+                        if(empty($this->threadId)){
+                            $isset = false;
+                            break;
+                        }
                         $isset = ThreadVote::query()->where(['id' => $voteId, 'thread_id' => $this->threadId])->exists();
                     }
+                    break;
+                default:
                     break;
             }
             if(!$isset){
