@@ -1,0 +1,47 @@
+{
+    "name_cn": "转发",
+    "name_en": "reforward",
+    "description": "帖子类型里添加转发的插件",
+    "type": 1,
+    "app_id": "900002",
+    "version": "1.0.0",
+    "status": 1,
+    "filter_enable": true,
+    "author": {
+        "name": "varieget",
+        "email": "varieget@gmail.com"
+    },
+    "busi": "Plugin\\Reforward\\ReforwardBusi",
+    "view": {
+        "display": {
+            "target": [
+                "plugin_index",
+                "plugin_detail"
+            ],
+            "hookName": "thread_extension_display_hook",
+            "platform": [
+                "pc",
+                "h5"
+            ],
+            "disables": false
+        },
+        "entry": {
+            "target": "plugin_post",
+            "hookName": "post_extension_entry_hook",
+            "platform": [
+                "pc",
+                "h5"
+            ],
+            "disables": false
+        },
+        "post": {
+            "target": "plugin_post",
+            "hookName": "post_extension_content_hook",
+            "platform": [
+                "pc",
+                "h5"
+            ],
+            "disables": false
+        }
+    }
+}
